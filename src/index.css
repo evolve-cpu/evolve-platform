@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* :root {
+  --vw-unit: calc(100vw / 1920);
+  --vh-unit: calc(100vh / 1080);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --vw-unit: calc(100vw / 390);
+    --vh-unit: calc(100vh / 844);
+  }
+} */
+
+
+/* Design system tokens for Evolve Educational Platform */
+
+@layer base {
+  :root {
+    --background: 0 0 0;
+    --foreground: 244 244 244;
+
+    --card: 25 25 25;
+    --card-foreground: 244 244 244;
+
+    --popover: 25 25 25;
+    --popover-foreground: 244 244 244;
+
+    --primary: 163 91 251;
+    --primary-foreground: 244 244 244;
+
+    --secondary: 212 122 249;
+    --secondary-foreground: 244 244 244;
+
+    --muted: 40 40 40;
+    --muted-foreground: 128 128 128;
+
+    --accent: 194 253 92;
+    --accent-foreground: 0 0 0;
+
+    --destructive: 255 74 49;
+    --destructive-foreground: 244 244 244;
+
+    --border: 40 40 40;
+    --input: 25 25 25;
+    --ring: 163 91 251;
+
+    --radius: 1.25rem;
+
+    /* Custom Evolve brand colors */
+    --evolve-flame: 235 83 40;
+    --evolve-turquoise: 1 241 217;
+    --evolve-inchworm: 194 253 92;
+    --evolve-yellow: 255 208 7;
+    --evolve-pink: 236 0 139;
+  }
+
+  .dark {
+    --background: 0 0 0;
+    --foreground: 244 244 244;
+  }
+}
+
+@layer base {
+  body {
+    @apply font-bricolage antialiased;
+    background: #000000;
+    color: hsl(var(--foreground));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-evolve-lavender-indigo hover:bg-evolve-heliotrope text-evolve-white font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent border border-evolve-lavender-indigo text-evolve-lavender-indigo hover:bg-evolve-lavender-indigo hover:text-evolve-white font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .btn-accent {
+    @apply bg-evolve-inchworm hover:bg-evolve-bright-turquoise text-black font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .card-evolve {
+    @apply border border-gray-800 rounded-lg p-6;
+  }
+
+  .card-flame {
+    @apply bg-gray-900 border border-evolve-flame rounded-lg p-6;
+  }
+
+  .card-turquoise {
+    @apply bg-gray-900 border border-evolve-bright-turquoise rounded-lg p-6;
+  }
+
+  .card-yellow {
+    @apply bg-gray-900 border border-evolve-yellow rounded-lg p-6;
+  }
+
+  .card-pink {
+    @apply bg-gray-900 border border-evolve-bollywood-pink rounded-lg p-6;
+  }
+
+  .card-inchworm {
+    @apply bg-gray-900 border border-evolve-inchworm rounded-lg p-6;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-evolve-lavender-indigo to-evolve-heliotrope bg-clip-text text-transparent;
+  }
+
+  .bento-grid {
+    @apply grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .bento-item {
+    @apply relative overflow-hidden rounded-lg transition-all duration-200;
+  }
+}
