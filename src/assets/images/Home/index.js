@@ -28,6 +28,16 @@ import left_element from "./left_element.svg";
 import left_element_mobile from "./left_element_mobile.svg";
 import yellow_bg from "./yellow_bg.svg";
 import yellow_bg_mobile from "./yellow_bg_mobile.svg";
+import yellow_ellipse from "./yellow_ellipse.svg";
+import yellow_ellipse_mobile from "./yellow_ellipse_mobile.svg";
+import object_1 from "./object_1.svg";
+import object_2 from "./object_2.svg";
+import bigger_orbit from "./bigger_orbit.svg";
+import bigger_orbit_mobile from "./bigger_orbit_mobile.svg";
+import right_element_eye from "./right_element_eye.svg";
+import left_element_eye from "./left_element_eye.svg";
+import left_element_eye_mobile from "./left_element_eye_mobile.svg";
+import right_element_eye_mobile from "./right_element_eye_mobile.svg";
 
 export {
   left_wall,
@@ -58,5 +68,15 @@ export {
   left_element,
   right_element,
   right_element_mobile,
-  left_element_mobile
+  left_element_mobile,
+  object_1,
+  object_2,
+  yellow_ellipse,
+  yellow_ellipse_mobile,
+  bigger_orbit,
+  bigger_orbit_mobile,
+  right_element_eye,
+  right_element_eye_mobile,
+  left_element_eye,
+  left_element_eye_mobile
 };

@@ -256,13 +256,25 @@ const Home = () => {
   const scene1Refs = useRef({});
   const scene1_1Refs = useRef({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const idleAnimsRef = useRef(null); // Track idle animations
+  const idleAnimsRef = useRef(null);
+  const masterTimelineRef = useRef(null);
 
   useLayoutEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
-    // First, create idle animations (ripple & bounce) BEFORE scroll starts
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    // Wait for refs to be populated
+    if (!scene1Refs.current.container || !scene1_1Refs.current.container) {
+      return;
+    }
+
+    // Create idle animations BEFORE scroll
     if (scene1Refs.current.rainbow && scene1Refs.current.cube) {
       idleAnimsRef.current = gsap.context(() => {
         gsap.to(scene1Refs.current.rainbow, {
@@ -286,32 +298,69 @@ const Home = () => {
     }
 
     const id = requestAnimationFrame(() => {
-      if (!scene1Refs.current.container || !scene1_1Refs.current.container)
-        return;
-
-      // ✅ Initialize Scene1_1 to START state
+      // ✅ Initialize Scene1_1 to START state - CRITICAL: This prevents flash
       gsap.set(scene1_1Refs.current.rightCloud, { opacity: 0, y: -50 });
       gsap.set(scene1_1Refs.current.leftCloud, { opacity: 0, y: 80 });
       gsap.set(scene1_1Refs.current.floor, { opacity: 0, y: 150 });
       gsap.set(scene1_1Refs.current.leftElement, { opacity: 0, x: -200 });
       gsap.set(scene1_1Refs.current.rightElement, { opacity: 0, x: 200 });
+      gsap.set(scene1_1Refs.current.text, { opacity: 0, y: 30 });
+      gsap.set(scene1_1Refs.current.objectsContainer, { opacity: 0 });
+      gsap.set(scene1_1Refs.current.ellipse, { opacity: 0 });
 
-      // ✅ Build scene timelines
+      // Initialize all objects, lines to start state
+      if (
+        scene1_1Refs.current.object1 &&
+        scene1_1Refs.current.object2 &&
+        scene1_1Refs.current.object3
+      ) {
+        gsap.set(
+          [
+            scene1_1Refs.current.object1,
+            scene1_1Refs.current.object2,
+            scene1_1Refs.current.object3
+          ],
+          { y: 0, opacity: 1, scale: 1 }
+        );
+      }
+      if (
+        scene1_1Refs.current.line1 &&
+        scene1_1Refs.current.line2 &&
+        scene1_1Refs.current.line3
+      ) {
+        gsap.set(
+          [
+            scene1_1Refs.current.line1,
+            scene1_1Refs.current.line2,
+            scene1_1Refs.current.line3
+          ],
+          { height: 0, opacity: 0 }
+        );
+      }
+
+      // ✅ Build scene timelines (NOW that refs are ready)
       const tl1 = useScene1Timeline(scene1Refs.current, isMobile);
       const tl2 = useScene1_1Timeline(scene1_1Refs.current, isMobile);
 
-      // ✅ FREEZE rainbow state before scroll (set it to exact current state)
-      gsap.set(scene1Refs.current.rainbow, {
-        scale: isMobile ? 1.08 : 1.06,
-        overwrite: "auto"
-      });
+      // ✅ FREEZE rainbow state before scroll
+      if (scene1Refs.current.rainbow) {
+        gsap.set(scene1Refs.current.rainbow, {
+          scale: isMobile ? 1.08 : 1.06,
+          overwrite: "auto"
+        });
+      }
+
+      // Kill existing timeline
+      if (masterTimelineRef.current) {
+        masterTimelineRef.current.kill();
+      }
 
       // ✅ Master timeline with camera zoom transition
       const master = gsap.timeline({
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: "+=9000",
+          end: "+=25000",
           scrub: 0.5,
           pin: true,
           fastScrollEnd: true,
@@ -322,25 +371,26 @@ const Home = () => {
               idleAnimsRef.current = null;
             }
             // Force overwrite to prevent ripple from restarting
-            gsap.set(scene1Refs.current.rainbow, { overwrite: "auto" });
+            if (scene1Refs.current.rainbow) {
+              gsap.set(scene1Refs.current.rainbow, { overwrite: "auto" });
+            }
           }
         }
       });
 
+      // Only add timelines if they exist
+      if (tl1) {
+        master.add(tl1);
+      }
+
+      // 🚪 ENTER THROUGH DOOR: Scene1 zooms in, Scene1_1 replaces it
       master
-        // Play Scene 1
-        .add(tl1)
-        // 🚪 ENTER THROUGH DOOR: Scene1 zooms in (camera going through door), Scene1_1 replaces it
-        .to(
-          scene1Refs.current.container,
-          {
-            scale: 1.5,
-            opacity: 0,
-            duration: 1.2,
-            ease: "power1.inOut"
-          },
-          "doorTransition"
-        )
+        .to(scene1Refs.current.container, {
+          scale: 1.5,
+          opacity: 0,
+          duration: 1.2,
+          ease: "power1.inOut"
+        })
         .to(
           scene1_1Refs.current.container,
           {
@@ -348,19 +398,26 @@ const Home = () => {
             duration: 1.2,
             ease: "power1.inOut"
           },
-          "doorTransition"
-        )
-        // Play Scene 1_1 animations after zoom completes
-        .add(tl2);
+          ">-0.4" // starts slightly before Scene1 fully disappears
+        );
+
+      // Play Scene 1_1 animations after zoom completes
+      if (tl2) {
+        master.add(tl2);
+      }
+
+      masterTimelineRef.current = master;
     });
 
     return () => {
       cancelAnimationFrame(id);
+      if (masterTimelineRef.current) {
+        masterTimelineRef.current.kill();
+      }
       if (idleAnimsRef.current) {
         idleAnimsRef.current.revert();
       }
       ScrollTrigger.getAll().forEach((st) => st.kill());
-      window.removeEventListener("resize", handleResize);
     };
   }, [isMobile]);
 
@@ -396,8 +453,9 @@ const Home = () => {
 
       {/* Scene 1_1 */}
       <div
-        className="absolute inset-0 z-[1]"
-        style={{ willChange: "transform, opacity" }}
+        ref={(el) => (scene1_1Refs.current.container = el)}
+        className="absolute inset-0 w-full h-full"
+        style={{ opacity: 0 }} // Important: start hidden
       >
         <Scene1_1 ref={scene1_1Refs} isMobile={isMobile} />
       </div>
