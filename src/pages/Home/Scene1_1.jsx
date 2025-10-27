@@ -1797,26 +1797,34 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // Eyes slide in with same timing and position as base elements
     if (isMobile) {
-      // Mobile: Left eye - animate to same position as left element
-      tl.to(
+      // Mobile: Left eye - use same transform as left element
+      tl.fromTo(
         refs.leftElementEye,
+        {
+          x: 0,
+          y: 0
+        },
         {
           y: "8vh",
           left: "-5%",
-          scale: 1, // Normal size for mobile left
+          scale: 1,
           duration: 1.2,
           ease: "power2.in"
         },
         stopAnimationEnd
       );
 
-      // Mobile: Right eye - animate to same position as right element (bigger)
-      tl.to(
+      // Mobile: Right eye - use same transform as right element
+      tl.fromTo(
         refs.rightElementEye,
+        {
+          x: 0,
+          y: 0
+        },
         {
           y: "15vh",
           right: "-5%",
-          scale: 1.5, // Bigger than left
+          scale: 1.5,
           duration: 1.2,
           ease: "power2.in"
         },
@@ -1824,8 +1832,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
     } else {
       // Desktop: Both eyes same size and position
-      tl.to(
+      tl.fromTo(
         refs.leftElementEye,
+        {
+          x: 0,
+          y: 0
+        },
         {
           y: "20vh",
           left: "-2.5%",
@@ -1836,8 +1848,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         stopAnimationEnd
       );
 
-      tl.to(
+      tl.fromTo(
         refs.rightElementEye,
+        {
+          x: 0,
+          y: 0
+        },
         {
           y: "20vh",
           right: "-2.5%",
