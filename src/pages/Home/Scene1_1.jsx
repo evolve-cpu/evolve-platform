@@ -13,6 +13,10 @@
 //   left_element_mobile,
 //   right_element,
 //   right_element_mobile,
+//   left_element_eye, // ADD THIS
+//   left_element_eye_mobile, // ADD THIS
+//   right_element_eye, // ADD THIS
+//   right_element_eye_mobile, // ADD THIS
 //   yellow_ellipse,
 //   yellow_ellipse_mobile,
 //   object_1,
@@ -483,6 +487,100 @@
 
 //     // Calculate when "stop" animation completes
 //     const stopAnimationEnd = newTextStart + firstPhaseEnd2 * 0.35 + 0.4;
+//     // Eyes follow the same position as their parent elements during slide-in
+//     // Set initial states to match parent elements
+//     // Eyes follow the same position as their parent elements during slide-in
+//     // Set initial states to match parent elements (they start off-screen like base elements)
+//     tl.set(
+//       refs.leftElementEye,
+//       {
+//         opacity: 0,
+//         scale: 1, // Start at normal scale
+//         x: 0, // No x offset initially
+//         y: 0, // No y offset initially
+//         willChange: "transform, opacity"
+//       },
+//       stopAnimationEnd
+//     );
+
+//     tl.set(
+//       refs.rightElementEye,
+//       {
+//         opacity: 0,
+//         scale: 1, // Start at normal scale
+//         x: 0, // No x offset initially
+//         y: 0, // No y offset initially
+//         willChange: "transform, opacity"
+//       },
+//       stopAnimationEnd
+//     );
+
+//     // Eyes slide in with same timing and position as base elements
+//     if (isMobile) {
+//       // Mobile: Left eye - animate to same position as left element
+//       tl.to(
+//         refs.leftElementEye,
+//         {
+//           y: "8vh",
+//           left: "-5%",
+//           scale: 1, // Normal size for mobile left
+//           duration: 1.2,
+//           ease: "power2.in"
+//         },
+//         stopAnimationEnd
+//       );
+
+//       // Mobile: Right eye - animate to same position as right element (bigger)
+//       tl.to(
+//         refs.rightElementEye,
+//         {
+//           y: "15vh",
+//           right: "-5%",
+//           scale: 1.5, // Bigger than left
+//           duration: 1.2,
+//           ease: "power2.in"
+//         },
+//         stopAnimationEnd
+//       );
+//     } else {
+//       // Desktop: Both eyes same size and position
+//       tl.to(
+//         refs.leftElementEye,
+//         {
+//           y: "20vh",
+//           left: "-2.5%",
+//           scale: 1.2,
+//           duration: 1.2,
+//           ease: "power2.in"
+//         },
+//         stopAnimationEnd
+//       );
+
+//       tl.to(
+//         refs.rightElementEye,
+//         {
+//           y: "20vh",
+//           right: "-2.5%",
+//           scale: 1.2,
+//           duration: 1.2,
+//           ease: "power2.in"
+//         },
+//         stopAnimationEnd
+//       );
+//     }
+
+//     // After elements reach position, eyes fade in (opening effect)
+//     const eyesOpenStart = stopAnimationEnd + 1.2;
+
+//     tl.to(
+//       [refs.leftElementEye, refs.rightElementEye],
+//       {
+//         opacity: 1,
+//         duration: 0.6,
+//         ease: "power2.out"
+//       },
+//       eyesOpenStart
+//     );
 
 //     // ===== LEFT AND RIGHT ELEMENTS SLIDE DOWN =====
 //     // Elements slide down with ease in motion
@@ -705,6 +803,8 @@
 //   const object1Ref = useRef(null);
 //   const object2Ref = useRef(null);
 //   const object3Ref = useRef(null);
+//   const leftElementEyeRef = useRef(null); // ADD THIS
+//   const rightElementEyeRef = useRef(null); // ADD THIS
 //   const ellipseRef = useRef(null);
 //   const objectsContainerRef = useRef(null);
 //   const biggerOrbitRef = useRef(null);
@@ -718,6 +818,8 @@
 //     floor: floorRef.current,
 //     leftElement: leftElementRef.current,
 //     rightElement: rightElementRef.current,
+//     leftElementEye: leftElementEyeRef.current, // ADD THIS
+//     rightElementEye: rightElementEyeRef.current, // ADD THIS
 //     text: textRef.current,
 //     text2: text2Ref.current, // Expose new text ref
 //     objectsContainer: objectsContainerRef.current,
@@ -767,7 +869,7 @@
 //         ref={rightCloudRef}
 //         src={isMobile ? right_cloud_mobile : right_cloud}
 //         alt="right cloud"
-//         className="absolute right-0 z-[5]"
+//         className="absolute right-0 z-[15]"
 //         style={{
 //           top: isMobile ? "6vh" : "3vh",
 //           width: isMobile ? "38vw" : "20vw",
@@ -780,7 +882,7 @@
 //         ref={leftCloudRef}
 //         src={isMobile ? left_cloud_mobile : left_cloud}
 //         alt="left cloud"
-//         className="absolute left-0 z-[5]"
+//         className="absolute left-0 z-[15]"
 //         style={{
 //           top: isMobile ? "12vh" : "5vh",
 //           width: isMobile ? "38vw" : "22vw",
@@ -829,6 +931,38 @@
 //           transform: "translateY(-50%)",
 //           width: isMobile ? "60vw" : "50vw",
 //           height: "auto"
+//         }}
+//       />
+
+//       {/* Left Element Eye - Same position as left element */}
+//       <img
+//         ref={leftElementEyeRef}
+//         src={isMobile ? left_element_eye_mobile : left_element_eye}
+//         alt="left element eye"
+//         className="absolute z-[12] pointer-events-none"
+//         style={{
+//           top: isMobile ? "54%" : "52%",
+//           left: isMobile ? "-40%" : "-30%",
+//           transform: "translateY(-50%)",
+//           width: isMobile ? "60vw" : "50vw",
+//           height: "auto",
+//           opacity: 0
+//         }}
+//       />
+
+//       {/* Right Element Eye - Same position as right element */}
+//       <img
+//         ref={rightElementEyeRef}
+//         src={isMobile ? right_element_eye_mobile : right_element_eye}
+//         alt="right element eye"
+//         className="absolute z-[12] pointer-events-none"
+//         style={{
+//           top: isMobile ? "54%" : "52%",
+//           right: isMobile ? "-40%" : "-30%",
+//           transform: "translateY(-50%)",
+//           width: isMobile ? "60vw" : "50vw",
+//           height: "auto",
+//           opacity: 0
 //         }}
 //       />
 
@@ -1157,16 +1291,18 @@ import {
   left_element_mobile,
   right_element,
   right_element_mobile,
-  left_element_eye, // ADD THIS
-  left_element_eye_mobile, // ADD THIS
-  right_element_eye, // ADD THIS
-  right_element_eye_mobile, // ADD THIS
+  left_element_eye,
+  left_element_eye_mobile,
+  right_element_eye,
+  right_element_eye_mobile,
   yellow_ellipse,
   yellow_ellipse_mobile,
   object_1,
   object_2,
   bigger_orbit,
-  bigger_orbit_mobile
+  bigger_orbit_mobile,
+  pink_bigger_orbit, // ADD THIS
+  pink_bigger_orbit_mobile // ADD THIS
 } from "../../assets/images/Home";
 
 // Timeline hook for Scene1_1 animation - works with master timeline
@@ -1633,11 +1769,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     const stopAnimationEnd = newTextStart + firstPhaseEnd2 * 0.35 + 0.4;
     // Eyes follow the same position as their parent elements during slide-in
     // Set initial states to match parent elements
+    // Eyes follow the same position as their parent elements during slide-in
+    // Set initial states to match parent elements (they start off-screen like base elements)
     tl.set(
       refs.leftElementEye,
       {
         opacity: 0,
-        scale: 0.3,
+        scale: 1, // Start at normal scale
+        x: 0, // No x offset initially
+        y: 0, // No y offset initially
         willChange: "transform, opacity"
       },
       stopAnimationEnd
@@ -1647,7 +1787,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.rightElementEye,
       {
         opacity: 0,
-        scale: 0.3,
+        scale: 1, // Start at normal scale
+        x: 0, // No x offset initially
+        y: 0, // No y offset initially
         willChange: "transform, opacity"
       },
       stopAnimationEnd
@@ -1655,33 +1797,33 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // Eyes slide in with same timing and position as base elements
     if (isMobile) {
-      // Mobile: Left eye
+      // Mobile: Left eye - animate to same position as left element
       tl.to(
         refs.leftElementEye,
         {
           y: "8vh",
           left: "-5%",
-          scale: 1,
+          scale: 1, // Normal size for mobile left
           duration: 1.2,
           ease: "power2.in"
         },
         stopAnimationEnd
       );
 
-      // Mobile: Right eye (bigger)
+      // Mobile: Right eye - animate to same position as right element (bigger)
       tl.to(
         refs.rightElementEye,
         {
           y: "15vh",
           right: "-5%",
-          scale: 1.5,
+          scale: 1.5, // Bigger than left
           duration: 1.2,
           ease: "power2.in"
         },
         stopAnimationEnd
       );
     } else {
-      // Desktop: Left eye
+      // Desktop: Both eyes same size and position
       tl.to(
         refs.leftElementEye,
         {
@@ -1694,7 +1836,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         stopAnimationEnd
       );
 
-      // Desktop: Right eye
       tl.to(
         refs.rightElementEye,
         {
@@ -1721,96 +1862,88 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       eyesOpenStart
     );
 
-    // ===== LEFT AND RIGHT ELEMENTS SLIDE DOWN =====
-    // Elements slide down with ease in motion
-    // tl.to(
-    //   refs.leftElement,
-    //   {
-    //     y: "50vh", // Move down
-    //     left: 0, // Place at left edge
-    //     duration: 1.2,
-    //     ease: "power2.in"
-    //   },
-    //   stopAnimationEnd
-    // );
+    // ADD THIS SECTION - Pink orbit transition
+    // Set initial state for pink orbit (same as yellow orbit)
+    tl.set(
+      refs.pinkBiggerOrbit,
+      {
+        opacity: 0,
+        scale: isMobile ? 2.3 : 1,
+        y: isMobile ? -100 : -150,
+        willChange: "transform, opacity"
+      },
+      eyesOpenStart
+    );
 
-    // tl.to(
-    //   refs.rightElement,
-    //   {
-    //     y: "50vh", // Move down
-    //     right: 0, // Place at right edge
-    //     duration: 1.2,
-    //     ease: "power2.in"
-    //   },
-    //   stopAnimationEnd
-    // );
+    // Fade out yellow orbit and fade in pink orbit simultaneously
+    const pinkOrbitTransitionStart = eyesOpenStart + 0.8;
 
-    // ===== LEFT AND RIGHT ELEMENTS SLIDE DOWN =====
-    // Elements slide down with ease in motion
-    // if (isMobile) {
-    //   // Mobile: Left element - less downward movement, 90% visible
-    //   tl.to(
-    //     refs.leftElement,
-    //     {
-    //       y: "15vh", // Less downward movement
-    //       left: "-5%", // Show 90% inside screen
-    //       scale: 1, // Normal size
-    //       duration: 1.2,
-    //       ease: "power2.in"
-    //     },
-    //     stopAnimationEnd
-    //   );
+    tl.to(
+      refs.biggerOrbit,
+      {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut"
+      },
+      pinkOrbitTransitionStart
+    );
 
-    //   // Mobile: Right element - more downward movement, bigger, 90% visible
-    //   tl.to(
-    //     refs.rightElement,
-    //     {
-    //       y: "35vh", // More downward movement
-    //       right: "-5%", // Show 90% inside screen
-    //       scale: 1.15, // Bigger than left
-    //       duration: 1.2,
-    //       ease: "power2.in"
-    //     },
-    //     stopAnimationEnd
-    //   );
-    // } else {
-    //   // Desktop: Less downward movement, bigger size, 90% visible
-    //   tl.to(
-    //     refs.leftElement,
-    //     {
-    //       y: "10vh", // Less downward movement
-    //       left: "-5%", // Show 90% inside screen
-    //       scale: 1.2, // Bigger for desktop
-    //       duration: 1.2,
-    //       ease: "power2.in"
-    //     },
-    //     stopAnimationEnd
-    //   );
+    tl.to(
+      refs.pinkBiggerOrbit,
+      {
+        opacity: 1,
+        duration: 0.8,
+        ease: "power2.inOut"
+      },
+      pinkOrbitTransitionStart
+    );
 
-    //   tl.to(
-    //     refs.rightElement,
-    //     {
-    //       y: "10vh", // Less downward movement
-    //       right: "-5%", // Show 90% inside screen
-    //       scale: 1.2, // Bigger for desktop
-    //       duration: 1.2,
-    //       ease: "power2.in"
-    //     },
-    //     stopAnimationEnd
-    //   );
-    // }
+    // ADD THIS SECTION - Elements disappear and orbit moves up
+    const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
 
-    // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====
-    // const orbitToCenterStart = stopAnimationEnd + 1.2;
-    // tl.to(
-    //   refs.biggerOrbit,
-    //   {
-    //     y: isMobile ? -100 : -150, // Move to center
-    //     duration: 1.0,
-    //     ease: "power2.out"
-    //   },
-    //   orbitToCenterStart
-    // );
+    // Fade out both base elements and eye elements
+    tl.to(
+      [refs.leftElement, refs.leftElementEye],
+      {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut"
+      },
+      elementsDisappearStart
+    );
+
+    tl.to(
+      [refs.rightElement, refs.rightElementEye],
+      {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut"
+      },
+      elementsDisappearStart
+    );
+
+    // Fade out second text along with elements (ADD THIS)
+    tl.to(
+      refs.text2,
+      {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut"
+      },
+      elementsDisappearStart
+    );
+
+    // Pink orbit moves up a bit
+    const orbitMoveUpStart = elementsDisappearStart + 0.8;
+    tl.to(
+      refs.pinkBiggerOrbit,
+      {
+        y: isMobile ? -150 : -200, // Move up more (was -100/-150)
+        duration: 1.2,
+        ease: "power2.out"
+      },
+      orbitMoveUpStart
+    );
 
     // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====
 
@@ -1947,6 +2080,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const ellipseRef = useRef(null);
   const objectsContainerRef = useRef(null);
   const biggerOrbitRef = useRef(null);
+  const pinkBiggerOrbitRef = useRef(null); // ADD THIS
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
@@ -1966,24 +2100,34 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     object2: object2Ref.current,
     object3: object3Ref.current,
     ellipse: ellipseRef.current,
-    biggerOrbit: biggerOrbitRef.current
+    biggerOrbit: biggerOrbitRef.current,
+    pinkBiggerOrbit: pinkBiggerOrbitRef.current // ADD THIS
   }));
 
   useEffect(() => {
     const handleScroll = () => {
-      if (biggerOrbitRef.current) {
-        const scrollY = window.scrollY;
-        const rotationAmount = scrollY * 0.1; // Adjust multiplier for rotation speed
+      const scrollY = window.scrollY;
+      const rotationAmount = scrollY * 0.1;
 
-        gsap.to(biggerOrbitRef.current, {
-          rotation: -rotationAmount,
-          duration: 0.1,
-          ease: "none"
+      // Rotate both orbits with the same rotation value
+      if (biggerOrbitRef.current) {
+        gsap.set(biggerOrbitRef.current, {
+          rotation: -rotationAmount
+        });
+      }
+
+      if (pinkBiggerOrbitRef.current) {
+        gsap.set(pinkBiggerOrbitRef.current, {
+          rotation: -rotationAmount
         });
       }
     };
 
     window.addEventListener("scroll", handleScroll);
+
+    // Initial call to sync rotation
+    handleScroll();
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -2008,7 +2152,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         ref={rightCloudRef}
         src={isMobile ? right_cloud_mobile : right_cloud}
         alt="right cloud"
-        className="absolute right-0 z-[5]"
+        className="absolute right-0 z-[10]"
         style={{
           top: isMobile ? "6vh" : "3vh",
           width: isMobile ? "38vw" : "20vw",
@@ -2021,7 +2165,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         ref={leftCloudRef}
         src={isMobile ? left_cloud_mobile : left_cloud}
         alt="left cloud"
-        className="absolute left-0 z-[5]"
+        className="absolute left-0 z-[10]"
         style={{
           top: isMobile ? "12vh" : "5vh",
           width: isMobile ? "38vw" : "22vw",
@@ -2110,6 +2254,21 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         ref={biggerOrbitRef}
         src={isMobile ? bigger_orbit_mobile : bigger_orbit}
         alt="bigger orbit"
+        className="absolute left-1/2 -translate-x-1/2 z-[9] pointer-events-none"
+        style={{
+          bottom: isMobile ? "-2vh" : "-60vh",
+          width: isMobile ? "100%" : "80vw",
+          height: "auto",
+          opacity: 0,
+          transformOrigin: "center center"
+        }}
+      />
+
+      {/* PINK BIGGER ORBIT - Same position as yellow orbit */}
+      <img
+        ref={pinkBiggerOrbitRef}
+        src={isMobile ? pink_bigger_orbit_mobile : pink_bigger_orbit}
+        alt="pink bigger orbit"
         className="absolute left-1/2 -translate-x-1/2 z-[9] pointer-events-none"
         style={{
           bottom: isMobile ? "-2vh" : "-60vh",

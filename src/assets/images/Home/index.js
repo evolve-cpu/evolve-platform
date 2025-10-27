@@ -34,6 +34,8 @@ import object_1 from "./object_1.svg";
 import object_2 from "./object_2.svg";
 import bigger_orbit from "./bigger_orbit.svg";
 import bigger_orbit_mobile from "./bigger_orbit_mobile.svg";
+import pink_bigger_orbit_mobile from "./pink_bigger_orbit_mobile.svg";
+import pink_bigger_orbit from "./pink_bigger_orbit.svg";
 import right_element_eye from "./right_element_eye.svg";
 import left_element_eye from "./left_element_eye.svg";
 import left_element_eye_mobile from "./left_element_eye_mobile.svg";
@@ -78,5 +80,7 @@ export {
   right_element_eye,
   right_element_eye_mobile,
   left_element_eye,
-  left_element_eye_mobile
+  left_element_eye_mobile,
+  pink_bigger_orbit,
+  pink_bigger_orbit_mobile
 };
