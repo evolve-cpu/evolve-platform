@@ -1898,52 +1898,52 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       pinkOrbitTransitionStart
     );
 
-    // ADD THIS SECTION - Elements disappear and orbit moves up
-    const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
+    // // ADD THIS SECTION - Elements disappear and orbit moves up
+    // const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
 
-    // Fade out both base elements and eye elements
-    tl.to(
-      [refs.leftElement, refs.leftElementEye],
-      {
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut"
-      },
-      elementsDisappearStart
-    );
+    // // Fade out both base elements and eye elements
+    // tl.to(
+    //   [refs.leftElement, refs.leftElementEye],
+    //   {
+    //     opacity: 0,
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   elementsDisappearStart
+    // );
 
-    tl.to(
-      [refs.rightElement, refs.rightElementEye],
-      {
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut"
-      },
-      elementsDisappearStart
-    );
+    // tl.to(
+    //   [refs.rightElement, refs.rightElementEye],
+    //   {
+    //     opacity: 0,
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   elementsDisappearStart
+    // );
 
-    // Fade out second text along with elements (ADD THIS)
-    tl.to(
-      refs.text2,
-      {
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut"
-      },
-      elementsDisappearStart
-    );
+    // // Fade out second text along with elements (ADD THIS)
+    // tl.to(
+    //   refs.text2,
+    //   {
+    //     opacity: 0,
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   elementsDisappearStart
+    // );
 
-    // Pink orbit moves up a bit
-    const orbitMoveUpStart = elementsDisappearStart + 0.8;
-    tl.to(
-      refs.pinkBiggerOrbit,
-      {
-        y: isMobile ? -150 : -200, // Move up more (was -100/-150)
-        duration: 1.2,
-        ease: "power2.out"
-      },
-      orbitMoveUpStart
-    );
+    // // Pink orbit moves up a bit
+    // const orbitMoveUpStart = elementsDisappearStart + 0.8;
+    // tl.to(
+    //   refs.pinkBiggerOrbit,
+    //   {
+    //     y: isMobile ? -150 : -200, // Move up more (was -100/-150)
+    //     duration: 1.2,
+    //     ease: "power2.out"
+    //   },
+    //   orbitMoveUpStart
+    // );
 
     // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====
 
