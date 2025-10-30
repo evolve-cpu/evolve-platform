@@ -1302,7 +1302,15 @@ import {
   bigger_orbit,
   bigger_orbit_mobile,
   pink_bigger_orbit, // ADD THIS
-  pink_bigger_orbit_mobile // ADD THIS
+  pink_bigger_orbit_mobile, // ADD THIS
+  left_stairs_mini, // ADD THIS
+  right_stairs_mini, // ADD THIS
+  stairs_mini_mobile, // ADD THIS
+  stairs_mod_mobile, // ADD THIS
+  stairs_left, // ADD THIS
+  stairs_right, // ADD THIS
+  stairs_mod1_mobile, // ADD THIS
+  stairs_mod2_mobile // ADD THIS NEW LINE
 } from "../../assets/images/Home";
 
 // Timeline hook for Scene1_1 animation - works with master timeline
@@ -1643,20 +1651,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   );
 
   // 3. Bigger orbit scales up but stays BEFORE center (happens after floor starts disappearing)
-  // const orbitBeforeCenterY = isMobile ? -50 : -80; // Not fully centered yet
-  // tl.to(
-  //   refs.biggerOrbit,
-  //   {
-  //     scale: 1,
-  //     y: orbitBeforeCenterY,
-  //     opacity: 1,
-  //     duration: 1.8,
-  //     ease: "power2.out"
-  //   },
-  //   transitionStart + 1.0
-  // );
-
-  // 3. Bigger orbit scales up but stays BEFORE center (happens after floor starts disappearing)
   const orbitBeforeCenterY = isMobile ? -50 : -80; // Not fully centered yet
   const orbitScale = isMobile ? 2 : 1; // Bigger for mobile
 
@@ -1839,7 +1833,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           y: 0
         },
         {
-          y: "20vh",
+          y: "15vh",
           left: "-2.5%",
           scale: 1.2,
           duration: 1.2,
@@ -1855,7 +1849,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           y: 0
         },
         {
-          y: "20vh",
+          y: "15vh",
           right: "-2.5%",
           scale: 1.2,
           duration: 1.2,
@@ -1885,7 +1879,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       {
         opacity: 0,
         scale: isMobile ? 2.3 : 1,
-        y: isMobile ? -100 : -150,
+        y: isMobile ? -250 : -200,
         willChange: "transform, opacity"
       },
       eyesOpenStart
@@ -1949,17 +1943,164 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       elementsDisappearStart
     );
 
-    // Pink orbit moves up a bit
+    // Pink orbit moves up (desktop) or left (mobile)
     const orbitMoveUpStart = elementsDisappearStart + 0.8;
-    tl.to(
-      refs.pinkBiggerOrbit,
+
+    if (isMobile) {
+      tl.to(
+        refs.pinkBiggerOrbit,
+        {
+          x: "-35vw", // Move towards left for mobile
+          // y: "-20%",
+          duration: 1.2,
+          ease: "power2.out"
+        },
+        orbitMoveUpStart
+      );
+    } else {
+      tl.to(
+        refs.pinkBiggerOrbit,
+        {
+          y: "-35%", // Move more upwards for desktop
+          duration: 1.2,
+          ease: "power2.out"
+        },
+        orbitMoveUpStart
+      );
+    }
+
+    // ===== THIRD TEXT APPEARS: "With Evolve, you get to build" =====
+    const text3AppearStart = orbitMoveUpStart + 1.2;
+
+    // Set initial state for text3
+    tl.set(
+      refs.text3,
       {
-        y: isMobile ? -150 : -200, // Move up more (was -100/-150)
-        duration: 1.2,
-        ease: "power2.out"
+        opacity: 1, // Appears directly without fade
+        y: 0,
+        willChange: "opacity"
       },
-      orbitMoveUpStart
+      text3AppearStart
     );
+
+    // ===== STAIRS ANIMATION =====
+    const stairsAnimateStart = text3AppearStart;
+
+    // ===== SIMULTANEOUS ANIMATIONS AFTER STAIRS =====
+    const nextPhaseStart = stairsAnimateStart + 1.5;
+
+    if (isMobile) {
+    } else {
+      // Desktop: Orbit moves down slightly
+      tl.to(
+        refs.pinkBiggerOrbit,
+        {
+          y: "+=8%", // Move down 8%
+          duration: 1.0,
+          ease: "power2.out"
+        },
+        nextPhaseStart
+      );
+
+      // Desktop: Replace mini stairs with full stairs
+      // Fade out mini stairs
+      tl.to(
+        [refs.leftStairsMini, refs.rightStairsMini],
+        {
+          opacity: 0,
+          duration: 0.4,
+          ease: "power2.out"
+        },
+        nextPhaseStart
+      );
+
+      // Fade in full stairs at same position
+      tl.fromTo(
+        refs.stairsLeft,
+        {
+          opacity: 0,
+          y: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        },
+        nextPhaseStart + 0.4
+      );
+
+      tl.fromTo(
+        refs.stairsRight,
+        {
+          opacity: 0,
+          y: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        },
+        nextPhaseStart + 0.4
+      );
+
+      // Desktop: Three stacked texts appear
+      tl.set(
+        refs.text4,
+        {
+          opacity: 1,
+          willChange: "opacity"
+        },
+        nextPhaseStart
+      );
+    }
+
+    if (isMobile) {
+    } else {
+      // Desktop: Both stairs come from bottom corners
+      tl.set(
+        refs.leftStairsMini,
+        {
+          opacity: 0,
+          y: 100,
+          willChange: "transform, opacity"
+        },
+        stairsAnimateStart
+      );
+
+      tl.set(
+        refs.rightStairsMini,
+        {
+          opacity: 0,
+          y: 100,
+          willChange: "transform, opacity"
+        },
+        stairsAnimateStart
+      );
+
+      // Left stairs animate up
+      tl.to(
+        refs.leftStairsMini,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.2,
+          ease: "power2.out"
+        },
+        stairsAnimateStart
+      );
+
+      // Right stairs animate up (slightly staggered)
+      tl.to(
+        refs.rightStairsMini,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.2,
+          ease: "power2.out"
+        },
+        stairsAnimateStart + 0.2
+      );
+    }
 
     // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====
 
@@ -1975,7 +2116,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 1.2,
           ease: "power2.in"
         },
-        stopAnimationEnd
+        // stopAnimationEnd
+        newTextStart
       );
 
       // Mobile: Right element - moderate downward movement, bigger, 90% visible
@@ -1988,39 +2130,42 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 1.2,
           ease: "power2.in"
         },
-        stopAnimationEnd
+        // stopAnimationEnd
+        newTextStart
       );
     } else {
       // Desktop: More downward, closer together, 95% visible
       tl.to(
         refs.leftElement,
         {
-          y: "20vh", // More downward movement
+          y: "15vh", // More downward movement
           left: "-2.5%", // Closer, show 95% inside screen
           scale: 1.2, // Bigger for desktop
           duration: 1.2,
           ease: "power2.in"
         },
-        stopAnimationEnd
+        // stopAnimationEnd
+        newTextStart
       );
 
       tl.to(
         refs.rightElement,
         {
-          y: "20vh", // More downward movement
+          y: "15vh", // More downward movement
           right: "-2.5%", // Closer, show 95% inside screen
           scale: 1.2, // Bigger for desktop
           duration: 1.2,
           ease: "power2.in"
         },
-        stopAnimationEnd
+        // stopAnimationEnd
+        newTextStart
       );
     }
     const orbitToCenterStart = stopAnimationEnd + 1.2;
     tl.to(
       refs.biggerOrbit,
       {
-        y: isMobile ? -100 : -150, // Move to center
+        y: isMobile ? -250 : -200, // Move to center
         scale: isMobile ? 2.3 : 1, // Maintain bigger scale for mobile
         // scale: orbitScale, // Maintain bigger scale for mobile
         duration: 1.0,
@@ -2088,6 +2233,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   // Text and animation refs
   const textRef = useRef(null);
   const text2Ref = useRef(null); // New text ref
+  const text3Ref = useRef(null); // New text ref
   const object1Ref = useRef(null);
   const object2Ref = useRef(null);
   const object3Ref = useRef(null);
@@ -2097,6 +2243,18 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const objectsContainerRef = useRef(null);
   const biggerOrbitRef = useRef(null);
   const pinkBiggerOrbitRef = useRef(null); // ADD THIS
+  const pinkOrbitInnerRef = useRef(null); // ADD THIS
+  const leftStairsMiniRef = useRef(null); // ADD THIS
+  const rightStairsMiniRef = useRef(null); // ADD THIS
+  const stairsMiniMobileRef = useRef(null); // ADD THIS
+  const stairsModMobileRef = useRef(null); // ADD THIS
+  const stairsLeftRef = useRef(null); // ADD THIS
+  const stairsRightRef = useRef(null); // ADD THIS
+  const stairsMod1MobileRef = useRef(null); // ADD THIS
+  const stairsMod2MobileRef = useRef(null);
+  const text4Ref = useRef(null); // ADD THIS (for desktop 3 texts)
+  const text5Ref = useRef(null); // ADD THIS (for mobile 1 text)
+  const text6Ref = useRef(null); // ADD THIS
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
@@ -2111,13 +2269,26 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     rightElementEye: rightElementEyeRef.current, // ADD THIS
     text: textRef.current,
     text2: text2Ref.current, // Expose new text ref
+    text3: text3Ref.current, // ADD THIS
+    leftStairsMini: leftStairsMiniRef.current, // ADD THIS
+    rightStairsMini: rightStairsMiniRef.current, // ADD THIS
+    stairsMiniMobile: stairsMiniMobileRef.current, // ADD THIS
+    stairsModMobile: stairsModMobileRef.current, // ADD THIS
     objectsContainer: objectsContainerRef.current,
     object1: object1Ref.current,
     object2: object2Ref.current,
     object3: object3Ref.current,
     ellipse: ellipseRef.current,
     biggerOrbit: biggerOrbitRef.current,
-    pinkBiggerOrbit: pinkBiggerOrbitRef.current // ADD THIS
+    pinkBiggerOrbit: pinkBiggerOrbitRef.current, // ADD THIS
+    pinkOrbitInner: pinkOrbitInnerRef.current, // ADD THIS
+    stairsLeft: stairsLeftRef.current, // ADD THIS
+    stairsRight: stairsRightRef.current, // ADD THIS
+    stairsMod1Mobile: stairsMod1MobileRef.current, // ADD THIS
+    stairsMod2Mobile: stairsMod2MobileRef.current, // ADD THIS
+    text4: text4Ref.current, // ADD THIS
+    text5: text5Ref.current, // ADD THIS
+    text6: text6Ref.current // ADD THIS
   }));
 
   useEffect(() => {
@@ -2125,26 +2296,39 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       const scrollY = window.scrollY;
       const rotationAmount = scrollY * 0.1;
 
-      // Rotate both orbits with the same rotation value
+      // Rotate both orbits - use INNER refs for rotation
       if (biggerOrbitRef.current) {
         gsap.set(biggerOrbitRef.current, {
           rotation: -rotationAmount
         });
       }
 
-      if (pinkBiggerOrbitRef.current) {
-        gsap.set(pinkBiggerOrbitRef.current, {
+      if (pinkOrbitInnerRef.current) {
+        // Changed from pinkBiggerOrbitRef
+        gsap.set(pinkOrbitInnerRef.current, {
           rotation: -rotationAmount
         });
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    // Throttle scroll events for better performance
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll);
 
     // Initial call to sync rotation
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const objectSize = isMobile ? 44 : 70;
@@ -2280,20 +2464,27 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         }}
       />
 
-      {/* PINK BIGGER ORBIT - Same position as yellow orbit */}
-      <img
+      {/* PINK BIGGER ORBIT - Wrapper for position */}
+      <div
         ref={pinkBiggerOrbitRef}
-        src={isMobile ? pink_bigger_orbit_mobile : pink_bigger_orbit}
-        alt="pink bigger orbit"
         className="absolute left-1/2 -translate-x-1/2 z-[9] pointer-events-none"
         style={{
           bottom: isMobile ? "-2vh" : "-60vh",
           width: isMobile ? "100%" : "80vw",
           height: "auto",
-          opacity: 0,
-          transformOrigin: "center center"
+          opacity: 0
         }}
-      />
+      >
+        <img
+          ref={pinkOrbitInnerRef}
+          src={isMobile ? pink_bigger_orbit_mobile : pink_bigger_orbit}
+          alt="pink bigger orbit"
+          className="w-full h-auto"
+          style={{
+            transformOrigin: "center center"
+          }}
+        />
+      </div>
 
       {/* YELLOW ELLIPSE - Lower z-index so objects are visible on top */}
       <img
@@ -2583,6 +2774,119 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </>
         )}
       </div>
+      <div
+        ref={text3Ref}
+        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+        style={{
+          top: isMobile ? "30%" : "30%",
+          fontSize: isMobile ? "32px" : "48px",
+          lineHeight: "1.2",
+          color: "rgb(0, 0, 0)",
+          opacity: 0,
+          width: isMobile ? "75vw" : "60%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        with evolve, you get to build
+      </div>
+      {/* FOURTH TEXT - Desktop: 3 stacked texts */}
+      {!isMobile && (
+        <div
+          ref={text4Ref}
+          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+          style={{
+            top: "45%",
+            fontSize: "56px",
+            lineHeight: "1.2",
+            color: "rgb(0, 0, 0)",
+            opacity: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0rem"
+          }}
+        >
+          <div>real design,</div>
+          <div>real portfolio,</div>
+          <div>real career beginnings...</div>
+        </div>
+      )}
+
+      {/* STAIRS FOR DESKTOP */}
+      {!isMobile && (
+        <>
+          <img
+            ref={leftStairsMiniRef}
+            src={left_stairs_mini}
+            alt="left stairs mini"
+            className="absolute z-[10] pointer-events-none"
+            style={{
+              bottom: 0,
+              left: 0,
+              width: "auto",
+              height: "auto",
+              transform: "scale(0.6)",
+              transformOrigin: "bottom left", // for left stairs
+              // transformOrigin: "bottom right", // for right stairs
+              // maxHeight: "50vh",
+              // maxWidth: "40%",
+              // objectFit: "contain",
+              opacity: 0
+            }}
+          />
+          <img
+            ref={rightStairsMiniRef}
+            src={right_stairs_mini}
+            alt="right stairs mini"
+            className="absolute z-[10] pointer-events-none"
+            style={{
+              bottom: 0,
+              right: 0,
+              width: "auto",
+              height: "auto",
+              transform: "scale(0.6)",
+              // transformOrigin: "bottom left", // for left stairs
+              transformOrigin: "bottom right", // for right stairs
+              // maxHeight: "50vh",
+              // maxWidth: "40%",
+              // objectFit: "contain",
+              opacity: 0
+            }}
+          />
+          {/* Full stairs - replace mini stairs */}
+          <img
+            ref={stairsLeftRef}
+            src={stairs_left}
+            alt="left stairs full"
+            className="absolute z-[10] pointer-events-none"
+            style={{
+              bottom: 0,
+              left: 0,
+              width: "40%",
+              height: "auto",
+              opacity: 0
+            }}
+          />
+          <img
+            ref={stairsRightRef}
+            src={stairs_right}
+            alt="right stairs full"
+            className="absolute z-[10] pointer-events-none"
+            style={{
+              bottom: 0,
+              right: 0,
+              width: "40%",
+              height: "auto",
+              opacity: 0
+            }}
+          />
+        </>
+      )}
+
+      {/* STAIRS FOR MOBILE */}
     </section>
   );
 });

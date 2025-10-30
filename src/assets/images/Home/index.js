@@ -40,6 +40,14 @@ import right_element_eye from "./right_element_eye.svg";
 import left_element_eye from "./left_element_eye.svg";
 import left_element_eye_mobile from "./left_element_eye_mobile.svg";
 import right_element_eye_mobile from "./right_element_eye_mobile.svg";
+import left_stairs_mini from "./left_stairs_mini.svg";
+import right_stairs_mini from "./right_stairs_mini.svg";
+import stairs_mini_mobile from "./stairs_mini_mobile.svg";
+import stairs_mod_mobile from "./stairs_mod_mobile.svg";
+import stairs_mod1_mobile from "./stairs_mod1_mobile.svg";
+import stairs_mod2_mobile from "./stairs_mod2_mobile.svg";
+import stairs_left from "./stairs_left.svg";
+import stairs_right from "./stairs_right.svg";
 
 export {
   left_wall,
@@ -82,5 +90,13 @@ export {
   left_element_eye,
   left_element_eye_mobile,
   pink_bigger_orbit,
-  pink_bigger_orbit_mobile
+  pink_bigger_orbit_mobile,
+  left_stairs_mini,
+  right_stairs_mini,
+  stairs_mini_mobile,
+  stairs_mod_mobile,
+  stairs_mod1_mobile,
+  stairs_mod2_mobile,
+  stairs_left,
+  stairs_right
 };

@@ -360,7 +360,7 @@ const Home = () => {
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: "+=35000",
+          end: "+=45000",
           scrub: 0.5,
           pin: true,
           fastScrollEnd: true,
