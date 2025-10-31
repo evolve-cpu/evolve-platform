@@ -46,6 +46,17 @@ import stairs_mini_mobile from "./stairs_mini_mobile.svg";
 import stairs_mod_mobile from "./stairs_mod_mobile.svg";
 import stairs_mod1_mobile from "./stairs_mod1_mobile.svg";
 import stairs_mod2_mobile from "./stairs_mod2_mobile.svg";
+import left_stairs_mod3_mobile from "./left_stairs_mod3_mobile.svg";
+import left_stairs_mod4_mobile from "./left_stairs_mod4_mobile.svg";
+import left_stairs_mod5_mobile from "./left_stairs_mod5_mobile.svg";
+import left_stairs_mod6_mobile from "./left_stairs_mod6_mobile.svg";
+import right_stairs_mod3_mobile from "./right_stairs_mod3_mobile.svg";
+import right_stairs_mod4_mobile from "./right_stairs_mod4_mobile.svg";
+import right_stairs_mod5_mobile from "./right_stairs_mod5_mobile.svg";
+import right_stairs_mod6_mobile from "./right_stairs_mod6_mobile.svg";
+import curvey_circle_inner_part from "./curvey_circle_inner_part.svg";
+import curvey_circle_with_inner_part from "./curvey_circle_with_inner_part.svg";
+import curvey_circle_without_inner_part from "./curvey_circle_without_inner_part.svg";
 import stairs_left from "./stairs_left.svg";
 import stairs_right from "./stairs_right.svg";
 
@@ -97,6 +108,17 @@ export {
   stairs_mod_mobile,
   stairs_mod1_mobile,
   stairs_mod2_mobile,
+  left_stairs_mod3_mobile,
+  right_stairs_mod3_mobile,
+  left_stairs_mod4_mobile,
+  right_stairs_mod4_mobile,
+  left_stairs_mod5_mobile,
+  right_stairs_mod5_mobile,
+  left_stairs_mod6_mobile,
+  right_stairs_mod6_mobile,
   stairs_left,
-  stairs_right
+  stairs_right,
+  curvey_circle_inner_part,
+  curvey_circle_with_inner_part,
+  curvey_circle_without_inner_part
 };
