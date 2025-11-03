@@ -58,7 +58,17 @@ import curvey_circle_inner_part from "./curvey_circle_inner_part.svg";
 import curvey_circle_with_inner_part from "./curvey_circle_with_inner_part.svg";
 import curvey_circle_without_inner_part from "./curvey_circle_without_inner_part.svg";
 import stairs_left from "./stairs_left.svg";
+import stairs_left_1 from "./stairs_left_1.svg";
+import stairs_left_2 from "./stairs_left_2.svg";
 import stairs_right from "./stairs_right.svg";
+import stairs_right_1 from "./stairs_right_1.svg";
+import stairs_right_2 from "./stairs_right_2.svg";
+import oval_mini_1 from "./oval_mini_1.svg";
+import oval_mini_2 from "./oval_mini_2.svg";
+import oval_mini_3 from "./oval_mini_3.svg";
+import oval_1 from "./oval_1.svg";
+import oval_2 from "./oval_2.svg";
+import oval_3 from "./oval_3.svg";
 
 export {
   left_wall,
@@ -120,5 +130,15 @@ export {
   stairs_right,
   curvey_circle_inner_part,
   curvey_circle_with_inner_part,
-  curvey_circle_without_inner_part
+  curvey_circle_without_inner_part,
+  oval_1,
+  oval_2,
+  oval_3,
+  oval_mini_1,
+  oval_mini_2,
+  oval_mini_3,
+  stairs_left_1,
+  stairs_left_2,
+  stairs_right_1,
+  stairs_right_2
 };
