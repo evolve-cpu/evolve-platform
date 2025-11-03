@@ -1543,6 +1543,7 @@ import {
 } from "../../assets/images/Home";
 
 // 🎥 OPTIMIZED TIMELINE - GPU acceleration
+// 🎥 OPTIMIZED TIMELINE - GPU acceleration
 export const useScene1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
@@ -1551,7 +1552,6 @@ export const useScene1Timeline = (refs, isMobile) => {
     opacity: 1,
     scale: 1,
     transformOrigin: "center center",
-    // filter: "brightness(1) saturate(1)",
     willChange: "transform, opacity"
   })
     .set(refs.doorCloseup, {
@@ -1560,8 +1560,12 @@ export const useScene1Timeline = (refs, isMobile) => {
       willChange: "transform, opacity"
     })
     .set(refs.doorCube, { opacity: 0, willChange: "transform" })
-    .set(refs.evolveLogo, { opacity: 0, willChange: "transform, opacity" })
-    .set(refs.text, { opacity: 0, y: 30, willChange: "transform, opacity" })
+    .set(refs.evolveLogo, {
+      opacity: 0,
+      y: 0,
+      willChange: "transform, opacity"
+    })
+    .set(refs.text, { opacity: 0, y: 0, willChange: "transform, opacity" })
     .set(refs.inner, {
       scale: 1,
       y: 0,
@@ -1573,7 +1577,7 @@ export const useScene1Timeline = (refs, isMobile) => {
   tl.to(refs.inner, {
     scale: isMobile ? 3.2 : 2.6,
     y: isMobile ? "28vh" : "25vh",
-    transformOrigin: "center center",
+    transformOrigin: "center 62%",
     ease: "power2.inOut",
     duration: 3,
     force3D: true
@@ -1582,7 +1586,6 @@ export const useScene1Timeline = (refs, isMobile) => {
       refs.rainbow,
       {
         scale: isMobile ? 2.3 : 2,
-        // filter: "brightness(1.25) saturate(1.25)",
         ease: "power2.inOut",
         duration: 3,
         force3D: true
@@ -1605,7 +1608,6 @@ export const useScene1Timeline = (refs, isMobile) => {
       { opacity: 0, duration: 0.6, ease: "power1.inOut" },
       "-=0.3"
     )
-    // INSTANTLY REMOVE RAINBOW - no fade out
     .set(refs.rainbow, { opacity: 0, pointerEvents: "none" }, "-=0.4")
     .to(
       refs.doorCloseup,
@@ -1618,97 +1620,79 @@ export const useScene1Timeline = (refs, isMobile) => {
       },
       "-=0.4"
     )
-    // bounce
-    .to(
-      refs.doorCube,
-      { opacity: 1, y: isMobile ? -25 : -35, duration: 0.6, force3D: true },
-      "-=0.9"
-    )
-    .to(refs.doorCube, { y: 0, duration: 0.5, ease: "back.out", force3D: true })
+
+    // 🎬 AUTO-PLAY SECTION STARTS HERE (add extra duration for scroll buffer)
+    .to({}, { duration: 0.5 }) // Buffer to ensure scroll completes
+
+    // Cube bounce animation
     .to(refs.doorCube, {
-      y: isMobile ? -12 : -16,
-      duration: 0.4,
-      ease: "back.out",
-      force3D: true
-    })
-    .to(refs.doorCube, { y: 0, duration: 0.2, ease: "back.out", force3D: true })
-    .to({}, { duration: 0.15 })
-    .to(refs.doorCube, {
-      y: isMobile ? -50 : -70,
-      duration: 0.5,
-      ease: "power2.in",
+      opacity: 1,
+      y: isMobile ? -25 : -35,
+      duration: 0.6,
+      ease: "power2.out",
       force3D: true
     })
     .to(refs.doorCube, {
       y: 0,
-      duration: 0.6,
+      duration: 0.5,
+      ease: "back.out(2)",
+      force3D: true
+    })
+    .to(refs.doorCube, {
+      y: isMobile ? -15 : -20,
+      duration: 0.4,
+      ease: "power2.out",
+      force3D: true
+    })
+    .to(refs.doorCube, {
+      y: 0,
+      duration: 0.3,
       ease: "bounce.out",
       force3D: true
     })
-    // morph
-    .to(
-      refs.doorCube,
-      {
-        scaleY: 0.4,
-        scaleX: 1.5,
-        duration: 0.5,
-        ease: "power2.inOut",
-        force3D: true
-      },
-      "-=0.2"
-    )
+
+    // Morph: cube fades out
     .to(refs.doorCube, {
-      scaleY: 1.6,
-      scaleX: 0.4,
-      duration: 0.12,
-      ease: "power3.inOut",
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.3,
+      ease: "power2.in",
       force3D: true
     })
-    .to(refs.doorCube, {
-      scaleY: 1,
-      scaleX: 1,
-      duration: 0.08,
-      ease: "power3.out",
-      force3D: true
-    })
-    .to(
-      refs.doorCube,
-      {
-        opacity: 0,
-        scale: 0.8,
-        duration: 0.4,
-        ease: "power2.inOut",
-        force3D: true
-      },
-      "morph"
-    )
+
+    // 2D logo appears in center
     .to(
       refs.evolveLogo,
       {
         opacity: 1,
-        scale: 1.03,
+        scale: 1,
+        y: 0,
         duration: 0.4,
-        ease: "power2.inOut",
+        ease: "back.out(1.4)",
         force3D: true
       },
-      "morph"
+      "-=0.1"
     )
+
+    // Logo moves UP to make space for text (using viewport units for consistency)
     .to(refs.evolveLogo, {
-      scale: 1,
-      duration: 0.2,
+      y: isMobile ? "-12vh" : "-15vh",
+      duration: 0.6,
       ease: "power2.out",
       force3D: true
     })
-    .to(refs.evolveLogo, {
-      y: isMobile ? -120 : -200,
-      duration: 0.5,
-      ease: "power2.inOut",
-      force3D: true
-    })
+
+    // Text appears below the logo (using viewport units for consistency)
     .to(
       refs.text,
-      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", force3D: true },
-      "-=0.2"
+      {
+        opacity: 1,
+        y: isMobile ? "12vh" : "15vh",
+        duration: 0.8,
+        ease: "power2.out",
+        force3D: true
+      },
+      "-=0.4"
     );
 
   return tl;
@@ -1908,7 +1892,9 @@ const Scene1 = React.forwardRef((props, ref) => {
       </div>
 
       {/* text */}
+      {/* <div className="absolute inset-0 z-[140] flex items-center justify-center pointer-events-none pt-[35vh]"> */}
       <div className="absolute inset-0 z-[140] flex items-center justify-center pointer-events-none">
+        {/* Added pt-[35vh] to push text down and create gap below logo */}
         <h2
           ref={textRef}
           className={

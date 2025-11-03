@@ -3435,6 +3435,46 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           step4Start + 2.0
         );
       }
+
+      // Clear will-change at the end
+      tl.set(
+        [refs.oval1, refs.oval2, refs.oval3],
+        { willChange: "auto" },
+        step9Start + 1.5
+      );
+
+      // Add floating pulse effect to all three ovals
+      const floatingStart = step9Start + 1.5;
+
+      // Oval 1 - slightly slower, larger movement
+      gsap.to(refs.oval1, {
+        y: "-=15",
+        duration: 2.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: 0
+      });
+
+      // Oval 2 - medium speed
+      gsap.to(refs.oval2, {
+        y: "-=15",
+        duration: 2.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: 0
+      });
+
+      // Oval 3 - faster, smaller movement
+      gsap.to(refs.oval3, {
+        y: "-=15",
+        duration: 2.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: 0
+      });
     }
 
     // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====

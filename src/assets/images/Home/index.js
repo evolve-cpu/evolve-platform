@@ -69,6 +69,15 @@ import oval_mini_3 from "./oval_mini_3.svg";
 import oval_1 from "./oval_1.svg";
 import oval_2 from "./oval_2.svg";
 import oval_3 from "./oval_3.svg";
+import vector from "./vector.svg";
+import vector_mobile from "./vector_mobile.svg";
+import left_mountains from "./left_mountains.svg";
+import right_mountains from "./right_mountains.svg";
+import left_ribbon from "./left_ribbon.svg";
+import middle_ribbon from "./middle_ribbon.svg";
+import right_ribbon from "./right_ribbon.svg";
+import shine from "./shine.svg";
+import diamond from "./diamond.svg";
 
 export {
   left_wall,
@@ -140,5 +149,14 @@ export {
   stairs_left_1,
   stairs_left_2,
   stairs_right_1,
-  stairs_right_2
+  stairs_right_2,
+  vector,
+  vector_mobile,
+  left_mountains,
+  right_mountains,
+  left_ribbon,
+  middle_ribbon,
+  right_ribbon,
+  shine,
+  diamond
 };
