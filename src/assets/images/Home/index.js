@@ -6,6 +6,7 @@ import stairs_with_door from "./stairs_with_door.svg";
 import evolve_cube from "./evolve_cube.svg";
 import evolve_2d from "./evolve_2d.svg";
 import grain_texture from "./grain_texture.jpg";
+import noisy_background from "./noisy_background.jpg";
 import grains from "./grains.svg";
 import down_arrow from "./down_arrow.svg";
 import door_closeup from "./door_closeup.svg";
@@ -78,6 +79,14 @@ import middle_ribbon from "./middle_ribbon.svg";
 import right_ribbon from "./right_ribbon.svg";
 import shine from "./shine.svg";
 import diamond from "./diamond.svg";
+import left_hand_orange from "./left_hand_orange.svg";
+import right_hand_orange from "./right_hand_orange.svg";
+import right_hand_orange_mobile from "./right_hand_orange_mobile.svg";
+import left_hand_orange_mobile from "./left_hand_orange_mobile.svg";
+import vector_lavender from "./vector_lavender.svg";
+import vector_lavender_mobile from "./vector_lavender_mobile.svg";
+import rays from "./rays.svg";
+import rays_mobile from "./rays_mobile.svg";
 
 export {
   left_wall,
@@ -158,5 +167,14 @@ export {
   middle_ribbon,
   right_ribbon,
   shine,
-  diamond
+  diamond,
+  left_hand_orange,
+  right_hand_orange,
+  right_hand_orange_mobile,
+  left_hand_orange_mobile,
+  vector_lavender,
+  vector_lavender_mobile,
+  rays,
+  rays_mobile,
+  noisy_background
 };

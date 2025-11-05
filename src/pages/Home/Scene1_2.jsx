@@ -1,45 +1,146 @@
-// import React, { useRef, useEffect } from "react";
+// import React, { useRef } from "react";
 // import { gsap } from "gsap";
-// import {
-//   vector,
-//   vector_mobile,
-//   left_mountains,
-//   right_mountains,
-//   left_ribbon,
-//   middle_ribbon,
-//   right_ribbon,
-//   shine,
-//   diamond
-// } from "../../assets/images/Home";
-// import ThreeDoors from "../../components/Threedoors";
+// import { vector, vector_mobile } from "../../assets/images/Home";
+// import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
+// import ThreeDoorsWithRibbonDiamondMountains from "../../components/ThreeDoorsWithRibbonDiamondMountains";
+// import ThreeDoorsWithRibbonMountainsEye from "../../components/ThreeDoorsWithRibbonMountainsEye";
 
 // // Timeline hook for Scene1_2 animation - works with master timeline
 // export const useScene1_2Timeline = (refs, isMobile) => {
 //   const tl = gsap.timeline();
 
-//   // Set initial states with will-change for performance
-//   tl.set(refs.vector, {
-//     opacity: 0,
-//     y: 50,
-//     willChange: "transform, opacity"
-//   });
+//   // Set initial states
+//   tl.set(
+//     [
+//       refs.vector,
+//       refs.topText,
+//       refs.mainText,
+//       refs.noShortcutsText,
+//       refs.mentorsText,
+//       refs.doorsWithRibbon,
+//       refs.doorsComplete,
+//       refs.doorsFinal
+//     ],
+//     {
+//       opacity: 0,
+//       willChange: "transform, opacity"
+//     }
+//   );
 
-//   // Vector appears from bottom
+//   // Make vector visible immediately
+//   tl.set(refs.vector, { opacity: 1 }, 0);
+
+//   tl.set(refs.topText, { y: -20 });
+//   tl.set(refs.mainText, { y: 20 });
+
+//   // Initial appearance - Texts appear
 //   tl.to(
-//     refs.vector,
+//     refs.topText,
 //     {
 //       opacity: 1,
 //       y: 0,
-//       duration: 1.2,
+//       duration: 0.8,
 //       ease: "power2.out"
 //     },
 //     0
 //   );
 
-//   // TODO: Add more animations here as you build the scene
+//   tl.to(
+//     refs.mainText,
+//     {
+//       opacity: 1,
+//       y: 0,
+//       duration: 0.8,
+//       ease: "power2.out"
+//     },
+//     0.2
+//   );
 
-//   // Clear will-change at the end for performance
-//   tl.set(refs.vector, { willChange: "auto" }, "+=0.5");
+//   // Show ThreeDoorsWithRibbon at bottom
+//   tl.to(
+//     refs.doorsWithRibbon,
+//     {
+//       opacity: 1,
+//       duration: 0.8,
+//       ease: "power2.out"
+//     },
+//     0.4
+//   );
+
+//   // SECOND SCROLL: Text change and doors swap
+//   tl.add("secondScroll", "+=0.5");
+
+//   // Fade out "three levels"
+//   tl.to(
+//     refs.mainText,
+//     {
+//       opacity: 0,
+//       duration: 0.4,
+//       ease: "power2.inOut"
+//     },
+//     "secondScroll"
+//   );
+
+//   // Fade in "no shortcuts"
+//   tl.to(
+//     refs.noShortcutsText,
+//     {
+//       opacity: 1,
+//       duration: 0.4,
+//       ease: "power2.inOut"
+//     },
+//     "secondScroll+=0.4"
+//   );
+
+//   // Instantly swap doors (0 duration)
+//   tl.set(refs.doorsWithRibbon, { opacity: 0 }, "secondScroll+=0.4");
+//   tl.set(refs.doorsComplete, { opacity: 1 }, "secondScroll+=0.4");
+
+//   // THIRD SCROLL: Text change and final doors swap
+//   tl.add("thirdScroll", "+=0.5");
+
+//   // Fade out "no shortcuts"
+//   tl.to(
+//     refs.noShortcutsText,
+//     {
+//       opacity: 0,
+//       duration: 0.4,
+//       ease: "power2.inOut"
+//     },
+//     "thirdScroll"
+//   );
+
+//   // Fade in "mentors who push your limits"
+//   tl.to(
+//     refs.mentorsText,
+//     {
+//       opacity: 1,
+//       duration: 0.4,
+//       ease: "power2.inOut"
+//     },
+//     "thirdScroll+=0.4"
+//   );
+
+//   // Instantly swap doors to final state
+//   tl.set(refs.doorsComplete, { opacity: 0 }, "thirdScroll+=0.4");
+//   tl.set(refs.doorsFinal, { opacity: 1 }, "thirdScroll+=0.4");
+
+//   // Clear will-change
+//   tl.set(
+//     [
+//       refs.topText,
+//       refs.mainText,
+//       refs.noShortcutsText,
+//       refs.mentorsText,
+//       refs.doorsWithRibbon,
+//       refs.doorsComplete,
+//       refs.doorsFinal
+//     ],
+//     {
+//       willChange: "auto"
+//     },
+//     "+=0.5"
+//   );
 
 //   return tl;
 // };
@@ -51,18 +152,25 @@
 //   // Main refs
 //   const containerRef = useRef(null);
 //   const vectorRef = useRef(null);
-
-//   // TODO: Add more refs as needed:
-//   // const element1Ref = useRef(null);
-//   // const textRef = useRef(null);
+//   const topTextRef = useRef(null);
+//   const mainTextRef = useRef(null);
+//   const noShortcutsTextRef = useRef(null);
+//   const mentorsTextRef = useRef(null);
+//   const doorsWithRibbonRef = useRef(null);
+//   const doorsCompleteRef = useRef(null);
+//   const doorsFinalRef = useRef(null);
 
 //   // Expose refs to parent
 //   React.useImperativeHandle(ref, () => ({
 //     container: containerRef.current,
-//     vector: vectorRef.current
-//     // TODO: Add all your refs here as you create them
-//     // element1: element1Ref.current,
-//     // text: textRef.current,
+//     vector: vectorRef.current,
+//     topText: topTextRef.current,
+//     mainText: mainTextRef.current,
+//     noShortcutsText: noShortcutsTextRef.current,
+//     mentorsText: mentorsTextRef.current,
+//     doorsWithRibbon: doorsWithRibbonRef.current,
+//     doorsComplete: doorsCompleteRef.current,
+//     doorsFinal: doorsFinalRef.current
 //   }));
 
 //   return (
@@ -70,27 +178,134 @@
 //       ref={containerRef}
 //       className="relative w-full h-screen overflow-hidden bg-evolve-lavender-indigo"
 //     >
+//       {/* Top Text Section */}
+//       <div
+//         className="absolute left-0 right-0 text-center z-20"
+//         style={{ top: "10%" }}
+//       >
+//         <p
+//           ref={topTextRef}
+//           className="text-white font-extrabold mb-4 px-4 lowercase"
+//           style={{
+//             fontSize: isMobile ? "24px" : "32px",
+//             opacity: 0,
+//             lineHeight: 1
+//           }}
+//         >
+//           the toolkit gets you started. the course is where it gets serious:
+//         </p>
+
+//         {/* Container for overlapping text elements */}
+//         <div
+//           className="relative"
+//           style={{ height: isMobile ? "48px" : "96px" }}
+//         >
+//           {/* "three levels" text */}
+//           <h2
+//             ref={mainTextRef}
+//             className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+//             style={{
+//               fontSize: isMobile ? "48px" : "96px",
+//               opacity: 0,
+//               top: 0,
+//               lineHeight: 1
+//             }}
+//           >
+//             three levels
+//           </h2>
+
+//           {/* "no shortcuts" text */}
+//           <h2
+//             ref={noShortcutsTextRef}
+//             className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+//             style={{
+//               fontSize: isMobile ? "48px" : "96px",
+//               opacity: 0,
+//               top: 0,
+//               lineHeight: 1
+//             }}
+//           >
+//             no shortcuts
+//           </h2>
+
+//           {/* "mentors who push your limits" text */}
+//           <h2
+//             ref={mentorsTextRef}
+//             className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+//             style={{
+//               fontSize: isMobile ? "48px" : "96px",
+//               opacity: 0,
+//               top: 0,
+//               lineHeight: 1
+//             }}
+//           >
+//             mentors who push your limits
+//           </h2>
+//         </div>
+//       </div>
+
+//       {/* ThreeDoorsWithRibbon - First state */}
+//       <div
+//         ref={doorsWithRibbonRef}
+//         className="absolute left-1/2 z-10"
+//         style={{
+//           bottom: 0,
+//           opacity: 0,
+//           transform: isMobile
+//             ? "translateX(-50%) scale(0.6)"
+//             : "translateX(-50%) scale(0.8)",
+//           transformOrigin: "bottom center"
+//         }}
+//       >
+//         <ThreeDoorsWithRibbon />
+//       </div>
+
+//       {/* ThreeDoorsWithRibbonDiamondMountains - Second state */}
+//       <div
+//         ref={doorsCompleteRef}
+//         className="absolute left-1/2 z-11"
+//         style={{
+//           bottom: 0,
+//           opacity: 0,
+//           transform: isMobile
+//             ? "translateX(-50%) scale(0.6)"
+//             : "translateX(-50%) scale(0.8)",
+//           transformOrigin: "bottom center"
+//         }}
+//       >
+//         <ThreeDoorsWithRibbonDiamondMountains />
+//       </div>
+
+//       {/* ThreeDoorsWithRibbonMountainsEye - Third state (final) */}
+//       <div
+//         ref={doorsFinalRef}
+//         className="absolute left-1/2 z-12"
+//         style={{
+//           bottom: 0,
+//           opacity: 0,
+//           transform: isMobile
+//             ? "translateX(-50%) scale(0.6)"
+//             : "translateX(-50%) scale(0.8)",
+//           transformOrigin: "bottom center"
+//         }}
+//       >
+//         <ThreeDoorsWithRibbonMountainsEye />
+//       </div>
+
 //       {/* Vector at bottom */}
 //       <img
 //         ref={vectorRef}
 //         src={isMobile ? vector_mobile : vector}
 //         alt="vector"
-//         className="absolute left-1/2 -translate-x-1/2 z-[10] pointer-events-none"
+//         className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
 //         style={{
 //           bottom: 0,
-//           width: isMobile ? "100%" : "100%",
+//           width: "100%",
 //           height: "auto",
-//           opacity: 0
+//           opacity: 1,
+//           zIndex: 9
 //         }}
 //       />
-
-//       {/* TODO: Add your scene elements here */}
-
-//       {/* Mobile-specific elements */}
-//       {isMobile && <>{/* Add mobile-only elements here */}</>}
-
-//       {/* Desktop-specific elements */}
-//       {!isMobile && <>{/* Add desktop-only elements here */}</>}
 //     </section>
 //   );
 // });
@@ -98,286 +313,265 @@
 // Scene1_2.displayName = "Scene1_2";
 // export default Scene1_2;
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { gsap } from "gsap";
 import {
   vector,
   vector_mobile,
-  left_mountains,
-  right_mountains,
-  left_ribbon,
-  middle_ribbon,
-  right_ribbon,
-  shine,
-  diamond
+  vector_lavender,
+  vector_lavender_mobile,
+  rays,
+  left_hand_orange,
+  left_hand_orange_mobile,
+  right_hand_orange,
+  right_hand_orange_mobile,
+  rays_mobile
 } from "../../assets/images/Home";
-import ThreeDoors from "../../components/Threedoors";
+import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
+import ThreeDoorsWithRibbonDiamondMountains from "../../components/ThreeDoorsWithRibbonDiamondMountains";
+import ThreeDoorsWithRibbonMountainsEye from "../../components/ThreeDoorsWithRibbonMountainsEye";
 
 // Timeline hook for Scene1_2 animation - works with master timeline
 export const useScene1_2Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
-  if (isMobile) {
-    // Mobile animations - TODO
-    tl.set(refs.vector, {
-      opacity: 0,
-      y: 50,
-      willChange: "transform, opacity"
-    });
-
-    tl.to(
+  // Set initial states
+  tl.set(
+    [
       refs.vector,
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "power2.out"
-      },
-      0
-    );
-
-    tl.set(refs.vector, { willChange: "auto" }, "+=0.5");
-  } else {
-    // DESKTOP ANIMATIONS
-
-    // Set initial states
-    tl.set(refs.vector, {
+      refs.vectorLavender,
+      refs.topText,
+      refs.mainText,
+      refs.noShortcutsText,
+      refs.mentorsText,
+      refs.finalTopText,
+      refs.finalBottomText,
+      refs.waitlistButton,
+      refs.doorsWithRibbon,
+      refs.doorsComplete,
+      refs.doorsFinal,
+      refs.rays,
+      refs.leftHand,
+      refs.rightHand
+    ],
+    {
       opacity: 0,
-      y: 50,
       willChange: "transform, opacity"
-    })
-      .set(refs.text1, {
-        opacity: 0,
-        y: 30,
-        willChange: "transform, opacity"
-      })
-      .set(refs.text2, {
-        opacity: 0,
-        y: 30,
-        willChange: "transform, opacity"
-      })
-      .set(refs.threeDoors, {
-        opacity: 0,
-        scale: 0.9,
-        willChange: "transform, opacity"
-      })
-      .set(refs.leftRibbon, {
-        opacity: 0,
-        x: -200,
-        willChange: "transform, opacity"
-      })
-      .set(refs.middleRibbon, {
-        opacity: 0,
-        y: 50,
-        willChange: "transform, opacity"
-      })
-      .set(refs.rightRibbon, {
-        opacity: 0,
-        x: 200,
-        willChange: "transform, opacity"
-      })
-      .set(refs.diamond, {
-        opacity: 0,
-        rotateY: -180,
-        scale: 0.8,
-        willChange: "transform, opacity"
-      })
-      .set([refs.leftMountains, refs.rightMountains], {
-        opacity: 0,
-        scale: 0.8,
-        willChange: "transform, opacity"
-      });
+    }
+  );
 
-    // PHASE 1: Vector and Text1 appear
-    tl.to(
+  // Make initial vector visible
+  tl.set(refs.vector, { opacity: 1 }, 0);
+  tl.set(refs.topText, { y: -20 });
+  tl.set(refs.mainText, { y: 20 });
+
+  // Initial appearance - Texts appear
+  tl.to(
+    refs.topText,
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    0
+  );
+
+  tl.to(
+    refs.mainText,
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    0.2
+  );
+
+  // Show ThreeDoorsWithRibbon at bottom
+  tl.to(
+    refs.doorsWithRibbon,
+    {
+      opacity: 1,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    0.4
+  );
+
+  // SECOND SCROLL: Text change and doors swap
+  tl.add("secondScroll", "+=0.5");
+
+  tl.to(
+    refs.mainText,
+    {
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.inOut"
+    },
+    "secondScroll"
+  );
+
+  tl.to(
+    refs.noShortcutsText,
+    {
+      opacity: 1,
+      duration: 0.4,
+      ease: "power2.inOut"
+    },
+    "secondScroll+=0.4"
+  );
+
+  tl.set(refs.doorsWithRibbon, { opacity: 0 }, "secondScroll+=0.4");
+  tl.set(refs.doorsComplete, { opacity: 1 }, "secondScroll+=0.4");
+
+  // THIRD SCROLL: Text change and final doors swap
+  tl.add("thirdScroll", "+=0.5");
+
+  tl.to(
+    refs.noShortcutsText,
+    {
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.inOut"
+    },
+    "thirdScroll"
+  );
+
+  tl.to(
+    refs.mentorsText,
+    {
+      opacity: 1,
+      duration: 0.4,
+      ease: "power2.inOut"
+    },
+    "thirdScroll+=0.4"
+  );
+
+  tl.set(refs.doorsComplete, { opacity: 0 }, "thirdScroll+=0.4");
+  tl.set(refs.doorsFinal, { opacity: 1 }, "thirdScroll+=0.4");
+
+  // FOURTH SCROLL: Background change, vector change, and final scene
+  tl.add("fourthScroll", "+=0.5");
+
+  // Change background color - use set instead of to for instant change
+  tl.set(
+    refs.divcontainer,
+    {
+      backgroundColor: "#ffd007" // This is evolve-inchworm from your tailwind config
+    },
+    "fourthScroll+=0.5"
+  );
+
+  // Fade out old texts
+  tl.to(
+    [refs.topText, refs.mentorsText],
+    {
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.inOut"
+    },
+    "fourthScroll"
+  );
+
+  // Swap vectors
+  tl.set(refs.vector, { opacity: 0 }, "fourthScroll+=0.3");
+  tl.set(refs.vectorLavender, { opacity: 1 }, "fourthScroll+=0.3");
+
+  // Show rays behind
+  tl.to(
+    refs.rays,
+    {
+      opacity: 1,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "fourthScroll+=0.3"
+  );
+
+  // Move doors and vector down
+  tl.to(
+    [refs.doorsFinal, refs.vectorLavender],
+    {
+      y: isMobile ? 100 : 150,
+      duration: 1,
+      ease: "power2.out"
+    },
+    "fourthScroll+=0.4"
+  );
+
+  // Show hands
+  tl.to(
+    [refs.leftHand, refs.rightHand],
+    {
+      opacity: 1,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "fourthScroll+=0.5"
+  );
+
+  // Show final texts
+  tl.to(
+    refs.finalTopText,
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "fourthScroll+=0.6"
+  );
+
+  tl.to(
+    refs.finalBottomText,
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "fourthScroll+=0.7"
+  );
+
+  // Show waitlist button
+  tl.to(
+    refs.waitlistButton,
+    {
+      opacity: 1,
+      scale: 1,
+      duration: 0.6,
+      ease: "back.out(1.7)"
+    },
+    "fourthScroll+=0.9"
+  );
+
+  // Clear will-change
+  tl.set(
+    [
+      refs.container,
+      refs.divcontainer,
       refs.vector,
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "power2.out"
-      },
-      0
-    ).to(
-      refs.text1,
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      },
-      0.5
-    );
-
-    // PHASE 2: "three levels" text appears
-    tl.to(
-      refs.text2,
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      },
-      "+=0.5"
-    );
-
-    // PHASE 3: Three doors appear
-    tl.to(
-      refs.threeDoors,
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 1.0,
-        ease: "back.out(1.2)"
-      },
-      "+=0.3"
-    );
-
-    // PHASE 4: Ribbons appear - left comes from left screen, middle from bottom, right goes to right screen
-    tl.to(
-      refs.leftRibbon,
-      {
-        opacity: 1,
-        x: 0,
-        duration: 1.0,
-        ease: "power2.out"
-      },
-      "+=0.3"
-    )
-      .to(
-        refs.middleRibbon,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        "-=0.5"
-      )
-      .to(
-        refs.rightRibbon,
-        {
-          opacity: 1,
-          x: 0,
-          duration: 1.0,
-          ease: "power2.out"
-        },
-        "-=0.8"
-      );
-
-    // PHASE 5: Scroll transition - Text changes to "no shortcuts"
-    const textChangeStart = "+=2.0";
-
-    // Fade out "three levels"
-    tl.to(
-      refs.text2,
-      {
-        opacity: 0,
-        y: -20,
-        duration: 0.6,
-        ease: "power2.in"
-      },
-      textChangeStart
-    );
-
-    // Change text2 content and fade in "no shortcuts"
-    tl.call(
-      () => {
-        if (refs.text2) {
-          refs.text2.textContent = "no shortcuts";
-        }
-      },
-      null,
-      textChangeStart + 0.6
-    );
-
-    tl.to(
-      refs.text2,
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      },
-      textChangeStart + 0.8
-    );
-
-    // PHASE 6: Mountains appear inside doors
-    tl.to(
-      refs.leftMountains,
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 1.0,
-        ease: "power2.out"
-      },
-      "+=0.5"
-    ).to(
-      refs.rightMountains,
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 1.0,
-        ease: "power2.out"
-      },
-      "-=0.8"
-    );
-
-    // PHASE 7: Diamond appears with flip animation
-    tl.to(
-      refs.diamond,
-      {
-        opacity: 1,
-        rotateY: 0,
-        scale: 1,
-        duration: 1.2,
-        ease: "back.out(1.5)"
-      },
-      "+=0.5"
-    );
-
-    // PHASE 8: Shine animation (continuous blink)
-    tl.to(
-      refs.shine,
-      {
-        opacity: 1,
-        duration: 0.3,
-        ease: "power2.out"
-      },
-      "-=0.3"
-    );
-
-    // Create continuous shine blink after initial animations
-    tl.call(() => {
-      if (refs.shine) {
-        gsap.to(refs.shine, {
-          opacity: 0.3,
-          duration: 0.8,
-          ease: "sine.inOut",
-          repeat: -1,
-          yoyo: true
-        });
-      }
-    });
-
-    // Clear will-change at the end for performance
-    tl.set(
-      [
-        refs.vector,
-        refs.text1,
-        refs.text2,
-        refs.threeDoors,
-        refs.leftRibbon,
-        refs.middleRibbon,
-        refs.rightRibbon,
-        refs.diamond,
-        refs.leftMountains,
-        refs.rightMountains
-      ],
-      { willChange: "auto" },
-      "+=0.5"
-    );
-  }
+      refs.vectorLavender,
+      refs.topText,
+      refs.mainText,
+      refs.noShortcutsText,
+      refs.mentorsText,
+      refs.finalTopText,
+      refs.finalBottomText,
+      refs.waitlistButton,
+      refs.doorsWithRibbon,
+      refs.doorsComplete,
+      refs.doorsFinal,
+      refs.rays,
+      refs.leftHand,
+      refs.rightHand
+    ],
+    {
+      willChange: "auto"
+    },
+    "+=0.5"
+  );
 
   return tl;
 };
@@ -388,40 +582,42 @@ const Scene1_2 = React.forwardRef((props, ref) => {
 
   // Main refs
   const containerRef = useRef(null);
+  const divcontainerRef = useRef(null);
   const vectorRef = useRef(null);
-  const text1Ref = useRef(null);
-  const text2Ref = useRef(null);
-  const threeDoorsRef = useRef(null);
-  const leftDoorRef = useRef(null);
-  const middleDoorRef = useRef(null);
-  const rightDoorRef = useRef(null);
-  const leftRibbonRef = useRef(null);
-  const middleRibbonRef = useRef(null);
-  const rightRibbonRef = useRef(null);
-  const leftMountainsRef = useRef(null);
-  const rightMountainsRef = useRef(null);
-  const diamondContainerRef = useRef(null);
-  const diamondRef = useRef(null);
-  const shineRef = useRef(null);
+  const vectorLavenderRef = useRef(null);
+  const topTextRef = useRef(null);
+  const mainTextRef = useRef(null);
+  const noShortcutsTextRef = useRef(null);
+  const mentorsTextRef = useRef(null);
+  const finalTopTextRef = useRef(null);
+  const finalBottomTextRef = useRef(null);
+  const waitlistButtonRef = useRef(null);
+  const doorsWithRibbonRef = useRef(null);
+  const doorsCompleteRef = useRef(null);
+  const doorsFinalRef = useRef(null);
+  const raysRef = useRef(null);
+  const leftHandRef = useRef(null);
+  const rightHandRef = useRef(null);
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
     container: containerRef.current,
+    divcontainer: divcontainerRef.current,
     vector: vectorRef.current,
-    text1: text1Ref.current,
-    text2: text2Ref.current,
-    threeDoors: threeDoorsRef.current,
-    leftDoor: leftDoorRef.current,
-    middleDoor: middleDoorRef.current,
-    rightDoor: rightDoorRef.current,
-    leftRibbon: leftRibbonRef.current,
-    middleRibbon: middleRibbonRef.current,
-    rightRibbon: rightRibbonRef.current,
-    leftMountains: leftMountainsRef.current,
-    rightMountains: rightMountainsRef.current,
-    diamondContainer: diamondContainerRef.current,
-    diamond: diamondRef.current,
-    shine: shineRef.current
+    vectorLavender: vectorLavenderRef.current,
+    topText: topTextRef.current,
+    mainText: mainTextRef.current,
+    noShortcutsText: noShortcutsTextRef.current,
+    mentorsText: mentorsTextRef.current,
+    finalTopText: finalTopTextRef.current,
+    finalBottomText: finalBottomTextRef.current,
+    waitlistButton: waitlistButtonRef.current,
+    doorsWithRibbon: doorsWithRibbonRef.current,
+    doorsComplete: doorsCompleteRef.current,
+    doorsFinal: doorsFinalRef.current,
+    rays: raysRef.current,
+    leftHand: leftHandRef.current,
+    rightHand: rightHandRef.current
   }));
 
   return (
@@ -429,187 +625,250 @@ const Scene1_2 = React.forwardRef((props, ref) => {
       ref={containerRef}
       className="relative w-full h-screen overflow-hidden bg-evolve-lavender-indigo"
     >
-      {/* Vector at bottom */}
-      <img
-        ref={vectorRef}
-        src={isMobile ? vector_mobile : vector}
-        alt="vector"
-        className="absolute left-1/2 -translate-x-1/2 z-[10] pointer-events-none"
-        style={{
-          bottom: 0,
-          width: isMobile ? "100%" : "100%",
-          height: "auto",
-          opacity: 0
-        }}
-      />
+      {/* <div ref={divcontainerRef} className="bg-evolve-lavender-indigo"> */}
+      <div
+        ref={divcontainerRef}
+        className="absolute inset-0 w-full h-full bg-evolve-lavender-indigo transition-colors"
+      >
+        {/* Rays background - half visible */}
+        <img
+          ref={raysRef}
+          src={isMobile ? rays_mobile : rays}
+          alt="rays"
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{
+            top: 0,
+            transform: isMobile
+              ? "translate(-50%, 0%)"
+              : "translate(-50%, -50%)",
+            width: isMobile ? "200%" : "300%",
+            //   width: "auto",
+            height: "auto",
+            opacity: 0,
+            zIndex: 1
+          }}
+        />
 
-      {/* Mobile-specific elements */}
-      {isMobile && <>{/* Add mobile-only elements here */}</>}
-
-      {/* Desktop-specific elements */}
-      {!isMobile && (
-        <>
-          {/* Text 1: "The toolkit gets you started..." */}
-          <div
-            ref={text1Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-white"
+        {/* Top Text Section - Initial state */}
+        <div
+          className="absolute left-0 right-0 text-center z-20"
+          style={{ top: "10%" }}
+        >
+          <p
+            ref={topTextRef}
+            className="text-white font-extrabold mb-4 px-4 lowercase"
             style={{
-              top: "15%",
-              fontSize: "32px",
-              lineHeight: "1.2",
-              maxWidth: "90%",
-              opacity: 0
+              fontSize: isMobile ? "24px" : "32px",
+              opacity: 0,
+              lineHeight: 1
             }}
           >
-            The toolkit gets you started. The course is where it gets serious:
-          </div>
+            the toolkit gets you started. the course is where it gets serious:
+          </p>
 
-          {/* Text 2: "three levels" (will change to "no shortcuts") */}
+          {/* Container for overlapping text elements */}
           <div
-            ref={text2Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-white"
-            style={{
-              top: "25%",
-              fontSize: "96px",
-              lineHeight: "1.2",
-              opacity: 0
-            }}
+            className="relative"
+            style={{ height: isMobile ? "48px" : "96px" }}
           >
-            three levels
-          </div>
-
-          {/* Three Doors Container */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 z-[15]"
-            style={{
-              bottom: 0,
-              width: "auto",
-              height: "50vh"
-            }}
-          >
-            <ThreeDoors
-              ref={threeDoorsRef}
-              leftRef={leftDoorRef}
-              middleRef={middleDoorRef}
-              rightRef={rightDoorRef}
-            />
-          </div>
-
-          {/* Ribbons - positioned at bottom-0 */}
-          <div className="absolute bottom-0 left-0 w-full h-full z-[16] pointer-events-none">
-            {/* Left Ribbon - comes from left screen into left door */}
-            <img
-              ref={leftRibbonRef}
-              src={left_ribbon}
-              alt="left ribbon"
-              className="absolute"
+            {/* "three levels" text */}
+            <h2
+              ref={mainTextRef}
+              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
               style={{
-                bottom: 0,
-                left: "15%",
-                width: "clamp(80px, 8vw, 120px)",
-                height: "auto",
-                opacity: 0
-              }}
-            />
-            {/* Middle Ribbon - in middle door */}
-            <img
-              ref={middleRibbonRef}
-              src={middle_ribbon}
-              alt="middle ribbon"
-              className="absolute"
-              style={{
-                bottom: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "clamp(80px, 8vw, 120px)",
-                height: "auto",
-                opacity: 0
-              }}
-            />
-            {/* Right Ribbon - goes from right door to right screen */}
-            <img
-              ref={rightRibbonRef}
-              src={right_ribbon}
-              alt="right ribbon"
-              className="absolute"
-              style={{
-                bottom: 0,
-                right: "15%",
-                width: "clamp(80px, 8vw, 120px)",
-                height: "auto",
-                opacity: 0
-              }}
-            />
-          </div>
-
-          {/* Left Mountains - inside left door */}
-          <img
-            ref={leftMountainsRef}
-            src={left_mountains}
-            alt="left mountains"
-            className="absolute z-[14] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: "17%",
-              width: "clamp(120px, 12vw, 200px)",
-              height: "auto",
-              opacity: 0
-            }}
-          />
-
-          {/* Right Mountains - inside right door */}
-          <img
-            ref={rightMountainsRef}
-            src={right_mountains}
-            alt="right mountains"
-            className="absolute z-[14] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: "17%",
-              width: "clamp(120px, 12vw, 200px)",
-              height: "auto",
-              opacity: 0
-            }}
-          />
-
-          {/* Diamond Container - positioned at top of middle door */}
-          <div
-            ref={diamondContainerRef}
-            className="absolute left-1/2 -translate-x-1/2 z-[25]"
-            style={{
-              top: "35%",
-              width: "clamp(120px, 10vw, 180px)",
-              height: "auto",
-              perspective: "1000px"
-            }}
-          >
-            {/* Diamond with flip animation */}
-            <div
-              ref={diamondRef}
-              className="relative w-full h-full"
-              style={{
-                transformStyle: "preserve-3d",
-                opacity: 0
+                fontSize: isMobile ? "48px" : "96px",
+                opacity: 0,
+                top: 0,
+                lineHeight: 1
               }}
             >
-              <img src={diamond} alt="diamond" className="w-full h-auto" />
+              three levels
+            </h2>
 
-              {/* Shine effect inside diamond */}
-              <img
-                ref={shineRef}
-                src={shine}
-                alt="shine"
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                style={{
-                  width: "60%",
-                  height: "auto",
-                  opacity: 0
-                }}
-              />
-            </div>
+            {/* "no shortcuts" text */}
+            <h2
+              ref={noShortcutsTextRef}
+              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+              style={{
+                fontSize: isMobile ? "48px" : "96px",
+                opacity: 0,
+                top: 0,
+                lineHeight: 1
+              }}
+            >
+              no shortcuts
+            </h2>
+
+            {/* "mentors who push your limits" text */}
+            <h2
+              ref={mentorsTextRef}
+              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+              style={{
+                fontSize: isMobile ? "48px" : "96px",
+                opacity: 0,
+                top: 0,
+                lineHeight: 1
+              }}
+            >
+              mentors who push your limits
+            </h2>
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Final Text Section - New state */}
+        <div
+          className="absolute left-0 right-0 text-center z-20"
+          style={{ top: "15%" }}
+        >
+          <p
+            ref={finalTopTextRef}
+            className="text-black font-extrabold mb-4 px-4 lowercase"
+            style={{
+              fontSize: isMobile ? "24px" : "32px",
+              opacity: 0,
+              lineHeight: 1
+            }}
+          >
+            The toolkit gets you started.
+          </p>
+
+          <h2
+            ref={finalBottomTextRef}
+            className="text-black font-extrabold px-4 lowercase mb-8"
+            style={{
+              fontSize: isMobile ? "48px" : "96px",
+              opacity: 0,
+              lineHeight: 0.8
+            }}
+          >
+            and a paid internship that proves you belong.
+          </h2>
+
+          {/* Waitlist Button */}
+          <button
+            ref={waitlistButtonRef}
+            className="px-8 py-4 bg-black text-white font-bold text-lg rounded-[16px] lowercase"
+            style={{
+              opacity: 0,
+              transform: "scale(0.8)",
+              // boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+              boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease"
+            }}
+          >
+            join the waitlist
+          </button>
+        </div>
+
+        {/* Left Hand */}
+        <img
+          ref={leftHandRef}
+          src={isMobile ? left_hand_orange_mobile : left_hand_orange}
+          alt="left hand"
+          className="absolute pointer-events-none z-15"
+          style={{
+            bottom: isMobile ? "10%" : "5%",
+            left: 0,
+            //   right: isMobile ? 0 : "auto",
+            width: isMobile ? "40%" : "auto",
+            height: "auto",
+            opacity: 0
+          }}
+        />
+
+        {/* Right Hand */}
+        <img
+          ref={rightHandRef}
+          src={isMobile ? right_hand_orange_mobile : right_hand_orange}
+          alt="right hand"
+          className="absolute pointer-events-none z-15"
+          style={{
+            bottom: isMobile ? "10%" : "5%",
+            right: 0,
+            width: isMobile ? "40%" : "auto",
+            height: "auto",
+            opacity: 0
+          }}
+        />
+
+        {/* ThreeDoorsWithRibbon - First state */}
+        <div
+          ref={doorsWithRibbonRef}
+          className="absolute left-1/2 z-10"
+          style={{
+            bottom: 0,
+            opacity: 0,
+            transform: isMobile
+              ? "translateX(-50%) scale(0.6)"
+              : "translateX(-50%) scale(0.8)",
+            transformOrigin: "bottom center"
+          }}
+        >
+          <ThreeDoorsWithRibbon />
+        </div>
+
+        {/* ThreeDoorsWithRibbonDiamondMountains - Second state */}
+        <div
+          ref={doorsCompleteRef}
+          className="absolute left-1/2 z-11"
+          style={{
+            bottom: 0,
+            opacity: 0,
+            transform: isMobile
+              ? "translateX(-50%) scale(0.6)"
+              : "translateX(-50%) scale(0.8)",
+            transformOrigin: "bottom center"
+          }}
+        >
+          <ThreeDoorsWithRibbonDiamondMountains />
+        </div>
+
+        {/* ThreeDoorsWithRibbonMountainsEye - Third state (final) */}
+        <div
+          ref={doorsFinalRef}
+          className="absolute left-1/2 z-12"
+          style={{
+            bottom: 0,
+            opacity: 0,
+            transform: isMobile
+              ? "translateX(-50%) scale(0.6)"
+              : "translateX(-50%) scale(0.8)",
+            transformOrigin: "bottom center"
+          }}
+        >
+          <ThreeDoorsWithRibbonMountainsEye />
+        </div>
+
+        {/* Initial Vector at bottom */}
+        <img
+          ref={vectorRef}
+          src={isMobile ? vector_mobile : vector}
+          alt="vector"
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{
+            bottom: 0,
+            width: "100%",
+            height: "auto",
+            opacity: 1,
+            zIndex: 9
+          }}
+        />
+
+        {/* Lavender Vector - appears later */}
+        <img
+          ref={vectorLavenderRef}
+          src={isMobile ? vector_lavender_mobile : vector_lavender}
+          alt="vector lavender"
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{
+            bottom: 0,
+            width: "100%",
+            height: "auto",
+            opacity: 0,
+            zIndex: 9
+          }}
+        />
+      </div>
     </section>
   );
 });
