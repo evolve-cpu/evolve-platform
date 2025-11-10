@@ -290,15 +290,16 @@ import gsap from "gsap";
 
 import {
   evolve_logo_nav as evolve_logo,
-  evolve_logo_mobile, // NEW: mobile logo
+  evolve_logo_mobile, // mobile logo
   three_wavy_lines,
   three_wavy_lines_pink,
   marquee_vector_1,
   evolve_text,
-  marquee_vector_2
+  marquee_vector_2,
+  cross_line_pink
 } from "../assets/images/Nav";
 
-// set both corners similar (adjust if you want a tiny asymmetry)
+// both bottom corners similar
 const MIXED_BL = 16;
 const MIXED_BR = 16;
 
@@ -308,10 +309,11 @@ const Navigation = () => {
 
   const outerRef = useRef(null);
   const navbarRef = useRef(null);
-  const barRowRef = useRef(null);
 
-  const menuBoxRef = useRef(null); // the UNDER-navbar panel (z-40)
-  const menuContentRef = useRef(null); // inner content wrapper (gets padding-top = navbar height)
+  // underlay (full wrapper), desktop panel (yellow 40%), and content wrapper
+  const menuUnderlayRef = useRef(null);
+  const menuPanelRef = useRef(null);
+  const menuContentRef = useRef(null);
 
   const marqueeTrackRef = useRef(null);
   const marqueeGroupRef = useRef(null);
@@ -331,8 +333,10 @@ const Navigation = () => {
   ];
 
   const isActive = (p) => location.pathname === p;
+  const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
-  // measure navbar height → set padding on the behind panel so content starts below the bar
+  // measure navbar height → for mobile, push menu content below it
+  // measure navbar height → push menu content below the navbar on all breakpoints
   useEffect(() => {
     const measure = () => {
       if (!outerRef.current) return;
@@ -351,22 +355,49 @@ const Navigation = () => {
     };
   }, []);
 
-  // slide DOWN panel from the top of the screen (behind navbar)
+  // menu animation:
+  // - mobile: slide the UNDERLAY from top (yPercent)
+  // - desktop: slide the LEFT PANEL from left (xPercent)
   useEffect(() => {
-    if (!menuBoxRef.current) return;
+    const underlay = menuUnderlayRef.current;
+    const panel = menuPanelRef.current;
+    if (!underlay || !panel) return;
+
+    // reset transforms before each open
+    gsap.set([underlay, panel], { clearProps: "transform,opacity" });
+
     if (menuOpen) {
-      gsap.fromTo(
-        menuBoxRef.current,
-        { yPercent: -100, opacity: 0 },
-        { yPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
-      );
+      if (isDesktop()) {
+        // desktop: show underlay instantly, slide in the panel from the left
+        gsap.set(underlay, { opacity: 1 });
+        gsap.fromTo(
+          panel,
+          { xPercent: -100, opacity: 1 },
+          { xPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+        );
+      } else {
+        // mobile: slide whole underlay from the top (behind navbar)
+        gsap.fromTo(
+          underlay,
+          { yPercent: -100, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+        );
+      }
     } else {
-      gsap.to(menuBoxRef.current, {
-        yPercent: -100,
-        opacity: 0,
-        duration: 0.45,
-        ease: "power2.in"
-      });
+      if (isDesktop()) {
+        gsap.to(panel, {
+          xPercent: -100,
+          duration: 0.45,
+          ease: "power2.in"
+        });
+      } else {
+        gsap.to(underlay, {
+          yPercent: -100,
+          opacity: 0,
+          duration: 0.45,
+          ease: "power2.in"
+        });
+      }
     }
   }, [menuOpen]);
 
@@ -406,8 +437,11 @@ const Navigation = () => {
     // measure one group width
     const groupWidth = group.getBoundingClientRect().width;
 
+    // bigger marquee → increase duration proportionally so speed feels right
+    const duration = 14; // was 12, slightly slower for bigger visuals
+
     const tl = gsap.timeline({ repeat: -1 });
-    tl.to(track, { x: -groupWidth, duration: 12, ease: "linear" });
+    tl.to(track, { x: -groupWidth, duration, ease: "linear" });
     marqueeTLRef.current = tl;
 
     return () => {
@@ -436,25 +470,17 @@ const Navigation = () => {
             style={{
               borderBottomLeftRadius: MIXED_BL,
               borderBottomRightRadius: MIXED_BR,
-              // darker, layered inner shadow from top + left
               boxShadow: [
                 "inset 0 22px 36px rgba(0,0,0,0.38)",
                 "inset 22px 0 36px rgba(0,0,0,0.38)",
-                "inset 0 2px 0 rgba(0,0,0,0.55)" // crisp inner edge
+                "inset 0 2px 0 rgba(0,0,0,0.55)"
               ].join(", ")
             }}
           >
             {/* top bar */}
             <div
-              ref={barRowRef}
               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
-              style={{
-                height: "64px",
-                boxShadow: `
-      inset 6px 6px 0 rgba(0, 0, 0, 0.1),   /* top edge - full width */
-      inset 6px 6px 0px rgba(0, 0, 0, 0.1)  /* left edge - starts below the top shadow */
-    `
-              }}
+              style={{ height: "64px" }}
             >
               {/* left: hamburger (smaller) */}
               <button
@@ -464,7 +490,7 @@ const Navigation = () => {
                 style={{ width: "80px" }}
               >
                 <img
-                  src={menuOpen ? three_wavy_lines_pink : three_wavy_lines}
+                  src={menuOpen ? cross_line_pink : three_wavy_lines}
                   alt="menu"
                   className="h-5 w-auto md:h-6"
                 />
@@ -482,12 +508,12 @@ const Navigation = () => {
                 <img
                   src={evolve_logo}
                   alt="evolve logo"
-                  className="hidden md:block h-9 w-auto"
+                  className="hidden md:block h-7 w-auto"
                 />
               </div>
 
-              {/* right: join us */}
-              <div className="text-black font-extrabold leading-none tracking-wide text-[20px] md:text-[28px] flex-shrink-0">
+              {/* right: join us — kerning 0% (tracking-normal) */}
+              <div className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] lg:text-[20px] flex-shrink-0">
                 join us
               </div>
             </div>
@@ -495,93 +521,95 @@ const Navigation = () => {
         </div>
       </nav>
 
-      {/* UNDERLAY MENU (z-40) — slides from top behind the navbar */}
-      {/* UNDERLAY MENU (z-40) — slides from top behind the navbar */}
+      {/* UNDERLAY (behind navbar) */}
       <div
-        ref={menuBoxRef}
+        ref={menuUnderlayRef}
         className={`fixed top-0 left-0 w-full h-screen z-40 ${
           menuOpen ? "block" : "hidden"
         }`}
       >
-        {/* row with left panel + right overlay (desktop only) */}
+        {/* desktop: left panel (40%) + right overlay; mobile: panel is full width */}
         <div className="h-full w-full flex">
-          {/* LEFT PANEL: mobile = 100%, desktop = 40% */}
-          <div className="w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden">
-            {/* content wrapper: padded down by navbar height */}
+          {/* LEFT PANEL */}
+          <div
+            ref={menuPanelRef}
+            className="w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+          >
+            {/* content wrapper (mobile gets padding-top to clear navbar) */}
             <div ref={menuContentRef} className="h-full flex flex-col">
-              <div className="flex-1" />
-              {/* horizontally centered container, but links left-aligned */}
-              <div className="w-full flex justify-center px-6 md:px-8">
-                <div className="flex flex-col items-start space-y-2">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMenuOpen(false)}
-                      className={`text-[40px] font-extrabold leading-[1.05] text-left transition-colors duration-300 ${
-                        isActive(item.path)
-                          ? "text-evolve-pink"
-                          : "text-black hover:text-evolve-pink"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+              {/* MIDDLE: takes all space between navbar (via paddingTop) and marquee */}
+              <div className="flex-1 flex items-center">
+                <div className="w-full flex justify-center px-6 md:px-8">
+                  <div className="flex flex-col items-start space-y-2 tracking-normal">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMenuOpen(false)}
+                        className={`text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                          isActive(item.path)
+                            ? "text-evolve-pink"
+                            : "text-black hover:text-evolve-pink"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="flex-1" />
 
-              {/* marquee footer (panel width) */}
-              <div className="w-full h-20 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+              {/* BOTTOM: marquee (fixed height) */}
+              <div className="w-full h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
                 <div
                   ref={marqueeTrackRef}
                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
                   style={{ willChange: "transform" }}
                 >
-                  {/* define once; cloned in JS for loop */}
                   <div
                     ref={marqueeGroupRef}
-                    className="flex items-center gap-10 pr-10 flex-none"
+                    className="flex items-center gap-14 pr-14 flex-none"
                   >
+                    {/* your larger marquee images */}
                     <img
                       src={marquee_vector_1}
                       alt="vector 1"
-                      className="h-10 w-auto flex-none"
+                      className="h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-6 w-auto flex-none"
+                      className="h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_2}
                       alt="vector 2"
-                      className="h-10 w-auto flex-none"
+                      className="h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-6 w-auto flex-none"
+                      className="h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_1}
                       alt="vector 1"
-                      className="h-10 w-auto flex-none"
+                      className="h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-6 w-auto flex-none"
+                      className="h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_2}
                       alt="vector 2"
-                      className="h-10 w-auto flex-none"
+                      className="h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-6 w-auto flex-none"
+                      className="h-10 w-auto flex-none"
                     />
                   </div>
                 </div>
@@ -589,7 +617,7 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* RIGHT OVERLAY: only on desktop, click to close */}
+          {/* RIGHT OVERLAY (desktop only): click outside to close */}
           <button
             className="hidden md:block flex-1 h-full bg-transparent"
             onClick={() => setMenuOpen(false)}
