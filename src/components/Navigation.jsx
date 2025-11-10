@@ -290,7 +290,7 @@ import gsap from "gsap";
 
 import {
   evolve_logo_nav as evolve_logo,
-  evolve_logo_mobile, // mobile logo
+  evolve_logo_mobile,
   three_wavy_lines,
   three_wavy_lines_pink,
   marquee_vector_1,
@@ -299,7 +299,6 @@ import {
   cross_line_pink
 } from "../assets/images/Nav";
 
-// both bottom corners similar
 const MIXED_BL = 16;
 const MIXED_BR = 16;
 
@@ -310,7 +309,6 @@ const Navigation = () => {
   const outerRef = useRef(null);
   const navbarRef = useRef(null);
 
-  // underlay (full wrapper), desktop panel (yellow 40%), and content wrapper
   const menuUnderlayRef = useRef(null);
   const menuPanelRef = useRef(null);
   const menuContentRef = useRef(null);
@@ -332,11 +330,16 @@ const Navigation = () => {
     { path: "/contact", label: "contact us" }
   ];
 
-  const isActive = (p) => location.pathname === p;
+  const isActive = (p) => {
+    // Exact match for home page
+    if (p === "/" && location.pathname === "/") return true;
+    // For other pages, check if pathname starts with the path (but not home)
+    if (p !== "/" && location.pathname === p) return true;
+    return false;
+  };
   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
-  // measure navbar height → for mobile, push menu content below it
-  // measure navbar height → push menu content below the navbar on all breakpoints
+  // measure navbar height → push menu content below it
   useEffect(() => {
     const measure = () => {
       if (!outerRef.current) return;
@@ -355,47 +358,41 @@ const Navigation = () => {
     };
   }, []);
 
-  // menu animation:
-  // - mobile: slide the UNDERLAY from top (yPercent)
-  // - desktop: slide the LEFT PANEL from left (xPercent)
+  // open/close animations - FIXED
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
     const panel = menuPanelRef.current;
     if (!underlay || !panel) return;
 
-    // reset transforms before each open
-    gsap.set([underlay, panel], { clearProps: "transform,opacity" });
-
     if (menuOpen) {
       if (isDesktop()) {
-        // desktop: show underlay instantly, slide in the panel from the left
-        gsap.set(underlay, { opacity: 1 });
-        gsap.fromTo(
-          panel,
-          { xPercent: -100, opacity: 1 },
-          { xPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
-        );
+        // desktop open: show overlay, slide panel from left
+        gsap.set(underlay, { display: "block", opacity: 0 });
+        gsap.set(panel, { xPercent: -100 });
+        gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+        gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
       } else {
-        // mobile: slide whole underlay from the top (behind navbar)
-        gsap.fromTo(
-          underlay,
-          { yPercent: -100, opacity: 0 },
-          { yPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
-        );
+        // mobile open: slide underlay down from top
+        gsap.set(underlay, { display: "block", yPercent: -100 });
+        gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
       if (isDesktop()) {
-        gsap.to(panel, {
-          xPercent: -100,
-          duration: 0.45,
-          ease: "power2.in"
-        });
-      } else {
+        // desktop close: slide panel left, fade overlay
+        gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
         gsap.to(underlay, {
-          yPercent: -100,
           opacity: 0,
           duration: 0.45,
-          ease: "power2.in"
+          ease: "power2.in",
+          onComplete: () => gsap.set(underlay, { display: "none" })
+        });
+      } else {
+        // mobile close: slide underlay up
+        gsap.to(underlay, {
+          yPercent: -100,
+          duration: 0.45,
+          ease: "power2.in",
+          onComplete: () => gsap.set(underlay, { display: "none" })
         });
       }
     }
@@ -411,7 +408,7 @@ const Navigation = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // marquee builder: define once in JSX, clone in JS for seamless loop
+  // marquee (clone once for seamless)
   useEffect(() => {
     if (!menuOpen) {
       if (marqueeTLRef.current) {
@@ -427,21 +424,13 @@ const Navigation = () => {
     if (marqueeTLRef.current) marqueeTLRef.current.kill();
     gsap.set(track, { x: 0 });
 
-    // strip old clones
     while (track.children.length > 1) track.removeChild(track.lastChild);
-
-    // clone once
     const clone = group.cloneNode(true);
     track.appendChild(clone);
 
-    // measure one group width
     const groupWidth = group.getBoundingClientRect().width;
-
-    // bigger marquee → increase duration proportionally so speed feels right
-    const duration = 14; // was 12, slightly slower for bigger visuals
-
     const tl = gsap.timeline({ repeat: -1 });
-    tl.to(track, { x: -groupWidth, duration, ease: "linear" });
+    tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
     marqueeTLRef.current = tl;
 
     return () => {
@@ -452,9 +441,8 @@ const Navigation = () => {
 
   return (
     <>
-      {/* NAVBAR (z-50) */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 left-0 w-full z-50">
-        {/* full width outer border */}
         <div
           ref={outerRef}
           className="w-full border-2 border-black bg-transparent"
@@ -463,31 +451,33 @@ const Navigation = () => {
             borderBottomRightRadius: MIXED_BR
           }}
         >
-          {/* background clipped to rounded border + darker inner shadow */}
           <div
             ref={navbarRef}
             className="w-full overflow-hidden"
             style={{
               borderBottomLeftRadius: MIXED_BL,
-              borderBottomRightRadius: MIXED_BR,
-              boxShadow: [
-                "inset 0 22px 36px rgba(0,0,0,0.38)",
-                "inset 22px 0 36px rgba(0,0,0,0.38)",
-                "inset 0 2px 0 rgba(0,0,0,0.55)"
-              ].join(", ")
+              borderBottomRightRadius: MIXED_BR
+              // boxShadow: `
+              //   inset 6px 6px 0 rgba(0, 0, 0, 0.35),
+              //   inset 6px 6px 0 rgba(0, 0, 0, 0.35)
+              // `
             }}
           >
-            {/* top bar */}
             <div
               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
-              style={{ height: "64px" }}
+              style={{
+                height: "56px",
+                boxShadow: `
+                inset 6px 6px 0 rgba(0, 0, 0, 0.2),
+                inset 6px 6px 0 rgba(0, 0, 0, 0.2)
+              `
+              }}
             >
-              {/* left: hamburger (smaller) */}
               <button
                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="open menu"
-                style={{ width: "80px" }}
+                style={{ width: "72px" }}
               >
                 <img
                   src={menuOpen ? cross_line_pink : three_wavy_lines}
@@ -496,15 +486,12 @@ const Navigation = () => {
                 />
               </button>
 
-              {/* center: logo — mobile vs desktop */}
               <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center">
-                {/* mobile logo */}
                 <img
                   src={evolve_logo_mobile}
                   alt="evolve logo"
                   className="h-7 w-auto md:hidden"
                 />
-                {/* desktop logo */}
                 <img
                   src={evolve_logo}
                   alt="evolve logo"
@@ -512,8 +499,7 @@ const Navigation = () => {
                 />
               </div>
 
-              {/* right: join us — kerning 0% (tracking-normal) */}
-              <div className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] lg:text-[20px] flex-shrink-0">
+              <div className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] flex-shrink-0">
                 join us
               </div>
             </div>
@@ -524,20 +510,23 @@ const Navigation = () => {
       {/* UNDERLAY (behind navbar) */}
       <div
         ref={menuUnderlayRef}
-        className={`fixed top-0 left-0 w-full h-screen z-40 ${
-          menuOpen ? "block" : "hidden"
-        }`}
+        className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+        style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
       >
-        {/* desktop: left panel (40%) + right overlay; mobile: panel is full width */}
-        <div className="h-full w-full flex">
+        <div className="relative h-full w-full flex">
+          {/* DESKTOP OVERLAY (shadow/backdrop) */}
+          <div className="hidden md:block absolute inset-0 bg-black/30" />
+
           {/* LEFT PANEL */}
           <div
             ref={menuPanelRef}
-            className="w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+            className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+            style={{
+              boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
+            }}
           >
-            {/* content wrapper (mobile gets padding-top to clear navbar) */}
             <div ref={menuContentRef} className="h-full flex flex-col">
-              {/* MIDDLE: takes all space between navbar (via paddingTop) and marquee */}
+              {/* middle area takes all space between navbar (paddingTop) and marquee */}
               <div className="flex-1 flex items-center">
                 <div className="w-full flex justify-center px-6 md:px-8">
                   <div className="flex flex-col items-start space-y-2 tracking-normal">
@@ -546,7 +535,7 @@ const Navigation = () => {
                         key={item.path}
                         to={item.path}
                         onClick={() => setMenuOpen(false)}
-                        className={`text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                        className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
                           isActive(item.path)
                             ? "text-evolve-pink"
                             : "text-black hover:text-evolve-pink"
@@ -559,8 +548,8 @@ const Navigation = () => {
                 </div>
               </div>
 
-              {/* BOTTOM: marquee (fixed height) */}
-              <div className="w-full h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+              {/* marquee: smaller on mobile, bigger on desktop */}
+              <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
                 <div
                   ref={marqueeTrackRef}
                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
@@ -568,48 +557,47 @@ const Navigation = () => {
                 >
                   <div
                     ref={marqueeGroupRef}
-                    className="flex items-center gap-14 pr-14 flex-none"
+                    className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
                   >
-                    {/* your larger marquee images */}
                     <img
                       src={marquee_vector_1}
                       alt="vector 1"
-                      className="h-14 w-auto flex-none"
+                      className="h-10 md:h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-10 w-auto flex-none"
+                      className="h-8 md:h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_2}
                       alt="vector 2"
-                      className="h-14 w-auto flex-none"
+                      className="h-10 md:h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-10 w-auto flex-none"
+                      className="h-8 md:h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_1}
                       alt="vector 1"
-                      className="h-14 w-auto flex-none"
+                      className="h-10 md:h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-10 w-auto flex-none"
+                      className="h-8 md:h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_2}
                       alt="vector 2"
-                      className="h-14 w-auto flex-none"
+                      className="h-10 md:h-14 w-auto flex-none"
                     />
                     <img
                       src={evolve_text}
                       alt="evolve text"
-                      className="h-10 w-auto flex-none"
+                      className="h-8 md:h-10 w-auto flex-none"
                     />
                   </div>
                 </div>
@@ -617,9 +605,9 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* RIGHT OVERLAY (desktop only): click outside to close */}
+          {/* RIGHT CLICK-TO-CLOSE AREA (desktop only) */}
           <button
-            className="hidden md:block flex-1 h-full bg-transparent"
+            className="hidden md:block flex-1 h-full bg-transparent relative z-10"
             onClick={() => setMenuOpen(false)}
             aria-label="close menu overlay"
           />
