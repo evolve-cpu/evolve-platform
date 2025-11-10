@@ -87,6 +87,25 @@ import vector_lavender from "./vector_lavender.svg";
 import vector_lavender_mobile from "./vector_lavender_mobile.svg";
 import rays from "./rays.svg";
 import rays_mobile from "./rays_mobile.svg";
+import thunder from "./thunder.svg";
+import purple_hand_left from "./purple_hand_left.svg";
+import purple_hand_left_mobile from "./purple_hand_left_mobile.svg";
+import purple_hand_right from "./purple_hand_right.svg";
+import purple_hand_right_mobile from "./purple_hand_right_mobile.svg";
+import saturn_left from "./saturn_left.svg";
+import saturn_left_mobile from "./saturn_left_mobile.svg";
+import saturn_right from "./saturn_right.svg";
+import saturn_right_mobile from "./saturn_right_mobile.svg";
+import pink_lightening_left from "./pink_lightening_left.svg";
+import pink_lightening_left_mobile from "./pink_lightening_left_mobile.svg";
+import pink_lightening_right from "./pink_lightening_right.svg";
+import pink_lightening_right_mobile from "./pink_lightening_right_mobile.svg";
+import bird_left from "./bird_left.svg";
+import bird_left_mobile from "./bird_left_mobile.svg";
+import bird_right from "./bird_right.svg";
+import bird_right_mobile from "./bird_right_mobile.svg";
+import semi_circle_left from "./semi_circle_left.svg";
+import semi_circle_right from "./semi_circle_right.svg";
 
 export {
   left_wall,
@@ -176,5 +195,24 @@ export {
   vector_lavender_mobile,
   rays,
   rays_mobile,
-  noisy_background
+  noisy_background,
+  thunder,
+  purple_hand_left,
+  purple_hand_left_mobile,
+  purple_hand_right,
+  purple_hand_right_mobile,
+  saturn_left,
+  saturn_left_mobile,
+  saturn_right,
+  saturn_right_mobile,
+  pink_lightening_left,
+  pink_lightening_right,
+  bird_left,
+  bird_right,
+  pink_lightening_left_mobile,
+  pink_lightening_right_mobile,
+  bird_left_mobile,
+  bird_right_mobile,
+  semi_circle_left,
+  semi_circle_right
 };

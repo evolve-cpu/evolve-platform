@@ -183,11 +183,18 @@
 import * as React from "react";
 const ThreeDoorsWithRibbon = (props) => (
   <svg
-    width={1920}
-    height={694}
     viewBox="0 0 1920 694"
-    fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    width="100vw"
+    height="auto"
+    preserveAspectRatio="xMidYMid slice"
+    style={{
+      width: "100vw", // full viewport width
+      height: "auto",
+      display: "block",
+      position: "relative"
+    }}
     {...props}
   >
     <g clipPath="url(#clip0_2938_1692)">
@@ -257,4 +264,4 @@ const ThreeDoorsWithRibbon = (props) => (
     </defs>
   </svg>
 );
-export default ThreeDoorsWithRibbon;
+export default React.memo(ThreeDoorsWithRibbon);

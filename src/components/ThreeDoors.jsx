@@ -58,4 +58,4 @@ const ThreeDoors = React.forwardRef(({ leftRef, middleRef, rightRef }, ref) => (
   </svg>
 ));
 
-export default ThreeDoors;
+export default React.memo(ThreeDoors);

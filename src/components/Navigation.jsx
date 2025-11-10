@@ -1,20 +1,323 @@
+// import { useState, useEffect, useRef } from "react";
+// import { Link, useLocation } from "react-router-dom";
+// import gsap from "gsap";
+// // import { ModifiersPlugin } from "gsap/ModifiersPlugin"; gsap.registerPlugin(ModifiersPlugin);
+
+// import {
+//   evolve_logo_nav as evolve_logo,
+//   evolve_logo_mobile,
+//   three_wavy_lines,
+//   three_wavy_lines_pink,
+//   marquee_vector_1,
+//   evolve_text,
+//   marquee_vector_2
+// } from "../assets/images/Nav";
+
+// // updated: make both corners similar
+// const MIXED_BL = 16;
+// const MIXED_BR = 16;
+
+// const Navigation = () => {
+//   const [menuOpen, setMenuOpen] = useState(false);
+//   const location = useLocation();
+
+//   const outerRef = useRef(null);
+//   const navbarRef = useRef(null);
+//   const barRowRef = useRef(null);
+//   const menuBoxRef = useRef(null);
+//   const marqueeTrackRef = useRef(null);
+//   const marqueeGroupRef = useRef(null);
+//   const navHeightRef = useRef(0);
+//   const marqueeTLRef = useRef(null);
+
+//   const navItems = [
+//     { path: "/", label: "home" },
+//     { path: "/about", label: "about" },
+//     { path: "/course", label: "courses" },
+//     { path: "/webinars", label: "webinars" },
+//     { path: "/quiz", label: "quiz" },
+//     { path: "/community", label: "community" },
+//     { path: "/investor", label: "investor page" },
+//     { path: "/contact", label: "contact us" }
+//   ];
+
+//   const isActive = (p) => location.pathname === p;
+
+//   // measure navbar height so the panel starts exactly under it
+//   useEffect(() => {
+//     const measure = () => {
+//       if (!outerRef.current) return;
+//       navHeightRef.current = outerRef.current.offsetHeight || 0;
+//       if (menuBoxRef.current) {
+//         menuBoxRef.current.style.top = `${navHeightRef.current}px`;
+//         menuBoxRef.current.style.height = `calc(100vh - ${navHeightRef.current}px)`;
+//       }
+//     };
+//     measure();
+//     const ro = new ResizeObserver(measure);
+//     if (outerRef.current) ro.observe(outerRef.current);
+//     window.addEventListener("resize", measure);
+//     return () => {
+//       ro.disconnect();
+//       window.removeEventListener("resize", measure);
+//     };
+//   }, []);
+
+//   // slide DOWN menu from under the navbar
+//   useEffect(() => {
+//     if (!menuBoxRef.current) return;
+//     if (menuOpen) {
+//       gsap.fromTo(
+//         menuBoxRef.current,
+//         { yPercent: -100, opacity: 0 },
+//         { yPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+//       );
+//     } else {
+//       gsap.to(menuBoxRef.current, {
+//         yPercent: -100,
+//         opacity: 0,
+//         duration: 0.45,
+//         ease: "power2.in"
+//       });
+//     }
+//   }, [menuOpen]);
+
+//   // close on route change
+//   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+//   // esc to close
+//   useEffect(() => {
+//     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+//     window.addEventListener("keydown", onKey);
+//     return () => window.removeEventListener("keydown", onKey);
+//   }, []);
+
+//   // marquee builder: single JSX group cloned in JS for seamless loop
+//   useEffect(() => {
+//     if (!menuOpen) {
+//       if (marqueeTLRef.current) {
+//         marqueeTLRef.current.kill();
+//         marqueeTLRef.current = null;
+//       }
+//       return;
+//     }
+//     const track = marqueeTrackRef.current;
+//     const group = marqueeGroupRef.current;
+//     if (!track || !group) return;
+
+//     if (marqueeTLRef.current) marqueeTLRef.current.kill();
+//     gsap.set(track, { x: 0 });
+
+//     // strip old clones
+//     while (track.children.length > 1) track.removeChild(track.lastChild);
+
+//     // clone once
+//     const clone = group.cloneNode(true);
+//     track.appendChild(clone);
+
+//     // measure one group width
+//     const groupWidth = group.getBoundingClientRect().width;
+
+//     const tl = gsap.timeline({ repeat: -1 });
+//     tl.to(track, { x: -groupWidth, duration: 12, ease: "linear" });
+//     marqueeTLRef.current = tl;
+
+//     return () => {
+//       if (marqueeTLRef.current) marqueeTLRef.current.kill();
+//       marqueeTLRef.current = null;
+//     };
+//   }, [menuOpen]);
+
+//   return (
+//     // removed horizontal padding so the bar spans true full width edge to edge
+//     <nav className="fixed top-0 left-0 w-full z-50">
+//       {/* full width outer border */}
+//       <div
+//         ref={outerRef}
+//         className="w-full border-2 border-black bg-transparent"
+//         style={{
+//           borderBottomLeftRadius: MIXED_BL,
+//           borderBottomRightRadius: MIXED_BR
+//         }}
+//       >
+//         {/* background clipped to rounded border */}
+//         <div
+//           ref={navbarRef}
+//           className="w-full overflow-hidden"
+//           style={{
+//             borderBottomLeftRadius: MIXED_BL,
+//             borderBottomRightRadius: MIXED_BR,
+//             boxShadow:
+//               "inset 0 18px 32px rgba(0,0,0,0.32), inset 18px 0 32px rgba(0,0,0,0.32)"
+//           }}
+//         >
+//           {/* top bar */}
+//           <div
+//             ref={barRowRef}
+//             className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+//             style={{ height: "64px" }}
+//           >
+//             {/* left: hamburger (smaller) */}
+//             <button
+//               className="cursor-pointer transition-transform duration-300 hover:scale-105"
+//               onClick={() => setMenuOpen((v) => !v)}
+//               aria-label="open menu"
+//             >
+//               <img
+//                 src={menuOpen ? three_wavy_lines_pink : three_wavy_lines}
+//                 alt="menu"
+//                 className="h-5 w-auto md:h-6"
+//               />
+//             </button>
+
+//             {/* center: logo (slightly smaller) */}
+//             <div className="flex justify-center items-center">
+//               <img
+//                 src={evolve_logo}
+//                 alt="evolve logo"
+//                 className="h-8 w-auto md:h-9"
+//               />
+//             </div>
+
+//             {/* right: join us */}
+//             <div className="text-black font-extrabold leading-none tracking-wide text-[20px] md:text-[28px]">
+//               join us
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* slide-down menu */}
+//       <div
+//         ref={menuBoxRef}
+//         className={`fixed left-0 w-full md:w-[40%] bg-evolve-yellow border-x-2 border-b-2 border-black ${
+//           menuOpen ? "block" : "hidden"
+//         }`}
+//         style={{
+//           borderBottomLeftRadius: MIXED_BL,
+//           borderBottomRightRadius: MIXED_BR,
+//           overflow: "hidden"
+//         }}
+//       >
+//         <div className="h-full flex flex-col">
+//           {/* equal top/bottom to vertically center block */}
+//           <div className="flex-1" />
+//           {/* updated: left aligned, tighter spacing, padding to pull text off the edge */}
+//           <div className="flex flex-col justify-center items-start space-y-2 px-6 md:px-8">
+//             {navItems.map((item) => (
+//               <Link
+//                 key={item.path}
+//                 to={item.path}
+//                 onClick={() => setMenuOpen(false)}
+//                 className={`text-[40px] font-extrabold leading-[1.05] w-full text-left transition-colors duration-300 ${
+//                   isActive(item.path)
+//                     ? "text-evolve-pink"
+//                     : "text-black hover:text-evolve-pink"
+//                 }`}
+//               >
+//                 {item.label}
+//               </Link>
+//             ))}
+//           </div>
+//           <div className="flex-1" />
+
+//           {/* marquee */}
+//           <div className="w-full h-20 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+//             <div
+//               ref={marqueeTrackRef}
+//               className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+//               style={{ willChange: "transform" }}
+//             >
+//               {/* define once; cloned in JS */}
+//               <div
+//                 ref={marqueeGroupRef}
+//                 className="flex items-center gap-10 pr-10 flex-none"
+//               >
+//                 <img
+//                   src={marquee_vector_1}
+//                   alt="vector 1"
+//                   className="h-10 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={evolve_text}
+//                   alt="evolve text"
+//                   className="h-6 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={marquee_vector_2}
+//                   alt="vector 2"
+//                   className="h-10 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={evolve_text}
+//                   alt="evolve text"
+//                   className="h-6 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={marquee_vector_1}
+//                   alt="vector 1"
+//                   className="h-10 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={evolve_text}
+//                   alt="evolve text"
+//                   className="h-6 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={marquee_vector_2}
+//                   alt="vector 2"
+//                   className="h-10 w-auto flex-none"
+//                 />
+//                 <img
+//                   src={evolve_text}
+//                   alt="evolve text"
+//                   className="h-6 w-auto flex-none"
+//                 />
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </nav>
+//   );
+// };
+
+// export default Navigation;
+
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import gsap from "gsap";
+
 import {
   evolve_logo_nav as evolve_logo,
+  evolve_logo_mobile, // NEW: mobile logo
   three_wavy_lines,
-  three_wavy_lines_pink
+  three_wavy_lines_pink,
+  marquee_vector_1,
+  evolve_text,
+  marquee_vector_2
 } from "../assets/images/Nav";
+
+// set both corners similar (adjust if you want a tiny asymmetry)
+const MIXED_BL = 16;
+const MIXED_BR = 16;
 
 const Navigation = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const location = useLocation();
 
+  const outerRef = useRef(null);
   const navbarRef = useRef(null);
-  const menuBoxRef = useRef(null);
-  const marqueeRef = useRef(null);
+  const barRowRef = useRef(null);
+
+  const menuBoxRef = useRef(null); // the UNDER-navbar panel (z-40)
+  const menuContentRef = useRef(null); // inner content wrapper (gets padding-top = navbar height)
+
+  const marqueeTrackRef = useRef(null);
+  const marqueeGroupRef = useRef(null);
+  const marqueeTLRef = useRef(null);
+
+  const navHeightRef = useRef(0);
 
   const navItems = [
     { path: "/", label: "home" },
@@ -22,143 +325,279 @@ const Navigation = () => {
     { path: "/course", label: "courses" },
     { path: "/webinars", label: "webinars" },
     { path: "/quiz", label: "quiz" },
-    { path: "/community", label: "community" }
+    { path: "/community", label: "community" },
+    { path: "/investor", label: "investor page" },
+    { path: "/contact", label: "contact us" }
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (p) => location.pathname === p;
 
-  // === Navbar Hover Animation ===
+  // measure navbar height → set padding on the behind panel so content starts below the bar
   useEffect(() => {
-    if (hovered) {
-      gsap.to(navbarRef.current, {
-        height: "5.5rem",
-        duration: 0.5,
-        ease: "power3.out"
-      });
-    } else {
-      gsap.to(navbarRef.current, {
-        height: "4rem",
-        duration: 0.5,
-        ease: "power2.inOut"
-      });
-    }
-  }, [hovered]);
-
-  // === Slide Menu Animation ===
-  useEffect(() => {
-    if (menuBoxRef.current) {
-      if (menuOpen) {
-        gsap.fromTo(
-          menuBoxRef.current,
-          { x: "-100%", opacity: 0 },
-          { x: "0%", opacity: 1, duration: 0.7, ease: "power4.out" }
-        );
-      } else {
-        gsap.to(menuBoxRef.current, {
-          x: "-100%",
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.in"
-        });
+    const measure = () => {
+      if (!outerRef.current) return;
+      navHeightRef.current = outerRef.current.offsetHeight || 0;
+      if (menuContentRef.current) {
+        menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
       }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (outerRef.current) ro.observe(outerRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  // slide DOWN panel from the top of the screen (behind navbar)
+  useEffect(() => {
+    if (!menuBoxRef.current) return;
+    if (menuOpen) {
+      gsap.fromTo(
+        menuBoxRef.current,
+        { yPercent: -100, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+      );
+    } else {
+      gsap.to(menuBoxRef.current, {
+        yPercent: -100,
+        opacity: 0,
+        duration: 0.45,
+        ease: "power2.in"
+      });
     }
   }, [menuOpen]);
 
-  // === Marquee Animation ===
+  // close on route change
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  // esc to close
   useEffect(() => {
-    if (menuOpen && marqueeRef.current) {
-      const tl = gsap.timeline({ repeat: -1 });
-      tl.to(marqueeRef.current, {
-        xPercent: -100,
-        duration: 8,
-        ease: "linear"
-      });
+    const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // marquee builder: define once in JSX, clone in JS for seamless loop
+  useEffect(() => {
+    if (!menuOpen) {
+      if (marqueeTLRef.current) {
+        marqueeTLRef.current.kill();
+        marqueeTLRef.current = null;
+      }
+      return;
     }
+    const track = marqueeTrackRef.current;
+    const group = marqueeGroupRef.current;
+    if (!track || !group) return;
+
+    if (marqueeTLRef.current) marqueeTLRef.current.kill();
+    gsap.set(track, { x: 0 });
+
+    // strip old clones
+    while (track.children.length > 1) track.removeChild(track.lastChild);
+
+    // clone once
+    const clone = group.cloneNode(true);
+    track.appendChild(clone);
+
+    // measure one group width
+    const groupWidth = group.getBoundingClientRect().width;
+
+    const tl = gsap.timeline({ repeat: -1 });
+    tl.to(track, { x: -groupWidth, duration: 12, ease: "linear" });
+    marqueeTLRef.current = tl;
+
+    return () => {
+      if (marqueeTLRef.current) marqueeTLRef.current.kill();
+      marqueeTLRef.current = null;
+    };
   }, [menuOpen]);
 
   return (
-    <nav
-      ref={navbarRef}
-      className="fixed top-0 left-0 w-full z-50 bg-transparent transition-all duration-500"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* === COLLAPSED BOX (default state) === */}
-      {!hovered && (
-        <div className="absolute left-1/2 -translate-x-1/2 bg-evolve-yellow border border-black px-8 py-2 rounded-b-2xl flex justify-center items-center">
-          <img src={evolve_logo} alt="Evolve" className="h-8 w-auto" />
-        </div>
-      )}
-
-      {/* === FULL NAVBAR (on hover) === */}
-      {hovered && (
-        <div className="bg-evolve-yellow border-b-2 border-black w-full flex justify-between items-center px-8 py-3">
-          {/* Left: 3 wavy lines */}
-          <button
-            className="cursor-pointer transition-transform duration-300 hover:scale-105"
-            onClick={() => setMenuOpen(!menuOpen)}
+    <>
+      {/* NAVBAR (z-50) */}
+      <nav className="fixed top-0 left-0 w-full z-50">
+        {/* full width outer border */}
+        <div
+          ref={outerRef}
+          className="w-full border-2 border-black bg-transparent"
+          style={{
+            borderBottomLeftRadius: MIXED_BL,
+            borderBottomRightRadius: MIXED_BR
+          }}
+        >
+          {/* background clipped to rounded border + darker inner shadow */}
+          <div
+            ref={navbarRef}
+            className="w-full overflow-hidden"
+            style={{
+              borderBottomLeftRadius: MIXED_BL,
+              borderBottomRightRadius: MIXED_BR,
+              // darker, layered inner shadow from top + left
+              boxShadow: [
+                "inset 0 22px 36px rgba(0,0,0,0.38)",
+                "inset 22px 0 36px rgba(0,0,0,0.38)",
+                "inset 0 2px 0 rgba(0,0,0,0.55)" // crisp inner edge
+              ].join(", ")
+            }}
           >
-            <img
-              src={menuOpen ? three_wavy_lines_pink : three_wavy_lines}
-              alt="menu"
-              className="h-8 w-auto"
-            />
-          </button>
+            {/* top bar */}
+            <div
+              ref={barRowRef}
+              className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+              style={{
+                height: "64px",
+                boxShadow: `
+      inset 6px 6px 0 rgba(0, 0, 0, 0.1),   /* top edge - full width */
+      inset 6px 6px 0px rgba(0, 0, 0, 0.1)  /* left edge - starts below the top shadow */
+    `
+              }}
+            >
+              {/* left: hamburger (smaller) */}
+              <button
+                className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="open menu"
+                style={{ width: "80px" }}
+              >
+                <img
+                  src={menuOpen ? three_wavy_lines_pink : three_wavy_lines}
+                  alt="menu"
+                  className="h-5 w-auto md:h-6"
+                />
+              </button>
 
-          {/* Center: Evolve Logo */}
-          <div className="flex justify-center items-center">
-            <img src={evolve_logo} alt="Evolve Logo" className="h-12 w-auto" />
-          </div>
+              {/* center: logo — mobile vs desktop */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center">
+                {/* mobile logo */}
+                <img
+                  src={evolve_logo_mobile}
+                  alt="evolve logo"
+                  className="h-7 w-auto md:hidden"
+                />
+                {/* desktop logo */}
+                <img
+                  src={evolve_logo}
+                  alt="evolve logo"
+                  className="hidden md:block h-9 w-auto"
+                />
+              </div>
 
-          {/* Right: Join Us text */}
-          <div className="text-black font-extrabold text-[28px] leading-none tracking-wide">
-            join us
+              {/* right: join us */}
+              <div className="text-black font-extrabold leading-none tracking-wide text-[20px] md:text-[28px] flex-shrink-0">
+                join us
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </nav>
 
-      {/* === LEFT SLIDE MENU BOX === */}
+      {/* UNDERLAY MENU (z-40) — slides from top behind the navbar */}
+      {/* UNDERLAY MENU (z-40) — slides from top behind the navbar */}
       <div
         ref={menuBoxRef}
-        className={`fixed top-0 left-0 h-screen w-[30%] bg-evolve-yellow border-r-2 border-black flex flex-col items-center transform ${
+        className={`fixed top-0 left-0 w-full h-screen z-40 ${
           menuOpen ? "block" : "hidden"
         }`}
       >
-        {/* spacing gap on top */}
-        <div className="flex-1" />
+        {/* row with left panel + right overlay (desktop only) */}
+        <div className="h-full w-full flex">
+          {/* LEFT PANEL: mobile = 100%, desktop = 40% */}
+          <div className="w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden">
+            {/* content wrapper: padded down by navbar height */}
+            <div ref={menuContentRef} className="h-full flex flex-col">
+              <div className="flex-1" />
+              {/* horizontally centered container, but links left-aligned */}
+              <div className="w-full flex justify-center px-6 md:px-8">
+                <div className="flex flex-col items-start space-y-2">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMenuOpen(false)}
+                      className={`text-[40px] font-extrabold leading-[1.05] text-left transition-colors duration-300 ${
+                        isActive(item.path)
+                          ? "text-evolve-pink"
+                          : "text-black hover:text-evolve-pink"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="flex-1" />
 
-        {/* nav links in middle */}
-        <div className="flex flex-col justify-center items-center space-y-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMenuOpen(false)}
-              className={`text-[40px] font-extrabold transition-colors duration-300 text-center ${
-                isActive(item.path)
-                  ? "text-evolve-pink"
-                  : "text-black hover:text-evolve-pink"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* spacing gap below links */}
-        <div className="flex-1" />
-
-        {/* marquee footer */}
-        <div className="w-full h-14 bg-evolve-purple overflow-hidden flex items-center border-t-2 border-black relative">
-          <div
-            ref={marqueeRef}
-            className="absolute whitespace-nowrap text-[40px] font-extrabold text-white"
-          >
-            evolve&nbsp;&nbsp;evolve&nbsp;&nbsp;evolve&nbsp;&nbsp;evolve&nbsp;&nbsp;evolve
+              {/* marquee footer (panel width) */}
+              <div className="w-full h-20 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+                <div
+                  ref={marqueeTrackRef}
+                  className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+                  style={{ willChange: "transform" }}
+                >
+                  {/* define once; cloned in JS for loop */}
+                  <div
+                    ref={marqueeGroupRef}
+                    className="flex items-center gap-10 pr-10 flex-none"
+                  >
+                    <img
+                      src={marquee_vector_1}
+                      alt="vector 1"
+                      className="h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt="evolve text"
+                      className="h-6 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_2}
+                      alt="vector 2"
+                      className="h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt="evolve text"
+                      className="h-6 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_1}
+                      alt="vector 1"
+                      className="h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt="evolve text"
+                      className="h-6 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_2}
+                      alt="vector 2"
+                      className="h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt="evolve text"
+                      className="h-6 w-auto flex-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* RIGHT OVERLAY: only on desktop, click to close */}
+          <button
+            className="hidden md:block flex-1 h-full bg-transparent"
+            onClick={() => setMenuOpen(false)}
+            aria-label="close menu overlay"
+          />
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 

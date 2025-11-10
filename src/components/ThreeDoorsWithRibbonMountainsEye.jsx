@@ -45,11 +45,21 @@ const ThreeDoorsWithRibbonMountainsEye = (props) => {
 
   return (
     <svg
-      width={1920}
-      height={562}
+      // width={1920}
+      // height={562}
       viewBox="0 0 1920 562"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      // fill="none"
+      width="100vw"
+      height="auto"
+      preserveAspectRatio="xMidYMid slice"
+      style={{
+        width: "100vw", // full viewport width
+        height: "auto",
+        display: "block",
+        position: "relative"
+      }}
       {...props}
     >
       {/* Clipped background circle - pink/magenta circle with black stroke */}
@@ -223,4 +233,4 @@ const ThreeDoorsWithRibbonMountainsEye = (props) => {
   );
 };
 
-export default ThreeDoorsWithRibbonMountainsEye;
+export default React.memo(ThreeDoorsWithRibbonMountainsEye);

@@ -1,314 +1,72 @@
-// import React, { useRef, useEffect } from "react";
-// import { gsap } from "gsap";
-// import { shine } from "../assets/images/Home";
-
-// const ThreeDoorsWithRibbonDiamondMountains = (props) => {
-//   const svgRef = useRef();
-
-//   // Refs for independent animation control
-//   const leftMountainRef = useRef();
-//   const rightMountainRef = useRef();
-//   const leftRibbonRef = useRef();
-//   const middleRibbonRef = useRef();
-//   const rightRibbonRef = useRef();
-//   const diamondRef = useRef();
-//   const shineRef = useRef();
-//   const leftDoorRef = useRef();
-//   const middleDoorRef = useRef();
-//   const rightDoorRef = useRef();
-
-//   useEffect(() => {
-//     const ctx = gsap.context(() => {
-//       // Animate mountains in
-//       gsap.from([leftMountainRef.current, rightMountainRef.current], {
-//         y: 150,
-//         opacity: 0,
-//         duration: 1.2,
-//         ease: "power3.out",
-//         stagger: 0.3
-//       });
-
-//       // Animate ribbons floating in
-//       gsap.from(
-//         [
-//           leftRibbonRef.current,
-//           middleRibbonRef.current,
-//           rightRibbonRef.current
-//         ],
-//         {
-//           y: 50,
-//           opacity: 0,
-//           duration: 1.2,
-//           ease: "power2.out",
-//           stagger: 0.2,
-//           delay: 0.8
-//         }
-//       );
-
-//       // Doors fade up
-//       //   gsap.from(
-//       //     [leftDoorRef.current, middleDoorRef.current, rightDoorRef.current],
-//       //     {
-//       //       scale: 0.8,
-//       //       opacity: 0,
-//       //       duration: 1,
-//       //       ease: "back.out(1.7)",
-//       //       stagger: 0.25,
-//       //       delay: 1.2
-//       //     }
-//       //   );
-
-//       // Shine animation on diamond
-//       gsap.fromTo(
-//         shineRef.current,
-//         { x: -120, y: -80, rotate: 25, opacity: 0 },
-//         {
-//           x: 120,
-//           y: 80,
-//           opacity: 1,
-//           duration: 1.6,
-//           ease: "sine.inOut",
-//           repeat: -1,
-//           yoyo: true,
-//           repeatDelay: 2.5
-//         }
-//       );
-//     }, svgRef);
-
-//     return () => ctx.revert();
-//   }, []);
-
-//   return (
-//     <div className="relative w-full flex justify-center">
-//       <svg
-//         ref={svgRef}
-//         width={1920}
-//         height={515}
-//         viewBox="0 0 1920 515"
-//         fill="none"
-//         xmlns="http://www.w3.org/2000/svg"
-//         {...props}
-//       >
-//         {/* ===== Left Mountains ===== */}
-//         <g ref={leftMountainRef}>
-//           <path d="M221.422 410.808C..." fill="#A30462" />
-//           <path d="M470.647 207.153C..." fill="#DE0686" />
-//         </g>
-
-//         {/* ===== Right Mountains ===== */}
-//         <g ref={rightMountainRef}>
-//           <path d="M1698.58 410.808C..." fill="#A30462" />
-//           <path d="M1449.35 207.153C..." fill="#DE0686" />
-//         </g>
-
-//         {/* ===== Ribbons ===== */}
-//         <g ref={leftRibbonRef}>
-//           <path d="M567 347L..." fill="#A30462" />
-//         </g>
-
-//         <g ref={middleRibbonRef}>
-//           <path d="M818 321L..." fill="#A30462" />
-//         </g>
-
-//         <g ref={rightRibbonRef}>
-//           <path d="M1270 347L..." fill="#A30462" />
-//         </g>
-
-//         {/* ===== Doors ===== */}
-//         <g ref={leftDoorRef}>
-//           <rect
-//             x="700"
-//             y="200"
-//             width="120"
-//             height="180"
-//             rx="6"
-//             fill="#E93CAC"
-//             stroke="#FFF"
-//             strokeWidth="2"
-//           />
-//         </g>
-
-//         <g ref={middleDoorRef}>
-//           <rect
-//             x="900"
-//             y="180"
-//             width="120"
-//             height="200"
-//             rx="6"
-//             fill="#FF5FCC"
-//             stroke="#FFF"
-//             strokeWidth="2"
-//           />
-//         </g>
-
-//         <g ref={rightDoorRef}>
-//           <rect
-//             x="1100"
-//             y="200"
-//             width="120"
-//             height="180"
-//             rx="6"
-//             fill="#E93CAC"
-//             stroke="#FFF"
-//             strokeWidth="2"
-//           />
-//         </g>
-
-//         {/* ===== Diamond ===== */}
-//         <g ref={diamondRef}>
-//           <path
-//             d="M955.5 287L816.5 462.5L815 421L955.5 247.5L1102.5 421V462.5L955.5 287Z"
-//             fill="#A30462"
-//           />
-//           <path
-//             d="M955.744 326.551L816.503 504.5L815 462.421L955.744 286.5L1103 462.421V504.5L955.744 326.551Z"
-//             fill="#DF0586"
-//           />
-//         </g>
-//       </svg>
-
-//       {/* ===== Shine Overlay (Animated) ===== */}
-//       <img
-//         ref={shineRef}
-//         src={shine}
-//         alt="shine"
-//         className="absolute top-[50%] left-[50%] w-[160px] h-auto translate-x-[-50%] translate-y-[-50%] pointer-events-none select-none opacity-0"
-//       />
-//     </div>
-//   );
-// };
-
-// export default ThreeDoorsWithRibbonDiamondMountains;
-
-// import * as React from "react";
-// const ThreeDoorsWithRibbonDiamondMountains = (props) => (
-//   <svg
-//     width={1920}
-//     height={515}
-//     viewBox="0 0 1920 515"
-//     fill="none"
-//     xmlns="http://www.w3.org/2000/svg"
-//     {...props}
-//   >
-//     <g clipPath="url(#clip0_2975_1690)">
-//       <circle
-//         cx={961}
-//         cy={573}
-//         r={572}
-//         fill="#DF0586"
-//         stroke="black"
-//         strokeWidth={2}
-//       />
-//     </g>
-//     <path
-//       d="M808.859 527.1V202.5C808.859 114 876.632 42 959.999 42C1043.37 42 1111.14 114 1111.14 202.5V527.1H808.959H808.859Z"
-//       fill="#161616"
-//       stroke="#FFD007"
-//       strokeWidth={16}
-//       strokeMiterlimit={10}
-//     />
-//     <path
-//       d="M1154.72 527.1V202.5C1154.72 114 1222.5 42 1305.86 42C1389.23 42 1457 114 1457 202.5V527.1H1154.82H1154.72Z"
-//       fill="#161616"
-//       stroke="#FFD007"
-//       strokeWidth={16}
-//       strokeMiterlimit={10}
-//     />
-//     <path
-//       d="M463 527V191.092C463 99.5083 530.683 25 613.939 25C697.195 25 764.879 99.5083 764.879 191.092V527H463.1H463Z"
-//       fill="#161616"
-//       stroke="#FFD007"
-//       strokeWidth={16}
-//       strokeMiterlimit={10}
-//     />
-//     <path
-//       d="M516.056 518.826L470.969 517.565L492.979 428.942L516.056 341.676L539.036 428.942L561.144 517.565L516.056 518.826Z"
-//       fill="#7A44BC"
-//     />
-//     <path
-//       d="M658.525 517.61L613.438 515.962L635.448 393.983L658.525 273.75L681.505 393.983L703.612 515.962L658.525 517.61Z"
-//       fill="#7A44BC"
-//     />
-//     <path
-//       d="M590.815 517.235L537.195 516.168L563.375 443.64L590.815 372.082L618.256 443.64L644.533 516.168L590.815 517.235Z"
-//       fill="#A35BFB"
-//     />
-//     <path
-//       d="M711.818 517.858L666.73 516.694L688.741 428.071L711.818 340.805L734.798 428.071L756.905 516.694L711.818 517.858Z"
-//       fill="#A35BFB"
-//     />
-//     <path
-//       d="M221.422 410.808C234.293 419.634 247.271 428.355 260.142 437.182C279.608 453.453 296.627 464.407 310.136 471.958C310.987 472.49 311.838 472.915 313.008 473.553C319.072 476.744 339.282 487.06 365.343 492.271C378.64 494.929 421.933 502.906 470.119 482.061C528.943 456.538 553.196 406.234 557.451 397.088C583.405 340.83 569.896 289.676 566.067 276.808C549.685 221.826 510.753 192.686 499.053 184.604C489.798 179.392 480.544 174.075 471.396 168.864C471.396 181.519 471.183 194.175 471.077 206.83C480.65 212.999 490.224 219.167 499.691 225.335C508.945 232.461 524.475 246.499 534.793 269.044C550.962 304.352 543.941 337.108 540.538 351.89C536.921 367.417 525.752 404.214 490.968 432.184C445.973 468.449 386.405 469.618 347.792 454.304C339.282 450.901 323.433 442.925 306.732 431.439C295.882 423.995 289.926 419.422 261.418 397.514C251.313 389.75 241.207 382.2 231.102 374.436C210.04 358.271 145.898 310.095 -11 193.324C-10.5745 210.659 -10.0427 227.888 -9.61725 245.222C67.3959 300.417 144.409 355.612 221.316 410.914L221.422 410.808Z"
-//       fill="#A30462"
-//     />
-//     <path
-//       d="M470.647 207.153C470.647 218.426 470.435 229.699 470.435 240.972C477.668 244.375 489.156 250.969 499.261 263.199C513.515 280.534 516.387 299.038 518.089 310.205C521.6 333.389 517.026 351.362 515.749 355.935C514.047 361.997 509.154 377.63 496.496 393.689C479.902 414.746 460.223 423.679 450.969 427.827C429.907 437.186 411.717 438.462 404.697 438.674C395.868 438.993 374.807 438.781 351.724 428.784C342.576 424.849 335.981 420.595 325.769 413.895C309.069 403.048 297.687 393.476 295.347 391.456C276.094 375.397 156.957 281.916 -10.3656 151.001C-10.3656 165.145 -10.3656 179.396 -10.4719 193.54C86.3264 266.07 183.125 338.6 280.029 411.13C288.007 418.043 299.602 427.295 314.6 436.547C329.599 445.906 342.257 453.776 360.234 458.881C385.763 466.112 407.037 463.56 417.781 462.178C429.056 460.689 456.819 456.754 485.327 436.973C494.794 430.379 532.343 402.516 542.98 353.489C547.554 332.326 545.64 314.459 544.682 307.121C543.512 297.337 541.066 277.981 529.897 258.094C511.494 225.551 481.923 211.513 470.86 206.94L470.647 207.153Z"
-//       fill="#DE0686"
-//     />
-//     <path
-//       d="M1405.8 523.501L1452 522.21L1429.45 431.441L1405.8 342.062L1382.25 431.441L1359.6 522.21L1405.8 523.501Z"
-//       fill="#7A44BC"
-//     />
-//     <path
-//       d="M1259.81 522.263L1306.02 520.575L1283.46 395.644L1259.81 272.5L1236.27 395.644L1213.61 520.575L1259.81 522.263Z"
-//       fill="#7A44BC"
-//     />
-//     <path
-//       d="M1329.2 521.869L1384.15 520.777L1357.32 446.493L1329.2 373.203L1301.08 446.493L1274.16 520.777L1329.2 521.869Z"
-//       fill="#A35BFB"
-//     />
-//     <path
-//       d="M1205.2 522.511L1251.41 521.319L1228.85 430.55L1205.2 341.172L1181.66 430.55L1159 521.319L1205.2 522.511Z"
-//       fill="#A35BFB"
-//     />
-//     <path
-//       d="M955.5 287L816.5 462.5L815 421L955.5 247.5L1102.5 421V462.5L955.5 287Z"
-//       fill="#A30462"
-//     />
-//     <path
-//       d="M955.744 326.551L816.503 504.5L815 462.421L955.744 286.5L1103 462.421V504.5L955.744 326.551Z"
-//       fill="#DF0586"
-//     />
-//     <path
-//       d="M1698.58 410.808C1685.71 419.634 1672.73 428.355 1659.86 437.182C1640.39 453.453 1623.37 464.407 1609.86 471.958C1609.01 472.49 1608.16 472.915 1606.99 473.553C1600.93 476.744 1580.72 487.06 1554.66 492.271C1541.36 494.929 1498.07 502.906 1449.88 482.061C1391.06 456.538 1366.8 406.234 1362.55 397.088C1336.59 340.83 1350.1 289.676 1353.93 276.808C1370.31 221.826 1409.25 192.686 1420.95 184.604C1430.2 179.392 1439.46 174.075 1448.6 168.864C1448.6 181.519 1448.82 194.175 1448.92 206.83C1439.35 212.999 1429.78 219.167 1420.31 225.335C1411.05 232.461 1395.52 246.499 1385.21 269.044C1369.04 304.352 1376.06 337.108 1379.46 351.89C1383.08 367.417 1394.25 404.214 1429.03 432.184C1474.03 468.449 1533.6 469.618 1572.21 454.304C1580.72 450.901 1596.57 442.925 1613.27 431.439C1624.12 423.995 1630.07 419.422 1658.58 397.514C1668.69 389.75 1678.79 382.2 1688.9 374.436C1709.96 358.271 1774.1 310.095 1931 193.324C1930.57 210.659 1930.04 227.888 1929.62 245.222C1852.6 300.417 1775.59 355.612 1698.68 410.914L1698.58 410.808Z"
-//       fill="#A30462"
-//     />
-//     <path
-//       d="M1449.35 207.153C1449.35 218.426 1449.57 229.699 1449.57 240.972C1442.33 244.375 1430.84 250.969 1420.74 263.199C1406.48 280.534 1403.61 299.038 1401.91 310.205C1398.4 333.389 1402.97 351.362 1404.25 355.935C1405.95 361.997 1410.85 377.63 1423.5 393.689C1440.1 414.746 1459.78 423.679 1469.03 427.827C1490.09 437.186 1508.28 438.462 1515.3 438.674C1524.13 438.993 1545.19 438.781 1568.28 428.784C1577.42 424.849 1584.02 420.595 1594.23 413.895C1610.93 403.048 1622.31 393.476 1624.65 391.456C1643.91 375.397 1763.04 281.916 1930.37 151.001C1930.37 165.145 1930.37 179.396 1930.47 193.54C1833.67 266.07 1736.88 338.6 1639.97 411.13C1631.99 418.043 1620.4 427.295 1605.4 436.547C1590.4 445.906 1577.74 453.776 1559.77 458.881C1534.24 466.112 1512.96 463.56 1502.22 462.178C1490.94 460.689 1463.18 456.754 1434.67 436.973C1425.21 430.379 1387.66 402.516 1377.02 353.489C1372.45 332.326 1374.36 314.459 1375.32 307.121C1376.49 297.337 1378.93 277.981 1390.1 258.094C1408.51 225.551 1438.08 211.513 1449.14 206.94L1449.35 207.153Z"
-//       fill="#DE0686"
-//     />
-//     <defs>
-//       <clipPath id="clip0_2975_1690">
-//         <rect
-//           width={945}
-//           height={1146}
-//           fill="white"
-//           transform="translate(487)"
-//         />
-//       </clipPath>
-//     </defs>
-//   </svg>
-// );
-// export default ThreeDoorsWithRibbonDiamondMountains;
-
 import * as React from "react";
-import { useRef } from "react";
+import { useRef, forwardRef, useImperativeHandle } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 
-const ThreeDoorsWithRibbonDiamondMountains = (props) => {
+const ThreeDoorsWithRibbonDiamondMountains = forwardRef(function TDwRDM(
+  props,
+  ref
+) {
   const starRef = useRef(null);
-  // const leftPeakRef = useRef(null);
-  // const rightPeakRef = useRef(null);
-  const peaksGroupRef = useRef(null);
+  // renamed: peaksGroupRef -> diamondRef
+  const diamondRef = useRef(null);
+  // add under existing refs
+  const leftMountainsRef = useRef(null);
+  const rightMountainsRef = useRef(null);
 
-  // React.useImperativeHandle(ref, () => ({
-  //   star: starRef.current,
-  //   peaksGroup: peaksGroupRef.current
-  // }));
+  useImperativeHandle(ref, () => ({
+    // call this from the parent timeline right before you swap to the eye svg
+    buildOutroToEye: ({ y = -70, scale = 1, duration = 1.5 } = {}) => {
+      const tl = gsap.timeline();
+      if (diamondRef.current && starRef.current) {
+        tl.to([diamondRef.current, starRef.current], {
+          y,
+          scale,
+          transformOrigin: "50% 50%",
+          ease: "power2.out",
+          duration,
+          // force3D helps avoid shimmer on scrub
+          force3D: true
+        });
+      }
+      return tl;
+    },
+    buildMountainsRise: ({ yStart = 140, duration = 0.9 } = {}) => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      const left = leftMountainsRef.current;
+      const right = rightMountainsRef.current;
+
+      // animate both together (slight stagger) from their pre-set start to final
+      tl.fromTo(
+        [left, right],
+        { y: yStart, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration,
+          stagger: 0.08,
+          immediateRender: false,
+          lazy: false
+        }
+      )
+        // optional settle bounce
+        .to(
+          [left, right],
+          { y: -6, duration: 0.18, ease: "sine.out" },
+          ">-0.08"
+        )
+        .to(
+          [left, right],
+          { y: 0, duration: 0.22, ease: "sine.inOut" },
+          ">-0.06"
+        );
+
+      return tl;
+    }
+  }));
 
   useGSAP(() => {
-    // Star sparkle animation (continuous)
+    // keep the star twinkle
     if (starRef.current) {
       gsap.to(starRef.current, {
         opacity: 0,
@@ -321,33 +79,36 @@ const ThreeDoorsWithRibbonDiamondMountains = (props) => {
       });
     }
 
-    // Crown peaks flip animation (both flip together as one unit)
-    // Replace the peaks animation with this:
-    if (peaksGroupRef.current) {
-      const tl = gsap.timeline();
-
-      for (let i = 0; i < 4; i++) {
-        // 4 flips
-        tl.to(peaksGroupRef.current, {
-          scaleX: 0,
-          duration: 0.15,
-          ease: "power2.in"
-        }).to(peaksGroupRef.current, {
-          scaleX: 1,
-          duration: 0.15,
-          ease: "power2.out"
-        });
-      }
+    // OPTIONAL idle breathing on the diamond so the scene feels alive
+    if (diamondRef.current) {
+      gsap.to(diamondRef.current, {
+        scale: 1.01,
+        duration: 1.6,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        transformOrigin: "50% 50%"
+      });
     }
   }, []);
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="1920"
-      height="515"
-      fill="none"
+      // width="1920"
+      // height="515"
+      // fill="none"
       viewBox="0 0 1920 515"
+      fill="none"
+      width="100vw"
+      height="auto"
+      preserveAspectRatio="xMidYMid slice"
+      style={{
+        width: "100vw", // full viewport width
+        height: "auto",
+        display: "block",
+        position: "relative"
+      }}
     >
       {/* Clipped background circle - pink/magenta circle with black stroke */}
       <g clipPath="url(#clip0_2980_1692)">
@@ -371,16 +132,26 @@ const ThreeDoorsWithRibbonDiamondMountains = (props) => {
       ></path>
 
       {/* Left section - Purple decorative elements (possibly flames or feathers) */}
-      <path
-        fill="#7A44BC" // Dark purple
-        d="m516.056 518.826-45.087-1.261 22.01-88.623 23.077-87.266 22.98 87.266 22.108 88.623zM658.525 517.61l-45.087-1.648 22.01-121.979 23.077-120.233 22.98 120.233 22.107 121.979z"
-      ></path>
+      <g
+        ref={leftMountainsRef}
+        style={{
+          opacity: 0,
+          transform: "translateY(140px)",
+          transformBox: "fill-box",
+          transformOrigin: "50% 100%"
+        }}
+      >
+        <path
+          fill="#7A44BC" // Dark purple
+          d="m516.056 518.826-45.087-1.261 22.01-88.623 23.077-87.266 22.98 87.266 22.108 88.623zM658.525 517.61l-45.087-1.648 22.01-121.979 23.077-120.233 22.98 120.233 22.107 121.979z"
+        ></path>
 
-      {/* Left section - Light purple decorative elements */}
-      <path
-        fill="#A35BFB" // Light purple
-        d="m590.815 517.235-53.62-1.067 26.18-72.528 27.44-71.558 27.441 71.558 26.277 72.528zM711.818 517.858l-45.088-1.164 22.011-88.623 23.077-87.266 22.98 87.266 22.107 88.623z"
-      ></path>
+        {/* Left section - Light purple decorative elements */}
+        <path
+          fill="#A35BFB" // Light purple
+          d="m590.815 517.235-53.62-1.067 26.18-72.528 27.44-71.558 27.441 71.558 26.277 72.528zM711.818 517.858l-45.088-1.164 22.011-88.623 23.077-87.266 22.98 87.266 22.107 88.623z"
+        ></path>
+      </g>
 
       {/* Left wing - Dark magenta/maroon */}
       <path
@@ -395,16 +166,26 @@ const ThreeDoorsWithRibbonDiamondMountains = (props) => {
       ></path>
 
       {/* Right section - Purple decorative elements (mirror of left) */}
-      <path
-        fill="#7A44BC" // Dark purple
-        d="m1405.8 523.501 46.2-1.291-22.55-90.769-23.65-89.379-23.55 89.379-22.65 90.769zM1259.81 522.263l46.21-1.688-22.56-124.931-23.65-123.144-23.54 123.144-22.66 124.931z"
-      ></path>
+      <g
+        ref={rightMountainsRef}
+        style={{
+          opacity: 0,
+          transform: "translateY(140px)",
+          transformBox: "fill-box",
+          transformOrigin: "50% 100%"
+        }}
+      >
+        <path
+          fill="#7A44BC" // Dark purple
+          d="m1405.8 523.501 46.2-1.291-22.55-90.769-23.65-89.379-23.55 89.379-22.65 90.769zM1259.81 522.263l46.21-1.688-22.56-124.931-23.65-123.144-23.54 123.144-22.66 124.931z"
+        ></path>
 
-      {/* Right section - Light purple decorative elements */}
-      <path
-        fill="#A35BFB" // Light purple
-        d="m1329.2 521.869 54.95-1.092-26.83-74.284-28.12-73.29-28.12 73.29-26.92 74.284zM1205.2 522.511l46.21-1.192-22.56-90.769-23.65-89.378-23.54 89.378-22.66 90.769z"
-      ></path>
+        {/* Right section - Light purple decorative elements */}
+        <path
+          fill="#A35BFB" // Light purple
+          d="m1329.2 521.869 54.95-1.092-26.83-74.284-28.12-73.29-28.12 73.29-26.92 74.284zM1205.2 522.511l46.21-1.192-22.56-90.769-23.65-89.378-23.54 89.378-22.66 90.769z"
+        ></path>
+      </g>
 
       {/* Center top - Gold/bronze triangular shape (left side of crown peak) - WITH FLIP ANIMATION */}
       {/* <path
@@ -414,7 +195,7 @@ const ThreeDoorsWithRibbonDiamondMountains = (props) => {
       ></path> */}
 
       {/* GROUP: Both crown peaks together for synchronized flipping */}
-      <g ref={peaksGroupRef}>
+      <g ref={diamondRef}>
         {/* Center top - Gold/bronze triangular shape */}
         <path
           fill="#BF9C05"
@@ -467,6 +248,6 @@ const ThreeDoorsWithRibbonDiamondMountains = (props) => {
       </defs>
     </svg>
   );
-};
+});
 
-export default ThreeDoorsWithRibbonDiamondMountains;
+export default React.memo(ThreeDoorsWithRibbonDiamondMountains);

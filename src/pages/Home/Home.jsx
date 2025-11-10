@@ -566,7 +566,8 @@ const Home = () => {
         );
       }
 
-      // ✅ Initialize Scene1_2 to START state
+      // ✅ Initialize Scene1_2 to START state (positioned above viewport)
+      gsap.set(scene1_2Refs.current.container, { y: "-100%" });
       gsap.set(scene1_2Refs.current.vector, { opacity: 0, y: 50 });
 
       // ✅ Build scene timelines (NOW that refs are ready)
@@ -592,7 +593,7 @@ const Home = () => {
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: "+=55000", // Increased for Scene1_2
+          end: "+=75000", // Increased for Scene1_2
           scrub: 0.5,
           pin: true,
           fastScrollEnd: true,
@@ -638,7 +639,7 @@ const Home = () => {
         master.add(tl2);
       }
 
-      // 🎬 TRANSITION: Scene1_1 goes down, Scene1_2 appears
+      // 🎬 TRANSITION: Scene1_1 and Scene1_2 slide down together (like connected pages)
       master
         .to(scene1_1Refs.current.container, {
           y: "100%", // Scene1_1 slides down
@@ -648,11 +649,11 @@ const Home = () => {
         .to(
           scene1_2Refs.current.container,
           {
-            opacity: 1,
-            duration: 1.2,
+            y: "0%", // Scene1_2 slides down from -100% to 0%
+            duration: 1.5,
             ease: "power2.inOut"
           },
-          "<0.3" // Scene1_2 appears slightly after Scene1_1 starts moving
+          "<" // starts at the same time as Scene1_1
         );
 
       // Play Scene 1_2 animations
@@ -758,10 +759,11 @@ const Home = () => {
       </div>
 
       {/* Scene 1_2 */}
+      {/* Scene 1_2 */}
       <div
         ref={(el) => (scene1_2Refs.current.container = el)}
         className="absolute inset-0 w-full h-full"
-        style={{ opacity: 0 }} // Important: start hidden
+        style={{ y: "-100%" }} // Important: start above viewport
       >
         <Scene1_2 ref={scene1_2Refs} isMobile={isMobile} />
       </div>

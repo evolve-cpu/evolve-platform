@@ -39,7 +39,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <div className="min-h-screen bg-evolve-black">
-            {/* <Navigation onContactClick={() => setIsContactModalOpen(true)} /> */}
+            <Navigation onContactClick={() => setIsContactModalOpen(true)} />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<AboutUs />} />

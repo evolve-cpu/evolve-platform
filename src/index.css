@@ -4,6 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* img {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+} */
+
 /* :root {
   --vw-unit: calc(100vw / 1920);
   --vh-unit: calc(100vh / 1080);
