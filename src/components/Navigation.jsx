@@ -468,8 +468,8 @@ const Navigation = () => {
               style={{
                 height: "56px",
                 boxShadow: `
-                inset 6px 6px 0 rgba(0, 0, 0, 0.2),
-                inset 6px 6px 0 rgba(0, 0, 0, 0.2)
+                inset 6px 6px 0 rgba(0, 0, 0, 0.15),
+                inset 6px 6px 0 rgba(0, 0, 0, 0.15)
               `
               }}
             >

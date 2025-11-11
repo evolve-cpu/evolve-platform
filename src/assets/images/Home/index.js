@@ -106,6 +106,7 @@ import bird_right from "./bird_right.svg";
 import bird_right_mobile from "./bird_right_mobile.svg";
 import semi_circle_left from "./semi_circle_left.svg";
 import semi_circle_right from "./semi_circle_right.svg";
+import semi_circle_right1 from "./semi_circle_right1.svg";
 
 export {
   left_wall,
@@ -214,5 +215,6 @@ export {
   bird_left_mobile,
   bird_right_mobile,
   semi_circle_left,
-  semi_circle_right
+  semi_circle_right,
+  semi_circle_right1
 };

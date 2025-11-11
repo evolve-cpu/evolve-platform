@@ -1442,7 +1442,8 @@ import {
   bird_left_mobile,
   bird_right_mobile,
   semi_circle_left,
-  semi_circle_right
+  semi_circle_right,
+  semi_circle_right1
 } from "../../assets/images/Home";
 
 import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
@@ -1557,6 +1558,14 @@ export const useScene1_2Timeline = (refs, isMobile) => {
 
   if (!isMobile) {
     elementsToSet.push(refs.thunder);
+  }
+
+  // ADD THIS NEW CODE HERE:
+  if (!isMobile) {
+    elementsToSet.push(refs.transitionSemiCircleLeft);
+    elementsToSet.push(refs.transitionBg); // ADD THIS
+  } else {
+    elementsToSet.push(refs.mobileTransitionView);
   }
 
   tl.set(elementsToSet, {
@@ -1909,7 +1918,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     tl.to(
       refs.semiCircleLeft,
       {
-        x: 0,
+        x: -110,
         duration: 1.2,
         ease: "power2.out"
       },
@@ -1919,7 +1928,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     tl.to(
       refs.semiCircleRight,
       {
-        x: 0,
+        x: 110,
         duration: 1.2,
         ease: "power2.out"
       },
@@ -2165,6 +2174,70 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "eighthScroll+=0.6"
   );
 
+  // NINTH SCROLL: Horizontal slide transition to Scene1_3
+  // NINTH SCROLL: Horizontal slide transition to Scene1_3
+  // NINTH SCROLL: Horizontal slide transition to Scene1_3
+  tl.add("ninthScroll", "+=0.5");
+
+  // Desktop horizontal scroll
+  if (!isMobile) {
+    // Show transition background and semi-circle
+    tl.set(
+      [refs.transitionSemiCircleLeft, refs.transitionBg],
+      { opacity: 1 },
+      "ninthScroll"
+    );
+
+    // Slide the main container left
+    tl.to(
+      refs.divcontainer,
+      {
+        x: "-19vw", // Slide left by one viewport
+        duration: 1.2,
+        ease: "power2.inOut"
+      },
+      "ninthScroll"
+    );
+
+    // Slide the transition background along with it
+    tl.to(
+      refs.transitionBg,
+      {
+        x: "-19vw", // Slide left by one viewport
+        duration: 1.2,
+        ease: "power2.inOut"
+      },
+      "ninthScroll"
+    );
+  }
+
+  // Mobile horizontal scroll
+  if (isMobile) {
+    // Slide current container left
+    tl.to(
+      refs.divcontainer,
+      {
+        x: "-50vw",
+        duration: 1.2,
+        ease: "power2.inOut"
+      },
+      "ninthScroll"
+    );
+
+    // Show and slide in the transition view
+    tl.set(refs.mobileTransitionView, { opacity: 1 }, "ninthScroll");
+
+    tl.to(
+      refs.mobileTransitionView,
+      {
+        x: "-50vw",
+        duration: 1.2,
+        ease: "power2.inOut"
+      },
+      "ninthScroll"
+    );
+  }
+
   // Clear will-change
   const elementsToClean = [
     refs.container,
@@ -2203,6 +2276,14 @@ export const useScene1_2Timeline = (refs, isMobile) => {
 
   if (!isMobile) {
     elementsToClean.push(refs.thunder);
+  }
+
+  // ADD THIS NEW CODE HERE:
+  if (!isMobile) {
+    elementsToClean.push(refs.transitionSemiCircleLeft);
+    elementsToClean.push(refs.transitionBg); // ADD THIS
+  } else {
+    elementsToClean.push(refs.mobileTransitionView);
   }
 
   tl.set(
@@ -2256,6 +2337,9 @@ const Scene1_2 = React.forwardRef((props, ref) => {
   const freedomTextRef = useRef(null);
   const semiCircleLeftRef = useRef(null);
   const semiCircleRightRef = useRef(null);
+  const transitionSemiCircleLeftRef = useRef(null); // ADD THIS
+  const mobileTransitionViewRef = useRef(null); // ADD THIS
+  const transitionBgRef = useRef(null); // ADD THIS
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
@@ -2293,7 +2377,10 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     nerveText: nerveTextRef.current,
     freedomText: freedomTextRef.current,
     semiCircleLeft: semiCircleLeftRef.current,
-    semiCircleRight: semiCircleRightRef.current
+    semiCircleRight: semiCircleRightRef.current,
+    transitionSemiCircleLeft: transitionSemiCircleLeftRef.current, // ADD THIS
+    mobileTransitionView: mobileTransitionViewRef.current, // ADD THIS
+    transitionBg: transitionBgRef.current // ADD THIS
   }));
 
   return (
@@ -2306,6 +2393,26 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         ref={divcontainerRef}
         className="absolute inset-0 w-full h-full bg-evolve-lavender-indigo transition-colors"
       >
+        {/* Transition background - appears during slide (Desktop only) */}
+        {!isMobile && (
+          <div
+            className="absolute h-full pointer-events-none"
+            style={{
+              left: "100vw", // Start at right edge
+              width: "100vw", // One viewport width
+              top: 0,
+              backgroundColor: "#ffd007", // Yellow background
+              opacity: 0,
+              zIndex: 1
+            }}
+            ref={(el) => {
+              // We'll animate this in the timeline
+              if (el) {
+                transitionBgRef.current = el;
+              }
+            }}
+          />
+        )}
         {/* Semi-Circle Left - Desktop Only (lowest z-index) */}
         {!isMobile && (
           <img
@@ -2315,7 +2422,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             className="absolute pointer-events-none"
             style={{
               left: 0,
-              bottom: 0,
+              bottom: "-5vh",
               width: "auto",
               height: "80vh",
               opacity: 0,
@@ -2328,12 +2435,29 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         {!isMobile && (
           <img
             ref={semiCircleRightRef}
-            src={semi_circle_right}
+            src={semi_circle_right1}
             alt="semi circle right"
             className="absolute pointer-events-none"
             style={{
               right: 0,
-              bottom: 0,
+              bottom: "-5vh",
+              width: "auto",
+              height: "80vh",
+              opacity: 0,
+              zIndex: 2
+            }}
+          />
+        )}
+        {/* Transition Semi-Circle Left - Desktop Only (appears during slide) */}
+        {!isMobile && (
+          <img
+            ref={transitionSemiCircleLeftRef}
+            src={semi_circle_left}
+            alt="transition semi circle left"
+            className="absolute pointer-events-none"
+            style={{
+              left: "107%", // Position it right after the viewport edge
+              bottom: "-5vh",
               width: "auto",
               height: "80vh",
               opacity: 0,
@@ -2342,6 +2466,45 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           />
         )}
 
+        {/* Mobile Transition View - Semi Circles */}
+        {/* Mobile Transition View - Semi Circles */}
+        {isMobile && (
+          <div
+            ref={mobileTransitionViewRef}
+            className="absolute inset-0 w-full h-full bg-evolve-yellow"
+            style={{
+              left: "100vw", // Start off-screen right
+              opacity: 0,
+              zIndex: 25 // Above everything else
+            }}
+          >
+            {/* Semi-Circle Right - takes left half */}
+            <img
+              src={semi_circle_right1}
+              alt="transition semi circle right"
+              className="absolute pointer-events-none"
+              style={{
+                left: 0,
+                bottom: "-5vh",
+                width: "auto",
+                height: "80vh"
+              }}
+            />
+
+            {/* Semi-Circle Left - takes right half */}
+            <img
+              src={semi_circle_left}
+              alt="transition semi circle left"
+              className="absolute pointer-events-none"
+              style={{
+                right: 0,
+                bottom: "-5vh",
+                width: "auto",
+                height: "80vh"
+              }}
+            />
+          </div>
+        )}
         {/* Rays background - half visible */}
         <img
           // loading="lazy"
@@ -2383,7 +2546,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           {isMobile ? (
             <LeftRightDoorHandsMobile className="" />
           ) : (
-            <LeftRightDoorHands className="w-full" />
+            <LeftRightDoorHands className="" />
           )}
 
           {/* Purple Hand Left - Desktop */}
@@ -2419,7 +2582,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           [@media(min-height:900px)]:top-[38%]
           [@media(min-height:1080px)]:top-[35%]"
               style={{
-                right: "37.98px",
+                right: "20px",
                 width: "auto",
                 height: "auto",
                 opacity: 0,
@@ -2602,7 +2765,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:900px)]:top-[14%]
     [@media(min-height:1080px)]:top-[10%]"
               style={{
-                right: "40px",
+                right: "20px",
                 // width: "full",
                 // height: "full",
                 opacity: 0,
@@ -2692,7 +2855,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[35%]"
               style={{
-                right: "37.98px",
+                right: "20px",
                 width: "30%",
                 // height: "auto",
                 opacity: 0,

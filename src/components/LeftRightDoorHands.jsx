@@ -4,7 +4,7 @@ const LeftRightDoorHands = (props) => {
   return (
     <svg
       // width={1522}
-      width="91vw"
+      width="91.5vw"
       //   height={"100%"}
       // height={1438}
       viewBox="0 0 1542 1238"

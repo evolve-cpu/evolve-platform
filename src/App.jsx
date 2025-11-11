@@ -14,6 +14,7 @@ import Navigation from "./components/Navigation";
 import ContactModal from "./components/ContactModal";
 import { useEffect, useState } from "react";
 import WhatIsDesign from "./pages/WhatIsDesign";
+import { TabletScaler } from "./lib/TabletScaler";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +42,25 @@ const App = () => {
           <div className="min-h-screen bg-evolve-black">
             <Navigation onContactClick={() => setIsContactModalOpen(true)} />
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route
+                path="/"
+                element={
+                  <TabletScaler>
+                    {(mode) => (
+                      <Home
+                        // force layout regardless of Tailwind breakpoints
+                        forceLayout={
+                          mode === "mobile-portrait"
+                            ? "mobile"
+                            : mode === "desktop-landscape"
+                            ? "desktop"
+                            : "auto"
+                        }
+                      />
+                    )}
+                  </TabletScaler>
+                }
+              />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/webinars" element={<Webinars />} />
               <Route path="/quiz" element={<Quiz />} />
