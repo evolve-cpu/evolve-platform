@@ -105,8 +105,12 @@ import bird_left_mobile from "./bird_left_mobile.svg";
 import bird_right from "./bird_right.svg";
 import bird_right_mobile from "./bird_right_mobile.svg";
 import semi_circle_left from "./semi_circle_left.svg";
+import semi_circle_left_mobile from "./semi_circle_left_mobile.svg";
 import semi_circle_right from "./semi_circle_right.svg";
+import semi_circle_right_mobile from "./semi_circle_right_mobile.svg";
 import semi_circle_right1 from "./semi_circle_right1.svg";
+import hand_with_thunder from "./hand_with_thunder.svg";
+import hand_with_thunder_mobile from "./hand_with_thunder_mobile.svg";
 
 export {
   left_wall,
@@ -216,5 +220,9 @@ export {
   bird_right_mobile,
   semi_circle_left,
   semi_circle_right,
-  semi_circle_right1
+  semi_circle_right1,
+  hand_with_thunder,
+  hand_with_thunder_mobile,
+  semi_circle_left_mobile,
+  semi_circle_right_mobile
 };

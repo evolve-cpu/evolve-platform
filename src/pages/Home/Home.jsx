@@ -370,16 +370,19 @@ import Scene1_2, { useScene1_2Timeline } from "./Scene1_2";
 import Scene1_3, { useScene1_3Timeline } from "./Scene1_3";
 // import Scene1_4, { useScene1_4Timeline } from "./Scene1_4"; // ADD THIS
 import GrainTexture from "../../components/GrainTexture";
-import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
+// import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Home = ({ forceLayout = "auto" }) => {
+const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
   const scene1Refs = useRef({});
   const scene1_1Refs = useRef({});
   const scene1_2Refs = useRef({});
   const scene1_3Refs = useRef({});
-  const scene1_4Refs = useRef({}); // ADD THIS
+  const scene1EndScrollRef = useRef(null); // Track where Scene1 ends
+  const hasShownNavbarRef = useRef(false);
+
+  // const scene1_4Refs = useRef({}); // ADD THIS
   // const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isMobile, setIsMobile] = useState(() => {
     if (forceLayout === "mobile") return true;
@@ -401,13 +404,21 @@ const Home = ({ forceLayout = "auto" }) => {
   }, [forceLayout]);
 
   useLayoutEffect(() => {
+    // Don't initialize animations until loading is complete
+    if (isLoading) return;
+
+    // Reset navbar state on mount
+    if (setShowNavbar) {
+      setShowNavbar(false);
+      hasShownNavbarRef.current = false;
+    }
     // Wait for refs to be populated
     if (
       !scene1Refs.current.container ||
       !scene1_1Refs.current.container ||
       !scene1_2Refs.current.container ||
-      !scene1_3Refs.current.container ||
-      !scene1_4Refs.current.container // ADD THIS
+      !scene1_3Refs.current.container
+      // || !scene1_4Refs.current.container // ADD THIS
     ) {
       return;
     }
@@ -483,21 +494,21 @@ const Home = ({ forceLayout = "auto" }) => {
       // ✅ Initialize Scene1_3 to START state (positioned to the right)
       gsap.set(scene1_3Refs.current.container, { x: "100%" });
 
-      // ✅ Initialize Scene1_4 to START state (positioned based on mobile/desktop)
-      gsap.set(scene1_4Refs.current.container, {
-        y: isMobile ? "-100%" : "100%" // Above viewport on mobile, below on desktop
-      }); // ADD THIS
-      gsap.set([scene1_4Refs.current.text1, scene1_4Refs.current.text2], {
-        opacity: 0,
-        y: 24
-      });
+      // // ✅ Initialize Scene1_4 to START state (positioned based on mobile/desktop)
+      // gsap.set(scene1_4Refs.current.container, {
+      //   y: isMobile ? "-100%" : "100%" // Above viewport on mobile, below on desktop
+      // }); // ADD THIS
+      // gsap.set([scene1_4Refs.current.text1, scene1_4Refs.current.text2], {
+      //   opacity: 0,
+      //   y: 24
+      // });
 
       // ✅ Build scene timelines (NOW that refs are ready)
       const tl1 = useScene1Timeline(scene1Refs.current, isMobile);
       const tl2 = useScene1_1Timeline(scene1_1Refs.current, isMobile);
       const tl3 = useScene1_2Timeline(scene1_2Refs.current, isMobile);
       const tl4 = useScene1_3Timeline(scene1_3Refs.current, isMobile);
-      const tl5 = useScene1_4Timeline(scene1_4Refs.current, isMobile); // ADD THIS
+      // const tl5 = useScene1_4Timeline(scene1_4Refs.current, isMobile); // ADD THIS
 
       // ✅ FREEZE rainbow state before scroll
       if (scene1Refs.current.rainbow) {
@@ -533,19 +544,60 @@ const Home = ({ forceLayout = "auto" }) => {
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: "+=400000", // Increased for Scene1_4
-          scrub: 0.5,
+          end: "+=400000",
+          scrub: isMobile ? 0.5 : 0.2, // Faster response on desktop
           pin: true,
           fastScrollEnd: true,
           onStart: () => {
-            // KILL idle animations permanently on scroll start
             if (idleAnimsRef.current) {
               idleAnimsRef.current.revert();
               idleAnimsRef.current = null;
             }
-            // Force overwrite to prevent ripple from restarting
             if (scene1Refs.current.rainbow) {
               gsap.set(scene1Refs.current.rainbow, { overwrite: "auto" });
+            }
+          },
+          onUpdate: (self) => {
+            // More precise calculation of Scene1 end point
+            // Get the actual timeline progress where Scene1_1 starts
+            const totalDuration = master.duration();
+
+            // Calculate Scene1 duration from your timeline
+            // Scene1 timeline (tl1) + zoom transition (1.2s) + fade in (1.2s - 0.4s overlap)
+            let scene1Duration = 1.2 + 1.2 - 0.4; // Start with transition duration
+            if (master.getChildren()[0]) {
+              // Add tl1 duration if it exists
+              scene1Duration += master.getChildren()[0].duration();
+            }
+
+            const scene1EndProgress = scene1Duration / totalDuration;
+
+            // Show navbar ONLY when we've passed Scene1
+            if (
+              setShowNavbar &&
+              !hasShownNavbarRef.current &&
+              self.progress > scene1EndProgress
+            ) {
+              setShowNavbar(true);
+              hasShownNavbarRef.current = true;
+            }
+
+            // Hide navbar if we scroll back to Scene1
+            if (
+              setShowNavbar &&
+              hasShownNavbarRef.current &&
+              self.progress <= scene1EndProgress
+            ) {
+              setShowNavbar(false);
+              hasShownNavbarRef.current = false;
+            }
+
+            // Store scroll position for Scene1_1 start (first time only)
+            if (
+              !scene1EndScrollRef.current &&
+              self.progress > scene1EndProgress
+            ) {
+              scene1EndScrollRef.current = self.scroll();
             }
           }
         }
@@ -624,21 +676,21 @@ const Home = ({ forceLayout = "auto" }) => {
       }
 
       // 🎬 VERTICAL TRANSITION: Scene1_3 and Scene1_4 slide vertically (direction depends on device)
-      master
-        .to(scene1_3Refs.current.container, {
-          y: isMobile ? "100%" : "-100%", // Mobile: down, Desktop: up
-          duration: 1.5,
-          ease: "power2.inOut"
-        })
-        .to(
-          scene1_4Refs.current.container,
-          {
-            y: "0%", // Scene1_4 slides to center from below (desktop) or above (mobile)
-            duration: 1.5,
-            ease: "power2.inOut"
-          },
-          "<" // starts at the same time as Scene1_3
-        );
+      // master
+      //   .to(scene1_3Refs.current.container, {
+      //     y: isMobile ? "100%" : "-100%", // Mobile: down, Desktop: up
+      //     duration: 1.5,
+      //     ease: "power2.inOut"
+      //   })
+      //   .to(
+      //     scene1_4Refs.current.container,
+      //     {
+      //       y: "0%", // Scene1_4 slides to center from below (desktop) or above (mobile)
+      //       duration: 1.5,
+      //       ease: "power2.inOut"
+      //     },
+      //     "<" // starts at the same time as Scene1_3
+      //   );
 
       // Play Scene 1_4 animations
       if (tl5) {
@@ -647,9 +699,34 @@ const Home = ({ forceLayout = "auto" }) => {
 
       masterTimelineRef.current = master;
     });
+    // Listen for logo click event
+    // Listen for logo click event
+    const handleScrollToScene1_1 = () => {
+      if (scene1EndScrollRef.current) {
+        window.scrollTo({
+          top: scene1EndScrollRef.current,
+          behavior: "smooth"
+        });
+      } else {
+        // Fallback: scroll to just past Scene1
+        const scrollTrigger = masterTimelineRef.current?.scrollTrigger;
+        if (scrollTrigger) {
+          // Estimate ~5-8% of total scroll is Scene1 (adjust based on testing)
+          const estimatedScroll =
+            scrollTrigger.start +
+            (scrollTrigger.end - scrollTrigger.start) * 0.06;
+          window.scrollTo({
+            top: estimatedScroll,
+            behavior: "smooth"
+          });
+        }
+      }
+    };
+    window.addEventListener("scrollToScene1_1", handleScrollToScene1_1);
 
     return () => {
       cancelAnimationFrame(id);
+      window.removeEventListener("scrollToScene1_1", handleScrollToScene1_1);
       if (masterTimelineRef.current) {
         masterTimelineRef.current.kill();
       }
@@ -657,8 +734,12 @@ const Home = ({ forceLayout = "auto" }) => {
         idleAnimsRef.current.revert();
       }
       ScrollTrigger.getAll().forEach((st) => st.kill());
+      // Reset navbar state on unmount
+      if (setShowNavbar) {
+        setShowNavbar(true);
+      }
     };
-  }, [isMobile]);
+  }, [isMobile, setShowNavbar, isLoading]);
 
   return (
     <div
@@ -721,7 +802,7 @@ const Home = ({ forceLayout = "auto" }) => {
         <Scene1_3 ref={scene1_3Refs} isMobile={isMobile} />
       </div>
 
-      {/* Scene 1_4 */}
+      {/* Scene 1_4
       <div
         ref={(el) => {
           if (scene1_4Refs.current) scene1_4Refs.current.container = el;
@@ -730,7 +811,7 @@ const Home = ({ forceLayout = "auto" }) => {
         style={{ y: isMobile ? "-100%" : "100%" }} // Positioned above on mobile, below on desktop
       >
         <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
-      </div>
+      </div> */}
     </div>
   );
 };

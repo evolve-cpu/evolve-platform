@@ -1443,7 +1443,9 @@ import {
   bird_right_mobile,
   semi_circle_left,
   semi_circle_right,
-  semi_circle_right1
+  semi_circle_right1,
+  semi_circle_right_mobile,
+  semi_circle_left_mobile
 } from "../../assets/images/Home";
 
 import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
@@ -2480,27 +2482,28 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           >
             {/* Semi-Circle Right - takes left half */}
             <img
-              src={semi_circle_right1}
+              src={semi_circle_right_mobile}
               alt="transition semi circle right"
               className="absolute pointer-events-none"
               style={{
                 left: 0,
                 bottom: "-5vh",
                 width: "auto",
-                height: "80vh"
+                height: "70vh"
+                // width: "90vw"
               }}
             />
 
             {/* Semi-Circle Left - takes right half */}
             <img
-              src={semi_circle_left}
+              src={semi_circle_left_mobile}
               alt="transition semi circle left"
               className="absolute pointer-events-none"
               style={{
                 right: 0,
                 bottom: "-5vh",
                 width: "auto",
-                height: "80vh"
+                height: "70vh"
               }}
             />
           </div>

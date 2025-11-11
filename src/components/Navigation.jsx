@@ -302,7 +302,7 @@ import {
 const MIXED_BL = 16;
 const MIXED_BR = 16;
 
-const Navigation = () => {
+const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -442,7 +442,12 @@ const Navigation = () => {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-50">
+      {/* <nav className="fixed top-0 left-0 w-full z-50"> */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-opacity duration-500 ${
+          showNavbar ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
         <div
           ref={outerRef}
           className="w-full border-2 border-black bg-transparent"
@@ -486,7 +491,10 @@ const Navigation = () => {
                 />
               </button>
 
-              <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center">
+              <div
+                onClick={onLogoClick}
+                className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
+              >
                 <img
                   src={evolve_logo_mobile}
                   alt="evolve logo"

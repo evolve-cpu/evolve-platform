@@ -2365,8 +2365,8 @@ const WaitlistButton = React.forwardRef(
         style={{
           backgroundColor: "#000000",
           borderRadius: "16px",
-          padding: "16px 20px",
-          fontSize: "24px",
+          padding: "1rem 1.02rem",
+          fontSize: "1.5rem",
           color: "#ffffff",
           textTransform: "lowercase",
           boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
@@ -2837,7 +2837,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
         style={{
           top: isMobile ? "24%" : "26%",
-          fontSize: isMobile ? "2.2rem" : "48px",
+          fontSize: isMobile ? "2rem" : "3rem",
+          // fontSize: isMobile
+          //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
+          //   : "clamp(1.25rem, 2.6vw, 3rem)",
           lineHeight: "1.2",
           maxWidth: isMobile ? "100%" : "80%",
           width: isMobile ? "92vw" : "80%",
@@ -2920,7 +2923,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
         style={{
           top: isMobile ? "24%" : "26%",
-          fontSize: isMobile ? "2.2rem" : "48px",
+          fontSize: isMobile ? "2rem" : "3rem",
+          // fontSize: isMobile
+          //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
+          //   : "clamp(1.25rem, 2.6vw, 3rem)",
           lineHeight: "1.2",
           maxWidth: isMobile ? "100%" : "80%",
           width: isMobile ? "92vw" : "80%",
@@ -3033,7 +3039,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
         style={{
           top: isMobile ? "30%" : "50%",
-          fontSize: isMobile ? "32px" : "48px",
+          fontSize: isMobile ? "2rem" : "3rem",
+          // fontSize: isMobile
+          // ? "clamp(1.25rem, 4.5vw, 2rem)"
+          // : "clamp(1.25rem, 2.6vw, 3rem)",
           lineHeight: "1.2",
           color: "rgb(0, 0, 0)",
           opacity: 0,
@@ -3052,7 +3061,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-0.8 font-extrabold"
           style={{
             top: "65%",
-            fontSize: "56px",
+            fontSize: "3.5rem",
+            // fontSize: "clamp(1.75rem, 3.6vw, 3.5rem)",
             lineHeight: "1.2",
             color: "rgb(0, 0, 0)",
             opacity: 0,
@@ -3206,7 +3216,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
                 opacity: 0,
                 width: "auto",
                 padding: "20px 40px",
-                fontSize: "28px",
+                // fontSize: "28px",
+                fontSize: "1.75rem",
                 cursor: "pointer",
                 pointerEvents: "auto"
               }}
@@ -3222,7 +3233,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold"
             style={{
               bottom: "10%",
-              fontSize: "96px",
+              fontSize: "6rem",
+              // fontSize: "clamp(2rem, 6.5vw, 6rem)",
               lineHeight: "1.2",
               color: "rgb(0, 0, 0)",
               opacity: 0
@@ -3432,7 +3444,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             style={{
               top: "42%",
               width: "75vw",
-              fontSize: "40px",
+              fontSize: "2.5rem",
+              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
               lineHeight: "1.2",
               color: "rgb(0, 0, 0)",
               opacity: 0
@@ -3447,7 +3460,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             style={{
               top: "42%",
               width: "75vw",
-              fontSize: "40px",
+              fontSize: "2.5rem",
+              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
               lineHeight: "1.2",
               color: "rgb(0, 0, 0)",
               opacity: 0
@@ -3462,7 +3476,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             style={{
               top: "42%",
               width: "75vw",
-              fontSize: "40px",
+              fontSize: "2.5rem",
+              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
               lineHeight: "1.2",
               color: "rgb(0, 0, 0)",
               opacity: 0
@@ -3585,7 +3600,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
                 opacity: 0,
                 width: isMobile ? "75vw" : "auto",
                 padding: isMobile ? "16px 20px" : "20px 40px",
-                fontSize: isMobile ? "24px" : "28px"
+                // fontSize: isMobile ? "24px" : "28px"
+                fontSize: isMobile ? "1.5rem" : "1.75rem"
               }}
               onClick={() => console.log("Waitlist button clicked!")}
             />
@@ -3596,7 +3612,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             style={{
               bottom: "10%",
               width: "75vw",
-              fontSize: "40px",
+              // fontSize: "40px",
+              fontSize: "2.5rem",
               lineHeight: "1.2",
               color: "rgb(0, 0, 0)",
               opacity: 0
