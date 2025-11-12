@@ -544,7 +544,7 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: "+=400000",
+          end: "+=300000",
           scrub: isMobile ? 0.5 : 0.2, // Faster response on desktop
           pin: true,
           fastScrollEnd: true,
@@ -744,7 +744,7 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
   return (
     <div
       id="scroll-container"
-      className="relative w-full h-screen overflow-hidden bg-black"
+      className="relative w-full h-screen overflow-hidden bg-black lowercase"
       style={{ perspective: "1200px" }}
     >
       <div

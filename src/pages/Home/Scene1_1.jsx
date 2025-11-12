@@ -55,9 +55,29 @@ import {
   stairs_right_2
 } from "../../assets/images/Home";
 
+// Helper function to get screen-size-specific multipliers
+const getScreenMultipliers = () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // Detect screen categories
+  if (width <= 1440) {
+    // Small laptops (13-14 inch) - current behavior
+    return { orbit: 1, stairs: 1 };
+  } else if (width <= 1920 && height <= 1200) {
+    // Medium laptops (15-16 inch) - reduce movement by 30%
+    return { orbit: 0.7, stairs: 0.85 };
+  } else {
+    // Large screens (17+ inch, 4K) - reduce movement by 50%
+    return { orbit: 0.5, stairs: 0.7 };
+  }
+};
 // Timeline hook for Scene1_1 animation - works with master timeline
 export const useScene1_1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
+
+  // Get screen multipliers for responsive movement
+  const multipliers = getScreenMultipliers();
 
   // Get object size for calculations
   const objectSize = isMobile ? 44 : 70;
@@ -763,7 +783,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 0,
           y: 50,
-          scale: 0.95
+          scale: 0
         },
         {
           opacity: 1,
@@ -783,7 +803,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 0,
           y: 50,
-          scale: 0.95
+          scale: 0
         },
         {
           opacity: 1,
@@ -1626,53 +1646,67 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
       // ===== DESKTOP: OPTIMIZED SMOOTH ANIMATION =====
 
-      // Step 1: Initial setup - orbit moves down, mini stairs removed, text4 appears
+      // Step 1: Initial setup - orbit moves down, stairs MORPH from mini to full
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "+=8%",
-          duration: 0.8,
+          y: `+=${7 * multipliers.orbit}%`,
+          duration: 0.2,
           ease: "power2.out"
         },
         nextPhaseStart
       );
 
+      // Set full stairs at same position as mini stairs initially
+      tl.set(
+        [refs.stairsLeft, refs.stairsRight],
+        {
+          opacity: 0,
+          scale: 0, // Match mini stairs scale
+          transformOrigin: "bottom left"
+        },
+        nextPhaseStart
+      );
+
+      tl.set(
+        refs.stairsRight,
+        {
+          transformOrigin: "bottom right"
+        },
+        nextPhaseStart
+      );
+
+      // Mini stairs scale up and morph into full stairs
+      tl.to(
+        [refs.leftStairsMini, refs.rightStairsMini],
+        {
+          scale: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        },
+        nextPhaseStart
+      );
+
+      // Crossfade: mini fades out as full fades in
       tl.to(
         [refs.leftStairsMini, refs.rightStairsMini],
         {
           opacity: 0,
-          duration: 0.3,
-          ease: "power2.out"
+          duration: 0.4,
+          ease: "power2.inOut"
         },
-        nextPhaseStart
+        nextPhaseStart + 0.2
       );
 
-      tl.fromTo(
-        refs.stairsLeft,
-        {
-          opacity: 0,
-          y: 0
-        },
+      tl.to(
+        [refs.stairsLeft, refs.stairsRight],
         {
           opacity: 1,
-          duration: 0.5,
-          ease: "power2.out"
+          scale: 1,
+          duration: 0.4,
+          ease: "power2.inOut"
         },
-        nextPhaseStart + 0.3
-      );
-
-      tl.fromTo(
-        refs.stairsRight,
-        {
-          opacity: 0,
-          y: 0
-        },
-        {
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out"
-        },
-        nextPhaseStart + 0.3
+        nextPhaseStart + 0.2
       );
 
       tl.set(
@@ -1685,6 +1719,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Step 2: Show outer circle at center, replace stairs with stairs_1
+      // Step 2: Show outer circle at center, stairs MORPH from full to stairs_1
       const step2Start = nextPhaseStart + 2.0;
 
       // Combined circle container appears at orbit center
@@ -1703,7 +1738,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.outer,
           {
             opacity: 0,
-            scale: 0.15, // Smaller initial scale
+            scale: 0.15,
             willChange: "transform, opacity"
           },
           step2Start
@@ -1720,67 +1755,69 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Remove old stairs (instant)
-      tl.to(
-        [refs.stairsLeft, refs.stairsRight],
+      // Set stairs_1 at same position/scale as current full stairs
+      tl.set(
+        [refs.leftStairs1, refs.rightStairs1],
         {
           opacity: 0,
-          duration: 0.2,
-          ease: "power1.out"
+          // scale: 1,
+          y: 0
         },
         step2Start
       );
 
-      // New stairs_1 appear
-      tl.fromTo(
-        refs.leftStairs1,
+      // Current stairs morph by moving slightly
+      tl.to(
+        [refs.stairsLeft, refs.stairsRight],
         {
-          opacity: 0,
-          y: 30
+          y: 10,
+          duration: 0.4,
+          ease: "power2.inOut"
         },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        },
-        step2Start + 0.3
+        step2Start
       );
 
-      tl.fromTo(
-        refs.rightStairs1,
+      // Crossfade to stairs_1
+      tl.to(
+        [refs.stairsLeft, refs.stairsRight],
         {
           opacity: 0,
-          y: 30
+          duration: 0.3,
+          ease: "power2.inOut"
         },
+        step2Start + 0.2
+      );
+
+      tl.to(
+        [refs.leftStairs1, refs.rightStairs1],
         {
           opacity: 1,
           y: 0,
-          duration: 0.6,
+          duration: 0.4,
           ease: "power2.out"
         },
-        step2Start + 0.3
+        step2Start + 0.2
       );
 
       // Step 3: Move orbit and stairs down, scale outer circle up (becomes combined)
       const step3Start = step2Start + 2.0;
 
-      // Orbit moves down
+      // Orbit moves down (with screen multiplier)
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "+=10%",
+          y: `+=${8 * multipliers.orbit}%`,
           duration: 1.0,
           ease: "power1.inOut"
         },
         step3Start
       );
 
-      // Stairs move down
+      // Stairs move down (with screen multiplier)
       tl.to(
         [refs.leftStairs1, refs.rightStairs1],
         {
-          y: "+=8vh",
+          y: `+=${12 * multipliers.stairs}vh`,
           duration: 1.0,
           ease: "power1.inOut"
         },
@@ -1824,7 +1861,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Step 4: Zoom orbit and circle from center, replace stairs with stairs_2
+      // Step 4: Zoom orbit and circle from center, stairs MORPH from stairs_1 to stairs_2
       const step4Start = step3Start + 2.0;
 
       // Orbit scales up from center
@@ -1843,7 +1880,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         tl.to(
           refs.combinedCircle.outer,
           {
-            scale: 0.8, // Final scale - still reasonable size
+            scale: 0.8,
             duration: 1.2,
             ease: "power1.inOut"
           },
@@ -1851,12 +1888,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Inner circle scales proportionally - BIGGER
+      // Inner circle scales proportionally
       if (refs.combinedCircle?.inner) {
         tl.to(
           refs.combinedCircle.inner,
           {
-            scale: 0.7, // Increased from 0.56 to 1.0 (about 180% bigger than before)
+            scale: 0.7,
             duration: 1.2,
             ease: "power1.inOut"
           },
@@ -1864,46 +1901,47 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Remove stairs_1
+      // Set stairs_2 at same position as stairs_1
+      tl.set(
+        [refs.leftStairs2, refs.rightStairs2],
+        {
+          opacity: 0,
+          y: `+=${12 * multipliers.stairs}vh`, // Match current stairs_1 position
+          scale: 1
+        },
+        step4Start
+      );
+
+      // Stairs_1 move slightly and morph
+      tl.to(
+        [refs.leftStairs1, refs.rightStairs1],
+        {
+          y: `+=${10 * multipliers.stairs}vh`,
+          duration: 0.4,
+          ease: "power2.inOut"
+        },
+        step4Start
+      );
+
+      // Crossfade to stairs_2
       tl.to(
         [refs.leftStairs1, refs.rightStairs1],
         {
           opacity: 0,
           duration: 0.3,
-          ease: "power1.out"
+          ease: "power2.inOut"
         },
-        step4Start
+        step4Start + 0.2
       );
 
-      // New stairs_2 appear
-      tl.fromTo(
-        refs.leftStairs2,
-        {
-          opacity: 0,
-          y: 30
-        },
+      tl.to(
+        [refs.leftStairs2, refs.rightStairs2],
         {
           opacity: 1,
-          y: 0,
-          duration: 0.6,
+          duration: 0.4,
           ease: "power2.out"
         },
-        step4Start + 0.3
-      );
-
-      tl.fromTo(
-        refs.rightStairs2,
-        {
-          opacity: 0,
-          y: 30
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        },
-        step4Start + 0.3
+        step4Start + 0.2
       );
 
       tl.to(
@@ -2927,7 +2965,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // fontSize: isMobile
           //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
           //   : "clamp(1.25rem, 2.6vw, 3rem)",
-          lineHeight: "1.2",
+          lineHeight: isMobile ? "36px" : "60px",
           maxWidth: isMobile ? "100%" : "80%",
           width: isMobile ? "92vw" : "80%",
           opacity: 0,
@@ -3038,12 +3076,12 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         ref={text3Ref}
         className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
         style={{
-          top: isMobile ? "30%" : "50%",
+          top: isMobile ? "30%" : "55%",
           fontSize: isMobile ? "2rem" : "3rem",
           // fontSize: isMobile
           // ? "clamp(1.25rem, 4.5vw, 2rem)"
           // : "clamp(1.25rem, 2.6vw, 3rem)",
-          lineHeight: "1.2",
+          lineHeight: isMobile ? "36px" : "84px",
           color: "rgb(0, 0, 0)",
           opacity: 0,
           width: isMobile ? "75vw" : "60%",
@@ -3058,12 +3096,13 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {!isMobile && (
         <div
           ref={text4Ref}
-          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-0.8 font-extrabold"
+          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
           style={{
-            top: "65%",
+            top: "70%",
             fontSize: "3.5rem",
             // fontSize: "clamp(1.75rem, 3.6vw, 3.5rem)",
-            lineHeight: "1.2",
+            lineHeight: "54px",
+            letterSpacing: 0,
             color: "rgb(0, 0, 0)",
             opacity: 0,
             display: "flex",
@@ -3235,7 +3274,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               bottom: "10%",
               fontSize: "6rem",
               // fontSize: "clamp(2rem, 6.5vw, 6rem)",
-              lineHeight: "1.2",
+              lineHeight: "84px",
               color: "rgb(0, 0, 0)",
               opacity: 0
             }}
@@ -3446,7 +3485,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               width: "75vw",
               fontSize: "2.5rem",
               // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "1.2",
+              lineHeight: "32px",
               color: "rgb(0, 0, 0)",
               opacity: 0
             }}
@@ -3462,7 +3501,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               width: "75vw",
               fontSize: "2.5rem",
               // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "1.2",
+              lineHeight: "32px",
               color: "rgb(0, 0, 0)",
               opacity: 0
             }}
@@ -3478,7 +3517,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               width: "75vw",
               fontSize: "2.5rem",
               // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "1.2",
+              lineHeight: "40px",
               color: "rgb(0, 0, 0)",
               opacity: 0
             }}
@@ -3614,7 +3653,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               width: "75vw",
               // fontSize: "40px",
               fontSize: "2.5rem",
-              lineHeight: "1.2",
+              lineHeight: "36px",
               color: "rgb(0, 0, 0)",
               opacity: 0
             }}

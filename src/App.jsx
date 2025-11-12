@@ -138,7 +138,27 @@ const AppLayout = () => {
 
   const hideFooterRoutes = ["/contact"];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
+  // const location = useLocation();
 
+  // prevent native scroll restore
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  // reset on full reload
+  useEffect(() => {
+    const nav = performance.getEntriesByType("navigation")?.[0];
+    if (nav && (nav.type === "reload" || nav.type === "navigate")) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  // reset on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   // Set navbar visibility based on route
   useEffect(() => {
     if (location.pathname === "/") {

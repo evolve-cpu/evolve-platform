@@ -2559,10 +2559,11 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_left}
               alt="purple hand left"
               className="absolute pointer-events-none 
-          [top:40%] 
-          [@media(min-height:768px)]:top-[39%] 
-          [@media(min-height:900px)]:top-[38%]
-          [@media(min-height:1080px)]:top-[35%]"
+    [top:40%] 
+    [@media(min-height:768px)]:top-[39%] 
+    [@media(min-height:900px)]:top-[38%]
+    [@media(min-height:1080px)]:top-[38%]
+    [@media(min-height:1200px)]:top-[33%]"
               style={{
                 left: "24px",
                 width: "auto",
@@ -2580,10 +2581,11 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_right}
               alt="purple hand right"
               className="absolute pointer-events-none 
-          [top:40%] 
-          [@media(min-height:768px)]:top-[39%] 
-          [@media(min-height:900px)]:top-[38%]
-          [@media(min-height:1080px)]:top-[35%]"
+    [top:40%] 
+    [@media(min-height:768px)]:top-[39%] 
+    [@media(min-height:900px)]:top-[38%]
+    [@media(min-height:1080px)]:top-[38%]
+    [@media(min-height:1200px)]:top-[33%]"
               style={{
                 right: "20px",
                 width: "auto",
@@ -2763,10 +2765,11 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_right}
               alt="pink lightening right"
               className="absolute pointer-events-none 
-    [top:20%] 
-    [@media(min-height:768px)]:top-[18%] 
-    [@media(min-height:900px)]:top-[14%]
-    [@media(min-height:1080px)]:top-[10%]"
+[top:20%]
+[@media(min-height:768px)]:top-[18%]
+[@media(min-height:900px)]:top-[14%]
+[@media(min-height:1080px)]:top-[10%]
+[@media(min-height:1200px)]:top-[8%]"
               style={{
                 right: "20px",
                 // width: "full",

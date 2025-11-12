@@ -47,7 +47,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { evolve_logo_nav_white } from "../assets/images/Nav";
+import { evolve_cube } from "../assets/images/Home"; // ✅ evolve_cube svg
 
 const ANIMATION_CONFIG = {
   exit: { opacity: 0, duration: 0.5 },
@@ -59,83 +59,50 @@ const ANIMATION_CONFIG = {
   }
 };
 
-const LOGO_SIZES = {
-  mobile: "220px",
-  desktop: "300px"
-};
-
 const LoadingScreen = ({ progress = 0 }) => {
   const roundedProgress = Math.round(progress);
-
-  const maskStyles = {
-    maskImage: `url(${evolve_logo_nav_white})`,
-    WebkitMaskImage: `url(${evolve_logo_nav_white})`,
-    maskRepeat: "no-repeat",
-    WebkitMaskRepeat: "no-repeat",
-    maskPosition: "center",
-    WebkitMaskPosition: "center",
-    maskSize: "contain",
-    WebkitMaskSize: "contain"
-  };
 
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: ANIMATION_CONFIG.exit.duration }}
-      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center will-change-opacity"
+      className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center will-change-opacity"
       role="status"
       aria-live="polite"
       aria-label={`Loading ${roundedProgress} percent complete`}
     >
-      <div className="text-center flex flex-col items-center">
-        {/* Logo Fill Animation */}
-        <div className="relative w-[220px] md:w-[300px] aspect-[5/1] mb-8">
-          {/* Animated fill overlay */}
-          <motion.div
-            className="absolute bottom-0 left-0 w-full bg-evolve-yellow will-change-transform"
-            style={{
-              height: `${progress}%`,
-              ...maskStyles,
-              transform: "translateZ(0)" // Force GPU acceleration
-            }}
-            transition={ANIMATION_CONFIG.progress}
-            aria-hidden="true"
-          />
+      {/* evolve cube logo */}
+      <img
+        src={evolve_cube}
+        alt="Evolve cube"
+        className="w-32 h-auto mb-8 mx-auto"
+      />
 
-          {/* Base logo outline */}
-          <img
-            src={evolve_logo_nav_white}
-            alt="Evolve logo"
-            className="relative w-full h-full object-contain opacity-30"
-          />
-        </div>
-
-        {/* Progress Bar */}
-        <div
-          className="w-64 h-1 bg-gray-800 rounded-full overflow-hidden"
-          aria-hidden="true"
-        >
-          <motion.div
-            className="h-full bg-evolve-yellow will-change-transform"
-            style={{ transform: "translateZ(0)" }} // Force GPU acceleration
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={ANIMATION_CONFIG.progress}
-          />
-        </div>
-
-        {/* Progress Percentage */}
-        <motion.p
-          className="text-evolve-yellow mt-4 text-sm font-medium"
-          key={roundedProgress}
-          initial={{ opacity: 0.7 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          {roundedProgress}%
-        </motion.p>
+      {/* Progress Bar */}
+      <div
+        className="w-64 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto"
+        aria-hidden="true"
+      >
+        <motion.div
+          className="h-full bg-evolve-yellow will-change-transform"
+          style={{ transform: "translateZ(0)" }}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={ANIMATION_CONFIG.progress}
+        />
       </div>
+
+      {/* Progress Percentage */}
+      <motion.p
+        className="text-evolve-yellow mt-4 text-sm font-medium text-center"
+        key={roundedProgress}
+        initial={{ opacity: 0.7 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
+      >
+        {roundedProgress}%
+      </motion.p>
     </motion.div>
   );
 };
