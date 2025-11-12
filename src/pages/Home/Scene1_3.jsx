@@ -477,7 +477,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                 opacity: 0
               }}
             >
-              we're not here to hand out certificates.
+              we're not here to hand out just certificates.
             </p>
 
             <p
@@ -511,7 +511,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                 opacity: 0
               }}
             >
-              we're not here to hand out certificates.
+              we're not here to hand out just certificates.
             </p>
 
             <p
