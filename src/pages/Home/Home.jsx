@@ -996,7 +996,7 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
           trigger: "#scroll-container",
           start: "top top",
           end: isMobile ? "+=150000" : "+=180000",
-          scrub: isMobile ? 0.2 : 0.05,
+          scrub: isMobile ? 0.05 : 0.05,
           pin: true,
           fastScrollEnd: true,
           anticipatePin: 1,
