@@ -321,12 +321,12 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const navItems = [
     { path: "/", label: "home" },
-    { path: "/about", label: "about" },
-    { path: "/course", label: "courses" },
-    { path: "/webinars", label: "webinars" },
-    { path: "/quiz", label: "quiz" },
-    { path: "/community", label: "community" },
-    { path: "/investor", label: "investor page" },
+    // { path: "/about", label: "about" },
+    // { path: "/course", label: "courses" },
+    // { path: "/webinars", label: "webinars" },
+    // { path: "/quiz", label: "quiz" },
+    // { path: "/community", label: "community" },
+    // { path: "/investor", label: "investor page" },
     { path: "/contact", label: "contact us" }
   ];
 

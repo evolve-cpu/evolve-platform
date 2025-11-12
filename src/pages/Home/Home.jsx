@@ -825,6 +825,7 @@ import Scene1, { useScene1Timeline } from "./Scene1";
 import Scene1_1, { useScene1_1Timeline } from "./Scene1_1";
 import Scene1_2, { useScene1_2Timeline } from "./Scene1_2";
 import Scene1_3, { useScene1_3Timeline } from "./Scene1_3";
+import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 import GrainTexture from "../../components/GrainTexture";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -834,6 +835,8 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
   const scene1_1Refs = useRef({});
   const scene1_2Refs = useRef({});
   const scene1_3Refs = useRef({});
+  const scene1_4Refs = useRef({});
+
   const scene1EndScrollRef = useRef(null);
   const hasShownNavbarRef = useRef(false);
 
@@ -867,7 +870,8 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
       !scene1Refs.current.container ||
       !scene1_1Refs.current.container ||
       !scene1_2Refs.current.container ||
-      !scene1_3Refs.current.container
+      !scene1_3Refs.current.container ||
+      !scene1_4Refs.current.container // ⬅️ add this
     ) {
       return;
     }
@@ -938,15 +942,18 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
       // ✅ Initialize Scene1_2 to START state - MAKE CONTENT VISIBLE from the start
       gsap.set(scene1_2Refs.current.container, { y: "-100%" });
       // DON'T hide the vector - keep it visible during transition
-      gsap.set(scene1_2Refs.current.vector, { opacity: 1, y: 0 });
+      // gsap.set(scene1_2Refs.current.vector, { opacity: 1, y: 0 });
 
       // ✅ Initialize Scene1_3 to START state - MAKE CONTENT VISIBLE from the start
       gsap.set(scene1_3Refs.current.container, { x: "100%" });
+      // ✅ Initialize Scene1_4 to START state — keep content visible, place it above the viewport.
+      gsap.set(scene1_4Refs.current.container, { y: "-100%" });
 
       const tl1 = useScene1Timeline(scene1Refs.current, isMobile);
       const tl2 = useScene1_1Timeline(scene1_1Refs.current, isMobile);
       const tl3 = useScene1_2Timeline(scene1_2Refs.current, isMobile);
       const tl4 = useScene1_3Timeline(scene1_3Refs.current, isMobile);
+      const tl5 = useScene1_4Timeline(scene1_4Refs.current, isMobile);
 
       // ✅ FREEZE rainbow state before scroll
       if (scene1Refs.current.rainbow) {
@@ -1121,6 +1128,27 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         master.add(tl4);
       }
 
+      // 🎬 SEAMLESS VERTICAL SLIDE: Scene1_3 → Scene1_4 (connected slide down)
+      master
+        .to(scene1_3Refs.current.container, {
+          y: "100%",
+          duration: 1.2,
+          ease: "power2.inOut"
+        })
+        .to(
+          scene1_4Refs.current.container,
+          {
+            y: "0%",
+            duration: 1.2,
+            ease: "power2.inOut"
+          },
+          "<" // sync both moves
+        );
+
+      if (tl5) {
+        master.add(tl5);
+      }
+
       masterTimelineRef.current = master;
     });
 
@@ -1220,6 +1248,23 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         style={{ x: "100%" }}
       >
         <Scene1_3 ref={scene1_3Refs} isMobile={isMobile} />
+      </div>
+
+      {/* Scene 1_4 */}
+      {/* <div
+  ref={(el) => (scene1_4Refs.current && (scene1_4Refs.current.container = el))}
+  className="absolute inset-0 w-full h-full z-[3]"  // on top during overlap
+>
+  <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
+</div> */}
+      <div
+        ref={(el) => {
+          if (scene1_4Refs.current) scene1_4Refs.current.container = el;
+        }}
+        className="absolute inset-0 w-full h-full"
+        style={{ y: "-100%" }} // initial (for clarity; gsap.set also handles it)
+      >
+        <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
       </div>
     </div>
   );

@@ -1579,9 +1579,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   tl.to(
     [refs.vector, refs.doorsWithRibbon],
     {
-      opacity: 1,
-      duration: 0.6,
-      ease: "power2.out"
+      opacity: 1
+      // duration: ,
+      // ease: "power2.out"
     },
     0
   );
@@ -1636,9 +1636,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   tl.to(
     refs.doorsWithRibbon,
     {
-      opacity: 1,
-      duration: 0,
-      ease: "power2.out"
+      opacity: 1
+      // duration: 0
+      // ease: "power2.out"
     },
     0.4
   );
@@ -1666,7 +1666,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "secondScroll+=0.4"
   );
 
-  tl.set(refs.doorsWithRibbon, { opacity: 0 }, "secondScroll+=0.4");
+  // tl.set(refs.doorsWithRibbon, { opacity: 1 }, "secondScroll+=0.4");
   tl.set(refs.doorsComplete, { opacity: 1 }, "secondScroll+=0.4");
 
   // example: after the doors component becomes visible
@@ -2432,7 +2432,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             }}
           />
         )}
-
         {/* Semi-Circle Right - Desktop Only (lowest z-index) */}
         {!isMobile && (
           <img
@@ -2467,7 +2466,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             }}
           />
         )}
-
         {/* Mobile Transition View - Semi Circles */}
         {/* Mobile Transition View - Semi Circles */}
         {isMobile && (
@@ -2919,7 +2917,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           )}
           {/* </div> */}
         </div>
-
         {!isMobile && (
           <img
             // loading="lazy"
@@ -2982,7 +2979,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             time
           </h2>
         </div>
-
         {/* Nerve Text */}
         <div
           className="absolute left-0 right-0 text-center z-20"
@@ -3001,7 +2997,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             nerve
           </h2>
         </div>
-
         {/* Freedom Text */}
         <div
           className="absolute left-0 right-0 text-center z-20"
@@ -3023,6 +3018,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           </h2>
         </div>
         {/* Top Text Section - Initial state */}
+        // 1. UPDATE: First text section (around line 440-490)
+        {/* Top Text Section - Initial state */}
         <div
           className="absolute left-0 right-0 text-center z-20"
           style={{ top: "10%" }}
@@ -3036,54 +3033,57 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               lineHeight: 1
             }}
           >
-            the toolkit gets you started. the course is where it gets serious:
+            {/* the toolkit gets you started. the course is where it gets serious: */}
           </p>
 
           {/* Container for overlapping text elements */}
           <div
             className="relative"
-            style={{ height: isMobile ? "48px" : "96px" }}
+            style={{ height: isMobile ? "3rem" : "6rem" }}
           >
-            {/* "three levels" text */}
+            {/* "learn design" text - CHANGED */}
             <h2
               ref={mainTextRef}
               className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
               style={{
-                fontSize: isMobile ? "48px" : "96px",
+                fontSize: isMobile ? "3rem" : "6rem",
+                letterSpacing: 0,
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
               }}
             >
-              three levels
+              {/* learn design */}
             </h2>
 
-            {/* "no shortcuts" text */}
+            {/* "get mentored" text - CHANGED */}
             <h2
               ref={noShortcutsTextRef}
               className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
               style={{
-                fontSize: isMobile ? "48px" : "96px",
+                fontSize: isMobile ? "3rem" : "6rem",
+                letterSpacing: 0,
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
               }}
             >
-              no shortcuts
+              learn design
             </h2>
 
-            {/* "mentors who push your limits" text */}
+            {/* "earn a paid internship" text - CHANGED */}
             <h2
               ref={mentorsTextRef}
               className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
               style={{
-                fontSize: isMobile ? "48px" : "96px",
+                fontSize: isMobile ? "3rem" : "6rem",
+                letterSpacing: 0,
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
               }}
             >
-              mentors who push your limits
+              get mentored
             </h2>
           </div>
         </div>
@@ -3101,7 +3101,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               lineHeight: 1
             }}
           >
-            The toolkit gets you started.
+            {/* The toolkit gets you started. */}
           </p>
 
           <h2
@@ -3113,7 +3113,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               lineHeight: 0.8
             }}
           >
-            and a paid internship that proves you belong.
+            earn a paid internship
           </h2>
 
           {/* Waitlist Button */}
@@ -3168,7 +3168,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           className="absolute left-1/2 z-10"
           style={{
             bottom: 0,
-            opacity: 0,
+            opacity: 1,
             width: "full",
             transform: isMobile
               ? "translateX(-50%) scale(2.5)"

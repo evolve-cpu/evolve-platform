@@ -149,6 +149,15 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   }
 
   // draw initial frame and warm cache
+  // ✅ Draw initial frame IMMEDIATELY (not in timeline)
+  if (ctx) {
+    (async () => {
+      await draw(STEPS[0].from);
+      warm(STEPS[0].from, 24);
+    })();
+  }
+
+  // Also add it to timeline at position 0 as backup
   tl.call(
     () => {
       draw(STEPS[0].from);
@@ -230,83 +239,18 @@ export const useScene1_3Timeline = (refs, isMobile) => {
 
   // Add continuation section - slide up scene and show marquee
   // Set initial position for continuation section (below viewport)
-  tl.set(refs.continuation, { y: "100vh" }, 0);
+  // tl.set(refs.continuation, { y: "100vh" }, 0);
 
   // After animation completes, slide initial scene up and continuation in
-  tl.to(
-    refs.initialScene,
-    {
-      y: "-100vh",
-      duration: 1,
-      ease: "power2.inOut"
-    },
-    "+=0.5"
-  );
-
-  tl.to(
-    refs.continuation,
-    {
-      y: 0,
-      duration: 1,
-      ease: "power2.inOut"
-    },
-    "<"
-  ); // "<" means start at the same time as previous
-
-  // Animate marquee in
-  tl.fromTo(
-    refs.marquee,
-    { opacity: 0 },
-    { opacity: 1, duration: 0.5, ease: "power2.out" },
-    "-=0.3"
-  );
-
-  // Animate marquee in
-  tl.fromTo(
-    refs.marquee,
-    { y: 100, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
-    "-=0.4"
-  );
-
-  // Start infinite marquee scroll
-  // Start infinite marquee scroll with seamless loop
-  tl.call(() => {
-    if (refs.marqueeTrack && refs.marqueeGroup) {
-      const group = refs.marqueeGroup;
-      const groupWidth = group.offsetWidth;
-
-      // Clone the group for seamless infinite scroll
-      const clone = group.cloneNode(true);
-      refs.marqueeTrack.appendChild(clone);
-
-      gsap.to(refs.marqueeTrack, {
-        x: -groupWidth,
-        duration: 20,
-        ease: "none",
-        repeat: -1,
-        modifiers: {
-          x: (x) => `${parseFloat(x) % groupWidth}px`
-        }
-      });
-    }
-  });
-
-  // Text 1 appears
-  tl.fromTo(
-    refs.text1,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-    "+=0.8"
-  );
-
-  // Text 2 appears
-  tl.fromTo(
-    refs.text2,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-    "+=0.6"
-  );
+  // tl.to(
+  //   refs.initialScene,
+  //   {
+  //     y: "-100vh",
+  //     duration: 1,
+  //     ease: "power2.inOut"
+  //   },
+  //   "+=0.5"
+  // );
 
   return tl;
 };
@@ -322,11 +266,6 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
   const headingRef = useRef(null);
   const subRef = useRef(null);
   const bodyRef = useRef(null);
-  const marqueeRef = useRef(null);
-  const marqueeTrackRef = useRef(null);
-  const marqueeGroupRef = useRef(null);
-  const text1Ref = useRef(null);
-  const text2Ref = useRef(null);
 
   // right canvas
   const canvasRef = useRef(null);
@@ -338,12 +277,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
     heading: headingRef.current,
     sub: subRef.current,
     body: bodyRef.current,
-    canvas: canvasRef.current,
-    marquee: marqueeRef.current,
-    marqueeTrack: marqueeTrackRef.current,
-    marqueeGroup: marqueeGroupRef.current,
-    text1: text1Ref.current,
-    text2: text2Ref.current
+    canvas: canvasRef.current
   }));
 
   return (
@@ -457,142 +391,6 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
 
       {/* Continuation section - appears after slide up */}
       {/* Continuation section - appears after slide up */}
-      <div
-        ref={continuationRef}
-        className="absolute inset-0 w-full min-h-screen bg-evolve-lavender-indigo"
-        style={{ willChange: "transform" }}
-      >
-        {/* Text container - desktop */}
-        {!isMobile && (
-          <div className="flex flex-col items-center pt-[30vh] px-8">
-            <p
-              ref={text1Ref}
-              className="text-white lowercase mb-8 text-center"
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: 400,
-                lineHeight: "3rem",
-                maxWidth: "62.5rem",
-                willChange: "transform, opacity",
-                opacity: 0
-              }}
-            >
-              we're not here to hand out just certificates.
-            </p>
-
-            <p
-              ref={text2Ref}
-              className="text-white lowercase font-extrabold text-center"
-              style={{
-                fontSize: "4rem",
-                lineHeight: "4.5rem",
-                maxWidth: "62.5rem",
-                willChange: "transform, opacity",
-                opacity: 0
-              }}
-            >
-              we're here to empower you to see new perspectives.
-            </p>
-          </div>
-        )}
-
-        {/* Text container - mobile */}
-        {isMobile && (
-          <div className="flex flex-col items-center pt-[30vh] px-6">
-            <p
-              ref={text1Ref}
-              className="text-white lowercase mb-4 text-center"
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: 500,
-                lineHeight: "1.75rem",
-                maxWidth: "90vw",
-                willChange: "transform, opacity",
-                opacity: 0
-              }}
-            >
-              we're not here to hand out just certificates.
-            </p>
-
-            <p
-              ref={text2Ref}
-              className="text-white lowercase font-extrabold text-center"
-              style={{
-                fontSize: "2.5rem",
-                lineHeight: "2.25rem",
-                maxWidth: "90vw",
-                willChange: "transform, opacity",
-                opacity: 0
-              }}
-            >
-              we're here to empower you to see new perspectives.
-            </p>
-          </div>
-        )}
-
-        {/* Marquee - positioned at bottom */}
-        <div
-          ref={marqueeRef}
-          className={`absolute left-0 w-full border-t-2 border-b-2 border-evolve-yellow bg-evolve-lavender-indigo overflow-hidden ${
-            isMobile ? "bottom-[10%] h-16" : "bottom-0 h-[9rem]"
-          }`}
-          style={{ opacity: 0 }}
-        >
-          <div
-            ref={marqueeTrackRef}
-            className="absolute top-1/2 -translate-y-1/2 left-0 flex whitespace-nowrap"
-            style={{ willChange: "transform" }}
-          >
-            <div
-              ref={marqueeGroupRef}
-              className={`flex items-center flex-none ${
-                isMobile ? "gap-8 pr-8" : "gap-14 pr-14"
-              }`}
-            >
-              <img
-                src={marquee_vector_1}
-                alt="vector 1"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <img
-                src={evolve_text}
-                alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-              />
-              <img
-                src={marquee_vector_2}
-                alt="vector 2"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <img
-                src={evolve_text}
-                alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-              />
-              <img
-                src={marquee_vector_1}
-                alt="vector 1"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <img
-                src={evolve_text}
-                alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-              />
-              <img
-                src={marquee_vector_2}
-                alt="vector 2"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <img
-                src={evolve_text}
-                alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
   );
 });
