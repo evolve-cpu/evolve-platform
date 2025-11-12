@@ -772,7 +772,7 @@ const Scene1 = React.forwardRef((props, ref) => {
             willChange: "transform, opacity"
           }}
         >
-          welcomeeeeeeeeeeeeeeeeeee
+          welcome
           <br />
           to evolve
         </h2>
