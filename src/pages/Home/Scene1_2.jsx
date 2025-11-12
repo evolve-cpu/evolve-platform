@@ -1666,7 +1666,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "secondScroll+=0.4"
   );
 
-  // tl.set(refs.doorsWithRibbon, { opacity: 1 }, "secondScroll+=0.4");
+  tl.set(refs.doorsWithRibbon, { opacity: 0 }, "secondScroll+=0.4");
   tl.set(refs.doorsComplete, { opacity: 1 }, "secondScroll+=0.4");
 
   // example: after the doors component becomes visible
