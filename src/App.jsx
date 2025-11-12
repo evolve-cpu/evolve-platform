@@ -168,6 +168,20 @@ const AppLayout = () => {
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    // Small delay to ensure page is mounted before scrolling
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+  }, [location.pathname]);
+
+  // In AppLayout, add this:
+  useEffect(() => {
+    console.log("Route changed to:", location.pathname);
+    console.log("isLoading:", isLoading);
+    console.log("showNavbar:", showNavbar);
+  }, [location.pathname, isLoading, showNavbar]);
+
   // Preload all images
   useEffect(() => {
     const preloadImages = async () => {

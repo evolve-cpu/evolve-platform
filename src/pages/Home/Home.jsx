@@ -985,13 +985,21 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
 
       // ✅ INCREASED SCROLL SPEED for desktop (reduced end value)
       const master = gsap.timeline({
+        // scrollTrigger: {
+        //   trigger: "#scroll-container",
+        //   start: "top top",
+        //   end: isMobile ? "+=300000" : "+=180000", // 40% less scrolling on desktop
+        //   scrub: isMobile ? 0.5 : 0.05, // Even faster response on desktop
+        //   pin: true,
+        //   fastScrollEnd: true,
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: isMobile ? "+=300000" : "+=180000", // 40% less scrolling on desktop
-          scrub: isMobile ? 0.5 : 0.05, // Even faster response on desktop
+          end: isMobile ? "+=150000" : "+=180000",
+          scrub: isMobile ? 0.2 : 0.05,
           pin: true,
           fastScrollEnd: true,
+          anticipatePin: 1,
           onStart: () => {
             if (idleAnimsRef.current) {
               idleAnimsRef.current.revert();
@@ -1174,15 +1182,42 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
     window.addEventListener("scrollToScene1_1", handleScrollToScene1_1);
 
     return () => {
+      // Set a flag that we're unmounting
+      const isUnmounting = true;
+
       cancelAnimationFrame(id);
       window.removeEventListener("scrollToScene1_1", handleScrollToScene1_1);
-      if (masterTimelineRef.current) {
-        masterTimelineRef.current.kill();
+
+      // Kill animations in the correct order
+      try {
+        if (idleAnimsRef.current) {
+          idleAnimsRef.current.kill();
+          idleAnimsRef.current = null;
+        }
+
+        if (masterTimelineRef.current) {
+          const st = masterTimelineRef.current.scrollTrigger;
+          if (st) st.kill();
+          masterTimelineRef.current.kill();
+          masterTimelineRef.current = null;
+        }
+
+        // Kill remaining ScrollTriggers
+        ScrollTrigger.getAll().forEach((trigger) => {
+          try {
+            trigger.kill();
+          } catch (e) {
+            // Ignore errors during cleanup
+          }
+        });
+
+        // Clear GSAP set values to prevent DOM manipulation errors
+        gsap.set("#scroll-container", { clearProps: "all" });
+      } catch (error) {
+        console.warn("Cleanup error:", error);
       }
-      if (idleAnimsRef.current) {
-        idleAnimsRef.current.revert();
-      }
-      ScrollTrigger.getAll().forEach((st) => st.kill());
+
+      // Reset navbar state
       if (setShowNavbar) {
         setShowNavbar(true);
       }
