@@ -142,45 +142,6 @@ export const setCompletedState = (refs, isMobile) => {
     }
   );
 
-  // Hide all stairs
-  if (isMobile) {
-    gsap.set(
-      [
-        refs.stairsMiniMobile,
-        refs.stairsModMobile,
-        refs.stairsMod1Mobile,
-        refs.stairsMod2Mobile,
-        refs.leftStairsMod3Mobile,
-        refs.rightStairsMod3Mobile,
-        refs.leftStairsMod4Mobile,
-        refs.rightStairsMod4Mobile,
-        refs.leftStairsMod5Mobile,
-        refs.rightStairsMod5Mobile,
-        refs.leftStairsMod6Mobile,
-        refs.rightStairsMod6Mobile
-      ],
-      {
-        opacity: 0
-      }
-    );
-  } else {
-    gsap.set(
-      [
-        refs.leftStairsMini,
-        refs.rightStairsMini,
-        refs.stairsLeft,
-        refs.stairsRight,
-        refs.leftStairs1,
-        refs.rightStairs1,
-        refs.leftStairs2,
-        refs.rightStairs2
-      ],
-      {
-        opacity: 0
-      }
-    );
-  }
-
   // Hide ovals
   gsap.set(
     [
