@@ -55,6 +55,148 @@ import {
   stairs_right_2
 } from "../../assets/images/Home";
 
+// Add this helper function at the top of your Scene1_1 file
+// Add this helper function at the top of your Scene1_1 file (EXPORT IT)
+export const setCompletedState = (refs, isMobile) => {
+  if (!refs) return;
+
+  // Show background
+  gsap.set(refs.bg, {
+    opacity: 1
+  });
+
+  // Show main elements in their "resting" positions
+  gsap.set([refs.rightCloud, refs.leftCloud], {
+    opacity: 1
+    // y: 0
+  });
+
+  gsap.set(refs.floor, {
+    opacity: 1
+    // y: 0
+  });
+
+  gsap.set([refs.leftElement, refs.rightElement], {
+    opacity: 1,
+    // x: 0,
+    // y: 0,
+    scale: 1
+  });
+
+  // Show first text
+  gsap.set(refs.text, {
+    opacity: 1
+    // y: 0
+  });
+
+  // Show all text spans at full opacity
+  if (refs.text) {
+    const spans = Array.from(refs.text.querySelectorAll("span[data-text]"));
+    gsap.set(spans, {
+      opacity: 1,
+      color: "rgb(0, 0, 0)"
+    });
+  }
+
+  // Show ellipse
+  gsap.set(refs.ellipse, {
+    opacity: 1,
+    scale: 1,
+    y: 0
+  });
+
+  // Show bigger orbit in centered position
+  gsap.set(refs.biggerOrbit, {
+    opacity: 1,
+    scale: isMobile ? 2.3 : 1,
+    y: isMobile ? -250 : -200
+  });
+
+  // Hide objects (they've already fallen)
+  gsap.set([refs.object1, refs.object2, refs.object3], {
+    opacity: 0
+  });
+
+  gsap.set(refs.objectsContainer, {
+    opacity: 0
+  });
+
+  // Hide secondary elements
+  gsap.set(
+    [
+      refs.text2,
+      refs.text3,
+      refs.text4,
+      refs.text5,
+      refs.text6,
+      refs.text7,
+      refs.text8,
+      refs.leftElementEye,
+      refs.rightElementEye,
+      refs.pinkBiggerOrbit,
+      refs.combinedCircleContainer,
+      refs.waitlistButton
+    ],
+    {
+      opacity: 0
+    }
+  );
+
+  // Hide all stairs
+  if (isMobile) {
+    gsap.set(
+      [
+        refs.stairsMiniMobile,
+        refs.stairsModMobile,
+        refs.stairsMod1Mobile,
+        refs.stairsMod2Mobile,
+        refs.leftStairsMod3Mobile,
+        refs.rightStairsMod3Mobile,
+        refs.leftStairsMod4Mobile,
+        refs.rightStairsMod4Mobile,
+        refs.leftStairsMod5Mobile,
+        refs.rightStairsMod5Mobile,
+        refs.leftStairsMod6Mobile,
+        refs.rightStairsMod6Mobile
+      ],
+      {
+        opacity: 0
+      }
+    );
+  } else {
+    gsap.set(
+      [
+        refs.leftStairsMini,
+        refs.rightStairsMini,
+        refs.stairsLeft,
+        refs.stairsRight,
+        refs.leftStairs1,
+        refs.rightStairs1,
+        refs.leftStairs2,
+        refs.rightStairs2
+      ],
+      {
+        opacity: 0
+      }
+    );
+  }
+
+  // Hide ovals
+  gsap.set(
+    [
+      refs.ovalMini1,
+      refs.ovalMini2,
+      refs.ovalMini3,
+      refs.oval1,
+      refs.oval2,
+      refs.oval3
+    ],
+    {
+      opacity: 0
+    }
+  );
+};
+
 // Helper function to get screen-size-specific multipliers
 const getScreenMultipliers = () => {
   const width = window.innerWidth;
