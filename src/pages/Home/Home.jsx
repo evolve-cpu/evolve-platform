@@ -1245,9 +1245,10 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
       </div>
 
       {/* Scene 1 */}
+      {/* Scene 1 */}
       <div
         className="absolute inset-0 z-[2]"
-        style={{ willChange: "transform, opacity" }}
+        style={{ willChange: "transform, opacity", pointerEvents: "none" }}
       >
         <Scene1 ref={scene1Refs} isMobile={isMobile} />
       </div>
@@ -1257,8 +1258,8 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         ref={(el) => {
           if (scene1_1Refs.current) scene1_1Refs.current.container = el;
         }}
-        className="absolute inset-0 w-full h-full"
-        style={{ opacity: 0 }}
+        className="absolute inset-0 w-full h-full z-[3]"
+        style={{ opacity: 0, pointerEvents: "auto" }}
       >
         <Scene1_1 ref={scene1_1Refs} isMobile={isMobile} />
       </div>
@@ -1268,7 +1269,7 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         ref={(el) => {
           if (scene1_2Refs.current) scene1_2Refs.current.container = el;
         }}
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-[4]"
         style={{ y: "-100%" }}
       >
         <Scene1_2 ref={scene1_2Refs} isMobile={isMobile} />

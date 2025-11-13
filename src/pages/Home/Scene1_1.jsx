@@ -2396,6 +2396,18 @@ CombinedCircle.displayName = "CombinedCircle";
 // Create a reusable Waitlist Button Component (add this after CombinedCircle component)
 const WaitlistButton = React.forwardRef(
   ({ onClick, style, className }, ref) => {
+    const handleClick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      console.log("Waitlist button clicked!");
+      // Open Discord link in new tab
+      window.open(
+        "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+        "_blank"
+      );
+      if (onClick) onClick(e);
+    };
+
     return (
       <button
         ref={ref}
@@ -2412,18 +2424,16 @@ const WaitlistButton = React.forwardRef(
           border: "none",
           width: "75vw",
           pointerEvents: "auto",
-          position: "relative", // ADD THIS
-          zIndex: 9999, // ADD THIS - ensure it's above everything
+          position: "relative",
+          zIndex: 999999,
           transition: "transform 0.2s ease, box-shadow 0.2s ease",
           ...style
         }}
-        onClick={(e) => {
-          e.stopPropagation(); // ADD THIS
-          console.log("Waitlist button clicked!");
-          if (onClick) onClick(e);
-        }}
+        onClick={handleClick}
+        onMouseDown={handleClick}
+        onTouchStart={handleClick}
         onMouseEnter={(e) => {
-          console.log("Mouse entered button"); // Debug log
+          console.log("Mouse entered button");
           e.currentTarget.style.cursor = "pointer";
         }}
       >
@@ -2611,10 +2621,16 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const objectSize = isMobile ? 44 : 70;
   const mobileObjGap = isMobile ? 8 : 24;
 
+  // return (
+  //   <section
+  //     ref={containerRef}
+  //     className="relative w-full h-screen overflow-hidden"
+  //   >
   return (
     <section
       ref={containerRef}
       className="relative w-full h-screen overflow-hidden"
+      style={{ pointerEvents: "none" }}
     >
       {/* Background */}
       <img
@@ -3241,30 +3257,32 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             }}
           />
           {/* Waitlist Button - Desktop - MOVE THIS OUTSIDE OF ANY POINTER-EVENTS-NONE CONTAINERS */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2"
+          {/* Waitlist Button - Works for BOTH mobile and desktop */}
+          {/* <div
             style={{
-              bottom: "10%",
-              zIndex: 9999,
-              pointerEvents: "auto" // Ensure container allows pointer events
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              bottom: isMobile ? "12%" : "10%",
+              zIndex: 999999,
+              pointerEvents: "auto",
+              isolation: "isolate"
             }}
           >
             <WaitlistButton
               ref={waitlistButtonRef}
               style={{
                 opacity: 0,
-                width: "auto",
-                padding: "20px 40px",
-                // fontSize: "28px",
-                fontSize: "1.75rem",
-                cursor: "pointer",
+                width: isMobile ? "75vw" : "auto",
+                padding: isMobile ? "16px 20px" : "20px 40px",
+                fontSize: isMobile ? "1.5rem" : "1.75rem",
+                position: "relative",
+                zIndex: 999999,
                 pointerEvents: "auto"
               }}
-              onClick={() => {
-                console.log("Desktop waitlist button clicked!");
-              }}
+              onClick={() => console.log("Waitlist button clicked!")}
             />
-          </div>
+          </div> */}
 
           {/* Text8: "the evolve toolkit" - Desktop */}
           <div
@@ -3769,6 +3787,48 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </div>
         </>
       )}
+      {/* FLOATING BUTTON LAYER - Completely independent */}
+      <div
+        style={{
+          position: "fixed",
+          left: "50%",
+          bottom: isMobile ? "12%" : "10%",
+          transform: "translateX(-50%)",
+          zIndex: 9999999,
+          pointerEvents: "auto"
+        }}
+      >
+        <button
+          ref={waitlistButtonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log("BUTTON CLICKED!");
+            window.open(
+              "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+              "_blank"
+            );
+          }}
+          onMouseEnter={() => console.log("MOUSE ON BUTTON")}
+          style={{
+            backgroundColor: "#000000",
+            borderRadius: "16px",
+            padding: isMobile ? "16px 20px" : "20px 40px",
+            fontSize: isMobile ? "1.5rem" : "1.75rem",
+            color: "#ffffff",
+            textTransform: "lowercase",
+            fontWeight: 800,
+            boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
+            cursor: "pointer",
+            border: "none",
+            width: isMobile ? "75vw" : "auto",
+            pointerEvents: "auto",
+            opacity: 0
+          }}
+        >
+          join the waitlist
+        </button>
+      </div>
     </section>
   );
 });

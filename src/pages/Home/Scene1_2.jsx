@@ -3127,6 +3127,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
               transition: "transform 0.2s ease, box-shadow 0.2s ease"
             }}
+            onClick={() => {
+              window.open(
+                "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+                "_blank"
+              );
+            }}
           >
             join the waitlist
           </button>

@@ -618,7 +618,10 @@ const Footer = () => {
     { label: "youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
     { label: "medium", url: "#" },
     { label: "linkedin", url: "#" },
-    { label: "discord", url: "#" }
+    {
+      label: "discord",
+      url: "https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+    }
   ];
 
   useLayoutEffect(() => {
@@ -671,12 +674,20 @@ const Footer = () => {
             </h2>
 
             <div className="mt-6">
-              <button
+              {/* <button
                 className="bg-black text-white font-extrabold px-6 py-3 rounded-xl text-[1.5rem] leading-none"
                 aria-label="join us"
               >
                 join us
-              </button>
+              </button> */}
+              <a
+                href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-black text-white font-extrabold px-5 py-3 rounded-xl text-[1.5rem] leading-none"
+              >
+                join us
+              </a>
             </div>
 
             <div className="h-px bg-black my-8" />
