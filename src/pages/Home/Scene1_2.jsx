@@ -1795,11 +1795,23 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   );
 
   // Show waitlist button
+  // tl.to(
+  //   refs.waitlistButton,
+  //   {
+  //     opacity: 1,
+  //     scale: 1,
+  //     duration: 0.6,
+  //     ease: "back.out(1.7)"
+  //   },
+  //   "fourthScroll+=0.9"
+  // );
+  // Show waitlist button
   tl.to(
     refs.waitlistButton,
     {
       opacity: 1,
       scale: 1,
+      pointerEvents: "auto", // ✅ Add this - make clickable when visible
       duration: 0.6,
       ease: "back.out(1.7)"
     },
@@ -1809,6 +1821,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   // FIFTH SCROLL: Move scene down and show new elements
   tl.add("fifthScroll", "+=0.5");
 
+  // Move entire scene downwards and fade out
   // Move entire scene downwards and fade out
   tl.to(
     [
@@ -1823,6 +1836,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     {
       y: isMobile ? 200 : 300,
       opacity: 0,
+      pointerEvents: "none", // ✅ Add this - make non-clickable when hidden
       duration: 0,
       ease: "power2.inOut"
     },
@@ -3117,13 +3131,14 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           </h2>
 
           {/* Waitlist Button */}
+          {/* Waitlist Button */}
           <button
             ref={waitlistButtonRef}
             className="px-8 py-4 bg-black text-white font-bold text-lg rounded-[16px] lowercase"
             style={{
               opacity: 0,
               transform: "scale(0.8)",
-              // boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+              pointerEvents: "none", // ✅ Add this - start non-clickable
               boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
               transition: "transform 0.2s ease, box-shadow 0.2s ease"
             }}

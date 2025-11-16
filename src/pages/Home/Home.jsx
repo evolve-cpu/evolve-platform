@@ -945,8 +945,11 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
 
       {/* Scene 1 */}
       <div
-        className="absolute inset-0 z-[2]"
-        style={{ willChange: "transform, opacity", pointerEvents: "none" }}
+        className="absolute inset-0 w-full h-full z-[2]"
+        style={{
+          willChange: "transform, opacity",
+          pointerEvents: "auto"
+        }}
       >
         <Scene1 ref={scene1Refs} isMobile={isMobile} />
       </div>

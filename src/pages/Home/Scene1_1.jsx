@@ -138,7 +138,8 @@ export const setCompletedState = (refs, isMobile) => {
       refs.waitlistButton
     ],
     {
-      opacity: 0
+      opacity: 0,
+      pointerEvents: "none" // ✅ Add this
     }
   );
 
@@ -224,6 +225,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       opacity: 0,
       scale: 0.5,
       y: 0,
+      willChange: "transform, opacity"
+    })
+    .set(refs.waitlistButton, {
+      // ✅ ADD THIS
+      opacity: 0,
+      scale: 0.9,
+      pointerEvents: "none",
       willChange: "transform, opacity"
     })
     .set([refs.object1, refs.object2, refs.object3], {
@@ -1377,17 +1385,20 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Waitlist button appears
+      // Waitlist button appears
       tl.fromTo(
         refs.waitlistButton,
         {
           opacity: 0,
           y: 30,
-          scale: 0.9
+          scale: 0.9,
+          pointerEvents: "none" // ✅ Add this - start non-clickable
         },
         {
           opacity: 1,
           y: 0,
           scale: 1,
+          pointerEvents: "auto", // ✅ Add this - make clickable when visible
           duration: 1.0,
           ease: "back.out(1.5)"
         },
@@ -1397,10 +1408,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       const step9Start = step8Start + 2.5;
 
       // Remove waitlist button, stairs, and CLOUDS
+      // Remove waitlist button, stairs, and CLOUDS
       tl.to(
         refs.waitlistButton,
         {
           opacity: 0,
+          pointerEvents: "none", // ✅ Add this - make non-clickable when hidden
           duration: 0.4,
           ease: "power2.out"
         },
@@ -2068,14 +2081,16 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 0,
           y: 30,
-          scale: 0.9
+          scale: 0.9,
+          pointerEvents: "none"
         },
         {
           opacity: 1,
           y: 0,
           scale: 1,
           duration: 1.0,
-          ease: "back.out(1.5)"
+          ease: "back.out(1.5)",
+          pointerEvents: "auto"
         },
         step5Start
       );
@@ -2089,6 +2104,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 0,
           duration: 0.4,
+          pointerEvents: "none",
           ease: "power2.out"
         },
         step6Start
@@ -3744,7 +3760,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             }}
           />
           {/* Waitlist Button - Works for BOTH mobile and desktop */}
-          <div
+          {/* <div
             style={{
               position: "absolute",
               left: "50%",
@@ -3765,7 +3781,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               }}
               onClick={() => console.log("Waitlist button clicked!")}
             />
-          </div>
+          </div> */}
           <div
             ref={text8Ref}
             className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold"
@@ -3891,7 +3907,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         </>
       )}
       {/* FLOATING BUTTON LAYER - Completely independent */}
-      <div
+      {/* <div
         style={{
           position: "fixed",
           left: "50%",
@@ -3927,6 +3943,62 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             width: isMobile ? "75vw" : "auto",
             pointerEvents: "auto",
             opacity: 0
+          }}
+        >
+          join the waitlist
+        </button>
+      </div> */}
+
+      {/* WAITLIST BUTTON - Single Instance */}
+      {/* WAITLIST BUTTON - Single Instance */}
+      {/* WAITLIST BUTTON - Single Instance */}
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          bottom: isMobile ? "12%" : "10%",
+          transform: "translateX(-50%)",
+          zIndex: 20,
+          pointerEvents: "none" // ✅ Wrapper is always "none"
+        }}
+      >
+        <button
+          ref={waitlistButtonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log("Waitlist button clicked!");
+            window.open(
+              "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+              "_blank"
+            );
+          }}
+          style={{
+            backgroundColor: "#000000",
+            borderRadius: "16px",
+            padding: isMobile ? "1rem 1.02rem" : "1.25rem 2.5rem",
+            fontSize: isMobile ? "1.5rem" : "1.75rem",
+            color: "#ffffff",
+            textTransform: "lowercase",
+            fontWeight: 800,
+            boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
+            cursor: "pointer",
+            border: "none",
+            width: isMobile ? "75vw" : "auto",
+            pointerEvents: "none", // ✅ Start as non-clickable
+            opacity: 0,
+            willChange: "transform, opacity, pointer-events", // ✅ Add pointer-events
+            transition: "transform 0.2s ease, box-shadow 0.2s ease"
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = "translateY(4px)";
+            e.currentTarget.style.boxShadow =
+              "0 2px 0 rgba(128, 128, 128, 0.8)";
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow =
+              "0 6px 0 rgba(128, 128, 128, 0.8)";
           }}
         >
           join the waitlist
