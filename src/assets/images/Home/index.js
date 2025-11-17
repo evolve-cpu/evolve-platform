@@ -56,6 +56,7 @@ import right_stairs_mod4_mobile from "./right_stairs_mod4_mobile.svg";
 import right_stairs_mod5_mobile from "./right_stairs_mod5_mobile.svg";
 import right_stairs_mod6_mobile from "./right_stairs_mod6_mobile.svg";
 import curvey_circle_inner_part from "./curvey_circle_inner_part.svg";
+import curvey_circle_inner_logo_part from "./curvey_circle_inner_logo_part.svg";
 import curvey_circle_with_inner_part from "./curvey_circle_with_inner_part.svg";
 import curvey_circle_without_inner_part from "./curvey_circle_without_inner_part.svg";
 import stairs_left from "./stairs_left.svg";
@@ -172,6 +173,7 @@ export {
   stairs_left,
   stairs_right,
   curvey_circle_inner_part,
+  curvey_circle_inner_logo_part,
   curvey_circle_with_inner_part,
   curvey_circle_without_inner_part,
   oval_1,

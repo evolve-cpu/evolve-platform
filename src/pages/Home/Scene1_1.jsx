@@ -36,6 +36,7 @@ import {
   left_stairs_mod3_mobile, // ADD THIS
   right_stairs_mod3_mobile, // ADD THIS
   curvey_circle_inner_part,
+  curvey_circle_inner_logo_part,
   curvey_circle_without_inner_part,
   left_stairs_mod4_mobile, // ADD THIS
   right_stairs_mod4_mobile, // ADD THIS
@@ -1542,12 +1543,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Mini oval moves UP to vertical center AND scales up simultaneously
-      // The parent container has flex centering, so y: 0 is the vertical center
-      // But mini ovals are positioned below center, so we need to move them up
+      // Mini oval moves UP to vertical center AND scales up simultaneously
       tl.to(
         refs.ovalMini1,
         {
-          y: "-20vh", // Move UP to reach vertical center (adjust this value based on actual position)
+          y: "-20vh",
           scale: 1.5,
           duration: 0.8,
           ease: "power2.out"
@@ -1555,24 +1555,24 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step10Start + 0.2
       );
 
-      // Set initial position for oval_1 (matches mini oval's NEW centered position)
+      // Set initial position for oval_1 (same position as scaled mini)
       tl.set(
         refs.oval1,
         {
           opacity: 0,
-          scale: 0.5, // Match mini oval size (120px / 380px ≈ 0.32)
-          y: 0, // At vertical center where mini oval moved to
+          scale: 0.5,
+          y: "0vh",
           willChange: "transform, opacity"
         },
-        step10Start + 0
+        step10Start + 0.8
       );
 
-      // Crossfade: mini oval fades out as full oval fades in
+      // Direct crossfade: mini oval fades out as full oval fades in (NO BLACK)
       tl.to(
         refs.ovalMini1,
         {
           opacity: 0,
-          duration: 0.5,
+          duration: 0.4,
           ease: "power2.inOut"
         },
         step10Start + 1.0
@@ -1582,7 +1582,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval1,
         {
           opacity: 1,
-          duration: 0.5,
+          duration: 0.4,
           ease: "power2.inOut"
         },
         step10Start + 1.0
@@ -1954,22 +1954,23 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       }
 
       // Inner circle reveals at bigger scale (95% of outer - MUCH BIGGER)
-      if (refs.combinedCircle?.inner) {
+      // Inner LOGO part reveals FIRST (at step3)
+      if (refs.combinedCircle?.innerLogo) {
         tl.set(
-          refs.combinedCircle.inner,
+          refs.combinedCircle.innerLogo,
           {
             opacity: 0,
-            scale: 0.38, // Increased from 0.38 to 0.50 (about 125% bigger)
+            scale: 0.38,
             willChange: "transform, opacity"
           },
           step3Start
         );
 
         tl.to(
-          refs.combinedCircle.inner,
+          refs.combinedCircle.innerLogo,
           {
             opacity: 1,
-            scale: 0.38, // Keep proportional to outer
+            scale: 0.38,
             duration: 0.8,
             ease: "power1.out"
           },
@@ -1992,6 +1993,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Combined circle outer scales up to final size
+      // Combined circle outer scales up to final size
       if (refs.combinedCircle?.outer) {
         tl.to(
           refs.combinedCircle.outer,
@@ -2004,16 +2006,52 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Inner circle scales proportionally
-      if (refs.combinedCircle?.inner) {
+      // Inner LOGO scales proportionally
+      if (refs.combinedCircle?.innerLogo) {
         tl.to(
-          refs.combinedCircle.inner,
+          refs.combinedCircle.innerLogo,
           {
-            scale: 0.7,
+            scale: 0.8,
             duration: 1.2,
             ease: "power1.inOut"
           },
           step4Start
+        );
+      }
+
+      // TRANSITION: Logo fades out, regular inner part fades in
+      if (refs.combinedCircle?.innerLogo && refs.combinedCircle?.inner) {
+        // Set regular inner part at same position/scale as logo
+        tl.set(
+          refs.combinedCircle.inner,
+          {
+            opacity: 0,
+            scale: 0.7,
+            willChange: "transform, opacity"
+          },
+          step4Start + 0.6
+        );
+
+        // Fade out logo
+        tl.to(
+          refs.combinedCircle.innerLogo,
+          {
+            opacity: 0,
+            duration: 0.3,
+            ease: "power2.in"
+          },
+          step4Start + 0.6
+        );
+
+        // Fade in regular inner part
+        tl.to(
+          refs.combinedCircle.inner,
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: "power2.inOut"
+          },
+          step4Start + 0.6
         );
       }
 
@@ -2235,47 +2273,107 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       // Step 9: Mini ovals SCALE UP and transform into full ovals
       const step9Start = step8Start + 2.0;
 
-      // Set initial state for full ovals (hidden, at same position)
+      // Set initial state for full ovals (hidden, at same position as mini ovals)
       tl.set(
         [refs.oval1, refs.oval2, refs.oval3],
         {
           opacity: 0,
-          scale: 1, // Will be at full size when visible
+          scale: 1,
+          x: 0,
           willChange: "transform, opacity"
         },
         step9Start
       );
 
-      // Mini ovals scale up FIRST
+      // Mini ovals scale up AND move apart (spreading effect)
       tl.to(
-        [refs.ovalMini1, refs.ovalMini2, refs.ovalMini3],
+        refs.ovalMini3, // Left card
         {
-          scale: 1.35, // Scale up mini ovals (280px * 1.35 ≈ 380px)
+          scale: 1.45,
+          x: "-110px", // Move left
           duration: 0.8,
           ease: "power2.inOut"
         },
         step9Start
       );
 
-      // During the scale-up, crossfade from mini to full
+      tl.to(
+        refs.ovalMini2, // Center card
+        {
+          scale: 1.45,
+          x: 0, // Stay center
+          duration: 0.8,
+          ease: "power2.inOut"
+        },
+        step9Start
+      );
+
+      tl.to(
+        refs.ovalMini1, // Right card
+        {
+          scale: 1.45,
+          x: "110px", // Move right
+          duration: 0.8,
+          ease: "power2.inOut"
+        },
+        step9Start
+      );
+
+      // Set full ovals at same spread positions
+      tl.set(
+        refs.oval3,
+        {
+          // x: "-60px"
+        },
+        step9Start + 0.4
+      );
+
+      tl.set(
+        refs.oval2,
+        {
+          x: 0
+        },
+        step9Start + 0.4
+      );
+
+      tl.set(
+        refs.oval1,
+        {
+          // x: "60px"
+        },
+        step9Start + 0.4
+      );
+
+      // Direct crossfade from mini to full (NO BLACK)
       tl.to(
         [refs.ovalMini1, refs.ovalMini2, refs.ovalMini3],
         {
           opacity: 0,
-          duration: 0.6,
+          duration: 0.5,
           ease: "power2.inOut"
         },
-        step9Start + 0.4 // Fade starts halfway through scale
+        step9Start + 0.4
       );
 
       tl.to(
         [refs.oval1, refs.oval2, refs.oval3],
         {
           opacity: 1,
-          duration: 0.6,
+          duration: 0.4,
           ease: "power2.inOut"
         },
-        step9Start + 0.4 // Fade in at same time
+        step9Start + 0.4
+      );
+
+      // Move full ovals back to original positions after crossfade
+      tl.to(
+        [refs.oval1, refs.oval2, refs.oval3],
+        {
+          x: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        },
+        step9Start + 0.8
       );
 
       // Clear will-change at the end
@@ -2471,14 +2569,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   return tl;
 };
 
-// Combined Circular Component
 const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
   const outerRef = useRef(null);
   const innerRef = useRef(null);
+  const innerLogoRef = useRef(null); // ADD THIS
 
   React.useImperativeHandle(ref, () => ({
     outer: outerRef.current,
-    inner: innerRef.current
+    inner: innerRef.current,
+    innerLogo: innerLogoRef.current // ADD THIS
   }));
 
   return (
@@ -2493,7 +2592,20 @@ const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
           transformOrigin: "center center"
         }}
       />
-      {/* Inner part - will rotate independently */}
+      {/* Inner LOGO part - shows FIRST on desktop */}
+      <img
+        ref={innerLogoRef}
+        src={curvey_circle_inner_logo_part}
+        alt="inner logo circle"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: "25%",
+          height: "25%",
+          transformOrigin: "center center",
+          opacity: 0
+        }}
+      />
+      {/* Inner part - shows SECOND on desktop */}
       <img
         ref={innerRef}
         src={curvey_circle_inner_part}
@@ -2503,7 +2615,7 @@ const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
           width: "70%",
           height: "70%",
           transformOrigin: "center center",
-          opacity: 0 // Start hidden
+          opacity: 0
         }}
       />
     </div>

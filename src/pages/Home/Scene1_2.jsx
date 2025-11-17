@@ -2575,7 +2575,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:768px)]:top-[39%] 
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[38%]
-    [@media(min-height:1200px)]:top-[33%]"
+    [@media(min-height:1200px)]:top-[33%]
+    [@media(min-width:1700px)]:top-[42%]" /* macbook pro 16" */
               style={{
                 left: "24px",
                 width: "auto",
@@ -2597,7 +2598,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:768px)]:top-[39%] 
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[38%]
-    [@media(min-height:1200px)]:top-[33%]"
+    [@media(min-height:1200px)]:top-[33%]
+        [@media(min-width:1700px)]:top-[42%]"
               style={{
                 right: "20px",
                 width: "auto",
@@ -2850,7 +2852,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [top:32%] 
     [@media(min-height:768px)]:top-[26%] 
     [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[35%]"
+    [@media(min-height:1080px)]:top-[35%]
+    [@media(min-width:1700px)]:top-[42%]"
               style={{
                 left: "24px",
                 width: "30%",
@@ -2871,7 +2874,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [top:32%] 
     [@media(min-height:768px)]:top-[26%] 
     [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[35%]"
+    [@media(min-height:1080px)]:top-[35%]
+    [@media(min-width:1700px)]:top-[42%]"
               style={{
                 right: "20px",
                 width: "30%",
