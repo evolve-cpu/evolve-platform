@@ -4,6 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* disable text + image selection everywhere */
+html, body {
+  -webkit-user-select: none;  /* safari */
+  -moz-user-select: none;     /* firefox */
+  -ms-user-select: none;      /* old edge/ie */
+  user-select: none;          /* standard */
+}
+
+/* also stop dragging images */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* BUT: keep selection in form fields (important for usability) */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+
 /* img {
   image-rendering: -webkit-optimize-contrast;
   backface-visibility: hidden;

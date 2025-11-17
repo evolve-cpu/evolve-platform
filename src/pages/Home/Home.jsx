@@ -715,19 +715,107 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
         });
       }
 
+      // if (masterTimelineRef.current) {
+      //   masterTimelineRef.current.kill();
+      // }
+
+      // const master = gsap.timeline({
+      //   // scrollTrigger: {
+      //   //   trigger: "#scroll-container",
+      //   //   start: "top top",
+      //   //   end: isMobile ? "+=80000" : "+=80000",
+      //   //   scrub: isMobile ? 0.05 : 0.05,
+      //   //   pin: true,
+      //   //   fastScrollEnd: true,
+      //   //   anticipatePin: 1,
+      //   // const master = gsap.timeline({
+      //   scrollTrigger: {
+      //     trigger: "#scroll-container",
+      //     start: "top top",
+      //     end: isMobile ? "+=40000" : "+=50000", // ✅ REDUCED from 80000 - makes scroll faster
+      //     scrub: 2, // ✅ INCREASED from 0.05 - creates discrete "snappy" transitions
+      //     pin: true,
+      //     fastScrollEnd: true,
+      //     anticipatePin: 1,
+      //     snap: {
+      //       snapTo: "labelsDirectional", // ✅ NEW - snaps to timeline labels
+      //       duration: { min: 0.2, max: 0.5 }, // ✅ NEW - smooth snap duration
+      //       ease: "power2.inOut"
+      //     },
+      //     onStart: () => {
+      //       if (idleAnimsRef.current) {
+      //         idleAnimsRef.current.revert();
+      //         idleAnimsRef.current = null;
+      //       }
+      //       if (scene1Refs.current.rainbow) {
+      //         gsap.set(scene1Refs.current.rainbow, { overwrite: "auto" });
+      //       }
+      //     },
+      //     onUpdate: (self) => {
+      //       const totalDuration = master.duration();
+      //       let scene1Duration = 0.6 + 0.6 - 0.3;
+      //       if (master.getChildren()[0]) {
+      //         scene1Duration += master.getChildren()[0].duration();
+      //       }
+
+      //       const scene1EndProgress = scene1Duration / totalDuration;
+
+      //       if (
+      //         setShowNavbar &&
+      //         !hasShownNavbarRef.current &&
+      //         self.progress > scene1EndProgress
+      //       ) {
+      //         setShowNavbar(true);
+      //         hasShownNavbarRef.current = true;
+      //       }
+
+      //       if (
+      //         setShowNavbar &&
+      //         hasShownNavbarRef.current &&
+      //         self.progress <= scene1EndProgress
+      //       ) {
+      //         setShowNavbar(false);
+      //         hasShownNavbarRef.current = false;
+      //       }
+
+      //       if (
+      //         !scene1EndScrollRef.current &&
+      //         self.progress > scene1EndProgress
+      //       ) {
+      //         scene1EndScrollRef.current = self.scroll();
+      //       }
+      //     }
+      //   }
+      // });
       if (masterTimelineRef.current) {
         masterTimelineRef.current.kill();
       }
+
+      const SECTIONS = 5; // scene1, 1_1, 1_2, 1_3, 1_4
+      const SCROLL_PER_SECTION = 4; // same for mobile/desktop
+
+      // guard for weird cases where innerHeight is tiny
+      const vh = Math.max(window.innerHeight, 400);
+      const scrollLength = vh * SECTIONS * SCROLL_PER_SECTION;
 
       const master = gsap.timeline({
         scrollTrigger: {
           trigger: "#scroll-container",
           start: "top top",
-          end: isMobile ? "+=80000" : "+=120000",
-          scrub: isMobile ? 0.05 : 0.05,
+          end: `+=${scrollLength}`,
+          scrub: 0.8,
           pin: true,
-          fastScrollEnd: true,
+          fastScrollEnd: false,
           anticipatePin: 1,
+          invalidateOnRefresh: true, // ✅ recompute on resize
+
+          // // ✅ SNAP TO LABELS - this makes Scene1_3 snap to each step
+          // snap: {
+          //   snapTo: "labels", // Snaps to timeline labels
+          //   duration: { min: 0.3, max: 0.6 },
+          //   delay: 0.1,
+          //   ease: "power2.out"
+          // },
           onStart: () => {
             if (idleAnimsRef.current) {
               idleAnimsRef.current.revert();
@@ -737,6 +825,7 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
               gsap.set(scene1Refs.current.rainbow, { overwrite: "auto" });
             }
           },
+
           onUpdate: (self) => {
             const totalDuration = master.duration();
             let scene1Duration = 0.6 + 0.6 - 0.3;
@@ -773,6 +862,8 @@ const Home = ({ forceLayout = "auto", setShowNavbar, isLoading }) => {
           }
         }
       });
+
+      masterTimelineRef.current = master;
 
       if (tl1) {
         master.add(tl1);
