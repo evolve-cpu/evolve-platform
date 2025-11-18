@@ -177,12 +177,70 @@ const getScreenMultipliers = () => {
     return { orbit: 0.5, stairs: 0.7 };
   }
 };
+
+// Helper function to get element slide-in adjustments based on screen size
+const getElementSlideMultipliers = () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // Detect screen categories for element downward movement
+  if (width <= 1440) {
+    // Small laptops (13-14 inch) - full movement (current behavior)
+    return { downwardY: 1 };
+  } else if (width <= 1680 && height <= 1050) {
+    // 15-inch laptops - reduce by 25%
+    return { downwardY: 0.75 };
+  } else if (width <= 1920 && height <= 1200) {
+    // 16-inch laptops (like MacBook Pro 16) - reduce by 40%
+    return { downwardY: 0.6 };
+  } else if (width <= 2560) {
+    // Large displays - reduce by 50%
+    return { downwardY: 0.5 };
+  } else {
+    // 4K and above - reduce by 60%
+    return { downwardY: 0.4 };
+  }
+};
+
+// Helper function to get orbit vertical movement multipliers
+const getOrbitVerticalMultipliers = () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // Detect screen categories for orbit vertical movement
+  if (width <= 1366) {
+    // Small screens (below 14-inch) - LESS upward, MORE downward
+    return { upward: 0.7, downward: 1.3 };
+  } else if (width <= 1440) {
+    // 14-inch laptops - baseline (current behavior)
+    return { upward: 1, downward: 1 };
+  } else if (width <= 1680 && height <= 1050) {
+    // 15-inch laptops - MORE upward, LESS downward
+    return { upward: 1, downward: 1 };
+  } else if (width <= 1920 && height <= 1200) {
+    // 16-inch laptops - even MORE upward, even LESS downward
+    return { upward: 1.4, downward: 0.7 };
+  } else if (width <= 2560) {
+    // Large displays - significant increase upward, decrease downward
+    return { upward: 1.6, downward: 0.6 };
+  } else {
+    // 4K and above - maximum upward, minimum downward
+    return { upward: 1.8, downward: 0.5 };
+  }
+};
+
 // Timeline hook for Scene1_1 animation - works with master timeline
 export const useScene1_1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
   // Get screen multipliers for responsive movement
   const multipliers = getScreenMultipliers();
+
+  // Get element slide-in multipliers (ADD THIS)
+  const elementMultipliers = getElementSlideMultipliers();
+
+  // Get orbit vertical movement multipliers (ADD THIS)
+  const orbitVerticalMultipliers = getOrbitVerticalMultipliers();
 
   // Get object size for calculations
   const objectSize = isMobile ? 44 : 70;
@@ -699,8 +757,47 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         stopAnimationEnd
       );
+      // } else {
+      //   // Desktop: Both eyes same size and position
+      //   tl.fromTo(
+      //     refs.leftElementEye,
+      //     {
+      //       x: 0,
+      //       y: 0
+      //     },
+      //     {
+      //       y: "15vh",
+      //       left: "-2.5%",
+      //       scale: 1.2,
+      //       duration: 1.2,
+      //       ease: "power2.in"
+      //     },
+      //     stopAnimationEnd
+      //   );
+
+      //   tl.fromTo(
+      //     refs.rightElementEye,
+      //     {
+      //       x: 0,
+      //       y: 0
+      //     },
+      //     {
+      //       y: "15vh",
+      //       right: "-2.5%",
+      //       scale: 1.2,
+      //       duration: 1.2,
+      //       ease: "power2.in"
+      //     },
+      //     stopAnimationEnd
+      //   );
+      // }
     } else {
-      // Desktop: Both eyes same size and position
+      // Desktop: Both eyes same size and position - responsive to screen size
+      const baseDownwardMovement = 15; // Base 15vh for small laptops
+      const adjustedY = `${
+        baseDownwardMovement * elementMultipliers.downwardY
+      }vh`;
+
       tl.fromTo(
         refs.leftElementEye,
         {
@@ -708,7 +805,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           y: 0
         },
         {
-          y: "15vh",
+          y: adjustedY, // Adjusted downward movement
           left: "-2.5%",
           scale: 1.2,
           duration: 1.2,
@@ -724,7 +821,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           y: 0
         },
         {
-          y: "15vh",
+          y: adjustedY, // Adjusted downward movement
           right: "-2.5%",
           scale: 1.2,
           duration: 1.2,
@@ -749,6 +846,17 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // ADD THIS SECTION - Pink orbit transition
     // Set initial state for pink orbit (same as yellow orbit)
+    // tl.set(
+    //   refs.pinkBiggerOrbit,
+    //   {
+    //     opacity: 0,
+    //     scale: isMobile ? 2.3 : 1,
+    //     y: isMobile ? -250 : -200,
+    //     willChange: "transform, opacity"
+    //   },
+    //   eyesOpenStart
+    // );
+
     tl.set(
       refs.pinkBiggerOrbit,
       {
@@ -773,10 +881,20 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       pinkOrbitTransitionStart
     );
 
+    // tl.to(
+    //   refs.pinkBiggerOrbit,
+    //   {
+    //     opacity: 1,
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   pinkOrbitTransitionStart
+    // );
+
     tl.to(
       refs.pinkBiggerOrbit,
       {
-        opacity: 1,
+        opacity: 1, // Changed from 1 to 0.5 (50% opacity)
         duration: 0.8,
         ease: "power2.inOut"
       },
@@ -833,10 +951,20 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         orbitMoveUpStart
       );
     } else {
+      // tl.to(
+      //   refs.pinkBiggerOrbit,
+      //   {
+      //     y: "-35%", // Move more upwards for desktop
+      //     duration: 1.2,
+      //     ease: "power2.out"
+      //   },
+      //   orbitMoveUpStart
+      // );
+
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "-35%", // Move more upwards for desktop
+          y: `${-35 * orbitVerticalMultipliers.upward}%`, // Responsive upward movement
           duration: 1.2,
           ease: "power2.out"
         },
@@ -2191,16 +2319,26 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Pink orbit moves down SMOOTHLY from its current position (stays centered)
+      // tl.to(
+      //   refs.pinkBiggerOrbit,
+      //   {
+      //     // y: "+=80vh", // Move down by 80vh from CURRENT position (relative movement)
+      //     // x stays unchanged to keep it centered
+      //     top: "90%",
+      //     duration: 1.5,
+      //     ease: "power2.inOut"
+      //   },
+      //   step6Start // Starts at same time as removals
+      // );
+
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          // y: "+=80vh", // Move down by 80vh from CURRENT position (relative movement)
-          // x stays unchanged to keep it centered
-          top: "90%",
+          top: `${90 * orbitVerticalMultipliers.downward}%`, // Responsive downward position
           duration: 1.5,
           ease: "power2.inOut"
         },
-        step6Start // Starts at same time as removals
+        step6Start
       );
 
       // Step 7: "the evolve toolkit" text appears AFTER orbit settles
@@ -2486,30 +2624,33 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         newTextStart
       );
     } else {
-      // Desktop: More downward, closer together, 95% visible
+      // Desktop: Responsive downward movement based on screen size
+      const baseDownwardMovement = 15; // Base 15vh for small laptops
+      const adjustedY = `${
+        baseDownwardMovement * elementMultipliers.downwardY
+      }vh`;
+
       tl.to(
         refs.leftElement,
         {
-          y: "15vh", // More downward movement
-          left: "-2.5%", // Closer, show 95% inside screen
-          scale: 1.2, // Bigger for desktop
+          y: adjustedY, // Adjusted downward movement
+          left: "-2.5%",
+          scale: 1.2,
           duration: 1.2,
           ease: "power2.in"
         },
-        // stopAnimationEnd
         newTextStart
       );
 
       tl.to(
         refs.rightElement,
         {
-          y: "15vh", // More downward movement
-          right: "-2.5%", // Closer, show 95% inside screen
-          scale: 1.2, // Bigger for desktop
+          y: adjustedY, // Adjusted downward movement
+          right: "-2.5%",
+          scale: 1.2,
           duration: 1.2,
           ease: "power2.in"
         },
-        // stopAnimationEnd
         newTextStart
       );
     }
@@ -3005,7 +3146,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           alt="pink bigger orbit"
           className="w-full h-auto"
           style={{
-            transformOrigin: "center center"
+            transformOrigin: "center center",
+            opacity: 0.5
           }}
         />
         {/* Combined Circle - appears at center of PINK ORBIT */}
@@ -3323,7 +3465,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         ref={text3Ref}
         className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
         style={{
-          top: isMobile ? "30%" : "55%",
+          top: isMobile ? "30%" : "58%",
           fontSize: isMobile ? "2rem" : "3rem",
           // fontSize: isMobile
           // ? "clamp(1.25rem, 4.5vw, 2rem)"
