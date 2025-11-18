@@ -186,13 +186,13 @@ const getElementSlideMultipliers = () => {
   // Detect screen categories for element downward movement
   if (width <= 1440) {
     // Small laptops (13-14 inch) - full movement (current behavior)
-    return { downwardY: 1 };
+    return { downwardY: 1.2 };
   } else if (width <= 1680 && height <= 1050) {
     // 15-inch laptops - reduce by 25%
-    return { downwardY: 0.75 };
+    return { downwardY: 1 };
   } else if (width <= 1920 && height <= 1200) {
     // 16-inch laptops (like MacBook Pro 16) - reduce by 40%
-    return { downwardY: 0.6 };
+    return { downwardY: -0.5 };
   } else if (width <= 2560) {
     // Large displays - reduce by 50%
     return { downwardY: 0.5 };
@@ -213,13 +213,13 @@ const getOrbitVerticalMultipliers = () => {
     return { upward: 0.7, downward: 1.3 };
   } else if (width <= 1440) {
     // 14-inch laptops - baseline (current behavior)
-    return { upward: 1, downward: 1 };
+    return { upward: 1.2, downward: 0.7 };
   } else if (width <= 1680 && height <= 1050) {
     // 15-inch laptops - MORE upward, LESS downward
-    return { upward: 1, downward: 1 };
+    return { upward: 0.9, downward: 1.1 };
   } else if (width <= 1920 && height <= 1200) {
     // 16-inch laptops - even MORE upward, even LESS downward
-    return { upward: 1.4, downward: 0.7 };
+    return { upward: 1.1, downward: 1 };
   } else if (width <= 2560) {
     // Large displays - significant increase upward, decrease downward
     return { upward: 1.6, downward: 0.6 };
@@ -1727,29 +1727,144 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step10Start + 1.5
       );
 
+      // // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
+      // const step11Start = step10Start + 4.0;
+
+      // // Calculate the scroll container height (from top to text position)
+      // const scrollContainerHeight = 85; // 85vh (100vh - 15vh where text is)
+
+      // // Set oval_2 ABOVE the visible area (above screen top)
+      // tl.set(
+      //   refs.oval2,
+      //   {
+      //     opacity: 1,
+      //     y: `-${scrollContainerHeight}vh`, // Start above screen
+      //     scale: 0.9
+      //   },
+      //   step11Start
+      // );
+
+      // // oval_1 scrolls DOWN and exits through BOTTOM
+      // tl.to(
+      //   refs.oval1,
+      //   {
+      //     y: `${scrollContainerHeight}vh`, // Exit through bottom
+      //     scale: 0.9,
+      //     duration: 1.8,
+      //     ease: "power3.inOut"
+      //   },
+      //   step11Start
+      // );
+
+      // // oval_2 scrolls DOWN from top to center
+      // tl.to(
+      //   refs.oval2,
+      //   {
+      //     y: 0, // Move to center
+      //     scale: 1,
+      //     duration: 1.8,
+      //     ease: "power3.inOut"
+      //   },
+      //   step11Start
+      // );
+
+      // // Fade out oval_1 as it exits bottom
+      // tl.to(
+      //   refs.oval1,
+      //   {
+      //     opacity: 0,
+      //     duration: 0.6,
+      //     ease: "power2.in"
+      //   },
+      //   step11Start + 1.2
+      // );
+
+      // // Step 12: Continue vertical scroll (TOP TO BOTTOM)
+      // const step12Start = step11Start + 4.0;
+
+      // // Set oval_3 ABOVE the visible area (above screen top)
+      // tl.set(
+      //   refs.oval3,
+      //   {
+      //     opacity: 1,
+      //     y: `-${scrollContainerHeight}vh`, // Start above screen
+      //     scale: 0.9
+      //   },
+      //   step12Start
+      // );
+
+      // // oval_2 scrolls DOWN and exits through BOTTOM
+      // tl.to(
+      //   refs.oval2,
+      //   {
+      //     y: `${scrollContainerHeight}vh`, // Exit through bottom
+      //     scale: 0.9,
+      //     duration: 1.8,
+      //     ease: "power3.inOut"
+      //   },
+      //   step12Start
+      // );
+
+      // // oval_3 scrolls DOWN from top to center
+      // tl.to(
+      //   refs.oval3,
+      //   {
+      //     y: 0, // Move to center
+      //     scale: 1,
+      //     duration: 1.8,
+      //     ease: "power3.inOut"
+      //   },
+      //   step12Start
+      // );
+
+      // // Fade out oval_2 as it exits bottom
+      // tl.to(
+      //   refs.oval2,
+      //   {
+      //     opacity: 0,
+      //     duration: 0.6,
+      //     ease: "power2.in"
+      //   },
+      //   step12Start + 1.2
+      // );
+
+      // // Step 13: Final card stays with subtle animation
+      // tl.to(
+      //   refs.oval3,
+      //   {
+      //     scale: 1.03,
+      //     duration: 0.5,
+      //     ease: "sine.inOut",
+      //     yoyo: true,
+      //     repeat: 1
+      //   },
+      //   step12Start + 2.5
+      // );
+      // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
       // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
       const step11Start = step10Start + 4.0;
 
       // Calculate the scroll container height (from top to text position)
       const scrollContainerHeight = 85; // 85vh (100vh - 15vh where text is)
 
-      // Set oval_2 ABOVE the visible area (above screen top)
+      // Set oval_2 ABOVE the visible area
       tl.set(
         refs.oval2,
         {
           opacity: 1,
-          y: `-${scrollContainerHeight}vh`, // Start above screen
+          top: `-100vh`, // Start well above screen
           scale: 0.9
         },
         step11Start
       );
 
-      // oval_1 scrolls DOWN and exits through BOTTOM
+      // oval_1 scrolls DOWN - moves down and fades
       tl.to(
         refs.oval1,
         {
-          y: `${scrollContainerHeight}vh`, // Exit through bottom
+          top: `${scrollContainerHeight * 0.6}vh`, // Move down
           scale: 0.9,
+          opacity: 0,
           duration: 1.8,
           ease: "power3.inOut"
         },
@@ -1760,7 +1875,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval2,
         {
-          y: 0, // Move to center
+          top: "15vh", // Moved down from 0 (adjust this value: try 10vh, 15vh, 20vh)
           scale: 1,
           duration: 1.8,
           ease: "power3.inOut"
@@ -1768,37 +1883,27 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step11Start
       );
 
-      // Fade out oval_1 as it exits bottom
-      tl.to(
-        refs.oval1,
-        {
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.in"
-        },
-        step11Start + 1.2
-      );
-
       // Step 12: Continue vertical scroll (TOP TO BOTTOM)
       const step12Start = step11Start + 4.0;
 
-      // Set oval_3 ABOVE the visible area (above screen top)
+      // Set oval_3 ABOVE the visible area
       tl.set(
         refs.oval3,
         {
           opacity: 1,
-          y: `-${scrollContainerHeight}vh`, // Start above screen
+          top: `-100vh`, // Start well above screen
           scale: 0.9
         },
         step12Start
       );
 
-      // oval_2 scrolls DOWN and exits through BOTTOM
+      // oval_2 scrolls DOWN and fades
       tl.to(
         refs.oval2,
         {
-          y: `${scrollContainerHeight}vh`, // Exit through bottom
+          top: `${scrollContainerHeight * 0.6}vh`, // Move down
           scale: 0.9,
+          opacity: 0,
           duration: 1.8,
           ease: "power3.inOut"
         },
@@ -1809,23 +1914,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval3,
         {
-          y: 0, // Move to center
+          top: "15vh", // Moved down from 0 (same as oval_2)
           scale: 1,
           duration: 1.8,
           ease: "power3.inOut"
         },
         step12Start
-      );
-
-      // Fade out oval_2 as it exits bottom
-      tl.to(
-        refs.oval2,
-        {
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.in"
-        },
-        step12Start + 1.2
       );
 
       // Step 13: Final card stays with subtle animation
@@ -1840,8 +1934,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         step12Start + 2.5
       );
-
-      // Step 13: oval_3 stays visible (final card)
     } else {
       // Desktop: Both stairs come from bottom corners
       tl.set(
@@ -2809,7 +2901,7 @@ const WaitlistButton = React.forwardRef(
           e.currentTarget.style.cursor = "pointer";
         }}
       >
-        join the waitlist
+        join us
       </button>
     );
   }
@@ -3601,7 +3693,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               opacity: 0
             }}
           />
-
           {/* Stairs 2 - NEW */}
           <img
             ref={leftStairs2Ref}
@@ -3656,7 +3747,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               onClick={() => console.log("Waitlist button clicked!")}
             />
           </div> */}
-
           {/* Text8: "the evolve toolkit" - Desktop */}
           <div
             ref={text8Ref}
@@ -3672,7 +3762,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           >
             the evolve toolkit
           </div>
-
           {/* Mini Ovals Container - Desktop (horizontal layout) */}
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[15]"
@@ -3721,7 +3810,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               }}
             />
           </div>
-
           {/* Full Ovals Container - Desktop (horizontal layout) */}
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[16]"
@@ -3770,6 +3858,72 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               }}
             />
           </div>
+          {/* Full Ovals Container - MOBILE - with clipping mask */}
+          {/* Full Ovals Container - MOBILE - with proper masking */}
+          {isMobile && (
+            <div
+              className="absolute z-[16]"
+              style={{
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: "15vh", // Boundary stops here (above text8)
+                overflow: "hidden", // This clips the content
+                pointerEvents: "none"
+              }}
+            >
+              {/* Inner positioned container - this is what moves */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "42.5vh", // Center in the visible area (85vh / 2)
+                  transform: "translate(-50%, 0)",
+                  width: "85vw",
+                  maxWidth: "380px"
+                }}
+              >
+                <img
+                  ref={oval1Ref}
+                  src={oval_1}
+                  alt="oval 1"
+                  className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    opacity: 0,
+                    top: 0
+                  }}
+                />
+
+                <img
+                  ref={oval2Ref}
+                  src={oval_2}
+                  alt="oval 2"
+                  className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    opacity: 0,
+                    top: 0
+                  }}
+                />
+
+                <img
+                  ref={oval3Ref}
+                  src={oval_3}
+                  alt="oval 3"
+                  className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    opacity: 0,
+                    top: 0
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -4255,7 +4409,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               "0 6px 0 rgba(128, 128, 128, 0.8)";
           }}
         >
-          join the waitlist
+          join us
         </button>
       </div>
     </section>

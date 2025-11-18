@@ -1,31 +1,36 @@
 import React, { useRef, useImperativeHandle } from "react";
 import { gsap } from "gsap";
-import {
-  evolve_text,
-  marquee_vector_1,
-  marquee_vector_2
-} from "../../assets/images/Nav";
 
 /* -------------------- timeline builder (no ScrollTrigger) -------------------- */
 
 const STEPS = [
   {
     key: "see",
-    body: "hunt for the details everyone else misses.",
+    body: "hunt for the details <br/>everyone else misses.",
     from: 1000,
     to: 1048
   },
   {
     key: "think",
-    body: "ask the questions no one's asking.",
+    body: "ask the questions <br/>no one's asking.",
     from: 1049,
     to: 1097
   },
-  { key: "make", body: "design like it matters.", from: 1098, to: 1146 },
-  { key: "ship", body: "send it to the real world", from: 1147, to: 1195 },
+  {
+    key: "make",
+    body: "design like it matters.",
+    from: 1098,
+    to: 1146
+  },
+  {
+    key: "ship",
+    body: "send it to the real world",
+    from: 1147,
+    to: 1195
+  },
   {
     key: "share",
-    body: "tell the story so well they can't ignore it.",
+    body: "tell the story so well <br/>they can't ignore it.",
     from: 1196,
     to: 1241
   }
@@ -103,7 +108,8 @@ export const useScene1_3Timeline = (refs, isMobile) => {
     if (!subEl || !bodyEl) return;
 
     // if already showing correct text, ensure visible and placed
-    if (subEl.textContent === newSub && bodyEl.textContent === newBody) {
+    // if (subEl.textContent === newSub && bodyEl.textContent === newBody) {
+    if (subEl.textContent === newSub && bodyEl.innerHTML === newBody) {
       gsap.to([subEl, bodyEl], {
         y: 0,
         opacity: 1,
@@ -126,9 +132,14 @@ export const useScene1_3Timeline = (refs, isMobile) => {
         duration: 0.22,
         ease: "power2.in"
       })
+      // .call(() => {
+      //   subEl.textContent = newSub;
+      //   bodyEl.textContent = newBody;
+      //   gsap.set([subEl, bodyEl], { y: inY, opacity: 0 });
+      // })
       .call(() => {
         subEl.textContent = newSub;
-        bodyEl.textContent = newBody;
+        bodyEl.innerHTML = newBody; // Changed from textContent to innerHTML
         gsap.set([subEl, bodyEl], { y: inY, opacity: 0 });
       })
       .to(
@@ -142,9 +153,15 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   const frame = { v: STEPS[0].from };
 
   // preset first paint for texts to avoid flashes
+  // if (refs.sub && refs.body) {
+  //   refs.sub.textContent = STEPS[0].key;
+  //   refs.body.textContent = STEPS[0].body;
+  //   gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
+  // }
+
   if (refs.sub && refs.body) {
     refs.sub.textContent = STEPS[0].key;
-    refs.body.textContent = STEPS[0].body;
+    refs.body.innerHTML = STEPS[0].body; // Changed to innerHTML
     gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
   }
 
@@ -207,11 +224,23 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   };
 
   // ensure initial text is correct and visible
+  // tl.call(
+  //   () => {
+  //     if (refs.sub && refs.body) {
+  //       refs.sub.textContent = STEPS[0].key;
+  //       refs.body.textContent = STEPS[0].body;
+  //       gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
+  //     }
+  //   },
+  //   null,
+  //   0.001
+  // );
+
   tl.call(
     () => {
       if (refs.sub && refs.body) {
         refs.sub.textContent = STEPS[0].key;
-        refs.body.textContent = STEPS[0].body;
+        refs.body.innerHTML = STEPS[0].body; // Changed to innerHTML
         gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
       }
     },
@@ -328,7 +357,11 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                     <p
                       ref={bodyRef}
                       className="font-medium text-4xl max-w-[42ch]"
-                      style={{ opacity: 0, transform: "translateY(20px)" }}
+                      style={{
+                        opacity: 0,
+                        transform: "translateY(20px)",
+                        lineHeight: "100%"
+                      }}
                     />
                   </div>
                 </div>
@@ -346,12 +379,13 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
         )}
 
         {/* mobile */}
+        {/* mobile */}
         {isMobile && (
           <div className="grid grid-rows-[25%_50%_25%] w-full h-full">
             <div className="relative">
               <div className="absolute inset-0 bg-evolve-lavender-indigo" />
-              <div className="absolute inset-0 flex items-end justify-center p-4">
-                <h2 className="text-white  lowercase font-extrabold text-[3rem] leading-none text-center">
+              <div className="absolute inset-0 flex items-end justify-start p-4">
+                <h2 className="text-white lowercase font-extrabold text-[3rem] leading-none text-left">
                   how you <br />
                   will evolve
                 </h2>
@@ -367,11 +401,11 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
 
             <div className="relative">
               <div className="absolute inset-0 bg-evolve-pink" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white lowercase p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 flex flex-col items-start justify-center text-white lowercase p-6 overflow-hidden">
                 <div className="overflow-hidden">
                   <h3
                     ref={subRef}
-                    className="font-extrabold text-[2rem]"
+                    className="font-extrabold text-[2rem] text-left"
                     style={{ opacity: 0, transform: "translateY(20px)" }}
                   />
                 </div>
@@ -379,8 +413,12 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                 <div className="overflow-hidden">
                   <p
                     ref={bodyRef}
-                    className="font-medium text-[24px] max-w-[30ch]"
-                    style={{ opacity: 0, transform: "translateY(20px)" }}
+                    className="font-medium text-[24px] max-w-[30ch] text-left"
+                    style={{
+                      opacity: 0,
+                      transform: "translateY(20px)",
+                      lineHeight: "100%"
+                    }}
                   />
                 </div>
               </div>

@@ -2576,9 +2576,11 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[38%]
     [@media(min-height:1200px)]:top-[33%]
-    [@media(min-width:1700px)]:top-[42%]" /* macbook pro 16" */
+    [@media(min-width:1700px)]:top-[42%] 
+    [@media(min-width:1700px)]:left-[30px]
+    [left:26px]" /* macbook pro 16" */
               style={{
-                left: "24px",
+                // left: "26px",
                 width: "auto",
                 height: "auto",
                 opacity: 0,
@@ -2620,7 +2622,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           [top:20%] 
           [@media(min-height:768px)]:top-[18%] 
           [@media(min-height:900px)]:top-[14%]
-          [@media(min-height:1080px)]:top-[10%]"
+          [@media(min-height:1080px)]:top-[10%]
+          [@media(min-width:1700px)]:top-[20%]"
               style={{
                 left: "40px",
                 width: "auto",
@@ -2642,7 +2645,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           [top:20%] 
           [@media(min-height:768px)]:top-[18%] 
           [@media(min-height:900px)]:top-[14%]
-          [@media(min-height:1080px)]:top-[10%]"
+          [@media(min-height:1080px)]:top-[10%]
+          [@media(min-width:1700px)]:top-[20%]"
               style={{
                 right: "37.98px",
                 width: "auto",
@@ -2761,9 +2765,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [top:20%] 
     [@media(min-height:768px)]:top-[18%] 
     [@media(min-height:900px)]:top-[14%]
-    [@media(min-height:1080px)]:top-[10%]"
+    [@media(min-height:1080px)]:top-[10%]
+    [@media(min-width:1700px)]:top-[22%]
+          [left:24px]
+          [@media(min-width:1700px)]:left-[30px]"
               style={{
-                left: "24px",
+                // left: "24px",
                 width: "auto",
                 height: "auto",
                 opacity: 0,
@@ -2783,9 +2790,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
 [@media(min-height:768px)]:top-[18%]
 [@media(min-height:900px)]:top-[14%]
 [@media(min-height:1080px)]:top-[10%]
-[@media(min-height:1200px)]:top-[8%]"
+[@media(min-height:1200px)]:top-[8%]
+    [@media(min-width:1700px)]:top-[22%]
+          [right:20px]
+          [@media(min-width:1700px)]:right-[25px]"
               style={{
-                right: "20px",
+                // right: "20px",
                 // width: "full",
                 // height: "full",
                 opacity: 0,
@@ -2853,10 +2863,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:768px)]:top-[26%] 
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[35%]
-    [@media(min-width:1700px)]:top-[42%]"
+    [@media(min-width:1700px)]:top-[28%]
+          [left:24px]
+          [@media(min-width:1700px)]:left-[30px]"
               style={{
-                left: "24px",
-                width: "30%",
+                // left: "24px",
+                width: "28%",
                 // height: "auto",
                 opacity: 0,
                 transform: "translateY(-50%)"
@@ -2875,10 +2887,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:768px)]:top-[26%] 
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[35%]
-    [@media(min-width:1700px)]:top-[42%]"
+    [@media(min-width:1700px)]:top-[28%]
+          [right:20px]
+          [@media(min-width:1700px)]:right-[22px]"
               style={{
-                right: "20px",
-                width: "30%",
+                // right: "20px",
+                width: "28%",
                 // height: "auto",
                 opacity: 0,
                 transform: "translateY(-50%)"
@@ -3036,11 +3050,10 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           </h2>
         </div>
         {/* Top Text Section - Initial state */}
-        // 1. UPDATE: First text section (around line 440-490)
         {/* Top Text Section - Initial state */}
         <div
           className="absolute left-0 right-0 text-center z-20"
-          style={{ top: "10%" }}
+          style={{ top: "15%" }}
         >
           <p
             ref={topTextRef}
@@ -3108,7 +3121,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         {/* Final Text Section - New state */}
         <div
           className="absolute left-0 right-0 text-center z-20"
-          style={{ top: "15%" }}
+          style={{ top: "17%" }}
         >
           <p
             ref={finalTopTextRef}
@@ -3153,7 +3166,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               );
             }}
           >
-            join the waitlist
+            join us
           </button>
         </div>
         {/* Left Hand */}

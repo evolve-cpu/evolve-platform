@@ -46,7 +46,7 @@ export const useScene1Timeline = (refs, isMobile) => {
   tl.to(refs.inner, {
     scale: isMobile ? 3.2 : 2.6,
     y: isMobile ? 0 : "25vh", // NO y translation for mobile
-    transformOrigin: isMobile ? "center 60%" : "center 62%", // Scale from bottom for mobile
+    transformOrigin: isMobile ? "center 55%" : "center 62%", // Scale from bottom for mobile
     ease: "power2.inOut",
     duration: 3,
     force3D: true
