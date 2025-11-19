@@ -2326,18 +2326,37 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.set(
         [refs.stairsLeft, refs.stairsRight],
         {
-          opacity: 0,
+          opacity: 1,
           scale: 1,
-          y: 0
+          y: "40vh" // Start position - mostly hidden below
         },
         stairsAnimateStart
       );
 
-      // Stairs fade in (20% visible from bottom)
+      // Set initial mask to show only 5% with soft gradient
+      if (refs.stairsLeft && refs.stairsRight) {
+        const leftImg = refs.stairsLeft.querySelector("img");
+        const rightImg = refs.stairsRight.querySelector("img");
+
+        if (leftImg && rightImg) {
+          tl.set(
+            [leftImg, rightImg],
+            {
+              maskImage:
+                "linear-gradient(to top, black 10%, black 0%, transparent 35%)",
+              WebkitMaskImage:
+                "linear-gradient(to top, black 10%, black 0%, transparent 35%)"
+            },
+            stairsAnimateStart
+          );
+        }
+      }
+
+      // Stairs slide up from bottom (showing 5%)
       tl.to(
         [refs.stairsLeft, refs.stairsRight],
         {
-          opacity: 1,
+          y: 0,
           duration: 1.0,
           ease: "power2.out"
         },
@@ -2355,7 +2374,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         nextPhaseStart
       );
 
-      // Stairs move down
+      // Stairs move down slightly (but stay at 5% visibility)
       tl.to(
         [refs.stairsLeft, refs.stairsRight],
         {
@@ -2366,26 +2385,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         nextPhaseStart
       );
 
-      // Reveal stairs to 40%
-      if (refs.stairsLeft && refs.stairsRight) {
-        const leftImg = refs.stairsLeft.querySelector("img");
-        const rightImg = refs.stairsRight.querySelector("img");
-
-        if (leftImg && rightImg) {
-          tl.to(
-            [leftImg, rightImg],
-            {
-              maskImage: "linear-gradient(to top, black 60%, transparent 60%)",
-              WebkitMaskImage:
-                "linear-gradient(to top, black 60%, transparent 60%)",
-              duration: 1.0,
-              ease: "power2.inOut"
-            },
-            nextPhaseStart
-          );
-        }
-      }
-
+      // NO mask change - keep stairs at 5% visibility
       tl.set(
         refs.text4,
         {
@@ -2430,7 +2430,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Reveal stairs to 100% (fully visible) - NO MOVEMENT
+      // Reveal stairs from 5% to 100% with SMOOTH translucent gradient
       if (refs.stairsLeft && refs.stairsRight) {
         const leftImg = refs.stairsLeft.querySelector("img");
         const rightImg = refs.stairsRight.querySelector("img");
@@ -2440,10 +2440,10 @@ export const useScene1_1Timeline = (refs, isMobile) => {
             [leftImg, rightImg],
             {
               maskImage:
-                "linear-gradient(to top, black 100%, transparent 100%)",
+                "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
               WebkitMaskImage:
-                "linear-gradient(to top, black 100%, transparent 100%)",
-              duration: 0.8,
+                "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
+              duration: 1.2,
               ease: "power2.out"
             },
             step2Start
