@@ -350,7 +350,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     // Set all spans to start at 0.3 opacity - but let them animate to full black
     spans.forEach((span) => {
       gsap.set(span, {
-        opacity: 0.3,
+        opacity: 0.15,
         color: "rgb(0, 0, 0)",
         willChange: "opacity"
       });
@@ -663,7 +663,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     // Set all spans to start at 0.3 opacity
     spans2.forEach((span) => {
       gsap.set(span, {
-        opacity: 0.3,
+        opacity: 0.15,
         color: "rgb(0, 0, 0)",
         willChange: "opacity"
       });
@@ -3666,10 +3666,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {/* TEXT */}
       <div
         ref={textRef}
-        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-3xl md:text-6xl"
         style={{
           top: isMobile ? "24%" : "26%",
-          fontSize: isMobile ? "2rem" : "3rem",
+          // fontSize: isMobile ? "2rem" : "3rem",
           // fontSize: isMobile
           //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
           //   : "clamp(1.25rem, 2.6vw, 3rem)",
@@ -3752,10 +3752,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {/* SECOND TEXT */}
       <div
         ref={text2Ref}
-        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-3xl md:text-6xl"
         style={{
           top: isMobile ? "24%" : "26%",
-          fontSize: isMobile ? "2rem" : "3rem",
+          // fontSize: isMobile ? "2rem" : "3rem",
           // fontSize: isMobile
           //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
           //   : "clamp(1.25rem, 2.6vw, 3rem)",
@@ -3846,10 +3846,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
                 world{" "}
               </span>
               <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
-                stop
+                stop{" "}
               </span>
-            </div>
-            <div>
+              {/* </div> */}
+              {/* <div> */}
               <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
                 and{" "}
               </span>
@@ -3868,13 +3868,12 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       </div>
       <div
         ref={text3Ref}
-        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+        className={`
+    absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold
+    text-3xl md:text-5xl
+  `}
         style={{
           top: isMobile ? "30%" : "58%",
-          fontSize: isMobile ? "2rem" : "3rem",
-          // fontSize: isMobile
-          // ? "clamp(1.25rem, 4.5vw, 2rem)"
-          // : "clamp(1.25rem, 2.6vw, 3rem)",
           lineHeight: isMobile ? "36px" : "84px",
           color: "rgb(0, 0, 0)",
           opacity: 0,
@@ -3886,14 +3885,15 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       >
         with evolve, you get to build
       </div>
+
       {/* FOURTH TEXT - Desktop: 3 stacked texts */}
       {!isMobile && (
         <div
           ref={text4Ref}
-          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
           style={{
             top: "70%",
-            fontSize: "3.5rem",
+            // fontSize: "3.5rem",
             // fontSize: "clamp(1.75rem, 3.6vw, 3.5rem)",
             lineHeight: "54px",
             letterSpacing: 0,
@@ -3998,10 +3998,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           {/* Text8: "the evolve toolkit" - Desktop */}
           <div
             ref={text8Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold"
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold text-6xl"
             style={{
               bottom: "10%",
-              fontSize: "6rem",
+              // fontSize: "6rem",
               // fontSize: "clamp(2rem, 6.5vw, 6rem)",
               lineHeight: "84px",
               color: "rgb(0, 0, 0)",
@@ -4272,10 +4272,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           {/* Text 5: "real design," */}
           <div
             ref={text5Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
             style={{
               top: "42%",
-              width: "75vw",
+              // width: "75vw",
               fontSize: "2.5rem",
               // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
               lineHeight: "32px",
@@ -4288,7 +4288,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           {/* Text 6: "real portfolio," */}
           <div
             ref={text6Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold"
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
             style={{
               top: "42%",
               width: "75vw",
@@ -4304,7 +4304,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           {/* Text 7: "real career beginnings..." */}
           <div
             ref={text7Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] leading-1 text-center font-extrabold"
+            className="absolute left-1/2 -translate-x-1/2 z-[20] leading-1 text-center font-extrabold text-6xl"
             style={{
               top: "42%",
               width: "75vw",
@@ -4440,12 +4440,12 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </div> */}
           <div
             ref={text8Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold"
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold text-4xl"
             style={{
               bottom: "10%",
               width: "75vw",
               // fontSize: "40px",
-              fontSize: "2.5rem",
+              // fontSize: "2.5rem",
               lineHeight: "36px",
               color: "rgb(0, 0, 0)",
               opacity: 0

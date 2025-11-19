@@ -115,6 +115,8 @@ import hand_with_thunder_mobile from "./hand_with_thunder_mobile.svg";
 import scroll from "./scroll.svg";
 import stairs_left_new from "./stairs_left_new.svg";
 import stairs_right_new from "./stairs_right_new.svg";
+import left_thunder from "./left_thunder.svg";
+import right_thunder from "./right_thunder.svg";
 
 export {
   left_wall,
@@ -232,5 +234,7 @@ export {
   semi_circle_right_mobile,
   scroll,
   stairs_left_new,
-  stairs_right_new
+  stairs_right_new,
+  left_thunder,
+  right_thunder
 };
