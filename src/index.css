@@ -17,6 +17,21 @@ img {
   -webkit-user-drag: none;
   user-drag: none;
 }
+/* make all animated images render as crisply as possible */
+/* overwrite the old version completely */
+/* CROSS-BROWSER, SAFE, NO POSITION SHIFT */
+.crisp-img {
+  image-rendering: -webkit-optimize-contrast; /* Chrome, Edge, Safari */
+  image-rendering: optimizeQuality;          /* fallback */
+  backface-visibility: hidden;
+  /* -webkit-backface-visibility: hidden; */
+  will-change: transform, opacity;
+}
+
+/* DO NOT ADD transform: translateZ(0) */
+/* DO NOT ADD image-rendering: crisp-edges (causes issues) */
+
+
 
 /* BUT: keep selection in form fields (important for usability) */
 input,

@@ -113,6 +113,8 @@ import semi_circle_right1 from "./semi_circle_right1.svg";
 import hand_with_thunder from "./hand_with_thunder.svg";
 import hand_with_thunder_mobile from "./hand_with_thunder_mobile.svg";
 import scroll from "./scroll.svg";
+import stairs_left_new from "./stairs_left_new.svg";
+import stairs_right_new from "./stairs_right_new.svg";
 
 export {
   left_wall,
@@ -228,5 +230,7 @@ export {
   hand_with_thunder_mobile,
   semi_circle_left_mobile,
   semi_circle_right_mobile,
-  scroll
+  scroll,
+  stairs_left_new,
+  stairs_right_new
 };

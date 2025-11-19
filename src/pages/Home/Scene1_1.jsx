@@ -53,7 +53,9 @@ import {
   stairs_left_1,
   stairs_right_1,
   stairs_left_2,
-  stairs_right_2
+  stairs_right_2,
+  stairs_left_new,
+  stairs_right_new
 } from "../../assets/images/Home";
 
 // Add this helper function at the top of your Scene1_1 file
@@ -1936,114 +1938,453 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
     } else {
       // Desktop: Both stairs come from bottom corners
-      tl.set(
-        refs.leftStairsMini,
-        {
-          opacity: 0,
-          y: 100,
-          willChange: "transform, opacity"
-        },
-        stairsAnimateStart
-      );
+      // tl.set(
+      //   refs.leftStairsMini,
+      //   {
+      //     opacity: 0,
+      //     y: 100,
+      //     willChange: "transform, opacity"
+      //   },
+      //   stairsAnimateStart
+      // );
 
-      tl.set(
-        refs.rightStairsMini,
-        {
-          opacity: 0,
-          y: 100,
-          willChange: "transform, opacity"
-        },
-        stairsAnimateStart
-      );
+      // tl.set(
+      //   refs.rightStairsMini,
+      //   {
+      //     opacity: 0,
+      //     y: 100,
+      //     willChange: "transform, opacity"
+      //   },
+      //   stairsAnimateStart
+      // );
 
-      // Left stairs animate up
-      tl.to(
-        refs.leftStairsMini,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          ease: "power2.out"
-        },
-        stairsAnimateStart
-      );
+      // // Left stairs animate up
+      // tl.to(
+      //   refs.leftStairsMini,
+      //   {
+      //     opacity: 1,
+      //     y: 0,
+      //     duration: 1.2,
+      //     ease: "power2.out"
+      //   },
+      //   stairsAnimateStart
+      // );
 
-      // Right stairs animate up (slightly staggered)
-      tl.to(
-        refs.rightStairsMini,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          ease: "power2.out"
-        },
-        stairsAnimateStart + 0.2
-      );
+      // // Right stairs animate up (slightly staggered)
+      // tl.to(
+      //   refs.rightStairsMini,
+      //   {
+      //     opacity: 1,
+      //     y: 0,
+      //     duration: 1.2,
+      //     ease: "power2.out"
+      //   },
+      //   stairsAnimateStart + 0.2
+      // );
 
       // ===== DESKTOP: OPTIMIZED SMOOTH ANIMATION =====
 
       // Step 1: Initial setup - orbit moves down, stairs MORPH from mini to full
-      tl.to(
-        refs.pinkBiggerOrbit,
-        {
-          y: `+=${7 * multipliers.orbit}%`,
-          duration: 0.2,
-          ease: "power2.out"
-        },
-        nextPhaseStart
-      );
+      // tl.to(
+      //   refs.pinkBiggerOrbit,
+      //   {
+      //     y: `+=${7 * multipliers.orbit}%`,
+      //     duration: 0.2,
+      //     ease: "power2.out"
+      //   },
+      //   nextPhaseStart
+      // );
 
-      // Set full stairs at same position as mini stairs initially
+      // // Set full stairs at same position as mini stairs initially
+      // tl.set(
+      //   [refs.stairsLeft, refs.stairsRight],
+      //   {
+      //     opacity: 0,
+      //     scale: 0, // Match mini stairs scale
+      //     transformOrigin: "bottom left"
+      //   },
+      //   nextPhaseStart
+      // );
+
+      // tl.set(
+      //   refs.stairsRight,
+      //   {
+      //     transformOrigin: "bottom right"
+      //   },
+      //   nextPhaseStart
+      // );
+
+      // // Mini stairs scale up and morph into full stairs
+      // tl.to(
+      //   [refs.leftStairsMini, refs.rightStairsMini],
+      //   {
+      //     scale: 1,
+      //     duration: 0.6,
+      //     ease: "power2.out"
+      //   },
+      //   nextPhaseStart
+      // );
+
+      // // Crossfade: mini fades out as full fades in
+      // tl.to(
+      //   [refs.leftStairsMini, refs.rightStairsMini],
+      //   {
+      //     opacity: 0,
+      //     duration: 0.4,
+      //     ease: "power2.inOut"
+      //   },
+      //   nextPhaseStart + 0.2
+      // );
+
+      // tl.to(
+      //   [refs.stairsLeft, refs.stairsRight],
+      //   {
+      //     opacity: 1,
+      //     scale: 1,
+      //     duration: 0.4,
+      //     ease: "power2.inOut"
+      //   },
+      //   nextPhaseStart + 0.2
+      // );
+
+      // tl.set(
+      //   refs.text4,
+      //   {
+      //     opacity: 1,
+      //     willChange: "opacity"
+      //   },
+      //   nextPhaseStart
+      // );
+
+      // // Step 2: Show outer circle at center, replace stairs with stairs_1
+      // // Step 2: Show outer circle at center, stairs MORPH from full to stairs_1
+      // const step2Start = nextPhaseStart + 2.0;
+
+      // // Combined circle container appears at orbit center
+      // tl.set(
+      //   refs.combinedCircleContainer,
+      //   {
+      //     opacity: 1,
+      //     willChange: "transform, opacity"
+      //   },
+      //   step2Start
+      // );
+
+      // // Outer circle appears - smaller initial scale
+      // if (refs.combinedCircle?.outer) {
+      //   tl.set(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       opacity: 0,
+      //       scale: 0.15,
+      //       willChange: "transform, opacity"
+      //     },
+      //     step2Start
+      //   );
+
+      //   tl.to(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       opacity: 1,
+      //       duration: 0.4,
+      //       ease: "power1.out"
+      //     },
+      //     step2Start + 0.1
+      //   );
+      // }
+
+      // // Set stairs_1 at same position/scale as current full stairs
+      // tl.set(
+      //   [refs.leftStairs1, refs.rightStairs1],
+      //   {
+      //     opacity: 0,
+      //     // scale: 1,
+      //     y: 0
+      //   },
+      //   step2Start
+      // );
+
+      // // Current stairs morph by moving slightly
+      // tl.to(
+      //   [refs.stairsLeft, refs.stairsRight],
+      //   {
+      //     y: 10,
+      //     duration: 0.4,
+      //     ease: "power2.inOut"
+      //   },
+      //   step2Start
+      // );
+
+      // // Crossfade to stairs_1
+      // tl.to(
+      //   [refs.stairsLeft, refs.stairsRight],
+      //   {
+      //     opacity: 0,
+      //     duration: 0.3,
+      //     ease: "power2.inOut"
+      //   },
+      //   step2Start + 0.2
+      // );
+
+      // tl.to(
+      //   [refs.leftStairs1, refs.rightStairs1],
+      //   {
+      //     opacity: 1,
+      //     y: 0,
+      //     duration: 0.4,
+      //     ease: "power2.out"
+      //   },
+      //   step2Start + 0.2
+      // );
+
+      // // Step 3: Move orbit and stairs down, scale outer circle up (becomes combined)
+      // const step3Start = step2Start + 2.0;
+
+      // // Orbit moves down (with screen multiplier)
+      // tl.to(
+      //   refs.pinkBiggerOrbit,
+      //   {
+      //     y: `+=${8 * multipliers.orbit}%`,
+      //     duration: 1.0,
+      //     ease: "power1.inOut"
+      //   },
+      //   step3Start
+      // );
+
+      // // Stairs move down (with screen multiplier)
+      // tl.to(
+      //   [refs.leftStairs1, refs.rightStairs1],
+      //   {
+      //     y: `+=${12 * multipliers.stairs}vh`,
+      //     duration: 1.0,
+      //     ease: "power1.inOut"
+      //   },
+      //   step3Start
+      // );
+
+      // // Outer circle scales up to intermediate size (0.4 scale)
+      // if (refs.combinedCircle?.outer) {
+      //   tl.to(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       scale: 0.4, // Intermediate scale - outer stays smaller
+      //       duration: 1.0,
+      //       ease: "power1.inOut"
+      //     },
+      //     step3Start
+      //   );
+      // }
+
+      // // Inner circle reveals at bigger scale (95% of outer - MUCH BIGGER)
+      // // Inner LOGO part reveals FIRST (at step3)
+      // if (refs.combinedCircle?.innerLogo) {
+      //   tl.set(
+      //     refs.combinedCircle.innerLogo,
+      //     {
+      //       opacity: 0,
+      //       scale: 0.38,
+      //       willChange: "transform, opacity"
+      //     },
+      //     step3Start
+      //   );
+
+      //   tl.to(
+      //     refs.combinedCircle.innerLogo,
+      //     {
+      //       opacity: 1,
+      //       scale: 0.38,
+      //       duration: 0.8,
+      //       ease: "power1.out"
+      //     },
+      //     step3Start + 0.3
+      //   );
+      // }
+
+      // // Step 4: Zoom orbit and circle from center, stairs MORPH from stairs_1 to stairs_2
+      // const step4Start = step3Start + 2.0;
+
+      // // Orbit scales up from center
+      // tl.to(
+      //   refs.pinkBiggerOrbit,
+      //   {
+      //     scale: "+=0.4",
+      //     duration: 1.2,
+      //     ease: "power1.inOut"
+      //   },
+      //   step4Start
+      // );
+
+      // // Combined circle outer scales up to final size
+      // // Combined circle outer scales up to final size
+      // if (refs.combinedCircle?.outer) {
+      //   tl.to(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       scale: 0.8,
+      //       duration: 1.2,
+      //       ease: "power1.inOut"
+      //     },
+      //     step4Start
+      //   );
+      // }
+
+      // // Inner LOGO scales proportionally
+      // if (refs.combinedCircle?.innerLogo) {
+      //   tl.to(
+      //     refs.combinedCircle.innerLogo,
+      //     {
+      //       scale: 0.8,
+      //       duration: 1.2,
+      //       ease: "power1.inOut"
+      //     },
+      //     step4Start
+      //   );
+      // }
+
+      // // TRANSITION: Logo fades out, regular inner part fades in
+      // if (refs.combinedCircle?.innerLogo && refs.combinedCircle?.inner) {
+      //   // Set regular inner part at same position/scale as logo
+      //   tl.set(
+      //     refs.combinedCircle.inner,
+      //     {
+      //       opacity: 0,
+      //       scale: 0.7,
+      //       willChange: "transform, opacity"
+      //     },
+      //     step4Start + 0.6
+      //   );
+
+      //   // Fade out logo
+      //   tl.to(
+      //     refs.combinedCircle.innerLogo,
+      //     {
+      //       opacity: 0,
+      //       duration: 0.3,
+      //       ease: "power2.in"
+      //     },
+      //     step4Start + 0.6
+      //   );
+
+      //   // Fade in regular inner part
+      //   tl.to(
+      //     refs.combinedCircle.inner,
+      //     {
+      //       opacity: 1,
+      //       duration: 0.5,
+      //       ease: "power2.inOut"
+      //     },
+      //     step4Start + 0.6
+      //   );
+      // }
+
+      // // Set stairs_2 at same position as stairs_1
+      // tl.set(
+      //   [refs.leftStairs2, refs.rightStairs2],
+      //   {
+      //     opacity: 0,
+      //     y: `+=${12 * multipliers.stairs}vh`, // Match current stairs_1 position
+      //     scale: 1
+      //   },
+      //   step4Start
+      // );
+
+      // // Stairs_1 move slightly and morph
+      // tl.to(
+      //   [refs.leftStairs1, refs.rightStairs1],
+      //   {
+      //     y: `+=${10 * multipliers.stairs}vh`,
+      //     duration: 0.4,
+      //     ease: "power2.inOut"
+      //   },
+      //   step4Start
+      // );
+
+      // // Crossfade to stairs_2
+      // tl.to(
+      //   [refs.leftStairs1, refs.rightStairs1],
+      //   {
+      //     opacity: 0,
+      //     duration: 0.3,
+      //     ease: "power2.inOut"
+      //   },
+      //   step4Start + 0.2
+      // );
+
+      // tl.to(
+      //   [refs.leftStairs2, refs.rightStairs2],
+      //   {
+      //     opacity: 1,
+      //     duration: 0.4,
+      //     ease: "power2.out"
+      //   },
+      //   step4Start + 0.2
+      // );
+      // Desktop: Stairs with progressive reveal
+      // Step 1: Initial setup and fade in (30% visible)
+      // Desktop: Stairs with progressive reveal
+      // Step 1: Initial setup and fade in (20% visible from bottom)
       tl.set(
         [refs.stairsLeft, refs.stairsRight],
         {
           opacity: 0,
-          scale: 0, // Match mini stairs scale
-          transformOrigin: "bottom left"
-        },
-        nextPhaseStart
-      );
-
-      tl.set(
-        refs.stairsRight,
-        {
-          transformOrigin: "bottom right"
-        },
-        nextPhaseStart
-      );
-
-      // Mini stairs scale up and morph into full stairs
-      tl.to(
-        [refs.leftStairsMini, refs.rightStairsMini],
-        {
           scale: 1,
-          duration: 0.6,
-          ease: "power2.out"
+          y: 0
         },
-        nextPhaseStart
+        stairsAnimateStart
       );
 
-      // Crossfade: mini fades out as full fades in
-      tl.to(
-        [refs.leftStairsMini, refs.rightStairsMini],
-        {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.inOut"
-        },
-        nextPhaseStart + 0.2
-      );
-
+      // Stairs fade in (20% visible from bottom)
       tl.to(
         [refs.stairsLeft, refs.stairsRight],
         {
           opacity: 1,
-          scale: 1,
-          duration: 0.4,
-          ease: "power2.inOut"
+          duration: 1.0,
+          ease: "power2.out"
         },
-        nextPhaseStart + 0.2
+        stairsAnimateStart
       );
+
+      // Step 2: Orbit moves down + stairs move down + reveal to 40%
+      tl.to(
+        refs.pinkBiggerOrbit,
+        {
+          y: `+=${6 * multipliers.orbit}%`,
+          duration: 1.0,
+          ease: "power2.out"
+        },
+        nextPhaseStart
+      );
+
+      // Stairs move down
+      tl.to(
+        [refs.stairsLeft, refs.stairsRight],
+        {
+          y: `+=${7 * multipliers.stairs}vh`, // Move stairs down
+          duration: 1.0,
+          ease: "power2.out"
+        },
+        nextPhaseStart
+      );
+
+      // Reveal stairs to 40%
+      if (refs.stairsLeft && refs.stairsRight) {
+        const leftImg = refs.stairsLeft.querySelector("img");
+        const rightImg = refs.stairsRight.querySelector("img");
+
+        if (leftImg && rightImg) {
+          tl.to(
+            [leftImg, rightImg],
+            {
+              maskImage: "linear-gradient(to top, black 60%, transparent 60%)",
+              WebkitMaskImage:
+                "linear-gradient(to top, black 60%, transparent 60%)",
+              duration: 1.0,
+              ease: "power2.inOut"
+            },
+            nextPhaseStart
+          );
+        }
+      }
 
       tl.set(
         refs.text4,
@@ -2054,11 +2395,10 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         nextPhaseStart
       );
 
-      // Step 2: Show outer circle at center, replace stairs with stairs_1
-      // Step 2: Show outer circle at center, stairs MORPH from full to stairs_1
+      // Step 3: Show outer circle + reveal stairs fully (100%)
+      // Step 3: Show outer circle + reveal stairs fully (100%)
       const step2Start = nextPhaseStart + 2.0;
 
-      // Combined circle container appears at orbit center
       tl.set(
         refs.combinedCircleContainer,
         {
@@ -2068,7 +2408,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step2Start
       );
 
-      // Outer circle appears - smaller initial scale
       if (refs.combinedCircle?.outer) {
         tl.set(
           refs.combinedCircle.outer,
@@ -2091,54 +2430,30 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Set stairs_1 at same position/scale as current full stairs
-      tl.set(
-        [refs.leftStairs1, refs.rightStairs1],
-        {
-          opacity: 0,
-          // scale: 1,
-          y: 0
-        },
-        step2Start
-      );
+      // Reveal stairs to 100% (fully visible) - NO MOVEMENT
+      if (refs.stairsLeft && refs.stairsRight) {
+        const leftImg = refs.stairsLeft.querySelector("img");
+        const rightImg = refs.stairsRight.querySelector("img");
 
-      // Current stairs morph by moving slightly
-      tl.to(
-        [refs.stairsLeft, refs.stairsRight],
-        {
-          y: 10,
-          duration: 0.4,
-          ease: "power2.inOut"
-        },
-        step2Start
-      );
+        if (leftImg && rightImg) {
+          tl.to(
+            [leftImg, rightImg],
+            {
+              maskImage:
+                "linear-gradient(to top, black 100%, transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to top, black 100%, transparent 100%)",
+              duration: 0.8,
+              ease: "power2.out"
+            },
+            step2Start
+          );
+        }
+      }
 
-      // Crossfade to stairs_1
-      tl.to(
-        [refs.stairsLeft, refs.stairsRight],
-        {
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.inOut"
-        },
-        step2Start + 0.2
-      );
-
-      tl.to(
-        [refs.leftStairs1, refs.rightStairs1],
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        step2Start + 0.2
-      );
-
-      // Step 3: Move orbit and stairs down, scale outer circle up (becomes combined)
+      // Step 4: Move orbit and stairs down MORE, scale outer circle up
       const step3Start = step2Start + 2.0;
 
-      // Orbit moves down (with screen multiplier)
       tl.to(
         refs.pinkBiggerOrbit,
         {
@@ -2149,23 +2464,22 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step3Start
       );
 
-      // Stairs move down (with screen multiplier)
+      // Stairs move down MORE
       tl.to(
-        [refs.leftStairs1, refs.rightStairs1],
+        [refs.stairsLeft, refs.stairsRight],
         {
-          y: `+=${12 * multipliers.stairs}vh`,
+          y: `+=${10 * multipliers.stairs}vh`, // More downward movement
           duration: 1.0,
           ease: "power1.inOut"
         },
         step3Start
       );
 
-      // Outer circle scales up to intermediate size (0.4 scale)
       if (refs.combinedCircle?.outer) {
         tl.to(
           refs.combinedCircle.outer,
           {
-            scale: 0.4, // Intermediate scale - outer stays smaller
+            scale: 0.4,
             duration: 1.0,
             ease: "power1.inOut"
           },
@@ -2173,8 +2487,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Inner circle reveals at bigger scale (95% of outer - MUCH BIGGER)
-      // Inner LOGO part reveals FIRST (at step3)
       if (refs.combinedCircle?.innerLogo) {
         tl.set(
           refs.combinedCircle.innerLogo,
@@ -2198,10 +2510,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Step 4: Zoom orbit and circle from center, stairs MORPH from stairs_1 to stairs_2
+      // Step 5: Zoom orbit and circle + stairs zoom in
       const step4Start = step3Start + 2.0;
 
-      // Orbit scales up from center
       tl.to(
         refs.pinkBiggerOrbit,
         {
@@ -2212,8 +2523,18 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step4Start
       );
 
-      // Combined circle outer scales up to final size
-      // Combined circle outer scales up to final size
+      // Stairs move down to bottom corners - only 10% visible from top
+      tl.to(
+        [refs.stairsLeft, refs.stairsRight],
+        {
+          y: `+=${40 * multipliers.stairs}vh`, // Move much further down
+          scale: 1.3,
+          duration: 1.2,
+          ease: "power1.inOut"
+        },
+        step4Start
+      );
+
       if (refs.combinedCircle?.outer) {
         tl.to(
           refs.combinedCircle.outer,
@@ -2226,7 +2547,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Inner LOGO scales proportionally
       if (refs.combinedCircle?.innerLogo) {
         tl.to(
           refs.combinedCircle.innerLogo,
@@ -2239,9 +2559,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // TRANSITION: Logo fades out, regular inner part fades in
       if (refs.combinedCircle?.innerLogo && refs.combinedCircle?.inner) {
-        // Set regular inner part at same position/scale as logo
         tl.set(
           refs.combinedCircle.inner,
           {
@@ -2252,7 +2570,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           step4Start + 0.6
         );
 
-        // Fade out logo
         tl.to(
           refs.combinedCircle.innerLogo,
           {
@@ -2263,7 +2580,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           step4Start + 0.6
         );
 
-        // Fade in regular inner part
         tl.to(
           refs.combinedCircle.inner,
           {
@@ -2275,49 +2591,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Set stairs_2 at same position as stairs_1
-      tl.set(
-        [refs.leftStairs2, refs.rightStairs2],
-        {
-          opacity: 0,
-          y: `+=${12 * multipliers.stairs}vh`, // Match current stairs_1 position
-          scale: 1
-        },
-        step4Start
-      );
-
-      // Stairs_1 move slightly and morph
-      tl.to(
-        [refs.leftStairs1, refs.rightStairs1],
-        {
-          y: `+=${10 * multipliers.stairs}vh`,
-          duration: 0.4,
-          ease: "power2.inOut"
-        },
-        step4Start
-      );
-
-      // Crossfade to stairs_2
-      tl.to(
-        [refs.leftStairs1, refs.rightStairs1],
-        {
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.inOut"
-        },
-        step4Start + 0.2
-      );
-
-      tl.to(
-        [refs.leftStairs2, refs.rightStairs2],
-        {
-          opacity: 1,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        step4Start + 0.2
-      );
-
       tl.to(
         [refs.text4, refs.text3],
         {
@@ -2327,6 +2600,37 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         step4Start
       );
+
+      // Update mask to show only top 10%
+      if (refs.stairsLeft && refs.stairsRight) {
+        const leftImg = refs.stairsLeft.querySelector("img");
+        const rightImg = refs.stairsRight.querySelector("img");
+
+        if (leftImg && rightImg) {
+          tl.to(
+            [leftImg, rightImg],
+            {
+              maskImage:
+                "linear-gradient(to bottom, black 100%, transparent 100%)", // Changed to show top 10%
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 100%, transparent 100%)",
+              duration: 1.2,
+              ease: "power2.inOut"
+            },
+            step4Start
+          );
+        }
+      }
+
+      // tl.to(
+      //   [refs.text4, refs.text3],
+      //   {
+      //     opacity: 0,
+      //     duration: 0.3,
+      //     ease: "power1.out"
+      //   },
+      //   step4Start
+      // );
 
       // Add this code after the stairs_2 appear section in desktop (after step4Start)
 
@@ -2368,8 +2672,17 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step6Start
       );
 
+      // tl.to(
+      //   [refs.leftStairs2, refs.rightStairs2],
+      //   {
+      //     opacity: 0,
+      //     duration: 0.4,
+      //     ease: "power2.out"
+      //   },
+      //   step6Start
+      // );
       tl.to(
-        [refs.leftStairs2, refs.rightStairs2],
+        [refs.stairsLeft, refs.stairsRight],
         {
           opacity: 0,
           duration: 0.4,
@@ -2936,8 +3249,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const biggerOrbitRef = useRef(null);
   const pinkBiggerOrbitRef = useRef(null); // ADD THIS
   const pinkOrbitInnerRef = useRef(null); // ADD THIS
-  const leftStairsMiniRef = useRef(null); // ADD THIS
-  const rightStairsMiniRef = useRef(null); // ADD THIS
+  // const leftStairsMiniRef = useRef(null); // ADD THIS
+  // const rightStairsMiniRef = useRef(null); // ADD THIS
   const stairsMiniMobileRef = useRef(null); // ADD THIS
   const stairsModMobileRef = useRef(null); // ADD THIS
   const stairsLeftRef = useRef(null); // ADD THIS
@@ -2966,10 +3279,10 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const oval1Ref = useRef(null);
   const oval2Ref = useRef(null);
   const oval3Ref = useRef(null);
-  const leftStairs1Ref = useRef(null);
-  const rightStairs1Ref = useRef(null);
-  const leftStairs2Ref = useRef(null);
-  const rightStairs2Ref = useRef(null);
+  // const leftStairs1Ref = useRef(null);
+  // const rightStairs1Ref = useRef(null);
+  // const leftStairs2Ref = useRef(null);
+  // const rightStairs2Ref = useRef(null);
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
@@ -2985,10 +3298,12 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     text: textRef.current,
     text2: text2Ref.current, // Expose new text ref
     text3: text3Ref.current, // ADD THIS
-    leftStairsMini: leftStairsMiniRef.current, // ADD THIS
-    rightStairsMini: rightStairsMiniRef.current, // ADD THIS
+    // leftStairsMini: leftStairsMiniRef.current, // ADD THIS
+    // rightStairsMini: rightStairsMiniRef.current, // ADD THIS
     stairsMiniMobile: stairsMiniMobileRef.current, // ADD THIS
-    stairsModMobile: stairsModMobileRef.current, // ADD THIS
+    stairsModMobile: stairsModMobileRef.current,
+    stairsRight: stairsRightRef.current, // ADD THIS
+    stairsLeft: stairsLeftRef.current, // ADD THIS
     objectsContainer: objectsContainerRef.current,
     object1: object1Ref.current,
     object2: object2Ref.current,
@@ -2997,8 +3312,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     biggerOrbit: biggerOrbitRef.current,
     pinkBiggerOrbit: pinkBiggerOrbitRef.current, // ADD THIS
     pinkOrbitInner: pinkOrbitInnerRef.current, // ADD THIS
-    stairsLeft: stairsLeftRef.current, // ADD THIS
-    stairsRight: stairsRightRef.current, // ADD THIS
     stairsMod1Mobile: stairsMod1MobileRef.current, // ADD THIS
     stairsMod2Mobile: stairsMod2MobileRef.current, // ADD THIS
     text4: text4Ref.current, // ADD THIS
@@ -3022,11 +3335,11 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     ovalMini3: ovalMini3Ref.current, // ADD THIS
     oval1: oval1Ref.current, // ADD THIS
     oval2: oval2Ref.current, // ADD THIS
-    oval3: oval3Ref.current, // ADD THIS
-    leftStairs1: leftStairs1Ref.current,
-    rightStairs1: rightStairs1Ref.current,
-    leftStairs2: leftStairs2Ref.current,
-    rightStairs2: rightStairs2Ref.current
+    oval3: oval3Ref.current // ADD THIS
+    // leftStairs1: leftStairs1Ref.current,
+    // rightStairs1: rightStairs1Ref.current,
+    // leftStairs2: leftStairs2Ref.current,
+    // rightStairs2: rightStairs2Ref.current
   }));
 
   useEffect(() => {
@@ -3602,124 +3915,59 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {/* STAIRS FOR DESKTOP */}
       {!isMobile && (
         <>
-          <img
-            ref={leftStairsMiniRef}
-            src={left_stairs_mini}
-            alt="left stairs mini"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "auto",
-              height: "auto",
-              transform: "scale(0.6)",
-              transformOrigin: "bottom left", // for left stairs
-              // transformOrigin: "bottom right", // for right stairs
-              // maxHeight: "50vh",
-              // maxWidth: "40%",
-              // objectFit: "contain",
-              opacity: 0
-            }}
-          />
-          <img
-            ref={rightStairsMiniRef}
-            src={right_stairs_mini}
-            alt="right stairs mini"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "auto",
-              height: "auto",
-              transform: "scale(0.6)",
-              // transformOrigin: "bottom left", // for left stairs
-              transformOrigin: "bottom right", // for right stairs
-              // maxHeight: "50vh",
-              // maxWidth: "40%",
-              // objectFit: "contain",
-              opacity: 0
-            }}
-          />
-          {/* Full stairs - replace mini stairs */}
-          <img
+          {/* Left stairs with gradient mask */}
+          <div
             ref={stairsLeftRef}
-            src={stairs_left}
-            alt="left stairs full"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
               left: 0,
               width: "40%",
               height: "auto",
-              opacity: 0
+              opacity: 0,
+              transformOrigin: "bottom center"
             }}
-          />
-          <img
+          >
+            <img
+              src={stairs_left_new}
+              alt="left stairs"
+              style={{
+                width: "100%",
+                height: "auto",
+                maskImage:
+                  "linear-gradient(to top, black 30%, transparent 70%)",
+                WebkitMaskImage:
+                  "linear-gradient(to top, black 30%, transparent 70%)"
+              }}
+            />
+          </div>
+
+          {/* Right stairs with gradient mask */}
+          <div
             ref={stairsRightRef}
-            src={stairs_right}
-            alt="right stairs full"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
               right: 0,
               width: "40%",
               height: "auto",
-              opacity: 0
+              opacity: 0,
+              transformOrigin: "bottom center"
             }}
-          />
-          <img
-            ref={leftStairs1Ref}
-            src={stairs_left_1}
-            alt="left stairs 1"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "40%",
-              height: "auto",
-              opacity: 0
-            }}
-          />
-          <img
-            ref={rightStairs1Ref}
-            src={stairs_right_1}
-            alt="right stairs 1"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "40%",
-              height: "auto",
-              opacity: 0
-            }}
-          />
-          {/* Stairs 2 - NEW */}
-          <img
-            ref={leftStairs2Ref}
-            src={stairs_left_2}
-            alt="left stairs 2"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "40%",
-              height: "auto",
-              opacity: 0
-            }}
-          />
-          <img
-            ref={rightStairs2Ref}
-            src={stairs_right_2}
-            alt="right stairs 2"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "40%",
-              height: "auto",
-              opacity: 0
-            }}
-          />
+          >
+            <img
+              src={stairs_right_new}
+              alt="right stairs"
+              style={{
+                width: "100%",
+                height: "auto",
+                maskImage:
+                  "linear-gradient(to top, black 30%, transparent 70%)",
+                WebkitMaskImage:
+                  "linear-gradient(to top, black 30%, transparent 70%)"
+              }}
+            />
+          </div>
           {/* Waitlist Button - Desktop - MOVE THIS OUTSIDE OF ANY POINTER-EVENTS-NONE CONTAINERS */}
           {/* Waitlist Button - Works for BOTH mobile and desktop */}
           {/* <div
