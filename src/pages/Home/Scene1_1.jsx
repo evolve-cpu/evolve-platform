@@ -2941,6 +2941,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           // x: "-60px"
         },
         step9Start + 0.4
+        // step9Start
       );
 
       tl.set(
@@ -2974,7 +2975,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.oval1, refs.oval2, refs.oval3],
         {
           opacity: 1,
-          duration: 0.4,
+          duration: 0,
           ease: "power2.inOut"
         },
         step9Start + 0.4
@@ -2985,7 +2986,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.oval1, refs.oval2, refs.oval3],
         {
           x: 0,
-          duration: 0.5,
+          duration: 0,
           ease: "power2.out"
         },
         step9Start + 0.8
