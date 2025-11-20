@@ -25,14 +25,14 @@ const STEPS = [
   },
   {
     key: "ship",
-    body: "send it to the real world",
+    body: "send it to the real world.",
     from: 1147,
     to: 1195
   },
   {
     key: "share",
     // body: "tell the story so well <br/>they can't ignore it.",
-    body: "stories that stick",
+    body: "stories that stick.",
     from: 1196,
     to: 1241
   }

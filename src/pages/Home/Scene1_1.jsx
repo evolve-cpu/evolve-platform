@@ -1438,7 +1438,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         tl.to(
           refs.combinedCircle.outer,
           {
-            scale: 1, // Scale to full size
+            scale: 0.7, // Scale to full size
             duration: 1.5,
             ease: "power2.inOut"
           },
@@ -1462,7 +1462,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.inner,
           {
             opacity: 1,
-            scale: 1,
+            scale: 0.7,
             duration: 1.2,
             ease: "power2.out"
           },
