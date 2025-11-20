@@ -412,7 +412,7 @@ export const useScene1Timeline = (refs, isMobile) => {
       refs.text,
       {
         opacity: 0,
-        y: isMobile ? "8vh" : "20vh"
+        y: isMobile ? "12vh" : "22vh"
       },
       {
         opacity: 1,
@@ -428,7 +428,7 @@ export const useScene1Timeline = (refs, isMobile) => {
 
     .to([refs.lottie, refs.text], {
       opacity: 0,
-      duration: 0.6,
+      duration: 0.2,
       ease: "power2.out",
       force3D: true
     });
@@ -775,7 +775,7 @@ const Scene1 = React.forwardRef((props, ref) => {
         className="absolute inset-0 z-[130] flex items-center justify-center pointer-events-none"
         style={{ willChange: "transform, opacity", opacity: 0 }}
       >
-        <div className={isMobile ? "w-[48vw]" : "w-[50vw]"}>
+        <div className={isMobile ? "w-[200%]" : "w-[100vw]"}>
           <DotLottieReact
             src="https://lottie.host/e6178cb6-f404-4ff2-a706-224dfb4904d1/sqmki3Tynt.lottie"
             loop={false}
