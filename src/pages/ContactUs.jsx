@@ -315,6 +315,133 @@
 
 // export default ContactUs;
 
+// import React, { useState } from "react";
+// import {
+//   hand_with_thunder,
+//   hand_with_thunder_mobile
+// } from "../assets/images/Home";
+
+// const ContactUs = () => {
+//   const [message, setMessage] = useState("");
+//   const [showEmptyHint, setShowEmptyHint] = useState(false);
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+
+//     if (!message.trim()) {
+//       setShowEmptyHint(true);
+//       return;
+//     }
+
+//     setShowEmptyHint(false);
+//     // later: handle send logic here
+//   };
+
+//   return (
+//     <section className="relative w-full h-screen bg-evolve-yellow text-black overflow-hidden flex flex-col md:flex-row">
+//       {/* ================= LEFT SECTION (content) ================= */}
+//       <div
+//         className="relative z-20 w-full md:w-1/2 max-w-[80vw] mx-auto md:mx-0
+//                 px-5 md:px-12 pt-16 md:pt-24 pb-10 md:pb-20
+//                 flex flex-col justify-start md:ml-20"
+//       >
+//         {/* headings */}
+//         <h1 className="font-extrabold lowercase mt-4 text-[2.5rem] md:text-[4rem] leading-tight">
+//           need to talk?
+//         </h1>
+//         <p className="lowercase font-normal text-[1.25rem] md:text-[2rem] leading-snug">
+//           we&apos;re here for real questions.
+//         </p>
+
+//         {/* form */}
+//         <form className="mt-6 md:mt-12" onSubmit={handleSubmit}>
+//           {/* email */}
+//           <label className="block w-full md:w-[39rem]">
+//             <span className="sr-only">email</span>
+//             <input
+//               type="email"
+//               required
+//               placeholder="enter email"
+//               className="w-full rounded-2xl md:rounded-[16px] px-5 md:px-6 py-4 md:py-5
+//                          bg-transparent border-2 border-[#806804]
+//                          placeholder-black font-bold
+//                          text-black outline-none focus:ring-2 ring-[#806804]
+//                          text-[1.25rem] md:text-[1.5rem]
+//                          placeholder:text-[1.25rem] md:placeholder:text-[1.5rem]"
+//             />
+//           </label>
+
+//           {/* message + button */}
+//           <div className="mt-4 md:mt-6 md:flex md:items-stretch md:gap-4 md:w-[46rem]">
+//             <label className="block w-full md:flex-1">
+//               <span className="sr-only">message</span>
+//               <textarea
+//                 placeholder="what’s on your mind?"
+//                 rows={5}
+//                 value={message}
+//                 onChange={(e) => {
+//                   setMessage(e.target.value);
+//                   if (e.target.value.trim()) setShowEmptyHint(false);
+//                 }}
+//                 className="w-full rounded-2xl md:rounded-[16px] px-5 md:px-6 py-4 md:py-5
+//                            min-h-[9rem] md:min-h-[11rem]
+//                            bg-transparent border-2 border-[#806804]
+//                            placeholder-black font-bold
+//                            text-black outline-none focus:ring-2 ring-[#806804]
+//                            text-[1.25rem] md:text-[1.5rem]
+//                            placeholder:text-[1.25rem] md:placeholder:text-[1.5rem] resize-none"
+//               />
+//               {showEmptyHint && (
+//                 <p className="mt-2 text-sm md:text-base font-semibold text-[#806804] lowercase">
+//                   tell us what you want to talk about.
+//                 </p>
+//               )}
+//             </label>
+
+//             {/* circle enter button */}
+//             <div className="mt-4 md:mt-0 md:flex md:items-end">
+//               <button
+//                 type="submit"
+//                 aria-label="send message"
+//                 className="grid place-items-center rounded-full bg-black
+//                          w-16 h-16 md:w-24 md:h-24 transition-transform active:scale-95"
+//               >
+//                 <svg
+//                   viewBox="0 0 24 24"
+//                   className="w-7 h-7 md:w-10 md:h-10"
+//                   fill="none"
+//                   xmlns="http://www.w3.org/2000/svg"
+//                 >
+//                   <path d="M4 12h14" stroke="#F2E205" strokeWidth="2" />
+//                   <path d="M12 6l6 6-6 6" stroke="#F2E205" strokeWidth="2" />
+//                 </svg>
+//               </button>
+//             </div>
+//           </div>
+//         </form>
+//       </div>
+
+//       {/* ================= RIGHT SECTION (image) ================= */}
+//       <div className="relative w-full md:w-1/2 flex justify-end items-end">
+//         {/* desktop image bottom-right (hidden on mobile) */}
+//         <img
+//           src={hand_with_thunder}
+//           alt="hand with thunder"
+//           className="hidden md:block pointer-events-none select-none fixed right-0 -bottom-32 w-[50vw] lg:w-[55vw] xl:w-[60vw] z-10"
+//         />
+//         {/* mobile image bottom-left */}
+//         <img
+//           src={hand_with_thunder_mobile}
+//           alt="hand with thunder"
+//           className="md:hidden pointer-events-none select-none absolute right-0 top-[70%] w-[90vw] z-10"
+//         />
+//       </div>
+//     </section>
+//   );
+// };
+
+// export default ContactUs;
+
 import React, { useState } from "react";
 import {
   hand_with_thunder,
@@ -322,10 +449,13 @@ import {
 } from "../assets/images/Home";
 
 const ContactUs = () => {
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [showEmptyHint, setShowEmptyHint] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState(null); // "success" | "error" | null
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!message.trim()) {
@@ -334,7 +464,29 @@ const ContactUs = () => {
     }
 
     setShowEmptyHint(false);
-    // later: handle send logic here
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, message })
+      });
+
+      if (!res.ok) throw new Error("failed");
+
+      setStatus("success");
+      setMessage("");
+      setEmail("");
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -362,6 +514,8 @@ const ContactUs = () => {
               type="email"
               required
               placeholder="enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-2xl md:rounded-[16px] px-5 md:px-6 py-4 md:py-5
                          bg-transparent border-2 border-[#806804]
                          placeholder-black font-bold
@@ -376,7 +530,7 @@ const ContactUs = () => {
             <label className="block w-full md:flex-1">
               <span className="sr-only">message</span>
               <textarea
-                placeholder="your answer"
+                placeholder="what’s on your mind?"
                 rows={5}
                 value={message}
                 onChange={(e) => {
@@ -396,6 +550,16 @@ const ContactUs = () => {
                   tell us what you want to talk about.
                 </p>
               )}
+              {status === "success" && (
+                <p className="mt-2 text-sm md:text-base font-semibold text-green-800 lowercase">
+                  got it, we&apos;ll reach out soon.
+                </p>
+              )}
+              {status === "error" && (
+                <p className="mt-2 text-sm md:text-base font-semibold text-red-700 lowercase">
+                  something went wrong, please try again.
+                </p>
+              )}
             </label>
 
             {/* circle enter button */}
@@ -403,12 +567,14 @@ const ContactUs = () => {
               <button
                 type="submit"
                 aria-label="send message"
-                className="grid place-items-center rounded-full bg-black
-                         w-16 h-16 md:w-24 md:h-24 transition-transform active:scale-95"
+                disabled={isSubmitting}
+                className="group grid place-items-center rounded-full bg-black
+                         w-16 h-16 md:w-24 md:h-24 transition-transform active:scale-95
+                         disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className="w-7 h-7 md:w-10 md:h-10"
+                  className="w-7 h-7 md:w-10 md:h-10 group-hover:animate-arrow-wiggle"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >

@@ -110,7 +110,7 @@ export const setCompletedState = (refs, isMobile) => {
 
   // Show bigger orbit in centered position
   gsap.set(refs.biggerOrbit, {
-    opacity: 1,
+    opacity: 0.5,
     scale: isMobile ? 2.3 : 1
     // y: isMobile ? -250 : -200
   });
@@ -322,7 +322,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     .to(
       refs.rightElement,
       { opacity: 1, x: 0, duration: 1, ease: "back.out(1.7)" },
-      "-=0.8"
+      // "-=0.8"
+      1.2
     );
 
   // ===== TEXT APPEARS FIRST (1.5s) =====
@@ -333,7 +334,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   );
 
   // ===== BIGGER ORBIT APPEARS (at 20% scale, half visible above floor) =====
-  tl.to(refs.biggerOrbit, { opacity: 1, duration: 0.6 }, 2.0);
+  tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 2.0);
 
   // ===== THEN OBJECTS APPEAR (reduced time gap) =====
   tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 3.5);
@@ -350,7 +351,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     // Set all spans to start at 0.3 opacity - but let them animate to full black
     spans.forEach((span) => {
       gsap.set(span, {
-        opacity: 0.15,
+        opacity: 0.1,
         color: "rgb(0, 0, 0)",
         willChange: "opacity"
       });
@@ -594,7 +595,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     {
       scale: orbitScale,
       y: orbitBeforeCenterY,
-      opacity: 1,
+      opacity: 0.5,
       duration: 1.8,
       ease: "power2.out"
     },
@@ -663,7 +664,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     // Set all spans to start at 0.3 opacity
     spans2.forEach((span) => {
       gsap.set(span, {
-        opacity: 0.15,
+        opacity: 0.1,
         color: "rgb(0, 0, 0)",
         willChange: "opacity"
       });
@@ -2466,41 +2467,25 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         nextPhaseStart
       );
+      // if (refs.stairsLeft && refs.stairsRight) {
+      //   const leftImg = refs.stairsLeft.querySelector("img");
+      //   const rightImg = refs.stairsRight.querySelector("img");
 
-      // Step 3: Show outer circle + reveal stairs fully (100%)
-      // Step 3: Show outer circle + reveal stairs fully (100%)
-      const step2Start = nextPhaseStart + 2.0;
-
-      tl.set(
-        refs.combinedCircleContainer,
-        {
-          opacity: 1,
-          willChange: "transform, opacity"
-        },
-        step2Start
-      );
-
-      if (refs.combinedCircle?.outer) {
-        tl.set(
-          refs.combinedCircle.outer,
-          {
-            opacity: 0,
-            scale: 0.15,
-            willChange: "transform, opacity"
-          },
-          step2Start
-        );
-
-        tl.to(
-          refs.combinedCircle.outer,
-          {
-            opacity: 1,
-            duration: 0.4,
-            ease: "power1.out"
-          },
-          step2Start + 0.1
-        );
-      }
+      //   if (leftImg && rightImg) {
+      //     tl.to(
+      //       [leftImg, rightImg],
+      //       {
+      //         maskImage:
+      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
+      //         WebkitMaskImage:
+      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
+      //         duration: 1.2,
+      //         ease: "power2.out"
+      //       },
+      //       nextPhaseStart
+      //     );
+      //   }
+      // }
 
       // Reveal stairs from 5% to 100% with SMOOTH translucent gradient
       if (refs.stairsLeft && refs.stairsRight) {
@@ -2518,10 +2503,99 @@ export const useScene1_1Timeline = (refs, isMobile) => {
               duration: 1.2,
               ease: "power2.out"
             },
-            step2Start
+            nextPhaseStart
           );
         }
       }
+
+      tl.set(
+        refs.combinedCircleContainer,
+        {
+          opacity: 1,
+          willChange: "transform, opacity"
+        },
+        nextPhaseStart
+      );
+
+      if (refs.combinedCircle?.outer) {
+        tl.set(
+          refs.combinedCircle.outer,
+          {
+            opacity: 0,
+            scale: 0.15,
+            willChange: "transform, opacity"
+          },
+          nextPhaseStart
+        );
+
+        tl.to(
+          refs.combinedCircle.outer,
+          {
+            opacity: 1,
+            // scale: 0.4,
+            duration: 0.4,
+            ease: "power1.out"
+          },
+          nextPhaseStart + 0.1
+        );
+      }
+
+      // Step 3: Show outer circle + reveal stairs fully (100%)
+      // Step 3: Show outer circle + reveal stairs fully (100%)
+      const step2Start = nextPhaseStart + 2.0;
+
+      // tl.set(
+      //   refs.combinedCircleContainer,
+      //   {
+      //     opacity: 1,
+      //     willChange: "transform, opacity"
+      //   },
+      //   step2Start
+      // );
+
+      // if (refs.combinedCircle?.outer) {
+      //   tl.set(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       opacity: 0,
+      //       scale: 0.15,
+      //       willChange: "transform, opacity"
+      //     },
+      //     step2Start
+      //   );
+
+      //   tl.to(
+      //     refs.combinedCircle.outer,
+      //     {
+      //       opacity: 1,
+      //       // scale: 0.4,
+      //       duration: 0.4,
+      //       ease: "power1.out"
+      //     },
+      //     step2Start + 0.1
+      //   );
+      // }
+
+      // // Reveal stairs from 5% to 100% with SMOOTH translucent gradient
+      // if (refs.stairsLeft && refs.stairsRight) {
+      //   const leftImg = refs.stairsLeft.querySelector("img");
+      //   const rightImg = refs.stairsRight.querySelector("img");
+
+      //   if (leftImg && rightImg) {
+      //     tl.to(
+      //       [leftImg, rightImg],
+      //       {
+      //         maskImage:
+      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
+      //         WebkitMaskImage:
+      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
+      //         duration: 1.2,
+      //         ease: "power2.out"
+      //       },
+      //       step2Start
+      //     );
+      //   }
+      // }
 
       // Step 4: Move orbit and stairs down MORE, scale outer circle up
       const step3Start = step2Start + 2.0;
