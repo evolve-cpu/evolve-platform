@@ -165,15 +165,11 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   });
 
   // Initial appearance - Vector and doors appear together
-  tl.to(
-    [refs.vector, refs.doorsWithRibbon],
-    {
-      opacity: 1
-      // duration: ,
-      // ease: "power2.out"
-    },
-    0
-  );
+  tl.to([refs.vector, refs.doorsWithRibbon], {
+    opacity: 1,
+    duration: 0
+    // ease: "power2.out"
+  });
 
   // Then texts appear
   tl.to(
@@ -222,15 +218,15 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   );
 
   // Show ThreeDoorsWithRibbon at bottom
-  tl.to(
-    refs.doorsWithRibbon,
-    {
-      opacity: 1
-      // duration: 0
-      // ease: "power2.out"
-    },
-    0.4
-  );
+  // tl.to(
+  //   refs.doorsWithRibbon,
+  //   {
+  //     opacity: 1
+  //     // duration: 0
+  //     // ease: "power2.out"
+  //   },
+  //   0.4
+  // );
 
   // SECOND SCROLL: Text change and doors swap
   tl.add("secondScroll", "+=0.5");
@@ -1609,14 +1605,43 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <div
             className="mx-auto px-4"
-            style={{ maxWidth: isMobile ? "95%" : "50%" }}
+            style={{ maxWidth: isMobile ? "95%" : "45%" }}
           >
             <p
               ref={ageTextRef}
-              className="text-black font-extrabold text-2xl md:text-3xl"
+              className={[
+                "text-black font-extrabold leading-tight",
+
+                // ============================
+                // 📱 MOBILE BASE — 24px
+                // ============================
+                "text-[24px]",
+
+                // mobile min-height:736 → 20px
+                "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[20px]",
+
+                // mobile min-height:667 → 20px
+                "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[20px]",
+
+                // mobile min-height:896 → 28px (comes last so it overrides 20px)
+                "[@media(max-width:767px)]:[@media(min-height:896px)]:text-[28px]",
+
+                // ============================
+                // 💻 DESKTOP (>=1024px)
+                // ============================
+                "md:text-[24px]", // base desktop compact (min-height 768px)
+
+                // desktop min-height >= 900px → 36px
+                "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[36px]",
+
+                // desktop tall >=1080px → 36px
+                "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[36px]",
+
+                // desktop wide >=1700px → 36px
+                "[@media(min-width:1700px)]:text-[36px]"
+              ].join(" ")}
               style={{
-                // fontSize: isMobile ? "24px" : "32px",
-                lineHeight: isMobile ? "28px" : "35px",
+                lineHeight: isMobile ? "23px" : "34px",
                 opacity: 0,
                 transform: "translateY(-10px)"
               }}
@@ -1634,9 +1659,44 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <h2
             ref={timeTextRef}
-            className="text-black font-extrabold px-4 lowercase text-5xl md:text-8xl"
+            className={[
+              "text-black font-extrabold px-4 lowercase leading-none",
+
+              // ==============================
+              // 📱 MOBILE BASE — 48px
+              // ==============================
+              "text-[48px]",
+
+              // mobile >=667px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+
+              // mobile >=736px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+
+              // mobile >=812px → 48px (override back to 48)
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+
+              // mobile >=844px → 48px
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+
+              // mobile >=926px → 56px (highest mobile)
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+
+              // ==============================
+              // 💻 DESKTOP BASE (>=1024px)
+              // ==============================
+              "md:text-[64px]", // default desktop @768 high
+
+              // desktop >=900px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]",
+
+              // desktop >=1080px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[96px]",
+
+              // desktop wide >=1700px → 96px
+              "[@media(min-width:1700px)]:text-[96px]"
+            ].join(" ")}
             style={{
-              // fontSize: isMobile ? "48px" : "96px",
               opacity: 0,
               lineHeight: 1,
               transform: "translateY(-10px)"
@@ -1652,9 +1712,44 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <h2
             ref={nerveTextRef}
-            className="text-black font-extrabold px-4 lowercase text-5xl md:text-8xl"
+            className={[
+              "text-black font-extrabold px-4 lowercase leading-none",
+
+              // ==============================
+              // 📱 MOBILE BASE — 48px
+              // ==============================
+              "text-[48px]",
+
+              // mobile >=667px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+
+              // mobile >=736px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+
+              // mobile >=812px → 48px (override back to 48)
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+
+              // mobile >=844px → 48px
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+
+              // mobile >=926px → 56px (highest mobile)
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+
+              // ==============================
+              // 💻 DESKTOP BASE (>=1024px)
+              // ==============================
+              "md:text-[64px]", // default desktop @768 high
+
+              // desktop >=900px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]",
+
+              // desktop >=1080px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[96px]",
+
+              // desktop wide >=1700px → 96px
+              "[@media(min-width:1700px)]:text-[96px]"
+            ].join(" ")}
             style={{
-              // fontSize: isMobile ? "48px" : "96px",
               opacity: 0,
               lineHeight: 1,
               transform: "translateY(-10px)"
@@ -1670,11 +1765,46 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <h2
             ref={freedomTextRef}
-            className="text-black font-extrabold px-4 lowercase text-5xl md:text-8xl"
+            className={[
+              "text-black font-extrabold px-4 lowercase leading-none",
+
+              // ==============================
+              // 📱 MOBILE BASE — 48px
+              // ==============================
+              "text-[48px]",
+
+              // mobile >=667px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+
+              // mobile >=736px → 40px
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+
+              // mobile >=812px → 48px (override back to 48)
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+
+              // mobile >=844px → 48px
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+
+              // mobile >=926px → 56px (highest mobile)
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+
+              // ==============================
+              // 💻 DESKTOP BASE (>=1024px)
+              // ==============================
+              "md:text-[64px]", // default desktop @768 high
+
+              // desktop >=900px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]",
+
+              // desktop >=1080px → 96px
+              "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[96px]",
+
+              // desktop wide >=1700px → 96px
+              "[@media(min-width:1700px)]:text-[96px]"
+            ].join(" ")}
             style={{
-              // fontSize: isMobile ? "48px" : "96px",
               opacity: 0,
-              lineHeight: 0.8,
+              lineHeight: "80%",
               transform: "translateY(-10px)"
             }}
           >

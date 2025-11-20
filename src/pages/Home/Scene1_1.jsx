@@ -3779,21 +3779,30 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         )}
       </div>
 
-      {/* TEXT */}
       <div
         ref={textRef}
-        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-3xl md:text-6xl"
+        className={[
+          "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+          // =======================
+          // MOBILE (<=767)
+          // =======================
+          "text-[32px] leading-[1.2]", // default mobile 667/736
+          "[@media(min-height:812px)]:text-[40px]", // mobile 812+
+          "[@media(min-height:812px)]:leading-[1.2]",
+          // =======================
+          // DESKTOP (>=1024)
+          // =======================
+          "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+        ].join(" ")}
         style={{
           top: isMobile ? "24%" : "26%",
-          // fontSize: isMobile ? "2rem" : "3rem",
-          // fontSize: isMobile
-          //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
-          //   : "clamp(1.25rem, 2.6vw, 3rem)",
-          lineHeight: "1.2",
           maxWidth: isMobile ? "100%" : "80%",
           width: isMobile ? "92vw" : "80%",
           opacity: 0,
-          color: "rgb(0, 0, 0)"
+          color: "rgb(0, 0, 0)",
+          willChange: "transform, opacity"
         }}
       >
         {isMobile ? (
@@ -3868,7 +3877,22 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {/* SECOND TEXT */}
       <div
         ref={text2Ref}
-        className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-3xl md:text-6xl"
+        // className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-3xl md:text-6xl"
+        className={[
+          "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+          // =======================
+          // MOBILE (<=767)
+          // =======================
+          "text-[32px] leading-[1.2]", // default mobile 667/736
+          "[@media(min-height:812px)]:text-[40px]", // mobile 812+
+          "[@media(min-height:812px)]:leading-[1.2]",
+          // =======================
+          // DESKTOP (>=1024)
+          // =======================
+          "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+        ].join(" ")}
         style={{
           top: isMobile ? "24%" : "26%",
           // fontSize: isMobile ? "2rem" : "3rem",
@@ -3984,10 +4008,26 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       </div>
       <div
         ref={text3Ref}
-        className={`
-    absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold
-    text-3xl md:text-5xl
-  `}
+        //       className={`
+        //   absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold
+        //   text-3xl md:text-5xl
+        // `}
+        className={[
+          "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+          // =======================
+          // MOBILE (<=767)
+          // =======================
+          "text-[32px] leading-[1.2]", // default mobile 667/736
+          "[@media(min-height:812px)]:text-[40px]", // mobile 812+
+          "[@media(min-height:812px)]:leading-[1.2]",
+          // =======================
+          // DESKTOP (>=1024)
+          // =======================
+          "md:text-[48px] md:leading-[1.2]",
+          "@media (min-width:1024px) and (min-height:768px):text-[40px]", // desktop compact 768px height
+          "@media (min-width:1024px) and (min-height:1080px):text-[56px]", // desktop 900+
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+        ].join(" ")}
         style={{
           top: isMobile ? "30%" : "58%",
           lineHeight: isMobile ? "36px" : "84px",
@@ -4006,7 +4046,13 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       {!isMobile && (
         <div
           ref={text4Ref}
-          className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
+          // className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
+          className={[
+            "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+            "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
+            "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
+            "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+          ].join(" ")}
           style={{
             top: "70%",
             // fontSize: "3.5rem",
@@ -4114,7 +4160,13 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           {/* Text8: "the evolve toolkit" - Desktop */}
           <div
             ref={text8Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold text-6xl"
+            // className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold text-6xl"
+            className={[
+              "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+              "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+            ].join(" ")}
             style={{
               bottom: "10%",
               // fontSize: "6rem",
@@ -4556,12 +4608,21 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </div> */}
           <div
             ref={text8Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center leading-tight font-extrabold text-4xl"
+            className={[
+              "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold leading-tight",
+
+              // BASE MOBILE — 40px
+              "text-[40px]",
+
+              // mobile 812px → 48px
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+
+              // mobile 926px → 56px
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]"
+            ].join(" ")}
             style={{
               bottom: "10%",
               width: "75vw",
-              // fontSize: "40px",
-              // fontSize: "2.5rem",
               lineHeight: "36px",
               color: "rgb(0, 0, 0)",
               opacity: 0

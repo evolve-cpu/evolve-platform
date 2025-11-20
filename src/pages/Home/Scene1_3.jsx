@@ -331,9 +331,34 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
               <div className="relative" style={{ height: "40%" }}>
                 <div className="absolute inset-0 bg-evolve-lavender-indigo" />
                 <div className="absolute inset-0 flex items-end p-8">
-                  <h2
+                  {/* <h2
                     ref={headingRef}
                     className="text-white lowercase font-extrabold leading-none text-8xl"
+                    style={{ lineHeight: "1.0" }}
+                  >
+                    how you
+                    <br /> will evolve
+                  </h2> */}
+                  <h2
+                    ref={headingRef}
+                    className={[
+                      "text-white lowercase font-extrabold leading-none",
+
+                      // default desktop-wide → 96px
+                      "text-[96px]",
+
+                      // desktop compact → 64px
+                      "[@media(min-width:1024px)]:[@media(min-height:768px)]:text-[64px]",
+
+                      // desktop base → 96px
+                      "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]",
+
+                      // desktop tall → 96px
+                      "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[96px]",
+
+                      // desktop wide → 96px
+                      "[@media(min-width:1700px)]:text-[96px]"
+                    ].join(" ")}
                     style={{ lineHeight: "1.0" }}
                   >
                     how you
@@ -358,13 +383,32 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                   <div className="overflow-hidden">
                     <p
                       ref={bodyRef}
-                      className="font-medium text-4xl max-w-[42ch]"
+                      className={[
+                        "font-medium max-w-[42ch] leading-none",
+
+                        // default desktop → 36px
+                        "text-[36px]",
+
+                        // desktop compact → 24px
+                        "[@media(min-width:1024px)]:[@media(min-height:768px)]:text-[24px]",
+
+                        // desktop base → 36px
+                        "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[36px]",
+
+                        // desktop tall → 36px
+                        "[@media(min-width:1024px)]:[@media(min-height:1080px)]:text-[36px]",
+
+                        // desktop wide → 36px
+                        "[@media(min-width:1700px)]:text-[36px]"
+                      ].join(" ")}
                       style={{
                         opacity: 0,
                         transform: "translateY(20px)",
                         lineHeight: "100%"
                       }}
                     />
+                    {/* body content here */}
+                    {/* </p> */}
                   </div>
                 </div>
               </div>
