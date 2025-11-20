@@ -97,7 +97,7 @@ export const useScene1Timeline = (refs, isMobile) => {
   tl.to(refs.inner, {
     scale: isMobile ? 3.2 : 3.9,
     y: isMobile ? 0 : "25vh", // NO y translation for mobile
-    transformOrigin: isMobile ? "center 55%" : "center 50%", // Scale from bottom for mobile
+    transformOrigin: isMobile ? "center 50%" : "center 50%", // Scale from bottom for mobile
     ease: "power2.inOut",
     duration: 3,
     force3D: true
@@ -291,17 +291,67 @@ const Scene1 = React.forwardRef((props, ref) => {
   const [doorBottomOffset, setDoorBottomOffset] = useState(0);
   const [isLocked, setIsLocked] = useState(false); // ADD THIS
 
+  // // Calculate door position based on screen size
+  // const calculateDoorPosition = (width, height) => {
+  //   if (width <= 768) {
+  //     if (width <= 360) return height * 0.28;
+  //     else if (width <= 430) return height * 0.3;
+  //     else if (width <= 540) return height * 0.3;
+  //     else return height * 0.3;
+  //   } else {
+  //     if (width <= 1024) return height * 0.2;
+  //     else if (width >= 2560) return height * 0.2;
+  //     else return height * 0.21;
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     if (isLocked) return; // Don't recalculate if locked
+
+  //     const offset = calculateDoorPosition(
+  //       window.innerWidth,
+  //       window.innerHeight
+  //     );
+  //     setDoorBottomOffset(offset);
+  //   };
+
+  //   handleResize();
+  //   setIsLocked(true); // Lock after first calculation
+
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, [isLocked]);
+
   // Calculate door position based on screen size
   const calculateDoorPosition = (width, height) => {
     if (width <= 768) {
-      if (width <= 360) return height * 0.28;
-      else if (width <= 430) return height * 0.3;
-      else if (width <= 540) return height * 0.3;
-      else return height * 0.3;
+      // Mobile devices
+      if (width <= 360)
+        return height * 0.28; // Small phones (Galaxy Fold, iPhone SE)
+      else if (width <= 375) return height * 0.29; // iPhone 13 Mini, iPhone SE
+      else if (width <= 393)
+        return height * 0.3; // iPhone 14 Pro, iPhone 15 Pro (Safari)
+      else if (width <= 414)
+        return height * 0.3; // iPhone 14 Plus, iPhone 15 Plus
+      else if (width <= 430)
+        return height * 0.3; // iPhone 14 Pro Max, iPhone 15 Pro Max
+      else if (width <= 540) return height * 0.3; // Surface Duo
+      else return height * 0.3; // Large phones/small tablets
+    } else if (width <= 1024) {
+      // Tablets
+      if (width <= 768) return height * 0.2; // iPad Mini, iPad portrait
+      else if (width <= 820) return height * 0.2; // iPad Air portrait
+      else if (width <= 912) return height * 0.2; // Surface Pro portrait
+      else return height * 0.2; // Tablet landscape
     } else {
-      if (width <= 1024) return height * 0.2;
-      else if (width >= 2560) return height * 0.2;
-      else return height * 0.21;
+      // Desktop
+      if (width <= 1280) return height * 0.21; // Small laptops (1024-1280)
+      else if (width <= 1440) return height * 0.21; // Standard laptops (HD+)
+      else if (width <= 1920) return height * 0.21; // Full HD
+      else if (width <= 2560) return height * 0.2; // 2K monitors
+      else if (width <= 3440) return height * 0.2; // Ultrawide monitors
+      else return height * 0.2; // 4K and above
     }
   };
 

@@ -1910,6 +1910,17 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       // Calculate the scroll container height (from top to text position)
       const scrollContainerHeight = 85; // 85vh (100vh - 15vh where text is)
 
+      // Set oval_1 to the same starting position as oval_2 and oval_3
+      tl.set(
+        refs.oval1,
+        {
+          opacity: 1,
+          top: "15vh", // Same position as oval_2 and oval_3
+          scale: 1
+        },
+        step11Start
+      );
+
       // Set oval_2 ABOVE the visible area
       tl.set(
         refs.oval2,
