@@ -735,7 +735,7 @@ const Footer = () => {
           <img
             src={hand_with_thunder}
             alt="hand with thunder"
-            className="pointer-events-none select-none absolute right-[-30vh] bottom-6 md:bottom-[-35vh] max-w-[90%] z-10"
+            className="pointer-events-none select-none absolute right-[-40vh] md:bottom-[-23vh] max-w-[90%] z-10"
             style={{ transform: "translateY(-10%)" }}
           />
         </div>
@@ -801,16 +801,16 @@ const Footer = () => {
         <img
           src={hand_with_thunder_mobile}
           alt="hand with thunder"
-          className="pointer-events-none select-none absolute right-2 bottom-2 w-[90%] z-10"
+          className="pointer-events-none select-none absolute right-0 -bottom-10 w-[90%] z-10"
         />
       </div>
 
       {/* ======= shared slanted marquee ======= */}
-      <div className="pointer-events-none absolute left-[-6vw] right-[-6vw] bottom-0 origin-bottom rotate-[-3deg] z-20">
+      <div className="pointer-events-none absolute left-[-20vw] right-[-18vw] bottom-0 origin-bottom rotate-[-9deg] z-20">
         <div
           ref={marqueeRef}
           className={`relative left-1/2 -translate-x-1/2 w-[112vw] border-t-2 border-b-2 border-evolve-yellow bg-evolve-lavender-indigo overflow-hidden ${
-            isMobile ? "bottom-[10%] h-16" : "bottom-[-16vh] h-[10rem]"
+            isMobile ? "-bottom-[3vh] h-24" : "bottom-[-16vh] h-[11rem]"
           }`}
           style={{ opacity: 0 }}
         >
@@ -828,42 +828,42 @@ const Footer = () => {
               <img
                 src={marquee_vector_1}
                 alt="vector 1"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
                 src={evolve_text}
                 alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />
               <img
                 src={marquee_vector_2}
                 alt="vector 2"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
                 src={evolve_text}
                 alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />
               <img
                 src={marquee_vector_1}
                 alt="vector 1"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
                 src={evolve_text}
                 alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />
               <img
                 src={marquee_vector_2}
                 alt="vector 2"
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
                 src={evolve_text}
                 alt="evolve text"
-                className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
+                className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />
             </div>
           </div>

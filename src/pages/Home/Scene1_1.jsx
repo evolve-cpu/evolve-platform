@@ -1764,7 +1764,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.ovalMini1,
         {
           opacity: 0,
-          duration: 0.4,
+          // duration: 0.4,
+          duration: 0,
           ease: "power2.inOut"
         },
         step10Start + 1.0
@@ -1774,7 +1775,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval1,
         {
           opacity: 1,
-          duration: 0.4,
+          duration: 0,
           ease: "power2.inOut"
         },
         step10Start + 1.0
@@ -1785,7 +1786,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval1,
         {
           scale: 1,
-          duration: 1.0,
+          duration: 0,
           ease: "power2.out"
         },
         step10Start + 1.5
@@ -4107,7 +4108,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           lineHeight: isMobile ? "36px" : "84px",
           color: "rgb(0, 0, 0)",
           opacity: 0,
-          width: isMobile ? "75vw" : "60%",
+          width: isMobile ? "85vw" : "60%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center"

@@ -400,7 +400,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
       duration: 0.6,
       ease: "back.out(1.7)"
     },
-    "fourthScroll+=0.9"
+    "fourthScroll+=1"
   );
 
   // FIFTH SCROLL: Move scene down and show new elements
@@ -447,7 +447,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     {
       y: isMobile ? "110vh" : "168vh", // Move down 90%, leaving 10% visible
       zIndex: 15,
-      duration: 0.21,
+      duration: 0.2,
       ease: "power2.inOut"
     },
     "fifthScroll"
@@ -458,7 +458,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     refs.doorHands,
     {
       opacity: 1,
-      duration: 0.8,
+      duration: 0,
       ease: "power2.out"
     },
     "fifthScroll+=0.3"
