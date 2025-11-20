@@ -111,8 +111,8 @@ export const setCompletedState = (refs, isMobile) => {
   // Show bigger orbit in centered position
   gsap.set(refs.biggerOrbit, {
     opacity: 1,
-    scale: isMobile ? 2.3 : 1,
-    y: isMobile ? -250 : -200
+    scale: isMobile ? 2.3 : 1
+    // y: isMobile ? -250 : -200
   });
 
   // Hide objects (they've already fallen)
@@ -834,6 +834,79 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     }
 
     // After elements reach position, eyes fade in (opening effect)
+    // const eyesOpenStart = stopAnimationEnd + 1.2;
+
+    // tl.to(
+    //   [refs.leftElementEye, refs.rightElementEye],
+    //   {
+    //     opacity: 1,
+    //     duration: 0.6,
+    //     ease: "power2.out"
+    //   },
+    //   eyesOpenStart
+    // );
+
+    // // ADD THIS SECTION - Pink orbit transition
+    // // Set initial state for pink orbit (same as yellow orbit)
+    // // tl.set(
+    // //   refs.pinkBiggerOrbit,
+    // //   {
+    // //     opacity: 0,
+    // //     scale: isMobile ? 2.3 : 1,
+    // //     y: isMobile ? -250 : -200,
+    // //     willChange: "transform, opacity"
+    // //   },
+    // //   eyesOpenStart
+    // // );
+
+    // tl.set(
+    //   refs.pinkBiggerOrbit,
+    //   {
+    //     opacity: 0,
+    //     scale: isMobile ? 2.3 : 1,
+    //     y: isMobile ? -250 : -200,
+    //     willChange: "transform, opacity"
+    //   },
+    //   eyesOpenStart
+    // );
+
+    // // Fade out yellow orbit and fade in pink orbit simultaneously
+    // const pinkOrbitTransitionStart = eyesOpenStart + 0.8;
+
+    // tl.to(
+    //   refs.biggerOrbit,
+    //   {
+    //     opacity: 0,
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   pinkOrbitTransitionStart
+    // );
+
+    // // tl.to(
+    // //   refs.pinkBiggerOrbit,
+    // //   {
+    // //     opacity: 1,
+    // //     duration: 0.8,
+    // //     ease: "power2.inOut"
+    // //   },
+    // //   pinkOrbitTransitionStart
+    // // );
+
+    // tl.to(
+    //   refs.pinkBiggerOrbit,
+    //   {
+    //     opacity: 1, // Changed from 1 to 0.5 (50% opacity)
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   pinkOrbitTransitionStart
+    // );
+
+    // // ADD THIS SECTION - Elements disappear and orbit moves up
+    // const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
+
+    // After elements reach position, eyes fade in (opening effect)
     const eyesOpenStart = stopAnimationEnd + 1.2;
 
     tl.to(
@@ -846,65 +919,53 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       eyesOpenStart
     );
 
-    // ADD THIS SECTION - Pink orbit transition
-    // Set initial state for pink orbit (same as yellow orbit)
-    // tl.set(
-    //   refs.pinkBiggerOrbit,
-    //   {
-    //     opacity: 0,
-    //     scale: isMobile ? 2.3 : 1,
-    //     y: isMobile ? -250 : -200,
-    //     willChange: "transform, opacity"
-    //   },
-    //   eyesOpenStart
-    // );
-
+    // Set initial state for pink orbit (same position as yellow orbit BEFORE it moved)
     tl.set(
       refs.pinkBiggerOrbit,
       {
         opacity: 0,
-        scale: isMobile ? 2.3 : 1,
-        y: isMobile ? -250 : -200,
+        scale: isMobile ? 2 : 1, // Same scale as yellow orbit currently has
+        y: isMobile ? -50 : -80, // Same position where yellow orbit is NOW (orbitBeforeCenterY)
         willChange: "transform, opacity"
       },
       eyesOpenStart
     );
 
-    // Fade out yellow orbit and fade in pink orbit simultaneously
-    const pinkOrbitTransitionStart = eyesOpenStart + 0.8;
-
+    // IMMEDIATELY crossfade yellow to pink (while eyes open)
     tl.to(
       refs.biggerOrbit,
       {
         opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut"
+        duration: 0.6,
+        ease: "power2.out"
       },
-      pinkOrbitTransitionStart
+      eyesOpenStart // Same timing as eyes
     );
-
-    // tl.to(
-    //   refs.pinkBiggerOrbit,
-    //   {
-    //     opacity: 1,
-    //     duration: 0.8,
-    //     ease: "power2.inOut"
-    //   },
-    //   pinkOrbitTransitionStart
-    // );
 
     tl.to(
       refs.pinkBiggerOrbit,
       {
-        opacity: 1, // Changed from 1 to 0.5 (50% opacity)
-        duration: 0.8,
-        ease: "power2.inOut"
+        // opacity: 0.5, // 50% opacity
+        opacity: 1, // 50% opacity
+        duration: 0.6,
+        ease: "power2.out"
       },
-      pinkOrbitTransitionStart
+      eyesOpenStart // Same timing as eyes and yellow fade
     );
 
-    // ADD THIS SECTION - Elements disappear and orbit moves up
-    const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
+    // Pink orbit IMAGE at 50% opacity
+    tl.to(
+      refs.pinkOrbitInner, // ✅ Only animate the INNER image
+      {
+        opacity: 0.5,
+        duration: 0.6,
+        ease: "power2.out"
+      },
+      eyesOpenStart
+    );
+
+    // THEN elements disappear
+    const elementsDisappearStart = eyesOpenStart + 1.0;
 
     // Fade out both base elements and eye elements
     tl.to(
@@ -2343,7 +2404,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
             [leftImg, rightImg],
             {
               maskImage:
-                "linear-gradient(to top, black 10%, black 0%, transparent 35%)",
+                "linear-gradient(to top, black 32.89%, black 0%, transparent 32.89%)",
               WebkitMaskImage:
                 "linear-gradient(to top, black 10%, black 0%, transparent 35%)"
             },
@@ -2892,7 +2953,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.ovalMini1, refs.ovalMini2, refs.ovalMini3],
         {
           opacity: 0,
-          duration: 0.5,
+          duration: 0.1,
           ease: "power2.inOut"
         },
         step9Start + 0.4
@@ -2964,37 +3025,63 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Add floating pulse effect to all three ovals
-      const floatingStart = step9Start + 1.5;
+      // Move full ovals back to original positions after crossfade
+      tl.to(
+        [refs.oval1, refs.oval2, refs.oval3],
+        {
+          x: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        },
+        step9Start + 0.8
+      );
 
-      // Oval 1 - slightly slower, larger movement
-      gsap.to(refs.oval1, {
-        y: "-=15",
-        duration: 2.5,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        delay: 0
-      });
+      // Clear will-change at the end
+      tl.set(
+        [refs.oval1, refs.oval2, refs.oval3],
+        { willChange: "auto" },
+        step9Start + 1.5
+      );
 
-      // Oval 2 - medium speed
-      gsap.to(refs.oval2, {
-        y: "-=15",
-        duration: 2.5,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        delay: 0
-      });
+      // Add floating pulse effect AFTER ovals are fully visible and centered
+      const pulseStart = step9Start + 1.8; // Start after transition completes
 
-      // Oval 3 - faster, smaller movement
-      gsap.to(refs.oval3, {
-        y: "-=15",
-        duration: 2.5,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        delay: 0
-      });
+      // Use timeline.call() to start infinite animations after timeline completes
+      tl.call(
+        () => {
+          // Oval 1 - slightly slower, larger movement
+          gsap.to(refs.oval1, {
+            y: "-=15",
+            duration: 2.5,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true
+          });
+
+          // Oval 2 - medium speed
+          gsap.to(refs.oval2, {
+            y: "-=15",
+            duration: 2.5,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+            delay: 0.3 // Slight stagger for natural effect
+          });
+
+          // Oval 3 - faster, smaller movement
+          gsap.to(refs.oval3, {
+            y: "-=15",
+            duration: 2.5,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+            delay: 0.6 // More stagger
+          });
+        },
+        null,
+        null,
+        pulseStart
+      );
     }
 
     // ===== ORBIT MOVES TO CENTER AFTER ELEMENTS REACH POSITION =====
@@ -3063,7 +3150,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     tl.to(
       refs.biggerOrbit,
       {
-        y: isMobile ? -250 : -200, // Move to center
+        // y: isMobile ? -250 : -200, // Move to center
         scale: isMobile ? 2.3 : 1, // Maintain bigger scale for mobile
         // scale: orbitScale, // Maintain bigger scale for mobile
         duration: 1.0,
@@ -3133,10 +3220,12 @@ const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
         ref={outerRef}
         src={curvey_circle_without_inner_part}
         alt="outer circle"
-        className="absolute inset-0 w-full h-full"
-        style={{
-          transformOrigin: "center center"
-        }}
+        className="absolute inset-0 w-full h-full antialiased"
+        style={
+          {
+            // transformOrigin: "center center"
+          }
+        }
       />
       {/* Inner LOGO part - shows FIRST on desktop */}
       <img
@@ -3551,12 +3640,12 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           alt="pink bigger orbit"
           className="w-full h-auto"
           style={{
-            transformOrigin: "center center",
-            opacity: 0.5
+            transformOrigin: "center center"
+            // opacity: 0.5
           }}
         />
         {/* Combined Circle - appears at center of PINK ORBIT */}
-        <div
+        {/* <div
           ref={combinedCircleContainerRef}
           className="absolute z-[15] pointer-events-none"
           style={{
@@ -3565,6 +3654,21 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
+            opacity: 0
+          }}
+        >
+          <CombinedCircle ref={combinedCircleRef} isMobile={isMobile} />
+        </div> */}
+        {/* Combined Circle - appears at center of PINK ORBIT */}
+        <div
+          ref={combinedCircleContainerRef}
+          className="absolute z-[15] pointer-events-none"
+          style={{
+            width: isMobile ? "60vw" : "30vw", // Responsive width
+            height: isMobile ? "60vw" : "30vw", // Same as width for perfect circle
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)", // Perfect centering
             opacity: 0
           }}
         >

@@ -6,13 +6,14 @@ import { gsap } from "gsap";
 const STEPS = [
   {
     key: "see",
-    body: "hunt for the details <br/>everyone else misses.",
+    // body: "hunt for the details <br/>everyone else misses.",
+    body: "notice what others miss.",
     from: 1000,
     to: 1048
   },
   {
     key: "think",
-    body: "ask the questions <br/>no one's asking.",
+    body: "ask what others don’t.",
     from: 1049,
     to: 1097
   },
@@ -30,7 +31,8 @@ const STEPS = [
   },
   {
     key: "share",
-    body: "tell the story so well <br/>they can't ignore it.",
+    // body: "tell the story so well <br/>they can't ignore it.",
+    body: "stories that stick",
     from: 1196,
     to: 1241
   }

@@ -1258,7 +1258,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_left_mobile}
               alt="purple hand left"
               className="absolute pointer-events-none
-          [top-45.5%]
+          [top:44.5%]
           [@media(min-height:667px)]:top-[43.5%]
           [@media(min-height:736px)]:top-[42.5%]
           [@media(min-height:812px)]:top-[43%]
@@ -1283,7 +1283,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_right_mobile}
               alt="purple hand right"
               className="absolute pointer-events-none
-          [top:45.5%]
+          [top:44.5%]
           [@media(min-height:667px)]:top-[43.5%]
           [@media(min-height:736px)]:top-[42.5%]
           [@media(min-height:812px)]:top-[43%]
@@ -1502,7 +1502,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={bird_left_mobile}
               alt="bird left"
               className="absolute pointer-events-none
-    [top-45.5%]
+    [top:45.5%]
     [@media(min-height:667px)]:top-[43.5%]
     [@media(min-height:736px)]:top-[42.5%]
     [@media(min-height:812px)]:top-[43%]

@@ -12,6 +12,51 @@ import {
   evolve_2d
 } from "../../assets/images/Home";
 
+// =========================
+// FONT SIZE LOGIC (H2)
+// =========================
+const getHeadingFontSize = () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  // ------- MOBILE -------
+  if (w < 768) {
+    if (h >= 812) return "64px"; // mobile 812 & above
+    if (h >= 736) return "56px"; // mobile 736
+    if (h >= 667) return "56px"; // mobile 667
+    return "48px"; // fallback small phones
+  }
+
+  // ------- DESKTOP -------
+  if (w >= 1700) return "128px"; // desktop-wide
+  if (h >= 1080) return "124px"; // desktop-tall
+  if (h >= 900) return "110px"; // desktop-base
+  if (h >= 768) return "96px"; // desktop-compact
+
+  return "96px"; // fallback
+};
+
+const getHeadingLineHeight = () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  // ------- MOBILE -------
+  if (w < 768) {
+    if (h >= 812) return "56px"; // mobile 812+
+    if (h >= 736) return "52px"; // mobile 736
+    if (h >= 667) return "52px"; // mobile 667
+    return "48px";
+  }
+
+  // ------- DESKTOP -------
+  if (w >= 1700) return "128px"; // desktop-wide
+  if (h >= 1080) return "128px"; // desktop-tall
+  if (h >= 900) return "120px"; // desktop-base
+  if (h >= 768) return "92px"; // desktop-compact
+
+  return "92px"; // fallback
+};
+
 // 🎥 OPTIMIZED TIMELINE - GPU acceleration
 export const useScene1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
@@ -23,10 +68,16 @@ export const useScene1Timeline = (refs, isMobile) => {
     transformOrigin: "center center",
     willChange: "transform, opacity"
   })
+    // .set(refs.doorCloseup, {
+    //   opacity: 0,
+    //   scale: 1.1,
+    //   willChange: "transform, opacity"
+    // })
     .set(refs.doorCloseup, {
       opacity: 0,
-      scale: 1.1,
-      willChange: "transform, opacity"
+      scale: 1.15, // Changed from 1.1
+      filter: "blur(8px)", // Add initial blur
+      willChange: "transform, opacity, filter"
     })
     .set(refs.doorCube, { opacity: 0, willChange: "transform" })
     .set(refs.evolveLogo, {
@@ -44,9 +95,9 @@ export const useScene1Timeline = (refs, isMobile) => {
 
   // main animation sequence - use force3D for GPU rendering
   tl.to(refs.inner, {
-    scale: isMobile ? 3.2 : 2.6,
+    scale: isMobile ? 3.2 : 3.9,
     y: isMobile ? 0 : "25vh", // NO y translation for mobile
-    transformOrigin: isMobile ? "center 55%" : "center 62%", // Scale from bottom for mobile
+    transformOrigin: isMobile ? "center 55%" : "center 50%", // Scale from bottom for mobile
     ease: "power2.inOut",
     duration: 3,
     force3D: true
@@ -77,44 +128,54 @@ export const useScene1Timeline = (refs, isMobile) => {
     .to(
       refs.rainbow,
       {
-        scale: isMobile ? 3.2 : 2.8,
-        opacity: 0,
-        duration: 1,
-        ease: "power1.inOut",
+        scale: isMobile ? 3.8 : 4.5, // Much larger scale for desktop to hide walls
+        opacity: 0, // Rainbow fades out during zoom
+        duration: 0.5,
+        ease: "power2.in",
         force3D: true
       },
-      "-=0.6"
+      "-=0.4"
     )
-    // Fade out cube and door simultaneously with rainbow - KEEP OPACITY
+    // Door and cube fade out at same time as rainbow
     .to(
       [refs.cube, ".door"],
-      { opacity: 0, duration: 0.8, ease: "power1.inOut" },
-      "-=0.8"
+      {
+        opacity: 0,
+        duration: 1.0, // Slightly longer fade
+        ease: "power1.in"
+      },
+      "<" // Start at same time as rainbow fade
     )
-    .set(refs.rainbow, { opacity: 0, pointerEvents: "none" })
-    // Door closeup and cube appear together immediately - SEAMLESS transition
-    .to(
+    // Door closeup starts fading in EARLY during the zoom
+    .fromTo(
       refs.doorCloseup,
+      {
+        opacity: 0,
+        scale: 1.15, // Start slightly larger
+        filter: "blur(8px)" // Start blurred for depth effect
+      },
       {
         opacity: 1,
         scale: 1,
+        filter: "blur(0px)",
         duration: 1,
         ease: "power2.out",
         force3D: true
       },
-      "-=0.5"
+      "-=1.1" // Start while zoom is happening - key for seamlessness
     )
+    .set(refs.rainbow, { opacity: 0, pointerEvents: "none" })
+    // Cube appears after door is fully visible
     .to(
       refs.doorCube,
       {
         opacity: 1,
-        duration: 1,
-        ease: "power2.out",
+        duration: 0.5,
+        ease: "power1.out",
         force3D: true
       },
-      "<"
+      "-=0.3"
     )
-
     // 🎬 AUTO-PLAY SECTION STARTS HERE (add extra duration for scroll buffer)
     .to({}, { duration: 0.5 }) // Buffer to ensure scroll completes
 
@@ -176,10 +237,27 @@ export const useScene1Timeline = (refs, isMobile) => {
     })
 
     // Text appears below the logo - NO animation, just instant display
-    .set(refs.text, {
-      opacity: 1,
-      y: isMobile ? "4vh" : "15vh"
-    })
+    // .set(refs.text, {
+    //   opacity: 1,
+    //   y: isMobile ? "4vh" : "15vh"
+    // })
+
+    // Text appears below the logo with subtle slide up
+    .fromTo(
+      refs.text,
+      {
+        opacity: 0,
+        y: isMobile ? "8vh" : "20vh" // Start lower
+      },
+      {
+        opacity: 1,
+        y: isMobile ? "4vh" : "15vh", // End position
+        duration: 0.8,
+        ease: "power2.out",
+        force3D: true
+      },
+      "-=0.2" // Slight overlap with logo movement
+    )
 
     // Hold for a moment
     .to({}, { duration: 1 })
@@ -300,7 +378,7 @@ const Scene1 = React.forwardRef((props, ref) => {
         style={{ willChange: "transform" }}
       >
         {/* 🌈 rainbow */}
-        <img
+        {/* <img
           ref={rainbowRef}
           src={purple_rainbow}
           alt="rainbow"
@@ -310,7 +388,24 @@ const Scene1 = React.forwardRef((props, ref) => {
               : "absolute left-1/2 -translate-x-1/2 bottom-[38%] w-[22vw]"
           }
           style={{ willChange: "transform, opacity" }}
-        />
+        /> */}
+        {/* <img
+          ref={rainbowRef}
+          src={purple_rainbow}
+          alt="rainbow"
+          className={
+            isMobile
+              ? "absolute left-1/2 -translate-x-1/2 bottom-[38%] w-[45vw]"
+              : "absolute left-1/2 -translate-x-1/2 bottom-[38%] w-[22vw]"
+          }
+          style={{
+            willChange: "transform, opacity",
+            imageRendering: "-webkit-optimize-contrast",
+            backfaceVisibility: "hidden"
+            // transform: "translateZ(0)"
+          }}
+        /> */}
+        {/* 🚪 door + cube */}
         {/* 🚪 door + cube */}
         <div
           ref={doorContainerRef}
@@ -318,18 +413,38 @@ const Scene1 = React.forwardRef((props, ref) => {
           style={{
             bottom: `${doorBottomOffset}px`,
             willChange: "transform",
-            transformOrigin: "center bottom"
+            transformOrigin: "center bottom",
+            position: "absolute"
           }}
         >
+          {/* 🌈 rainbow behind door, centered relative to door */}
+          <img
+            ref={rainbowRef}
+            src={purple_rainbow}
+            alt="rainbow"
+            className={
+              isMobile
+                ? "absolute left-[49%] -translate-x-1/2 bottom-[10%] w-[45vw] -z-10"
+                : "absolute left-[49.2%] -translate-x-1/2 bottom-[10%] w-[22vw] -z-10"
+            }
+            style={{
+              willChange: "transform, opacity",
+              imageRendering: "-webkit-optimize-contrast",
+              backfaceVisibility: "hidden"
+            }}
+          />
+
+          {/* door on top of rainbow */}
           <img
             src={stairs_with_door}
             alt="door"
             className={
               isMobile
-                ? "door w-[65vw] min-w-[200px] max-w-[260px]"
-                : "door w-[24vw] min-w-[280px] max-w-[400px]"
+                ? "door w-[65vw] min-w-[200px] max-w-[260px] relative"
+                : "door w-[24vw] min-w-[280px] max-w-[400px] relative"
             }
           />
+
           <img
             ref={cubeRef}
             src={evolve_cube}
@@ -341,6 +456,7 @@ const Scene1 = React.forwardRef((props, ref) => {
             }
           />
         </div>
+
         {/* 🧱 floor */}
         <img
           ref={floorRef}
@@ -402,9 +518,9 @@ const Scene1 = React.forwardRef((props, ref) => {
           ref={textRef}
           className="font-[800] text-center text-[#DF0586]"
           style={{
-            fontSize: isMobile ? "4rem" : "8.75rem", // Mobile: 64px = 4rem, Desktop: 140px = 8.75rem
-            lineHeight: isMobile ? "3.5rem" : "7.5rem", // Mobile: 56px = 3.5rem, Desktop: 120px = 7.5rem
-            letterSpacing: "-0.03em", // -3%
+            fontSize: getHeadingFontSize(), // auto from function
+            lineHeight: getHeadingLineHeight(), // auto from function
+            letterSpacing: "-0.03em",
             willChange: "transform, opacity"
           }}
         >
