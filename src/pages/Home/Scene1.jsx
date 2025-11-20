@@ -412,11 +412,11 @@ export const useScene1Timeline = (refs, isMobile) => {
       refs.text,
       {
         opacity: 0,
-        y: isMobile ? "12vh" : "22vh"
+        y: isMobile ? "12vh" : "14vh"
       },
       {
         opacity: 1,
-        y: isMobile ? "4vh" : "15vh",
+        y: isMobile ? "4vh" : "20vh",
         duration: 0.8,
         ease: "power2.out",
         force3D: true

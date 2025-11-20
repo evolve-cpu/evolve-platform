@@ -262,8 +262,15 @@ export const useScene1_4Timeline = (refs, isMobile) => {
   tl.fromTo(
     refs.marquee,
     { y: 100, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+    { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
     0.3
+  );
+
+  tl.fromTo(
+    refs.text1,
+    { y: 60, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
+    0
   );
 
   // kick off infinite marquee (idempotent + reversible)
@@ -318,17 +325,17 @@ export const useScene1_4Timeline = (refs, isMobile) => {
   });
 
   // text reveals
-  tl.fromTo(
-    refs.text1,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-    "+=0.8"
-  );
+  // tl.fromTo(
+  //   refs.text1,
+  //   { y: 60, opacity: 0 },
+  //   { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
+  //   "+=0.8"
+  // );
   tl.fromTo(
     refs.text2,
     { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-    "+=0.6"
+    { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
+    0
   );
 
   // cleanup when the master timeline rewinds past this scene
@@ -381,7 +388,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
   return (
     <section
       ref={containerRef}
-      className="absolute inset-0 w-full h-full bg-evolve-lavender-indigo overflow-hidden"
+      className="absolute inset-0 w-full h-full border-2 border-evolve-yellow bg-evolve-lavender-indigo overflow-hidden"
     >
       {/* Text container - desktop */}
       {!isMobile && (
