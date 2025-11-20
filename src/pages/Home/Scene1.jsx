@@ -141,7 +141,8 @@ export const useScene1Timeline = (refs, isMobile) => {
       [refs.cube, ".door"],
       {
         opacity: 0,
-        duration: 1.0, // Slightly longer fade
+        // duration: 1.0, // Slightly longer fade
+        duration: 0, // Slightly longer fade
         ease: "power1.in"
       },
       "<" // Start at same time as rainbow fade
@@ -158,7 +159,8 @@ export const useScene1Timeline = (refs, isMobile) => {
         opacity: 1,
         scale: 1,
         filter: "blur(0px)",
-        duration: 1,
+        // duration: 1,
+        duration: 0,
         ease: "power2.out",
         force3D: true
       },
@@ -170,7 +172,8 @@ export const useScene1Timeline = (refs, isMobile) => {
       refs.doorCube,
       {
         opacity: 1,
-        duration: 0.5,
+        // duration: 0.5,
+        duration: 0.2,
         ease: "power1.out",
         force3D: true
       },
