@@ -3764,8 +3764,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // =======================
           // DESKTOP (>=1024)
           // =======================
-          "md:text-[48px] md:leading-[1.2]",
-          "@media (min-width:1024px) and (min-height:768px):text-[40px]", // desktop compact 768px height
+          "md:text-[36px] md:leading-[1.2]",
+          "@media (min-width:1024px) and (min-height:768px):text-[36px]", // desktop compact 768px height
           "@media (min-width:1024px) and (min-height:1080px):text-[56px]", // desktop 900+
           "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
         ].join(" ")}
