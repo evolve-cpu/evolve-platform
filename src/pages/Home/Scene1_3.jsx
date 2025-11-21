@@ -1269,7 +1269,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
             </div>
 
             {/* right 50% - canvas at bottom, text above */}
-            <div className="relative h-full bg-black flex flex-col gap-0 items-center justify-center">
+            <div className="relative h-full bg-[#0a0a0a] flex flex-col gap-0 items-center justify-center">
               {/* text group - positioned for proper spacing */}
               <div
                 ref={textGroupRef}
@@ -1331,7 +1331,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
             </div>
 
             {/* bottom - black background with canvas and text */}
-            <div className="relative bg-black flex flex-col items-center justify-end pb-4">
+            <div className="relative bg-[#161616] flex flex-col items-center justify-end pb-4">
               {/* text group */}
               <div
                 ref={textGroupRef}

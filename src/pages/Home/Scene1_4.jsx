@@ -263,7 +263,7 @@ export const useScene1_4Timeline = (refs, isMobile) => {
     refs.marquee,
     { y: 100, opacity: 0 },
     { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
-    0.3
+    0
   );
 
   tl.fromTo(
