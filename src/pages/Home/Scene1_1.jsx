@@ -3641,7 +3641,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
           //   : "clamp(1.25rem, 2.6vw, 3rem)",
           lineHeight: isMobile ? "36px" : "60px",
-          maxWidth: isMobile ? "100%" : "60%",
+          maxWidth: isMobile ? "100%" : "80%",
           width: isMobile ? "92vw" : "80%",
           opacity: 0,
           color: "rgb(0, 0, 0)"
@@ -3669,6 +3669,9 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               </span>
               <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
                 make
+              </span>
+              <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
+                the
               </span>
             </div>
             <div>
@@ -3723,6 +3726,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
                 the{" "}
               </span>
+              <br />
               <span data-text2 style={{ color: "rgb(0, 0, 0)" }}>
                 world{" "}
               </span>
