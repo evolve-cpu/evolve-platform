@@ -923,40 +923,74 @@ import { gsap } from "gsap";
 
 /* -------------------- timeline builder (no ScrollTrigger) -------------------- */
 
+// const STEPS = [
+//   {
+//     key: "see",
+//     body: "notice what others miss.",
+//     from: 1000,
+//     to: 1048
+//   },
+//   {
+//     key: "think",
+//     body: "ask what others don't.",
+//     from: 1049,
+//     to: 1097
+//   },
+//   {
+//     key: "make",
+//     body: "design like it matters.",
+//     from: 1098,
+//     to: 1146
+//   },
+//   {
+//     key: "ship",
+//     body: "send it to the real world.",
+//     from: 1147,
+//     to: 1195
+//   },
+//   {
+//     key: "share",
+//     body: "stories that stick.",
+//     from: 1196,
+//     to: 1241
+//   }
+// ];
+
 const STEPS = [
   {
     key: "see",
     body: "notice what others miss.",
-    from: 1000,
-    to: 1048
+    from: 18,
+    to: 61 // 18 + 43
   },
   {
     key: "think",
     body: "ask what others don't.",
-    from: 1049,
-    to: 1097
+    from: 62,
+    to: 105 // +44
   },
   {
     key: "make",
     body: "design like it matters.",
-    from: 1098,
-    to: 1146
+    from: 106,
+    to: 149
   },
   {
     key: "ship",
     body: "send it to the real world.",
-    from: 1147,
-    to: 1195
+    from: 150,
+    to: 193
   },
   {
     key: "share",
     body: "stories that stick.",
-    from: 1196,
-    to: 1241
+    from: 194,
+    to: 239
   }
 ];
 
-const pad = (n, w = 4) => String(n).padStart(w, "0");
+// const pad = (n, w = 4) => String(n).padStart(w, "0");
+const pad = (n, w = 3) => String(n).padStart(w, "0");
 const srcFor = (i, basePath, prefix, ext) =>
   `${basePath}/${prefix}${pad(i)}.${ext}`;
 
@@ -975,10 +1009,11 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   }
 
   const basePath = "/assets/seed_to_plant";
-  const prefix = "Seed ot plant_";
+  const prefix = "seed to plant_alpha";
   const ext = "png";
-  const TOTAL_START = 1000;
-  const TOTAL_END = 1241;
+  // const TOTAL_START = 1000;
+  const TOTAL_START = 18;
+  const TOTAL_END = 239;
 
   /** FRAME CACHE (ALL SYNC ON READ) */
   const cache = new Map();
