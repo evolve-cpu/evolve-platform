@@ -777,7 +777,7 @@ const Scene1 = React.forwardRef((props, ref) => {
       >
         <div className={isMobile ? "w-[200%]" : "w-[100vw]"}>
           <DotLottieReact
-            src="https://lottie.host/e6178cb6-f404-4ff2-a706-224dfb4904d1/sqmki3Tynt.lottie"
+            src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
             loop={false}
             autoplay={false}
             dotLottieRefCallback={(instance) => {
