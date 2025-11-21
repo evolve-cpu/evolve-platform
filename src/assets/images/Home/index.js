@@ -117,6 +117,10 @@ import stairs_left_new from "./stairs_left_new.svg";
 import stairs_right_new from "./stairs_right_new.svg";
 import left_thunder from "./left_thunder.svg";
 import right_thunder from "./right_thunder.svg";
+import stairs1_mobile from "./stairs1_mobile.svg";
+import stairs2_mobile from "./stairs2_mobile.svg";
+import stairs4_mobile from "./stairs4_mobile.svg";
+import stairsfull_right_mobile from "./stairsfull_right_mobile.svg";
 
 export {
   left_wall,
@@ -236,5 +240,9 @@ export {
   stairs_left_new,
   stairs_right_new,
   left_thunder,
-  right_thunder
+  right_thunder,
+  stairs1_mobile,
+  stairs2_mobile,
+  stairs4_mobile,
+  stairsfull_right_mobile
 };

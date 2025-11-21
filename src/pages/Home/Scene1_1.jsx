@@ -55,7 +55,11 @@ import {
   stairs_left_2,
   stairs_right_2,
   stairs_left_new,
-  stairs_right_new
+  stairs_right_new,
+  stairs1_mobile, // ADD THIS
+  stairs2_mobile, // ADD THIS
+  stairs4_mobile, // ADD THIS
+  stairsfull_right_mobile // ADD THIS
 } from "../../assets/images/Home";
 
 // Add this helper function at the top of your Scene1_1 file
@@ -834,80 +838,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
     }
 
-    // After elements reach position, eyes fade in (opening effect)
-    // const eyesOpenStart = stopAnimationEnd + 1.2;
-
-    // tl.to(
-    //   [refs.leftElementEye, refs.rightElementEye],
-    //   {
-    //     opacity: 1,
-    //     duration: 0.6,
-    //     ease: "power2.out"
-    //   },
-    //   eyesOpenStart
-    // );
-
-    // // ADD THIS SECTION - Pink orbit transition
-    // // Set initial state for pink orbit (same as yellow orbit)
-    // // tl.set(
-    // //   refs.pinkBiggerOrbit,
-    // //   {
-    // //     opacity: 0,
-    // //     scale: isMobile ? 2.3 : 1,
-    // //     y: isMobile ? -250 : -200,
-    // //     willChange: "transform, opacity"
-    // //   },
-    // //   eyesOpenStart
-    // // );
-
-    // tl.set(
-    //   refs.pinkBiggerOrbit,
-    //   {
-    //     opacity: 0,
-    //     scale: isMobile ? 2.3 : 1,
-    //     y: isMobile ? -250 : -200,
-    //     willChange: "transform, opacity"
-    //   },
-    //   eyesOpenStart
-    // );
-
-    // // Fade out yellow orbit and fade in pink orbit simultaneously
-    // const pinkOrbitTransitionStart = eyesOpenStart + 0.8;
-
-    // tl.to(
-    //   refs.biggerOrbit,
-    //   {
-    //     opacity: 0,
-    //     duration: 0.8,
-    //     ease: "power2.inOut"
-    //   },
-    //   pinkOrbitTransitionStart
-    // );
-
-    // // tl.to(
-    // //   refs.pinkBiggerOrbit,
-    // //   {
-    // //     opacity: 1,
-    // //     duration: 0.8,
-    // //     ease: "power2.inOut"
-    // //   },
-    // //   pinkOrbitTransitionStart
-    // // );
-
-    // tl.to(
-    //   refs.pinkBiggerOrbit,
-    //   {
-    //     opacity: 1, // Changed from 1 to 0.5 (50% opacity)
-    //     duration: 0.8,
-    //     ease: "power2.inOut"
-    //   },
-    //   pinkOrbitTransitionStart
-    // );
-
-    // // ADD THIS SECTION - Elements disappear and orbit moves up
-    // const elementsDisappearStart = pinkOrbitTransitionStart + 1.0;
-
-    // After elements reach position, eyes fade in (opening effect)
     const eyesOpenStart = stopAnimationEnd + 1.2;
 
     tl.to(
@@ -1056,12 +986,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     // ===== SIMULTANEOUS ANIMATIONS AFTER STAIRS =====
     const nextPhaseStart = stairsAnimateStart + 1.5;
 
+    // MOBILE STAIRS ANIMATION - COMPLETE TIMELINE
     if (isMobile) {
       const mobileStairsStart = text3AppearStart + 0.5;
 
-      // Step 1: stairs_mini_mobile appears
+      // Step 1: stairs1_mobile appears at bottom left
       tl.set(
-        refs.stairsMiniMobile,
+        refs.stairsMod1Mobile,
         {
           opacity: 0,
           willChange: "transform, opacity"
@@ -1070,7 +1001,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       tl.to(
-        refs.stairsMiniMobile,
+        refs.stairsMod1Mobile,
         {
           opacity: 1,
           duration: 0,
@@ -1079,55 +1010,42 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         mobileStairsStart
       );
 
-      // Step 2: stairs_mod_mobile appears with fromTo animation (more stairs coming)
-      const stairsModStart = mobileStairsStart + 1.5;
+      // Step 2: stairs2_mobile appears on top (duration 0, full opacity)
+      const stairs2Start = mobileStairsStart + 1.5;
 
-      tl.fromTo(
-        refs.stairsModMobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0
-        },
+      tl.to(
+        refs.stairsMod2Mobile,
         {
           opacity: 1,
-          y: 0,
-          scale: 1,
           duration: 0,
           ease: "power2.out"
         },
-        stairsModStart
+        stairs2Start
       );
 
-      // Step 3: stairs_mod1_mobile appears + orbit moves up + text5 appears
-      const stairsMod1Start = stairsModStart + 1.5;
+      // Step 3: Orbit goes up + "real design" text + stairs4_mobile appears
+      const stairs4Start = stairs2Start + 1.5;
 
-      tl.fromTo(
-        refs.stairsMod1Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0
-        },
+      // stairs4_mobile appears with full opacity on same position
+      tl.to(
+        refs.leftStairsMod3Mobile,
         {
           opacity: 1,
-          y: 0,
-          scale: 1,
           duration: 0,
           ease: "power2.out"
         },
-        stairsMod1Start
+        stairs4Start
       );
 
       // Orbit moves upwards
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "-=15vh", // Move up by 15vh from current position
+          y: "-=15vh",
           duration: 1.0,
           ease: "power2.out"
         },
-        stairsMod1Start
+        stairs4Start
       );
 
       // Text5 appears: "real design,"
@@ -1137,7 +1055,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           opacity: 0,
           willChange: "opacity"
         },
-        stairsMod1Start
+        stairs4Start
       );
 
       tl.to(
@@ -1147,50 +1065,56 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 0.6,
           ease: "power2.out"
         },
-        stairsMod1Start + 0.8
+        stairs4Start + 0.8
       );
 
-      // Step 4: Orbit moves right + all stairs removed + stairs_mod2_mobile appears + text changes
-      const finalStairsStart = stairsMod1Start + 2.0;
+      // Step 4: "real portfolio" text + orbit moves right + stairsfull_right_mobile appears and slides
+      const portfolioStart = stairs4Start + 2.0;
 
       // Orbit moves rightwards
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          x: "+=10vw", // Move right by 10vw from current position
+          x: "+=10vw",
           duration: 1.0,
           ease: "power2.out"
         },
-        finalStairsStart
+        portfolioStart
       );
 
-      // Remove all previous stairs
-      tl.to(
-        [refs.stairsMiniMobile, refs.stairsModMobile, refs.stairsMod1Mobile],
-        {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        finalStairsStart
+      tl.set(
+        [
+          refs.leftStairsMod3Mobile,
+          refs.stairsMod1Mobile,
+          refs.stairsMod2Mobile
+        ],
+        { opacity: 0 },
+        portfolioStart
       );
 
-      // stairs_mod2_mobile appears at bottom-0 right-0
-      tl.fromTo(
-        refs.stairsMod2Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
+      // stairsfull_right_mobile appears at left: 0 with full opacity
+      tl.set(
+        refs.rightStairsMod3Mobile,
         {
           opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
+          // scale: 0.8,
+          width: "80%",
+          duration: 0,
           ease: "power2.out"
         },
-        finalStairsStart + 0.4
+        portfolioStart
+      );
+
+      // Then slide it to right
+      tl.to(
+        refs.rightStairsMod3Mobile,
+        {
+          right: "-10%",
+          left: "auto",
+          duration: 1.5,
+          ease: "power1.out"
+        },
+        portfolioStart + 0.2
       );
 
       // Text5 fades out
@@ -1201,7 +1125,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 0.4,
           ease: "power2.out"
         },
-        finalStairsStart
+        portfolioStart
       );
 
       // Text6 appears: "real portfolio,"
@@ -1211,7 +1135,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           opacity: 0,
           willChange: "opacity"
         },
-        finalStairsStart + 0.4
+        portfolioStart + 0.4
       );
 
       tl.to(
@@ -1221,69 +1145,35 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 0.6,
           ease: "power2.out"
         },
-        finalStairsStart + 0.8
+        portfolioStart + 0.8
       );
 
-      // Step 5: Orbit moves more right + remove stairs_mod2 + show left & right stairs_mod3 + text changes
-      const mod3StairsStart = finalStairsStart + 2.0;
+      // Step 5: "real career" text + orbit moves down + stairsfull_right_mobile scales down and pushes right+bottom
+      const careerStart = portfolioStart + 2.0;
 
-      // Orbit moves more rightwards
+      // Orbit moves down and more right
       tl.to(
         refs.pinkBiggerOrbit,
         {
           x: "+=15vw",
-          y: "+=10vh", // Move right by another 10vw from current position
+          y: "+=10vh",
           duration: 1.0,
           ease: "power2.out"
         },
-        mod3StairsStart
+        careerStart
       );
 
-      // Remove stairs_mod2_mobile
+      // stairsfull_right_mobile scales down and moves more right and bottom
       tl.to(
-        refs.stairsMod2Mobile,
-        {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        mod3StairsStart
-      );
-
-      // left_stairs_mod3_mobile appears at bottom-0 left-0
-      tl.fromTo(
-        refs.leftStairsMod3Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        mod3StairsStart + 0.4
-      );
-
-      // right_stairs_mod3_mobile appears at bottom-0 right-0
-      tl.fromTo(
         refs.rightStairsMod3Mobile,
         {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
+          scale: 0.8,
+          right: "-10%",
+          bottom: "-10%",
+          duration: 1.0,
           ease: "power2.out"
         },
-        mod3StairsStart + 0.4
+        careerStart
       );
 
       // Text6 fades out
@@ -1294,7 +1184,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 0.4,
           ease: "power2.out"
         },
-        mod3StairsStart
+        careerStart
       );
 
       // Text7 appears: "real career beginnings..."
@@ -1304,7 +1194,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           opacity: 0,
           willChange: "opacity"
         },
-        mod3StairsStart + 0.4
+        careerStart + 0.4
       );
 
       tl.to(
@@ -1314,10 +1204,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           duration: 0.6,
           ease: "power2.out"
         },
-        mod3StairsStart + 0.8
+        careerStart + 0.8
       );
-      // Step 6: Remove texts + orbit centers + combined circle appears + new stairs mod4
-      const centerCircleStart = mod3StairsStart + 2.0;
+
+      // Step 6: Orbit centers + stairsfull_right_mobile pushes more right + left_stairs_mod6_mobile slides in
+      const centerCircleStart = careerStart + 2.0;
 
       // Remove all texts
       tl.to(
@@ -1334,23 +1225,42 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          x: 0, // Center horizontally
-          y: "-25vh", // Adjust vertical position
+          x: 0,
+          y: "-25vh",
           duration: 1.2,
           ease: "power2.out"
         },
         centerCircleStart
       );
 
-      // Remove old stairs (mod3)
+      // Push stairsfull_right_mobile even more right
       tl.to(
-        [refs.leftStairsMod3Mobile, refs.rightStairsMod3Mobile],
+        refs.rightStairsMod3Mobile,
         {
-          opacity: 0,
-          duration: 0.4,
+          right: "-52%",
+          bottom: "-12%",
+          scale: 1.12,
+          duration: 1.0,
           ease: "power2.out"
         },
         centerCircleStart
+      );
+
+      // left_stairs_mod6_mobile slides in from left (-100% to 0%)
+      tl.fromTo(
+        refs.leftStairsMod6Mobile,
+        {
+          opacity: 1,
+          left: "-100%",
+          width: "35%",
+          bottom: 0
+        },
+        {
+          left: "-8%",
+          duration: 1.2,
+          ease: "power2.out"
+        },
+        centerCircleStart + 0.3
       );
 
       // Combined circle container - position it at orbit center
@@ -1385,49 +1295,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // New stairs mod4 appear
-      tl.fromTo(
-        refs.leftStairsMod4Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        centerCircleStart + 0.8
-      );
-
-      tl.fromTo(
-        refs.rightStairsMod4Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        centerCircleStart + 0.8
-      );
-
-      // Step 7: Zoom effect + inner circle reveals + stairs mod5
+      // Continue with rest of the mobile animation (zoom effect, etc.)
+      // Step 7: Zoom effect + inner circle reveals
       const zoomStart = centerCircleStart + 3.0;
 
       // Orbit scales up (zoom effect)
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          scale: "+=0.5", // Scale up from current scale
+          scale: "+=0.5",
           duration: 1.5,
           ease: "power2.inOut"
         },
@@ -1439,7 +1315,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         tl.to(
           refs.combinedCircle.outer,
           {
-            scale: 0.7, // Scale to full size
+            scale: 0.7,
             duration: 1.5,
             ease: "power2.inOut"
           },
@@ -1447,9 +1323,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Inner part becomes visible and scales up when circle reaches certain size
+      // Inner part becomes visible and scales up
       if (refs.combinedCircle?.inner) {
-        // Set initial state
         tl.set(
           refs.combinedCircle.inner,
           {
@@ -1471,9 +1346,14 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         );
       }
 
-      // Remove stairs mod4
+      // Remove old stairs
       tl.to(
-        [refs.leftStairsMod4Mobile, refs.rightStairsMod4Mobile],
+        [
+          refs.stairsMod1Mobile,
+          refs.stairsMod2Mobile,
+          refs.leftStairsMod3Mobile
+          // refs.rightStairsMod3Mobile
+        ],
         {
           opacity: 0,
           duration: 0.4,
@@ -1482,102 +1362,20 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         zoomStart
       );
 
-      // New stairs mod5 appear
-      tl.fromTo(
-        refs.leftStairsMod5Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        zoomStart + 0.4
-      );
-
-      tl.fromTo(
-        refs.rightStairsMod5Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        zoomStart + 0.4
-      );
-
-      // Step 8: Orbit moves up + circle moves up + replace stairs + button appears
+      // Step 8: Orbit moves up + circle moves up + button appears
       const step8Start = zoomStart + 2.5;
 
       // Orbit and combined circle move up together
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "-=10vh", // Move up by 10vh from current position
+          y: "-=10vh",
           duration: 1.2,
           ease: "power2.out"
         },
         step8Start
       );
 
-      // Remove stairs mod5
-      tl.to(
-        [refs.leftStairsMod5Mobile, refs.rightStairsMod5Mobile],
-        {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        step8Start
-      );
-
-      // New stairs mod6 appear
-      tl.fromTo(
-        refs.leftStairsMod6Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        step8Start + 0.4
-      );
-
-      tl.fromTo(
-        refs.rightStairsMod6Mobile,
-        {
-          opacity: 0,
-          y: 50,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out"
-        },
-        step8Start + 0.4
-      );
-
-      // Waitlist button appears
       // Waitlist button appears
       tl.fromTo(
         refs.waitlistButton,
@@ -1585,28 +1383,28 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           opacity: 0,
           y: 30,
           scale: 0.9,
-          pointerEvents: "none" // ✅ Add this - start non-clickable
+          pointerEvents: "none"
         },
         {
           opacity: 1,
           y: 0,
           scale: 1,
-          pointerEvents: "auto", // ✅ Add this - make clickable when visible
+          pointerEvents: "auto",
           duration: 1.0,
           ease: "back.out(1.5)"
         },
         step8Start + 0.8
       );
+
       // Step 9: Remove elements + orbit moves down + toolkit text + mini ovals appear
       const step9Start = step8Start + 2.5;
 
-      // Remove waitlist button, stairs, and CLOUDS
-      // Remove waitlist button, stairs, and CLOUDS
+      // Remove waitlist button and CLOUDS
       tl.to(
         refs.waitlistButton,
         {
           opacity: 0,
-          pointerEvents: "none", // ✅ Add this - make non-clickable when hidden
+          pointerEvents: "none",
           duration: 0.4,
           ease: "power2.out"
         },
@@ -1614,7 +1412,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       tl.to(
-        [refs.leftStairsMod6Mobile, refs.rightStairsMod6Mobile],
+        [refs.leftStairsMod6Mobile, refs.rightStairsMod3Mobile],
         {
           opacity: 0,
           duration: 0.4,
@@ -1623,7 +1421,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step9Start
       );
 
-      // Remove clouds (ADD THIS)
       tl.to(
         [refs.rightCloud, refs.leftCloud],
         {
@@ -1645,13 +1442,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step9Start
       );
 
-      // Orbit moves down more (to about 70% from top)
+      // Orbit moves down more
       tl.to(
         refs.pinkBiggerOrbit,
         {
-          y: "35vh", // More downwards than before
-          x: 0, // Center horizontally
-          scale: 2, // Keep current scale
+          y: "35vh",
+          x: 0,
+          scale: 2,
           duration: 1.2,
           ease: "power2.out"
         },
@@ -1678,7 +1475,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step9Start + 1.0
       );
 
-      // Mini ovals appear at center (between text and top)
+      // Mini ovals appear
       tl.set(
         [refs.ovalMini3, refs.ovalMini2, refs.ovalMini1],
         {
@@ -1689,7 +1486,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step9Start + 1.0
       );
 
-      // They appear with slight stagger
       tl.to(
         refs.ovalMini3,
         {
@@ -1735,7 +1531,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Mini oval moves UP to vertical center AND scales up simultaneously
-      // Mini oval moves UP to vertical center AND scales up simultaneously
       tl.to(
         refs.ovalMini1,
         {
@@ -1759,12 +1554,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step10Start + 0.8
       );
 
-      // Direct crossfade: mini oval fades out as full oval fades in (NO BLACK)
+      // Direct crossfade: mini oval fades out as full oval fades in
       tl.to(
         refs.ovalMini1,
         {
           opacity: 0,
-          // duration: 0.4,
           duration: 0,
           ease: "power2.inOut"
         },
@@ -1792,132 +1586,17 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step10Start + 1.5
       );
 
-      // // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
-      // const step11Start = step10Start + 4.0;
-
-      // // Calculate the scroll container height (from top to text position)
-      // const scrollContainerHeight = 85; // 85vh (100vh - 15vh where text is)
-
-      // // Set oval_2 ABOVE the visible area (above screen top)
-      // tl.set(
-      //   refs.oval2,
-      //   {
-      //     opacity: 1,
-      //     y: `-${scrollContainerHeight}vh`, // Start above screen
-      //     scale: 0.9
-      //   },
-      //   step11Start
-      // );
-
-      // // oval_1 scrolls DOWN and exits through BOTTOM
-      // tl.to(
-      //   refs.oval1,
-      //   {
-      //     y: `${scrollContainerHeight}vh`, // Exit through bottom
-      //     scale: 0.9,
-      //     duration: 1.8,
-      //     ease: "power3.inOut"
-      //   },
-      //   step11Start
-      // );
-
-      // // oval_2 scrolls DOWN from top to center
-      // tl.to(
-      //   refs.oval2,
-      //   {
-      //     y: 0, // Move to center
-      //     scale: 1,
-      //     duration: 1.8,
-      //     ease: "power3.inOut"
-      //   },
-      //   step11Start
-      // );
-
-      // // Fade out oval_1 as it exits bottom
-      // tl.to(
-      //   refs.oval1,
-      //   {
-      //     opacity: 0,
-      //     duration: 0.6,
-      //     ease: "power2.in"
-      //   },
-      //   step11Start + 1.2
-      // );
-
-      // // Step 12: Continue vertical scroll (TOP TO BOTTOM)
-      // const step12Start = step11Start + 4.0;
-
-      // // Set oval_3 ABOVE the visible area (above screen top)
-      // tl.set(
-      //   refs.oval3,
-      //   {
-      //     opacity: 1,
-      //     y: `-${scrollContainerHeight}vh`, // Start above screen
-      //     scale: 0.9
-      //   },
-      //   step12Start
-      // );
-
-      // // oval_2 scrolls DOWN and exits through BOTTOM
-      // tl.to(
-      //   refs.oval2,
-      //   {
-      //     y: `${scrollContainerHeight}vh`, // Exit through bottom
-      //     scale: 0.9,
-      //     duration: 1.8,
-      //     ease: "power3.inOut"
-      //   },
-      //   step12Start
-      // );
-
-      // // oval_3 scrolls DOWN from top to center
-      // tl.to(
-      //   refs.oval3,
-      //   {
-      //     y: 0, // Move to center
-      //     scale: 1,
-      //     duration: 1.8,
-      //     ease: "power3.inOut"
-      //   },
-      //   step12Start
-      // );
-
-      // // Fade out oval_2 as it exits bottom
-      // tl.to(
-      //   refs.oval2,
-      //   {
-      //     opacity: 0,
-      //     duration: 0.6,
-      //     ease: "power2.in"
-      //   },
-      //   step12Start + 1.2
-      // );
-
-      // // Step 13: Final card stays with subtle animation
-      // tl.to(
-      //   refs.oval3,
-      //   {
-      //     scale: 1.03,
-      //     duration: 0.5,
-      //     ease: "sine.inOut",
-      //     yoyo: true,
-      //     repeat: 1
-      //   },
-      //   step12Start + 2.5
-      // );
-      // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
-      // Step 11: Vertical scroll transition - cards stack behavior (TOP TO BOTTOM)
+      // Step 11: Vertical scroll transition - cards stack behavior
       const step11Start = step10Start + 4.0;
 
-      // Calculate the scroll container height (from top to text position)
-      const scrollContainerHeight = 85; // 85vh (100vh - 15vh where text is)
+      const scrollContainerHeight = 85;
 
       // Set oval_1 to the same starting position as oval_2 and oval_3
       tl.set(
         refs.oval1,
         {
           opacity: 1,
-          top: "15vh", // Same position as oval_2 and oval_3
+          top: "15vh",
           scale: 1
         },
         step11Start
@@ -1928,7 +1607,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval2,
         {
           opacity: 1,
-          top: `-100vh`, // Start well above screen
+          top: `-100vh`,
           scale: 0.9
         },
         step11Start
@@ -1938,7 +1617,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval1,
         {
-          top: `${scrollContainerHeight * 0.6}vh`, // Move down
+          top: `${scrollContainerHeight * 0.6}vh`,
           scale: 0.9,
           opacity: 0,
           duration: 1.8,
@@ -1951,7 +1630,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval2,
         {
-          top: "15vh", // Moved down from 0 (adjust this value: try 10vh, 15vh, 20vh)
+          top: "15vh",
           scale: 1,
           duration: 1.8,
           ease: "power3.inOut"
@@ -1959,7 +1638,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step11Start
       );
 
-      // Step 12: Continue vertical scroll (TOP TO BOTTOM)
+      // Step 12: Continue vertical scroll
       const step12Start = step11Start + 4.0;
 
       // Set oval_3 ABOVE the visible area
@@ -1967,7 +1646,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval3,
         {
           opacity: 1,
-          top: `-100vh`, // Start well above screen
+          top: `-100vh`,
           scale: 0.9
         },
         step12Start
@@ -1977,7 +1656,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval2,
         {
-          top: `${scrollContainerHeight * 0.6}vh`, // Move down
+          top: `${scrollContainerHeight * 0.6}vh`,
           scale: 0.9,
           opacity: 0,
           duration: 1.8,
@@ -1990,7 +1669,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.oval3,
         {
-          top: "15vh", // Moved down from 0 (same as oval_2)
+          top: "15vh",
           scale: 1,
           duration: 1.8,
           ease: "power3.inOut"
@@ -3427,8 +3106,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const pinkOrbitInnerRef = useRef(null); // ADD THIS
   // const leftStairsMiniRef = useRef(null); // ADD THIS
   // const rightStairsMiniRef = useRef(null); // ADD THIS
-  const stairsMiniMobileRef = useRef(null); // ADD THIS
-  const stairsModMobileRef = useRef(null); // ADD THIS
+  // const stairsMiniMobileRef = useRef(null); // ADD THIS
+  // const stairsMod1MobileRef = useRef(null); // ADD THIS
   const stairsLeftRef = useRef(null); // ADD THIS
   const stairsRightRef = useRef(null); // ADD THIS
   const stairsMod1MobileRef = useRef(null); // ADD THIS
@@ -3476,8 +3155,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     text3: text3Ref.current, // ADD THIS
     // leftStairsMini: leftStairsMiniRef.current, // ADD THIS
     // rightStairsMini: rightStairsMiniRef.current, // ADD THIS
-    stairsMiniMobile: stairsMiniMobileRef.current, // ADD THIS
-    stairsModMobile: stairsModMobileRef.current,
+    // stairsMiniMobile: stairsMiniMobileRef.current, // ADD THIS
+    // stairsModMobile: stairsModMobileRef.current,
     stairsRight: stairsRightRef.current, // ADD THIS
     stairsLeft: stairsLeftRef.current, // ADD THIS
     objectsContainer: objectsContainerRef.current,
@@ -3592,7 +3271,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
         alt="yellow background"
         className="absolute inset-0 w-full h-full object-cover z-[1]"
       />
-
       {/* Right Cloud */}
       <img
         ref={rightCloudRef}
@@ -3605,7 +3283,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           height: "auto"
         }}
       />
-
       {/* Left Cloud */}
       <img
         ref={leftCloudRef}
@@ -3618,7 +3295,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           height: "auto"
         }}
       />
-
       {/* Floor */}
       <img
         ref={floorRef}
@@ -3632,7 +3308,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           objectFit: "cover"
         }}
       />
-
       {/* Left Element */}
       <img
         ref={leftElementRef}
@@ -3647,7 +3322,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           height: "auto"
         }}
       />
-
       {/* Right Element */}
       <img
         ref={rightElementRef}
@@ -3662,7 +3336,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           height: "auto"
         }}
       />
-
       {/* Left Element Eye - Same position as left element */}
       <img
         ref={leftElementEyeRef}
@@ -3678,7 +3351,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           opacity: 0
         }}
       />
-
       {/* Right Element Eye - Same position as right element */}
       <img
         ref={rightElementEyeRef}
@@ -3694,7 +3366,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           opacity: 0
         }}
       />
-
       {/* BIGGER ORBIT - Behind floor, starts at 20% scale, half visible */}
       <img
         ref={biggerOrbitRef}
@@ -3709,7 +3380,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           transformOrigin: "center center"
         }}
       />
-
       {/* PINK BIGGER ORBIT - Wrapper for position */}
       <div
         ref={pinkBiggerOrbitRef}
@@ -3762,7 +3432,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           <CombinedCircle ref={combinedCircleRef} isMobile={isMobile} />
         </div>
       </div>
-
       {/* YELLOW ELLIPSE - Lower z-index so objects are visible on top */}
       <img
         ref={ellipseRef}
@@ -3777,7 +3446,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           transformOrigin: "center"
         }}
       />
-
       {/* FALLING OBJECTS CONTAINER - Higher z-index so they appear above ellipse */}
       <div
         ref={objectsContainerRef}
@@ -3853,7 +3521,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </div>
         )}
       </div>
-
       <div
         ref={textRef}
         className={[
@@ -3948,7 +3615,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </>
         )}
       </div>
-
       {/* SECOND TEXT */}
       <div
         ref={text2Ref}
@@ -4116,7 +3782,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
       >
         with evolve, you get to build
       </div>
-
       {/* FOURTH TEXT - Desktop: 3 stacked texts */}
       {!isMobile && (
         <div
@@ -4148,7 +3813,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           <div>real career beginnings...</div>
         </div>
       )}
-
       {/* STAIRS FOR DESKTOP */}
       {!isMobile && (
         <>
@@ -4417,219 +4081,73 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           )}
         </>
       )}
-
       {/* STAIRS FOR MOBILE */}
       {/* STAIRS FOR MOBILE */}
+      // STAIRS FOR MOBILE - UPDATED WITH CORRECT SVG NAMES // STAIRS FOR MOBILE
+      - COMPLETE SECTION
       {isMobile && (
         <>
-          {/* Step 1: Initial mini stairs */}
-          <img
-            ref={stairsMiniMobileRef}
-            src={stairs_mini_mobile}
-            alt="stairs mini mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "auto",
-              height: "auto",
-              // maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          {/* Step 2: More stairs appearing */}
-          <img
-            ref={stairsModMobileRef}
-            src={stairs_mod_mobile}
-            alt="stairs mod mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "auto",
-              height: "auto",
-              // maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          {/* Step 3: Even more stairs */}
+          {/* Step 1: stairs1_mobile appears at bottom left */}
           <img
             ref={stairsMod1MobileRef}
-            src={stairs_mod1_mobile}
-            alt="stairs mod1 mobile"
+            src={stairs1_mobile}
+            alt="stairs1 mobile"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
               left: 0,
               width: "auto",
               height: "auto",
-              // maxHeight: "40vh",
               opacity: 0
             }}
           />
-          {/* Step 4: Final stairs on right */}
+
+          {/* Step 2: stairs2_mobile appears on top of stairs1 */}
           <img
             ref={stairsMod2MobileRef}
-            src={stairs_mod2_mobile}
-            alt="stairs mod2 mobile"
+            src={stairs2_mobile}
+            alt="stairs2 mobile"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
-              right: 0,
+              left: 0,
               width: "auto",
               height: "auto",
-              // maxHeight: "40vh",
               opacity: 0
             }}
           />
-          {/* Step 5: Left stairs mod3 */}
+
+          {/* Step 3: stairs4_mobile appears on top when orbit goes up and "real design" text comes */}
           <img
             ref={leftStairsMod3MobileRef}
-            src={left_stairs_mod3_mobile}
-            alt="left stairs mod3 mobile"
+            src={stairs4_mobile}
+            alt="stairs4 mobile"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
               left: 0,
               width: "auto",
               height: "auto",
-              maxHeight: "40vh",
               opacity: 0
             }}
           />
-          {/* Step 5: Right stairs mod3 */}
+
+          {/* Step 4: stairsfull_right_mobile appears when "real portfolio" text comes */}
           <img
             ref={rightStairsMod3MobileRef}
-            src={right_stairs_mod3_mobile}
-            alt="right stairs mod3 mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "auto",
-              height: "auto",
-              maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          {/* Text 5: "real design," */}
-          <div
-            ref={text5Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
-            style={{
-              top: "42%",
-              // width: "75vw",
-              fontSize: "2.5rem",
-              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "32px",
-              color: "rgb(0, 0, 0)",
-              opacity: 0
-            }}
-          >
-            real design,
-          </div>
-          {/* Text 6: "real portfolio," */}
-          <div
-            ref={text6Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
-            style={{
-              top: "42%",
-              width: "75vw",
-              fontSize: "2.5rem",
-              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "32px",
-              color: "rgb(0, 0, 0)",
-              opacity: 0
-            }}
-          >
-            real portfolio,
-          </div>
-          {/* Text 7: "real career beginnings..." */}
-          <div
-            ref={text7Ref}
-            className="absolute left-1/2 -translate-x-1/2 z-[20] leading-1 text-center font-extrabold text-6xl"
-            style={{
-              top: "42%",
-              width: "75vw",
-              fontSize: "2.5rem",
-              // fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
-              lineHeight: "40px",
-              color: "rgb(0, 0, 0)",
-              opacity: 0
-            }}
-          >
-            real career beginnings...
-          </div>
-          {/* Combined Circle - appears at center */}
-          {/* <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[15] pointer-events-none"
-            style={{
-              width: "200px",
-              height: "200px"
-              // opacity: 0
-            }}
-          >
-            <CombinedCircle ref={combinedCircleRef} isMobile={isMobile} />
-          </div> */}
-          {/* Stairs mod4 */}
-          <img
-            ref={leftStairsMod4MobileRef}
-            src={left_stairs_mod4_mobile}
-            alt="left stairs mod4 mobile"
+            src={stairsfull_right_mobile}
+            alt="stairsfull right mobile"
             className="absolute z-[10] pointer-events-none"
             style={{
               bottom: 0,
               left: 0,
               width: "auto",
               height: "auto",
-              maxHeight: "40vh",
               opacity: 0
             }}
           />
-          <img
-            ref={rightStairsMod4MobileRef}
-            src={right_stairs_mod4_mobile}
-            alt="right stairs mod4 mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "auto",
-              height: "auto",
-              maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          {/* Stairs mod5 */}
-          <img
-            ref={leftStairsMod5MobileRef}
-            src={left_stairs_mod5_mobile}
-            alt="left stairs mod5 mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              left: 0,
-              width: "auto",
-              height: "auto",
-              maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          <img
-            ref={rightStairsMod5MobileRef}
-            src={right_stairs_mod5_mobile}
-            alt="right stairs mod5 mobile"
-            className="absolute z-[10] pointer-events-none"
-            style={{
-              bottom: 0,
-              right: 0,
-              width: "auto",
-              height: "auto",
-              maxHeight: "40vh",
-              opacity: 0
-            }}
-          />
-          {/* Stairs mod6 - NEW */}
+
+          {/* Step 5: left_stairs_mod6_mobile - will slide in from left when orbit centers */}
           <img
             ref={leftStairsMod6MobileRef}
             src={left_stairs_mod6_mobile}
@@ -4640,59 +4158,64 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               left: 0,
               width: "auto",
               height: "auto",
-              maxHeight: "40vh",
               opacity: 0
             }}
           />
-          <img
-            ref={rightStairsMod6MobileRef}
-            src={right_stairs_mod6_mobile}
-            alt="right stairs mod6 mobile"
-            className="absolute z-[10] pointer-events-none"
+
+          {/* Text 5: "real design," */}
+          <div
+            ref={text5Ref}
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
             style={{
-              bottom: 0,
-              right: 0,
-              width: "auto",
-              height: "auto",
-              maxHeight: "40vh",
+              top: "42%",
+              fontSize: "2.5rem",
+              lineHeight: "32px",
+              color: "rgb(0, 0, 0)",
               opacity: 0
-            }}
-          />
-          {/* Waitlist Button - Works for BOTH mobile and desktop */}
-          {/* <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              transform: "translateX(-50%)",
-              bottom: isMobile ? "12%" : "10%",
-              zIndex: 9999,
-              pointerEvents: "auto"
             }}
           >
-            <WaitlistButton
-              ref={waitlistButtonRef}
-              style={{
-                opacity: 0,
-                width: isMobile ? "75vw" : "auto",
-                padding: isMobile ? "16px 20px" : "20px 40px",
-                // fontSize: isMobile ? "24px" : "28px"
-                fontSize: isMobile ? "1.5rem" : "1.75rem"
-              }}
-              onClick={() => console.log("Waitlist button clicked!")}
-            />
-          </div> */}
+            real design,
+          </div>
+
+          {/* Text 6: "real portfolio," */}
+          <div
+            ref={text6Ref}
+            className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
+            style={{
+              top: "42%",
+              width: "75vw",
+              fontSize: "2.5rem",
+              lineHeight: "32px",
+              color: "rgb(0, 0, 0)",
+              opacity: 0
+            }}
+          >
+            real portfolio,
+          </div>
+
+          {/* Text 7: "real career beginnings..." */}
+          <div
+            ref={text7Ref}
+            className="absolute left-1/2 -translate-x-1/2 z-[20] leading-1 text-center font-extrabold text-6xl"
+            style={{
+              top: "42%",
+              width: "75vw",
+              fontSize: "2.5rem",
+              lineHeight: "40px",
+              color: "rgb(0, 0, 0)",
+              opacity: 0
+            }}
+          >
+            real career beginnings...
+          </div>
+
+          {/* Text8: "the evolve toolkit" */}
           <div
             ref={text8Ref}
             className={[
               "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold leading-tight",
-
-              // BASE MOBILE — 40px
               "text-[40px]",
-
-              // mobile 812px → 48px
               "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
-
-              // mobile 926px → 56px
               "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]"
             ].join(" ")}
             style={{
@@ -4706,17 +4229,17 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             the evolve toolkit
           </div>
 
-          {/* Mini Ovals Container - centered in space above text */}
+          {/* Mini Ovals Container */}
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[15]"
             style={{
-              bottom: "15%", // Start from text position
-              top: 0, // Extend to top
+              bottom: "15%",
+              top: 0,
               display: "flex",
               flexDirection: "column",
               gap: "16px",
               alignItems: "center",
-              justifyContent: "center", // Center vertically in available space
+              justifyContent: "center",
               pointerEvents: "none"
             }}
           >
@@ -4754,7 +4277,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               }}
             />
           </div>
-
           {/* Full Ovals Container - SAME position as mini ovals */}
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[16]"
@@ -4856,7 +4378,6 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           join the waitlist
         </button>
       </div> */}
-
       {/* WAITLIST BUTTON - Single Instance */}
       {/* WAITLIST BUTTON - Single Instance */}
       {/* WAITLIST BUTTON - Single Instance */}
