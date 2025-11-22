@@ -101,6 +101,227 @@
 
 // export default App;
 
+// import { Toaster } from "@/components/ui/toaster";
+// import { Toaster as Sonner } from "@/components/ui/sonner";
+// import { TooltipProvider } from "@/components/ui/tooltip";
+// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+// import { useEffect, useState } from "react";
+// import { AnimatePresence } from "framer-motion";
+
+// import Home from "./pages/Home/Home";
+// import AboutUs from "./pages/AboutUs";
+// import Webinars from "./pages/Webinars";
+// import Quiz from "./pages/Quiz";
+// import Community from "./pages/Community";
+// import Course from "./pages/Course";
+// import NotFound from "./pages/NotFound";
+// import Navigation from "./components/Navigation";
+// import ContactModal from "./components/ContactModal";
+// import WhatIsDesign from "./pages/WhatIsDesign";
+// import Footer from "./components/Footer";
+// import ContactUs from "./pages/ContactUs";
+// import LoadingScreen from "./components/LoadingScreen";
+
+// // Import all your images
+// import * as images from "./assets/images/Home"; // Adjust path to your images folder
+
+// const queryClient = new QueryClient();
+
+// /* ------------------------------ Inner Layout ------------------------------ */
+// const AppLayout = () => {
+//   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+//   const [showNavbar, setShowNavbar] = useState(true);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [loadingProgress, setLoadingProgress] = useState(0);
+//   const location = useLocation();
+
+//   const hideFooterRoutes = ["/contact"];
+//   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
+//   // const location = useLocation();
+
+//   // prevent native scroll restore
+//   useEffect(() => {
+//     if ("scrollRestoration" in window.history) {
+//       window.history.scrollRestoration = "manual";
+//     }
+//   }, []);
+
+//   // reset on full reload
+//   useEffect(() => {
+//     const nav = performance.getEntriesByType("navigation")?.[0];
+//     if (nav && (nav.type === "reload" || nav.type === "navigate")) {
+//       window.scrollTo(0, 0);
+//     }
+//   }, []);
+
+//   // reset on route change
+//   useEffect(() => {
+//     window.scrollTo(0, 0);
+//   }, [location.pathname]);
+//   // Set navbar visibility based on route
+//   useEffect(() => {
+//     if (location.pathname === "/") {
+//       setShowNavbar(false);
+//     } else {
+//       setShowNavbar(true);
+//     }
+//   }, [location.pathname]);
+
+//   useEffect(() => {
+//     // Small delay to ensure page is mounted before scrolling
+//     requestAnimationFrame(() => {
+//       window.scrollTo(0, 0);
+//     });
+//   }, [location.pathname]);
+
+//   // In AppLayout, add this:
+//   useEffect(() => {
+//     console.log("Route changed to:", location.pathname);
+//     console.log("isLoading:", isLoading);
+//     console.log("showNavbar:", showNavbar);
+//   }, [location.pathname, isLoading, showNavbar]);
+
+//   // Preload all images
+//   useEffect(() => {
+//     const preloadImages = async () => {
+//       // Get all image URLs from your imports
+//       const imageUrls = Object.values(images).filter(
+//         (img) =>
+//           typeof img === "string" &&
+//           (img.startsWith("/") || img.startsWith("http"))
+//       );
+
+//       if (imageUrls.length === 0) {
+//         // No images found, just add a minimal delay
+//         setTimeout(() => {
+//           setLoadingProgress(100);
+//           setTimeout(() => setIsLoading(false), 300);
+//         }, 800); // Minimum 800ms loading
+//         return;
+//       }
+
+//       let loadedCount = 0;
+//       const totalImages = imageUrls.length;
+
+//       const loadImage = (src) => {
+//         return new Promise((resolve) => {
+//           const img = new Image();
+
+//           const onLoad = () => {
+//             loadedCount++;
+//             const progress = (loadedCount / totalImages) * 100;
+//             setLoadingProgress(progress);
+//             resolve();
+//           };
+
+//           img.onload = onLoad;
+//           img.onerror = onLoad; // Still count as loaded to prevent hanging
+//           img.src = src;
+//         });
+//       };
+
+//       try {
+//         await Promise.all(imageUrls.map(loadImage));
+//         // Ensure minimum loading time for smooth experience
+//         const minLoadTime = 800; // 800ms minimum
+//         await new Promise((resolve) => setTimeout(resolve, minLoadTime));
+//         setIsLoading(false);
+//       } catch (error) {
+//         console.error("Error loading images:", error);
+//         setIsLoading(false);
+//       }
+//     };
+
+//     // Only preload on initial mount
+//     if (isLoading) {
+//       preloadImages();
+//     }
+//   }, []); // Run only once on mount
+
+//   useEffect(() => {
+//     const setVhUnit = () => {
+//       document.documentElement.style.setProperty(
+//         "--vh-unit",
+//         `${window.innerHeight * 0.01}px`
+//       );
+//     };
+//     setVhUnit();
+//     window.addEventListener("resize", setVhUnit);
+//     return () => window.removeEventListener("resize", setVhUnit);
+//   }, []);
+
+//   return (
+//     <>
+//       {/* Loading Screen */}
+//       <AnimatePresence mode="wait">
+//         {isLoading && <LoadingScreen progress={loadingProgress} />}
+//       </AnimatePresence>
+
+//       {/* Main Content */}
+//       <div
+//         className="min-h-screen bg-evolve-black"
+//         style={{
+//           visibility: isLoading ? "hidden" : "visible",
+//           opacity: isLoading ? 0 : 1,
+//           transition: "opacity 0.5s ease-in-out"
+//         }}
+//       >
+//         <Navigation
+//           onContactClick={() => setIsContactModalOpen(true)}
+//           showNavbar={showNavbar}
+//           onLogoClick={() => {
+//             if (location.pathname === "/") {
+//               window.dispatchEvent(new CustomEvent("scrollToScene1_1"));
+//             }
+//           }}
+//         />
+
+//         <Routes>
+//           <Route
+//             path="/"
+//             element={
+//               <Home setShowNavbar={setShowNavbar} isLoading={isLoading} />
+//             }
+//           />
+//           <Route path="/about" element={<AboutUs />} />
+//           <Route path="/webinars" element={<Webinars />} />
+//           <Route path="/quiz" element={<Quiz />} />
+//           <Route path="/community" element={<Community />} />
+//           <Route path="/course" element={<Course />} />
+//           <Route path="/what-is-design" element={<WhatIsDesign />} />
+//           <Route path="/contact" element={<ContactUs />} />
+//           <Route path="*" element={<NotFound />} />
+//         </Routes>
+
+//         {shouldShowFooter && <Footer />}
+
+//         <ContactModal
+//           isOpen={isContactModalOpen}
+//           onClose={() => setIsContactModalOpen(false)}
+//         />
+//       </div>
+//     </>
+//   );
+// };
+
+// /* ------------------------------- Main App ------------------------------- */
+// const App = () => {
+//   return (
+//     <QueryClientProvider client={queryClient}>
+//       <TooltipProvider>
+//         <Toaster />
+//         <Sonner />
+//         <BrowserRouter>
+//           <AppLayout />
+//         </BrowserRouter>
+//       </TooltipProvider>
+//     </QueryClientProvider>
+//   );
+// };
+
+// export default App;
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -122,11 +343,35 @@ import WhatIsDesign from "./pages/WhatIsDesign";
 import Footer from "./components/Footer";
 import ContactUs from "./pages/ContactUs";
 import LoadingScreen from "./components/LoadingScreen";
+import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 
 // Import all your images
-import * as images from "./assets/images/Home"; // Adjust path to your images folder
+import * as images from "./assets/images/Home";
 
 const queryClient = new QueryClient();
+
+/* ------------------------------ Device Detection Helper ------------------------------ */
+const getDeviceType = () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // Mobile: <= 768px
+  if (width <= 768) {
+    return "mobile";
+  }
+
+  // Tablet: 769px - 1024px
+  if (width > 768 && width <= 1024) {
+    return "tablet";
+  }
+
+  // Desktop: > 1024px
+  return "desktop";
+};
+
+const isLandscape = () => {
+  return window.innerWidth > window.innerHeight;
+};
 
 /* ------------------------------ Inner Layout ------------------------------ */
 const AppLayout = () => {
@@ -134,11 +379,48 @@ const AppLayout = () => {
   const [showNavbar, setShowNavbar] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [deviceType, setDeviceType] = useState(getDeviceType());
+  const [showOrientationWarning, setShowOrientationWarning] = useState(false);
   const location = useLocation();
 
   const hideFooterRoutes = ["/contact"];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
-  // const location = useLocation();
+
+  // Check orientation for tablets
+  useEffect(() => {
+    const checkOrientation = () => {
+      const currentDeviceType = getDeviceType();
+      setDeviceType(currentDeviceType);
+
+      // Show warning if tablet is in portrait mode
+      if (currentDeviceType === "tablet" && !isLandscape()) {
+        setShowOrientationWarning(true);
+      } else {
+        setShowOrientationWarning(false);
+      }
+    };
+
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+    };
+  }, []);
+
+  // Calculate scale for tablet
+  const getTabletScale = () => {
+    if (deviceType !== "tablet") return 1;
+
+    // Target small desktop width (e.g., 1280px)
+    const targetWidth = 1280;
+    const currentWidth = window.innerWidth;
+
+    // Scale down to fit, with a minimum scale
+    return Math.max(currentWidth / targetWidth, 0.7);
+  };
 
   // prevent native scroll restore
   useEffect(() => {
@@ -159,6 +441,7 @@ const AppLayout = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
   // Set navbar visibility based on route
   useEffect(() => {
     if (location.pathname === "/") {
@@ -169,23 +452,21 @@ const AppLayout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    // Small delay to ensure page is mounted before scrolling
     requestAnimationFrame(() => {
       window.scrollTo(0, 0);
     });
   }, [location.pathname]);
 
-  // In AppLayout, add this:
   useEffect(() => {
     console.log("Route changed to:", location.pathname);
     console.log("isLoading:", isLoading);
     console.log("showNavbar:", showNavbar);
-  }, [location.pathname, isLoading, showNavbar]);
+    console.log("deviceType:", deviceType);
+  }, [location.pathname, isLoading, showNavbar, deviceType]);
 
   // Preload all images
   useEffect(() => {
     const preloadImages = async () => {
-      // Get all image URLs from your imports
       const imageUrls = Object.values(images).filter(
         (img) =>
           typeof img === "string" &&
@@ -193,11 +474,10 @@ const AppLayout = () => {
       );
 
       if (imageUrls.length === 0) {
-        // No images found, just add a minimal delay
         setTimeout(() => {
           setLoadingProgress(100);
           setTimeout(() => setIsLoading(false), 300);
-        }, 800); // Minimum 800ms loading
+        }, 800);
         return;
       }
 
@@ -216,15 +496,14 @@ const AppLayout = () => {
           };
 
           img.onload = onLoad;
-          img.onerror = onLoad; // Still count as loaded to prevent hanging
+          img.onerror = onLoad;
           img.src = src;
         });
       };
 
       try {
         await Promise.all(imageUrls.map(loadImage));
-        // Ensure minimum loading time for smooth experience
-        const minLoadTime = 800; // 800ms minimum
+        const minLoadTime = 800;
         await new Promise((resolve) => setTimeout(resolve, minLoadTime));
         setIsLoading(false);
       } catch (error) {
@@ -233,11 +512,10 @@ const AppLayout = () => {
       }
     };
 
-    // Only preload on initial mount
     if (isLoading) {
       preloadImages();
     }
-  }, []); // Run only once on mount
+  }, []);
 
   useEffect(() => {
     const setVhUnit = () => {
@@ -258,13 +536,22 @@ const AppLayout = () => {
         {isLoading && <LoadingScreen progress={loadingProgress} />}
       </AnimatePresence>
 
-      {/* Main Content */}
+      {/* Tablet Orientation Warning */}
+      {showOrientationWarning && <TabletOrientationOverlay />}
+
+      {/* Main Content with Tablet Scaling */}
       <div
         className="min-h-screen bg-evolve-black"
         style={{
           visibility: isLoading ? "hidden" : "visible",
           opacity: isLoading ? 0 : 1,
-          transition: "opacity 0.5s ease-in-out"
+          transition: "opacity 0.5s ease-in-out",
+          // Apply scaling for tablets
+          transform:
+            deviceType === "tablet" ? `scale(${getTabletScale()})` : "none",
+          transformOrigin: "top center",
+          width: deviceType === "tablet" ? "128%" : "100%", // Compensate for scale
+          minWidth: deviceType === "tablet" ? "1280px" : "auto"
         }}
       >
         <Navigation
@@ -281,7 +568,11 @@ const AppLayout = () => {
           <Route
             path="/"
             element={
-              <Home setShowNavbar={setShowNavbar} isLoading={isLoading} />
+              <Home
+                setShowNavbar={setShowNavbar}
+                isLoading={isLoading}
+                deviceType={deviceType}
+              />
             }
           />
           <Route path="/about" element={<AboutUs />} />

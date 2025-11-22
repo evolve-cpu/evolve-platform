@@ -90,13 +90,37 @@ export const setCompletedState = (refs, isMobile) => {
     scale: 1
   });
 
-  // Show first text
-  gsap.set(refs.text, {
+  // // Show first text
+  // gsap.set(refs.text, {
+  //   opacity: 1
+  //   // y: 0
+  // });
+
+  // // Show all text spans at full opacity
+  // if (refs.text) {
+  //   const spans = Array.from(refs.text.querySelectorAll("span[data-text]"));
+  //   gsap.set(spans, {
+  //     opacity: 1,
+  //     color: "rgb(0, 0, 0)"
+  //   });
+  // }
+
+  // Show all texts at full opacity in completed state
+  gsap.set([refs.text0, refs.text], {
+    // ADD refs.text0 here
     opacity: 1
-    // y: 0
   });
 
   // Show all text spans at full opacity
+  if (refs.text0) {
+    // ADD THIS BLOCK
+    const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
+    gsap.set(spans0, {
+      opacity: 1,
+      color: "rgb(0, 0, 0)"
+    });
+  }
+
   if (refs.text) {
     const spans = Array.from(refs.text.querySelectorAll("span[data-text]"));
     gsap.set(spans, {
@@ -274,6 +298,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       x: 200,
       willChange: "transform, opacity"
     })
+    .set(refs.text0, { opacity: 0, y: 10, willChange: "transform, opacity" }) // ADD THIS LINE
     .set(refs.text, { opacity: 0, y: 10, willChange: "transform, opacity" })
     .set(refs.text2, { opacity: 0, y: 0, willChange: "transform, opacity" })
     .set(refs.objectsContainer, {
@@ -330,22 +355,74 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       1.2
     );
 
-  // ===== TEXT APPEARS FIRST (1.5s) =====
+  // // ===== TEXT APPEARS FIRST (1.5s) =====
+  // tl.to(
+  //   refs.text,
+  //   { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+  //   1.5
+  // );
+  // ===== NEW TEXT0 APPEARS WITH ELEMENTS (1.5s) =====
   tl.to(
-    refs.text,
+    refs.text0,
     { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
     1.5
   );
 
+  // Animate text0 spans with stagger
+  if (refs.text0) {
+    const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
+
+    spans0.forEach((span) => {
+      gsap.set(span, {
+        opacity: 0.1,
+        color: "rgb(0, 0, 0)",
+        willChange: "opacity"
+      });
+    });
+
+    spans0.forEach((span, idx) => {
+      tl.to(
+        span,
+        {
+          opacity: 1,
+          duration: 0.4,
+          ease: "power2.out"
+        },
+        1.5 + idx * 0.35
+      );
+    });
+  }
+
+  // Fade out text0 before showing main text
+  tl.to(
+    refs.text0,
+    {
+      opacity: 0,
+      duration: 0.6,
+      ease: "power2.out"
+    },
+    4.8 // Fades out right before main text appears
+  );
+
+  // ===== MAIN TEXT APPEARS (now at 3.5s instead of 1.5s) =====
+  tl.to(
+    refs.text,
+    { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+    5.2 // Changed from 1.5 to 3.5
+  );
+
   // ===== BIGGER ORBIT APPEARS (at 20% scale, half visible above floor) =====
-  tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 2.0);
+  // tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 2.0);
+  tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 5.6);
 
   // ===== THEN OBJECTS APPEAR (reduced time gap) =====
-  tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 3.5);
+  // tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 3.5);
+  tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 7.3);
 
   // ===== OBJECTS START FALLING (4.5s) =====
   const fallDuration = 2.5;
-  const fallStart = 4.5;
+  // const fallStart = 4.5;
+  const fallStart = 6.7;
 
   // ===== TEXT ANIMATION HAPPENS WHILE OBJECTS ARE FALLING =====
   // Text animates up to "misfits" (first 5 words) during fall
@@ -1580,7 +1657,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval1,
         {
           scale: 1,
-          duration: 0,
+          duration: 0.6,
           ease: "power2.out"
         },
         step10Start + 1.5
@@ -2954,6 +3031,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     { willChange: "auto" },
     "+=0.5"
   );
+  tl.set(refs.text0, { willChange: "auto" }, "+=0");
   tl.set(refs.text, { willChange: "auto" }, "+=0");
   tl.set(refs.text2, { willChange: "auto" }, "+=0");
   tl.set(refs.objectsContainer, { willChange: "auto" }, "+=0");
@@ -3090,6 +3168,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const leftElementRef = useRef(null);
   const rightElementRef = useRef(null);
 
+  const text0Ref = useRef(null); // ADD THIS - for the first text "Home to fearless design..."
   // Text and animation refs
   const textRef = useRef(null);
   const text2Ref = useRef(null); // New text ref
@@ -3150,6 +3229,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     rightElement: rightElementRef.current,
     leftElementEye: leftElementEyeRef.current, // ADD THIS
     rightElementEye: rightElementEyeRef.current, // ADD THIS
+    text0: text0Ref.current, // ADD THIS LINE
     text: textRef.current,
     text2: text2Ref.current, // Expose new text ref
     text3: text3Ref.current, // ADD THIS
@@ -3519,6 +3599,87 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               }}
             />
           </div>
+        )}
+      </div>
+      {/* FIRST TEXT - "Home to fearless design..." */}
+      <div
+        ref={text0Ref}
+        className={[
+          "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
+          "text-[32px] leading-[1.2]",
+          "[@media(min-height:812px)]:text-[40px]",
+          "[@media(min-height:812px)]:leading-[1.2]",
+          "md:text-[48px] md:leading-[1.2]",
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]",
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+        ].join(" ")}
+        style={{
+          top: isMobile ? "24%" : "26%",
+          maxWidth: isMobile ? "100%" : "80%",
+          width: isMobile ? "92vw" : "80%",
+          opacity: 0,
+          color: "rgb(0, 0, 0)",
+          willChange: "transform, opacity"
+        }}
+      >
+        {isMobile ? (
+          <>
+            <div>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                Home{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                to{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                fearless
+              </span>
+            </div>
+            <div>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                design{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                and{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                untamed
+              </span>
+            </div>
+            <div>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                creativity.
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                Home{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                to{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                fearless{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                design{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                and
+              </span>
+            </div>
+            <div>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                untamed{" "}
+              </span>
+              <span data-text0 style={{ color: "rgb(0, 0, 0)" }}>
+                creativity.
+              </span>
+            </div>
+          </>
         )}
       </div>
       <div

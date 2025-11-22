@@ -1345,7 +1345,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
               <canvas
                 ref={canvasRef}
                 className="w-full bottom-0 block object-contain"
-                style={{ maxHeight: "55%" }}
+                style={{ maxHeight: "65%" }}
               />
             </div>
           </div>

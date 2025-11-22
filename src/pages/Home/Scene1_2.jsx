@@ -1035,7 +1035,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         {!isMobile && (
           <img
             ref={semiCircleRightRef}
-            src={semi_circle_right1}
+            src={semi_circle_right}
             alt="semi circle right"
             className="absolute pointer-events-none"
             style={{
@@ -1079,28 +1079,28 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           >
             {/* Semi-Circle Right - takes left half */}
             <img
-              src={semi_circle_right_mobile}
+              src={semi_circle_right}
               alt="transition semi circle right"
               className="absolute pointer-events-none"
               style={{
                 left: 0,
                 bottom: "-5vh",
-                width: "auto",
-                height: "70vh"
+                width: "50%"
+                // height: "70vh"
                 // width: "90vw"
               }}
             />
 
             {/* Semi-Circle Left - takes right half */}
             <img
-              src={semi_circle_left_mobile}
+              src={semi_circle_left}
               alt="transition semi circle left"
               className="absolute pointer-events-none"
               style={{
                 right: 0,
                 bottom: "-5vh",
-                width: "auto",
-                height: "70vh"
+                width: "50%"
+                // height: "70vh"
               }}
             />
           </div>
