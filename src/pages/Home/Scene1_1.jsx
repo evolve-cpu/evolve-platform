@@ -195,10 +195,25 @@ const getScreenMultipliers = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
+  // ============================
+  // 📱 TABLETS (portrait & landscape)
+  // ============================
+  // iPad Mini: 768×1024
+  // iPad Air: 820×1180
+  // iPad Pro: 834×1194 / 1024×1368
+  // Surface Pro: 912×1368
+  if (
+    (width >= 700 && width <= 1368 && height >= 900 && height <= 1300) ||
+    (height >= 700 && height <= 1180 && width >= 900 && width <= 1400)
+  ) {
+    // tablets should go more UP and less DOWN
+    return { orbit: 1.345, stairs: 0.35 };
+  }
+
   // Detect screen categories
   if (width <= 1440) {
     // Small laptops (13-14 inch) - current behavior
-    return { orbit: 1, stairs: 1 };
+    return { orbit: 1, stairs: 0.9 };
   } else if (width <= 1920 && height <= 1200) {
     // Medium laptops (15-16 inch) - reduce movement by 30%
     return { orbit: 0.7, stairs: 0.85 };
@@ -212,6 +227,14 @@ const getScreenMultipliers = () => {
 const getElementSlideMultipliers = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
+
+  if (
+    (width >= 700 && width <= 1368 && height >= 900 && height <= 1300) ||
+    (height >= 700 && height <= 1180 && width >= 900 && width <= 1400)
+  ) {
+    // tablets should go more UP and less DOWN
+    return { downwardY: 0.7 };
+  }
 
   // Detect screen categories for element downward movement
   if (width <= 1440) {
@@ -232,32 +255,109 @@ const getElementSlideMultipliers = () => {
   }
 };
 
+// // Helper function to get orbit vertical movement multipliers
+// const getOrbitVerticalMultipliers = () => {
+//   const width = window.innerWidth;
+//   const height = window.innerHeight;
+
+//   // Detect screen categories for orbit vertical movement
+//   if (width <= 1368) {
+//     // Small screens (below 14-inch) - LESS upward, MORE downward
+//     return { upward: 0.7, downward: 1.3 };
+//   } else if (width <= 1440) {
+//     // 14-inch laptops - baseline (current behavior)
+//     return { upward: 1.2, downward: 0.7 };
+//   } else if (width <= 1680 && height <= 1050) {
+//     // 15-inch laptops - MORE upward, LESS downward
+//     return { upward: 0.9, downward: 1.1 };
+//   } else if (width <= 1920 && height <= 1200) {
+//     // 16-inch laptops - even MORE upward, even LESS downward
+//     return { upward: 1.1, downward: 1 };
+//   } else if (width <= 2560) {
+//     // Large displays - significant increase upward, decrease downward
+//     return { upward: 1.6, downward: 0.6 };
+//   } else {
+//     // 4K and above - maximum upward, minimum downward
+//     return { upward: 1.8, downward: 0.5 };
+//   }
+// };
+
 // Helper function to get orbit vertical movement multipliers
 const getOrbitVerticalMultipliers = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  // Detect screen categories for orbit vertical movement
-  if (width <= 1366) {
-    // Small screens (below 14-inch) - LESS upward, MORE downward
-    return { upward: 0.7, downward: 1.3 };
-  } else if (width <= 1440) {
-    // 14-inch laptops - baseline (current behavior)
-    return { upward: 1.2, downward: 0.7 };
-  } else if (width <= 1680 && height <= 1050) {
-    // 15-inch laptops - MORE upward, LESS downward
-    return { upward: 0.9, downward: 1.1 };
-  } else if (width <= 1920 && height <= 1200) {
-    // 16-inch laptops - even MORE upward, even LESS downward
-    return { upward: 1.1, downward: 1 };
-  } else if (width <= 2560) {
-    // Large displays - significant increase upward, decrease downward
-    return { upward: 1.6, downward: 0.6 };
-  } else {
-    // 4K and above - maximum upward, minimum downward
-    return { upward: 1.8, downward: 0.5 };
+  // ============================
+  // 📱 TABLETS (portrait & landscape)
+  // ============================
+  // iPad Mini: 768×1024
+  // iPad Air: 820×1180
+  // iPad Pro: 834×1194 / 1024×1368
+  // Surface Pro: 912×1368
+  if (
+    (width >= 700 && width <= 1368 && height >= 900 && height <= 1300) ||
+    (height >= 700 && height <= 1180 && width >= 900 && width <= 1400)
+  ) {
+    // tablets should go more UP and less DOWN
+    return { upward: 1.4, downward: 0.9 };
   }
+
+  // ============================
+  // 💻 SMALL LAPTOPS (below 14”)
+  // ============================
+  if (width <= 1368) {
+    return { upward: 0.7, downward: 1.3 };
+  }
+
+  // ============================
+  // 💻 14-inch laptops
+  // ============================
+  if (width <= 1440) {
+    return { upward: 1.2, downward: 0.7 };
+  }
+
+  // ============================
+  // 💻 15-inch laptops
+  // ============================
+  if (width <= 1680 && height <= 1050) {
+    return { upward: 0.9, downward: 1.1 };
+  }
+
+  // ============================
+  // 💻 16-inch laptops
+  // ============================
+  if (width <= 1920 && height <= 1200) {
+    return { upward: 1.1, downward: 1.0 };
+  }
+
+  // ============================
+  // 🖥️ large displays (2K, ultrawide)
+  // ============================
+  if (width <= 2560) {
+    return { upward: 1.6, downward: 0.6 };
+  }
+
+  // ============================
+  // 🖥️ 4K & beyond
+  // ============================
+  return { upward: 1.8, downward: 0.5 };
 };
+
+const isTabletLandscape = (() => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  // Example tablet-landscape breakpoints:
+  // iPad 1024 × 768
+  // iPad Air 1180 × 820
+  // iPad Pro 1368 × 1024
+  return (
+    w >= 900 &&
+    w <= 1400 && // width in tablet-landscape range
+    h >= 600 &&
+    h <= 1100 // height in landscape range
+  );
+})();
 
 // Timeline hook for Scene1_1 animation - works with master timeline
 export const useScene1_1Timeline = (refs, isMobile) => {
@@ -1767,388 +1867,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step12Start + 2.5
       );
     } else {
-      // Desktop: Both stairs come from bottom corners
-      // tl.set(
-      //   refs.leftStairsMini,
-      //   {
-      //     opacity: 0,
-      //     y: 100,
-      //     willChange: "transform, opacity"
-      //   },
-      //   stairsAnimateStart
-      // );
-
-      // tl.set(
-      //   refs.rightStairsMini,
-      //   {
-      //     opacity: 0,
-      //     y: 100,
-      //     willChange: "transform, opacity"
-      //   },
-      //   stairsAnimateStart
-      // );
-
-      // // Left stairs animate up
-      // tl.to(
-      //   refs.leftStairsMini,
-      //   {
-      //     opacity: 1,
-      //     y: 0,
-      //     duration: 1.2,
-      //     ease: "power2.out"
-      //   },
-      //   stairsAnimateStart
-      // );
-
-      // // Right stairs animate up (slightly staggered)
-      // tl.to(
-      //   refs.rightStairsMini,
-      //   {
-      //     opacity: 1,
-      //     y: 0,
-      //     duration: 1.2,
-      //     ease: "power2.out"
-      //   },
-      //   stairsAnimateStart + 0.2
-      // );
-
-      // ===== DESKTOP: OPTIMIZED SMOOTH ANIMATION =====
-
-      // Step 1: Initial setup - orbit moves down, stairs MORPH from mini to full
-      // tl.to(
-      //   refs.pinkBiggerOrbit,
-      //   {
-      //     y: `+=${7 * multipliers.orbit}%`,
-      //     duration: 0.2,
-      //     ease: "power2.out"
-      //   },
-      //   nextPhaseStart
-      // );
-
-      // // Set full stairs at same position as mini stairs initially
-      // tl.set(
-      //   [refs.stairsLeft, refs.stairsRight],
-      //   {
-      //     opacity: 0,
-      //     scale: 0, // Match mini stairs scale
-      //     transformOrigin: "bottom left"
-      //   },
-      //   nextPhaseStart
-      // );
-
-      // tl.set(
-      //   refs.stairsRight,
-      //   {
-      //     transformOrigin: "bottom right"
-      //   },
-      //   nextPhaseStart
-      // );
-
-      // // Mini stairs scale up and morph into full stairs
-      // tl.to(
-      //   [refs.leftStairsMini, refs.rightStairsMini],
-      //   {
-      //     scale: 1,
-      //     duration: 0.6,
-      //     ease: "power2.out"
-      //   },
-      //   nextPhaseStart
-      // );
-
-      // // Crossfade: mini fades out as full fades in
-      // tl.to(
-      //   [refs.leftStairsMini, refs.rightStairsMini],
-      //   {
-      //     opacity: 0,
-      //     duration: 0.4,
-      //     ease: "power2.inOut"
-      //   },
-      //   nextPhaseStart + 0.2
-      // );
-
-      // tl.to(
-      //   [refs.stairsLeft, refs.stairsRight],
-      //   {
-      //     opacity: 1,
-      //     scale: 1,
-      //     duration: 0.4,
-      //     ease: "power2.inOut"
-      //   },
-      //   nextPhaseStart + 0.2
-      // );
-
-      // tl.set(
-      //   refs.text4,
-      //   {
-      //     opacity: 1,
-      //     willChange: "opacity"
-      //   },
-      //   nextPhaseStart
-      // );
-
-      // // Step 2: Show outer circle at center, replace stairs with stairs_1
-      // // Step 2: Show outer circle at center, stairs MORPH from full to stairs_1
-      // const step2Start = nextPhaseStart + 2.0;
-
-      // // Combined circle container appears at orbit center
-      // tl.set(
-      //   refs.combinedCircleContainer,
-      //   {
-      //     opacity: 1,
-      //     willChange: "transform, opacity"
-      //   },
-      //   step2Start
-      // );
-
-      // // Outer circle appears - smaller initial scale
-      // if (refs.combinedCircle?.outer) {
-      //   tl.set(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       opacity: 0,
-      //       scale: 0.15,
-      //       willChange: "transform, opacity"
-      //     },
-      //     step2Start
-      //   );
-
-      //   tl.to(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       opacity: 1,
-      //       duration: 0.4,
-      //       ease: "power1.out"
-      //     },
-      //     step2Start + 0.1
-      //   );
-      // }
-
-      // // Set stairs_1 at same position/scale as current full stairs
-      // tl.set(
-      //   [refs.leftStairs1, refs.rightStairs1],
-      //   {
-      //     opacity: 0,
-      //     // scale: 1,
-      //     y: 0
-      //   },
-      //   step2Start
-      // );
-
-      // // Current stairs morph by moving slightly
-      // tl.to(
-      //   [refs.stairsLeft, refs.stairsRight],
-      //   {
-      //     y: 10,
-      //     duration: 0.4,
-      //     ease: "power2.inOut"
-      //   },
-      //   step2Start
-      // );
-
-      // // Crossfade to stairs_1
-      // tl.to(
-      //   [refs.stairsLeft, refs.stairsRight],
-      //   {
-      //     opacity: 0,
-      //     duration: 0.3,
-      //     ease: "power2.inOut"
-      //   },
-      //   step2Start + 0.2
-      // );
-
-      // tl.to(
-      //   [refs.leftStairs1, refs.rightStairs1],
-      //   {
-      //     opacity: 1,
-      //     y: 0,
-      //     duration: 0.4,
-      //     ease: "power2.out"
-      //   },
-      //   step2Start + 0.2
-      // );
-
-      // // Step 3: Move orbit and stairs down, scale outer circle up (becomes combined)
-      // const step3Start = step2Start + 2.0;
-
-      // // Orbit moves down (with screen multiplier)
-      // tl.to(
-      //   refs.pinkBiggerOrbit,
-      //   {
-      //     y: `+=${8 * multipliers.orbit}%`,
-      //     duration: 1.0,
-      //     ease: "power1.inOut"
-      //   },
-      //   step3Start
-      // );
-
-      // // Stairs move down (with screen multiplier)
-      // tl.to(
-      //   [refs.leftStairs1, refs.rightStairs1],
-      //   {
-      //     y: `+=${12 * multipliers.stairs}vh`,
-      //     duration: 1.0,
-      //     ease: "power1.inOut"
-      //   },
-      //   step3Start
-      // );
-
-      // // Outer circle scales up to intermediate size (0.4 scale)
-      // if (refs.combinedCircle?.outer) {
-      //   tl.to(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       scale: 0.4, // Intermediate scale - outer stays smaller
-      //       duration: 1.0,
-      //       ease: "power1.inOut"
-      //     },
-      //     step3Start
-      //   );
-      // }
-
-      // // Inner circle reveals at bigger scale (95% of outer - MUCH BIGGER)
-      // // Inner LOGO part reveals FIRST (at step3)
-      // if (refs.combinedCircle?.innerLogo) {
-      //   tl.set(
-      //     refs.combinedCircle.innerLogo,
-      //     {
-      //       opacity: 0,
-      //       scale: 0.38,
-      //       willChange: "transform, opacity"
-      //     },
-      //     step3Start
-      //   );
-
-      //   tl.to(
-      //     refs.combinedCircle.innerLogo,
-      //     {
-      //       opacity: 1,
-      //       scale: 0.38,
-      //       duration: 0.8,
-      //       ease: "power1.out"
-      //     },
-      //     step3Start + 0.3
-      //   );
-      // }
-
-      // // Step 4: Zoom orbit and circle from center, stairs MORPH from stairs_1 to stairs_2
-      // const step4Start = step3Start + 2.0;
-
-      // // Orbit scales up from center
-      // tl.to(
-      //   refs.pinkBiggerOrbit,
-      //   {
-      //     scale: "+=0.4",
-      //     duration: 1.2,
-      //     ease: "power1.inOut"
-      //   },
-      //   step4Start
-      // );
-
-      // // Combined circle outer scales up to final size
-      // // Combined circle outer scales up to final size
-      // if (refs.combinedCircle?.outer) {
-      //   tl.to(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       scale: 0.8,
-      //       duration: 1.2,
-      //       ease: "power1.inOut"
-      //     },
-      //     step4Start
-      //   );
-      // }
-
-      // // Inner LOGO scales proportionally
-      // if (refs.combinedCircle?.innerLogo) {
-      //   tl.to(
-      //     refs.combinedCircle.innerLogo,
-      //     {
-      //       scale: 0.8,
-      //       duration: 1.2,
-      //       ease: "power1.inOut"
-      //     },
-      //     step4Start
-      //   );
-      // }
-
-      // // TRANSITION: Logo fades out, regular inner part fades in
-      // if (refs.combinedCircle?.innerLogo && refs.combinedCircle?.inner) {
-      //   // Set regular inner part at same position/scale as logo
-      //   tl.set(
-      //     refs.combinedCircle.inner,
-      //     {
-      //       opacity: 0,
-      //       scale: 0.7,
-      //       willChange: "transform, opacity"
-      //     },
-      //     step4Start + 0.6
-      //   );
-
-      //   // Fade out logo
-      //   tl.to(
-      //     refs.combinedCircle.innerLogo,
-      //     {
-      //       opacity: 0,
-      //       duration: 0.3,
-      //       ease: "power2.in"
-      //     },
-      //     step4Start + 0.6
-      //   );
-
-      //   // Fade in regular inner part
-      //   tl.to(
-      //     refs.combinedCircle.inner,
-      //     {
-      //       opacity: 1,
-      //       duration: 0.5,
-      //       ease: "power2.inOut"
-      //     },
-      //     step4Start + 0.6
-      //   );
-      // }
-
-      // // Set stairs_2 at same position as stairs_1
-      // tl.set(
-      //   [refs.leftStairs2, refs.rightStairs2],
-      //   {
-      //     opacity: 0,
-      //     y: `+=${12 * multipliers.stairs}vh`, // Match current stairs_1 position
-      //     scale: 1
-      //   },
-      //   step4Start
-      // );
-
-      // // Stairs_1 move slightly and morph
-      // tl.to(
-      //   [refs.leftStairs1, refs.rightStairs1],
-      //   {
-      //     y: `+=${10 * multipliers.stairs}vh`,
-      //     duration: 0.4,
-      //     ease: "power2.inOut"
-      //   },
-      //   step4Start
-      // );
-
-      // // Crossfade to stairs_2
-      // tl.to(
-      //   [refs.leftStairs1, refs.rightStairs1],
-      //   {
-      //     opacity: 0,
-      //     duration: 0.3,
-      //     ease: "power2.inOut"
-      //   },
-      //   step4Start + 0.2
-      // );
-
-      // tl.to(
-      //   [refs.leftStairs2, refs.rightStairs2],
-      //   {
-      //     opacity: 1,
-      //     duration: 0.4,
-      //     ease: "power2.out"
-      //   },
-      //   step4Start + 0.2
-      // );
       // Desktop: Stairs with progressive reveal
       // Step 1: Initial setup and fade in (30% visible)
       // Desktop: Stairs with progressive reveal
@@ -3446,7 +3164,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           opacity: 0
         }}
       />
-      {/* BIGGER ORBIT - Behind floor, starts at 20% scale, half visible */}
+      {/* BIGGER ORBIT - Behind floor, starts at 20% scale, half visible
       <img
         ref={biggerOrbitRef}
         src={isMobile ? bigger_orbit_mobile : bigger_orbit}
@@ -3459,13 +3177,36 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           opacity: 0,
           transformOrigin: "center center"
         }}
+      /> */}
+      {/* BIGGER ORBIT - Behind floor, starts at 20% scale, half visible */}
+      <img
+        ref={biggerOrbitRef}
+        src={isMobile ? bigger_orbit_mobile : bigger_orbit}
+        alt="bigger orbit"
+        className="absolute left-1/2 -translate-x-1/2 z-[9] pointer-events-none"
+        style={{
+          bottom: isMobile
+            ? "-2vh"
+            : isTabletLandscape
+            ? "-40vh" // ⬅️ moved upward for tablet landscape
+            : "-60vh", // desktop
+          width: isMobile ? "100%" : "80vw",
+          height: "auto",
+          opacity: 0,
+          transformOrigin: "center center"
+        }}
       />
       {/* PINK BIGGER ORBIT - Wrapper for position */}
       <div
         ref={pinkBiggerOrbitRef}
         className="absolute left-1/2 -translate-x-1/2 z-[9] pointer-events-none"
         style={{
-          bottom: isMobile ? "-2vh" : "-60vh",
+          // bottom: isMobile ? "-2vh" : "-60vh",
+          bottom: isMobile
+            ? "-2vh"
+            : isTabletLandscape
+            ? "-40vh" // ⬅️ moved upward for tablet landscape
+            : "-60vh", // desktop
           width: isMobile ? "100%" : "80vw",
           height: "auto",
           opacity: 0

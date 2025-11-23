@@ -58,6 +58,14 @@ const getHeadingLineHeight = () => {
   return "92px"; // fallback
 };
 
+const isTablet = (() => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  // common tablet ranges (portrait + landscape)
+  return w >= 700 && w <= 1380 && h >= 600 && h <= 1400;
+})();
+
 // 🎥 OPTIMIZED TIMELINE - GPU acceleration
 export const useScene1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
@@ -94,7 +102,13 @@ export const useScene1Timeline = (refs, isMobile) => {
   tl.to(refs.inner, {
     scale: isMobile ? 3.2 : 5.5,
     y: isMobile ? 0 : "25vh",
-    transformOrigin: isMobile ? "center 50%" : "center 45%",
+    // transformOrigin: isMobile ? "center 50%" : "center 45%",
+    transformOrigin: isMobile
+      ? "center 50%"
+      : isTablet
+      ? "center 62%" // ⬅️ tablets get 50%
+      : "center 45%", // desktops stay the same
+
     ease: "power2.inOut",
     duration: 3,
     force3D: true
@@ -253,12 +267,12 @@ const Scene1 = React.forwardRef((props, ref) => {
         return height * 0.3; // iPhone 14 Pro Max, iPhone 15 Pro Max
       else if (width <= 540) return height * 0.3; // Surface Duo
       else return height * 0.3; // Large phones/small tablets
-    } else if (width <= 1024) {
+    } else if (width <= 1368) {
       // Tablets
       if (width <= 768) return height * 0.1; // iPad Mini, iPad portrait
       else if (width <= 820) return height * 0.1; // iPad Air portrait
       else if (width <= 912) return height * 0.1; // Surface Pro portrait
-      else return height * 0.05; // Tablet landscape
+      else return height * 0.15; // Tablet landscape
     } else {
       // Desktop
       if (width <= 1280) return height * 0.2; // Small laptops (1024-1280)

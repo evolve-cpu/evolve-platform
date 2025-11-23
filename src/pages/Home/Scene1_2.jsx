@@ -109,10 +109,47 @@ const startSaturnCompassAnimation = (saturnLeft, saturnRight) => {
   });
 };
 
+const isTablet = (() => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  // Covers:
+  // iPad Mini 768×1024
+  // iPad Air 820×1180
+  // iPad Pro 834×1194 / 1024×1368
+  // Surface 912×1368
+  return (
+    w >= 700 &&
+    w <= 1370 && // width within tablet range
+    h >= 600 &&
+    h <= 1400 // height within tablet range
+  );
+})();
+
 export const useScene1_2Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
-  // Set initial states
+  // Move doorHands component down - with responsive behavior
+  const doorHandsY = gsap.matchMedia();
+
+  doorHandsY.add(
+    "(min-width: 768px) and (max-width: 1365px) and (min-height: 600px) and (max-height: 1400px)",
+    () => {
+      tl.to(
+        refs.doorHands,
+        { y: "-60vh", duration: 0.8, ease: "power2.inOut" },
+        "sixthScroll"
+      );
+    }
+  );
+
+  // doorHandsY.add(
+  //   "(min-width: 1181px)",
+  //   () => {
+  //     tl.to(refs.doorHands, { y: "15vh", duration: 0.8, ease: "power2.inOut" }, "sixthScroll");
+  //   }
+  // );
+
   // Set initial states
   const elementsToSet = [
     refs.vector,
@@ -571,10 +608,39 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     );
 
     // Move doorHands component down
+    // tl.to(
+    //   refs.doorHands,
+    //   {
+    //     y: "15vh",
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   "sixthScroll"
+    // );
+    // Move doorHands component down
+    // Move doorHands component down
+    // Move doorHands component down
     tl.to(
       refs.doorHands,
       {
-        y: "15vh",
+        y: () => {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          // Tablet landscape check
+          const isTabletLandscape =
+            w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+
+          console.log(
+            "DoorHands animation - Width:",
+            w,
+            "Height:",
+            h,
+            "isTablet:",
+            isTabletLandscape
+          );
+
+          return isTabletLandscape ? "-35vh" : "15vh";
+        },
         duration: 0.8,
         ease: "power2.inOut"
       },
@@ -1106,7 +1172,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           </div>
         )}
         {/* Rays background - half visible */}
-        <img
+        {/* <img
           // loading="lazy"
           ref={raysRef}
           src={rays}
@@ -1122,7 +1188,28 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             opacity: 0,
             zIndex: 1
           }}
+        /> */}
+        <img
+          ref={raysRef}
+          src={rays}
+          alt="rays"
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{
+            top: isMobile
+              ? "0"
+              : // : isTablet
+                // ? "-60vh" // ⬅️ tablet screens get -60
+                "-80vh", // ⬅️ desktop screens remain -80
+            transform: isMobile
+              ? "translate(-50%) scale(2)"
+              : "translate(-50%)",
+            width: isMobile ? "200%" : isTablet ? "400%" : "300%",
+            height: "auto",
+            opacity: 0,
+            zIndex: 1
+          }}
         />
+
         {/* LeftRightDoorHands Component - centered behind rays */}
         {/* <div
           ref={doorHandsRef}
@@ -1163,10 +1250,15 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:1200px)]:top-[33%]
     [@media(min-width:1700px)]:top-[42%] 
     [@media(min-width:1700px)]:left-[30px]
-    [left:26px]" /* macbook pro 16" */
+    [left:26px]
+    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[40%]
+    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:left-[22px]
+[@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:scale-30
+          [w-auto]
+          [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
               style={{
                 // left: "26px",
-                width: "auto",
+                // width: "auto",
                 height: "auto",
                 opacity: 0,
                 transform: "translateY(-50%)",
@@ -1187,10 +1279,15 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[38%]
     [@media(min-height:1200px)]:top-[33%]
-        [@media(min-width:1700px)]:top-[42%]"
+        [@media(min-width:1700px)]:top-[42%]
+        [right:20px]
+            [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%]
+              [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:right-[18px]
+              [w-auto]
+              [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
               style={{
-                right: "20px",
-                width: "auto",
+                // right: "20px",
+                // width: "auto",
                 height: "auto",
                 opacity: 0,
                 transform: "translateY(-50%)",
