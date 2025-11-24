@@ -121,6 +121,7 @@ import stairs1_mobile from "./stairs1_mobile.svg";
 import stairs2_mobile from "./stairs2_mobile.svg";
 import stairs4_mobile from "./stairs4_mobile.svg";
 import stairsfull_right_mobile from "./stairsfull_right_mobile.svg";
+import dive_in from "./dive_in.svg";
 
 export {
   left_wall,
@@ -244,5 +245,6 @@ export {
   stairs1_mobile,
   stairs2_mobile,
   stairs4_mobile,
-  stairsfull_right_mobile
+  stairsfull_right_mobile,
+  dive_in
 };

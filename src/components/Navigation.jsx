@@ -235,7 +235,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               </div>
 
               <a
-                href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+                // href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+                href="https://discord.gg/wKRYG7cSWt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] flex-shrink-0 cursor-pointer"

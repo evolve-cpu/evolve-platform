@@ -382,6 +382,7 @@ const AppLayout = () => {
   const [deviceType, setDeviceType] = useState(getDeviceType());
   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
   const location = useLocation();
+  const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
 
   const hideFooterRoutes = ["/contact"];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
@@ -429,13 +430,24 @@ const AppLayout = () => {
     }
   }, []);
 
-  // reset on full reload
+  // // reset on full reload
+  // useEffect(() => {
+  //   const nav = performance.getEntriesByType("navigation")?.[0];
+  //   if (nav && (nav.type === "reload" || nav.type === "navigate")) {
+  //     window.scrollTo(0, 0);
+  //   }
+  // }, []);
+
+  // Set navbar visibility based on route
   useEffect(() => {
-    const nav = performance.getEntriesByType("navigation")?.[0];
-    if (nav && (nav.type === "reload" || nav.type === "navigate")) {
-      window.scrollTo(0, 0);
+    if (location.pathname === "/") {
+      setShowNavbar(false);
+      setIsHomeIntroActive(true); // Intro is active on home load
+    } else {
+      setShowNavbar(true);
+      setIsHomeIntroActive(false);
     }
-  }, []);
+  }, [location.pathname]);
 
   // reset on route change
   useEffect(() => {
@@ -565,6 +577,16 @@ const AppLayout = () => {
         />
 
         <Routes>
+          {/* <Route
+            path="/"
+            element={
+              <Home
+                setShowNavbar={setShowNavbar}
+                isLoading={isLoading}
+                deviceType={deviceType}
+              />
+            }
+          /> */}
           <Route
             path="/"
             element={
@@ -572,6 +594,7 @@ const AppLayout = () => {
                 setShowNavbar={setShowNavbar}
                 isLoading={isLoading}
                 deviceType={deviceType}
+                onIntroComplete={() => setIsHomeIntroActive(false)}
               />
             }
           />
@@ -585,7 +608,9 @@ const AppLayout = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {shouldShowFooter && <Footer />}
+        {/* {shouldShowFooter && <Footer />} */}
+        {shouldShowFooter &&
+          !(location.pathname === "/" && isHomeIntroActive) && <Footer />}
 
         <ContactModal
           isOpen={isContactModalOpen}

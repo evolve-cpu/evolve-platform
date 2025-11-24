@@ -2022,7 +2022,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             }}
             onClick={() => {
               window.open(
-                "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+                // "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+                "https://discord.gg/wKRYG7cSWt",
                 "_blank"
               );
             }}

@@ -620,7 +620,8 @@ const Footer = () => {
     { label: "linkedin", url: "#" },
     {
       label: "discord",
-      url: "https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+      // url: "https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+      url: "https://discord.gg/wKRYG7cSWt"
     }
   ];
 
@@ -681,7 +682,8 @@ const Footer = () => {
                 join us
               </button> */}
               <a
-                href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+                // href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
+                href="https://discord.gg/wKRYG7cSWt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block bg-black text-white font-extrabold px-5 py-3 rounded-xl text-[1.5rem] leading-none"

@@ -576,15 +576,57 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   }
 
   // Calculate fall distance: objects should reach ellipse center and stop there
+  // const calculateFallDistance = () => {
+  //   if (!refs.objectsContainer) return isMobile ? 250 : 350;
+
+  //   try {
+  //     const objectsRect = refs.objectsContainer.getBoundingClientRect();
+  //     const viewportHeight = window.innerHeight;
+
+  //     // Ellipse dimensions
+  //     const ellipseHeight = isMobile ? 300 * 0.4 : 560 * 0.3; // Approximate height (30% of width)
+  //     const ellipseBottom = isMobile
+  //       ? viewportHeight * 0.09
+  //       : viewportHeight * 0.05;
+
+  //     // Target is ellipse center (bottom + half height)
+  //     const ellipseCenter = viewportHeight - ellipseBottom - ellipseHeight / 2;
+
+  //     // Current object position
+  //     const objectsCenterY = isMobile
+  //       ? objectsRect.bottom - objectSize / 2 // Mobile: bottom object center
+  //       : objectsRect.top + objectsRect.height / 2; // Desktop: container center
+
+  //     const distance = ellipseCenter - objectsCenterY;
+
+  //     console.log("Fall calculation:", {
+  //       ellipseCenter,
+  //       objectsCenterY,
+  //       distance,
+  //       isMobile
+  //     });
+
+  //     return distance > 0 ? distance : isMobile ? 250 : 350;
+  //   } catch (error) {
+  //     console.error("Error calculating fall distance:", error);
+  //     return isMobile ? 250 : 350;
+  //   }
+  // };
+  // Calculate fall distance: objects should reach ellipse center and stop there
   const calculateFallDistance = () => {
-    if (!refs.objectsContainer) return isMobile ? 250 : 350;
+    // slightly smaller base distance for mobile
+    const MOBILE_FALLBACK = 200;
+    const DESKTOP_FALLBACK = 350;
+
+    if (!refs.objectsContainer)
+      return isMobile ? MOBILE_FALLBACK : DESKTOP_FALLBACK;
 
     try {
       const objectsRect = refs.objectsContainer.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
 
       // Ellipse dimensions
-      const ellipseHeight = isMobile ? 300 * 0.4 : 560 * 0.3; // Approximate height (30% of width)
+      const ellipseHeight = isMobile ? 300 * 0.4 : 560 * 0.3; // Approx height
       const ellipseBottom = isMobile
         ? viewportHeight * 0.09
         : viewportHeight * 0.05;
@@ -597,7 +639,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         ? objectsRect.bottom - objectSize / 2 // Mobile: bottom object center
         : objectsRect.top + objectsRect.height / 2; // Desktop: container center
 
-      const distance = ellipseCenter - objectsCenterY;
+      let distance = ellipseCenter - objectsCenterY;
+
+      // 🔽 make mobile fall "a bit" smaller
+      if (isMobile) {
+        distance *= 0.5; // tweak this (0.7 / 0.85) if you want more / less
+      }
 
       console.log("Fall calculation:", {
         ellipseCenter,
@@ -606,10 +653,14 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         isMobile
       });
 
-      return distance > 0 ? distance : isMobile ? 250 : 350;
+      return distance > 0
+        ? distance
+        : isMobile
+        ? MOBILE_FALLBACK
+        : DESKTOP_FALLBACK;
     } catch (error) {
       console.error("Error calculating fall distance:", error);
-      return isMobile ? 250 : 350;
+      return isMobile ? MOBILE_FALLBACK : DESKTOP_FALLBACK;
     }
   };
 
@@ -2830,7 +2881,8 @@ const WaitlistButton = React.forwardRef(
       console.log("Waitlist button clicked!");
       // Open Discord link in new tab
       window.open(
-        "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+        // "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+        "https://discord.gg/wKRYG7cSWt",
         "_blank"
       );
       if (onClick) onClick(e);
@@ -4304,7 +4356,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             e.preventDefault();
             console.log("Waitlist button clicked!");
             window.open(
-              "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+              // "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
+              "https://discord.gg/wKRYG7cSWt",
               "_blank"
             );
           }}
