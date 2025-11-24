@@ -1251,7 +1251,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-width:1700px)]:top-[42%] 
     [@media(min-width:1700px)]:left-[30px]
     [left:26px]
-    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[40%]
+    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%]
     [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:left-[22px]
 [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:scale-30
           [w-auto]

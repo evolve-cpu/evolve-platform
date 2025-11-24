@@ -36,7 +36,8 @@ export default async function handler(req, res) {
       },
       to: [
         {
-          email: "sonam@evolvedesign.academy" // YOUR INBOX
+          // email: "sonam@evolvedesign.academy" // YOUR INBOX
+          email: "content@evolvedesign.academy" // YOUR INBOX
         }
       ],
       subject: "new contact message from evolve website",
