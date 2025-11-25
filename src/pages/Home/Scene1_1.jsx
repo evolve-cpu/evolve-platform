@@ -3037,6 +3037,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           scale: "-=0.15",
+          y: `-=${3 * multipliers.orbit}%`, // Move down slightly while scaling
           duration: 0.8,
           ease: "power2.inOut"
         },
@@ -3049,6 +3050,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.outer,
           {
             scale: "-=0.1",
+            y: `-=${3 * multipliers.orbit}%`,
             duration: 0.8,
             ease: "power2.inOut"
           },
@@ -3061,6 +3063,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.inner,
           {
             scale: "-=0.1",
+            y: `-=${3 * multipliers.orbit}%`,
             duration: 0.8,
             ease: "power2.inOut"
           },
@@ -3072,7 +3075,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         [refs.stairsLeft, refs.stairsRight],
         {
-          scale: "-=0.15",
+          scale: "+=0.05",
+          y: "-=1vh",
           duration: 0.8,
           ease: "power2.inOut"
         },
