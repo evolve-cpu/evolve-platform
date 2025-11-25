@@ -3585,8 +3585,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // DESKTOP (>=1024)
           // =======================
           "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
-          "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
-          "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+          "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]" // desktop 900+
+          // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
         ].join(" ")}
         style={{
           top: isMobile ? "24%" : "26%",
@@ -3594,7 +3594,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // fontSize: isMobile
           //   ? "clamp(1.1rem, 4.2vw, 2.2rem)"
           //   : "clamp(1.25rem, 2.6vw, 3rem)",
-          lineHeight: isMobile ? "36px" : "60px",
+          // lineHeight: isMobile ? "36px" : "60px",
           maxWidth: isMobile ? "100%" : "100%",
           width: isMobile ? "92vw" : "80%",
           opacity: 0,
@@ -3722,8 +3722,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // =======================
           // DESKTOP (>=1024)
           // =======================
-          "md:text-[36px] md:leading-[1.2]",
-          "@media (min-width:1024px) and (min-height:768px):text-[36px]", // desktop compact 768px height
+          "md:text-[32px] md:leading-[1.2]",
+          "@media (min-width:1024px) and (min-height:768px):text-[32px]", // desktop compact 768px height
           "@media (min-width:1024px) and (min-height:1080px):text-[56px]", // desktop 900+
           "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
         ].join(" ")}
@@ -3747,15 +3747,15 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           // className="absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold text-6xl"
           className={[
             "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
-            "md:text-[48px] md:leading-[1.2]", // desktop compact 768px height
+            "md:text-[48px] md:leading-[48px]", // desktop compact 768px height
             "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]", // desktop 900+
-            "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+            "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[64px]"
           ].join(" ")}
           style={{
             top: "70%",
             // fontSize: "3.5rem",
             // fontSize: "clamp(1.75rem, 3.6vw, 3.5rem)",
-            lineHeight: "54px",
+            // lineHeight: "64px",
             letterSpacing: 0,
             color: "rgb(0, 0, 0)",
             opacity: 0,

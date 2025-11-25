@@ -1914,7 +1914,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         {/* Top Text Section - Initial state */}
         <div
           className="absolute left-0 right-0 text-center z-20"
-          style={{ top: "15%" }}
+          style={{ top: "20%" }}
         >
           <p
             ref={topTextRef}
@@ -1951,7 +1951,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             {/* "get mentored" text - CHANGED */}
             <h2
               ref={noShortcutsTextRef}
-              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0 text-5xl md:text-8xl"
+              className={[
+                "text-white font-extrabold px-4 lowercase absolute left-0 right-0 ",
+                "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
+                "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
+                // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+              ].join(" ")}
               style={{
                 // fontSize: isMobile ? "3rem" : "6rem",
                 letterSpacing: 0,
@@ -1966,7 +1971,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             {/* "earn a paid internship" text - CHANGED */}
             <h2
               ref={mentorsTextRef}
-              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0 text-5xl md:text-8xl"
+              className={[
+                "text-white font-extrabold px-4 lowercase absolute left-0 right-0",
+                "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
+                "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
+                // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+              ].join(" ")}
               style={{
                 // fontSize: isMobile ? "3rem" : "6rem",
                 letterSpacing: 0,
@@ -1982,7 +1992,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         {/* Final Text Section - New state */}
         <div
           className="absolute left-0 right-0 text-center z-20"
-          style={{ top: "17%" }}
+          style={{ top: "23%" }}
         >
           <p
             ref={finalTopTextRef}
@@ -1998,7 +2008,12 @@ const Scene1_2 = React.forwardRef((props, ref) => {
 
           <h2
             ref={finalBottomTextRef}
-            className="text-black font-extrabold px-4 lowercase mb-8 text-5xl md:text-8xl"
+            className={[
+              "text-black font-extrabold px-4 lowercase mb-8",
+              "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
+              "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
+              // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+            ].join(" ")}
             style={{
               // fontSize: isMobile ? "48px" : "96px",
               opacity: 0,
@@ -2014,6 +2029,16 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             ref={waitlistButtonRef}
             className="px-8 py-4 bg-black text-white font-bold text-lg rounded-[16px] lowercase"
             style={{
+              // backgroundColor: "#000000",
+              // borderRadius: "16px",
+              // // padding: "1rem 1.02rem",
+              // fontSize: "1.5rem",
+              // color: "#ffffff",
+              // textTransform: "lowercase",
+              // boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
+              // cursor: "pointer",
+              // border: "none",
+              // width: "75vw",
               opacity: 0,
               transform: "scale(0.8)",
               pointerEvents: "none", // ✅ Add this - start non-clickable
