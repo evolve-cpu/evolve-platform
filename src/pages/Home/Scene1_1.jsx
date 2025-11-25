@@ -1937,25 +1937,23 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         mobileStairsStart
       );
 
-      // Set initial mask with SOFT GRADIENT edges
+      // Set initial mask - 10% visible with soft top edge
       if (refs.rightStairsMod3Mobile) {
-        // Create a softer mask using a gradient approach
         tl.set(
           refs.rightStairsMod3Mobile,
           {
-            clipPath: "inset(80% 0 0 0)",
-            WebkitClipPath: "inset(80% 0 0 0)",
-            // Add a mask-image for soft edges
+            clipPath: "inset(90% 0 0 0)",
+            WebkitClipPath: "inset(90% 0 0 0)",
             WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, black 0%, black 5%, transparent 10%)",
             maskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 100%)"
+              "linear-gradient(to top, black 0%, black 5%, transparent 10%)"
           },
           mobileStairsStart
         );
       }
 
-      // Step 2: Reveal to 20% (with scroll)
+      // Step 2: Reveal to 20% (with scroll) - soft edge at 20%
       const stairs20Start = mobileStairsStart + 1.5;
 
       if (refs.rightStairsMod3Mobile) {
@@ -1965,9 +1963,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
             clipPath: "inset(80% 0 0 0)",
             WebkitClipPath: "inset(80% 0 0 0)",
             WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, black 0%, black 15%, transparent 20%)",
             maskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, black 0%, black 15%, transparent 20%)",
             duration: 0.8,
             ease: "power2.out"
           },
@@ -1989,7 +1987,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         stairs30Start
       );
 
-      // Reveal to 30%
+      // Reveal to 30% - soft edge at 30%
       if (refs.rightStairsMod3Mobile) {
         tl.to(
           refs.rightStairsMod3Mobile,
@@ -1997,9 +1995,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
             clipPath: "inset(70% 0 0 0)",
             WebkitClipPath: "inset(70% 0 0 0)",
             WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, black 0%, black 25%, transparent 30%)",
             maskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, black 0%, black 25%, transparent 30%)",
             duration: 0.8,
             ease: "power2.out"
           },
@@ -2027,7 +2025,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         stairs30Start + 0.8
       );
 
-      // Step 4: "real portfolio" text + orbit moves right + reveal to 40%
+      // Step 4: "real portfolio" text + orbit moves right + reveal to full (100%)
       const portfolioStart = stairs30Start + 2.0;
 
       // Orbit moves rightwards
@@ -2041,17 +2039,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         portfolioStart
       );
 
-      // Reveal to 40%
+      // Reveal to 100% - fade from semi-transparent to fully opaque
       if (refs.rightStairsMod3Mobile) {
         tl.to(
           refs.rightStairsMod3Mobile,
           {
             clipPath: "inset(60% 0 0 0)",
             WebkitClipPath: "inset(60% 0 0 0)",
-            WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
-            maskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+            WebkitMaskImage: "linear-gradient(to top, black 35%, black 40%)",
+            maskImage: "linear-gradient(to top, black 35%, black 40%)",
             duration: 0.8,
             ease: "power2.out"
           },
@@ -2089,7 +2085,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         portfolioStart + 0.8
       );
-
       // Step 5: "real career" text + orbit moves down + stair moves to right-bottom + reveal to 50%
       const careerStart = portfolioStart + 2.0;
 
@@ -2119,19 +2114,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       if (refs.rightStairsMod3Mobile) {
-        tl.fromTo(
+        tl.to(
           refs.rightStairsMod3Mobile,
           {
-            WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 100%)",
-            maskImage:
-              "linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 100%)"
-          },
-          {
-            WebkitMaskImage:
-              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
-            maskImage:
-              "radial-gradient(circle at bottom, black 60%, transparent 100%)",
+            clipPath: "inset(38% 0 0 0)",
+            WebkitClipPath: "inset(38% 0 0 0)",
+            WebkitMaskImage: "linear-gradient(to top, black 40%, black 63%)",
+            maskImage: "linear-gradient(to top, black 40%, black 63%)",
 
             duration: 0.8,
             ease: "power2.out"
@@ -2202,7 +2191,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.rightStairsMod3Mobile,
         {
           right: "-36%", // Slide mostly out of screen
-          bottom: "-20%", // CHANGED: More down (was 0%)
+          bottom: "-21%", // CHANGED: More down (was 0%)
           clipPath: "inset(0% 0 0 0)", // Show full stair (but most is off-screen)
           WebkitClipPath: "inset(0% 0 0 0)",
           WebkitMaskImage: "none", // Remove gradient mask when sliding out
@@ -2218,10 +2207,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.leftStairsMod6Mobile,
         {
           opacity: 1,
-          left: "-0%", // Start mostly off-screen
+          left: "-2%", // Start mostly off-screen
           right: "auto",
-          bottom: "-10%", // CHANGED: Match right stair position
-          width: "33.5%",
+          bottom: "-9%", // CHANGED: Match right stair position
+          width: "32.5%",
+          transform: "scaleX(1) rotate(1.5deg)", // Added slight right rotation
           transform: "scaleX(1)", // CHANGED: No inversion
           clipPath: "inset(0% 0 0 0)",
           WebkitClipPath: "inset(0% 0 0 0)",
