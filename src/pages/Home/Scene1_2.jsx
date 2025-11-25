@@ -34,7 +34,8 @@ import {
   semi_circle_right_mobile,
   semi_circle_left_mobile,
   left_thunder,
-  right_thunder
+  right_thunder,
+  join_us_button
 } from "../../assets/images/Home";
 
 import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
@@ -435,7 +436,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
       scale: 1,
       pointerEvents: "auto", // ✅ Add this - make clickable when visible
       duration: 0.6,
-      ease: "back.out(1.7)"
+      ease: "back.out(1)"
     },
     "fourthScroll+=1"
   );
@@ -1171,24 +1172,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             />
           </div>
         )}
-        {/* Rays background - half visible */}
-        {/* <img
-          // loading="lazy"
-          ref={raysRef}
-          src={rays}
-          alt="rays"
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{
-            top: isMobile ? "0" : "-80vh", // Center vertically
-            transform: isMobile
-              ? "translate(-50%) scale(2)"
-              : "translate(-50%)", // Center both horizontally and vertically
-            width: isMobile ? "200%" : "300%",
-            height: "auto",
-            opacity: 0,
-            zIndex: 1
-          }}
-        /> */}
+
         <img
           ref={raysRef}
           src={rays}
@@ -1209,17 +1193,6 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             zIndex: 1
           }}
         />
-
-        {/* LeftRightDoorHands Component - centered behind rays */}
-        {/* <div
-          ref={doorHandsRef}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-5"
-          style={{ opacity: 0 }}
-        >
-          {isMobile ? <LeftRightDoorHandsMobile /> : <LeftRightDoorHands />}
-        </div> */}
-        {/* LeftRightDoorHands Component with Purple Hands and Saturns - centered behind rays */}
-        {/* LeftRightDoorHands Component with Purple Hands and Saturns - centered behind rays */}
         <div
           ref={doorHandsRef}
           style={{
@@ -1351,13 +1324,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_left_mobile}
               alt="purple hand left"
               className="absolute pointer-events-none
-          [top:44.5%]
+          [top:45%]
           [@media(min-height:667px)]:top-[43.5%]
-          [@media(min-height:736px)]:top-[42.5%]
-          [@media(min-height:812px)]:top-[43%]
-          [@media(min-height:844px)]:top-[44.5%]
-          [@media(min-height:896px)]:top-[45.5%]
-          [@media(min-height:926px)]:top-[46%]"
+          [@media(min-height:736px)]:top-[43%]
+          [@media(min-height:812px)]:top-[44%]
+          [@media(min-height:844px)]:top-[44.9%]
+          [@media(min-height:896px)]:top-[45.9%]
+          [@media(min-height:926px)]:top-[46.9%]"
               style={{
                 left: "0",
                 width: "auto",
@@ -1499,13 +1472,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_left_mobile}
               alt="pink lightening left"
               className="absolute pointer-events-none 
-    [top:25%]
-    [@media(min-height:667px)]:top-[21%]
-    [@media(min-height:736px)]:top-[22%]
-    [@media(min-height:812px)]:top-[20%]
-    [@media(min-height:844px)]:top-[19%]
-    [@media(min-height:896px)]:top-[18%]
-    [@media(min-height:926px)]:top-[17%]"
+    [top:20%]
+    [@media(min-height:667px)]:top-[17%]
+    [@media(min-height:736px)]:top-[18%]
+    [@media(min-height:812px)]:top-[16%]
+    [@media(min-height:844px)]:top-[15%]
+    [@media(min-height:896px)]:top-[14%]
+    [@media(min-height:926px)]:top-[13%]"
               style={{
                 left: "0",
                 width: "auto",
@@ -1523,13 +1496,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_right_mobile}
               alt="pink lightening right"
               className="absolute pointer-events-none 
-    [top:25%]
-    [@media(min-height:667px)]:top-[21%]
-    [@media(min-height:736px)]:top-[22%]
-    [@media(min-height:812px)]:top-[20%]
-    [@media(min-height:844px)]:top-[19%]
-    [@media(min-height:896px)]:top-[18%]
-    [@media(min-height:926px)]:top-[17%]"
+    [top:20%]
+    [@media(min-height:667px)]:top-[17%]
+    [@media(min-height:736px)]:top-[18%]
+    [@media(min-height:812px)]:top-[16%]
+    [@media(min-height:844px)]:top-[15%]
+    [@media(min-height:896px)]:top-[14%]
+    [@media(min-height:926px)]:top-[13%]"
               style={{
                 right: "0",
                 width: "auto",
@@ -1702,7 +1675,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <div
             className="mx-auto px-4"
-            style={{ maxWidth: isMobile ? "95%" : "45%" }}
+            style={{ maxWidth: isMobile ? "80%" : "45%" }}
           >
             <p
               ref={ageTextRef}
@@ -1762,22 +1735,22 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               // ==============================
               // 📱 MOBILE BASE — 48px
               // ==============================
-              "text-[48px]",
+              "text-[40px]",
 
               // mobile >=667px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[36px]",
 
               // mobile >=736px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[36px]",
 
               // mobile >=812px → 48px (override back to 48)
-              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[40px]",
 
               // mobile >=844px → 48px
-              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[40px]",
 
               // mobile >=926px → 56px (highest mobile)
-              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[48px]",
 
               // ==============================
               // 💻 DESKTOP BASE (>=1024px)
@@ -1815,22 +1788,22 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               // ==============================
               // 📱 MOBILE BASE — 48px
               // ==============================
-              "text-[48px]",
+              "text-[40px]",
 
               // mobile >=667px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[36px]",
 
               // mobile >=736px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[36px]",
 
               // mobile >=812px → 48px (override back to 48)
-              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[40px]",
 
               // mobile >=844px → 48px
-              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[40px]",
 
               // mobile >=926px → 56px (highest mobile)
-              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[48px]",
 
               // ==============================
               // 💻 DESKTOP BASE (>=1024px)
@@ -1868,22 +1841,22 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               // ==============================
               // 📱 MOBILE BASE — 48px
               // ==============================
-              "text-[48px]",
+              "text-[40px]",
 
               // mobile >=667px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:667px)]:text-[36px]",
 
               // mobile >=736px → 40px
-              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[40px]",
+              "[@media(max-width:767px)]:[@media(min-height:736px)]:text-[36px]",
 
               // mobile >=812px → 48px (override back to 48)
-              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[40px]",
 
               // mobile >=844px → 48px
-              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[48px]",
+              "[@media(max-width:767px)]:[@media(min-height:844px)]:text-[40px]",
 
               // mobile >=926px → 56px (highest mobile)
-              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[56px]",
+              "[@media(max-width:767px)]:[@media(min-height:926px)]:text-[48px]",
 
               // ==============================
               // 💻 DESKTOP BASE (>=1024px)
@@ -1901,7 +1874,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             ].join(" ")}
             style={{
               opacity: 0,
-              lineHeight: "80%",
+              lineHeight: isMobile ? "100%" : "80%",
               transform: "translateY(-10px)"
             }}
           >
@@ -1948,18 +1921,19 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               {/* learn design */}
             </h2>
 
-            {/* "get mentored" text - CHANGED */}
             <h2
               ref={noShortcutsTextRef}
               className={[
-                "text-white font-extrabold px-4 lowercase absolute left-0 right-0 ",
-                "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
-                "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
-                // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
+                "text-white font-extrabold px-4 lowercase absolute left-0 right-0",
+                // "text-[40px] leading-[1.1]", // mobile base
+                // "sm:text-[48px]", // slightly bigger on big mobiles
+                "text-[40px] leading-[1]", // default mobile 667/736
+                "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px] leading-[1]",
+                "md:text-[64px] md:leading-[1.2]", // tablets / compact desktops
+                "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // large desktop
               ].join(" ")}
               style={{
-                // fontSize: isMobile ? "3rem" : "6rem",
-                letterSpacing: 0,
+                letterSpacing: "0.03em", // 3% kerning
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
@@ -1973,6 +1947,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={mentorsTextRef}
               className={[
                 "text-white font-extrabold px-4 lowercase absolute left-0 right-0",
+                "text-[40px] leading-[1]", // default mobile 667/736
+                "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px] leading-[1]",
                 "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
                 "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
                 // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
@@ -2010,14 +1986,16 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             ref={finalBottomTextRef}
             className={[
               "text-black font-extrabold px-4 lowercase mb-8",
+              "text-[40px] leading-[1]", // default mobile 667/736
+              "[@media(max-width:767px)]:[@media(min-height:812px)]:text-[48px] leading-[1]",
               "md:text-[64px] md:leading-[1.2]", // desktop compact 768px height
               "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // desktop 900+
               // "[@media(min-width:1024px)]:[@media(min-height:900px)]:leading-[1.2]"
             ].join(" ")}
             style={{
               // fontSize: isMobile ? "48px" : "96px",
-              opacity: 0,
-              lineHeight: 0.8
+              opacity: 0
+              // lineHeight: 0.8
             }}
           >
             earn a paid internship
@@ -2025,36 +2003,33 @@ const Scene1_2 = React.forwardRef((props, ref) => {
 
           {/* Waitlist Button */}
           {/* Waitlist Button */}
-          <button
+          {/* Waitlist Button */}
+          <a
             ref={waitlistButtonRef}
-            className="px-8 py-4 bg-black text-white font-bold text-lg rounded-[16px] lowercase"
+            href="https://discord.gg/wKRYG7cSWt"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
             style={{
-              // backgroundColor: "#000000",
-              // borderRadius: "16px",
-              // // padding: "1rem 1.02rem",
-              // fontSize: "1.5rem",
-              // color: "#ffffff",
-              // textTransform: "lowercase",
-              // boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
-              // cursor: "pointer",
-              // border: "none",
-              // width: "75vw",
               opacity: 0,
               transform: "scale(0.8)",
-              pointerEvents: "none", // ✅ Add this - start non-clickable
-              boxShadow: "0 6px 0 rgba(128, 128, 128, 0.8)",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease"
+              pointerEvents: "none", // Start non-clickable
+              transition: "transform 0.2s ease, opacity 0.3s ease"
             }}
-            onClick={() => {
-              window.open(
-                // "https://discord.com/channels/@me/1347086283985649749/1438414139365265479",
-                "https://discord.gg/wKRYG7cSWt",
-                "_blank"
-              );
+            onClick={(e) => {
+              e.preventDefault();
+              window.open("https://discord.gg/wKRYG7cSWt", "_blank");
             }}
           >
-            join us
-          </button>
+            <img
+              src={join_us_button}
+              alt="join us"
+              className="w-auto hover:opacity-80 transition-opacity duration-300"
+              style={{
+                height: isMobile ? "3rem" : "4rem"
+              }}
+            />
+          </a>
         </div>
         {/* Left Hand */}
         <img

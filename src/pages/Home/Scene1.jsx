@@ -1160,6 +1160,18 @@ const isTablet = (() => {
 const buildScene1Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
+  // tl.set(refs.rainbow, {
+  //   opacity: 1,
+  //   scale: 1,
+  //   transformOrigin: "center center",
+  //   willChange: "transform, opacity"
+  // })
+  //   .set(refs.doorCloseup, {
+  //     opacity: 0,
+  //     scale: 1.15,
+  //     filter: "blur(8px)",
+  //     willChange: "transform, opacity, filter"
+  //   })
   tl.set(refs.rainbow, {
     opacity: 1,
     scale: 1,
@@ -1167,9 +1179,9 @@ const buildScene1Timeline = (refs, isMobile) => {
     willChange: "transform, opacity"
   })
     .set(refs.doorCloseup, {
-      opacity: 0,
-      scale: 1.15,
-      filter: "blur(8px)",
+      opacity: 0, // START HIDDEN
+      scale: 1, // CHANGED from 1.15 to 1
+      filter: "blur(0px)", // CHANGED from blur(8px) to blur(0px)
       willChange: "transform, opacity, filter"
     })
     .set(refs.lottie, {
@@ -1265,21 +1277,23 @@ const buildScene1Timeline = (refs, isMobile) => {
       duration: 0.3,
       ease: "power1.out"
     })
+    // Fade in door closeup as rainbow fades out
     .fromTo(
       refs.doorCloseup,
       {
         opacity: 0,
-        scale: 1.1,
+        scale: 1,
         filter: "blur(0px)"
       },
       {
         opacity: 1,
         scale: 1,
         filter: "blur(0px)",
-        duration: 0.2,
+        duration: 0.6,
         ease: "power2.out",
         force3D: true
-      }
+      },
+      "-=0.2"
     )
     .to(
       refs.doorLeft,
@@ -1289,7 +1303,7 @@ const buildScene1Timeline = (refs, isMobile) => {
         opacity: 1,
         ease: "power2.out"
       },
-      "<"
+      "-=0.4" // start door split while closeup is still fading in
     )
     .to(
       refs.doorRight,
@@ -1363,8 +1377,7 @@ const buildScene1Timeline = (refs, isMobile) => {
     })
     .to({}, { duration: 1.5 })
     .to(refs.lottie, {
-      // y: isMobile ? "-12vh" : "-15vh",
-      y: isMobile ? "-14vh" : "-18vh",
+      y: isMobile ? "-16vh" : "-20vh", // move lottie higher
       duration: 0.3,
       ease: "power2.out",
       force3D: true
@@ -1373,13 +1386,11 @@ const buildScene1Timeline = (refs, isMobile) => {
       refs.text,
       {
         opacity: 0,
-        // y: isMobile ? "12vh" : "14vh"
-        y: isMobile ? "8vh" : "10vh"
+        y: isMobile ? "6vh" : "10vh" // start text closer
       },
       {
         opacity: 1,
-        // y: isMobile ? "4vh" : "20vh",
-        y: isMobile ? "0vh" : "14vh",
+        y: isMobile ? "-2vh" : "10vh", // final position closer to lottie
         duration: 0.8,
         ease: "power2.out",
         force3D: true
@@ -1389,13 +1400,9 @@ const buildScene1Timeline = (refs, isMobile) => {
     .add(() => {
       // Lock all elements in their final positions
       gsap.set(refs.doorCloseup, { opacity: 1, scale: 1, filter: "blur(0px)" });
-      // gsap.set(refs.lottie, { opacity: 1, y: isMobile ? "-12vh" : "-15vh" });
-      // gsap.set(refs.text, { opacity: 1, y: isMobile ? "4vh" : "20vh" });
-      gsap.set(refs.lottie, { opacity: 1, y: isMobile ? "-14vh" : "-18vh" }); // UPDATED: was "-12vh" and "-15vh"
-      gsap.set(refs.text, { opacity: 1, y: isMobile ? "0vh" : "14vh" }); // UPDATED: was "4vh" and "20vh"
+      gsap.set(refs.lottie, { opacity: 1, y: isMobile ? "-16vh" : "-20vh" }); // UPDATED
+      gsap.set(refs.text, { opacity: 1, y: isMobile ? "-2vh" : "10vh" }); // UPDATED
       gsap.set([refs.doorLeft, refs.doorRight], { opacity: 0 });
-      // gsap.set([refs.stairs_with_door], { opacity: 0 });
-      // gsap.set([refs.floor], { opacity: 0 });
       gsap.set(refs.rainbow, { opacity: 0 });
       gsap.set(refs.cube, { autoAlpha: 0 });
 
@@ -1468,12 +1475,12 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
       else if (width <= 912) return height * 0.1;
       else return height * 0.15;
     } else {
-      if (width <= 1280) return height * 0.2;
-      else if (width <= 1440) return height * 0.21;
-      else if (width <= 1920) return height * 0.21;
-      else if (width <= 2560) return height * 0.2;
-      else if (width <= 3440) return height * 0.2;
-      else return height * 0.2;
+      if (width <= 1280) return height * 0.3;
+      else if (width <= 1440) return height * 0.23;
+      else if (width <= 1920) return height * 0.23;
+      else if (width <= 2560) return height * 0.23;
+      else if (width <= 3440) return height * 0.23;
+      else return height * 0.25;
     }
   };
 
@@ -1755,14 +1762,18 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
       </div>
       {/* 3 pulsing arrows (after intro) */}
 
+      {/* 3 pulsing arrows (after intro) - positioned under text */}
       {showScrollArrows && (
         <div
           ref={downArrowsRef}
-          className="absolute bottom-[8%] left-1/2 -translate-x-1/2 z-[150] pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 z-[150] pointer-events-none"
+          style={{
+            top: isMobile ? "66%" : "74%" // position relative to text
+          }}
         >
           <svg
-            width={isMobile ? "40" : "56"}
-            height={isMobile ? "48" : "64"}
+            width={isMobile ? "32" : "44"}
+            height={isMobile ? "40" : "52"}
             viewBox="0 0 56 64"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -1770,7 +1781,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             {/* Top chevron - most transparent */}
             <path
               d="M16 12L28 24L40 12"
-              stroke="#DF0586"
+              stroke="#000000"
               strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1780,7 +1791,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             {/* Middle chevron - medium transparency */}
             <path
               d="M16 28L28 40L40 28"
-              stroke="#DF0586"
+              stroke="#000000"
               strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1790,7 +1801,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             {/* Bottom chevron - most visible */}
             <path
               d="M16 44L28 56L40 44"
-              stroke="#DF0586"
+              stroke="#000000"
               strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"

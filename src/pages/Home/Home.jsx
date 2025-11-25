@@ -1072,7 +1072,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Scene1 from "./Scene1";
 import Scene1_1, { useScene1_1Timeline, setCompletedState } from "./Scene1_1";
 import Scene1_2, { useScene1_2Timeline } from "./Scene1_2";
-import Scene1_3, { useScene1_3Timeline } from "./Scene1_3";
+import Scene1_3, { useScene1_3Timeline, SCENE1_3_STEP_COUNT } from "./Scene1_3";
 import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 import GrainTexture from "../../components/GrainTexture";
 
@@ -1283,42 +1283,40 @@ const Home = ({
       const SCENE1_END_PROGRESS = 0.06;
 
       const master = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#scroll-container",
-          start: "top top",
-          end: `+=${scrollLength}`,
-          scrub: 0.8,
-          pin: true,
-          fastScrollEnd: false,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            if (
-              setShowNavbar &&
-              !hasShownNavbarRef.current &&
-              self.progress > SCENE1_END_PROGRESS
-            ) {
-              setShowNavbar(true);
-              hasShownNavbarRef.current = true;
-            }
-
-            if (
-              setShowNavbar &&
-              hasShownNavbarRef.current &&
-              self.progress <= SCENE1_END_PROGRESS
-            ) {
-              setShowNavbar(false);
-              hasShownNavbarRef.current = false;
-            }
-
-            if (
-              !scene1EndScrollRef.current &&
-              self.progress > SCENE1_END_PROGRESS
-            ) {
-              scene1EndScrollRef.current = self.scroll();
-            }
-          }
-        }
+        // scrollTrigger: {
+        //   trigger: "#scroll-container",
+        //   start: "top top",
+        //   end: `+=${scrollLength}`,
+        //   scrub: 0.8,
+        //   pin: true,
+        //   fastScrollEnd: false,
+        //   anticipatePin: 1,
+        //   invalidateOnRefresh: true,
+        //   onUpdate: (self) => {
+        //     if (
+        //       setShowNavbar &&
+        //       !hasShownNavbarRef.current &&
+        //       self.progress > SCENE1_END_PROGRESS
+        //     ) {
+        //       setShowNavbar(true);
+        //       hasShownNavbarRef.current = true;
+        //     }
+        //     if (
+        //       setShowNavbar &&
+        //       hasShownNavbarRef.current &&
+        //       self.progress <= SCENE1_END_PROGRESS
+        //     ) {
+        //       setShowNavbar(false);
+        //       hasShownNavbarRef.current = false;
+        //     }
+        //     if (
+        //       !scene1EndScrollRef.current &&
+        //       self.progress > SCENE1_END_PROGRESS
+        //     ) {
+        //       scene1EndScrollRef.current = self.scroll();
+        //     }
+        //   }
+        // }
       });
 
       masterTimelineRef.current = master;
@@ -1429,6 +1427,99 @@ const Home = ({
 
       if (tl5) master.add(tl5);
 
+      // we want snapping only inside the scene1_3 segment
+      let lastProgress = 0;
+      let currentStepIndex = 0; // 0..SCENE1_3_STEP_COUNT-1
+
+      const maxIndex = (SCENE1_3_STEP_COUNT || 5) - 1;
+      const scene1_3Start = tl4 ? tl4.startTime() : 0;
+      const scene1_3End = tl4 ? tl4.startTime() + tl4.duration() : 0;
+      const masterDur = master.duration();
+
+      const st = ScrollTrigger.create({
+        animation: master,
+        trigger: "#scroll-container",
+        start: "top top",
+        end: `+=${scrollLength}`,
+        scrub: 0.8,
+        pin: true,
+        fastScrollEnd: false,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+
+        snap: {
+          snapTo: (rawProgress) => {
+            if (!tl4 || !masterDur || !maxIndex >= 0) return rawProgress;
+
+            const t = rawProgress * masterDur;
+
+            // outside scene1_3 → don't interfere
+            if (t < scene1_3Start || t > scene1_3End) {
+              lastProgress = rawProgress;
+              return rawProgress;
+            }
+
+            // how much did we move this frame?
+            const delta = rawProgress - lastProgress;
+            lastProgress = rawProgress;
+
+            // small noise → stay on same step
+            if (Math.abs(delta) < 0.001) {
+              return progressForStep(currentStepIndex);
+            }
+
+            // decide direction
+            if (delta > 0) {
+              // scrolling down → next step (max +1)
+              currentStepIndex = Math.min(currentStepIndex + 1, maxIndex);
+            } else if (delta < 0) {
+              // scrolling up → previous step (max -1)
+              currentStepIndex = Math.max(currentStepIndex - 1, 0);
+            }
+
+            return progressForStep(currentStepIndex);
+          },
+          duration: 0, // instant jump, no auto tween
+          inertia: false // no momentum fighting this
+        },
+        onUpdate: (self) => {
+          // keep your existing navbar logic
+          if (
+            setShowNavbar &&
+            !hasShownNavbarRef.current &&
+            self.progress > SCENE1_END_PROGRESS
+          ) {
+            setShowNavbar(true);
+            hasShownNavbarRef.current = true;
+          }
+
+          if (
+            setShowNavbar &&
+            hasShownNavbarRef.current &&
+            self.progress <= SCENE1_END_PROGRESS
+          ) {
+            setShowNavbar(false);
+            hasShownNavbarRef.current = false;
+          }
+
+          if (
+            !scene1EndScrollRef.current &&
+            self.progress > SCENE1_END_PROGRESS
+          ) {
+            scene1EndScrollRef.current = self.scroll();
+          }
+        }
+      });
+      // helper: convert step index → master progress
+      function progressForStep(stepIndex) {
+        const local = maxIndex === 0 ? 0 : stepIndex / maxIndex; // 0..1
+        const snappedTime =
+          scene1_3Start + local * (scene1_3End - scene1_3Start || 1);
+        return snappedTime / masterDur;
+      }
+
+      // store for cleanup (optional, but handy)
+      master.scrollTrigger = st;
       masterTimelineRef.current = master;
     });
 

@@ -584,7 +584,8 @@ import {
 } from "../assets/images/Nav";
 import {
   hand_with_thunder,
-  hand_with_thunder_mobile
+  hand_with_thunder_mobile,
+  join_us_button
 } from "../assets/images/Home";
 
 const useIsMobile = (bp = 768) => {
@@ -675,20 +676,17 @@ const Footer = () => {
             </h2>
 
             <div className="mt-6">
-              {/* <button
-                className="bg-black text-white font-extrabold px-6 py-3 rounded-xl text-[1.5rem] leading-none"
-                aria-label="join us"
-              >
-                join us
-              </button> */}
               <a
-                // href="https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
                 href="https://discord.gg/wKRYG7cSWt"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-black text-white font-extrabold px-5 py-3 rounded-xl text-[1.5rem] leading-none"
+                className="inline-block"
               >
-                join us
+                <img
+                  src={join_us_button}
+                  alt="join us"
+                  className="w-auto h-[3.5rem] hover:opacity-80 transition-opacity duration-300"
+                />
               </a>
             </div>
 
@@ -751,9 +749,18 @@ const Footer = () => {
           </h2>
 
           <div className="mt-4">
-            <button className="bg-black text-white font-extrabold px-5 py-3 rounded-xl text-[1.5rem] leading-none">
-              join us
-            </button>
+            <a
+              href="https://discord.gg/wKRYG7cSWt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <img
+                src={join_us_button}
+                alt="join us"
+                className="w-auto h-[3rem] hover:opacity-80 transition-opacity duration-300"
+              />
+            </a>
           </div>
 
           <div className="h-px bg-black my-6" />

@@ -256,72 +256,114 @@ export const useScene1_4Timeline = (refs, isMobile) => {
   const tl = gsap.timeline();
 
   // start state
-  tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 0 }, 0);
+  // tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 0 }, 0);
 
-  // marquee in
-  tl.fromTo(
-    refs.marquee,
-    { y: 100, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0, ease: "power2.out" },
-    0
-  );
+  // // marquee in
+  // tl.fromTo(
+  //   refs.marquee,
+  //   { y: 100, opacity: 0 },
+  //   { y: 0, opacity: 1, duration: 0, ease: "power2.out" },
+  //   0
+  // );
 
-  tl.fromTo(
-    refs.text1,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
-    0
-  );
+  // tl.fromTo(
+  //   refs.text1,
+  //   { y: 60, opacity: 0 },
+  //   { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
+  //   0
+  // );
+  // start state
+  // start state – visible immediately, no entrance animation
+  tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 1, y: 0 }, 0);
+
+  // tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 0 }, 0);
+
+  // // marquee in – give it a small duration
+  // tl.fromTo(
+  //   refs.marquee,
+  //   { y: 40, opacity: 0 },
+  //   { y: 0, opacity: 1, duration: 0, ease: "power1.out" },
+  //   0
+  // );
+
+  // // text1 + text2 together (staggered a bit)
+  // tl.fromTo(
+  //   [refs.text1, refs.text2],
+  //   { y: 40, opacity: 0 },
+  //   {
+  //     y: 0,
+  //     opacity: 1,
+  //     duration: 0,
+  //     ease: "power1.out",
+  //     stagger: 0.08
+  //   },
+  //   0
+  // );
 
   // kick off infinite marquee (idempotent + reversible)
   tl.add(() => {
-    if (!refs.marqueeTrack || !refs.marqueeGroup) return;
+    // let the browser paint once, then do the heavy stuff
+    requestAnimationFrame(() => {
+      if (!refs.marqueeTrack || !refs.marqueeGroup) return;
 
-    // prevent duplicate init on re-entries
-    if (refs.marqueeTrack.dataset.playing === "1") return;
-    refs.marqueeTrack.dataset.playing = "1";
+      const track = refs.marqueeTrack;
+      const group = refs.marqueeGroup;
 
-    // measure
-    const groupWidth = refs.marqueeGroup.scrollWidth;
+      // already running? skip
+      if (track.dataset.playing === "1") return;
+      track.dataset.playing = "1";
 
-    // ensure there's enough content to cover a wrap without DOM growth
-    // duplicate once if needed, but only once
-    if (!refs.marqueeTrack.dataset.duplicated) {
-      const clone = refs.marqueeGroup.cloneNode(true);
-      refs.marqueeTrack.appendChild(clone);
-      refs.marqueeTrack.dataset.duplicated = "1";
-    }
-
-    // create the tween and stash it for cleanup
-    const tween = gsap.to(refs.marqueeTrack, {
-      x: -groupWidth,
-      duration: 20,
-      ease: "none",
-      repeat: -1,
-      modifiers: {
-        x: (x) => `${parseFloat(x) % groupWidth}px`
+      // duplicate content once
+      if (!track.dataset.duplicated) {
+        const clone = group.cloneNode(true);
+        track.appendChild(clone);
+        track.dataset.duplicated = "1";
       }
-    });
 
-    refs.marqueeTween = tween;
+      const baseWidth = group.scrollWidth;
 
-    // responsive re-measure (optional but nice)
-    refs._resizeHandler = () => {
-      const w = refs.marqueeGroup.scrollWidth;
-      // jump current progress into the new range smoothly
-      const p = tween.progress();
-      tween.kill();
-      const t2 = gsap.to(refs.marqueeTrack, {
-        x: -w,
+      // reset + gpu hint
+      gsap.set(track, {
+        x: 0,
+        willChange: "transform",
+        force3D: true
+      });
+
+      const tween = gsap.to(track, {
+        x: -baseWidth,
         duration: 20,
         ease: "none",
         repeat: -1,
-        modifiers: { x: (x) => `${parseFloat(x) % w}px` }
+        force3D: true,
+        modifiers: {
+          x: (x) => `${parseFloat(x) % baseWidth}px`
+        }
       });
-      t2.progress(p);
-      refs.marqueeTween = t2;
-    };
-    window.addEventListener("resize", refs._resizeHandler, { passive: true });
+
+      refs.marqueeTween = tween;
+
+      // resize handler
+      refs._resizeHandler = () => {
+        const w = group.scrollWidth;
+        const p = tween.progress();
+        tween.kill();
+
+        const t2 = gsap.to(track, {
+          x: -w,
+          duration: 20,
+          ease: "none",
+          repeat: -1,
+          force3D: true,
+          modifiers: {
+            x: (x) => `${parseFloat(x) % w}px`
+          }
+        });
+        t2.progress(p);
+        refs.marqueeTween = t2;
+      };
+
+      window.addEventListener("resize", refs._resizeHandler, { passive: true });
+    });
   });
 
   // text reveals
@@ -331,12 +373,12 @@ export const useScene1_4Timeline = (refs, isMobile) => {
   //   { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
   //   "+=0.8"
   // );
-  tl.fromTo(
-    refs.text2,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
-    0
-  );
+  // tl.fromTo(
+  //   refs.text2,
+  //   { y: 60, opacity: 0 },
+  //   { y: 0, opacity: 1, duration: 0, ease: "power3.out" },
+  //   0
+  // );
 
   // cleanup when the master timeline rewinds past this scene
   tl.eventCallback("onReverseComplete", () => {
@@ -400,8 +442,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               fontSize: "2.5rem",
               fontWeight: 400,
               lineHeight: "3rem",
-              maxWidth: "62.5rem",
-              opacity: 0
+              maxWidth: "62.5rem"
+              // opacity: 0
             }}
           >
             we're not here to hand out just certificates.
@@ -413,8 +455,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             style={{
               fontSize: "4rem",
               lineHeight: "4.5rem",
-              maxWidth: "62.5rem",
-              opacity: 0
+              maxWidth: "62.5rem"
+              // opacity: 0
             }}
           >
             we're here to empower you to see new perspectives.
@@ -432,8 +474,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               fontSize: "1.5rem",
               fontWeight: 500,
               lineHeight: "1.75rem",
-              maxWidth: "90vw",
-              opacity: 0
+              maxWidth: "90vw"
+              // opacity: 0
             }}
           >
             we're not here to hand out just certificates.
@@ -445,8 +487,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             style={{
               fontSize: "2.5rem",
               lineHeight: "2.25rem",
-              maxWidth: "90vw",
-              opacity: 0
+              maxWidth: "90vw"
+              // opacity: 0
             }}
           >
             we're here to empower you to see new perspectives.
@@ -460,7 +502,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
         className={`absolute left-0 w-full border-t-2 border-b-2 border-evolve-yellow bg-evolve-lavender-indigo overflow-hidden ${
           isMobile ? "bottom-[10%] h-16" : "bottom-0 h-[9rem]"
         }`}
-        style={{ opacity: 0 }}
+        // style={{ opacity: 0 }}
       >
         <div
           ref={marqueeTrackRef}

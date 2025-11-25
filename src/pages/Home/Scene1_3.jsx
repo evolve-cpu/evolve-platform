@@ -496,6 +496,8 @@ const STEPS = [
   }
 ];
 
+export const SCENE1_3_STEP_COUNT = STEPS.length;
+
 const pad = (n, w = 3) => String(n).padStart(w, "0");
 const srcFor = (i, basePath, prefix, ext) =>
   `${basePath}/${prefix}${pad(i)}.${ext}`;
@@ -850,7 +852,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                   ref={canvasRef}
                   className="w-full block object-contain"
                   style={{
-                    maxHeight: "56vh",
+                    maxHeight: "66vh",
                     transform: "scale(1.05)", // increase by 5%
                     transformOrigin: "center bottom"
                   }}
@@ -912,7 +914,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                 <canvas
                   ref={canvasRef}
                   className="w-full block object-contain"
-                  style={{ maxHeight: "50vh" }}
+                  style={{ maxHeight: "60vh" }}
                 />
               </div>
             </div>

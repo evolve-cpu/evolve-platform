@@ -122,6 +122,7 @@ import stairs2_mobile from "./stairs2_mobile.svg";
 import stairs4_mobile from "./stairs4_mobile.svg";
 import stairsfull_right_mobile from "./stairsfull_right_mobile.svg";
 import dive_in from "./dive_in.svg";
+import join_us_button from "./join_us_button.svg";
 
 export {
   left_wall,
@@ -246,5 +247,6 @@ export {
   stairs2_mobile,
   stairs4_mobile,
   stairsfull_right_mobile,
-  dive_in
+  dive_in,
+  join_us_button
 };
