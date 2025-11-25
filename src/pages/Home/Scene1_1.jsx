@@ -3510,24 +3510,22 @@ const Scene1_1 = React.forwardRef((props, ref) => {
               <span data-text="first" style={{ color: "rgb(0, 0, 0)" }}>
                 you'll{" "}
               </span>
-            </div>
-            <div>
               <span data-text="first" style={{ color: "rgb(0, 0, 0)" }}>
                 find{" "}
               </span>
               <span data-text="first" style={{ color: "rgb(0, 0, 0)" }}>
-                mentors,
+                mentors,{" "}
               </span>
-            </div>
-            <div>
+              {/* </div>
+            <div> */}
               <span data-text="first" style={{ color: "rgb(0, 0, 0)" }}>
                 misfits,{" "}
               </span>
               <span data-text="last" style={{ color: "rgb(0, 0, 0)" }}>
-                and
+                and{" "}
               </span>
-            </div>
-            <div>
+              {/* </div>
+            <div> */}
               <span data-text="last" style={{ color: "rgb(0, 0, 0)" }}>
                 midnight{" "}
               </span>
