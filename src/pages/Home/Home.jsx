@@ -1280,7 +1280,7 @@ const Home = ({
       const vh = Math.max(window.innerHeight, 400);
       const scrollLength = vh * SECTIONS * SCROLL_PER_SECTION;
 
-      const SCENE1_END_PROGRESS = 0.06;
+      const SCENE1_END_PROGRESS = 0.03;
 
       const master = gsap.timeline({
         // scrollTrigger: {
@@ -1509,6 +1509,36 @@ const Home = ({
             scene1EndScrollRef.current = self.scroll();
           }
         }
+        // onUpdate: (self) => {
+        //   // Get Scene1_1's current opacity
+        //   const scene1_1Opacity = gsap.getProperty(
+        //     scene1_1Refs.current.container,
+        //     "opacity"
+        //   );
+
+        //   if (
+        //     setShowNavbar &&
+        //     !hasShownNavbarRef.current &&
+        //     scene1_1Opacity >= 0.9 // Show navbar when Scene1_1 is almost fully visible
+        //   ) {
+        //     setShowNavbar(true);
+        //     hasShownNavbarRef.current = true;
+        //   }
+
+        //   if (
+        //     setShowNavbar &&
+        //     hasShownNavbarRef.current &&
+        //     scene1_1Opacity < 0.4 // Hide when going back
+        //   ) {
+        //     setShowNavbar(false);
+        //     hasShownNavbarRef.current = false;
+        //   }
+
+        //   // Keep your scroll reference logic
+        //   if (!scene1EndScrollRef.current && scene1_1Opacity >= 0.9) {
+        //     scene1EndScrollRef.current = self.scroll();
+        //   }
+        // }
       });
       // helper: convert step index → master progress
       function progressForStep(stepIndex) {

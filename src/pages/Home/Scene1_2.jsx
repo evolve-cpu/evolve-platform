@@ -35,7 +35,8 @@ import {
   semi_circle_left_mobile,
   left_thunder,
   right_thunder,
-  join_us_button
+  join_us_button,
+  join_us_button_hover
 } from "../../assets/images/Home";
 
 import ThreeDoorsWithRibbon from "../../components/ThreeDoorsWithRibbon";
@@ -139,6 +140,22 @@ export const useScene1_2Timeline = (refs, isMobile) => {
       tl.to(
         refs.doorHands,
         { y: "-60vh", duration: 0.8, ease: "power2.inOut" },
+        "sixthScroll"
+      );
+    }
+  );
+
+  // iPad Pro 11" Landscape dedicated rule
+  doorHandsY.add(
+    "(min-width: 1180px) and (max-width: 1210px) and (min-height: 780px) and (max-height: 840px) and (orientation: landscape)",
+    () => {
+      tl.to(
+        refs.doorHands,
+        {
+          y: "0vh", // custom movement for ipad pro 11 landscape
+          duration: 0.8,
+          ease: "power2.inOut"
+        },
         "sixthScroll"
       );
     }
@@ -447,10 +464,21 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   // Move entire scene downwards and fade out
   // Move entire scene downwards and fade out
   tl.to(
+    refs.waitlistButton,
+    {
+      y: isMobile ? 50 : 100,
+      opacity: 0,
+      pointerEvents: "none", // ✅ Add this - make non-clickable when hidden
+      duration: 0.1,
+      ease: "power2.inOut"
+    },
+    "fifthscroll"
+  );
+  tl.to(
     [
       refs.finalTopText,
       refs.finalBottomText,
-      refs.waitlistButton,
+      // refs.waitlistButton,
       refs.doorsFinal,
       refs.vectorLavender,
       refs.leftHand,
@@ -460,7 +488,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
       y: isMobile ? 200 : 300,
       opacity: 0,
       pointerEvents: "none", // ✅ Add this - make non-clickable when hidden
-      duration: 0,
+      duration: 0.4,
       ease: "power2.inOut"
     },
     "fifthScroll"
@@ -621,13 +649,55 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     // Move doorHands component down
     // Move doorHands component down
     // Move doorHands component down
+    //   tl.to(
+    //     refs.doorHands,
+    //     {
+    //       y: () => {
+    //         const w = window.innerWidth;
+    //         const h = window.innerHeight;
+    //         // Tablet landscape check
+    //         const isTabletLandscape =
+    //           w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+
+    //         console.log(
+    //           "DoorHands animation - Width:",
+    //           w,
+    //           "Height:",
+    //           h,
+    //           "isTablet:",
+    //           isTabletLandscape
+    //         );
+
+    //         return isTabletLandscape ? "-35vh" : "15vh";
+    //       },
+    //       duration: 0.8,
+    //       ease: "power2.inOut"
+    //     },
+    //     "sixthScroll"
+    //   );
+    // }
+
     tl.to(
       refs.doorHands,
       {
         y: () => {
           const w = window.innerWidth;
           const h = window.innerHeight;
-          // Tablet landscape check
+
+          // --- CUSTOM iPad Pro 11" LANDSCAPE (real Safari viewport) ---
+          const isIpadPro11Landscape =
+            w >= 1180 &&
+            w <= 1210 &&
+            h >= 780 &&
+            h <= 840 &&
+            window.matchMedia("(orientation: landscape)").matches;
+
+          if (isIpadPro11Landscape) {
+            console.log("Detected: iPad Pro 11-inch Landscape");
+            return "15vh"; // <-- your custom value
+          }
+
+          // --- GENERAL TABLET LANDSCAPE ---
           const isTabletLandscape =
             w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
 
@@ -636,11 +706,14 @@ export const useScene1_2Timeline = (refs, isMobile) => {
             w,
             "Height:",
             h,
-            "isTablet:",
+            "Tablet:",
             isTabletLandscape
           );
 
-          return isTabletLandscape ? "-35vh" : "15vh";
+          if (isTabletLandscape) return "-35vh";
+
+          // --- DEFAULT (desktop / mobile) ---
+          return "15vh";
         },
         duration: 0.8,
         ease: "power2.inOut"
@@ -1326,7 +1399,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               className="absolute pointer-events-none
           [top:45%]
           [@media(min-height:667px)]:top-[43.5%]
-          [@media(min-height:736px)]:top-[43%]
+          [@media(min-height:725px)]:top-[44%]
           [@media(min-height:812px)]:top-[44%]
           [@media(min-height:844px)]:top-[44.9%]
           [@media(min-height:896px)]:top-[45.9%]
@@ -1349,13 +1422,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={purple_hand_right_mobile}
               alt="purple hand right"
               className="absolute pointer-events-none
-          [top:44.5%]
+          [top:45%]
           [@media(min-height:667px)]:top-[43.5%]
-          [@media(min-height:736px)]:top-[42.5%]
-          [@media(min-height:812px)]:top-[43%]
-          [@media(min-height:844px)]:top-[44.5%]
-          [@media(min-height:896px)]:top-[45.5%]
-          [@media(min-height:926px)]:top-[46%]"
+          [@media(min-height:725px)]:top-[44%]
+          [@media(min-height:812px)]:top-[44%]
+          [@media(min-height:844px)]:top-[44.9%]
+          [@media(min-height:896px)]:top-[45.9%]
+          [@media(min-height:926px)]:top-[46.9%]"
               style={{
                 right: "0",
                 width: "auto",
@@ -1472,15 +1545,15 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_left_mobile}
               alt="pink lightening left"
               className="absolute pointer-events-none 
-    [top:20%]
-    [@media(min-height:667px)]:top-[17%]
-    [@media(min-height:736px)]:top-[18%]
-    [@media(min-height:812px)]:top-[16%]
-    [@media(min-height:844px)]:top-[15%]
-    [@media(min-height:896px)]:top-[14%]
-    [@media(min-height:926px)]:top-[13%]"
+    [top:17%]
+    [@media(min-height:667px)]:top-[15%]
+    [@media(min-height:736px)]:top-[16%]
+    [@media(min-height:812px)]:top-[14%]
+    [@media(min-height:844px)]:top-[13%]
+    [@media(min-height:896px)]:top-[12%]
+    [@media(min-height:926px)]:top-[11%]"
               style={{
-                left: "0",
+                left: "-5%",
                 width: "auto",
                 height: "auto",
                 opacity: 0,
@@ -1496,15 +1569,15 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_right_mobile}
               alt="pink lightening right"
               className="absolute pointer-events-none 
-    [top:20%]
-    [@media(min-height:667px)]:top-[17%]
-    [@media(min-height:736px)]:top-[18%]
-    [@media(min-height:812px)]:top-[16%]
-    [@media(min-height:844px)]:top-[15%]
-    [@media(min-height:896px)]:top-[14%]
-    [@media(min-height:926px)]:top-[13%]"
+    [top:17%]
+    [@media(min-height:667px)]:top-[15%]
+    [@media(min-height:736px)]:top-[16%]
+    [@media(min-height:812px)]:top-[14%]
+    [@media(min-height:844px)]:top-[13%]
+    [@media(min-height:896px)]:top-[12%]
+    [@media(min-height:926px)]:top-[11%]"
               style={{
-                right: "0",
+                right: "-5%",
                 width: "auto",
                 height: "auto",
                 opacity: 0,
@@ -1712,6 +1785,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ].join(" ")}
               style={{
                 lineHeight: isMobile ? "23px" : "34px",
+                // letterSpacing: isMobile ? "-0.04em" : "",
                 opacity: 0,
                 transform: "translateY(-10px)"
               }}
@@ -1769,6 +1843,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             style={{
               opacity: 0,
               lineHeight: 1,
+              letterSpacing: isMobile ? "-0.04em" : "",
               transform: "translateY(-10px)"
             }}
           >
@@ -1822,6 +1897,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             style={{
               opacity: 0,
               lineHeight: 1,
+              letterSpacing: isMobile ? "-0.04em" : "",
               transform: "translateY(-10px)"
             }}
           >
@@ -1875,6 +1951,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             style={{
               opacity: 0,
               lineHeight: isMobile ? "100%" : "80%",
+              letterSpacing: isMobile ? "-0.04em" : "",
               transform: "translateY(-10px)"
             }}
           >
@@ -1933,7 +2010,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
                 "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[96px]" // large desktop
               ].join(" ")}
               style={{
-                letterSpacing: "0.03em", // 3% kerning
+                letterSpacing: isMobile ? "-0.04em" : "", // 3% kerning
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
@@ -1955,7 +2032,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ].join(" ")}
               style={{
                 // fontSize: isMobile ? "3rem" : "6rem",
-                letterSpacing: 0,
+                letterSpacing: "-0.04em",
                 opacity: 0,
                 top: 0,
                 lineHeight: 1
@@ -1994,6 +2071,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             ].join(" ")}
             style={{
               // fontSize: isMobile ? "48px" : "96px",
+              letterSpacing: "-0.04em",
               opacity: 0
               // lineHeight: 0.8
             }}
@@ -2012,9 +2090,9 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             className="inline-block"
             style={{
               opacity: 0,
-              transform: "scale(0.8)",
-              pointerEvents: "none", // Start non-clickable
-              transition: "transform 0.2s ease, opacity 0.3s ease"
+              // transform: "scale(0.8)",
+              pointerEvents: "none" // Start non-clickable
+              // transition: "transform 0.2s ease, opacity 0.3s ease"
             }}
             onClick={(e) => {
               e.preventDefault();
@@ -2024,7 +2102,9 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             <img
               src={join_us_button}
               alt="join us"
-              className="w-auto hover:opacity-80 transition-opacity duration-300"
+              className="w-auto "
+              onMouseEnter={(e) => (e.currentTarget.src = join_us_button_hover)}
+              onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
               style={{
                 height: isMobile ? "3rem" : "4rem"
               }}

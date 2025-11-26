@@ -649,7 +649,7 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   // bigger, clearly visible step offsets
   // index 0 = seed, 1..3 = growing, 4 = settled
   const TEXT_Y_POSITIONS = isMobile
-    ? [240, 180, 100, 60, 20] // mobile
+    ? [200, 120, 40, -20, -35] // mobile
     : [280, 190, 100, 20, 0]; // desktop
 
   if (textGroup) {
@@ -914,7 +914,11 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
                 <canvas
                   ref={canvasRef}
                   className="w-full block object-contain"
-                  style={{ maxHeight: "60vh" }}
+                  style={{
+                    maxHeight: "70vh",
+                    transform: "scale(1.35)",
+                    transformOrigin: "center bottom"
+                  }}
                 />
               </div>
             </div>

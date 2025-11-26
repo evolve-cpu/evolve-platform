@@ -585,7 +585,8 @@ import {
 import {
   hand_with_thunder,
   hand_with_thunder_mobile,
-  join_us_button
+  join_us_button,
+  join_us_button_hover
 } from "../assets/images/Home";
 
 const useIsMobile = (bp = 768) => {
@@ -758,7 +759,11 @@ const Footer = () => {
               <img
                 src={join_us_button}
                 alt="join us"
-                className="w-auto h-[3rem] hover:opacity-80 transition-opacity duration-300"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.src = join_us_button_hover)
+                }
+                onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
+                className="w-auto h-[3rem] "
               />
             </a>
           </div>

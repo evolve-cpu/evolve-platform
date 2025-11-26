@@ -122,7 +122,9 @@ import stairs2_mobile from "./stairs2_mobile.svg";
 import stairs4_mobile from "./stairs4_mobile.svg";
 import stairsfull_right_mobile from "./stairsfull_right_mobile.svg";
 import dive_in from "./dive_in.svg";
+import dive_in_hover from "./dive_in_hover.svg";
 import join_us_button from "./join_us_button.svg";
+import join_us_button_hover from "./join_us_button_hover.svg";
 
 export {
   left_wall,
@@ -248,5 +250,7 @@ export {
   stairs4_mobile,
   stairsfull_right_mobile,
   dive_in,
-  join_us_button
+  join_us_button,
+  dive_in_hover,
+  join_us_button_hover
 };

@@ -60,7 +60,8 @@ import {
   stairs2_mobile, // ADD THIS
   stairs4_mobile, // ADD THIS
   stairsfull_right_mobile, // ADD THIS
-  join_us_button
+  join_us_button,
+  join_us_button_hover
 } from "../../assets/images/Home";
 
 // Add this helper function at the top of your Scene1_1 file
@@ -2046,8 +2047,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           {
             clipPath: "inset(60% 0 0 0)",
             WebkitClipPath: "inset(60% 0 0 0)",
-            WebkitMaskImage: "linear-gradient(to top, black 35%, black 40%)",
-            maskImage: "linear-gradient(to top, black 35%, black 40%)",
+            WebkitMaskImage: "linear-gradient(to top, black 75%, black 20%)",
+            maskImage: "linear-gradient(to top, black 25%, black 60%)",
             duration: 0.8,
             ease: "power2.out"
           },
@@ -5160,7 +5161,9 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           <img
             src={join_us_button}
             alt="join us"
-            className="hover:opacity-80 transition-opacity duration-300"
+            // className="hover:opacity-80 transition-opacity duration-300"
+            onMouseEnter={(e) => (e.currentTarget.src = join_us_button_hover)}
+            onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
             style={{
               width: "auto",
               height: isMobile ? "3rem" : "4rem",
