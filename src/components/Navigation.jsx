@@ -872,13 +872,16 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     }
   }, [showNavbar]);
 
-  // open/close animations - FIXED
+  // open/close animations - FIXED + prevent scroll
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
     const panel = menuPanelRef.current;
     if (!underlay || !panel) return;
 
     if (menuOpen) {
+      // Prevent body scroll
+      document.body.style.overflow = "hidden";
+
       if (isDesktop()) {
         gsap.set(underlay, { display: "block", opacity: 0 });
         gsap.set(panel, { xPercent: -100 });
@@ -889,6 +892,9 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
+      // Restore body scroll
+      document.body.style.overflow = "";
+
       if (isDesktop()) {
         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
         gsap.to(underlay, {

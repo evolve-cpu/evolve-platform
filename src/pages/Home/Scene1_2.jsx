@@ -1622,7 +1622,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
     [@media(min-height:900px)]:top-[38%]
     [@media(min-height:1080px)]:top-[35%]
     [@media(min-width:1700px)]:top-[28%]
-          [right:20px]
+          [right:18px]
           [@media(min-width:1700px)]:right-[22px]"
               style={{
                 // right: "20px",
@@ -1641,13 +1641,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={bird_left_mobile}
               alt="bird left"
               className="absolute pointer-events-none
-    [top:45.5%]
-    [@media(min-height:667px)]:top-[43.5%]
-    [@media(min-height:736px)]:top-[42.5%]
-    [@media(min-height:812px)]:top-[43%]
-    [@media(min-height:844px)]:top-[44.5%]
+    [top:35.5%]
+    [@media(min-height:667px)]:top-[37.5%]
+    [@media(min-height:736px)]:top-[32.5%]
+    [@media(min-height:812px)]:top-[33%]
+    [@media(min-height:844px)]:top-[34.5%]
     [@media(min-height:896px)]:top-[45.5%]
-    [@media(min-height:926px)]:top-[46%]"
+    [@media(min-height:926px)]:top-[36%]"
               style={{
                 left: "0",
                 width: "50%",
@@ -1665,13 +1665,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={bird_right_mobile}
               alt="bird right"
               className="absolute pointer-events-none
-    [top:45.5%]
-    [@media(min-height:667px)]:top-[43.5%]
-    [@media(min-height:736px)]:top-[42.5%]
-    [@media(min-height:812px)]:top-[43%]
-    [@media(min-height:844px)]:top-[44.5%]
+      [top:35.5%]
+    [@media(min-height:667px)]:top-[37.5%]
+    [@media(min-height:736px)]:top-[32.5%]
+    [@media(min-height:812px)]:top-[33%]
+    [@media(min-height:844px)]:top-[34.5%]
     [@media(min-height:896px)]:top-[45.5%]
-    [@media(min-height:926px)]:top-[46%]"
+    [@media(min-height:926px)]:top-[36%]"
               style={{
                 right: "0",
                 width: "50%",

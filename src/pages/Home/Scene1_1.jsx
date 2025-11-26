@@ -140,7 +140,7 @@ export const setCompletedState = (refs, isMobile) => {
 
   // Show bigger orbit in centered position
   gsap.set(refs.biggerOrbit, {
-    opacity: 0.5,
+    opacity: 0.3,
     scale: isMobile ? 2.3 : 1
     // y: isMobile ? -250 : -200
   });
@@ -1118,7 +1118,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     tl.to(
       refs.pinkOrbitInner, // ✅ Only animate the INNER image
       {
-        opacity: 0.5,
+        opacity: 0.3,
         duration: 0.6,
         ease: "power2.out"
       },

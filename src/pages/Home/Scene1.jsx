@@ -1221,7 +1221,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
         />
       </div>
       {/* evolve cube morph lottie */}
-      <div
+      {/* <div
         ref={lottieRef}
         className="absolute inset-0 z-[130] flex items-center justify-center pointer-events-none"
         style={{ willChange: "transform, opacity", opacity: 0 }}
@@ -1236,7 +1236,39 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             }}
           />
         </div>
+      </div> */}
+      <div
+        ref={lottieRef}
+        className="absolute inset-0 z-[130] flex items-center justify-center pointer-events-none"
+        style={{ willChange: "transform, opacity", opacity: 0 }}
+      >
+        <div
+          className="w-[100vw]"
+          style={
+            isMobile
+              ? {
+                  transform: "scale(1.6)", // 🔥 make it visually bigger on mobile
+                  transformOrigin: "center center"
+                }
+              : {}
+          }
+        >
+          <DotLottieReact
+            src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
+            loop={false}
+            autoplay={false}
+            style={{
+              width: "100%", // fill wrapper
+              height: "auto",
+              display: "block"
+            }}
+            dotLottieRefCallback={(instance) => {
+              lottiePlayRef.current = () => instance?.play();
+            }}
+          />
+        </div>
       </div>
+
       {/* welcome text */}
       <div className="absolute inset-0 z-[140] flex items-center justify-center pointer-events-none">
         <h2
