@@ -788,9 +788,19 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const navHeightRef = useRef(0);
 
+  // const navItems = [
+  //   { path: "/", label: "home" },
+  //   { path: "/contact", label: "contact us" },
+  //   {
+  //     path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+  //     label: "rate this website",
+  //     external: true
+  //   }
+  // ];
+
   const navItems = [
     { path: "/", label: "home" },
-    { path: "/contact", label: "contact us" },
+    { path: "/contact", label: "contact us", isModal: true }, // Add isModal flag
     {
       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
       label: "rate this website",
@@ -1055,6 +1065,34 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               <div className="flex-1 flex items-center">
                 <div className="w-full flex justify-center px-6 md:px-8">
                   <div className="flex flex-col items-start space-y-2 tracking-normal">
+                    {/* {navItems.map((item) =>
+                      item.external ? (
+                        <a
+                          key={item.path}
+                          href={item.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMenuOpen(false)}
+                          className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setMenuOpen(false)}
+                          className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                            isActive(item.path)
+                              ? "text-evolve-pink"
+                              : "text-black hover:text-evolve-pink"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    )} */}
+
                     {navItems.map((item) =>
                       item.external ? (
                         <a
@@ -1067,6 +1105,23 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                         >
                           {item.label}
                         </a>
+                      ) : item.isModal ? (
+                        <button
+                          key={item.path}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            if (onContactClick) {
+                              onContactClick();
+                            }
+                          }}
+                          className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                            location.pathname === item.path
+                              ? "text-evolve-pink"
+                              : "text-black hover:text-evolve-pink"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
                       ) : (
                         <Link
                           key={item.path}
