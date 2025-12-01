@@ -406,7 +406,7 @@ const Home = ({
           duration: { min: 0.3, max: 1 }, // Adaptive duration
           delay: 0, // CHANGE THIS TO 0
           ease: "power1.inOut",
-          inertia: false, // Disables momentum scrolling
+          // inertia: false, // Disables momentum scrolling
           onStart: () => {
             // Optional: Force immediate snap start
             ScrollTrigger.clearScrollMemory();
