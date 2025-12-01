@@ -1,3 +1,50 @@
+// export const SCENE1_1_STEP_LABELS = [
+//   "s1_1_step0_intro",
+//   "s1_1_step1_text0",
+//   "s1_1_step2_mainText",
+//   "s1_1_step3_textToMisfits",
+//   "s1_1_step4_textFullElementsDown",
+//   "s1_1_step5_text2ToStop",
+//   "s1_1_step6_text2CompleteElementsUp",
+//   "s1_1_step7_stairsAppear",
+//   "s1_1_step8_zoomInOrbitCircle",
+//   "s1_1_step9_joinUsCTA",
+//   "s1_1_step10_miniOvals",
+//   "s1_1_step11_fullOvals"
+// ];
+
+// export const SCENE1_1_STEP_LABELS = [
+//   "s1_1_step0_intro",
+//   "s1_1_step1_text0",
+//   "s1_1_step2_mainTextToMisfits",
+//   "s1_1_step3_textFullElementsDown",
+//   "s1_1_step4_text2ToStop",
+//   "s1_1_step5_eyeElementsVisible",
+//   "s1_1_step6_withEvolveText",
+//   "s1_1_step7_threeTextsComplete",
+//   "s1_1_step8_ctaVisible",
+//   "s1_1_step9_toolkitCardsVisible"
+// ];
+
+export const SCENE1_1_STEP_LABELS = [
+  "s1_1_step0_intro",
+  "s1_1_step1_text0",
+  "s1_1_step2_mainTextToMisfits",
+  "s1_1_step3_textFullElementsDown",
+  "s1_1_step4_text2ToStop",
+  "s1_1_step5_eyeElementsVisible",
+  "s1_1_step6_withEvolveText",
+  "s1_1_step7_threeTextsComplete", // Desktop - keeps working
+  "s1_1_step7_realDesignVisible", // NEW - Mobile only
+  "s1_1_step8_realPortfolioVisible", // NEW - Mobile only
+  "s1_1_step9_realCareerVisible", // NEW - Mobile only
+  "s1_1_step8_ctaVisible", // Desktop - keeps working
+  "s1_1_step9_toolkitCardsVisible", // Desktop - keeps working
+  "s1_1_step10_oval1Mobile", // NEW - Mobile only
+  "s1_1_step11_oval2Mobile", // NEW - Mobile only
+  "s1_1_step12_oval3Mobile" // NEW - Mobile only
+];
+
 import React, { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import {
@@ -91,21 +138,6 @@ export const setCompletedState = (refs, isMobile) => {
     // y: 0,
     scale: 1
   });
-
-  // // Show first text
-  // gsap.set(refs.text, {
-  //   opacity: 1
-  //   // y: 0
-  // });
-
-  // // Show all text spans at full opacity
-  // if (refs.text) {
-  //   const spans = Array.from(refs.text.querySelectorAll("span[data-text]"));
-  //   gsap.set(spans, {
-  //     opacity: 1,
-  //     color: "rgb(0, 0, 0)"
-  //   });
-  // }
 
   // Show all texts at full opacity in completed state
   gsap.set([refs.text0, refs.text], {
@@ -257,33 +289,6 @@ const getElementSlideMultipliers = () => {
   }
 };
 
-// // Helper function to get orbit vertical movement multipliers
-// const getOrbitVerticalMultipliers = () => {
-//   const width = window.innerWidth;
-//   const height = window.innerHeight;
-
-//   // Detect screen categories for orbit vertical movement
-//   if (width <= 1368) {
-//     // Small screens (below 14-inch) - LESS upward, MORE downward
-//     return { upward: 0.7, downward: 1.3 };
-//   } else if (width <= 1440) {
-//     // 14-inch laptops - baseline (current behavior)
-//     return { upward: 1.2, downward: 0.7 };
-//   } else if (width <= 1680 && height <= 1050) {
-//     // 15-inch laptops - MORE upward, LESS downward
-//     return { upward: 0.9, downward: 1.1 };
-//   } else if (width <= 1920 && height <= 1200) {
-//     // 16-inch laptops - even MORE upward, even LESS downward
-//     return { upward: 1.1, downward: 1 };
-//   } else if (width <= 2560) {
-//     // Large displays - significant increase upward, decrease downward
-//     return { upward: 1.6, downward: 0.6 };
-//   } else {
-//     // 4K and above - maximum upward, minimum downward
-//     return { upward: 1.8, downward: 0.5 };
-//   }
-// };
-
 // Helper function to get orbit vertical movement multipliers
 const getOrbitVerticalMultipliers = () => {
   const width = window.innerWidth;
@@ -434,25 +439,33 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     });
 
   // Entrance animations - clouds/floor/elements (0-3s)
-  tl.to(refs.rightCloud, { opacity: 1, y: 0, duration: 1, ease: "power2.out" })
+  tl.addLabel("s1_1_step0_intro", 0); // 👈 intro start
+
+  // Entrance animations - clouds/floor/elements (0-3s)
+  tl.to(refs.rightCloud, {
+    opacity: 1,
+    y: 0,
+    duration: 0.4,
+    ease: "power2.out"
+  })
     .to(
       refs.leftCloud,
-      { opacity: 1, y: 0, duration: 1, ease: "power2.out" },
-      "-=0.6"
+      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
+      // "-=0.6"
     )
     .to(
       refs.floor,
-      { opacity: 1, y: 0, duration: 1.2, ease: "power2.out" },
+      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
       "-=0.6"
     )
     .to(
       refs.leftElement,
-      { opacity: 1, x: 0, duration: 1, ease: "back.out(1.7)" },
+      { opacity: 1, x: 0, duration: 0.8, ease: "back.out(1.7)" },
       1.2
     )
     .to(
       refs.rightElement,
-      { opacity: 1, x: 0, duration: 1, ease: "back.out(1.7)" },
+      { opacity: 1, x: 0, duration: 0.8, ease: "back.out(1.7)" },
       // "-=0.8"
       1.2
     );
@@ -463,6 +476,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   //   { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
   //   1.5
   // );
+
+  // ===== NEW TEXT0 APPEARS WITH ELEMENTS (1.5s) =====
+  tl.addLabel("s1_1_step1_text0", 4.2); // 👈 first “checkpoint”: text0 in
   // ===== NEW TEXT0 APPEARS WITH ELEMENTS (1.5s) =====
   tl.to(
     refs.text0,
@@ -506,6 +522,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     4.8 // Fades out right before main text appears
   );
 
+  // tl.addLabel("s1_1_step2_mainTextToMisfits", 4.5 + firstPhaseEnd * 0.4 + 0.4); // NEW POSITION
   // ===== MAIN TEXT APPEARS (now at 3.5s instead of 1.5s) =====
   tl.to(
     refs.text,
@@ -515,14 +532,14 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
   // ===== BIGGER ORBIT APPEARS (at 20% scale, half visible above floor) =====
   // tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 2.0);
-  tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.6 }, 5.6);
+  tl.to(refs.biggerOrbit, { opacity: 0.5, duration: 0.4 }, 5.6);
 
   // ===== THEN OBJECTS APPEAR (reduced time gap) =====
   // tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 3.5);
-  tl.to(refs.objectsContainer, { opacity: 1, duration: 0.6 }, 7.3);
+  tl.to(refs.objectsContainer, { opacity: 1, duration: 0.8 }, 7.3);
 
   // ===== OBJECTS START FALLING (4.5s) =====
-  const fallDuration = 2.5;
+  const fallDuration = 4.5;
   // const fallStart = 4.5;
   const fallStart = 6.7;
 
@@ -549,6 +566,10 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     });
 
     const firstPhaseEnd = misfitsIndex >= 0 ? misfitsIndex : 4; // Up to and including "misfits"
+    tl.addLabel(
+      "s1_1_step2_mainTextToMisfits",
+      4.5 + firstPhaseEnd * 0.4 + 0.4
+    );
 
     // PHASE 1: Animate words up to "misfits" while objects fall
     spans.forEach((span, idx) => {
@@ -570,51 +591,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.text,
       {
         y: -10,
-        duration: 2.0,
+        duration: 0.8,
         ease: "power2.out"
       },
       4.5
     );
   }
 
-  // Calculate fall distance: objects should reach ellipse center and stop there
-  // const calculateFallDistance = () => {
-  //   if (!refs.objectsContainer) return isMobile ? 250 : 350;
-
-  //   try {
-  //     const objectsRect = refs.objectsContainer.getBoundingClientRect();
-  //     const viewportHeight = window.innerHeight;
-
-  //     // Ellipse dimensions
-  //     const ellipseHeight = isMobile ? 300 * 0.4 : 560 * 0.3; // Approximate height (30% of width)
-  //     const ellipseBottom = isMobile
-  //       ? viewportHeight * 0.09
-  //       : viewportHeight * 0.05;
-
-  //     // Target is ellipse center (bottom + half height)
-  //     const ellipseCenter = viewportHeight - ellipseBottom - ellipseHeight / 2;
-
-  //     // Current object position
-  //     const objectsCenterY = isMobile
-  //       ? objectsRect.bottom - objectSize / 2 // Mobile: bottom object center
-  //       : objectsRect.top + objectsRect.height / 2; // Desktop: container center
-
-  //     const distance = ellipseCenter - objectsCenterY;
-
-  //     console.log("Fall calculation:", {
-  //       ellipseCenter,
-  //       objectsCenterY,
-  //       distance,
-  //       isMobile
-  //     });
-
-  //     return distance > 0 ? distance : isMobile ? 250 : 350;
-  //   } catch (error) {
-  //     console.error("Error calculating fall distance:", error);
-  //     return isMobile ? 250 : 350;
-  //   }
-  // };
-  // Calculate fall distance: objects should reach ellipse center and stop there
   const calculateFallDistance = () => {
     // slightly smaller base distance for mobile
     const MOBILE_FALLBACK = 200;
@@ -718,10 +701,17 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   }
 
   // ===== ELLIPSE APPEARS WHEN OBJECTS ARE FALLING (6s) =====
-  tl.to(refs.ellipse, { opacity: 1, duration: 0.8 }, 6.0);
+  tl.to(refs.ellipse, { opacity: 1, duration: 1 }, 6.0);
 
   // ===== OBJECTS SHRINK AND VANISH INSIDE ELLIPSE =====
   const shrinkStart = fallStart + fallDuration - 1.0;
+
+  tl.addLabel(
+    "s1_1_step3_textFullElementsDown",
+    shrinkStart + (isMobile ? 2.0 : 1.5) + 1.2
+  ); // MOVED LATER
+
+  // 👆 by then, objects are basically gone & ellipse pulse done
 
   if (isMobile) {
     const shrinkDuration = 0.8;
@@ -765,7 +755,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       {
         scale: 0,
         opacity: 0,
-        duration: 1.5,
+        duration: 1.2,
         ease: "power2.in",
         stagger: 0.1
       },
@@ -778,7 +768,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     refs.ellipse,
     {
       scale: 1.08,
-      duration: 0.6,
+      duration: 0.5,
       ease: "power2.out"
     },
     shrinkStart
@@ -801,7 +791,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     {
       y: 300,
       opacity: 0,
-      duration: 1.2,
+      duration: 1,
       ease: "power2.inOut"
     },
     transitionStart
@@ -813,7 +803,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     {
       y: 300,
       opacity: 0,
-      duration: 1.2,
+      duration: 1,
       ease: "power2.inOut"
     },
     // transitionStart + 0.8
@@ -830,7 +820,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       scale: orbitScale,
       y: orbitBeforeCenterY,
       opacity: 0.5,
-      duration: 1.8,
+      duration: 1.2,
       ease: "power2.out"
     },
     transitionStart + 1.0
@@ -879,7 +869,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.text,
       {
         opacity: 0,
-        duration: 0.6,
+        duration: 0.3,
         ease: "power2.out"
       },
       textFadeOutStart
@@ -931,8 +921,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // Calculate when "stop" animation completes
     const stopAnimationEnd = newTextStart + firstPhaseEnd2 * 0.35 + 0.4;
-    // Eyes follow the same position as their parent elements during slide-in
-    // Set initial states to match parent elements
+    tl.addLabel("s1_1_step4_text2ToStop", stopAnimationEnd + 0.4); // NEW POSITION (after "stop" is fully visible)
+
     // Eyes follow the same position as their parent elements during slide-in
     // Set initial states to match parent elements (they start off-screen like base elements)
     tl.set(
@@ -994,40 +984,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         stopAnimationEnd
       );
-      // } else {
-      //   // Desktop: Both eyes same size and position
-      //   tl.fromTo(
-      //     refs.leftElementEye,
-      //     {
-      //       x: 0,
-      //       y: 0
-      //     },
-      //     {
-      //       y: "15vh",
-      //       left: "-2.5%",
-      //       scale: 1.2,
-      //       duration: 1.2,
-      //       ease: "power2.in"
-      //     },
-      //     stopAnimationEnd
-      //   );
-
-      //   tl.fromTo(
-      //     refs.rightElementEye,
-      //     {
-      //       x: 0,
-      //       y: 0
-      //     },
-      //     {
-      //       y: "15vh",
-      //       right: "-2.5%",
-      //       scale: 1.2,
-      //       duration: 1.2,
-      //       ease: "power2.in"
-      //     },
-      //     stopAnimationEnd
-      //   );
-      // }
     } else {
       // Desktop: Both eyes same size and position - responsive to screen size
       const baseDownwardMovement = 15; // Base 15vh for small laptops
@@ -1069,12 +1025,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     }
 
     const eyesOpenStart = stopAnimationEnd + 1.2;
+    tl.addLabel("s1_1_step5_eyeElementsVisible", eyesOpenStart + 1.256789); // ADD AFTER eyes fade in completes
 
     tl.to(
       [refs.leftElementEye, refs.rightElementEye],
       {
         opacity: 1,
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out"
       },
       eyesOpenStart
@@ -1097,7 +1054,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.biggerOrbit,
       {
         opacity: 0,
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out"
       },
       eyesOpenStart // Same timing as eyes
@@ -1108,7 +1065,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       {
         // opacity: 0.5, // 50% opacity
         opacity: 1, // 50% opacity
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out"
       },
       eyesOpenStart // Same timing as eyes and yellow fade
@@ -1119,7 +1076,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.pinkOrbitInner, // ✅ Only animate the INNER image
       {
         opacity: 0.3,
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out"
       },
       eyesOpenStart
@@ -1154,7 +1111,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       refs.text2,
       {
         opacity: 0,
-        duration: 0.8,
+        duration: 0.6,
         ease: "power2.inOut"
       },
       elementsDisappearStart
@@ -1198,6 +1155,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // ===== THIRD TEXT APPEARS: "With Evolve, you get to build" =====
     const text3AppearStart = orbitMoveUpStart + 1.2;
+    tl.addLabel("s1_1_step6_withEvolveText", text3AppearStart + 0.5); // NEW - after text appears
 
     // Set initial state for text3
     tl.set(
@@ -1215,711 +1173,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
     // ===== SIMULTANEOUS ANIMATIONS AFTER STAIRS =====
     const nextPhaseStart = stairsAnimateStart + 1.5;
-
-    // MOBILE STAIRS ANIMATION - COMPLETE TIMELINE
-    // if (isMobile) {
-    //   const mobileStairsStart = text3AppearStart + 0.5;
-
-    //   // Step 1: stairs1_mobile appears at bottom left
-    //   tl.set(
-    //     refs.stairsMod1Mobile,
-    //     {
-    //       opacity: 0,
-    //       willChange: "transform, opacity"
-    //     },
-    //     mobileStairsStart
-    //   );
-
-    //   tl.to(
-    //     refs.stairsMod1Mobile,
-    //     {
-    //       opacity: 1,
-    //       duration: 0,
-    //       ease: "power2.out"
-    //     },
-    //     mobileStairsStart
-    //   );
-
-    //   // Step 2: stairs2_mobile appears on top (duration 0, full opacity)
-    //   const stairs2Start = mobileStairsStart + 1.5;
-
-    //   tl.to(
-    //     refs.stairsMod2Mobile,
-    //     {
-    //       opacity: 1,
-    //       duration: 0,
-    //       ease: "power2.out"
-    //     },
-    //     stairs2Start
-    //   );
-
-    //   // Step 3: Orbit goes up + "real design" text + stairs4_mobile appears
-    //   const stairs4Start = stairs2Start + 1.5;
-
-    //   // stairs4_mobile appears with full opacity on same position
-    //   tl.to(
-    //     refs.leftStairsMod3Mobile,
-    //     {
-    //       opacity: 1,
-    //       duration: 0,
-    //       ease: "power2.out"
-    //     },
-    //     stairs4Start
-    //   );
-
-    //   // Orbit moves upwards
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       y: "-=15vh",
-    //       duration: 1.0,
-    //       ease: "power2.out"
-    //     },
-    //     stairs4Start
-    //   );
-
-    //   // Text5 appears: "real design,"
-    //   tl.set(
-    //     refs.text5,
-    //     {
-    //       opacity: 0,
-    //       willChange: "opacity"
-    //     },
-    //     stairs4Start
-    //   );
-
-    //   tl.to(
-    //     refs.text5,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.6,
-    //       ease: "power2.out"
-    //     },
-    //     stairs4Start + 0.8
-    //   );
-
-    //   // Step 4: "real portfolio" text + orbit moves right + stairsfull_right_mobile appears and slides
-    //   const portfolioStart = stairs4Start + 2.0;
-
-    //   // Orbit moves rightwards
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       x: "+=10vw",
-    //       duration: 1.0,
-    //       ease: "power2.out"
-    //     },
-    //     portfolioStart
-    //   );
-
-    //   tl.set(
-    //     [
-    //       refs.leftStairsMod3Mobile,
-    //       refs.stairsMod1Mobile,
-    //       refs.stairsMod2Mobile
-    //     ],
-    //     { opacity: 0 },
-    //     portfolioStart
-    //   );
-
-    //   // stairsfull_right_mobile appears at left: 0 with full opacity
-    //   tl.set(
-    //     refs.rightStairsMod3Mobile,
-    //     {
-    //       opacity: 1,
-    //       // scale: 0.8,
-    //       width: "80%",
-    //       duration: 0,
-    //       ease: "power2.out"
-    //     },
-    //     portfolioStart
-    //   );
-
-    //   // Then slide it to right
-    //   tl.to(
-    //     refs.rightStairsMod3Mobile,
-    //     {
-    //       right: "-10%",
-    //       left: "auto",
-    //       duration: 1.5,
-    //       ease: "power1.out"
-    //     },
-    //     portfolioStart + 0.2
-    //   );
-
-    //   // Text5 fades out
-    //   tl.to(
-    //     refs.text5,
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     portfolioStart
-    //   );
-
-    //   // Text6 appears: "real portfolio,"
-    //   tl.set(
-    //     refs.text6,
-    //     {
-    //       opacity: 0,
-    //       willChange: "opacity"
-    //     },
-    //     portfolioStart + 0.4
-    //   );
-
-    //   tl.to(
-    //     refs.text6,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.6,
-    //       ease: "power2.out"
-    //     },
-    //     portfolioStart + 0.8
-    //   );
-
-    //   // Step 5: "real career" text + orbit moves down + stairsfull_right_mobile scales down and pushes right+bottom
-    //   const careerStart = portfolioStart + 2.0;
-
-    //   // Orbit moves down and more right
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       x: "+=15vw",
-    //       y: "+=10vh",
-    //       duration: 1.0,
-    //       ease: "power2.out"
-    //     },
-    //     careerStart
-    //   );
-
-    //   // stairsfull_right_mobile scales down and moves more right and bottom
-    //   tl.to(
-    //     refs.rightStairsMod3Mobile,
-    //     {
-    //       scale: 0.8,
-    //       right: "-10%",
-    //       bottom: "-10%",
-    //       duration: 1.0,
-    //       ease: "power2.out"
-    //     },
-    //     careerStart
-    //   );
-
-    //   // Text6 fades out
-    //   tl.to(
-    //     refs.text6,
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     careerStart
-    //   );
-
-    //   // Text7 appears: "real career beginnings..."
-    //   tl.set(
-    //     refs.text7,
-    //     {
-    //       opacity: 0,
-    //       willChange: "opacity"
-    //     },
-    //     careerStart + 0.4
-    //   );
-
-    //   tl.to(
-    //     refs.text7,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.6,
-    //       ease: "power2.out"
-    //     },
-    //     careerStart + 0.8
-    //   );
-
-    //   // Step 6: Orbit centers + stairsfull_right_mobile pushes more right + left_stairs_mod6_mobile slides in
-    //   const centerCircleStart = careerStart + 2.0;
-
-    //   // Remove all texts
-    //   tl.to(
-    //     [refs.text3, refs.text7],
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     centerCircleStart
-    //   );
-
-    //   // Orbit moves to center (reset x to 0 and adjust y)
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       x: 0,
-    //       y: "-25vh",
-    //       duration: 1.2,
-    //       ease: "power2.out"
-    //     },
-    //     centerCircleStart
-    //   );
-
-    //   // Push stairsfull_right_mobile even more right
-    //   tl.to(
-    //     refs.rightStairsMod3Mobile,
-    //     {
-    //       right: "-52%",
-    //       bottom: "-12%",
-    //       scale: 1.12,
-    //       duration: 1.0,
-    //       ease: "power2.out"
-    //     },
-    //     centerCircleStart
-    //   );
-
-    //   // left_stairs_mod6_mobile slides in from left (-100% to 0%)
-    //   tl.fromTo(
-    //     refs.leftStairsMod6Mobile,
-    //     {
-    //       opacity: 1,
-    //       left: "-100%",
-    //       width: "35%",
-    //       bottom: 0
-    //     },
-    //     {
-    //       left: "-8%",
-    //       duration: 1.2,
-    //       ease: "power2.out"
-    //     },
-    //     centerCircleStart + 0.3
-    //   );
-
-    //   // Combined circle container - position it at orbit center
-    //   tl.set(
-    //     refs.combinedCircleContainer,
-    //     {
-    //       opacity: 1
-    //     },
-    //     centerCircleStart
-    //   );
-
-    //   // Combined circle appears at center (very small scale) - OUTER PART ONLY
-    //   if (refs.combinedCircle?.outer) {
-    //     tl.set(
-    //       refs.combinedCircle.outer,
-    //       {
-    //         opacity: 0,
-    //         scale: 0.3,
-    //         willChange: "transform, opacity"
-    //       },
-    //       centerCircleStart
-    //     );
-
-    //     tl.to(
-    //       refs.combinedCircle.outer,
-    //       {
-    //         opacity: 1,
-    //         duration: 0.6,
-    //         ease: "power2.out"
-    //       },
-    //       centerCircleStart + 0.8
-    //     );
-    //   }
-
-    //   // Continue with rest of the mobile animation (zoom effect, etc.)
-    //   // Step 7: Zoom effect + inner circle reveals
-    //   const zoomStart = centerCircleStart + 3.0;
-
-    //   // Orbit scales up (zoom effect)
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       scale: "+=0.5",
-    //       duration: 1.5,
-    //       ease: "power2.inOut"
-    //     },
-    //     zoomStart
-    //   );
-
-    //   // Combined circle OUTER scales up
-    //   if (refs.combinedCircle?.outer) {
-    //     tl.to(
-    //       refs.combinedCircle.outer,
-    //       {
-    //         scale: 0.7,
-    //         duration: 1.5,
-    //         ease: "power2.inOut"
-    //       },
-    //       zoomStart
-    //     );
-    //   }
-
-    //   // Inner part becomes visible and scales up
-    //   if (refs.combinedCircle?.inner) {
-    //     tl.set(
-    //       refs.combinedCircle.inner,
-    //       {
-    //         opacity: 0,
-    //         scale: 0.3
-    //       },
-    //       zoomStart
-    //     );
-
-    //     tl.to(
-    //       refs.combinedCircle.inner,
-    //       {
-    //         opacity: 1,
-    //         scale: 0.7,
-    //         duration: 1.2,
-    //         ease: "power2.out"
-    //       },
-    //       zoomStart + 0.5
-    //     );
-    //   }
-
-    //   // Remove old stairs
-    //   tl.to(
-    //     [
-    //       refs.stairsMod1Mobile,
-    //       refs.stairsMod2Mobile,
-    //       refs.leftStairsMod3Mobile
-    //       // refs.rightStairsMod3Mobile
-    //     ],
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     zoomStart
-    //   );
-
-    //   // Step 8: Orbit moves up + circle moves up + button appears
-    //   const step8Start = zoomStart + 2.5;
-
-    //   // Orbit and combined circle move up together
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       y: "-=10vh",
-    //       duration: 1.2,
-    //       ease: "power2.out"
-    //     },
-    //     step8Start
-    //   );
-
-    //   // Waitlist button appears
-    //   tl.fromTo(
-    //     refs.waitlistButton,
-    //     {
-    //       opacity: 0,
-    //       y: 30,
-    //       scale: 0.9,
-    //       pointerEvents: "none"
-    //     },
-    //     {
-    //       opacity: 1,
-    //       y: 0,
-    //       scale: 1,
-    //       pointerEvents: "auto",
-    //       duration: 1.0,
-    //       ease: "back.out(1.5)"
-    //     },
-    //     step8Start + 0.8
-    //   );
-
-    //   // Step 9: Remove elements + orbit moves down + toolkit text + mini ovals appear
-    //   const step9Start = step8Start + 2.5;
-
-    //   // Remove waitlist button and CLOUDS
-    //   tl.to(
-    //     refs.waitlistButton,
-    //     {
-    //       opacity: 0,
-    //       pointerEvents: "none",
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start
-    //   );
-
-    //   tl.to(
-    //     [refs.leftStairsMod6Mobile, refs.rightStairsMod3Mobile],
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start
-    //   );
-
-    //   tl.to(
-    //     [refs.rightCloud, refs.leftCloud],
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start
-    //   );
-
-    //   // Hide combined circle
-    //   tl.to(
-    //     refs.combinedCircleContainer,
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start
-    //   );
-
-    //   // Orbit moves down more
-    //   tl.to(
-    //     refs.pinkBiggerOrbit,
-    //     {
-    //       y: "35vh",
-    //       x: 0,
-    //       scale: 2,
-    //       duration: 1.2,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start + 0.4
-    //   );
-
-    //   // "the evolve toolkit" text appears
-    //   tl.set(
-    //     refs.text8,
-    //     {
-    //       opacity: 0,
-    //       willChange: "opacity"
-    //     },
-    //     step9Start + 0.4
-    //   );
-
-    //   tl.to(
-    //     refs.text8,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.6,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start + 1.0
-    //   );
-
-    //   // Mini ovals appear
-    //   tl.set(
-    //     [refs.ovalMini3, refs.ovalMini2, refs.ovalMini1],
-    //     {
-    //       opacity: 0,
-    //       scale: 1,
-    //       willChange: "transform, opacity"
-    //     },
-    //     step9Start + 1.0
-    //   );
-
-    //   tl.to(
-    //     refs.ovalMini3,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start + 1.2
-    //   );
-
-    //   tl.to(
-    //     refs.ovalMini2,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start + 1.4
-    //   );
-
-    //   tl.to(
-    //     refs.ovalMini1,
-    //     {
-    //       opacity: 1,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step9Start + 1.6
-    //   );
-
-    //   // Step 10: oval_mini_1 expands and transforms into oval_1
-    //   const step10Start = step9Start + 3.0;
-
-    //   // First hide other mini ovals
-    //   tl.to(
-    //     [refs.ovalMini2, refs.ovalMini3],
-    //     {
-    //       opacity: 0,
-    //       duration: 0.4,
-    //       ease: "power2.out"
-    //     },
-    //     step10Start
-    //   );
-
-    //   // Mini oval moves UP to vertical center AND scales up simultaneously
-    //   tl.to(
-    //     refs.ovalMini1,
-    //     {
-    //       y: "-20vh",
-    //       scale: 1.5,
-    //       duration: 0.8,
-    //       ease: "power2.out"
-    //     },
-    //     step10Start + 0.2
-    //   );
-
-    //   // Set initial position for oval_1 (same position as scaled mini)
-    //   tl.set(
-    //     refs.oval1,
-    //     {
-    //       opacity: 0,
-    //       scale: 0.5,
-    //       y: "0vh",
-    //       willChange: "transform, opacity"
-    //     },
-    //     step10Start + 0.8
-    //   );
-
-    //   // Direct crossfade: mini oval fades out as full oval fades in
-    //   tl.to(
-    //     refs.ovalMini1,
-    //     {
-    //       opacity: 0,
-    //       duration: 0,
-    //       ease: "power2.inOut"
-    //     },
-    //     step10Start + 1.0
-    //   );
-
-    //   tl.to(
-    //     refs.oval1,
-    //     {
-    //       opacity: 1,
-    //       duration: 0,
-    //       ease: "power2.inOut"
-    //     },
-    //     step10Start + 1.0
-    //   );
-
-    //   // Full oval scales up to final size at center
-    //   tl.to(
-    //     refs.oval1,
-    //     {
-    //       scale: 1,
-    //       duration: 0.6,
-    //       ease: "power2.out"
-    //     },
-    //     step10Start + 1.5
-    //   );
-
-    //   // Step 11: Vertical scroll transition - cards stack behavior
-    //   const step11Start = step10Start + 4.0;
-
-    //   const scrollContainerHeight = 85;
-
-    //   // Set oval_1 to the same starting position as oval_2 and oval_3
-    //   tl.set(
-    //     refs.oval1,
-    //     {
-    //       opacity: 1,
-    //       top: "15vh",
-    //       scale: 1
-    //     },
-    //     step11Start
-    //   );
-
-    //   // Set oval_2 ABOVE the visible area
-    //   tl.set(
-    //     refs.oval2,
-    //     {
-    //       opacity: 1,
-    //       top: `-100vh`,
-    //       scale: 0.9
-    //     },
-    //     step11Start
-    //   );
-
-    //   // oval_1 scrolls DOWN - moves down and fades
-    //   tl.to(
-    //     refs.oval1,
-    //     {
-    //       top: `${scrollContainerHeight * 0.6}vh`,
-    //       scale: 0.9,
-    //       opacity: 0,
-    //       duration: 1.8,
-    //       ease: "power3.inOut"
-    //     },
-    //     step11Start
-    //   );
-
-    //   // oval_2 scrolls DOWN from top to center
-    //   tl.to(
-    //     refs.oval2,
-    //     {
-    //       top: "15vh",
-    //       scale: 1,
-    //       duration: 1.8,
-    //       ease: "power3.inOut"
-    //     },
-    //     step11Start
-    //   );
-
-    //   // Step 12: Continue vertical scroll
-    //   const step12Start = step11Start + 4.0;
-
-    //   // Set oval_3 ABOVE the visible area
-    //   tl.set(
-    //     refs.oval3,
-    //     {
-    //       opacity: 1,
-    //       top: `-100vh`,
-    //       scale: 0.9
-    //     },
-    //     step12Start
-    //   );
-
-    //   // oval_2 scrolls DOWN and fades
-    //   tl.to(
-    //     refs.oval2,
-    //     {
-    //       top: `${scrollContainerHeight * 0.6}vh`,
-    //       scale: 0.9,
-    //       opacity: 0,
-    //       duration: 1.8,
-    //       ease: "power3.inOut"
-    //     },
-    //     step12Start
-    //   );
-
-    //   // oval_3 scrolls DOWN from top to center
-    //   tl.to(
-    //     refs.oval3,
-    //     {
-    //       top: "15vh",
-    //       scale: 1,
-    //       duration: 1.8,
-    //       ease: "power3.inOut"
-    //     },
-    //     step12Start
-    //   );
-
-    //   // Step 13: Final card stays with subtle animation
-    //   tl.to(
-    //     refs.oval3,
-    //     {
-    //       scale: 1.03,
-    //       duration: 0.5,
-    //       ease: "sine.inOut",
-    //       yoyo: true,
-    //       repeat: 1
-    //     },
-    //     step12Start + 2.5
-    //   );
-    // }
 
     if (isMobile) {
       const mobileStairsStart = text3AppearStart + 0.5;
@@ -1982,7 +1235,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           y: "-=15vh",
-          duration: 1.0,
+          duration: 1.2,
           ease: "power2.out"
         },
         stairs30Start
@@ -2020,11 +1273,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.text5,
         {
           opacity: 1,
-          duration: 0.6,
+          duration: 1,
           ease: "power2.out"
         },
         stairs30Start + 0.8
       );
+      // After text5 (real design) is fully visible
+      tl.addLabel("s1_1_step7_realDesignVisible", stairs30Start + 1.8);
 
       // Step 4: "real portfolio" text + orbit moves right + reveal to full (100%)
       const portfolioStart = stairs30Start + 2.0;
@@ -2034,7 +1289,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           x: "+=10vw",
-          duration: 1.0,
+          duration: 1.2,
           ease: "power2.out"
         },
         portfolioStart
@@ -2061,7 +1316,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.text5,
         {
           opacity: 0,
-          duration: 0.4,
+          duration: 0.9,
           ease: "power2.out"
         },
         portfolioStart
@@ -2081,11 +1336,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.text6,
         {
           opacity: 1,
-          duration: 0.6,
+          duration: 0.9,
           ease: "power2.out"
         },
         portfolioStart + 0.8
       );
+      // After text6 (real portfolio) is fully visible
+      tl.addLabel("s1_1_step8_realPortfolioVisible", portfolioStart + 1.8);
       // Step 5: "real career" text + orbit moves down + stair moves to right-bottom + reveal to 50%
       const careerStart = portfolioStart + 2.0;
 
@@ -2095,7 +1352,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           x: "+=15vw",
           y: "+=10vh",
-          duration: 1.0,
+          duration: 1.2,
           ease: "power2.out"
         },
         careerStart
@@ -2155,11 +1412,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.text7,
         {
           opacity: 1,
-          duration: 0.6,
+          duration: 0.9,
           ease: "power2.out"
         },
         careerStart + 0.8
       );
+      // After text7 (real career) is fully visible - ADD this, don't replace the desktop one
+      tl.addLabel("s1_1_step9_realCareerVisible", careerStart + 1.8);
+
+      // tl.addLabel("s1_1_step7_threeTextsComplete", careerStart + 1.4); // NEW POSITION
 
       // Step 6: Orbit centers + curved outer circle appears + stairs slide to edges (10-20% visible)
       const centerCircleStart = careerStart + 2.0;
@@ -2248,7 +1509,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.outer,
           {
             opacity: 1,
-            duration: 0.6,
+            duration: 0.9,
             ease: "power2.out"
           },
           centerCircleStart + 0.8
@@ -2344,6 +1605,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         step8Start + 0.8
       );
 
+      tl.addLabel("s1_1_step8_ctaVisible", step8Start + 1.8); // NEW POSITION (after button fully appears)
+
       // Step 9: Remove elements (including BOTH stairs) + orbit moves down + toolkit text + mini ovals appear
       const step9Start = step8Start + 2.5;
 
@@ -2418,7 +1681,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.text8,
         {
           opacity: 1,
-          duration: 0.6,
+          duration: 0.8,
           ease: "power2.out"
         },
         step9Start + 1.0
@@ -2467,6 +1730,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
 
       // Step 10: oval_mini_1 expands and transforms into oval_1
       const step10Start = step9Start + 3.0;
+      // const step10Start = step9Start + 4.5; // CHANGED from 3.0 to 4.5 (adds 1.5 seconds delay)
 
       // First hide other mini ovals
       tl.to(
@@ -2474,6 +1738,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 0,
           duration: 0.4,
+          // duration: 0.6,
           ease: "power2.out"
         },
         step10Start
@@ -2486,6 +1751,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           y: "-20vh",
           scale: 1.5,
           duration: 0.8,
+          // duration: 1.2,
           ease: "power2.out"
         },
         step10Start + 0.2
@@ -2501,7 +1767,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           willChange: "transform, opacity"
         },
         step10Start + 0.8
+        // step10Start + 1.2
       );
+      // After oval_1 is fully visible on mobile (this is DIFFERENT from desktop's step9)
+      tl.addLabel("s1_1_step10_oval1Mobile", step10Start + 2.1);
+
+      // tl.addLabel("s1_1_step9_toolkitCardsVisible", step10Start + 2.1); // NEW POSITION
 
       // Direct crossfade: mini oval fades out as full oval fades in
       tl.to(
@@ -2529,10 +1800,12 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.oval1,
         {
           scale: 1,
-          duration: 0.6,
+          // duration: 0.6,
+          duration: 1,
           ease: "power2.out"
         },
         step10Start + 1.5
+        // step10Start + 2.3
       );
 
       // Step 11: Vertical scroll transition - cards stack behavior
@@ -2569,7 +1842,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           top: `${scrollContainerHeight * 0.6}vh`,
           scale: 0.9,
           opacity: 0,
-          duration: 1.8,
+          duration: 2.8,
           ease: "power3.inOut"
         },
         step11Start
@@ -2581,11 +1854,13 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           top: "15vh",
           scale: 1,
-          duration: 1.8,
+          duration: 2.8,
           ease: "power3.inOut"
         },
         step11Start
       );
+      // After oval_2 transition completes on mobile
+      tl.addLabel("s1_1_step11_oval2Mobile", step11Start + 2.8);
 
       // Step 12: Continue vertical scroll
       const step12Start = step11Start + 4.0;
@@ -2608,7 +1883,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           top: `${scrollContainerHeight * 0.6}vh`,
           scale: 0.9,
           opacity: 0,
-          duration: 1.8,
+          duration: 2.8,
           ease: "power3.inOut"
         },
         step12Start
@@ -2620,7 +1895,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           top: "15vh",
           scale: 1,
-          duration: 1.8,
+          duration: 2.8,
           ease: "power3.inOut"
         },
         step12Start
@@ -2638,6 +1913,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         step12Start + 2.5
       );
+      // After oval_3 transition completes on mobile
+      tl.addLabel("s1_1_step12_oval3Mobile", step12Start + 2.8);
     } else {
       // Desktop: Stairs with progressive reveal
       // Step 1: Initial setup and fade in (30% visible)
@@ -2677,7 +1954,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.stairsLeft, refs.stairsRight],
         {
           y: 0,
-          duration: 1.0,
+          duration: 1.4,
           ease: "power2.out"
         },
         stairsAnimateStart
@@ -2688,7 +1965,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           y: `+=${6 * multipliers.orbit}%`,
-          duration: 1.0,
+          duration: 1.8,
           ease: "power2.out"
         },
         nextPhaseStart
@@ -2699,7 +1976,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.stairsLeft, refs.stairsRight],
         {
           y: `+=${7 * multipliers.stairs}vh`, // Move stairs down
-          duration: 1.0,
+          duration: 1.4,
           ease: "power2.out"
         },
         nextPhaseStart
@@ -2714,25 +1991,10 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         nextPhaseStart
       );
-      // if (refs.stairsLeft && refs.stairsRight) {
-      //   const leftImg = refs.stairsLeft.querySelector("img");
-      //   const rightImg = refs.stairsRight.querySelector("img");
 
-      //   if (leftImg && rightImg) {
-      //     tl.to(
-      //       [leftImg, rightImg],
-      //       {
-      //         maskImage:
-      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
-      //         WebkitMaskImage:
-      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
-      //         duration: 1.2,
-      //         ease: "power2.out"
-      //       },
-      //       nextPhaseStart
-      //     );
-      //   }
-      // }
+      tl.addLabel("s1_1_step7_threeTextsComplete", nextPhaseStart + 0.5); // NEW POSITION
+      // ✅ ADD BUFFER: User must scroll more before next step
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
 
       // Reveal stairs from 5% to 100% with SMOOTH translucent gradient
       if (refs.stairsLeft && refs.stairsRight) {
@@ -2747,7 +2009,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
                 "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
               WebkitMaskImage:
                 "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
-              duration: 1.2,
+              duration: 1.4,
               ease: "power2.out"
             },
             nextPhaseStart
@@ -2780,7 +2042,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           {
             opacity: 1,
             // scale: 0.4,
-            duration: 0.4,
+            duration: 0.9,
             ease: "power1.out"
           },
           nextPhaseStart + 0.1
@@ -2791,59 +2053,6 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       // Step 3: Show outer circle + reveal stairs fully (100%)
       const step2Start = nextPhaseStart + 2.0;
 
-      // tl.set(
-      //   refs.combinedCircleContainer,
-      //   {
-      //     opacity: 1,
-      //     willChange: "transform, opacity"
-      //   },
-      //   step2Start
-      // );
-
-      // if (refs.combinedCircle?.outer) {
-      //   tl.set(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       opacity: 0,
-      //       scale: 0.15,
-      //       willChange: "transform, opacity"
-      //     },
-      //     step2Start
-      //   );
-
-      //   tl.to(
-      //     refs.combinedCircle.outer,
-      //     {
-      //       opacity: 1,
-      //       // scale: 0.4,
-      //       duration: 0.4,
-      //       ease: "power1.out"
-      //     },
-      //     step2Start + 0.1
-      //   );
-      // }
-
-      // // Reveal stairs from 5% to 100% with SMOOTH translucent gradient
-      // if (refs.stairsLeft && refs.stairsRight) {
-      //   const leftImg = refs.stairsLeft.querySelector("img");
-      //   const rightImg = refs.stairsRight.querySelector("img");
-
-      //   if (leftImg && rightImg) {
-      //     tl.to(
-      //       [leftImg, rightImg],
-      //       {
-      //         maskImage:
-      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
-      //         WebkitMaskImage:
-      //           "linear-gradient(to top, black 100%, black 90%, transparent 200%)",
-      //         duration: 1.2,
-      //         ease: "power2.out"
-      //       },
-      //       step2Start
-      //     );
-      //   }
-      // }
-
       // Step 4: Move orbit and stairs down MORE, scale outer circle up
       const step3Start = step2Start + 2.0;
 
@@ -2851,7 +2060,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           y: `+=${8 * multipliers.orbit}%`,
-          duration: 1.0,
+          duration: 5.8,
           ease: "power1.inOut"
         },
         step3Start
@@ -2862,7 +2071,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.stairsLeft, refs.stairsRight],
         {
           y: `+=${10 * multipliers.stairs}vh`, // More downward movement
-          duration: 1.0,
+          duration: 3.4,
           ease: "power1.inOut"
         },
         step3Start
@@ -2873,7 +2082,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.outer,
           {
             scale: 0.4,
-            duration: 1.0,
+            duration: 3.4,
             ease: "power1.inOut"
           },
           step3Start
@@ -2896,12 +2105,15 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           {
             opacity: 1,
             scale: 0.38,
-            duration: 0.8,
+            duration: 1.9,
             ease: "power1.out"
           },
           step3Start + 0.3
         );
       }
+
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
 
       // Step 5: Zoom orbit and circle + stairs zoom in
       const step4Start = step3Start + 2.0;
@@ -2910,7 +2122,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           scale: "+=0.4",
-          duration: 1.2,
+          duration: 2.8,
           ease: "power1.inOut"
         },
         step4Start
@@ -2922,7 +2134,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           y: `+=${40 * multipliers.stairs}vh`, // Move much further down
           scale: 1.3,
-          duration: 1.2,
+          duration: 2.4,
           ease: "power1.inOut"
         },
         step4Start
@@ -2933,7 +2145,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.outer,
           {
             scale: 0.8,
-            duration: 1.2,
+            duration: 2.2,
             ease: "power1.inOut"
           },
           step4Start
@@ -2945,7 +2157,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.innerLogo,
           {
             scale: 0.8,
-            duration: 1.2,
+            duration: 2.2,
             ease: "power1.inOut"
           },
           step4Start
@@ -2967,7 +2179,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.innerLogo,
           {
             opacity: 0,
-            duration: 0.3,
+            duration: 1.8,
             ease: "power2.in"
           },
           step4Start + 0.6
@@ -2977,7 +2189,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           refs.combinedCircle.inner,
           {
             opacity: 1,
-            duration: 0.5,
+            duration: 1.8,
             ease: "power2.inOut"
           },
           step4Start + 0.6
@@ -2988,7 +2200,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.text4, refs.text3],
         {
           opacity: 0,
-          duration: 0.3,
+          duration: 1.8,
           ease: "power1.out"
         },
         step4Start
@@ -3007,7 +2219,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
                 "linear-gradient(to bottom, black 100%, transparent 100%)", // Changed to show top 10%
               WebkitMaskImage:
                 "linear-gradient(to bottom, black 100%, transparent 100%)",
-              duration: 1.2,
+              duration: 1.4,
               ease: "power2.inOut"
             },
             step4Start
@@ -3030,6 +2242,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       // Step 5: Waitlist button appears
       // Add this code after the stairs_2 appear section in desktop (after step4Start)
 
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
+
       // Step 5: Scale down orbit, combined circle, and stairs
       const step5Start = step4Start + 2.0;
 
@@ -3039,7 +2254,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           scale: "-=0.15",
           y: `-=${3 * multipliers.orbit}%`, // Move down slightly while scaling
-          duration: 0.8,
+          duration: 2.8,
           ease: "power2.inOut"
         },
         step5Start
@@ -3052,7 +2267,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           {
             scale: "-=0.1",
             y: `-=${3 * multipliers.orbit}%`,
-            duration: 0.8,
+            duration: 1.8,
             ease: "power2.inOut"
           },
           step5Start
@@ -3065,7 +2280,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
           {
             scale: "-=0.1",
             y: `-=${3 * multipliers.orbit}%`,
-            duration: 0.8,
+            duration: 1.8,
             ease: "power2.inOut"
           },
           step5Start
@@ -3078,7 +2293,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           scale: "+=0.05",
           y: "-=1vh",
-          duration: 0.8,
+          duration: 2.4,
           ease: "power2.inOut"
         },
         step5Start
@@ -3106,6 +2321,9 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         },
         step6Start
       );
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
+      // tl.to({}, { duration: 1.5 }); // Adjust this value (1.5-3.0 seconds)
+      tl.addLabel("s1_1_step8_ctaVisible", step6Start + 1.0); // NEW POSITION
 
       // Step 7: Remove everything EXCEPT orbit, orbit moves down smoothly
       const step7Start = step6Start + 2.5;
@@ -3190,7 +2408,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.pinkBiggerOrbit,
         {
           top: `${90 * orbitVerticalMultipliers.downward}%`, // Responsive downward position
-          duration: 1.5,
+          duration: 1.8,
           ease: "power2.inOut"
         },
         step7Start
@@ -3221,7 +2439,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       );
 
       // Step 8: Mini ovals appear AFTER text
-      const step9Start = step8Start + 1.0;
+      // const step9Start = step8Start + 2.0;
+      const step9Start = step8Start + 3.0;
 
       // Set initial state for mini ovals
       tl.set(
@@ -3239,7 +2458,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.ovalMini3,
         {
           opacity: 1,
-          duration: 0.4,
+          // duration: 1,
+          duration: 1.2,
           ease: "power2.out"
         },
         step9Start + 0.2
@@ -3249,7 +2469,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.ovalMini2,
         {
           opacity: 1,
-          duration: 0.4,
+          // duration: 1,
+          duration: 1.2,
           ease: "power2.out"
         },
         step9Start + 0.4
@@ -3259,14 +2480,16 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.ovalMini1,
         {
           opacity: 1,
-          duration: 0.4,
+          duration: 1,
+          duration: 1.2,
           ease: "power2.out"
         },
         step9Start + 0.6
       );
 
       // Step 9: Mini ovals SCALE UP and transform into full ovals
-      const step10Start = step9Start + 2.0;
+      // const step10Start = step9Start + 2.0;
+      const step10Start = step9Start + 3.5;
 
       // Set initial state for full ovals (hidden, at same position as mini ovals)
       tl.set(
@@ -3286,7 +2509,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           scale: 1.45,
           x: "-110px", // Move left
-          duration: 0.8,
+          // duration: 1,
+          duration: 1.4,
           ease: "power2.inOut"
         },
         step10Start
@@ -3297,7 +2521,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           scale: 1.45,
           x: 0, // Stay center
-          duration: 0.8,
+          duration: 1.4,
           ease: "power2.inOut"
         },
         step10Start
@@ -3308,7 +2532,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           scale: 1.45,
           x: "110px", // Move right
-          duration: 0.8,
+          duration: 1.4,
           ease: "power2.inOut"
         },
         step10Start
@@ -3345,10 +2569,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.ovalMini1, refs.ovalMini2, refs.ovalMini3],
         {
           opacity: 0,
-          duration: 0,
+          duration: 0.4,
           ease: "power2.inOut"
         },
-        step10Start + 0.4
+        // step10Start + 0.4
+        step10Start + 1.4
       );
 
       tl.to(
@@ -3356,10 +2581,11 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 1,
           scale: 1, // Scale up slightly when appearing
-          duration: 0,
+          duration: 0.4,
           ease: "power2.inOut"
         },
-        step10Start + 0.4
+        // step10Start + 0.4
+        step10Start + 1.4
       );
 
       // Scale back to normal size before settling
@@ -3367,11 +2593,14 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.oval1, refs.oval2, refs.oval3],
         {
           scale: 1.01,
-          duration: 0.5,
+          // duration: 0.5,
+          duration: 0.8,
           ease: "back.out(2)"
         },
-        step10Start + 0.5
+        // step10Start + 0.5
+        step10Start + 2.2
       );
+      tl.addLabel("s1_1_step9_toolkitCardsVisible", step10Start + 2.3); // NEW POSITION
 
       // Move full ovals back to original positions after crossfade
       tl.to(
@@ -3602,6 +2831,38 @@ export const useScene1_1Timeline = (refs, isMobile) => {
   );
   tl.set(refs.ellipse, { willChange: "auto" }, "+=0");
   tl.set(refs.biggerOrbit, { willChange: "auto" }, "+=0");
+
+  // This runs parallel to all other animations
+  tl.to(
+    refs.biggerOrbit,
+    {
+      rotation: -720, // 2 full rotations
+      duration: tl.duration(), // Match total timeline duration
+      ease: "none" // Linear rotation
+    },
+    0 // Start at beginning
+  );
+
+  tl.to(
+    refs.pinkOrbitInner,
+    {
+      rotation: -720,
+      duration: tl.duration(),
+      ease: "none"
+    },
+    0
+  );
+
+  // Rotate combined circle outer part
+  tl.to(
+    refs.combinedCircle?.outer,
+    {
+      rotation: -720,
+      duration: tl.duration(),
+      ease: "none"
+    },
+    0
+  );
 
   return tl;
 };
@@ -3838,58 +3099,58 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     // rightStairs2: rightStairs2Ref.current
   }));
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const rotationAmount = scrollY * 0.1;
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const scrollY = window.scrollY;
+  //     const rotationAmount = scrollY * 0.1;
 
-      // Rotate both orbits - use INNER refs for rotation
-      if (biggerOrbitRef.current) {
-        gsap.set(biggerOrbitRef.current, {
-          rotation: -rotationAmount
-        });
-      }
+  //     // Rotate both orbits - use INNER refs for rotation
+  //     if (biggerOrbitRef.current) {
+  //       gsap.set(biggerOrbitRef.current, {
+  //         rotation: -rotationAmount
+  //       });
+  //     }
 
-      if (pinkOrbitInnerRef.current) {
-        // Changed from pinkBiggerOrbitRef
-        gsap.set(pinkOrbitInnerRef.current, {
-          rotation: -rotationAmount
-        });
-      }
-      // Rotate combined circle outer part (ADD THIS)
-      if (combinedCircleRef.current?.outer) {
-        gsap.set(combinedCircleRef.current.outer, {
-          rotation: -rotationAmount
-        });
-      }
+  //     if (pinkOrbitInnerRef.current) {
+  //       // Changed from pinkBiggerOrbitRef
+  //       gsap.set(pinkOrbitInnerRef.current, {
+  //         rotation: -rotationAmount
+  //       });
+  //     }
+  //     // Rotate combined circle outer part (ADD THIS)
+  //     if (combinedCircleRef.current?.outer) {
+  //       gsap.set(combinedCircleRef.current.outer, {
+  //         rotation: -rotationAmount
+  //       });
+  //     }
 
-      // Rotate combined circle inner part independently (ADD THIS)
-      // if (combinedCircleRef.current?.inner) {
-      //   gsap.set(combinedCircleRef.current.inner, {
-      //     rotation: rotationAmount * 0.5 // Rotate slower or in opposite direction
-      //   });
-      // }
-    };
+  //     // Rotate combined circle inner part independently (ADD THIS)
+  //     // if (combinedCircleRef.current?.inner) {
+  //     //   gsap.set(combinedCircleRef.current.inner, {
+  //     //     rotation: rotationAmount * 0.5 // Rotate slower or in opposite direction
+  //     //   });
+  //     // }
+  //   };
 
-    // Throttle scroll events for better performance
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+  //   // Throttle scroll events for better performance
+  //   let ticking = false;
+  //   const onScroll = () => {
+  //     if (!ticking) {
+  //       window.requestAnimationFrame(() => {
+  //         handleScroll();
+  //         ticking = false;
+  //       });
+  //       ticking = true;
+  //     }
+  //   };
 
-    window.addEventListener("scroll", onScroll);
+  //   window.addEventListener("scroll", onScroll);
 
-    // Initial call to sync rotation
-    handleScroll();
+  //   // Initial call to sync rotation
+  //   handleScroll();
 
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  //   return () => window.removeEventListener("scroll", onScroll);
+  // }, []);
 
   const objectSize = isMobile ? 44 : 70;
   const mobileObjGap = isMobile ? 8 : 24;

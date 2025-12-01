@@ -1,3 +1,14 @@
+export const SCENE1_2_STEP_LABELS = [
+  "s1_2_step1_sceneStart",
+  "s1_2_step2_learnDesign",
+  "s1_2_step3_getMentored",
+  "s1_2_step4_cta",
+  "s1_2_step5_handsAndSaturn",
+  "s1_2_step6_nerveAndLightning",
+  "s1_2_step7_freedomAndBirds",
+  "s1_2_step8_freedomComplete"
+];
+
 import React, { useRef, lazy, Suspense } from "react";
 import { gsap } from "gsap";
 import {
@@ -219,6 +230,8 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     willChange: "transform, opacity"
   });
 
+  // ===== STEP 1: SCENE STARTS - Vector, Doors, and BG appear =====
+  tl.addLabel("s1_2_step1_sceneStart", 0);
   // Initial appearance - Vector and doors appear together
   tl.to([refs.vector, refs.doorsWithRibbon], {
     opacity: 1,
@@ -232,9 +245,10 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     {
       opacity: 1,
       y: 0,
-      duration: 0.8,
+      duration: 1.3,
       ease: "power2.out"
     },
+
     0.3
   );
 
@@ -243,44 +257,33 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     {
       opacity: 1,
       y: 0,
-      duration: 0.8,
+      duration: 1,
       ease: "power2.out"
     },
-    0.5
+    0.8
   );
 
-  // Initial appearance - Texts appear
-  tl.to(
-    refs.topText,
-    {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out"
-    },
-    0
-  );
-
-  tl.to(
-    refs.mainText,
-    {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out"
-    },
-    0.2
-  );
-
-  // Show ThreeDoorsWithRibbon at bottom
+  // // Initial appearance - Texts appear
   // tl.to(
-  //   refs.doorsWithRibbon,
+  //   refs.topText,
   //   {
-  //     opacity: 1
-  //     // duration: 0
-  //     // ease: "power2.out"
+  //     opacity: 1,
+  //     y: 0,
+  //     duration: 0.8,
+  //     ease: "power2.out"
   //   },
-  //   0.4
+  //   0
+  // );
+
+  // tl.to(
+  //   refs.mainText,
+  //   {
+  //     opacity: 1,
+  //     y: 0,
+  //     duration: 0.8,
+  //     ease: "power2.out"
+  //   },
+  //   0.2
   // );
 
   // SECOND SCROLL: Text change and doors swap
@@ -305,6 +308,8 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     },
     "secondScroll+=0.4"
   );
+  // ===== STEP 2: LEARN DESIGN TEXT APPEARS - ADD LABEL HERE =====
+  tl.addLabel("s1_2_step2_learnDesign", "secondScroll+=0.8");
 
   tl.set(refs.doorsWithRibbon, { opacity: 0 }, "secondScroll+=0.4");
   tl.set(refs.doorsComplete, { opacity: 1 }, "secondScroll+=0.4");
@@ -318,6 +323,8 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   // THIRD SCROLL: Text change and final doors swap
   tl.add("thirdScroll", "+=0.5");
 
+  // ===== STEP 3: GET MENTORED TEXT APPEARS =====
+  // tl.addLabel("s1_2_step3_getMentored", "thirdScroll");
   tl.to(
     refs.noShortcutsText,
     {
@@ -337,6 +344,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     },
     "thirdScroll+=0.4"
   );
+
+  // ===== STEP 3: GET MENTORED TEXT FULLY VISIBLE =====
+  tl.addLabel("s1_2_step3_getMentored", "thirdScroll+=0.8");
 
   // 🔽 run the diamond outro (lift a bit) right before swapping
   if (refs.doorsDM?.buildOutroToEye) {
@@ -400,6 +410,8 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "fourthScroll+=0.4"
   );
 
+  // ===== STEP 4: CTA (EARN A PAID INTERNSHIP + BUTTON) =====
+  // tl.addLabel("s1_2_step4_cta", "fourthScroll+=0.3");
   // Show hands
   tl.to(
     [refs.leftHand, refs.rightHand],
@@ -458,6 +470,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "fourthScroll+=1"
   );
 
+  // ADD STEP 4 HERE - after button is fully visible:
+  // ===== STEP 4: CTA FULLY VISIBLE =====
+  tl.addLabel("s1_2_step4_cta", "fourthScroll+=1.6");
   // FIFTH SCROLL: Move scene down and show new elements
   tl.add("fifthScroll", "+=0.5");
 
@@ -554,6 +569,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     },
     "fifthScroll+=0.6"
   );
+
+  // ===== STEP 5: HANDS AND SATURN PLANETS ANIMATE =====
+  tl.addLabel("s1_2_step5_handsAndSaturn", "sixthScroll");
   // In useScene1_2Timeline, replace the purple hands and saturns animation section:
 
   // SIXTH SCROLL section - Replace the entire section around line 340-400:
@@ -769,6 +787,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "sixthScroll+=0.9"
   );
 
+  // ===== STEP 6: TIME TEXT AND SATURNS FULLY VISIBLE =====
+  tl.addLabel("s1_2_step6_nerveAndLightning", "sixthScroll+=2.3");
+
   // // 5. ADD SEVENTH SCROLL ANIMATION (add after the sixthScroll section, around line 440)
   // SEVENTH SCROLL: Saturn slides out, Pink Lightening slides in, Time text changes to Nerve
   tl.add("seventhScroll", "+=0.5");
@@ -854,6 +875,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     "seventhScroll+=0.6"
   );
 
+  // ===== STEP 7: NERVE TEXT AND LIGHTNING FULLY VISIBLE =====
+  tl.addLabel("s1_2_step7_freedomAndBirds", "seventhScroll+=1.6");
+
   // EIGHTH SCROLL: Lightening and hands slide out, Birds slide in
   // EIGHTH SCROLL: Lightening and hands slide out, Birds slide in, Nerve changes to Freedom
   tl.add("eighthScroll", "+=0.5");
@@ -914,6 +938,9 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     },
     "eighthScroll+=0.6"
   );
+
+  // ===== STEP 8: FREEDOM TEXT AND BIRDS FULLY VISIBLE =====
+  tl.addLabel("s1_2_step8_freedomComplete", "eighthScroll+=1.6");
 
   // NINTH SCROLL: Horizontal slide transition to Scene1_3
   // NINTH SCROLL: Horizontal slide transition to Scene1_3

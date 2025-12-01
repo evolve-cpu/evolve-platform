@@ -468,32 +468,40 @@ const STEPS = [
     key: "see",
     body: "notice what others miss.",
     from: 18,
-    to: 61
+    to: 51
   },
   {
     key: "think",
     body: "ask what others don't.",
-    from: 62,
-    to: 105
+    from: 52,
+    to: 92
   },
   {
     key: "make",
     body: "design like it matters.",
-    from: 106,
-    to: 149
+    from: 93,
+    to: 145
   },
   {
     key: "ship",
     body: "send it to the real world.",
-    from: 150,
-    to: 193
+    from: 146,
+    to: 180
   },
   {
     key: "share",
     body: "stories that stick.",
-    from: 194,
+    from: 181,
     to: 239
   }
+];
+
+export const SCENE1_3_STEP_LABELS = [
+  "s1_3_step1_see",
+  "s1_3_step2_think",
+  "s1_3_step3_make",
+  "s1_3_step4_ship",
+  "s1_3_step5_share"
 ];
 
 export const SCENE1_3_STEP_COUNT = STEPS.length;
@@ -671,8 +679,10 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   let currentStepIndex = 0;
 
   STEPS.forEach((s, idx) => {
+    // ===== STEP LABELS for scroll snapping =====
+    // tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
     // label for snapping
-    tl.addLabel(`step-${idx}`);
+    // tl.addLabel(`step-${idx}`);
 
     tl.to(
       frame,
@@ -719,6 +729,7 @@ export const useScene1_3Timeline = (refs, isMobile) => {
       },
       ">-0"
     );
+    tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
   });
 
   tl.to({}, { duration: 0.3 });
