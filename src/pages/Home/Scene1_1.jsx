@@ -29,7 +29,7 @@
 export const SCENE1_1_STEP_LABELS = [
   "s1_1_step0_intro",
   "s1_1_step1_text0",
-  "s1_1_step2_mainTextToMisfits",
+  // "s1_1_step2_mainTextToMisfits",
   "s1_1_step3_textFullElementsDown",
   "s1_1_step4_text2ToStop",
   "s1_1_step5_eyeElementsVisible",
@@ -566,10 +566,10 @@ export const useScene1_1Timeline = (refs, isMobile) => {
     });
 
     const firstPhaseEnd = misfitsIndex >= 0 ? misfitsIndex : 4; // Up to and including "misfits"
-    tl.addLabel(
-      "s1_1_step2_mainTextToMisfits",
-      4.5 + firstPhaseEnd * 0.4 + 0.4
-    );
+    // tl.addLabel(
+    //   "s1_1_step2_mainTextToMisfits",
+    //   4.5 + firstPhaseEnd * 0.4 + 0.4
+    // );
 
     // PHASE 1: Animate words up to "misfits" while objects fall
     spans.forEach((span, idx) => {
@@ -2569,7 +2569,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         [refs.ovalMini1, refs.ovalMini2, refs.ovalMini3],
         {
           opacity: 0,
-          duration: 0.4,
+          // duration: 0.4,
+          duration: 0,
           ease: "power2.inOut"
         },
         // step10Start + 0.4
@@ -2581,7 +2582,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         {
           opacity: 1,
           scale: 1, // Scale up slightly when appearing
-          duration: 0.4,
+          // duration: 0.4,
+          duration: 0,
           ease: "power2.inOut"
         },
         // step10Start + 0.4

@@ -389,21 +389,10 @@ const Home = ({
         invalidateOnRefresh: true,
 
         animation: master,
-        scrub: 0.3,
-
-        // snap: {
-        //   snapTo: snapPoints,
-        //   duration: 0.5, // Fast snap
-        //   delay: 0,
-        //   ease: "power2.out",
-        //   onStart: () => {
-        //     // Force immediate snap start
-        //     ScrollTrigger.update();
-        //   }
-        // },
+        scrub: 0.6,
         snap: {
           snapTo: snapPoints, // Simply pass the array directly
-          duration: { min: 0.3, max: 1 }, // Adaptive duration
+          duration: { min: 0.2, max: 0.8 }, // Adaptive duration
           delay: 0, // CHANGE THIS TO 0
           ease: "power1.inOut",
           // inertia: false, // Disables momentum scrolling
@@ -491,18 +480,6 @@ const Home = ({
       // store for cleanup
       master.scrollTrigger = st;
       masterTimelineRef.current = master;
-
-      // // helper: convert step index → master progress
-      // function progressForStep(stepIndex) {
-      //   const local = maxIndex === 0 ? 0 : stepIndex / maxIndex; // 0..1
-      //   const snappedTime =
-      //     scene1_3Start + local * (scene1_3End - scene1_3Start || 1);
-      //   return snappedTime / masterDur;
-      // }
-
-      // store for cleanup (optional, but handy)
-      // master.scrollTrigger = st;
-      // masterTimelineRef.current = master;
     });
 
     const handleScrollToScene1_1 = () => {

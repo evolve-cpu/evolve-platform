@@ -611,7 +611,12 @@ const Footer = () => {
 
   const navigationLinks = [
     { label: "home", path: "/" },
-    { label: "contact us", path: "/contact" }
+    { label: "contact us", path: "/contact" },
+    {
+      path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+      label: "rate this website",
+      external: true
+    }
   ];
 
   const socialLinks = [

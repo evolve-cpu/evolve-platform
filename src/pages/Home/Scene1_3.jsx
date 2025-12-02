@@ -510,6 +510,249 @@ const pad = (n, w = 3) => String(n).padStart(w, "0");
 const srcFor = (i, basePath, prefix, ext) =>
   `${basePath}/${prefix}${pad(i)}.${ext}`;
 
+// export const useScene1_3Timeline = (refs, isMobile) => {
+//   const tl = gsap.timeline({ defaults: { ease: "none" } });
+
+//   // canvas setup
+//   const canvas = refs.canvas;
+//   const ctx = canvas?.getContext?.("2d");
+//   const W = isMobile ? 720 : 1080;
+//   const H = isMobile ? 720 : 1080;
+//   if (canvas && ctx) {
+//     canvas.width = W;
+//     canvas.height = H;
+//     ctx.imageSmoothingEnabled = true;
+//   }
+
+//   const basePath = "/assets/seed_to_plant";
+//   const prefix = "seed to plant_alpha";
+//   const ext = "png";
+//   const TOTAL_START = 18;
+//   const TOTAL_END = 239;
+
+//   /** FRAME CACHE */
+//   const cache = new Map();
+//   let currentFrame = null;
+
+//   const decodeFrame = (idx) => {
+//     if (!idx || idx < TOTAL_START || idx > TOTAL_END) return;
+//     if (cache.has(idx)) return;
+
+//     const img = new Image();
+//     img.decoding = "async";
+//     img.crossOrigin = "anonymous";
+//     img.src = srcFor(idx, basePath, prefix, ext);
+
+//     img.onload = async () => {
+//       let bmp = img;
+//       if (window.createImageBitmap) {
+//         try {
+//           bmp = await createImageBitmap(img);
+//         } catch {
+//           // fallback
+//         }
+//       }
+//       cache.set(idx, bmp);
+
+//       if (currentFrame === idx && ctx) {
+//         ctx.clearRect(0, 0, W, H);
+//         ctx.drawImage(bmp, 0, 0, W, H);
+//       }
+//     };
+
+//     img.onerror = () => {
+//       // ignore
+//     };
+//   };
+
+//   const draw = (idx) => {
+//     if (!ctx) return;
+//     currentFrame = idx;
+//     const bmp = cache.get(idx);
+
+//     if (!bmp) {
+//       decodeFrame(idx);
+//       return;
+//     }
+
+//     ctx.clearRect(0, 0, W, H);
+//     ctx.drawImage(bmp, 0, 0, W, H);
+//   };
+
+//   // pre-decode
+//   for (let i = TOTAL_START; i <= TOTAL_END; i++) {
+//     decodeFrame(i);
+//   }
+
+//   /* ---------- text swap ---------- */
+
+//   let textSwapTimeline = null;
+
+//   const swapText = (subEl, bodyEl, newSub, newBody, dir = 1) => {
+//     if (!subEl || !bodyEl) return;
+
+//     if (subEl.textContent === newSub && bodyEl.innerHTML === newBody) {
+//       gsap.killTweensOf([subEl, bodyEl]);
+//       gsap.set([subEl, bodyEl], { y: 0, opacity: 1 });
+//       return;
+//     }
+
+//     if (textSwapTimeline) textSwapTimeline.kill();
+
+//     const outY = dir > 0 ? -80 : 80;
+//     const inY = dir > 0 ? 80 : -80;
+
+//     textSwapTimeline = gsap.timeline();
+
+//     textSwapTimeline
+//       .to([subEl, bodyEl], {
+//         y: outY,
+//         opacity: 0,
+//         duration: 0.2,
+//         ease: "power2.in",
+//         overwrite: true
+//       })
+//       .call(() => {
+//         subEl.textContent = newSub;
+//         bodyEl.innerHTML = newBody;
+//         gsap.set([subEl, bodyEl], { y: inY, opacity: 0 });
+//       })
+//       .to([subEl, bodyEl], {
+//         y: 0,
+//         opacity: 1,
+//         duration: 0.25,
+//         ease: "power2.out"
+//       });
+//   };
+
+//   const frame = { v: STEPS[0].from };
+
+//   // initial text
+//   if (refs.sub && refs.body) {
+//     refs.sub.textContent = STEPS[0].key;
+//     refs.body.innerHTML = STEPS[0].body;
+//     gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
+//   }
+
+//   // initial frame
+//   if (ctx) {
+//     draw(STEPS[0].from);
+//   }
+
+//   tl.call(
+//     () => {
+//       draw(STEPS[0].from);
+//     },
+//     null,
+//     0
+//   );
+
+//   // small delay
+//   tl.to({}, { duration: 1.0 });
+
+//   const stepDur = 1.0;
+
+//   const textGroup = refs.textGroup;
+
+//   // bigger, clearly visible step offsets
+//   // index 0 = seed, 1..3 = growing, 4 = settled
+//   const TEXT_Y_POSITIONS = isMobile
+//     ? [200, 120, 40, -20, -35] // mobile
+//     : [280, 190, 100, 20, 0]; // desktop
+
+//   if (textGroup) {
+//     gsap.set(textGroup, { y: TEXT_Y_POSITIONS[0] });
+//   }
+
+//   const getStepIndexForFrame = (frameVal) => {
+//     const i = Math.round(frameVal);
+//     for (let idx = 0; idx < STEPS.length; idx++) {
+//       const s = STEPS[idx];
+//       if (i >= s.from && i <= s.to) return idx;
+//     }
+//     if (i < STEPS[0].from) return 0;
+//     if (i > STEPS[STEPS.length - 1].to) return STEPS.length - 1;
+//     return 0;
+//   };
+
+//   let lastFrameValue = STEPS[0].from;
+//   let currentStepIndex = 0;
+
+//   STEPS.forEach((s, idx) => {
+//     // ===== STEP LABELS for scroll snapping =====
+//     // tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
+//     // label for snapping
+//     // tl.addLabel(`step-${idx}`);
+
+//     tl.to(
+//       frame,
+//       {
+//         v: s.to,
+//         duration: stepDur,
+//         ease: "none",
+//         onUpdate: () => {
+//           const val = frame.v;
+//           const i = Math.round(val);
+
+//           // draw frame
+//           if (i !== currentFrame) {
+//             draw(i);
+//           }
+
+//           const goingForward = i >= lastFrameValue;
+//           lastFrameValue = i;
+
+//           const newStepIndex = getStepIndexForFrame(val);
+
+//           if (newStepIndex !== currentStepIndex && refs.sub && refs.body) {
+//             const step = STEPS[newStepIndex];
+
+//             // text change
+//             swapText(
+//               refs.sub,
+//               refs.body,
+//               step.key,
+//               step.body,
+//               goingForward ? 1 : -1
+//             );
+
+//             // **instant snap of text group to the new height**
+//             if (textGroup) {
+//               gsap.set(textGroup, {
+//                 y: TEXT_Y_POSITIONS[newStepIndex]
+//               });
+//             }
+
+//             currentStepIndex = newStepIndex;
+//           }
+//         }
+//       },
+//       ">-0"
+//     );
+//     tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
+//   });
+
+//   tl.to({}, { duration: 0.3 });
+
+//   tl.call(
+//     () => {
+//       if (refs.sub && refs.body) {
+//         refs.sub.textContent = STEPS[0].key;
+//         refs.body.innerHTML = STEPS[0].body;
+//         gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
+//       }
+//       if (textGroup) {
+//         gsap.set(textGroup, { y: TEXT_Y_POSITIONS[0] });
+//       }
+//       currentStepIndex = 0;
+//       lastFrameValue = STEPS[0].from;
+//     },
+//     null,
+//     0.001
+//   );
+
+//   return tl;
+// };
 export const useScene1_3Timeline = (refs, isMobile) => {
   const tl = gsap.timeline({ defaults: { ease: "none" } });
 
@@ -533,6 +776,9 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   /** FRAME CACHE */
   const cache = new Map();
   let currentFrame = null;
+
+  const srcFor = (i, basePath, prefix, ext) =>
+    `${basePath}/${prefix}${String(i).padStart(3, "0")}.${ext}`;
 
   const decodeFrame = (idx) => {
     if (!idx || idx < TOTAL_START || idx > TOTAL_END) return;
@@ -587,10 +833,12 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   /* ---------- text swap ---------- */
 
   let textSwapTimeline = null;
+  let textYTween = null; // <– new: tween handle for Y position
 
   const swapText = (subEl, bodyEl, newSub, newBody, dir = 1) => {
     if (!subEl || !bodyEl) return;
 
+    // if same text, just ensure visible and bail
     if (subEl.textContent === newSub && bodyEl.innerHTML === newBody) {
       gsap.killTweensOf([subEl, bodyEl]);
       gsap.set([subEl, bodyEl], { y: 0, opacity: 1 });
@@ -635,9 +883,7 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   }
 
   // initial frame
-  if (ctx) {
-    draw(STEPS[0].from);
-  }
+  if (ctx) draw(STEPS[0].from);
 
   tl.call(
     () => {
@@ -654,7 +900,6 @@ export const useScene1_3Timeline = (refs, isMobile) => {
 
   const textGroup = refs.textGroup;
 
-  // bigger, clearly visible step offsets
   // index 0 = seed, 1..3 = growing, 4 = settled
   const TEXT_Y_POSITIONS = isMobile
     ? [200, 120, 40, -20, -35] // mobile
@@ -679,11 +924,6 @@ export const useScene1_3Timeline = (refs, isMobile) => {
   let currentStepIndex = 0;
 
   STEPS.forEach((s, idx) => {
-    // ===== STEP LABELS for scroll snapping =====
-    // tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
-    // label for snapping
-    // tl.addLabel(`step-${idx}`);
-
     tl.to(
       frame,
       {
@@ -707,7 +947,7 @@ export const useScene1_3Timeline = (refs, isMobile) => {
           if (newStepIndex !== currentStepIndex && refs.sub && refs.body) {
             const step = STEPS[newStepIndex];
 
-            // text change
+            // swap text contents with slide in/out
             swapText(
               refs.sub,
               refs.body,
@@ -716,10 +956,14 @@ export const useScene1_3Timeline = (refs, isMobile) => {
               goingForward ? 1 : -1
             );
 
-            // **instant snap of text group to the new height**
+            // smooth move of the whole text group instead of snap
             if (textGroup) {
-              gsap.set(textGroup, {
-                y: TEXT_Y_POSITIONS[newStepIndex]
+              if (textYTween) textYTween.kill();
+              textYTween = gsap.to(textGroup, {
+                y: TEXT_Y_POSITIONS[newStepIndex],
+                duration: 0.35,
+                ease: "power2.out",
+                overwrite: "auto"
               });
             }
 
@@ -729,11 +973,13 @@ export const useScene1_3Timeline = (refs, isMobile) => {
       },
       ">-0"
     );
+
     tl.addLabel(`s1_3_step${idx + 1}_${s.key}`, `step-${idx}`);
   });
 
   tl.to({}, { duration: 0.3 });
 
+  // reset if timeline rewinds to start
   tl.call(
     () => {
       if (refs.sub && refs.body) {
@@ -742,6 +988,7 @@ export const useScene1_3Timeline = (refs, isMobile) => {
         gsap.set([refs.sub, refs.body], { y: 0, opacity: 1 });
       }
       if (textGroup) {
+        if (textYTween) textYTween.kill();
         gsap.set(textGroup, { y: TEXT_Y_POSITIONS[0] });
       }
       currentStepIndex = 0;

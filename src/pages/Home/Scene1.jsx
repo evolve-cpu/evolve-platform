@@ -761,8 +761,8 @@ const buildScene1Timeline = (refs, isMobile) => {
   })
     .set(refs.doorCloseup, {
       opacity: 0,
-      scale: 1.5,
-      filter: "blur(12px)",
+      scale: 1,
+      filter: "blur(8px)",
       willChange: "transform, opacity, filter",
       visibility: "hidden"
     })
