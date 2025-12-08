@@ -941,7 +941,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
       if (width <= 360) return height * 0.28;
       else if (width <= 375) return height * 0.29;
       else if (width <= 393) return height * 0.3;
-      else if (width <= 414) return height * 0.3;
+      else if (width <= 414) return height * 0.29;
       else if (width <= 430) return height * 0.3;
       else if (width <= 540) return height * 0.3;
       else return height * 0.3;

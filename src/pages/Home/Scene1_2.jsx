@@ -1553,8 +1553,8 @@ const Scene1_2 = React.forwardRef((props, ref) => {
 [@media(min-height:1080px)]:top-[10%]
 [@media(min-height:1200px)]:top-[8%]
     [@media(min-width:1700px)]:top-[22%]
-          [right:20px]
-          [@media(min-width:1700px)]:right-[25px]"
+          [right:18px]
+          [@media(min-width:1700px)]:right-[20px]"
               style={{
                 // right: "20px",
                 // width: "full",
@@ -1572,13 +1572,13 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_left_mobile}
               alt="pink lightening left"
               className="absolute pointer-events-none 
-    [top:17%]
-    [@media(min-height:667px)]:top-[15%]
-    [@media(min-height:736px)]:top-[16%]
-    [@media(min-height:812px)]:top-[14%]
-    [@media(min-height:844px)]:top-[13%]
-    [@media(min-height:896px)]:top-[12%]
-    [@media(min-height:926px)]:top-[11%]"
+    [top:18%]
+    [@media(min-height:667px)]:top-[16%]
+    [@media(min-height:736px)]:top-[17%]
+    [@media(min-height:812px)]:top-[15%]
+    [@media(min-height:844px)]:top-[14%]
+    [@media(min-height:896px)]:top-[13%]
+    [@media(min-height:926px)]:top-[12%]"
               style={{
                 left: "-5%",
                 width: "auto",
@@ -1596,15 +1596,15 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               src={pink_lightening_right_mobile}
               alt="pink lightening right"
               className="absolute pointer-events-none 
-    [top:17%]
-    [@media(min-height:667px)]:top-[15%]
-    [@media(min-height:736px)]:top-[16%]
-    [@media(min-height:812px)]:top-[14%]
-    [@media(min-height:844px)]:top-[13%]
-    [@media(min-height:896px)]:top-[12%]
-    [@media(min-height:926px)]:top-[11%]"
+    [top:18%]
+    [@media(min-height:667px)]:top-[16%]
+    [@media(min-height:736px)]:top-[17%]
+    [@media(min-height:812px)]:top-[15%]
+    [@media(min-height:844px)]:top-[14%]
+    [@media(min-height:896px)]:top-[13%]
+    [@media(min-height:926px)]:top-[12%]"
               style={{
-                right: "-5%",
+                right: "-3%",
                 width: "auto",
                 height: "auto",
                 opacity: 0,

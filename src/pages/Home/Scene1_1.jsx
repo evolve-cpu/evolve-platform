@@ -2507,7 +2507,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.ovalMini3, // Left card
         {
-          scale: 1.45,
+          // scale: 1.45,
+          scale: 1.2,
           x: "-110px", // Move left
           // duration: 1,
           duration: 1.4,
@@ -2519,7 +2520,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.ovalMini2, // Center card
         {
-          scale: 1.45,
+          // scale: 1.45,
+          scale: 1.2,
           x: 0, // Stay center
           duration: 1.4,
           ease: "power2.inOut"
@@ -2530,7 +2532,8 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       tl.to(
         refs.ovalMini1, // Right card
         {
-          scale: 1.45,
+          // scale: 1.45,
+          scale: 1.2,
           x: "110px", // Move right
           duration: 1.4,
           ease: "power2.inOut"
@@ -2602,7 +2605,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         // step10Start + 0.5
         step10Start + 2.2
       );
-      tl.addLabel("s1_1_step9_toolkitCardsVisible", step10Start + 2.3); // NEW POSITION
+      tl.addLabel("s1_1_step9_toolkitCardsVisible", step10Start + 2.4); // NEW POSITION
 
       // Move full ovals back to original positions after crossfade
       tl.to(
