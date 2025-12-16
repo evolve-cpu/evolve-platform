@@ -321,6 +321,8 @@ import ContactModal from "./components/ContactModal"; // Import the new modal co
 // Import all your images
 import * as images from "./assets/images/Home";
 
+import { supabase } from "./supabaseClient";
+
 const queryClient = new QueryClient();
 
 /* ------------------------------ Device Detection Helper ------------------------------ */
@@ -506,6 +508,50 @@ const AppLayout = () => {
     window.addEventListener("openContactModal", handleOpenContactModal);
     return () =>
       window.removeEventListener("openContactModal", handleOpenContactModal);
+  }, []);
+
+  // useEffect(() => {
+  //   const script = document.createElement("script");
+  //   script.src = "https://accounts.google.com/gsi/client";
+  //   script.async = true;
+  //   script.defer = true;
+  //   document.body.appendChild(script);
+
+  //   script.onload = () => {
+  //     window.google.accounts.id.initialize({
+  //       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+  //       callback: async (response) => {
+  //         await supabase.auth.signInWithIdToken({
+  //           provider: "google",
+  //           token: response.credential
+  //         });
+  //       }
+  //     });
+  //   };
+  // }, []);
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (!window.google) return;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          await supabase.auth.signInWithIdToken({
+            provider: "google",
+            token: response.credential
+          });
+        }
+      });
+
+      // 🔥 THIS IS WHERE ONE TAP SHOULD BE CALLED
+      window.google.accounts.id.prompt();
+    };
   }, []);
 
   return (

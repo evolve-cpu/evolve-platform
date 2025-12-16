@@ -766,6 +766,8 @@ import {
   cross_line_pink
 } from "../assets/images/Nav";
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+import { useAuth } from "../hooks/useAuth";
+import { handleSignIn } from "../auth/signInLogic";
 
 const MIXED_BL = 16;
 const MIXED_BR = 16;
@@ -787,6 +789,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const marqueeTLRef = useRef(null);
 
   const navHeightRef = useRef(0);
+
+  const { user, setUser } = useAuth();
 
   // const navItems = [
   //   { path: "/", label: "home" },
@@ -1029,14 +1033,30 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 />
               </div>
 
-              <a
+              {/* <a
                 href="https://discord.gg/wKRYG7cSWt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] flex-shrink-0 cursor-pointer"
               >
                 join us
-              </a>
+              </a> */}
+              <button
+                onClick={() => handleSignIn(setUser)}
+                className="text-black font-extrabold text-[16px] md:text-[20px]"
+              >
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={user.avatar_url}
+                      className="h-6 w-6 rounded-full"
+                    />
+                    <span>{user.username}</span>
+                  </div>
+                ) : (
+                  "sign in"
+                )}
+              </button>
             </div>
           </div>
         </div>
