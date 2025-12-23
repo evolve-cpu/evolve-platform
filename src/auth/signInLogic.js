@@ -80,33 +80,67 @@
 import { supabase } from "../supabaseClient";
 import { generateGuestProfile } from "./generateGuest";
 
-export async function handleSignIn(setUser) {
-  // 1️⃣ Anonymous sign-in (NO EMAIL)
+// export async function handleSignIn(setUser) {
+//   // 1️⃣ Anonymous sign-in (NO EMAIL)
+//   const { data, error } = await supabase.auth.signInAnonymously();
+
+//   if (error) {
+//     console.error("Anonymous sign-in failed:", error);
+//     return;
+//   }
+
+//   const userId = data.user.id;
+
+//   // 2️⃣ Generate guest profile
+//   const { username, avatar_url } = generateGuestProfile();
+
+//   // 3️⃣ Store profile in DB
+//   await supabase.from("profiles").insert({
+//     id: userId,
+//     username,
+//     avatar_url,
+//     is_guest: true
+//   });
+
+//   // 4️⃣ Update UI
+//   setUser({
+//     id: userId,
+//     username,
+//     avatar_url,
+//     is_guest: true
+//   });
+// }
+
+export async function handleSignIn(setUser, setAuthLoading) {
+  setAuthLoading(true);
+
   const { data, error } = await supabase.auth.signInAnonymously();
 
   if (error) {
-    console.error("Anonymous sign-in failed:", error);
+    setAuthLoading(false);
     return;
   }
 
   const userId = data.user.id;
 
-  // 2️⃣ Generate guest profile
   const { username, avatar_url } = generateGuestProfile();
 
-  // 3️⃣ Store profile in DB
-  await supabase.from("profiles").insert({
-    id: userId,
-    username,
-    avatar_url,
-    is_guest: true
-  });
+  await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      username,
+      avatar_url,
+      is_guest: true
+    },
+    { onConflict: "id" }
+  );
 
-  // 4️⃣ Update UI
   setUser({
     id: userId,
     username,
     avatar_url,
     is_guest: true
   });
+
+  setAuthLoading(false);
 }

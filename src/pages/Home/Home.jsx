@@ -392,9 +392,11 @@ const Home = ({
         scrub: 0.6,
         snap: {
           snapTo: snapPoints, // Simply pass the array directly
-          duration: { min: 0.2, max: 0.8 }, // Adaptive duration
+          // duration: { min: 0.2, max: 0.8 }, // Adaptive duration
+          duration: 1.8, // Adaptive duration
           delay: 0, // CHANGE THIS TO 0
-          ease: "power1.inOut",
+          // ease: "power1.inOut",
+          ease: "power2.out",
           // inertia: false, // Disables momentum scrolling
           onStart: () => {
             // Optional: Force immediate snap start

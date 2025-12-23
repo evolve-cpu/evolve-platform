@@ -790,7 +790,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const navHeightRef = useRef(0);
 
-  const { user, setUser } = useAuth();
+  // const { user, setUser } = useAuth();
+  const { user, setUser, authLoading, setAuthLoading } = useAuth();
 
   // const navItems = [
   //   { path: "/", label: "home" },
@@ -1042,17 +1043,23 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 join us
               </a> */}
               <button
-                onClick={() => handleSignIn(setUser)}
-                className="text-black font-extrabold text-[16px] md:text-[20px]"
+                disabled={authLoading}
+                onClick={() => handleSignIn(setUser, setAuthLoading)}
+                className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
               >
-                {user ? (
-                  <div className="flex items-center gap-2">
+                {authLoading ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+                    <span>signing in…</span>
+                  </>
+                ) : user ? (
+                  <>
                     <img
                       src={user.avatar_url}
                       className="h-6 w-6 rounded-full"
                     />
                     <span>{user.username}</span>
-                  </div>
+                  </>
                 ) : (
                   "sign in"
                 )}

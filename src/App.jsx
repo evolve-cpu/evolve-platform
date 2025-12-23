@@ -510,25 +510,6 @@ const AppLayout = () => {
       window.removeEventListener("openContactModal", handleOpenContactModal);
   }, []);
 
-  // useEffect(() => {
-  //   const script = document.createElement("script");
-  //   script.src = "https://accounts.google.com/gsi/client";
-  //   script.async = true;
-  //   script.defer = true;
-  //   document.body.appendChild(script);
-
-  //   script.onload = () => {
-  //     window.google.accounts.id.initialize({
-  //       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-  //       callback: async (response) => {
-  //         await supabase.auth.signInWithIdToken({
-  //           provider: "google",
-  //           token: response.credential
-  //         });
-  //       }
-  //     });
-  //   };
-  // }, []);
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -550,9 +531,31 @@ const AppLayout = () => {
       });
 
       // 🔥 THIS IS WHERE ONE TAP SHOULD BE CALLED
-      window.google.accounts.id.prompt();
+      // window.google.accounts.id.prompt();
     };
   }, []);
+
+  const promptGoogleOneTap = () => {
+    if (!window.google?.accounts?.id) return;
+
+    window.google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed()) {
+        console.log(
+          "One Tap not displayed:",
+          notification.getNotDisplayedReason()
+        );
+      }
+      if (notification.isSkippedMoment()) {
+        console.log("One Tap skipped:", notification.getSkippedReason());
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (showNavbar) {
+      promptGoogleOneTap();
+    }
+  }, [showNavbar]);
 
   return (
     <>
