@@ -71,6 +71,7 @@ import oval_mini_3 from "./oval_mini_3.svg";
 import oval_1 from "./oval_1.svg";
 import oval_2 from "./oval_2.svg";
 import oval_3 from "./oval_3.svg";
+import oval_3_1 from "./oval_3_1.svg";
 import vector from "./vector.svg";
 import vector_mobile from "./vector_mobile.svg";
 import left_mountains from "./left_mountains.svg";
@@ -191,6 +192,7 @@ export {
   oval_1,
   oval_2,
   oval_3,
+  oval_3_1,
   oval_mini_1,
   oval_mini_2,
   oval_mini_3,

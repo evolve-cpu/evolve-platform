@@ -306,7 +306,7 @@ import { AnimatePresence } from "framer-motion";
 
 import Home from "./pages/Home/Home";
 import AboutUs from "./pages/AboutUs";
-import Webinars from "./pages/Webinars";
+import Webinars from "./pages/Webinars.jsx";
 import Quiz from "./pages/Quiz";
 import Community from "./pages/Community";
 import Course from "./pages/Course";
@@ -359,6 +359,7 @@ const AppLayout = () => {
   const location = useLocation();
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
 
+  // const hideFooterRoutes = ["/webinars"]; // Removed "/contact" since it's now a modal
   const hideFooterRoutes = []; // Removed "/contact" since it's now a modal
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 

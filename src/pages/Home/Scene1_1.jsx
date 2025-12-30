@@ -108,7 +108,8 @@ import {
   stairs4_mobile, // ADD THIS
   stairsfull_right_mobile, // ADD THIS
   join_us_button,
-  join_us_button_hover
+  join_us_button_hover,
+  oval_3_1
 } from "../../assets/images/Home";
 
 // Add this helper function at the top of your Scene1_1 file
@@ -3995,6 +3996,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             <img
               ref={oval3Ref}
               src={oval_3}
+              // src={oval_3_1}
               alt="oval 3"
               className="pointer-events-none"
               style={{
@@ -4005,7 +4007,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             />
             <img
               ref={oval2Ref}
-              src={oval_2}
+              // src={oval_2}
+              src={oval_3_1}
               alt="oval 2"
               className="pointer-events-none"
               style={{
@@ -4066,7 +4069,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
 
                 <img
                   ref={oval2Ref}
-                  src={oval_2}
+                  // src={oval_2}
+                  src={oval_3_1}
                   alt="oval 2"
                   className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
                   style={{
@@ -4080,6 +4084,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
                 <img
                   ref={oval3Ref}
                   src={oval_3}
+                  // src={oval_3_1}
                   alt="oval 3"
                   className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
                   style={{
@@ -4321,7 +4326,8 @@ const Scene1_1 = React.forwardRef((props, ref) => {
 
             <img
               ref={oval2Ref}
-              src={oval_2}
+              // src={oval_2}
+              src={oval_3_1}
               alt="oval 2"
               className="absolute pointer-events-none"
               style={{
@@ -4337,6 +4343,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             <img
               ref={oval3Ref}
               src={oval_3}
+              // src={oval_3_1}
               alt="oval 3"
               className="absolute pointer-events-none"
               style={{
