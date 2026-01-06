@@ -805,6 +805,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const navItems = [
     { path: "/", label: "home" },
+    { path: "/community", label: "community" },
+    { path: "/webinars", label: "webinars" },
     { path: "/contact", label: "contact us", isModal: true }, // Add isModal flag
     {
       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",

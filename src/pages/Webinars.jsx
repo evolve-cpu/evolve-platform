@@ -1,201 +1,3 @@
-// import React from "react";
-// import {
-//   barfi,
-//   hands_with_stairs_chat,
-//   left_elem,
-//   rays_webinars,
-//   right_elem,
-//   hands_with_webinars_card_full
-// } from "../assets/images/Webinars";
-
-// const Webinars = () => {
-//   return (
-//     <main className="bg-evolve-yellow">
-//       {/* Wrapper for the entire hero section */}
-//       <div className="relative overflow-hidden">
-//         {/* Rays webinar SVG - z-10 (lowest) */}
-//         <img
-//           src={rays_webinars}
-//           alt="rays background"
-//           className="absolute inset-x-0 top-0 mx-auto object-contain z-10 pointer-events-none"
-//         />
-
-//         {/* Left element - starts at 10vh, stretches to bottom of grid */}
-//         <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]">
-//           {/* <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
-//           <img
-//             src={left_elem}
-//             alt="left element"
-//             className="h-full w-auto object-cover object-top"
-//             // className="h-full w-auto object-cover object-top"
-//           />
-//         </div>
-
-//         {/* Right element - starts at 10vh, stretches to bottom of grid */}
-//         <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]">
-//           {/* <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
-//           <img
-//             src={right_elem}
-//             alt="right element"
-//             className="h-full w-auto object-cover object-top"
-//             // className="w-auto object-cover object-top"
-//           />
-//         </div>
-
-//         {/* Content sections */}
-//         <section className="relative">
-//           {/* First viewport content */}
-//           <div className="relative min-h-screen">
-//             {/* Barfi - z-20, centered and moved down */}
-//             <div className="absolute inset-0 flex items-center justify-center z-20 pt-20">
-//               <div className="relative flex flex-col items-center text-center">
-//                 <img src={barfi} alt="barfi" className="relative w-[90%]" />
-
-//                 {/* Text inside Barfi - z-30 */}
-//                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16">
-//                   <h1
-//                     className="text-evolve-pink font-extrabold lowercase"
-//                     style={{
-//                       fontSize: "128px",
-//                       lineHeight: "110px",
-//                       letterSpacing: "-0.03em"
-//                     }}
-//                   >
-//                     evolve <br /> webinars
-//                   </h1>
-
-//                   <p
-//                     className="mt-6 font-bold lowercase text-black"
-//                     style={{ fontSize: "40px" }}
-//                   >
-//                     Free. Forever. Worth Your Time.
-//                   </p>
-
-//                   <p
-//                     className="mt-4 font-normal lowercase text-black leading-tight"
-//                     style={{ fontSize: "32px" }}
-//                   >
-//                     Learn from people who've been there,
-//                     <br />
-//                     done that, and have the work to prove it.
-//                   </p>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Hands with stairs - z-40, bottom of screen */}
-//             <img
-//               src={hands_with_stairs_chat}
-//               alt="hands with stairs chat"
-//               className="absolute bottom-0 inset-x-0 mx-auto z-40 w-full pointer-events-none"
-//             />
-//           </div>
-
-//           {/* Second part - below hands-with-stairs */}
-//           <div className="relative z-30 py-16">
-//             {/* "upcoming webinar" text */}
-//             <div className="flex justify-center mb-12">
-//               <h2
-//                 className="lowercase font-extrabold text-black"
-//                 style={{
-//                   fontSize: "96px",
-//                   lineHeight: "96px",
-//                   letterSpacing: "0"
-//                 }}
-//               >
-//                 upcoming webinar
-//               </h2>
-//             </div>
-
-//             {/* Webinar card SVG */}
-//             <div>
-//               <img
-//                 src={hands_with_webinars_card_full}
-//                 alt="webinar card"
-//                 className="w-screen object-contain"
-//               />
-//             </div>
-//           </div>
-//         </section>
-//       </div>
-//       {/* Left/right arches end here because the wrapper div ends here */}
-
-//       {/* Past Webinars Section */}
-//       <section className="relative bg-evolve-yellow px-16 py-20">
-//         {/* Description text */}
-//         <p
-//           className="text-black font-semibold text-center mb-16 leading-tight max-w-[90vw]"
-//           style={{ fontSize: "32px" }}
-//         >
-//           Real talk from working professionals. Practical takeaways you can use
-//           immediately. Every session is recorded, so you never miss out.
-//         </p>
-
-//         {/* Webinar cards grid - 4 horizontal boxes */}
-//         <div className="grid grid-cols-4 gap-2 max-w-[95vw] mx-auto">
-//           {/* Card 1 */}
-//           <div className="rounded-[70px] overflow-hidden border-2 border-evolve-yellow">
-//             {/* Top 60% - Black */}
-//             <div className="bg-black h-[60%] min-h-[240px]"></div>
-//             {/* Divider line */}
-//             <div className="h-0.5 bg-evolve-yellow"></div>
-//             {/* Bottom 40% - Pink */}
-//             <div className="bg-evolve-pink h-[40%] min-h-[160px]"></div>
-//           </div>
-
-//           {/* Card 2 */}
-//           <div className="rounded-[70px] overflow-hidden border-2 border-evolve-yellow">
-//             {/* Top 60% - Black */}
-//             <div className="bg-black h-[60%] min-h-[240px]"></div>
-//             {/* Divider line */}
-//             <div className="h-0.5 bg-evolve-yellow"></div>
-//             {/* Bottom 40% - Pink */}
-//             <div className="bg-evolve-pink h-[40%] min-h-[160px]"></div>
-//           </div>
-
-//           {/* Card 3 */}
-//           <div className="rounded-[70px] overflow-hidden border-2 border-evolve-yellow">
-//             {/* Top 60% - Black */}
-//             <div className="bg-black h-[60%] min-h-[240px]"></div>
-//             {/* Divider line */}
-//             <div className="h-0.5 bg-evolve-yellow"></div>
-//             {/* Bottom 40% - Pink */}
-//             <div className="bg-evolve-pink h-[40%] min-h-[160px]"></div>
-//           </div>
-
-//           {/* Card 4 */}
-//           <div className="rounded-[70px] overflow-hidden border-2 border-evolve-yellow">
-//             {/* Top 60% - Black */}
-//             <div className="bg-black h-[60%] min-h-[240px]"></div>
-//             {/* Divider line */}
-//             <div className="h-0.5 bg-evolve-yellow"></div>
-//             {/* Bottom 40% - Pink */}
-//             <div className="bg-evolve-pink h-[40%] min-h-[160px]"></div>
-//           </div>
-//         </div>
-//       </section>
-//     </main>
-//   );
-// };
-
-// export default Webinars;
-
-// import React, { useState } from "react";
-// import {
-// barfi,
-// hands_with_stairs_chat,
-// hands_with_stairs_chat_full,
-// left_elem,
-// rays_webinars,
-// right_elem,
-// hands_with_webinars_card_full,
-// visual_design,
-// interaction_design,
-// career_growth,
-// hobbies,
-// watch_playlist_button
-// } from "../assets/images/Webinars";
-
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -223,68 +25,159 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
+// // Reusable Card Component
+// const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
+//   return (
+//     <div
+//       className={`
+//         rounded-[70px] overflow-hidden border-2 border-evolve-yellow
+//         transition-all duration-500 ease-in-out cursor-pointer
+//         ${isExpanded ? "scale-y-110" : "scale-y-100"}
+//       `}
+//       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
+//       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
+//       onClick={() => "ontouchstart" in window && onToggle(!isExpanded)}
+//     >
+//       {/* Top 60% - Black with SVG */}
+//       <div className="bg-black h-[60%] min-h-[240px] flex items-center justify-center">
+//         <img src={svg} alt={title} className="w-full h-full object-cover" />
+//       </div>
+
+//       {/* Divider line */}
+//       <div className="h-0.5 bg-evolve-yellow"></div>
+
+//       {/* Bottom 40% - Pink with text and button */}
+//       <div
+//         className={`
+//         bg-evolve-pink h-[40%] min-h-[160px] flex flex-col items-center justify-center
+//         transition-all duration-500 ease-in-out
+//         ${isExpanded ? "pt-6 pb-8" : "py-0"}
+//       `}
+//       >
+//         <h3
+//           className={`
+//             font-extrabold lowercase text-white text-center
+//             transition-all duration-500 ease-in-out text-5xl
+//             ${
+//               isExpanded
+//                 ? "-translate-y-0 scale-y-90"
+//                 : "translate-y-0 scale-y-100"
+//             }
+//           `}
+//           style={{
+//             // fontSize: "48px",
+//             lineHeight: "40px",
+//             letterSpacing: "0"
+//           }}
+//           dangerouslySetInnerHTML={{ __html: title }}
+//         />
+
+//         {/* Button - appears on expand */}
+//         <div
+//           className={`
+//           mt-6 transition-all duration-500 ease-in-out
+//           ${
+//             isExpanded
+//               ? "opacity-100 translate-y-0"
+//               : "opacity-0 -translate-y-4 pointer-events-none"
+//           }
+//         `}
+//         >
+//           <img
+//             src={watch_playlist_button}
+//             alt="watch playlist"
+//             className="h-12 w-auto"
+//           />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
 // Reusable Card Component
 const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
   return (
     <div
       className={`
-        rounded-[70px] overflow-hidden border-2 border-evolve-yellow 
+        rounded-[70px] overflow-hidden border-2 border-evolve-yellow
         transition-all duration-500 ease-in-out cursor-pointer
         ${isExpanded ? "scale-y-110" : "scale-y-100"}
+        /* Tablet only */
+        md:rounded-[40px] lg:rounded-[70px]
+        md:scale-y-100 lg:scale-y-100
       `}
       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
       onClick={() => "ontouchstart" in window && onToggle(!isExpanded)}
     >
-      {/* Top 60% - Black with SVG */}
-      <div className="bg-black h-[60%] min-h-[240px] flex items-center justify-center">
-        <img src={svg} alt={title} className="w-full h-full object-cover" />
+      {/* Top section */}
+      <div
+        className="
+          bg-black h-[60%] min-h-[240px] flex items-center justify-center
+          /* Tablet only */
+          md:h-[58%] md:min-h-[160px]
+          lg:h-[60%] lg:min-h-[240px]
+        "
+      >
+        <img
+          src={svg}
+          alt={title}
+          className="
+            w-full h-full object-cover
+            /* Tablet only */
+            md:scale-90 lg:scale-100
+          "
+        />
       </div>
-
-      {/* Divider line */}
-      <div className="h-0.5 bg-evolve-yellow"></div>
-
-      {/* Bottom 40% - Pink with text and button */}
+      {/* Divider */}
+      <div className="h-0.5 bg-evolve-yellow" />
+      {/* Bottom section */}
       <div
         className={`
-        bg-evolve-pink h-[40%] min-h-[160px] flex flex-col items-center justify-center
-        transition-all duration-500 ease-in-out
-        ${isExpanded ? "pt-6 pb-8" : "py-0"}
-      `}
+          bg-evolve-pink h-[40%] min-h-[160px]
+          flex flex-col items-center justify-center
+          transition-all duration-500 ease-in-out
+          ${isExpanded ? "pt-6 pb-8" : "py-0"}
+          /* Tablet only */
+          // md:h-[42%] md:min-h-[110px]
+          lg:h-[40%] lg:min-h-[160px]
+          ${isExpanded ? "md:pt-3 md:pb-5 lg:pt-6 lg:pb-8" : ""}
+        `}
       >
         <h3
-          className={`
+          className="
             font-extrabold lowercase text-white text-center
-            transition-all duration-500 ease-in-out text-5xl
-            ${
-              isExpanded
-                ? "-translate-y-0 scale-y-90"
-                : "translate-y-0 scale-y-100"
-            }
-          `}
-          style={{
-            // fontSize: "48px",
-            lineHeight: "40px",
-            letterSpacing: "0"
-          }}
+            transition-all duration-500 ease-in-out
+            text-5xl leading-[40px]
+            md:text-2xl lg:text-4xl
+          "
+          // style={{
+          //   lineHeight: "40px",
+          //   letterSpacing: "0"
+          // }}
           dangerouslySetInnerHTML={{ __html: title }}
         />
-
-        {/* Button - appears on expand */}
+        {/* Button */}
         <div
           className={`
-          mt-6 transition-all duration-500 ease-in-out
-          ${
-            isExpanded
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 -translate-y-4 pointer-events-none"
-          }
-        `}
+            mt-6 transition-all duration-500 ease-in-out
+            ${
+              isExpanded
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-4 pointer-events-none"
+            }
+            /* Tablet only */
+            md:mt-3 lg:mt-6
+          `}
         >
           <img
             src={watch_playlist_button}
             alt="watch playlist"
-            className="h-12 w-auto"
+            className="
+              h-12 w-auto
+              /* Tablet only */
+              md:h-9 lg:h-12
+            "
           />
         </div>
       </div>
@@ -527,7 +420,7 @@ const Webinars = () => {
               <img
                 src={hands_with_stairs_chat_full}
                 alt="hands with stairs chat"
-                className="absolute -bottom-0 inset-x-0 mx-auto z-40 pointer-events-none w-[100%]"
+                className="absolute -bottom-0 inset-x-0 mx-auto z-30 pointer-events-none w-[100%]"
               />
             </div>
 
@@ -591,92 +484,109 @@ const Webinars = () => {
       {/* ================= MOBILE VIEW ================= */}
       <div className="block md:hidden overflow-hidden bg-evolve-yellow">
         {/* ---------- PAGE 1 : HERO (2 screens) ---------- */}
-        <section className="relative min-h-screen">
-          {/* Rays */}
-          <img
-            src={rays_webinars_mobile}
-            className="absolute inset-0 w-full z-10 pointer-events-none"
-            alt=""
-          />
+        <section className="relative">
+          {/* <section className="relative min-h-screen"> */}
+          <div className="relative min-h-screen">
+            {/* <section className="relative min-h-screen overflow-hidden"> */}
+            {/* Rays */}
+            <img
+              src={rays_webinars_mobile}
+              className="absolute inset-0 w-full z-10 pointer-events-none"
+              alt=""
+            />
 
-          {/* Barfi */}
-          <div className="absolute top-0 inset-x-0 flex justify-center z-20">
-            <img src={barfi_mobile} className="w-[100%]" alt="" />
-          </div>
-
-          {/* Side elements */}
-          <img
-            src={left_elem_mobile}
-            className="absolute left-0 top-[30%] z-30 w-auto"
-            alt=""
-          />
-          <img
-            src={right_elem_mobile}
-            className="absolute right-0 top-[30%] z-30"
-            alt=""
-          />
-
-          {/* Texts inside barfi */}
-          <div className="absolute top-[10vh] inset-x-0 z-40 flex justify-center">
-            <div className="w-[90%] text-center pt-16 px-6">
-              <h1
-                className="text-evolve-pink font-extrabold lowercase"
-                style={{
-                  fontSize: "64px",
-                  lineHeight: "58px",
-                  letterSpacing: "-0.03em"
-                }}
-              >
-                evolve <br /> webinars
-              </h1>
-
-              <p
-                className="mt-4 font-bold text-black"
-                style={{ fontSize: "20px" }}
-              >
-                Free. Forever. Worth Your Time.
-              </p>
-
-              <p
-                className="mt-3 font-normal text-center text-black mx-auto max-w-[70vw]"
-                style={{ fontSize: "20px" }}
-              >
-                Learn from people who've been there, done that, and have the
-                work to prove it.
-              </p>
+            {/* Barfi */}
+            <div className="absolute top-0 inset-x-0 flex justify-center z-20">
+              <img src={barfi_mobile} className="w-[100%]" alt="" />
             </div>
+
+            {/* Side elements */}
+            <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[30vh] h-[70%]">
+              <img
+                src={left_elem_mobile}
+                // className="absolute left-0 top-[30%] z-20 w-auto"
+                className="w-auto object-cover object-top"
+                alt=""
+              />
+            </div>
+            <img
+              src={right_elem_mobile}
+              className="absolute right-0 top-[30%] z-20"
+              alt=""
+            />
+
+            {/* Texts inside barfi */}
+            <div className="absolute top-[10vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
+              <div className="w-[80%] text-center pt-16 px-6">
+                <h1
+                  className="
+      text-evolve-pink font-extrabold lowercase
+      text-[48px] leading-[44px]
+      md:text-[clamp(42px,5vw,64px)]
+      md:leading-[58px]
+      tracking-[-0.03em]
+    "
+                >
+                  evolve <br /> webinars
+                </h1>
+
+                <p
+                  className="
+      mt-4 font-bold text-black
+      text-[18px]
+      md:text-[clamp(18px,2vw,20px)]
+    "
+                >
+                  Free. Forever. Worth Your Time.
+                </p>
+
+                <p
+                  className="
+      mt-3 font-normal text-center text-black mx-auto max-w-[70vw]
+      text-[18px]
+      md:text-[clamp(18px,1.8vw,20px)]
+    "
+                >
+                  Learn from people who've been there, done that, and have the
+                  work to prove it.
+                </p>
+              </div>
+            </div>
+
+            {/* Hands chat (top layer) */}
+            <img
+              src={hands_with_stairs_chat_full_mobile}
+              className="absolute -bottom-10 inset-x-0 z-30 w-full"
+              alt=""
+            />
           </div>
+          {/* </section> */}
 
-          {/* Hands chat (top layer) */}
-          <img
-            src={hands_with_stairs_chat_full_mobile}
-            className="absolute -bottom-10 inset-x-0 z-30 w-full"
-            alt=""
-          />
+          {/* ---------- PAGE 1 : UPCOMING ---------- */}
+          {/* <section className="relative z-40 pt-32 pb-20 text-center"> */}
+          <div className="relative z-40 pt-32 pb-20 text-center">
+            <h2
+              className="font-extrabold lowercase text-black"
+              style={{
+                fontSize: "32px",
+                lineHeight: "32px"
+              }}
+            >
+              upcoming
+              <br /> webinar
+            </h2>
+
+            <img
+              src={hands_with_webinars_card_full_mobile}
+              className="w-full mt-10"
+              alt=""
+            />
+            {/* </section> */}
+
+            {/* ---------- PAGE 2 : PAST WEBINARS ---------- */}
+            <MobilePinnedCards cards={cards} />
+          </div>
         </section>
-
-        {/* ---------- PAGE 1 : UPCOMING ---------- */}
-        <section className="relative z-40 pt-32 pb-20 text-center">
-          <h2
-            className="font-extrabold lowercase text-black"
-            style={{
-              fontSize: "32px",
-              lineHeight: "32px"
-            }}
-          >
-            upcoming
-            <br /> webinar
-          </h2>
-
-          <img
-            src={hands_with_webinars_card_full_mobile}
-            className="w-full mt-10"
-            alt=""
-          />
-        </section>
-
-        {/* ---------- PAGE 2 : PAST WEBINARS ---------- */}
-        <MobilePinnedCards cards={cards} />
       </div>
     </main>
   );

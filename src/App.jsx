@@ -308,7 +308,7 @@ import Home from "./pages/Home/Home";
 import AboutUs from "./pages/AboutUs";
 import Webinars from "./pages/Webinars.jsx";
 import Quiz from "./pages/Quiz";
-import Community from "./pages/Community";
+import Community from "./pages/Community.jsx";
 import Course from "./pages/Course";
 import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";

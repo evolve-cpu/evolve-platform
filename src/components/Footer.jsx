@@ -611,6 +611,8 @@ const Footer = () => {
 
   const navigationLinks = [
     { label: "home", path: "/" },
+    { path: "/community", label: "community" },
+    { path: "/webinars", label: "webinars" },
     { label: "contact us", path: "/contact" },
     {
       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
