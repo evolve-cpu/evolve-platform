@@ -573,7 +573,7 @@ const Webinars = () => {
             {/* Hands chat (top layer) */}
             <img
               src={hands_with_stairs_chat_full_mobile}
-              className="absolute -bottom-10 inset-x-0 z-30 w-full"
+              className="absolute -bottom-10 inset-x-0 z-30 w-full mx-auto pointer-events-none"
               alt=""
             />
           </div>
