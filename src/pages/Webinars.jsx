@@ -54,23 +54,23 @@ gsap.registerPlugin(ScrollTrigger);
 //         ${isExpanded ? "pt-6 pb-8" : "py-0"}
 //       `}
 //       >
-//         <h3
-//           className={`
-//             font-extrabold lowercase text-white text-center
-//             transition-all duration-500 ease-in-out text-5xl
-//             ${
-//               isExpanded
-//                 ? "-translate-y-0 scale-y-90"
-//                 : "translate-y-0 scale-y-100"
-//             }
-//           `}
-//           style={{
-//             // fontSize: "48px",
-//             lineHeight: "40px",
-//             letterSpacing: "0"
-//           }}
-//           dangerouslySetInnerHTML={{ __html: title }}
-//         />
+// <h3
+//   className={`
+//     font-extrabold lowercase text-white text-center
+//     transition-all duration-500 ease-in-out text-5xl
+//     ${
+//       isExpanded
+//         ? "-translate-y-0 scale-y-90"
+//         : "translate-y-0 scale-y-100"
+//     }
+//   `}
+//   style={{
+//     // fontSize: "48px",
+//     lineHeight: "40px",
+//     letterSpacing: "0"
+//   }}
+//   dangerouslySetInnerHTML={{ __html: title }}
+// />
 
 //         {/* Button - appears on expand */}
 //         <div
@@ -102,9 +102,6 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
         rounded-[70px] overflow-hidden border-2 border-evolve-yellow
         transition-all duration-500 ease-in-out cursor-pointer
         ${isExpanded ? "scale-y-110" : "scale-y-100"}
-        /* Tablet only */
-        md:rounded-[40px] lg:rounded-[70px]
-        md:scale-y-100 lg:scale-y-100
       `}
       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
@@ -145,6 +142,25 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
         `}
       >
         <h3
+          className={`
+            font-extrabold lowercase text-white text-center
+            transition-all duration-500 ease-in-out
+                        text-5xl leading-[40px]
+            md:text-2xl lg:text-4xl
+            ${
+              isExpanded
+                ? "-translate-y-0 scale-y-90"
+                : "translate-y-0 scale-y-100"
+            }
+          `}
+          style={{
+            // fontSize: "48px",
+            lineHeight: "40px",
+            letterSpacing: "0"
+          }}
+          dangerouslySetInnerHTML={{ __html: title }}
+        />
+        {/* <h3
           className="
             font-extrabold lowercase text-white text-center
             transition-all duration-500 ease-in-out
@@ -156,7 +172,7 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
           //   letterSpacing: "0"
           // }}
           dangerouslySetInnerHTML={{ __html: title }}
-        />
+        /> */}
         {/* Button */}
         <div
           className={`
@@ -349,7 +365,7 @@ const Webinars = () => {
           <img
             src={rays_webinars}
             alt="rays background"
-            className="absolute inset-x-0 top-0 mx-auto object-contain z-10 pointer-events-none"
+            className="absolute inset-x-0 -top-10 mx-auto object-contain z-10 pointer-events-none"
           />
 
           {/* Left element - starts at 10vh, stretches to bottom of grid */}
@@ -431,9 +447,10 @@ const Webinars = () => {
                 <h2
                   className="lowercase font-extrabold text-black"
                   style={{
-                    fontSize: "96px",
+                    fontSize: "36px",
                     lineHeight: "96px",
-                    letterSpacing: "0"
+                    // letterSpacing: "0",
+                    letterSpacing: "-0.03em"
                   }}
                 >
                   upcoming webinar
@@ -569,7 +586,8 @@ const Webinars = () => {
               className="font-extrabold lowercase text-black"
               style={{
                 fontSize: "32px",
-                lineHeight: "32px"
+                lineHeight: "32px",
+                letterSpacing: "-0.03em"
               }}
             >
               upcoming
@@ -578,7 +596,7 @@ const Webinars = () => {
 
             <img
               src={hands_with_webinars_card_full_mobile}
-              className="w-full mt-10"
+              className="w-[95%] mx-auto mt-10"
               alt=""
             />
             {/* </section> */}

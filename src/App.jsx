@@ -576,7 +576,7 @@ const AppLayout = () => {
 
       {/* Main Content with Tablet Scaling */}
       <div
-        className="min-h-screen bg-evolve-black"
+        className="min-h-screen bg-evolve-black lowercase"
         style={{
           visibility: isLoading ? "hidden" : "visible",
           opacity: isLoading ? 0 : 1,
