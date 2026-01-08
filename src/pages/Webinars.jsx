@@ -95,7 +95,7 @@ gsap.registerPlugin(ScrollTrigger);
 // };
 
 // Reusable Card Component
-const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
+const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
   return (
     <div
       className={`
@@ -110,22 +110,25 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
       {/* Top section */}
       <div
         className="
-          bg-black h-[60%] min-h-[240px] flex items-center justify-center
-          /* Tablet only */
-          md:h-[58%] md:min-h-[160px]
-          lg:h-[60%] lg:min-h-[240px]
-        "
+    bg-black h-[60%] min-h-[240px]
+    relative overflow-hidden
+    flex justify-center
+  "
       >
         <img
           src={svg}
           alt={title}
-          className="
-            w-full h-full object-cover
-            /* Tablet only */
-            md:scale-90 lg:scale-100
-          "
+          className={`
+      absolute bottom-0
+      w-full
+      object-contain
+      transition-transform duration-500 ease-in-out
+      origin-bottom
+      ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
+    `}
         />
       </div>
+
       {/* Divider */}
       <div className="h-0.5 bg-evolve-yellow" />
       {/* Bottom section */}
@@ -174,28 +177,36 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
           dangerouslySetInnerHTML={{ __html: title }}
         /> */}
         {/* Button */}
-        <div
+        <a
+          // href={playlistUrl}
+          onClick={() => window.open(playlistUrl, "_blank")}
+          target="_blank"
+          rel="noopener noreferrer"
           className={`
-            mt-6 transition-all duration-500 ease-in-out
-            ${
-              isExpanded
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-4 pointer-events-none"
-            }
-            /* Tablet only */
-            md:mt-3 lg:mt-6
-          `}
+    mt-6 transition-all duration-500 ease-in-out
+    ${
+      isExpanded
+        ? "opacity-100 translate-y-0"
+        : "opacity-0 -translate-y-4 pointer-events-none"
+    }
+    md:mt-3 lg:mt-6
+  `}
         >
           <img
             src={watch_playlist_button}
             alt="watch playlist"
             className="
-              h-12 w-auto cursor-pointer
-              /* Tablet only */
-              md:h-9 lg:h-12
-            "
+      h-12 w-auto md:h-9 lg:h-12
+      cursor-pointer
+      transition-all duration-300 ease-out
+      hover:-translate-y-1
+      hover:scale-[1.04]
+      hover:drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)]
+      active:translate-y-0
+      active:scale-[0.98]
+    "
           />
-        </div>
+        </a>
       </div>
     </div>
   );
@@ -313,7 +324,12 @@ const MobilePinnedCards = ({ cards }) => {
                 style={{ fontSize: "40px", lineHeight: "36px" }}
                 dangerouslySetInnerHTML={{ __html: card.title }}
               />
-              <img src={watch_playlist_button} className="mt-6 h-12" alt="" />
+              <img
+                src={watch_playlist_button}
+                onClick={() => window.open(card.playlistUrl, "_blank")}
+                className="mt-6 h-12"
+                alt=""
+              />
             </div>
           </div>
         ))}
@@ -327,10 +343,30 @@ const Webinars = () => {
   const [currentMobileCard, setCurrentMobileCard] = useState(0);
 
   const cards = [
-    { svg: visual_design, title: "visual<br/>design" },
-    { svg: interaction_design, title: "interaction<br/>design" },
-    { svg: career_growth, title: "career<br/>growth" },
-    { svg: hobbies, title: "hobbies" }
+    {
+      svg: visual_design,
+      title: "visual<br/>design",
+      playlistUrl:
+        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiBk41nO_f8tpn0UfUFOEZkA"
+    },
+    {
+      svg: interaction_design,
+      title: "interaction<br/>design",
+      playlistUrl:
+        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiDuKT-UgO3rGP0260L-XAxX"
+    },
+    {
+      svg: career_growth,
+      title: "career<br/>growth",
+      playlistUrl:
+        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiCaCGpLy_LIRDFSWTm2gA66"
+    },
+    {
+      svg: hobbies,
+      title: "hobbies",
+      playlistUrl:
+        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiCNf6dl-Cs3RuhrEAFjaIm3"
+    }
   ];
 
   const handleCardToggle = (index, expand) => {
@@ -401,24 +437,24 @@ const Webinars = () => {
 
                   {/* Text inside Barfi - z-30 */}
                   {/* <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16"> */}
-                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-15%]">
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-28%]">
                     <h1
                       className="text-evolve-pink font-extrabold lowercase"
                       style={{
-                        fontSize: "108px",
-                        lineHeight: "100px",
+                        fontSize: "clamp(64px, 8vw, 128px)",
+                        lineHeight: "clamp(48px, 7vw, 110px)",
                         letterSpacing: "-0.03em"
                       }}
                     >
                       evolve <br /> webinars
                     </h1>
 
-                    <p
+                    {/* <p
                       className="mt-6 font-bold lowercase text-black"
                       style={{ fontSize: "38px" }}
                     >
                       Free. Forever. Worth Your Time.
-                    </p>
+                    </p> */}
 
                     <p
                       className="mt-4 font-normal lowercase text-black leading-tight"
@@ -484,11 +520,21 @@ const Webinars = () => {
 
           {/* Webinar cards grid - 4 horizontal boxes */}
           <div className="grid grid-cols-4 gap-2 max-w-[85vw] h-[65vh] mx-auto">
+            {/* {cards.map((card, index) => (
+              <WebinarCard
+                key={index}
+                svg={card.svg}
+                title={card.title}
+                isExpanded={expandedCard === index}
+                onToggle={(expand) => handleCardToggle(index, expand)}
+              />
+            ))} */}
             {cards.map((card, index) => (
               <WebinarCard
                 key={index}
                 svg={card.svg}
                 title={card.title}
+                playlistUrl={card.playlistUrl}
                 isExpanded={expandedCard === index}
                 onToggle={(expand) => handleCardToggle(index, expand)}
               />
@@ -537,17 +583,17 @@ const Webinars = () => {
               <div className="w-[80%] text-center pt-16 px-6">
                 <h1
                   className="
-      text-evolve-pink font-extrabold lowercase
-       leading-[44px]
-      text-[clamp64px, 8vw, 128px]
-      md:leading-[58px]
-      tracking-[-0.03em]
-    "
+      text-evolve-pink font-extrabold lowercase"
+                  style={{
+                    fontSize: "clamp(64px, 8vw, 128px)",
+                    lineHeight: "clamp(48px, 7vw, 110px)",
+                    letterSpacing: "-0.03em"
+                  }}
                 >
                   evolve <br /> webinars
                 </h1>
 
-                <p
+                {/* <p
                   className="
       mt-4 font-bold text-black
       text-[18px]
@@ -555,7 +601,7 @@ const Webinars = () => {
     "
                 >
                   Free. Forever. Worth Your Time.
-                </p>
+                </p> */}
 
                 <p
                   className="

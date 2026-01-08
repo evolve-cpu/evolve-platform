@@ -680,7 +680,9 @@ const Footer = () => {
           {/* text/content layer */}
           <div className="relative z-30 w-2/3 h-full">
             <h2 className="font-extrabold lowercase text-[4rem] leading-[1.1]">
-              ready to be remarkable?
+              ready to
+              <br />
+              be remarkable?
             </h2>
 
             <div className="mt-6">

@@ -1525,13 +1525,13 @@ const Community = () => {
 
           {/* Sub text */}
           <p
-            className="mt-6 font-bold lowercase text-black max-w-[80vw]"
+            className="mt-6 font-regular lowercase text-black max-w-[80vw]"
             style={{
               fontSize: "clamp(20px, 2.5vw, 32px)",
               lineHeight: "clamp(28px, 3vw, 36px)"
             }}
           >
-            not a forum. not a feed! <br />
+            {/* not a forum. not a feed! <br /> */}
             an inner circle built for creators.
           </p>
 
