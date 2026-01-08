@@ -25,75 +25,6 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-// // Reusable Card Component
-// const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
-//   return (
-//     <div
-//       className={`
-//         rounded-[70px] overflow-hidden border-2 border-evolve-yellow
-//         transition-all duration-500 ease-in-out cursor-pointer
-//         ${isExpanded ? "scale-y-110" : "scale-y-100"}
-//       `}
-//       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
-//       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
-//       onClick={() => "ontouchstart" in window && onToggle(!isExpanded)}
-//     >
-//       {/* Top 60% - Black with SVG */}
-//       <div className="bg-black h-[60%] min-h-[240px] flex items-center justify-center">
-//         <img src={svg} alt={title} className="w-full h-full object-cover" />
-//       </div>
-
-//       {/* Divider line */}
-//       <div className="h-0.5 bg-evolve-yellow"></div>
-
-//       {/* Bottom 40% - Pink with text and button */}
-//       <div
-//         className={`
-//         bg-evolve-pink h-[40%] min-h-[160px] flex flex-col items-center justify-center
-//         transition-all duration-500 ease-in-out
-//         ${isExpanded ? "pt-6 pb-8" : "py-0"}
-//       `}
-//       >
-// <h3
-//   className={`
-//     font-extrabold lowercase text-white text-center
-//     transition-all duration-500 ease-in-out text-5xl
-//     ${
-//       isExpanded
-//         ? "-translate-y-0 scale-y-90"
-//         : "translate-y-0 scale-y-100"
-//     }
-//   `}
-//   style={{
-//     // fontSize: "48px",
-//     lineHeight: "40px",
-//     letterSpacing: "0"
-//   }}
-//   dangerouslySetInnerHTML={{ __html: title }}
-// />
-
-//         {/* Button - appears on expand */}
-//         <div
-//           className={`
-//           mt-6 transition-all duration-500 ease-in-out
-//           ${
-//             isExpanded
-//               ? "opacity-100 translate-y-0"
-//               : "opacity-0 -translate-y-4 pointer-events-none"
-//           }
-//         `}
-//         >
-//           <img
-//             src={watch_playlist_button}
-//             alt="watch playlist"
-//             className="h-12 w-auto"
-//           />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
 // Reusable Card Component
 const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
   return (
@@ -115,7 +46,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     flex justify-center
   "
       >
-        <img
+        {/* <img
           src={svg}
           alt={title}
           className={`
@@ -126,6 +57,21 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
       origin-bottom
       ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
     `}
+        /> */}
+        <img
+          src={svg}
+          alt={title}
+          className={`
+    absolute bottom-0
+    w-full
+    object-contain
+    transition-transform duration-500 ease-in-out
+    origin-bottom
+    ${svg === hobbies ? "w-[79.9%]" : ""}
+    ${svg === career_growth ? "-bottom-1" : ""}
+
+    ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
+  `}
         />
       </div>
 
@@ -406,7 +352,7 @@ const Webinars = () => {
 
           {/* Left element - starts at 10vh, stretches to bottom of grid */}
           <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]">
-            {/* <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
+            {/* <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
             <img
               src={left_elem}
               alt="left element"
