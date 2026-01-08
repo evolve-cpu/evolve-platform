@@ -1551,7 +1551,8 @@ const Community = () => {
       </section>
 
       {/* ================= HEADING ================= */}
-      <section className="bg-evolve-yellow pt-28 pb-24 text-center px-4">
+      <section className="bg-evolve-yellow pt-28 text-center px-4">
+        {/* <section className="bg-evolve-yellow pt-28 pb-24 text-center px-4"> */}
         <h2 className="font-extrabold lowercase text-black text-[clamp(40px,5vw,80px)]">
           inside the community circle
         </h2>

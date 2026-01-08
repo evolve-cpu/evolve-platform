@@ -100,7 +100,7 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
     <div
       className={`
         rounded-[70px] overflow-hidden border-2 border-evolve-yellow
-        transition-all duration-500 ease-in-out cursor-pointer
+        transition-all duration-500 ease-in-out 
         ${isExpanded ? "scale-y-110" : "scale-y-100"}
       `}
       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
@@ -190,7 +190,7 @@ const WebinarCard = ({ svg, title, isExpanded, onToggle }) => {
             src={watch_playlist_button}
             alt="watch playlist"
             className="
-              h-12 w-auto
+              h-12 w-auto cursor-pointer
               /* Tablet only */
               md:h-9 lg:h-12
             "
@@ -538,8 +538,8 @@ const Webinars = () => {
                 <h1
                   className="
       text-evolve-pink font-extrabold lowercase
-      text-[48px] leading-[44px]
-      md:text-[clamp(42px,5vw,64px)]
+       leading-[44px]
+      text-[clamp64px, 8vw, 128px]
       md:leading-[58px]
       tracking-[-0.03em]
     "
