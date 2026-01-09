@@ -648,6 +648,388 @@
 // import { Toaster } from "@/components/ui/toaster";
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { TooltipProvider } from "@/components/ui/tooltip";
+// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+// import { useEffect, useState, lazy, Suspense } from "react";
+// import { AnimatePresence } from "framer-motion";
+
+// // Eager load only Home page (critical)
+// import Home from "./pages/Home/Home";
+// import Navigation from "./components/Navigation";
+// import LoadingScreen from "./components/LoadingScreen";
+// import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
+// import ContactModal from "./components/ContactModal";
+
+// // Lazy load non-critical routes
+// const AboutUs = lazy(() => import("./pages/AboutUs"));
+// const Webinars = lazy(() => import("./pages/Webinars.jsx"));
+// const Quiz = lazy(() => import("./pages/Quiz"));
+// const Community = lazy(() => import("./pages/Community.jsx"));
+// const Course = lazy(() => import("./pages/Course"));
+// const NotFound = lazy(() => import("./pages/NotFound"));
+// const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
+// const Footer = lazy(() => import("./components/Footer"));
+
+// // Import only critical home images
+// import * as images from "./assets/images/Home";
+// import { supabase } from "./supabaseClient";
+
+// const queryClient = new QueryClient();
+
+// /* ------------------------------ Device Detection Helper ------------------------------ */
+// const getDeviceType = () => {
+//   const width = window.innerWidth;
+//   if (width <= 768) return "mobile";
+//   if (width > 768 && width <= 1024) return "tablet";
+//   return "desktop";
+// };
+
+// const isLandscape = () => window.innerWidth > window.innerHeight;
+
+// /* ------------------------------ Inner Layout ------------------------------ */
+// const AppLayout = () => {
+//   const [showNavbar, setShowNavbar] = useState(true);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [loadingProgress, setLoadingProgress] = useState(0);
+//   const [deviceType, setDeviceType] = useState(getDeviceType());
+//   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
+//   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+//   const location = useLocation();
+//   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
+//   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+
+//   const hideFooterRoutes = [];
+//   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
+
+//   // Check orientation for tablets
+//   useEffect(() => {
+//     const checkOrientation = () => {
+//       const currentDeviceType = getDeviceType();
+//       setDeviceType(currentDeviceType);
+
+//       if (currentDeviceType === "tablet" && !isLandscape()) {
+//         setShowOrientationWarning(true);
+//       } else {
+//         setShowOrientationWarning(false);
+//       }
+//     };
+
+//     checkOrientation();
+//     const handleResize = () => requestAnimationFrame(checkOrientation);
+
+//     window.addEventListener("resize", handleResize);
+//     window.addEventListener("orientationchange", checkOrientation);
+
+//     return () => {
+//       window.removeEventListener("resize", handleResize);
+//       window.removeEventListener("orientationchange", checkOrientation);
+//     };
+//   }, []);
+
+//   const getTabletScale = () => {
+//     if (deviceType !== "tablet") return 1;
+//     const targetWidth = 1280;
+//     const currentWidth = window.innerWidth;
+//     return Math.max(currentWidth / targetWidth, 0.7);
+//   };
+
+//   // Prevent native scroll restore
+//   useEffect(() => {
+//     if ("scrollRestoration" in window.history) {
+//       window.history.scrollRestoration = "manual";
+//     }
+//   }, []);
+
+//   // Set navbar visibility based on route
+//   useEffect(() => {
+//     if (location.pathname === "/") {
+//       setShowNavbar(false);
+//       setIsHomeIntroActive(true);
+//     } else {
+//       setShowNavbar(true);
+//       setIsHomeIntroActive(false);
+//     }
+//   }, [location.pathname]);
+
+//   // Reset scroll on route change (optimized)
+//   useEffect(() => {
+//     requestAnimationFrame(() => {
+//       window.scrollTo(0, 0);
+//     });
+//   }, [location.pathname]);
+
+//   // Preload images with working progress
+//   useEffect(() => {
+//     const preloadImages = async () => {
+//       const imageUrls = Object.values(images).filter(
+//         (img) =>
+//           typeof img === "string" &&
+//           (img.startsWith("/") || img.startsWith("http"))
+//       );
+
+//       // Separate critical and non-critical images
+//       const criticalCount = Math.min(5, imageUrls.length);
+//       const criticalImages = imageUrls.slice(0, criticalCount);
+//       const deferredImages = imageUrls.slice(criticalCount);
+
+//       if (imageUrls.length === 0) {
+//         setTimeout(() => {
+//           setLoadingProgress(100);
+//           setTimeout(() => setIsLoading(false), 300);
+//         }, 800);
+//         return;
+//       }
+
+//       let loadedCount = 0;
+//       const totalCritical = criticalImages.length;
+
+//       const loadImage = (src) => {
+//         return new Promise((resolve) => {
+//           const img = new Image();
+//           img.fetchPriority = "high";
+
+//           const onLoad = () => {
+//             loadedCount++;
+//             // Update progress based on critical images only
+//             const progress = Math.min((loadedCount / totalCritical) * 100, 100);
+//             setLoadingProgress(progress);
+//             resolve();
+//           };
+
+//           img.onload = onLoad;
+//           img.onerror = onLoad; // Don't block on errors
+//           img.src = src;
+//         });
+//       };
+
+//       try {
+//         // Load critical images first (these update the progress bar)
+//         await Promise.all(criticalImages.map(loadImage));
+
+//         // Ensure minimum loading time for smooth UX
+//         const minLoadTime = 800;
+//         await new Promise((resolve) => setTimeout(resolve, minLoadTime));
+
+//         // Hide loading screen
+//         setLoadingProgress(100);
+//         setIsLoading(false);
+
+//         // Load remaining images in background (after site is visible)
+//         if (deferredImages.length > 0) {
+//           if ("requestIdleCallback" in window) {
+//             requestIdleCallback(
+//               () => {
+//                 deferredImages.forEach((src) => {
+//                   const img = new Image();
+//                   img.src = src;
+//                 });
+//               },
+//               { timeout: 2000 }
+//             );
+//           } else {
+//             setTimeout(() => {
+//               deferredImages.forEach((src) => {
+//                 const img = new Image();
+//                 img.src = src;
+//               });
+//             }, 1000);
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Error loading images:", error);
+//         setLoadingProgress(100);
+//         setIsLoading(false);
+//       }
+//     };
+
+//     preloadImages();
+//   }, []);
+
+//   // Set vh unit (with debouncing)
+//   useEffect(() => {
+//     let timeoutId;
+//     const setVhUnit = () => {
+//       clearTimeout(timeoutId);
+//       timeoutId = setTimeout(() => {
+//         document.documentElement.style.setProperty(
+//           "--vh-unit",
+//           `${window.innerHeight * 0.01}px`
+//         );
+//       }, 100);
+//     };
+
+//     setVhUnit();
+//     window.addEventListener("resize", setVhUnit);
+//     return () => {
+//       window.removeEventListener("resize", setVhUnit);
+//       clearTimeout(timeoutId);
+//     };
+//   }, []);
+
+//   // Listen for contact modal event
+//   useEffect(() => {
+//     const handleOpenContactModal = () => setIsContactModalOpen(true);
+//     window.addEventListener("openContactModal", handleOpenContactModal);
+//     return () =>
+//       window.removeEventListener("openContactModal", handleOpenContactModal);
+//   }, []);
+
+//   // Load Google Sign-In script ONLY when needed (deferred)
+//   useEffect(() => {
+//     if (googleScriptLoaded || isLoading) return;
+
+//     const loadGoogleScript = () => {
+//       const script = document.createElement("script");
+//       script.src = "https://accounts.google.com/gsi/client";
+//       script.async = true;
+//       script.defer = true;
+
+//       script.onload = () => {
+//         setGoogleScriptLoaded(true);
+
+//         if (!window.google) return;
+
+//         window.google.accounts.id.initialize({
+//           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+//           callback: async (response) => {
+//             await supabase.auth.signInWithIdToken({
+//               provider: "google",
+//               token: response.credential
+//             });
+//           }
+//         });
+//       };
+
+//       document.body.appendChild(script);
+//     };
+
+//     // Delay Google script load until after critical content
+//     if ("requestIdleCallback" in window) {
+//       requestIdleCallback(loadGoogleScript, { timeout: 3000 });
+//     } else {
+//       setTimeout(loadGoogleScript, 3000);
+//     }
+//   }, [isLoading, googleScriptLoaded]);
+
+//   // Prompt Google One Tap (only when navbar is shown)
+//   useEffect(() => {
+//     if (!showNavbar || !googleScriptLoaded) return;
+
+//     const promptGoogleOneTap = () => {
+//       if (!window.google?.accounts?.id) return;
+
+//       window.google.accounts.id.prompt((notification) => {
+//         if (notification.isNotDisplayed()) {
+//           console.log(
+//             "One Tap not displayed:",
+//             notification.getNotDisplayedReason()
+//           );
+//         }
+//         if (notification.isSkippedMoment()) {
+//           console.log("One Tap skipped:", notification.getSkippedReason());
+//         }
+//       });
+//     };
+
+//     // Delay One Tap prompt
+//     const timeoutId = setTimeout(promptGoogleOneTap, 1000);
+//     return () => clearTimeout(timeoutId);
+//   }, [showNavbar, googleScriptLoaded]);
+
+//   return (
+//     <>
+//       {/* Loading Screen */}
+//       <AnimatePresence mode="wait">
+//         {isLoading && <LoadingScreen progress={loadingProgress} />}
+//       </AnimatePresence>
+
+//       {/* Tablet Orientation Warning */}
+//       {showOrientationWarning && <TabletOrientationOverlay />}
+
+//       {/* Contact Modal */}
+//       <ContactModal
+//         isOpen={isContactModalOpen}
+//         onClose={() => setIsContactModalOpen(false)}
+//       />
+
+//       {/* Main Content with Tablet Scaling */}
+//       <div
+//         className="min-h-screen bg-evolve-black lowercase"
+//         style={{
+//           visibility: isLoading ? "hidden" : "visible",
+//           opacity: isLoading ? 0 : 1,
+//           transition: "opacity 0.5s ease-in-out",
+//           transform:
+//             deviceType === "tablet" ? `scale(${getTabletScale()})` : "none",
+//           transformOrigin: "top center",
+//           width: deviceType === "tablet" ? "128%" : "100%",
+//           minWidth: deviceType === "tablet" ? "1280px" : "auto"
+//         }}
+//       >
+//         <Navigation
+//           showNavbar={showNavbar}
+//           onLogoClick={() => {
+//             if (location.pathname === "/") {
+//               window.dispatchEvent(new CustomEvent("scrollToScene1_1"));
+//             }
+//           }}
+//           onContactClick={() => setIsContactModalOpen(true)}
+//         />
+
+//         <Suspense fallback={<LoadingScreen progress={50} />}>
+//           <Routes>
+//             <Route
+//               path="/"
+//               element={
+//                 <Home
+//                   setShowNavbar={setShowNavbar}
+//                   isLoading={isLoading}
+//                   deviceType={deviceType}
+//                   onIntroComplete={() => setIsHomeIntroActive(false)}
+//                 />
+//               }
+//             />
+//             <Route path="/about" element={<AboutUs />} />
+//             <Route path="/webinars" element={<Webinars />} />
+//             <Route path="/quiz" element={<Quiz />} />
+//             <Route path="/community" element={<Community />} />
+//             <Route path="/course" element={<Course />} />
+//             <Route path="/what-is-design" element={<WhatIsDesign />} />
+//             <Route path="*" element={<NotFound />} />
+//           </Routes>
+//         </Suspense>
+
+//         {shouldShowFooter &&
+//           !(location.pathname === "/" && isHomeIntroActive) && (
+//             <Suspense fallback={null}>
+//               <Footer />
+//             </Suspense>
+//           )}
+//       </div>
+//     </>
+//   );
+// };
+
+// /* ------------------------------- Main App ------------------------------- */
+// const App = () => {
+//   return (
+//     <QueryClientProvider client={queryClient}>
+//       {/* <TooltipProvider> */}
+//       {/* <Toaster /> */}
+//       {/* <Sonner /> */}
+//       <BrowserRouter>
+//         <AppLayout />
+//       </BrowserRouter>
+//       {/* </TooltipProvider> */}
+//     </QueryClientProvider>
+//   );
+// };
+
+// export default App;
+
+// import { Toaster } from "@/components/ui/toaster";
+// import { Toaster as Sonner } from "@/components/ui/sonner";
+// import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
