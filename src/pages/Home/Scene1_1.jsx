@@ -2481,7 +2481,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         refs.ovalMini1,
         {
           opacity: 1,
-          duration: 1,
+          // duration: 1,
           duration: 1.2,
           ease: "power2.out"
         },
