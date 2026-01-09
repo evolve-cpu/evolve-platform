@@ -19,7 +19,6 @@
 // }));
 
 
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -86,8 +85,13 @@ export default defineConfig(({ mode }) => ({
         },
         // Optimize asset file names for better caching
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split(".");
-          const ext = info[info.length - 1];
+          // Fix TypeScript warnings - check if name exists
+          if (!assetInfo.names || assetInfo.names.length === 0) {
+            return `assets/[name]-[hash][extname]`;
+          }
+          
+          const name = assetInfo.names[0];
+          const ext = name.split('.').pop() || '';
           
           // Separate images, fonts, and other assets
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {

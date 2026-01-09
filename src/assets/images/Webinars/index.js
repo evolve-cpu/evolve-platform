@@ -1,327 +1,46 @@
-// import left_elem from "./left_elem.svg";
-// import left_elem_mobile from "./left_elem_mobile.svg";
-// import right_elem from "./right_elem.svg";
-// import right_elem_mobile from "./right_elem_mobile.svg";
-// import hands_with_stairs from "./hands_with_stairs.svg";
-// import hands_with_stairs_chat from "./hands_with_stairs_chat.svg";
-// import hands_with_stairs_chat_full from "./hands_with_stairs_chat_full.svg";
-// import hands_with_stairs_chat_full_mobile from "./hands_with_stairs_chat_full_mobile.svg";
-// import rays_webinars from "./rays_webinars.svg";
-// import rays_webinars_mobile from "./rays_webinars_mobile.svg";
-// import barfi from "./barfi.svg";
-// import barfi_mobile from "./barfi_mobile.svg";
-// import hands_with_webinars_card from "./hands_with_webinars_card.svg";
-// import hands_with_webinars_card_full from "./hands_with_webinars_card_full.svg";
-// import hands_with_webinars_card_full_mobile from "./hands_with_webinars_card_full_mobile.svg";
-// import clock from "./clock.svg";
-// import calendar from "./calendar.svg";
-// import visual_design from "./visual_design.svg";
-// import interaction_design from "./interaction_design.svg";
-// import career_growth from "./career_growth.svg";
-// import hobbies from "./hobbies.svg";
-// import watch_playlist_button from "./watch_playlist_button.svg";
-// export {
-//   left_elem,
-//   left_elem_mobile,
-//   right_elem,
-//   right_elem_mobile,
-//   hands_with_stairs,
-//   hands_with_stairs_chat,
-//   hands_with_stairs_chat_full,
-//   hands_with_stairs_chat_full_mobile,
-//   rays_webinars,
-//   rays_webinars_mobile,
-//   barfi,
-//   barfi_mobile,
-//   hands_with_webinars_card,
-//   clock,
-//   calendar,
-//   hands_with_webinars_card_full,
-//   hands_with_webinars_card_full_mobile,
-//   visual_design,
-//   interaction_design,
-//   career_growth,
-//   hobbies,
-//   watch_playlist_button
-// };
-
-// ========== CRITICAL IMAGES (Scene 1 - Intro) ==========
-// These MUST load first - shown immediately
-import evolve_cube from "./evolve_cube.svg";
-import evolve_2d from "./evolve_2d.svg";
-import stairs_with_door from "./stairs_with_door.svg";
-import door_closeup from "./door_closeup.svg";
-import door_closeup_mobile from "./door_closeup_mobile.svg";
-
-// ========== HIGH PRIORITY (Scene 1_1 - Second Screen) ==========
-// These load second - visible on first scroll
-import floor_2nd from "./floor_2nd.svg";
-import floor_2nd_mobile from "./floor_2nd_mobile.svg";
-import left_cloud from "./left_cloud.svg";
-import left_cloud_mobile from "./left_cloud_mobile.svg";
-import right_cloud from "./right_cloud.svg";
-import right_cloud_mobile from "./right_cloud_mobile.svg";
-import yellow_bg from "./yellow_bg.svg";
-import yellow_bg_mobile from "./yellow_bg_mobile.svg";
-import yellow_ellipse from "./yellow_ellipse.svg";
-import yellow_ellipse_mobile from "./yellow_ellipse_mobile.svg";
-
-// ========== MEDIUM PRIORITY (Scene 1_1 Interactive) ==========
-// These load third - interactive elements
-import left_element from "./left_element.svg";
-import left_element_mobile from "./left_element_mobile.svg";
-import right_element from "./right_element.svg";
-import right_element_mobile from "./right_element_mobile.svg";
-import object_1 from "./object_1.svg";
-import object_2 from "./object_2.svg";
-import bigger_orbit from "./bigger_orbit.svg";
-import bigger_orbit_mobile from "./bigger_orbit_mobile.svg";
-import pink_bigger_orbit from "./pink_bigger_orbit.svg";
-import pink_bigger_orbit_mobile from "./pink_bigger_orbit_mobile.svg";
-import left_element_eye from "./left_element_eye.svg";
-import left_element_eye_mobile from "./left_element_eye_mobile.svg";
-import right_element_eye from "./right_element_eye.svg";
-import right_element_eye_mobile from "./right_element_eye_mobile.svg";
-
-// ========== LOW PRIORITY (Scenes 2, 3, 4) ==========
-// These load last - only visible after scrolling
-import left_wall from "./left_wall.svg";
-import left_wall_mobile from "./left_wall_mobile.svg";
-import right_wall from "./right_wall.svg";
-import right_wall_mobile from "./right_wall_mobile.svg";
-import purple_rainbow from "./purple_rainbow.svg";
-import floor from "./floor.svg";
-import floor_mobile from "./floor_mobile.svg";
-import floor_with_walls from "./floor_with_walls.svg";
-import floor_with_walls_mobile from "./floor_with_walls_mobile.svg";
-import left_stairs_mini from "./left_stairs_mini.svg";
-import right_stairs_mini from "./right_stairs_mini.svg";
-import stairs_mini_mobile from "./stairs_mini_mobile.svg";
-import stairs_mod_mobile from "./stairs_mod_mobile.svg";
-import stairs_mod1_mobile from "./stairs_mod1_mobile.svg";
-import stairs_mod2_mobile from "./stairs_mod2_mobile.svg";
-import left_stairs_mod3_mobile from "./left_stairs_mod3_mobile.svg";
-import left_stairs_mod4_mobile from "./left_stairs_mod4_mobile.svg";
-import left_stairs_mod5_mobile from "./left_stairs_mod5_mobile.svg";
-import left_stairs_mod6_mobile from "./left_stairs_mod6_mobile.svg";
-import right_stairs_mod3_mobile from "./right_stairs_mod3_mobile.svg";
-import right_stairs_mod4_mobile from "./right_stairs_mod4_mobile.svg";
-import right_stairs_mod5_mobile from "./right_stairs_mod5_mobile.svg";
-import right_stairs_mod6_mobile from "./right_stairs_mod6_mobile.svg";
-import curvey_circle_inner_part from "./curvey_circle_inner_part.svg";
-import curvey_circle_inner_logo_part from "./curvey_circle_inner_logo_part.svg";
-import curvey_circle_with_inner_part from "./curvey_circle_with_inner_part.svg";
-import curvey_circle_without_inner_part from "./curvey_circle_without_inner_part.svg";
-import stairs_left from "./stairs_left.svg";
-import stairs_left_1 from "./stairs_left_1.svg";
-import stairs_left_2 from "./stairs_left_2.svg";
-import stairs_right from "./stairs_right.svg";
-import stairs_right_1 from "./stairs_right_1.svg";
-import stairs_right_2 from "./stairs_right_2.svg";
-import oval_mini_1 from "./oval_mini_1.svg";
-import oval_mini_2 from "./oval_mini_2.svg";
-import oval_mini_3 from "./oval_mini_3.svg";
-import oval_1 from "./oval_1.svg";
-import oval_2 from "./oval_2.svg";
-import oval_3 from "./oval_3.svg";
-import oval_3_1 from "./oval_3_1.svg";
-import vector from "./vector.svg";
-import vector_mobile from "./vector_mobile.svg";
-import left_mountains from "./left_mountains.svg";
-import right_mountains from "./right_mountains.svg";
-import left_ribbon from "./left_ribbon.svg";
-import middle_ribbon from "./middle_ribbon.svg";
-import right_ribbon from "./right_ribbon.svg";
-import shine from "./shine.svg";
-import diamond from "./diamond.svg";
-import left_hand_orange from "./left_hand_orange.svg";
-import left_hand_orange_mobile from "./left_hand_orange_mobile.svg";
-import right_hand_orange from "./right_hand_orange.svg";
-import right_hand_orange_mobile from "./right_hand_orange_mobile.svg";
-import vector_lavender from "./vector_lavender.svg";
-import vector_lavender_mobile from "./vector_lavender_mobile.svg";
-import rays from "./rays.svg";
-import rays_mobile from "./rays_mobile.svg";
-import thunder from "./thunder.svg";
-import purple_hand_left from "./purple_hand_left.svg";
-import purple_hand_left_mobile from "./purple_hand_left_mobile.svg";
-import purple_hand_right from "./purple_hand_right.svg";
-import purple_hand_right_mobile from "./purple_hand_right_mobile.svg";
-import saturn_left from "./saturn_left.svg";
-import saturn_left_mobile from "./saturn_left_mobile.svg";
-import saturn_right from "./saturn_right.svg";
-import saturn_right_mobile from "./saturn_right_mobile.svg";
-import pink_lightening_left from "./pink_lightening_left.svg";
-import pink_lightening_left_mobile from "./pink_lightening_left_mobile.svg";
-import pink_lightening_right from "./pink_lightening_right.svg";
-import pink_lightening_right_mobile from "./pink_lightening_right_mobile.svg";
-import bird_left from "./bird_left.svg";
-import bird_left_mobile from "./bird_left_mobile.svg";
-import bird_right from "./bird_right.svg";
-import bird_right_mobile from "./bird_right_mobile.svg";
-import semi_circle_left from "./semi_circle_left.svg";
-import semi_circle_left_mobile from "./semi_circle_left_mobile.svg";
-import semi_circle_right from "./semi_circle_right.svg";
-import semi_circle_right_mobile from "./semi_circle_right_mobile.svg";
-import semi_circle_right1 from "./semi_circle_right1.svg";
-import hand_with_thunder from "./hand_with_thunder.svg";
-import hand_with_thunder_mobile from "./hand_with_thunder_mobile.svg";
-import scroll from "./scroll.svg";
-import stairs_left_new from "./stairs_left_new.svg";
-import stairs_right_new from "./stairs_right_new.svg";
-import left_thunder from "./left_thunder.svg";
-import right_thunder from "./right_thunder.svg";
-import stairs1_mobile from "./stairs1_mobile.svg";
-import stairs2_mobile from "./stairs2_mobile.svg";
-import stairs4_mobile from "./stairs4_mobile.svg";
-import stairsfull_right_mobile from "./stairsfull_right_mobile.svg";
-import dive_in from "./dive_in.svg";
-import dive_in_hover from "./dive_in_hover.svg";
-import join_us_button from "./join_us_button.svg";
-import join_us_button_hover from "./join_us_button_hover.svg";
-
-// ========== BACKGROUND/TEXTURES (Load Separately) ==========
-import grain_texture from "./grain_texture.jpg";
-import noisy_background from "./noisy_background.jpg";
-import grains from "./grains.svg";
-import down_arrow from "./down_arrow.svg";
-
-// Export all images (maintains backward compatibility)
+import left_elem from "./left_elem.svg";
+import left_elem_mobile from "./left_elem_mobile.svg";
+import right_elem from "./right_elem.svg";
+import right_elem_mobile from "./right_elem_mobile.svg";
+import hands_with_stairs from "./hands_with_stairs.svg";
+import hands_with_stairs_chat from "./hands_with_stairs_chat.svg";
+import hands_with_stairs_chat_full from "./hands_with_stairs_chat_full.svg";
+import hands_with_stairs_chat_full_mobile from "./hands_with_stairs_chat_full_mobile.svg";
+import rays_webinars from "./rays_webinars.svg";
+import rays_webinars_mobile from "./rays_webinars_mobile.svg";
+import barfi from "./barfi.svg";
+import barfi_mobile from "./barfi_mobile.svg";
+import hands_with_webinars_card from "./hands_with_webinars_card.svg";
+import hands_with_webinars_card_full from "./hands_with_webinars_card_full.svg";
+import hands_with_webinars_card_full_mobile from "./hands_with_webinars_card_full_mobile.svg";
+import clock from "./clock.svg";
+import calendar from "./calendar.svg";
+import visual_design from "./visual_design.svg";
+import interaction_design from "./interaction_design.svg";
+import career_growth from "./career_growth.svg";
+import hobbies from "./hobbies.svg";
+import watch_playlist_button from "./watch_playlist_button.svg";
 export {
-  // Critical - Scene 1
-  evolve_cube,
-  evolve_2d,
-  stairs_with_door,
-  door_closeup,
-  door_closeup_mobile,
-
-  // High Priority - Scene 1_1
-  floor_2nd,
-  floor_2nd_mobile,
-  left_cloud,
-  left_cloud_mobile,
-  right_cloud,
-  right_cloud_mobile,
-  yellow_bg,
-  yellow_bg_mobile,
-  yellow_ellipse,
-  yellow_ellipse_mobile,
-
-  // Medium Priority - Scene 1_1 Interactive
-  left_element,
-  left_element_mobile,
-  right_element,
-  right_element_mobile,
-  object_1,
-  object_2,
-  bigger_orbit,
-  bigger_orbit_mobile,
-  pink_bigger_orbit,
-  pink_bigger_orbit_mobile,
-  left_element_eye,
-  left_element_eye_mobile,
-  right_element_eye,
-  right_element_eye_mobile,
-
-  // Low Priority - Later Scenes
-  left_wall,
-  left_wall_mobile,
-  right_wall,
-  right_wall_mobile,
-  purple_rainbow,
-  floor,
-  floor_mobile,
-  floor_with_walls,
-  floor_with_walls_mobile,
-  left_stairs_mini,
-  right_stairs_mini,
-  stairs_mini_mobile,
-  stairs_mod_mobile,
-  stairs_mod1_mobile,
-  stairs_mod2_mobile,
-  left_stairs_mod3_mobile,
-  left_stairs_mod4_mobile,
-  left_stairs_mod5_mobile,
-  left_stairs_mod6_mobile,
-  right_stairs_mod3_mobile,
-  right_stairs_mod4_mobile,
-  right_stairs_mod5_mobile,
-  right_stairs_mod6_mobile,
-  curvey_circle_inner_part,
-  curvey_circle_inner_logo_part,
-  curvey_circle_with_inner_part,
-  curvey_circle_without_inner_part,
-  stairs_left,
-  stairs_left_1,
-  stairs_left_2,
-  stairs_right,
-  stairs_right_1,
-  stairs_right_2,
-  oval_mini_1,
-  oval_mini_2,
-  oval_mini_3,
-  oval_1,
-  oval_2,
-  oval_3,
-  oval_3_1,
-  vector,
-  vector_mobile,
-  left_mountains,
-  right_mountains,
-  left_ribbon,
-  middle_ribbon,
-  right_ribbon,
-  shine,
-  diamond,
-  left_hand_orange,
-  left_hand_orange_mobile,
-  right_hand_orange,
-  right_hand_orange_mobile,
-  vector_lavender,
-  vector_lavender_mobile,
-  rays,
-  rays_mobile,
-  thunder,
-  purple_hand_left,
-  purple_hand_left_mobile,
-  purple_hand_right,
-  purple_hand_right_mobile,
-  saturn_left,
-  saturn_left_mobile,
-  saturn_right,
-  saturn_right_mobile,
-  pink_lightening_left,
-  pink_lightening_left_mobile,
-  pink_lightening_right,
-  pink_lightening_right_mobile,
-  bird_left,
-  bird_left_mobile,
-  bird_right,
-  bird_right_mobile,
-  semi_circle_left,
-  semi_circle_left_mobile,
-  semi_circle_right,
-  semi_circle_right_mobile,
-  semi_circle_right1,
-  hand_with_thunder,
-  hand_with_thunder_mobile,
-  scroll,
-  stairs_left_new,
-  stairs_right_new,
-  left_thunder,
-  right_thunder,
-  stairs1_mobile,
-  stairs2_mobile,
-  stairs4_mobile,
-  stairsfull_right_mobile,
-  dive_in,
-  dive_in_hover,
-  join_us_button,
-  join_us_button_hover,
-
-  // Textures/Background
-  grain_texture,
-  noisy_background,
-  grains,
-  down_arrow
+  left_elem,
+  left_elem_mobile,
+  right_elem,
+  right_elem_mobile,
+  hands_with_stairs,
+  hands_with_stairs_chat,
+  hands_with_stairs_chat_full,
+  hands_with_stairs_chat_full_mobile,
+  rays_webinars,
+  rays_webinars_mobile,
+  barfi,
+  barfi_mobile,
+  hands_with_webinars_card,
+  clock,
+  calendar,
+  hands_with_webinars_card_full,
+  hands_with_webinars_card_full_mobile,
+  visual_design,
+  interaction_design,
+  career_growth,
+  hobbies,
+  watch_playlist_button
 };
