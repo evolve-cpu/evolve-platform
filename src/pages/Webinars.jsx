@@ -101,20 +101,11 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     ${svg === career_growth ? "-bottom-3" : ""}
     ${svg === visual_design ? "-bottom-[0.3rem]" : ""}
 
-    ${
-      svg === interaction_design
-        ? "w-[200%] -left-2 bottom-[-4rem] scale-x-[1.5] scale-y-[1.5]"
-        : ""
-    }
+${svg === interaction_design ? "min-w-[150%] -left-[5rem] -bottom-[4rem] " : ""}
+
 
     
-    ${
-      isExpanded && svg === interaction_design
-        ? " bottom-[-2rem] scale-y-[1.36]"
-        : ""
-    }
-    
-    ${isExpanded && svg !== interaction_design ? "scale-y-[0.91]" : ""}
+    ${isExpanded ? "scale-y-[0.91]" : ""}
     `}
           // ${
           //   isExpanded && svg === interaction_design
