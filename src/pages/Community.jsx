@@ -1291,7 +1291,7 @@ const Community = () => {
 
       {/* ================= INTRO TEXT ================= */}
       <section className="bg-evolve-yellow pt-28 text-center px-4">
-        <p className="mt-6 max-w-4xl mx-auto text-[24px] md:text-[36px] font-semibold text-black leading-[36px]">
+        <p className="mt-6 max-w-4xl mx-auto text-[24px] md:text-[36px] font-regular text-black leading-[36px]">
           it's YOUR space to ask bold questions, trade war stories, learn from
           real people, and build the kind of skills that stick for life.
         </p>
