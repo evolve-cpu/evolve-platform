@@ -1307,12 +1307,27 @@ const Community = () => {
             style={{ height: "140px" }}
           >
             {/* Collapsed Heading */}
+            {/* <div
+              ref={(el) => (headingRefs.current[index] = el)}
+              className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+            >
+              <h2
+                className="font-extrabold lowercase text-evolve-pink/50 text-center"
+                style={{
+                  fontSize: "clamp(48px, 8vw, 96px)",
+                  letterSpacing: "-0.03em",
+                  lineHeight: "1"
+                }}
+              >
+                {card.title}
+              </h2>
+            </div> */}
             <div
               ref={(el) => (headingRefs.current[index] = el)}
               className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
             >
               <h2
-                className="font-extrabold lowercase text-evolve-pink text-center"
+                className="font-extrabold lowercase text-evolve-pink/50 text-center translate-y-[0rem] md:translate-y-[3rem]"
                 style={{
                   fontSize: "clamp(48px, 8vw, 96px)",
                   letterSpacing: "-0.03em",
