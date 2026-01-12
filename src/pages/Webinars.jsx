@@ -107,14 +107,16 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
         : ""
     }
 
-    ${
-      isExpanded && svg === interaction_design
-        ? "scale-y-[1.25] scale-x-[1.25] bottom-[-2rem]"
-        : ""
-    }
-
+    
+    ${isExpanded && svg === interaction_design ? " bottom-[-2rem]" : ""}
+    
     ${isExpanded && svg !== interaction_design ? "scale-y-[0.91]" : ""}
-  `}
+    `}
+          // ${
+          //   isExpanded && svg === interaction_design
+          //     ? "scale-y-[1.25] scale-x-[1.25] bottom-[-2rem]"
+          //     : ""
+          // }
         />
       </div>
 
