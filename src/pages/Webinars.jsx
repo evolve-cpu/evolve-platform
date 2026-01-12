@@ -63,18 +63,17 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
           alt={title}
           className={`
     absolute bottom-0
-    w-full
-    object-full
+    object-contain
     transition-transform duration-500 ease-in-out
     origin-bottom
-    ${svg === hobbies ? "w-[79%]" : ""}
+    ${svg === hobbies ? "w-[80%]" : ""}
     ${
       svg === interaction_design
         ? "w-[200%] -left-2 bottom-[-4rem] scale-x-[1.5] scale-y-[1.5]"
         : ""
     }
-    ${svg === career_growth ? "-bottom-2" : ""}
-    ${svg === visual_design ? "-bottom-2" : ""}
+    ${svg === career_growth ? "-bottom-3" : ""}
+    ${svg === visual_design ? "-bottom-[0.3rem]" : ""}
 
     ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
     ${
