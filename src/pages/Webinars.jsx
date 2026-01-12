@@ -101,7 +101,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     ${svg === career_growth ? "-bottom-3" : ""}
     ${svg === visual_design ? "-bottom-[0.3rem]" : ""}
 
-${svg === interaction_design ? "min-w-[150%] -left-[5rem] -bottom-[4rem] " : ""}
+${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
 
 
     
