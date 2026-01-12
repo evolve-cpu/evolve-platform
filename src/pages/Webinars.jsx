@@ -64,13 +64,25 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
           className={`
     absolute bottom-0
     w-full
-    object-contain
+    object-full
     transition-transform duration-500 ease-in-out
     origin-bottom
-    ${svg === hobbies ? "w-[79.9%]" : ""}
-    ${svg === career_growth ? "-bottom-1" : ""}
+    ${svg === hobbies ? "w-[78%]" : ""}
+    ${
+      svg === interaction_design
+        ? "w-[200%] -left-2 bottom-[-4rem] scale-x-[1.5] scale-y-[1.5]"
+        : ""
+    }
+    ${svg === career_growth ? "-bottom-2" : ""}
+    ${svg === visual_design ? "-bottom-2" : ""}
 
     ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
+    ${
+      isExpanded && svg == interaction_design
+        ? "scale-y-[1.37] scale-x-[1.2] bottom-[-2rem]"
+        : "scale-y-100 scale-x-100"
+    }
+
   `}
         />
       </div>
@@ -351,24 +363,24 @@ const Webinars = () => {
           />
 
           {/* Left element - starts at 10vh, stretches to bottom of grid */}
-          <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]">
-            {/* <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
+          {/* <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]"> */}
+          <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]">
             <img
               src={left_elem}
               alt="left element"
-              className="h-full w-auto object-cover object-top"
-              // className="w-auto object-cover object-top"
+              // className="h-full w-auto object-cover object-top"
+              className="w-auto object-cover object-top"
             />
           </div>
 
           {/* Right element - starts at 10vh, stretches to bottom of grid */}
-          <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]">
-            {/* <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]"> */}
+          {/* <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]"> */}
+          <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]">
             <img
               src={right_elem}
               alt="right element"
-              className="h-full w-auto object-cover object-top"
-              // className="w-auto object-cover object-top"
+              // className="h-full w-auto object-cover object-top"
+              className="w-auto object-cover object-top"
             />
           </div>
 
@@ -403,7 +415,7 @@ const Webinars = () => {
                     </p> */}
 
                     <p
-                      className="mt-4 font-normal lowercase text-black leading-tight"
+                      className="mt-4 font-medium lowercase text-black leading-tight"
                       style={{ fontSize: "28px" }}
                     >
                       Learn from people who've been there,
@@ -423,9 +435,9 @@ const Webinars = () => {
             </div>
 
             {/* Second part - below hands-with-stairs */}
-            <div className="relative z-30 py-16">
-              {/* "upcoming webinar" text */}
-              <div className="flex justify-center mb-12">
+            {/* <div className="relative z-30 py-16"> */}
+            {/* "upcoming webinar" text */}
+            {/* <div className="flex justify-center mb-12">
                 <h2
                   className="lowercase font-extrabold text-black"
                   style={{
@@ -437,17 +449,17 @@ const Webinars = () => {
                 >
                   upcoming webinar
                 </h2>
-              </div>
+              </div> */}
 
-              {/* Webinar card SVG */}
-              <div>
+            {/* Webinar card SVG */}
+            {/* <div>
                 <img
                   src={hands_with_webinars_card_full}
                   alt="webinar card"
                   className="w-screen object-contain"
                 />
-              </div>
-            </div>
+              </div> */}
+            {/* </div> */}
           </section>
         </div>
 

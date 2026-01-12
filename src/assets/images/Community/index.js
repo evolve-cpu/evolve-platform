@@ -18,6 +18,14 @@ import card_4th_3 from "./card_4th_3.svg";
 import card_5th_left from "./card_5th_left.svg";
 import card_5th_right from "./card_5th_right.svg";
 import card_5th_mobile from "./card_5th_mobile.svg";
+import ama_session from "./ama_session.svg";
+import ama_session_mobile from "./ama_session_mobile.svg";
+import challenges from "./challenges.svg";
+import challenges_mobile from "./challenges_mobile.svg";
+import portfolio_reviews from "./portfolio_reviews.svg";
+import portfolio_reviews_mobile from "./portfolio_reviews_mobile.svg";
+import resources from "./resources.svg";
+import resources_mobile from "./resources_mobile.svg";
 
 export {
   doors_community,
@@ -39,5 +47,13 @@ export {
   card_4th_3,
   card_5th_left,
   card_5th_right,
-  card_5th_mobile
+  card_5th_mobile,
+  ama_session,
+  ama_session_mobile,
+  challenges,
+  challenges_mobile,
+  portfolio_reviews,
+  portfolio_reviews_mobile,
+  resources,
+  resources_mobile
 };
