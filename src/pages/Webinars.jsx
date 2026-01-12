@@ -58,7 +58,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
       ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
     `}
         /> */}
-        <img
+        {/* <img
           src={svg}
           alt={title}
           className={`
@@ -86,6 +86,35 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
                       : "scale-y-100"
                   }
           `}
+        />
+         */}
+        <img
+          src={svg}
+          alt={title}
+          className={`
+    absolute bottom-0
+    object-contain
+    transition-transform duration-500 ease-in-out
+    origin-bottom
+
+    ${svg === hobbies ? "w-[80%]" : ""}
+    ${svg === career_growth ? "-bottom-3" : ""}
+    ${svg === visual_design ? "-bottom-[0.3rem]" : ""}
+
+    ${
+      svg === interaction_design
+        ? "w-[200%] -left-2 bottom-[-4rem] scale-x-[1.5] scale-y-[1.5]"
+        : ""
+    }
+
+    ${
+      isExpanded && svg === interaction_design
+        ? "scale-y-[1.39] scale-x-[1.2] bottom-[-2rem]"
+        : ""
+    }
+
+    ${isExpanded && svg !== interaction_design ? "scale-y-[0.91]" : ""}
+  `}
         />
       </div>
 
