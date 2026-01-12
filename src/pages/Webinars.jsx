@@ -67,7 +67,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     object-full
     transition-transform duration-500 ease-in-out
     origin-bottom
-    ${svg === hobbies ? "w-[78%]" : ""}
+    ${svg === hobbies ? "w-[79%]" : ""}
     ${
       svg === interaction_design
         ? "w-[200%] -left-2 bottom-[-4rem] scale-x-[1.5] scale-y-[1.5]"
@@ -79,7 +79,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     ${isExpanded ? "scale-y-[0.91]" : "scale-y-100"}
     ${
       isExpanded && svg == interaction_design
-        ? "scale-y-[1.37] scale-x-[1.2] bottom-[-2rem]"
+        ? "scale-y-[1.38] scale-x-[1.2] bottom-[-2rem]"
         : "scale-y-100 scale-x-100"
     }
 
