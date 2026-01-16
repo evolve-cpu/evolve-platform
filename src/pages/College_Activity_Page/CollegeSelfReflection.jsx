@@ -208,59 +208,38 @@ export default function CollegeSelfReflection() {
     }
   };
 
-  //   const RatingStars = ({ qKey }) => {
-  //     const current = ratings[qKey];
-  //     const hover = hoverRating[qKey];
-
-  //     return (
-  //       <div className="flex items-center gap-3">
-  //         {[1, 2, 3, 4, 5].map((n) => {
-  //           const filled = hover ? n <= hover : n <= current;
-
-  //           return (
-  //             <button
-  //               key={n}
-  //               type="button"
-  //               onMouseEnter={() => setHoverRating((p) => ({ ...p, [qKey]: n }))}
-  //               onMouseLeave={() => setHoverRating((p) => ({ ...p, [qKey]: 0 }))}
-  //               onClick={() => setRatings((p) => ({ ...p, [qKey]: n }))}
-  //               className="transition-transform active:scale-[0.92]"
-  //             >
-  //               <img
-  //                 src={filled ? filled_star : hollow_star}
-  //                 alt={filled ? "filled star" : "hollow star"}
-  //                 className="
-  //                   w-[34px] h-[34px]
-  //                   md:w-[42px] md:h-[42px]
-  //                   object-contain
-  //                 "
-  //               />
-  //             </button>
-  //           );
-  //         })}
-  //       </div>
-  //     );
-  //   };
-
   const RatingStars = ({ qKey }) => {
     const current = ratings[qKey];
-    const hover = hoverRating[qKey];
+
+    // ✅ Detect if device supports hover (desktop/laptop)
+    const isHoverDevice = window.matchMedia("(hover: hover)").matches;
 
     return (
       <div className="flex items-center gap-3">
         {[1, 2, 3, 4, 5].map((n) => {
-          const filled = hover ? n <= hover : n <= current;
+          // ✅ Desktop: filled only based on FINAL click rating
+          // ✅ Mobile: keep hover preview (already works fine)
+          const filled = isHoverDevice
+            ? n <= current
+            : hoverRating[qKey]
+            ? n <= hoverRating[qKey]
+            : n <= current;
 
           return (
             <button
               key={n}
               type="button"
-              onMouseEnter={() => setHoverRating((p) => ({ ...p, [qKey]: n }))}
-              onMouseLeave={() => setHoverRating((p) => ({ ...p, [qKey]: 0 }))}
-              onClick={() => {
-                setRatings((p) => ({ ...p, [qKey]: n })); // ✅ final rating
-                setHoverRating((p) => ({ ...p, [qKey]: 0 })); // ✅ clear hover
+              // ✅ Hover effect ONLY for mobile devices (touch)
+              onMouseEnter={() => {
+                if (isHoverDevice) return; // ✅ disable hover preview in desktop
+                setHoverRating((p) => ({ ...p, [qKey]: n }));
               }}
+              onMouseLeave={() => {
+                if (isHoverDevice) return; // ✅ disable hover preview in desktop
+                setHoverRating((p) => ({ ...p, [qKey]: 0 }));
+              }}
+              // ✅ Click always sets FINAL rating
+              onClick={() => setRatings((p) => ({ ...p, [qKey]: n }))}
               className="transition-transform active:scale-[0.92]"
             >
               <img
@@ -278,6 +257,43 @@ export default function CollegeSelfReflection() {
       </div>
     );
   };
+
+  // const RatingStars = ({ qKey }) => {
+  //   const current = ratings[qKey];
+  //   const hover = hoverRating[qKey];
+
+  //   return (
+  //     <div className="flex items-center gap-3">
+  //       {[1, 2, 3, 4, 5].map((n) => {
+  //         const filled = hover ? n <= hover : n <= current;
+
+  //         return (
+  //           <button
+  //             key={n}
+  //             type="button"
+  //             onMouseEnter={() => setHoverRating((p) => ({ ...p, [qKey]: n }))}
+  //             onMouseLeave={() => setHoverRating((p) => ({ ...p, [qKey]: 0 }))}
+  //             onClick={() => {
+  //               setRatings((p) => ({ ...p, [qKey]: n })); // ✅ final rating
+  //               setHoverRating((p) => ({ ...p, [qKey]: 0 })); // ✅ clear hover
+  //             }}
+  //             className="transition-transform active:scale-[0.92]"
+  //           >
+  //             <img
+  //               src={filled ? filled_star : hollow_star}
+  //               alt={filled ? "filled star" : "hollow star"}
+  //               className="
+  //               w-[34px] h-[34px]
+  //               md:w-[42px] md:h-[42px]
+  //               object-contain
+  //             "
+  //             />
+  //           </button>
+  //         );
+  //       })}
+  //     </div>
+  //   );
+  // };
 
   return (
     <div className="min-h-screen bg-evolve-yellow px-6 md:px-16 py-10">
