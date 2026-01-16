@@ -1055,6 +1055,10 @@ const Footer = lazy(() => import("./components/Footer"));
 // Import only critical home images
 import * as images from "./assets/images/Home";
 import { supabase } from "./supabaseClient";
+import CollegeActivation from "./pages/College_Activity_Page/CollegeActivation.jsx";
+import CollegeActivities from "./pages/College_Activity_Page/CollegeActivities.jsx";
+import CollegeSelfReflection from "./pages/College_Activity_Page/CollegeSelfReflection.jsx";
+import CollegeRealityCheck from "./pages/College_Activity_Page/CollegeRealityCheck.jsx";
 
 const queryClient = new QueryClient();
 
@@ -1080,7 +1084,12 @@ const AppLayout = () => {
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
 
-  const hideFooterRoutes = [];
+  const hideFooterRoutes = [
+    "/college-activation",
+    "/college-activation/activities",
+    "/college-activation/self-reflection",
+    "/college-activation/reality-check"
+  ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
   // Check orientation for tablets
@@ -1257,66 +1266,66 @@ const AppLayout = () => {
   }, []);
 
   // Load Google Sign-In script ONLY when needed (deferred)
-  useEffect(() => {
-    if (googleScriptLoaded || isLoading) return;
+  // useEffect(() => {
+  //   if (googleScriptLoaded || isLoading) return;
 
-    const loadGoogleScript = () => {
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
+  //   const loadGoogleScript = () => {
+  //     const script = document.createElement("script");
+  //     script.src = "https://accounts.google.com/gsi/client";
+  //     script.async = true;
+  //     script.defer = true;
 
-      script.onload = () => {
-        setGoogleScriptLoaded(true);
+  //     script.onload = () => {
+  //       setGoogleScriptLoaded(true);
 
-        if (!window.google) return;
+  //       if (!window.google) return;
 
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            await supabase.auth.signInWithIdToken({
-              provider: "google",
-              token: response.credential
-            });
-          }
-        });
-      };
+  //       window.google.accounts.id.initialize({
+  //         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+  //         callback: async (response) => {
+  //           await supabase.auth.signInWithIdToken({
+  //             provider: "google",
+  //             token: response.credential
+  //           });
+  //         }
+  //       });
+  //     };
 
-      document.body.appendChild(script);
-    };
+  //     document.body.appendChild(script);
+  //   };
 
-    // Delay Google script load until after critical content
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(loadGoogleScript, { timeout: 3000 });
-    } else {
-      setTimeout(loadGoogleScript, 3000);
-    }
-  }, [isLoading, googleScriptLoaded]);
+  //   // Delay Google script load until after critical content
+  //   if ("requestIdleCallback" in window) {
+  //     requestIdleCallback(loadGoogleScript, { timeout: 3000 });
+  //   } else {
+  //     setTimeout(loadGoogleScript, 3000);
+  //   }
+  // }, [isLoading, googleScriptLoaded]);
 
   // Prompt Google One Tap (only when navbar is shown)
-  useEffect(() => {
-    if (!showNavbar || !googleScriptLoaded) return;
+  // useEffect(() => {
+  //   if (!showNavbar || !googleScriptLoaded) return;
 
-    const promptGoogleOneTap = () => {
-      if (!window.google?.accounts?.id) return;
+  //   const promptGoogleOneTap = () => {
+  //     if (!window.google?.accounts?.id) return;
 
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed()) {
-          console.log(
-            "One Tap not displayed:",
-            notification.getNotDisplayedReason()
-          );
-        }
-        if (notification.isSkippedMoment()) {
-          console.log("One Tap skipped:", notification.getSkippedReason());
-        }
-      });
-    };
+  //     window.google.accounts.id.prompt((notification) => {
+  //       if (notification.isNotDisplayed()) {
+  //         console.log(
+  //           "One Tap not displayed:",
+  //           notification.getNotDisplayedReason()
+  //         );
+  //       }
+  //       if (notification.isSkippedMoment()) {
+  //         console.log("One Tap skipped:", notification.getSkippedReason());
+  //       }
+  //     });
+  //   };
 
-    // Delay One Tap prompt
-    const timeoutId = setTimeout(promptGoogleOneTap, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [showNavbar, googleScriptLoaded]);
+  //   // Delay One Tap prompt
+  //   const timeoutId = setTimeout(promptGoogleOneTap, 1000);
+  //   return () => clearTimeout(timeoutId);
+  // }, [showNavbar, googleScriptLoaded]);
 
   return (
     <>
@@ -1370,6 +1379,19 @@ const AppLayout = () => {
                   onIntroComplete={() => setIsHomeIntroActive(false)}
                 />
               }
+            />
+            <Route path="/college-activation" element={<CollegeActivation />} />
+            <Route
+              path="/college-activation/activities"
+              element={<CollegeActivities />}
+            />
+            <Route
+              path="/college-activation/self-reflection"
+              element={<CollegeSelfReflection />}
+            />
+            <Route
+              path="/college-activation/reality-check"
+              element={<CollegeRealityCheck />}
             />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/webinars" element={<Webinars />} />
