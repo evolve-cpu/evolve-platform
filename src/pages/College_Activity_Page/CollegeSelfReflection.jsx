@@ -95,10 +95,23 @@ export default function CollegeSelfReflection() {
 
   const reviewCount = fields.length;
 
-  const canAddField = useMemo(() => {
-    if (!area.trim()) return false;
+  // const canAddField = useMemo(() => {
+  //   if (!area.trim()) return false;
 
-    // ✅ all 4 questions must be answered
+  //   // ✅ all 4 questions must be answered
+  //   return (
+  //     ratings.interest > 0 &&
+  //     ratings.skill > 0 &&
+  //     ratings.natural > 0 &&
+  //     ratings.finance > 0
+  //   );
+  // }, [area, ratings]);
+
+  const canAddField = useMemo(() => {
+    const cleanedArea = area.replace(/\s+/g, " ").trim();
+
+    if (!cleanedArea) return false;
+
     return (
       ratings.interest > 0 &&
       ratings.skill > 0 &&
@@ -238,6 +251,7 @@ export default function CollegeSelfReflection() {
                 if (isHoverDevice) return; // ✅ disable hover preview in desktop
                 setHoverRating((p) => ({ ...p, [qKey]: 0 }));
               }}
+              onTouchStart={() => setRatings((p) => ({ ...p, [qKey]: n }))} // ✅ iOS fast response
               // ✅ Click always sets FINAL rating
               onClick={() => setRatings((p) => ({ ...p, [qKey]: n }))}
               className="transition-transform active:scale-[0.92]"
@@ -459,6 +473,7 @@ export default function CollegeSelfReflection() {
                 <input
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
+                  onInput={(e) => setArea(e.target.value)} // ✅ iOS fix
                   placeholder="ex. industrial design, photography, ui, writing"
                   className="
                     mt-4 w-full md:w-[520px]

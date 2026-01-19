@@ -77,9 +77,6 @@
 //   });
 // }
 
-import { supabase } from "../supabaseClient";
-import { generateGuestProfile } from "./generateGuest";
-
 // export async function handleSignIn(setUser) {
 //   // 1️⃣ Anonymous sign-in (NO EMAIL)
 //   const { data, error } = await supabase.auth.signInAnonymously();
@@ -110,6 +107,8 @@ import { generateGuestProfile } from "./generateGuest";
 //     is_guest: true
 //   });
 // }
+import { supabase } from "../supabaseClient";
+import { generateGuestProfile } from "./generateGuest";
 
 export async function handleSignIn(setUser, setAuthLoading) {
   setAuthLoading(true);

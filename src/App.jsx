@@ -1059,6 +1059,7 @@ import CollegeActivation from "./pages/College_Activity_Page/CollegeActivation.j
 import CollegeActivities from "./pages/College_Activity_Page/CollegeActivities.jsx";
 import CollegeSelfReflection from "./pages/College_Activity_Page/CollegeSelfReflection.jsx";
 import CollegeRealityCheck from "./pages/College_Activity_Page/CollegeRealityCheck.jsx";
+import CollegeActivationVerify from "./pages/College_Activity_Page/CollegeActivationVerify.jsx";
 
 const queryClient = new QueryClient();
 
@@ -1381,6 +1382,11 @@ const AppLayout = () => {
               }
             />
             <Route path="/college-activation" element={<CollegeActivation />} />
+            <Route
+              path="/college-activation/verify"
+              element={<CollegeActivationVerify />}
+            />
+
             <Route
               path="/college-activation/activities"
               element={<CollegeActivities />}
