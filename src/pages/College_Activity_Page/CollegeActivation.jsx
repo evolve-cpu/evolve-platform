@@ -1294,26 +1294,45 @@ export default function CollegeActivation() {
     }
   };
 
-  const handleOtpChange = (index, value) => {
-    const digit = value.replace(/\D/g, "").slice(-1); // only 1 digit
-    const otpArr = otp.split("");
-
-    otpArr[index] = digit;
-    const newOtp = otpArr.join("").slice(0, 6).padEnd(6, "");
-    setOtp(newOtp.trimEnd());
-
-    // auto focus next
-    if (digit && index < 5) {
-      otpInputsRef.current[index + 1]?.focus();
+  // focus only visible otp input (because desktop + mobile both exist in dom)
+  const focusNextVisible = (fromIndex) => {
+    for (let i = fromIndex; i < 6; i++) {
+      const el = otpInputsRef.current[i];
+      if (el && el.offsetParent !== null) {
+        requestAnimationFrame(() => el.focus());
+        break;
+      }
     }
+  };
+
+  const focusPrevVisible = (fromIndex) => {
+    for (let i = fromIndex; i >= 0; i--) {
+      const el = otpInputsRef.current[i];
+      if (el && el.offsetParent !== null) {
+        requestAnimationFrame(() => el.focus());
+        break;
+      }
+    }
+  };
+
+  const handleOtpChange = (index, value) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+
+    setOtp((prev) => {
+      const arr = prev.padEnd(6, "").split("");
+      arr[index] = digit;
+      return arr.join("").trimEnd();
+    });
+
+    if (digit) focusNextVisible(index + 1);
   };
 
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace") {
-      if (!otp[index] && index > 0) {
-        otpInputsRef.current[index - 1]?.focus();
-      }
+      if (!otp[index]) focusPrevVisible(index - 1);
     }
+    if (e.key === "ArrowLeft") focusPrevVisible(index - 1);
+    if (e.key === "ArrowRight") focusNextVisible(index + 1);
   };
 
   const handleOtpPaste = (e) => {
@@ -1648,7 +1667,11 @@ export default function CollegeActivation() {
                     {Array.from({ length: 6 }).map((_, idx) => (
                       <input
                         key={idx}
-                        ref={(el) => (otpInputsRef.current[idx] = el)}
+                        ref={(el) => {
+                          if (el && el.offsetParent !== null) {
+                            otpInputsRef.current[idx] = el;
+                          }
+                        }}
                         value={otp[idx] || ""}
                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
@@ -1894,7 +1917,11 @@ export default function CollegeActivation() {
                       {Array.from({ length: 6 }).map((_, idx) => (
                         <input
                           key={idx}
-                          ref={(el) => (otpInputsRef.current[idx] = el)}
+                          ref={(el) => {
+                            if (el && el.offsetParent !== null) {
+                              otpInputsRef.current[idx] = el;
+                            }
+                          }}
                           value={otp[idx] || ""}
                           onChange={(e) => handleOtpChange(idx, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(idx, e)}

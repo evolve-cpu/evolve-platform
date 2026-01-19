@@ -1267,7 +1267,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
     const rect = accountBtnRef.current.getBoundingClientRect();
 
-    const modalWidth = 340;
+    const modalWidth = 315;
     const gap = 10;
 
     let left = rect.right - modalWidth;
@@ -1572,7 +1572,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 border-[2px] border-black
                 bg-evolve-yellow
                 shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-                p-6
+                pl-6 pr-6 pt-0 pb-6
               "
               style={{
                 top: accountPos.top,
@@ -1582,7 +1582,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               <div className="flex justify-end">
                 <button
                   onClick={() => setAccountOpen(false)}
-                  className="text-black text-[28px] font-extrabold -mt-2"
+                  className="text-black text-[28px] font-extrabold mt-2"
                 >
                   ×
                 </button>
