@@ -612,7 +612,7 @@ const Footer = () => {
   const navigationLinks = [
     { label: "home", path: "/" },
     { path: "/community", label: "community" },
-    { path: "/college-activation", label: "offline activity" },
+    { path: "/evolve-in-person", label: "evolve in-person" },
     { path: "/webinars", label: "webinars" },
     { label: "contact us", path: "/contact" },
     {

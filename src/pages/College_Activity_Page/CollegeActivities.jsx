@@ -477,12 +477,12 @@ export default function CollegeActivities() {
     if (!id) return alert("Session not found. Please go back and start again.");
 
     if (key === "self_reflection") {
-      navigate(`/college-activation/self-reflection?id=${id}`);
+      navigate(`/evolve-in-person/self-reflection?id=${id}`);
     }
 
     if (key === "reality_check") {
       if (!selfDone) return;
-      navigate(`/college-activation/reality-check?id=${id}`);
+      navigate(`/evolve-in-person/reality-check?id=${id}`);
     }
   };
 

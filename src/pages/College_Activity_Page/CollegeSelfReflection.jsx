@@ -95,18 +95,6 @@ export default function CollegeSelfReflection() {
 
   const reviewCount = fields.length;
 
-  // const canAddField = useMemo(() => {
-  //   if (!area.trim()) return false;
-
-  //   // ✅ all 4 questions must be answered
-  //   return (
-  //     ratings.interest > 0 &&
-  //     ratings.skill > 0 &&
-  //     ratings.natural > 0 &&
-  //     ratings.finance > 0
-  //   );
-  // }, [area, ratings]);
-
   const canAddField = useMemo(() => {
     const cleanedArea = area.replace(/\s+/g, " ").trim();
 
@@ -184,8 +172,8 @@ export default function CollegeSelfReflection() {
       setSaving(false);
     }
 
-    // ✅ jump to review tab
-    setActiveTab("review");
+    // ✅ stay in reflect tab (user will go review manually)
+    // setActiveTab("review");
   };
 
   const handleSaveAndFinish = async () => {
@@ -213,7 +201,7 @@ export default function CollegeSelfReflection() {
       if (error) throw error;
 
       // ✅ back to activities listing (activity 2 will unlock)
-      navigate(`/college-activation/activities?id=${id}`);
+      navigate(`/evolve-in-person/activities?id=${id}`);
     } catch (err) {
       setError(err.message || "Failed to save. Try again.");
     } finally {
@@ -331,7 +319,7 @@ export default function CollegeSelfReflection() {
           <h1
             className="
               text-evolve-pink font-extrabold
-              text-[40px] md:text-[58px]
+              text-[32px] md:text-[58px]
               tracking-[-0.03em]
             "
           >
@@ -482,7 +470,7 @@ export default function CollegeSelfReflection() {
                     bg-transparent
                     px-5 py-4
                     text-black
-                     placeholder-black
+                     placeholder-black/60
                     text-[18px] md:text-[24px]
                     tracking-[-0.04em]
                     outline-none
@@ -689,7 +677,8 @@ export default function CollegeSelfReflection() {
                           {/* Row 3 */}
                           <div className="flex items-center justify-between gap-4 py-4">
                             <p className="text-black font-normal text-[16px]">
-                              come naturally to you?
+                              come naturally to
+                              <br /> you?
                             </p>
                             <div className="flex items-center gap-2">
                               {[1, 2, 3, 4, 5].map((n) => (

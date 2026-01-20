@@ -1086,10 +1086,10 @@ const AppLayout = () => {
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
 
   const hideFooterRoutes = [
-    "/college-activation",
-    "/college-activation/activities",
-    "/college-activation/self-reflection",
-    "/college-activation/reality-check"
+    "/evolve-in-person",
+    "/evolve-in-person/activities",
+    "/evolve-in-person/self-reflection",
+    "/evolve-in-person/reality-check"
   ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
@@ -1381,22 +1381,22 @@ const AppLayout = () => {
                 />
               }
             />
-            <Route path="/college-activation" element={<CollegeActivation />} />
+            <Route path="/evolve-in-person" element={<CollegeActivation />} />
             <Route
-              path="/college-activation/verify"
+              path="/evolve-in-person/verify"
               element={<CollegeActivationVerify />}
             />
 
             <Route
-              path="/college-activation/activities"
+              path="/evolve-in-person/activities"
               element={<CollegeActivities />}
             />
             <Route
-              path="/college-activation/self-reflection"
+              path="/evolve-in-person/self-reflection"
               element={<CollegeSelfReflection />}
             />
             <Route
-              path="/college-activation/reality-check"
+              path="/evolve-in-person/reality-check"
               element={<CollegeRealityCheck />}
             />
             <Route path="/about" element={<AboutUs />} />

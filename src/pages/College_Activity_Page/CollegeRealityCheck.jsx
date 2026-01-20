@@ -651,31 +651,31 @@ import {
 const QUESTIONS = [
   {
     id: 1,
-    text: "question 1: what are the things you enjoy about the field you’ve chosen?",
+    text: "1. what are the things you enjoy about the field you’ve chosen?",
     placeholder: "type whatever comes to mind…",
     durationSec: 120
   },
   {
     id: 2,
-    text: "question 2: what feels different from what you expected?",
+    text: "2. what feels different from what you expected?",
     placeholder: "type whatever comes to mind…",
     durationSec: 120
   },
   {
     id: 3,
-    text: "question 3: what parts of this journey have been frustrating or difficult?",
+    text: "3. what parts of this journey have been frustrating or difficult?",
     placeholder: "type whatever comes to mind…",
     durationSec: 120
   },
   {
     id: 4,
-    text: "question 4: what worries or fears come up when you think about your future?",
+    text: "4. what worries or fears come up when you think about your future?",
     placeholder: "type whatever comes to mind…",
     durationSec: 120
   },
   {
     id: 5,
-    text: "question 5: what things feel unclear or hard to figure out right now?",
+    text: "5. what things feel unclear or hard to figure out right now?",
     placeholder: "type whatever comes to mind…",
     durationSec: 120
   }
@@ -774,6 +774,10 @@ export default function CollegeRealityCheck() {
 
   const isLastQuestion = qIndex === QUESTIONS.length - 1;
   const isLastQuestionInModal = qIndex === QUESTIONS.length - 1;
+
+  const canAddAnswer = useMemo(() => {
+    return input.trim().length > 0;
+  }, [input]);
 
   const currentResponses = useMemo(() => {
     const key = String(currentQ?.id);
@@ -1041,7 +1045,7 @@ export default function CollegeRealityCheck() {
             className="
               hidden md:block
               text-evolve-pink font-extrabold
-              text-[64px]
+              text-[58px]
               tracking-[-0.03em]
             "
           >
@@ -1053,7 +1057,7 @@ export default function CollegeRealityCheck() {
               md:hidden
               flex-1 text-center
               text-evolve-pink font-extrabold 
-              text-[40px]
+              text-[32px]
               tracking-[-0.03em]
               leading-[1.05]
             "
@@ -1074,7 +1078,7 @@ export default function CollegeRealityCheck() {
             <p className="mt-6 text-black font-normal text-[18px] md:text-[32px] leading-[1.3] text-center md:text-left whitespace-pre-line">
               {`You’ll see ${QUESTIONS.length} questions, one at a time.
 Each question is timed.
-Write the first honest thought that comes to mind—don’t overthink it.
+Write the first honest thought that comes to mind, don’t overthink it.
 
 You can add multiple responses within the given time for each question.
 
@@ -1111,12 +1115,12 @@ There are no right or wrong answers.`}
             {/* Desktop question row */}
             <div className="hidden md:flex items-start justify-between gap-8">
               <div className="flex-1">
-                <h2 className="text-black font-bold text-[40px] tracking-[-0.04em]">
+                <h2 className="text-black font-bold text-[40px] tracking-[-0.04em] leading-[115%]">
                   {currentQ.text}
                 </h2>
 
                 <p className="mt-2 text-black font-normal tracking-[-0.04em] text-[22px]">
-                  you can add multiple responses
+                  you can add multiple responses, one at a time
                 </p>
               </div>
 
@@ -1137,12 +1141,12 @@ There are no right or wrong answers.`}
                 </p>
               </div>
 
-              <h2 className="mt-8 text-black font-bold text-[22px] text-center tracking-[-0.04em]">
+              <h2 className="mt-8 text-black font-bold text-[22px] text-center leading-tight tracking-[-0.04em]">
                 {currentQ.text}
               </h2>
 
               <p className="mt-2 text-black font-normal text-center tracking-[-0.04em] text-[16px]">
-                you can add multiple responses
+                you can add multiple responses, one at a time
               </p>
             </div>
 
@@ -1171,7 +1175,7 @@ There are no right or wrong answers.`}
             <div className="mt-8 flex justify-center md:justify-start">
               <button
                 onClick={handleAddAnswer}
-                className="
+                className={`
                   bg-black text-white font-extrabold
                   text-[18px] md:text-[22px]
                   rounded-[37.11px]
@@ -1179,7 +1183,12 @@ There are no right or wrong answers.`}
                   shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
                   transition-all duration-300
                   active:scale-[0.98]
-                "
+                   ${
+                     !canAddAnswer || saving || isLocked
+                       ? "opacity-40 cursor-not-allowed"
+                       : ""
+                   }
+        `}
               >
                 add answer
               </button>
@@ -1239,7 +1248,7 @@ we’ll look at patterns and talk through them together.`}
                     </button>
 
                     {/* content */}
-                    <h3 className="text-black font-bold text-[32px] tracking-[-0.04em]">
+                    <h3 className="text-black font-bold text-[32px] tracking-[-0.04em] leading-tight">
                       {allResultCards[activeResultIndex]?.title}
                     </h3>
 
@@ -1317,7 +1326,7 @@ we’ll look at patterns and talk through them together.`}
           "
                         >
                           {/* ✅ QUESTION TITLE (fixed area) */}
-                          <h3 className="text-black font-bold text-[22px] tracking-[-0.04em] flex-shrink-0">
+                          <h3 className="text-black font-bold text-[22px] tracking-[-0.04em] leading-tight flex-shrink-0">
                             {card.title}
                           </h3>
 
@@ -1366,7 +1375,7 @@ we’ll look at patterns and talk through them together.`}
                 <div className="mt-10 flex justify-center md:justify-start">
                   <button
                     onClick={() =>
-                      navigate(`/college-activation/activities?id=${id}`)
+                      navigate(`/evolve-in-person/activities?id=${id}`)
                     }
                     className="
                       bg-black text-white font-extrabold

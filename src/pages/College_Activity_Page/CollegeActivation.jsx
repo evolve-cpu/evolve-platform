@@ -1235,6 +1235,12 @@ export default function CollegeActivation() {
     return college?.trim() ? college : "select college";
   }, [college]);
 
+  const isFormValid =
+    name.trim().length > 0 &&
+    email.trim().length > 0 &&
+    validateEmail(email.trim()) &&
+    college.trim().length > 0;
+
   // ✅ close dropdown on outside click
   useEffect(() => {
     const handleOutside = (e) => {
@@ -1416,7 +1422,7 @@ export default function CollegeActivation() {
       });
 
       // ✅ redirect
-      navigate(`/college-activation/activities?id=${activation.id}`);
+      navigate(`/evolve-in-person/activities?id=${activation.id}`);
     } catch (err) {
       console.log("verify otp error:", err.message);
       setError(err.message || "OTP verification failed");
@@ -1445,7 +1451,7 @@ export default function CollegeActivation() {
         setCollege(existing.college || "");
 
         // ✅ take them directly back
-        navigate(`/college-activation/activities?id=${existing.id}`);
+        navigate(`/evolve-in-person/activities?id=${existing.id}`);
       }
     };
 
@@ -1732,7 +1738,8 @@ export default function CollegeActivation() {
               {step === "form" ? (
                 <button
                   onClick={sendOtp}
-                  disabled={loading}
+                  // disabled={loading}
+                  disabled={loading || !isFormValid}
                   className="
                     bg-black text-white font-extrabold
                     rounded-[37.11px]
@@ -1773,7 +1780,7 @@ export default function CollegeActivation() {
           <div className="md:hidden w-full flex flex-col justify-center items-center">
             <div className="w-full max-w-[360px]">
               <p className="text-black font-bold text-[18px] mb-2">
-                {step === "form" ? "enter details" : "enter otp"}
+                {step === "form" ? "" : "enter otp"}
               </p>
 
               {/* MOBILE FORM */}
@@ -1887,7 +1894,8 @@ export default function CollegeActivation() {
                   <div className="flex justify-center">
                     <button
                       onClick={sendOtp}
-                      disabled={loading}
+                      // disabled={loading}
+                      disabled={loading || !isFormValid}
                       className="
                         bg-black text-white font-extrabold
                         rounded-[37.11px]

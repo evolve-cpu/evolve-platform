@@ -1217,7 +1217,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     { path: "/", label: "home" },
     { path: "/community", label: "community" },
     { path: "/webinars", label: "webinars" },
-    { path: "/college-activation", label: "offline activity" },
+    { path: "/evolve-in-person", label: "evolve in-person" },
     { path: "/contact", label: "contact us", isModal: true },
     {
       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
@@ -1232,13 +1232,15 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     return false;
   };
 
+  const hideAuthButton = location.pathname === "/evolve-in-person";
+
   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
   const isCollegeProtectedRoute = (pathname) => {
     return (
-      pathname === "/college-activation/activities" ||
-      pathname === "/college-activation/self-reflection" ||
-      pathname === "/college-activation/reality-check"
+      pathname === "/evolve-in-person/activities" ||
+      pathname === "/evolve-in-person/self-reflection" ||
+      pathname === "/evolve-in-person/reality-check"
     );
   };
 
@@ -1294,7 +1296,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
       // ✅ redirect only for specific college routes
       if (isCollegeProtectedRoute(location.pathname)) {
-        navigate("/college-activation");
+        navigate("/evolve-in-person");
       }
     } catch (err) {
       console.log("logout error:", err.message);
@@ -1508,44 +1510,44 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               </div>
 
               {/* AUTH BUTTON / ACCOUNT */}
-              <button
-                ref={accountBtnRef}
-                disabled={authLoading}
-                onClick={() => {
-                  // not logged in → guest signin
-                  if (!user) return handleSignIn(setUser, setAuthLoading);
+              {/* AUTH BUTTON / ACCOUNT */}
+              {!hideAuthButton && (
+                <button
+                  ref={accountBtnRef}
+                  disabled={authLoading}
+                  onClick={() => {
+                    // not logged in → guest signin
+                    if (!user) return handleSignIn(setUser, setAuthLoading);
 
-                  // guest user → ignore for now
-                  if (user?.is_guest) return;
+                    // guest user → ignore for now
+                    if (user?.is_guest) return;
 
-                  // full user → open modal
-                  if (!accountOpen) openAccountModal();
-                  else setAccountOpen(false);
-                }}
-                className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
-              >
-                {authLoading ? (
-                  <>
-                    <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
-                    <span>loading…</span>
-                  </>
-                ) : user ? (
-                  <>
-                    <img
-                      // src={user.avatar_url}
-                      src={avatarSrc}
-                      alt="avatar"
-                      className="h-6 w-6 rounded-full"
-                    />
-                    {/* <span>{user.username}</span> */}
-                    {/* ✅ Desktop = full name, Mobile = first name */}
-                    <span className="hidden md:inline">{fullName}</span>
-                    <span className="md:hidden">{firstName}</span>
-                  </>
-                ) : (
-                  "sign in"
-                )}
-              </button>
+                    // full user → open modal
+                    if (!accountOpen) openAccountModal();
+                    else setAccountOpen(false);
+                  }}
+                  className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+                >
+                  {authLoading ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+                      <span>loading…</span>
+                    </>
+                  ) : user ? (
+                    <>
+                      <img
+                        src={avatarSrc}
+                        alt="avatar"
+                        className="h-10 w-10 rounded-full"
+                      />
+                      <span className="hidden md:inline">{fullName}</span>
+                      <span className="md:hidden">{firstName}</span>
+                    </>
+                  ) : (
+                    "sign in"
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1593,7 +1595,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   // src={user.avatar_url}
                   src={avatarSrc}
                   alt="avatar"
-                  className="w-16 h-16 rounded-full"
+                  className="w-[5.5rem] h-[5.5rem] rounded-full"
                 />
 
                 <p className="text-black font-extrabold text-[20px] mt-4">

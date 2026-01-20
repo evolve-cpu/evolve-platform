@@ -93,7 +93,7 @@ export default function CollegeActivationVerify() {
       setAuthLoading(false);
 
       // ✅ Go next
-      navigate(`/college-activation/activities?id=${activationId}`);
+      navigate(`/evolve-in-person/activities?id=${activationId}`);
     } catch (err) {
       setError(err.message || "OTP verification failed.");
     } finally {
