@@ -1490,20 +1490,43 @@ export default function CollegeActivation() {
         "
       >
         {/* LEFT */}
+        {/* LEFT */}
         <div className="md:w-1/2 flex items-center justify-center md:justify-start">
-          <h1
+          {/* ✅ GROUP WRAPPER */}
+          <div
             className="
-              text-evolve-pink font-extrabold
-              text-center md:text-left
-              text-[48px] leading-[52px] tracking-[-0.02em]
-              md:ml-14
-              md:text-[140px] md:leading-[120px] md:tracking-[-0.03em]
-              md:mt-0 mt-24 mb-4
-            "
+      flex flex-col
+      items-center md:items-start
+      text-center md:text-left
+      md:ml-14
+      mt-24 md:mt-0
+      mb-4
+    "
           >
-            think beyond <br />
-            design!
-          </h1>
+            {/* ✅ new text */}
+            <p
+              className="
+        text-black font-extrabold
+        tracking-[-0.04em]
+        text-[16px] md:text-[24px]
+        mb-3
+      "
+            >
+              evolve in-person
+            </p>
+
+            {/* ✅ main heading */}
+            <h1
+              className="
+        text-evolve-pink font-extrabold
+        text-[48px] leading-[52px] tracking-[-0.02em]
+        md:text-[140px] md:leading-[120px] md:tracking-[-0.03em]
+      "
+            >
+              think beyond <br />
+              design!
+            </h1>
+          </div>
         </div>
 
         {/* RIGHT */}

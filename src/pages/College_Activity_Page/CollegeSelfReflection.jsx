@@ -62,6 +62,7 @@ export default function CollegeSelfReflection() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [openMenuFor, setOpenMenuFor] = useState(null); // stores area name
+  const [confirmDeleteFor, setConfirmDeleteFor] = useState(null);
 
   // ✅ fetch saved progress if user comes back
   useEffect(() => {
@@ -601,7 +602,7 @@ export default function CollegeSelfReflection() {
                       className="
           min-w-[900px]
           grid
-          grid-cols-[220px_repeat(4,1fr)]
+          grid-cols-[220px_repeat(4,1fr)_60px]
           gap-0
           rounded-2xl
           overflow-hidden
@@ -623,61 +624,17 @@ export default function CollegeSelfReflection() {
                       <div className="p-6 bg-black/10 font-bold text-black">
                         see this as financially viable?
                       </div>
+                      <div className="p-6 bg-black/10 font-bold text-black" />
 
                       {/* rows */}
                       {fields.map((f) => (
                         <React.Fragment key={f.area}>
-                          {/* <div className="p-6 border-t border-black/10 font-bold text-black">
+                          {/* area */}
+                          <div className="p-6 border-t border-black/10 font-bold text-black">
                             {f.area}
-                          </div> */}
-                          <div className="p-6 border-t border-black/10 font-bold text-black flex items-center justify-between gap-3">
-                            <span>{f.area}</span>
-
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuFor((prev) =>
-                                    prev === f.area ? null : f.area
-                                  );
-                                }}
-                                className="text-black font-extrabold text-[22px] px-2"
-                              >
-                                ⋯
-                              </button>
-
-                              {openMenuFor === f.area && (
-                                <div
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="
-          absolute right-0 top-8
-          bg-evolve-yellow
-          border-2 border-black
-          rounded-xl
-          shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
-          overflow-hidden
-          z-50
-        "
-                                >
-                                  <button
-                                    type="button"
-                                    disabled={saving}
-                                    onClick={() => handleDeleteField(f.area)}
-                                    className="
-            px-5 py-3 w-full text-left
-            font-bold text-black
-            hover:text-evolve-pink
-            disabled:opacity-50
-          "
-                                  >
-                                    delete
-                                  </button>
-                                </div>
-                              )}
-                            </div>
                           </div>
 
+                          {/* stars */}
                           {["interest", "skill", "natural", "finance"].map(
                             (k) => (
                               <div
@@ -701,6 +658,54 @@ export default function CollegeSelfReflection() {
                               </div>
                             )
                           )}
+
+                          {/* ✅ 3 dots at END of row */}
+                          <div className="p-6 border-t border-black/10 flex justify-end relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuFor((prev) =>
+                                  prev === f.area ? null : f.area
+                                );
+                              }}
+                              className="text-black font-extrabold text-[22px] px-2"
+                            >
+                              ⋯
+                            </button>
+
+                            {openMenuFor === f.area && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="
+            absolute right-4 top-14
+            bg-evolve-yellow
+            border-2 border-black
+            rounded-xl
+            shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+            overflow-hidden
+            z-50
+          "
+                              >
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  onClick={() => {
+                                    setConfirmDeleteFor(f.area);
+                                    setOpenMenuFor(null);
+                                  }}
+                                  className="
+              px-5 py-3 w-full text-left
+              font-bold text-black
+              hover:text-evolve-pink
+              disabled:opacity-50
+            "
+                                >
+                                  delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </React.Fragment>
                       ))}
                     </div>
@@ -754,7 +759,10 @@ export default function CollegeSelfReflection() {
                                   <button
                                     type="button"
                                     disabled={saving}
-                                    onClick={() => handleDeleteField(f.area)}
+                                    onClick={() => {
+                                      setConfirmDeleteFor(f.area);
+                                      setOpenMenuFor(null);
+                                    }}
                                     className="
             px-5 py-3 w-full text-left
             font-bold text-black
@@ -909,6 +917,72 @@ export default function CollegeSelfReflection() {
           <p className="text-black font-semibold mt-10">loading...</p>
         )}
       </div>
+      {confirmDeleteFor && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-6">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setConfirmDeleteFor(null)}
+          />
+
+          <div
+            className="
+        relative z-10
+        w-full max-w-[420px]
+        bg-evolve-yellow
+        border-2 border-black
+        rounded-3xl
+        shadow-[10px_10px_0px_rgba(0,0,0,0.25)]
+        p-7
+      "
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-black font-extrabold text-[22px] md:text-[24px]">
+              delete this field?
+            </p>
+
+            <p className="mt-2 text-black/80 font-normal text-[16px] md:text-[18px]">
+              you’re about to delete <b>{confirmDeleteFor}</b>. this cannot be
+              undone.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteFor(null)}
+                className="
+            bg-transparent
+            border-[3px] border-black/40
+            text-black font-extrabold
+            rounded-[37.11px]
+            px-6 py-2
+            text-[16px]
+          "
+              >
+                cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  handleDeleteField(confirmDeleteFor);
+                  setConfirmDeleteFor(null);
+                }}
+                className="
+            bg-black text-white font-extrabold
+            rounded-[37.11px]
+            px-6 py-2
+            text-[16px]
+            shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+            disabled:opacity-50
+          "
+              >
+                {saving ? "deleting..." : "delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
