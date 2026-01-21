@@ -61,6 +61,7 @@ export default function CollegeSelfReflection() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [openMenuFor, setOpenMenuFor] = useState(null); // stores area name
 
   // ✅ fetch saved progress if user comes back
   useEffect(() => {
@@ -175,6 +176,45 @@ export default function CollegeSelfReflection() {
     // ✅ stay in reflect tab (user will go review manually)
     // setActiveTab("review");
   };
+
+  const handleDeleteField = async (areaName) => {
+    setError("");
+
+    if (!id) return setError("Session not found.");
+
+    const nextFields = fields.filter((f) => f.area !== areaName);
+    setFields(nextFields);
+    setOpenMenuFor(null);
+
+    try {
+      setSaving(true);
+
+      const payload = {
+        fields: nextFields,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from("college_activations")
+        .update({
+          self_reflection_answers: payload
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.log(err.message);
+      setError("Deleted locally, but failed to sync. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const close = () => setOpenMenuFor(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
 
   const handleSaveAndFinish = async () => {
     setError("");
@@ -302,7 +342,7 @@ export default function CollegeSelfReflection() {
       <div className="max-w-[1100px] mx-auto">
         {/* ✅ Top heading row */}
         {/* <div className="flex items-center gap-4"> */}
-        <div className="flex items-center gap-4 mt-4 md:mt-6">
+        <div className="flex items-center gap-4 mt-6 md:mt-6">
           {/* back arrow */}
           <button
             onClick={() => navigate(-1)}
@@ -323,12 +363,13 @@ export default function CollegeSelfReflection() {
               tracking-[-0.03em]
             "
           >
-            activity 1
+            self reflection
+            {/* activity 1 */}
           </h1>
         </div>
 
         {/* ✅ Tabs */}
-        <div className="mt-8">
+        <div className="mt-4 md:mt-8">
           {/* ================= MOBILE TABS (OLD UI) ================= */}
           <div className="md:hidden">
             <div className="flex items-center justify-between">
@@ -462,7 +503,8 @@ export default function CollegeSelfReflection() {
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
                   onInput={(e) => setArea(e.target.value)} // ✅ iOS fix
-                  placeholder="ex. industrial design, photography, ui, writing"
+                  // placeholder="ex. industrial design, photography, ui, writing"
+                  placeholder="ex. industrial design..."
                   className="
                     mt-4 w-full md:w-[520px]
                     rounded-[16px]
@@ -585,8 +627,55 @@ export default function CollegeSelfReflection() {
                       {/* rows */}
                       {fields.map((f) => (
                         <React.Fragment key={f.area}>
-                          <div className="p-6 border-t border-black/10 font-bold text-black">
+                          {/* <div className="p-6 border-t border-black/10 font-bold text-black">
                             {f.area}
+                          </div> */}
+                          <div className="p-6 border-t border-black/10 font-bold text-black flex items-center justify-between gap-3">
+                            <span>{f.area}</span>
+
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuFor((prev) =>
+                                    prev === f.area ? null : f.area
+                                  );
+                                }}
+                                className="text-black font-extrabold text-[22px] px-2"
+                              >
+                                ⋯
+                              </button>
+
+                              {openMenuFor === f.area && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="
+          absolute right-0 top-8
+          bg-evolve-yellow
+          border-2 border-black
+          rounded-xl
+          shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+          overflow-hidden
+          z-50
+        "
+                                >
+                                  <button
+                                    type="button"
+                                    disabled={saving}
+                                    onClick={() => handleDeleteField(f.area)}
+                                    className="
+            px-5 py-3 w-full text-left
+            font-bold text-black
+            hover:text-evolve-pink
+            disabled:opacity-50
+          "
+                                  >
+                                    delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {["interest", "skill", "natural", "finance"].map(
@@ -626,9 +715,59 @@ export default function CollegeSelfReflection() {
                           className="border-b border-black pb-8"
                         >
                           {/* Topic Heading */}
-                          <h2 className="text-black font-extrabold text-[22px] mb-6">
+                          {/* <h2 className="text-black font-extrabold text-[22px] mb-6">
                             {f.area}
-                          </h2>
+                          </h2> */}
+                          <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-black font-extrabold text-[22px]">
+                              {f.area}
+                            </h2>
+
+                            {/* 3 dot menu */}
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuFor((prev) =>
+                                    prev === f.area ? null : f.area
+                                  );
+                                }}
+                                className="text-black font-extrabold text-[22px] px-2"
+                              >
+                                ⋯
+                              </button>
+
+                              {openMenuFor === f.area && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="
+          absolute right-0 top-8
+          bg-evolve-yellow
+          border-2 border-black
+          rounded-xl
+          shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+          overflow-hidden
+          z-50
+        "
+                                >
+                                  <button
+                                    type="button"
+                                    disabled={saving}
+                                    onClick={() => handleDeleteField(f.area)}
+                                    className="
+            px-5 py-3 w-full text-left
+            font-bold text-black
+            hover:text-evolve-pink
+            disabled:opacity-50
+          "
+                                  >
+                                    delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                           {/* Row 1 */}
                           <div className="flex items-center justify-between gap-4 pb-4">
@@ -655,7 +794,8 @@ export default function CollegeSelfReflection() {
                           {/* Row 2 */}
                           <div className="flex items-center justify-between gap-4 py-4">
                             <p className="text-black font-normal text-[16px]">
-                              your current skill in this?
+                              your current skill <br />
+                              in this?
                             </p>
                             <div className="flex items-center gap-2">
                               {[1, 2, 3, 4, 5].map((n) => (

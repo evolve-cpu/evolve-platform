@@ -784,6 +784,30 @@ export default function CollegeRealityCheck() {
     return responsesByQ[key]?.responses || [];
   }, [responsesByQ, currentQ]);
 
+  const autoSubmitCurrentInput = () => {
+    const trimmed = input.trim();
+    if (!trimmed || !currentQ) return;
+
+    setResponsesByQ((prev) => {
+      const key = String(currentQ.id);
+
+      const prevEntry = prev[key] || {
+        question: currentQ.text,
+        responses: []
+      };
+
+      return {
+        ...prev,
+        [key]: {
+          question: currentQ.text,
+          responses: [...(prevEntry.responses || []), trimmed]
+        }
+      };
+    });
+
+    setInput("");
+  };
+
   // =========================================================
   // ✅ FETCH EXISTING ANSWERS (STRICT)
   // =========================================================
@@ -869,11 +893,55 @@ export default function CollegeRealityCheck() {
   }, [step, qIndex, isLocked]);
 
   // ✅ when timer hits 0 -> show modal + move next
+  // useEffect(() => {
+  //   if (step !== "question") return;
+  //   if (isLocked) return;
+  //   if (timeLeft > 0) return;
+
+  //   setShowTimeUpModal(true);
+
+  //   let cd = 5;
+  //   setNextCountdown(cd);
+
+  //   const interval = setInterval(() => {
+  //     cd -= 1;
+  //     setNextCountdown(cd);
+
+  //     if (cd <= 0) {
+  //       clearInterval(interval);
+
+  //       // ✅ next question OR results
+  //       if (qIndex < QUESTIONS.length - 1) {
+  //         setShowTimeUpModal(false);
+  //         setQIndex((p) => p + 1);
+  //       } else {
+  //         setShowTimeUpModal(false);
+  //         setStep("results");
+  //         saveRealityCheck(true);
+  //       }
+  //     }
+  //   }, 1000);
+
+  //   return () => clearInterval(interval);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [timeLeft]);
+
   useEffect(() => {
     if (step !== "question") return;
     if (isLocked) return;
     if (timeLeft > 0) return;
 
+    // ✅ auto-submit typed input (even if user didn’t click add answer)
+    autoSubmitCurrentInput();
+
+    // ✅ if it is LAST question → go directly to results (NO MODAL)
+    if (qIndex === QUESTIONS.length - 1) {
+      setStep("results");
+      saveRealityCheck(true);
+      return;
+    }
+
+    // ✅ show modal ONLY between questions (not after last question)
     setShowTimeUpModal(true);
 
     let cd = 5;
@@ -885,20 +953,13 @@ export default function CollegeRealityCheck() {
 
       if (cd <= 0) {
         clearInterval(interval);
-
-        // ✅ next question OR results
-        if (qIndex < QUESTIONS.length - 1) {
-          setShowTimeUpModal(false);
-          setQIndex((p) => p + 1);
-        } else {
-          setShowTimeUpModal(false);
-          setStep("results");
-          saveRealityCheck(true);
-        }
+        setShowTimeUpModal(false);
+        setQIndex((p) => p + 1);
       }
     }, 1000);
 
     return () => clearInterval(interval);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
 
@@ -1049,7 +1110,8 @@ export default function CollegeRealityCheck() {
               tracking-[-0.03em]
             "
           >
-            activity 2 - reality check
+            {/* activity 2 - reality check */}
+            reality check
           </h1>
 
           <h1
@@ -1062,7 +1124,7 @@ export default function CollegeRealityCheck() {
               leading-[1.05]
             "
           >
-            activity 2 - <br /> reality check
+            reality check
           </h1>
         </div>
 
