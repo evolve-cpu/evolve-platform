@@ -1232,7 +1232,10 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     return false;
   };
 
-  const hideAuthButton = location.pathname === "/evolve-in-person";
+  const hideAuthButton = ["/evolve-in-person", "/evolve-in-person/"].includes(
+    location.pathname
+  );
+  // const hideAuthButton = location.pathname === "/evolve-in-person/";
 
   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 

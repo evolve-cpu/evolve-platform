@@ -1060,6 +1060,9 @@ import CollegeActivities from "./pages/College_Activity_Page/CollegeActivities.j
 import CollegeSelfReflection from "./pages/College_Activity_Page/CollegeSelfReflection.jsx";
 import CollegeRealityCheck from "./pages/College_Activity_Page/CollegeRealityCheck.jsx";
 import CollegeActivationVerify from "./pages/College_Activity_Page/CollegeActivationVerify.jsx";
+import AdminLogin from "./pages/admn/AdminLogin.jsx";
+import AdminDashboard from "./pages/admn/AdminDashboard.jsx";
+import AdminGuard from "./routes/AdminGuard.jsx";
 
 const queryClient = new QueryClient();
 
@@ -1087,6 +1090,7 @@ const AppLayout = () => {
 
   const hideFooterRoutes = [
     "/evolve-in-person",
+    "/evolve-in-person/",
     "/evolve-in-person/activities",
     "/evolve-in-person/self-reflection",
     "/evolve-in-person/reality-check"
@@ -1370,6 +1374,17 @@ const AppLayout = () => {
 
         <Suspense fallback={<LoadingScreen progress={50} />}>
           <Routes>
+            <Route path="/admin" element={<AdminLogin />} />
+
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminGuard>
+                  <AdminDashboard />
+                </AdminGuard>
+              }
+            />
+
             <Route
               path="/"
               element={

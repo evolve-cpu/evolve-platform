@@ -651,32 +651,32 @@ import {
 const QUESTIONS = [
   {
     id: 1,
-    text: "1. what are the things you enjoy about the field you’ve chosen?",
-    placeholder: "type whatever comes to mind…",
+    text: "1. what pushed you toward choosing what you’re pursuing right now?",
+    placeholder: "mention what influenced your decision",
     durationSec: 120
   },
   {
     id: 2,
-    text: "2. what feels different from what you expected?",
-    placeholder: "type whatever comes to mind…",
+    text: "2. what are the things you genuinely enjoy about this field so far?",
+    placeholder: "as many as you can think of",
     durationSec: 120
   },
   {
     id: 3,
-    text: "3. what parts of this journey have been frustrating or difficult?",
-    placeholder: "type whatever comes to mind…",
+    text: "3. What kind of support or resources do you wish you had in your learning journey right now?",
+    placeholder: "From college, teachers, peers, family, etc...",
     durationSec: 120
   },
   {
     id: 4,
-    text: "4. what worries or fears come up when you think about your future?",
-    placeholder: "type whatever comes to mind…",
+    text: "4. when you think about the future, what worries or doubts come up most often?",
+    placeholder: "Write everything that applies",
     durationSec: 120
   },
   {
     id: 5,
-    text: "5. what things feel unclear or hard to figure out right now?",
-    placeholder: "type whatever comes to mind…",
+    text: "5. looking back, what do you feel you could have done differently, or wish you had known earlier?",
+    placeholder: "note thoughts, mistakes, or realisations",
     durationSec: 120
   }
 ];
@@ -766,6 +766,15 @@ export default function CollegeRealityCheck() {
 
   // ✅ strict lock if any answer exists
   const [isLocked, setIsLocked] = useState(false);
+
+  // ✅ Before start modal
+  const [showBeforeStartModal, setShowBeforeStartModal] = useState(false);
+  const [majorInput, setMajorInput] = useState("");
+  const [savingMajor, setSavingMajor] = useState(false);
+
+  const canProceedMajor = useMemo(() => {
+    return majorInput.trim().length > 0;
+  }, [majorInput]);
 
   // ✅ RESULTS slider index (question-wise)
   const [activeResultIndex, setActiveResultIndex] = useState(0);
@@ -1001,11 +1010,51 @@ export default function CollegeRealityCheck() {
     }
   };
 
+  // const handleBegin = () => {
+  //   if (isLocked) return;
+
+  //   setStep("question");
+  //   setQIndex(0);
+  // };
+
   const handleBegin = () => {
     if (isLocked) return;
 
-    setStep("question");
-    setQIndex(0);
+    // ✅ Instead of directly starting question, open modal first
+    setShowBeforeStartModal(true);
+  };
+
+  const handleSaveMajorAndStart = async () => {
+    setError("");
+
+    if (!id)
+      return setError("Session not found. Please go back and start again.");
+    if (!majorInput.trim()) return;
+
+    try {
+      setSavingMajor(true);
+
+      // ✅ save major in DB
+      const { error } = await supabase
+        .from("college_activations")
+        .update({
+          reality_check_major: majorInput.trim(), // ✅ NEW COLUMN (recommended)
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // ✅ close modal & start questions
+      setShowBeforeStartModal(false);
+      setStep("question");
+      setQIndex(0);
+    } catch (err) {
+      console.log(err.message);
+      setError("Could not save. Please try again.");
+    } finally {
+      setSavingMajor(false);
+    }
   };
 
   const handleAddAnswer = () => {
@@ -1450,6 +1499,94 @@ we’ll look at patterns and talk through them together.`}
                     "
                   >
                     back to activities
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================= */}
+        {/* ✅ BEFORE START MODAL */}
+        {/* ======================================================= */}
+        {showBeforeStartModal && step === "instructions" && !isLocked && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center px-6 z-50">
+            <div
+              className="
+        w-full max-w-[600px]
+        rounded-3xl
+        border-2 border-black
+        bg-evolve-yellow
+        p-8 md:p-10
+        shadow-[10px_10px_0px_rgba(0,0,0,0.25)]
+      "
+            >
+              <div className="flex flex-col justify-center">
+                {/* heading */}
+                <h2
+                  className="
+            text-black font-extrabold
+            text-[32px] md:text-[40px]
+            tracking-[-0.04em]
+            text-center md:text-left
+          "
+                >
+                  before you start..
+                </h2>
+
+                {/* sub text */}
+                <p
+                  className="
+            mt-4
+            text-black font-bold
+            text-[16px] md:text-[24px]
+            tracking-[-0.02em] md:tracking-[-0.04em]
+            text-center md:text-left
+          "
+                >
+                  What are you currently pursuing? (majors)
+                </p>
+
+                {/* input */}
+                <input
+                  value={majorInput}
+                  onChange={(e) => setMajorInput(e.target.value)}
+                  placeholder="ex. industrial design"
+                  className="
+            mt-6
+            w-full
+            rounded-2xl
+            bg-black/10
+            border-[2px] border-black/20
+            px-6 py-4
+            text-black
+            outline-none
+            placeholder-black/50
+            text-[16px] md:text-[20px]
+          "
+                />
+
+                {/* button */}
+                <div className="mt-8 flex justify-center md:justify-start">
+                  <button
+                    onClick={handleSaveMajorAndStart}
+                    disabled={!canProceedMajor || savingMajor}
+                    className={`
+              bg-black text-white font-extrabold
+              text-[18px] md:text-[22px]
+              rounded-[37.11px]
+              px-14 py-3
+              shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+              transition-all duration-300
+              active:scale-[0.98]
+              ${
+                !canProceedMajor || savingMajor
+                  ? "opacity-40 cursor-not-allowed"
+                  : ""
+              }
+            `}
+                  >
+                    {savingMajor ? "saving..." : "next"}
                   </button>
                 </div>
               </div>
