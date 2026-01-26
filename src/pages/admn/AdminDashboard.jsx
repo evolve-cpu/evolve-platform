@@ -1096,7 +1096,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+// import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -1204,28 +1204,28 @@ export default function AdminDashboard() {
   // =========================================================
   // ✅ AUTH USERS (pagination fix)
   // =========================================================
-  const fetchAllAuthUsers = async () => {
-    const allUsers = [];
-    let page = 1;
-    const perPage = 200;
+  // const fetchAllAuthUsers = async () => {
+  //   const allUsers = [];
+  //   let page = 1;
+  //   const perPage = 200;
 
-    while (true) {
-      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-        page,
-        perPage
-      });
+  //   while (true) {
+  //     const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+  //       page,
+  //       perPage
+  //     });
 
-      if (error) throw error;
+  //     if (error) throw error;
 
-      const users = data?.users || [];
-      allUsers.push(...users);
+  //     const users = data?.users || [];
+  //     allUsers.push(...users);
 
-      if (users.length < perPage) break;
-      page += 1;
-    }
+  //     if (users.length < perPage) break;
+  //     page += 1;
+  //   }
 
-    return allUsers;
-  };
+  //   return allUsers;
+  // };
 
   // =========================================================
   // ✅ Fetch all data (Auth Users + activations)
@@ -1236,8 +1236,16 @@ export default function AdminDashboard() {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
-      const allAuthUsers = await fetchAllAuthUsers();
+      // ✅ FETCH PROFILES (REAL USERS ONLY)
+      const { data: pData, error: pErr } = await supabase
+        .from("profiles")
+        .select("*")
+        // .or("is_guest.is.null,is_guest.eq.false")
+        .order("created_at", { ascending: false });
 
+      if (pErr) throw pErr;
+
+      // ✅ FETCH ACTIVATIONS
       const { data: aData, error: aErr } = await supabase
         .from("college_activations")
         .select("*")
@@ -1245,40 +1253,10 @@ export default function AdminDashboard() {
 
       if (aErr) throw aErr;
 
-      const transformedProfiles =
-        allAuthUsers
-          .filter((u) => u.email && String(u.email).trim().length > 0)
-          .map((u) => {
-            const username =
-              u.user_metadata?.full_name ||
-              u.user_metadata?.name ||
-              u.user_metadata?.username ||
-              u.email?.split("@")?.[0] ||
-              "";
-
-            return {
-              id: u.id,
-              email: u.email || "-",
-              phone: u.phone || "-",
-              provider:
-                u.app_metadata?.providers?.[0] ||
-                u.app_metadata?.provider ||
-                "email",
-              created_at: u.created_at,
-              last_sign_in_at: u.last_sign_in_at || "-",
-              username,
-              is_guest: u.is_anonymous ?? false,
-              confirmed_at: u.confirmed_at || "-",
-              role: u.role || "authenticated"
-            };
-          })
-          // ✅ remove blanks + unknown users
-          .filter((u) => u.username && u.username.trim().length > 0) || [];
-
-      setProfiles(transformedProfiles);
+      setProfiles(pData || []);
       setActivations(aData || []);
     } catch (err) {
-      console.log("admin fetch error:", err.message);
+      console.error("admin fetch error:", err.message);
       setError(err.message || "Failed to load admin data");
     } finally {
       setLoading(false);
@@ -1289,6 +1267,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // useEffect(() => {
+  //   const test = async () => {
+  //     const { data, error } = await supabase.from("profiles").select("*");
+
+  //     console.log("PROFILES TABLE RAW 👉", data, error);
+  //   };
+
+  //   test();
+  // }, []);
 
   // =========================================================
   // ✅ Stats
