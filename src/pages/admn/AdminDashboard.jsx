@@ -1240,7 +1240,7 @@ export default function AdminDashboard() {
       const { data: pData, error: pErr } = await supabase
         .from("profiles")
         .select("*")
-        // .or("is_guest.is.null,is_guest.eq.false")
+        .or("is_guest.is.null,is_guest.eq.false")
         .order("created_at", { ascending: false });
 
       if (pErr) throw pErr;
