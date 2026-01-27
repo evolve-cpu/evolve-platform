@@ -1202,32 +1202,6 @@ export default function AdminDashboard() {
   };
 
   // =========================================================
-  // ✅ AUTH USERS (pagination fix)
-  // =========================================================
-  // const fetchAllAuthUsers = async () => {
-  //   const allUsers = [];
-  //   let page = 1;
-  //   const perPage = 200;
-
-  //   while (true) {
-  //     const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-  //       page,
-  //       perPage
-  //     });
-
-  //     if (error) throw error;
-
-  //     const users = data?.users || [];
-  //     allUsers.push(...users);
-
-  //     if (users.length < perPage) break;
-  //     page += 1;
-  //   }
-
-  //   return allUsers;
-  // };
-
-  // =========================================================
   // ✅ Fetch all data (Auth Users + activations)
   // =========================================================
   const fetchAll = async (isRefresh = false) => {
@@ -1435,22 +1409,103 @@ export default function AdminDashboard() {
         };
       });
 
+      //   const prompt = `
+      //   You are an admin analyst for a design education platform called EVOLVE.
+      //   Dataset: ${JSON.stringify(compactDataset)}
+
+      //   Generate insights:
+      //   1) Overall summary (2 lines)
+      //   2) College-wise trends (top 3)
+      //   3) Common interests (top 5)
+      //   4) Worries + motivations (top 5)
+      //   5) Suggestions (3 bullet points)
+      // `;
+
+      //       const prompt = `
+      // # ROLE
+      // You are a Senior Discussion Facilitator at EVOLVE. Your job is to look past the surface level of student data and find the "Deep Why"—the raw, emotional fears and blocks that students are often too shy to bring up themselves.
+
+      // # DATASET
+      // ${JSON.stringify(compactDataset)}
+
+      // # YOUR TASK
+      // Identify the top 3 most common and emotionally heavy themes across the students' "Reality Check" answers. Combine these into 3 powerful, direct questions for a group discussion.
+
+      // # EXAMPLE STYLE (Follow this exactly)
+      // "Is this career actually financially viable and 'AI-proof' in the long run, or will my skills become redundant?"
+      // This is a core anxiety for many students who worry about the ROI of their education and whether the industry will still exist in its current form by the time they graduate.
+
+      // # OUTPUT RULES
+      // 1. Provide ONLY 3 sections.
+      // 2. NO bullet points, NO headers, NO "Overall Summary."
+      // 3. Each section must be exactly two parts:
+      //    - Part 1: The question in quotes (make it sound like something a student would say).
+      //    - Part 2: A short paragraph (2-3 lines) explaining the emotional context or frequency.
+      // 4. Mention "multiple students" or "many participants" to show the trend.
+
+      // # NOW GENERATE THE 3 QUESTIONS:
+      // `;
+
+      //       const prompt = `
+      // # ROLE
+      // You are a Workshop Facilitator for EVOLVE. You are turning student survey data into a high-impact discussion guide.
+
+      // # DATASET
+      // ${JSON.stringify(compactDataset)}
+
+      // # TASK
+      // Generate exactly 3 discussion questions. These must be the "Top 3" questions based on frequency and emotional weight.
+
+      // # OUTPUT FORMAT (Strictly match this style)
+      // "Discussion Question In Quotes?" (Addressed by Name, Name, Name)
+      // Brief context (2 lines) explaining why this is a common theme, focusing on the raw emotion, market gap. Use simple, human language.
+
+      // # EXAMPLE OF THE STYLE I WANT:
+      // "Is this career actually financially viable and 'AI-proof' in the long run, or will my skills become redundant?" (Addressed by Danesh, Sonam, Arnab, Aneri, Sakshi)
+      // This is the biggest worry in the room. Many students are terrified that while they are studying, AI is already making their future jobs obsolete.
+
+      // # RULES
+      // - NO headers like "## Question 1"
+      // - NO bullet points
+      // - Use ONLY the names found in the dataset
+      // - NO corporate jargon (avoid: "profound," "echoed," "sentiment," "facilitates")
+      // - If a question is common but has too many names to list, say "(Addressed by Name, Name + [number] others)"
+
+      // # NOW GENERATE THE 3 QUESTIONS:
+      // `;
+
       const prompt = `
-      You are an admin analyst for a design education platform called EVOLVE.
-      Dataset: ${JSON.stringify(compactDataset)}
-      
-      Generate insights:
-      1) Overall summary (2 lines)
-      2) College-wise trends (top 3)
-      3) Common interests (top 5)
-      4) Worries + motivations (top 5)
-      5) Suggestions (3 bullet points)
-    `;
+# ROLE
+You are a Senior Workshop Lead at EVOLVE. You have a deep understanding of student psychology and design education.
+
+# DATASET
+${JSON.stringify(compactDataset)}
+
+# YOUR GOAL
+Extract exactly 3 distinct discussion questions. They must represent different areas of the student experience to ensure the workshop doesn't get repetitive.
+
+# THINKING PROCESS (Internal)
+1. Find one question about: Livelihood/Future (Money, AI, Stability).
+2. Find one question about: Self-Doubt/Path (Am I good enough? Is this for me?).
+3. Find one question about: Action/Obstacles (Portfolios, Jobs, College gaps).
+
+# OUTPUT FORMAT (Strictly match this style)
+"Specific Discussion Question In Quotes?" (Addressed by Name, Name, Name)
+Brief context (2 lines max) using simple, human language. Explain the "why" behind the worry.
+
+# RULES
+1. DO NOT repeat the same theme. If Question 1 is about AI, Question 2 MUST NOT mention AI.
+2. NO headers (like "Question 1"), NO bullet points.
+3. Use ONLY names from the dataset. Use "(Addressed by Name, Name + [x] others)" if more than 5 students are involved.
+4. Language must be blunt and honest—avoid "AI jargon" like "sentiment," "pervasive," or "profound."
+
+# NOW GENERATE THE 3 DISTINCT QUESTIONS:
+`;
 
       // 2026 Updated Model: gemini-2.5-flash is the stable workhorse
       // Note: If you want the absolute newest, you can try gemini-3-flash-preview
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: {

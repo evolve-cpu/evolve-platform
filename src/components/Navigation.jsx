@@ -1544,7 +1544,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                         className="h-10 w-10 rounded-full"
                       />
                       <span className="hidden md:inline">{fullName}</span>
-                      <span className="md:hidden">{firstName}</span>
+                      {/* <span className="md:hidden">{firstName}</span> */}
                     </>
                   ) : (
                     "sign in"

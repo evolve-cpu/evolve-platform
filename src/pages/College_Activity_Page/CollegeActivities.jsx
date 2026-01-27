@@ -504,7 +504,7 @@ export default function CollegeActivities() {
 
         {/* ✅ Desktop Grid */}
         <div className="hidden md:grid grid-cols-2 gap-10 justify-items-center">
-          {activities.map((item) => (
+          {/* {activities.map((item) => (
             <div
               key={item.key}
               className="
@@ -512,6 +512,19 @@ export default function CollegeActivities() {
               rounded-[52px] overflow-hidden
               border-evolve-pink border-2
             "
+            > */}
+          {activities.map((item) => (
+            <div
+              key={item.key}
+              onClick={() => {
+                if (!item.isLocked) handleStart(item.key);
+              }}
+              className={`
+      w-full max-w-[600px]
+      rounded-[52px] overflow-hidden
+      border-evolve-pink border-2
+      ${!item.isLocked ? "cursor-pointer" : "cursor-not-allowed"}
+    `}
             >
               {/* TOP */}
               <div className="bg-black h-[230px] flex items-center overflow-hidden justify-center p-8">
@@ -552,7 +565,11 @@ export default function CollegeActivities() {
 
                 {!item.isLocked ? (
                   <button
-                    onClick={() => handleStart(item.key)}
+                    // onClick={() => handleStart(item.key)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStart(item.key);
+                    }}
                     disabled={loading}
                     className="
                     bg-black text-white font-extrabold
