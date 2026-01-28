@@ -26,17 +26,34 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 // Reusable Card Component
+// const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
 const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
+  const handleDesktopClick = () => {
+    if (window.innerWidth >= 768) {
+      window.open(playlistUrl, "_blank");
+    }
+  };
   return (
+    // <div
+    //   className={`
+    //     rounded-[70px] overflow-hidden border-2 border-evolve-yellow
+    //     transition-all duration-500 ease-in-out
+    //     ${isExpanded ? "scale-y-110" : "scale-y-100"}
+    //   `}
+    //   onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
+    //   onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
+    //   onClick={() => "ontouchstart" in window && onToggle(!isExpanded)}
+    // >
     <div
       className={`
         rounded-[70px] overflow-hidden border-2 border-evolve-yellow
         transition-all duration-500 ease-in-out 
         ${isExpanded ? "scale-y-110" : "scale-y-100"}
+        cursor-pointer md:cursor-pointer
       `}
+      onClick={handleDesktopClick}
       onMouseEnter={() => !("ontouchstart" in window) && onToggle(true)}
       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
-      onClick={() => "ontouchstart" in window && onToggle(!isExpanded)}
     >
       {/* Top section */}
       <div
