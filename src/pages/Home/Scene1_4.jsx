@@ -247,6 +247,7 @@
 import React, { useRef, useImperativeHandle } from "react";
 import { gsap } from "gsap";
 import {
+  evolve_be_remarkable,
   evolve_text,
   marquee_vector_1,
   marquee_vector_2
@@ -531,8 +532,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
             />
             <img
-              src={evolve_text}
-              alt="evolve text"
+              src={evolve_be_remarkable}
+              alt="evolve be remarkable"
               className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
             />
             <img
@@ -551,8 +552,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
             />
             <img
-              src={evolve_text}
-              alt="evolve text"
+              src={evolve_be_remarkable}
+              alt="evolve be remarkable"
               className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
             />
           </div>

@@ -9,6 +9,7 @@ import cross_line_black from "./cross_line_black.svg";
 import marquee_vector_1 from "./marquee_vector_1.svg";
 import marquee_vector_2 from "./marquee_vector_2.svg";
 import evolve_text from "./evolve_text.svg";
+import evolve_be_remarkable from "./evolve_be_remarkable.svg";
 
 export {
   evolve_logo_nav,
@@ -19,6 +20,7 @@ export {
   marquee_vector_1,
   marquee_vector_2,
   evolve_text,
+  evolve_be_remarkable,
   cross_line_pink,
   cross_line_pink1,
   cross_line_black

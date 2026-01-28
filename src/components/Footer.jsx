@@ -580,7 +580,8 @@ import { Link } from "react-router-dom";
 import {
   marquee_vector_1,
   evolve_text,
-  marquee_vector_2
+  marquee_vector_2,
+  evolve_be_remarkable
 } from "../assets/images/Nav";
 import {
   hand_with_thunder,
@@ -865,8 +866,8 @@ const Footer = () => {
                 className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
-                src={evolve_text}
-                alt="evolve text"
+                src={evolve_be_remarkable}
+                alt="evolve be remarkable"
                 className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />
               <img
@@ -885,7 +886,7 @@ const Footer = () => {
                 className={`w-auto flex-none ${isMobile ? "h-14" : "h-[6rem]"}`}
               />
               <img
-                src={evolve_text}
+                src={evolve_be_remarkable}
                 alt="evolve text"
                 className={`w-auto flex-none ${isMobile ? "h-12" : "h-[5rem]"}`}
               />

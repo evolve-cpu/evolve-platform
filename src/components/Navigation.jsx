@@ -1162,7 +1162,8 @@ import {
   marquee_vector_1,
   evolve_text,
   marquee_vector_2,
-  cross_line_pink
+  cross_line_pink,
+  evolve_be_remarkable
 } from "../assets/images/Nav";
 
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
@@ -1788,8 +1789,29 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                       className="h-10 md:h-14 w-auto flex-none"
                     />
                     <img
+                      src={evolve_be_remarkable}
+                      alt="vector 2"
+                      className="h-8 md:h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_1}
+                      alt="vector 2"
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+
+                    <img
                       src={evolve_text}
                       alt="evolve text"
+                      className="h-8 md:h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_2}
+                      alt="vector 2"
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_be_remarkable}
+                      alt="vector 2"
                       className="h-8 md:h-10 w-auto flex-none"
                     />
                   </div>

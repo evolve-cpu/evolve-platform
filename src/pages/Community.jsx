@@ -976,7 +976,7 @@ const CARDS = [
     title: "ama sessions",
     subtitle: "ask what really matters.",
     description:
-      "ask anything in open sessions with working professionals. get answers from people who’ve been there and know how it actually works.",
+      "ask anything in open sessions with professionals who’ve done it for real.",
     desktopImages: [{ src: ama_session, position: "center" }],
     mobileImage: ama_session_mobile
   },
@@ -984,7 +984,7 @@ const CARDS = [
     title: "portfolio reviews",
     subtitle: "honest feedback. real growth.",
     description:
-      "share your work and get direct, no-sugarcoating feedback from experienced designers. understand what works, what doesn’t, and how to level up.",
+      "share work and get direct feedback on what works and what doesn’t.",
     desktopImages: [{ src: portfolio_reviews, position: "center" }],
     mobileImage: portfolio_reviews_mobile
   },
@@ -992,7 +992,7 @@ const CARDS = [
     title: "challenges",
     subtitle: "learn by doing.",
     description:
-      "jump into short, time-bound challenges designed to stretch your thinking. ship your work, see how others approached the same brief, and pick up new ways of solving problems.",
+      "take short challenges, ship work, compare approaches, and learn new ways.",
     desktopImages: [{ src: challenges, position: "center" }],
     mobileImage: challenges_mobile
   },
@@ -1000,7 +1000,7 @@ const CARDS = [
     title: "resource library",
     subtitle: "the good stuff, curated.",
     description:
-      "access hand-picked articles, tools, and reads,  written by evolve and sourced from the best out there. no fluff. just solid resources to build strong fundamentals.",
+      "access curated articles, tools, and reads to build strong design fundamentals.",
     desktopImages: [{ src: resources, position: "center" }],
     mobileImage: resources_mobile
   },
@@ -1008,7 +1008,7 @@ const CARDS = [
     title: "bookclub",
     subtitle: "read. learn. finish.",
     description:
-      "join the book club to read design classics and modern must-reads together. we break books into small chunks and meet weekly to talk ideas, opinions, and real takeaways, so you actually finish what you start.",
+      "read design classics together in a weekly book club you actually finish.",
     desktopImages: [
       { src: card_5th_left, position: "left" },
       { src: card_5th_right, position: "right" }
@@ -1223,10 +1223,19 @@ const Community = () => {
           className="hidden md:block absolute bottom-0 w-full z-10 object-contain"
         />
 
-        <img
+        {/* <img
           src={doors_community_mobile}
           alt="doors mobile"
           className="md:hidden absolute bottom-0 w-full z-10 object-contain"
+        /> */}
+        <img
+          src={doors_community_mobile}
+          alt="doors mobile"
+          className="
+    md:hidden absolute bottom-0 w-full z-10 object-contain
+    max-[375px]:scale-90
+    origin-bottom
+  "
         />
 
         <img
@@ -1358,10 +1367,10 @@ const Community = () => {
               >
                 {card.title}
               </h3>
-              <p className="mt-3 font-bold lowercase text-black text-[20px] md:text-[36px]">
+              <p className="mt-2 font-bold lowercase text-black text-[20px] md:text-[36px]">
                 {card.subtitle}
               </p>
-              <p className="mt-6 max-w-2xl text-black font-normal md:font-normal text-[16px] md:text-[20px]">
+              <p className="mt-3 max-w-2xl text-black font-normal md:font-normal text-[16px] md:text-[20px] leading-tight">
                 {card.description}
               </p>
             </div>
@@ -1378,8 +1387,8 @@ const Community = () => {
                     img.position === "left"
                       ? "0"
                       : img.position === "right"
-                      ? "auto"
-                      : "50%",
+                        ? "auto"
+                        : "50%",
                   right: img.position === "right" ? "0" : "auto",
                   transform:
                     img.position === "center" ? "translateX(-50%)" : "none"
