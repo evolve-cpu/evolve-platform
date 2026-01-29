@@ -975,40 +975,50 @@ const CARDS = [
   {
     title: "ama sessions",
     subtitle: "ask what really matters.",
-    description:
+    descriptionMobile:
       "ask anything in open sessions with professionals who’ve done it for real.",
+    descriptionDesktop:
+      "ask anything in open sessions with working professionals. get answers from people who’ve been there and know how it actually works.",
     desktopImages: [{ src: ama_session, position: "center" }],
     mobileImage: ama_session_mobile
   },
   {
     title: "portfolio reviews",
     subtitle: "honest feedback. real growth.",
-    description:
+    descriptionMobile:
       "share work and get direct feedback on what works and what doesn’t.",
+    descriptionDesktop:
+      "share your work and get direct, no-sugarcoating feedback from experienced designers. understand what works, what doesn’t, and how to level up.",
     desktopImages: [{ src: portfolio_reviews, position: "center" }],
     mobileImage: portfolio_reviews_mobile
   },
   {
     title: "challenges",
     subtitle: "learn by doing.",
-    description:
+    descriptionMobile:
       "take short challenges, ship work, compare approaches, and learn new ways.",
+    descriptionDesktop:
+      "jump into short, time-bound challenges designed to stretch your thinking. ship your work, see how others approached the same brief, and pick up new ways of solving problems.",
     desktopImages: [{ src: challenges, position: "center" }],
     mobileImage: challenges_mobile
   },
   {
     title: "resource library",
     subtitle: "the good stuff, curated.",
-    description:
+    descriptionMobile:
       "access curated articles, tools, and reads to build strong design fundamentals.",
+    descriptionDesktop:
+      "access hand-picked articles, tools, and reads,  written by evolve and sourced from the best out there. no fluff. just solid resources to build strong fundamentals.",
     desktopImages: [{ src: resources, position: "center" }],
     mobileImage: resources_mobile
   },
   {
     title: "bookclub",
     subtitle: "read. learn. finish.",
-    description:
+    descriptionMobile:
       "read design classics together in a weekly book club you actually finish.",
+    descriptionDesktop:
+      "join the book club to read design classics and modern must-reads together. we break books into small chunks and meet weekly to talk ideas, opinions, and real takeaways, so you actually finish what you start.",
     desktopImages: [
       { src: card_5th_left, position: "left" },
       { src: card_5th_right, position: "right" }
@@ -1370,8 +1380,17 @@ const Community = () => {
               <p className="mt-2 font-bold lowercase text-black text-[20px] md:text-[36px]">
                 {card.subtitle}
               </p>
-              <p className="mt-3 max-w-2xl text-black font-normal md:font-normal text-[16px] md:text-[20px] leading-tight">
+              {/* <p className="mt-3 max-w-2xl text-black font-normal md:font-normal text-[16px] md:text-[20px] leading-tight">
                 {card.description}
+              </p> */}
+              {/* Mobile description */}
+              <p className="mt-3 max-w-2xl text-black font-normal text-[16px] leading-tight md:hidden">
+                {card.descriptionMobile}
+              </p>
+
+              {/* Desktop description */}
+              <p className="mt-3 max-w-2xl text-black font-normal text-[20px] leading-tight hidden md:block">
+                {card.descriptionDesktop}
               </p>
             </div>
 
