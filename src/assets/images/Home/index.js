@@ -277,6 +277,12 @@ import yellow_bg from "./yellow_bg.svg";
 import yellow_bg_mobile from "./yellow_bg_mobile.svg";
 import yellow_ellipse from "./yellow_ellipse.svg";
 import yellow_ellipse_mobile from "./yellow_ellipse_mobile.svg";
+import vector_1st from "./vector_1st.svg";
+import vector_1st_mobile from "./vector_1st_mobile.svg";
+import vector_2nd from "./vector_2nd.svg";
+import vector_2nd_mobile from "./vector_2nd_mobile.svg";
+import left_thunder_mobile from "./left_thunder_mobile.svg";
+import right_thunder_mobile from "./right_thunder_mobile.svg";
 
 // ========== MEDIUM PRIORITY (Scene 1_1 Interactive) ==========
 // These load third - interactive elements
@@ -418,6 +424,12 @@ export {
   yellow_bg_mobile,
   yellow_ellipse,
   yellow_ellipse_mobile,
+  vector_1st,
+  vector_1st_mobile,
+  vector_2nd,
+  vector_2nd_mobile,
+  left_thunder_mobile,
+  right_thunder_mobile,
 
   // Medium Priority - Scene 1_1 Interactive
   left_element,
