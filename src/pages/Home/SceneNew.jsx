@@ -7078,7 +7078,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           alt="oval mini 2"
           className="pointer-events-none"
           style={{
-            width: isMobile ? "60%" : "240px",
+            width: isMobile ? "60%" : "280px",
             height: "auto",
             opacity: 0
           }}

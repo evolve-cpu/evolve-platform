@@ -4456,7 +4456,7 @@
 
 export const SCENE1_1_STEP_LABELS = [
   "s1_1_step0_intro",
-  "s1_1_step1_text0",
+  // "s1_1_step1_text0",
   "s1_1_step3_textFullElementsDown",
   "s1_1_step4_text2ToStop",
   "s1_1_step5_eyeElementsVisible",
@@ -4555,17 +4555,20 @@ export const setCompletedState = (refs, isMobile) => {
     scale: 1
   });
 
-  gsap.set([refs.text0, refs.text], {
+  // gsap.set([refs.text0, refs.text], {
+  //   opacity: 1
+  // });
+  gsap.set([refs.text], {
     opacity: 1
   });
 
-  if (refs.text0) {
-    const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
-    gsap.set(spans0, {
-      opacity: 1,
-      color: "rgb(0, 0, 0)"
-    });
-  }
+  // if (refs.text0) {
+  //   const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
+  //   gsap.set(spans0, {
+  //     opacity: 1,
+  //     color: "rgb(0, 0, 0)"
+  //   });
+  // }
 
   if (refs.text) {
     const spans = Array.from(refs.text.querySelectorAll("span[data-text]"));
@@ -4746,7 +4749,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       x: 0,
       willChange: "transform, opacity"
     })
-    .set(refs.text0, { opacity: 0, y: 10, willChange: "transform, opacity" })
+    // .set(refs.text0, { opacity: 0, y: 10, willChange: "transform, opacity" })
     .set(refs.text, { opacity: 0, y: 10, willChange: "transform, opacity" })
     .set(refs.text2, { opacity: 0, y: 0, willChange: "transform, opacity" })
     .set(refs.objectsContainer, {
@@ -4803,47 +4806,47 @@ export const useScene1_1Timeline = (refs, isMobile) => {
       1.2
     );
 
-  tl.addLabel("s1_1_step1_text0", 4.2);
+  // tl.addLabel("s1_1_step1_text0", 4.2);
 
-  tl.to(
-    refs.text0,
-    { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
-    1.5
-  );
+  // tl.to(
+  //   refs.text0,
+  //   { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+  //   1.5
+  // );
 
-  if (refs.text0) {
-    const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
+  // if (refs.text0) {
+  //   const spans0 = Array.from(refs.text0.querySelectorAll("span[data-text0]"));
 
-    spans0.forEach((span) => {
-      gsap.set(span, {
-        opacity: 0.1,
-        color: "rgb(0, 0, 0)",
-        willChange: "opacity"
-      });
-    });
+  //   spans0.forEach((span) => {
+  //     gsap.set(span, {
+  //       opacity: 0.1,
+  //       color: "rgb(0, 0, 0)",
+  //       willChange: "opacity"
+  //     });
+  //   });
 
-    spans0.forEach((span, idx) => {
-      tl.to(
-        span,
-        {
-          opacity: 1,
-          duration: 0.4,
-          ease: "power2.out"
-        },
-        1.5 + idx * 0.35
-      );
-    });
-  }
+  //   spans0.forEach((span, idx) => {
+  //     tl.to(
+  //       span,
+  //       {
+  //         opacity: 1,
+  //         duration: 0.4,
+  //         ease: "power2.out"
+  //       },
+  //       1.5 + idx * 0.35
+  //     );
+  //   });
+  // }
 
-  tl.to(
-    refs.text0,
-    {
-      opacity: 0,
-      duration: 0.6,
-      ease: "power2.out"
-    },
-    4.8
-  );
+  // tl.to(
+  //   refs.text0,
+  //   {
+  //     opacity: 0,
+  //     duration: 0.6,
+  //     ease: "power2.out"
+  //   },
+  //   4.8
+  // );
 
   tl.to(
     refs.text,
@@ -6424,7 +6427,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
   const leftElementRef = useRef(null);
   const rightElementRef = useRef(null);
 
-  const text0Ref = useRef(null);
+  // const text0Ref = useRef(null);
   const textRef = useRef(null);
   const text2Ref = useRef(null);
   const text3Ref = useRef(null);
@@ -6475,7 +6478,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
     rightElement: rightElementRef.current,
     leftElementEye: leftElementEyeRef.current,
     rightElementEye: rightElementEyeRef.current,
-    text0: text0Ref.current,
+    // text0: text0Ref.current,
     text: textRef.current,
     text2: text2Ref.current,
     text3: text3Ref.current,
@@ -6752,7 +6755,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
           </div>
         )}
       </div>
-      <div
+      {/* <div
         ref={text0Ref}
         className={[
           "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
@@ -6831,7 +6834,7 @@ const Scene1_1 = React.forwardRef((props, ref) => {
             </div>
           </>
         )}
-      </div>
+      </div> */}
       <div
         ref={textRef}
         className={[
