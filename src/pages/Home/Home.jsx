@@ -4076,7 +4076,8 @@ const Home = ({
 
       const SECTIONS = 5; // Still 5 sections (Scene1, SceneNew, Scene1_2, Scene1_1, Scene1_4)
       const SCROLL_PER_SECTION = 8;
-      const vh = Math.max(window.innerHeight, 400);
+      // Cap viewport height to 1080 to prevent excessive scrolling on large screens like MacBook 16
+      const vh = Math.max(Math.min(window.innerHeight, 1080), 400);
       const scrollLength = vh * SECTIONS * SCROLL_PER_SECTION;
 
       const master = gsap.timeline({ paused: true });

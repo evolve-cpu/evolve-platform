@@ -150,7 +150,8 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     () => {
       tl.to(
         refs.doorHands,
-        { y: "-60vh", duration: 0.8, ease: "power2.inOut" },
+        // { y: "-60vh", duration: 0.8, ease: "power2.inOut" },change
+        { y: "-40vh", duration: 0.8, ease: "power2.inOut" },
         "sixthScroll"
       );
     }
@@ -731,7 +732,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
           if (isTabletLandscape) return "-35vh";
 
           // --- DEFAULT (desktop / mobile) ---
-          return "15vh";
+          return "12vh"; //new change, change from 15vh to 12vh
         },
         duration: 0.8,
         ease: "power2.inOut"
