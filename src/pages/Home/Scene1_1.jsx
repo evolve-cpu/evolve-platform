@@ -5253,7 +5253,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         stopAnimationEnd
       );
     } else {
-      const baseDownwardMovement = 15;
+      const baseDownwardMovement = 25;
       const adjustedY = `${
         baseDownwardMovement * elementMultipliers.downwardY
       }vh`;
@@ -6206,7 +6206,7 @@ export const useScene1_1Timeline = (refs, isMobile) => {
         newTextStart
       );
     } else {
-      const baseDownwardMovement = 15;
+      const baseDownwardMovement = 25;
       const adjustedY = `${
         baseDownwardMovement * elementMultipliers.downwardY
       }vh`;
