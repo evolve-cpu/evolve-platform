@@ -4653,6 +4653,30 @@ const getScreenMultipliers = () => {
   }
 };
 
+// const getElementSlideMultipliers = () => {
+//   const width = window.innerWidth;
+//   const height = window.innerHeight;
+
+//   if (
+//     (width >= 700 && width <= 1368 && height >= 900 && height <= 1300) ||
+//     (height >= 700 && height <= 1180 && width >= 900 && width <= 1400)
+//   ) {
+//     return { downwardY: 0.7 };
+//   }
+
+//   if (width <= 1440) {
+//     return { downwardY: 1.2 };
+//   } else if (width <= 1680 && height <= 1050) {
+//     return { downwardY: 1 };
+//   } else if (width <= 1920 && height <= 1200) {
+//     return { downwardY: -0.5 };
+//   } else if (width <= 2560) {
+//     return { downwardY: 0.5 };
+//   } else {
+//     return { downwardY: 0.4 };
+//   }
+// };
+
 const getElementSlideMultipliers = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -4668,6 +4692,9 @@ const getElementSlideMultipliers = () => {
     return { downwardY: 1.2 };
   } else if (width <= 1680 && height <= 1050) {
     return { downwardY: 1 };
+    // ✅ ADD THIS BLOCK — catches 1727x995 before the 1920 rule
+  } else if (width <= 1730 && height <= 1000) {
+    return { downwardY: 1.4 }; // 👈 tweak this value to taste
   } else if (width <= 1920 && height <= 1200) {
     return { downwardY: -0.5 };
   } else if (width <= 2560) {

@@ -695,6 +695,83 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     //   );
     // }
 
+    // tl.to(
+    //   refs.doorHands,
+    //   {
+    //     y: () => {
+    //       const w = window.innerWidth;
+    //       const h = window.innerHeight;
+
+    //       // --- CUSTOM iPad Pro 11" LANDSCAPE (real Safari viewport) ---
+    //       const isIpadPro11Landscape =
+    //         w >= 1180 &&
+    //         w <= 1210 &&
+    //         h >= 780 &&
+    //         h <= 840 &&
+    //         window.matchMedia("(orientation: landscape)").matches;
+
+    //       if (isIpadPro11Landscape) {
+    //         console.log("Detected: iPad Pro 11-inch Landscape");
+    //         return "12vh"; // <-- your custom value
+    //       }
+
+    //       // --- GENERAL TABLET LANDSCAPE ---
+    //       const isTabletLandscape =
+    //         w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+
+    //       console.log(
+    //         "DoorHands animation - Width:",
+    //         w,
+    //         "Height:",
+    //         h,
+    //         "Tablet:",
+    //         isTabletLandscape
+    //       );
+
+    //       if (isTabletLandscape) return "-35vh";
+
+    //       // --- DEFAULT (desktop / mobile) ---
+    //       return "8vh";
+    //     },
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   "sixthScroll"
+    // );
+    // tl.to(
+    //   refs.doorHands,
+    //   {
+    //     y: () => {
+    //       const w = window.innerWidth;
+    //       const h = window.innerHeight;
+
+    //       // iPad Pro 11" Landscape
+    //       const isIpadPro11Landscape =
+    //         w >= 1180 &&
+    //         w <= 1210 &&
+    //         h >= 780 &&
+    //         h <= 840 &&
+    //         window.matchMedia("(orientation: landscape)").matches;
+
+    //       if (isIpadPro11Landscape) return "12vh";
+
+    //       // Tablet range
+    //       const isTabletLandscape =
+    //         w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+    //       if (isTabletLandscape) return "-35vh";
+
+    //       // ✅ ADD THIS: Wide desktop but shorter height (MacBook 16 type)
+    //       // 1727×995, 1728×913, etc.
+    //       if (w >= 1500 && h <= 1000) return "-44vh"; // pull UP not down
+
+    //       // Default desktop
+    //       return "8vh";
+    //     },
+    //     duration: 0.8,
+    //     ease: "power2.inOut"
+    //   },
+    //   "sixthScroll"
+    // );
     tl.to(
       refs.doorHands,
       {
@@ -702,39 +779,31 @@ export const useScene1_2Timeline = (refs, isMobile) => {
           const w = window.innerWidth;
           const h = window.innerHeight;
 
-          // --- CUSTOM iPad Pro 11" LANDSCAPE (real Safari viewport) ---
+          // iPad Pro 11" Landscape - keep as is
           const isIpadPro11Landscape =
             w >= 1180 &&
             w <= 1210 &&
             h >= 780 &&
             h <= 840 &&
             window.matchMedia("(orientation: landscape)").matches;
+          if (isIpadPro11Landscape) return "12vh";
 
-          if (isIpadPro11Landscape) {
-            console.log("Detected: iPad Pro 11-inch Landscape");
-            return "12vh"; // <-- your custom value
-          }
-
-          // --- GENERAL TABLET LANDSCAPE ---
+          // Tablet range - keep as is
           const isTabletLandscape =
             w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
-
-          console.log(
-            "DoorHands animation - Width:",
-            w,
-            "Height:",
-            h,
-            "Tablet:",
-            isTabletLandscape
-          );
-
           if (isTabletLandscape) return "-35vh";
 
-          // --- DEFAULT (desktop / mobile) ---
-          return "8vh";
-        },
-        duration: 0.8,
-        ease: "power2.inOut"
+          // ✅ REPLACE all hardcoded desktop values with ratio-based calc
+          // aspect ratio tells us how "wide vs tall" the screen is
+          const aspectRatio = w / h;
+
+          // wider and shorter = higher ratio = push UP more
+          // taller screens = lower ratio = can push DOWN more
+          if (aspectRatio > 1.9) return "10vh"; // very wide, short (ultrawide, mac16 squished)
+          if (w >= 1600 && aspectRatio > 1.7) return "-44vh"; // 1727×995 = 1.73 → goes here
+          if (aspectRatio > 1.5) return "8vh"; // standard 16:9 (1920×1080 = 1.77, 1440×900 = 1.6)
+          return "8vh"; // tall-ish desktops
+        }
       },
       "sixthScroll"
     );
