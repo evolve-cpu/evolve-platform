@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+     allowedHosts: true, // ✅ add this
     headers: {
       "Content-Security-Policy":
         "default-src 'self' https:; " +

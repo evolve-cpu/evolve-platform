@@ -526,7 +526,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
   tl.to(
     refs.rays,
     {
-      y: isMobile ? "110vh" : "168vh", // Move down 90%, leaving 10% visible
+      y: isMobile ? "110vh" : "170vh", // Move down 90%, leaving 10% visible
       zIndex: 15,
       duration: 0.2,
       ease: "power2.inOut"
@@ -775,35 +775,69 @@ export const useScene1_2Timeline = (refs, isMobile) => {
     tl.to(
       refs.doorHands,
       {
-        y: () => {
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-
-          // iPad Pro 11" Landscape - keep as is
-          const isIpadPro11Landscape =
-            w >= 1180 &&
-            w <= 1210 &&
-            h >= 780 &&
-            h <= 840 &&
-            window.matchMedia("(orientation: landscape)").matches;
-          if (isIpadPro11Landscape) return "12vh";
-
-          // Tablet range - keep as is
-          const isTabletLandscape =
-            w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
-          if (isTabletLandscape) return "-35vh";
-
-          // ✅ REPLACE all hardcoded desktop values with ratio-based calc
-          // aspect ratio tells us how "wide vs tall" the screen is
-          const aspectRatio = w / h;
-
-          // wider and shorter = higher ratio = push UP more
-          // taller screens = lower ratio = can push DOWN more
-          if (aspectRatio > 1.9) return "10vh"; // very wide, short (ultrawide, mac16 squished)
-          if (w >= 1600 && aspectRatio > 1.7 && h <= 990) return "-42vh"; // 1727×995 = 1.73 → goes here
-          if (aspectRatio > 1.5) return "8vh"; // standard 16:9 (1920×1080 = 1.77, 1440×900 = 1.6)
-          return "8vh"; // tall-ish desktops
-        }
+        // y: () => {
+        //   const w = window.innerWidth;
+        //   const h = window.innerHeight;
+        //   // iPad Pro 11" Landscape - keep as is
+        //   const isIpadPro11Landscape =
+        //     w >= 1180 &&
+        //     w <= 1210 &&
+        //     h >= 780 &&
+        //     h <= 840 &&
+        //     window.matchMedia("(orientation: landscape)").matches;
+        //   if (isIpadPro11Landscape) return "12vh";
+        //   // Tablet range - keep as is
+        //   const isTabletLandscape =
+        //     w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+        //   if (isTabletLandscape) return "-35vh";
+        //   // ✅ REPLACE all hardcoded desktop values with ratio-based calc
+        //   // aspect ratio tells us how "wide vs tall" the screen is
+        //   const aspectRatio = w / h;
+        //   // wider and shorter = higher ratio = push UP more
+        //   // taller screens = lower ratio = can push DOWN more
+        //   if (aspectRatio > 1.9) return "-50vh"; // very wide, short (ultrawide, mac16 squished)
+        //   if (w >= 1500 && aspectRatio > 1.7 && h <= 900) return "-44vh"; // 1727×995 = 1.73 → goes here
+        //   if (aspectRatio > 1.5) return "8vh"; // standard 16:9 (1920×1080 = 1.77, 1440×900 = 1.6)
+        //   return "8vh"; // tall-ish desktops
+        // }
+        // y: () => {
+        //   const w = window.innerWidth;
+        //   const ow = window.outerWidth;
+        //   const h = window.innerHeight;
+        //   const oh = window.outerHeight;
+        //   const aspectRatio = w / h;
+        //   console.log("doorHands calc:", { w, h, aspectRatio });
+        //   const isIpadPro11Landscape =
+        //     w >= 1180 &&
+        //     w <= 1210 &&
+        //     h >= 780 &&
+        //     h <= 840 &&
+        //     window.matchMedia("(orientation: landscape)").matches;
+        //   if (isIpadPro11Landscape) {
+        //     console.log("→ iPad Pro 11 Landscape");
+        //     return "12vh";
+        //   }
+        //   const isTabletLandscape =
+        //     w >= 768 && w <= 1365 && h >= 600 && h <= 1400;
+        //   if (isTabletLandscape) {
+        //     console.log("→ Tablet");
+        //     return "-35vh";
+        //   }
+        //   if (aspectRatio > 1.9) {
+        //     console.log("→ Ultrawide");
+        //     return "-50vh";
+        //   }
+        //   if (ow >= 1600 && aspectRatio > 1.7 && oh <= 1000) {
+        //     console.log("→ Mac16");
+        //     return "-8vh";
+        //   }
+        //   if (ow >= 1366 && ow < 1600) {
+        //     console.log("→ Standard laptop");
+        //     return "5vh";
+        //   }
+        //   console.log("→ Default");
+        //   return "8vh";
+        // }
       },
       "sixthScroll"
     );
@@ -1366,7 +1400,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
           ref={doorHandsRef}
           style={{
             opacity: 0,
-            top: isMobile ? "60vh" : "",
+            top: isMobile ? "60vh" : "60vh",
             width: isMobile ? "100vw" : "90vw",
             height: "auto"
           }}
