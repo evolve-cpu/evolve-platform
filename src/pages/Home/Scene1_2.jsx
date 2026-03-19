@@ -800,7 +800,7 @@ export const useScene1_2Timeline = (refs, isMobile) => {
           // wider and shorter = higher ratio = push UP more
           // taller screens = lower ratio = can push DOWN more
           if (aspectRatio > 1.9) return "10vh"; // very wide, short (ultrawide, mac16 squished)
-          if (w >= 1600 && aspectRatio > 1.7) return "-44vh"; // 1727×995 = 1.73 → goes here
+          if (w >= 1600 && aspectRatio > 1.7 && h <= 990) return "-42vh"; // 1727×995 = 1.73 → goes here
           if (aspectRatio > 1.5) return "8vh"; // standard 16:9 (1920×1080 = 1.77, 1440×900 = 1.6)
           return "8vh"; // tall-ish desktops
         }
