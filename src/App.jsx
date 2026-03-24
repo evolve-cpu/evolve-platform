@@ -1034,6 +1034,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 // Eager load only Home page (critical)
 import Home from "./pages/Home/Home";
@@ -1447,6 +1448,7 @@ const App = () => {
       <BrowserRouter>
         <AppLayout />
       </BrowserRouter>
+      <Analytics />
       {/* </TooltipProvider> */}
     </QueryClientProvider>
   );
