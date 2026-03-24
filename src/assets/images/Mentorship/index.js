@@ -13,6 +13,8 @@ import left_eye_ribbon from "./left_eye_ribbon.svg";
 import left_eye_ribbon_mobile from "./left_eye_ribbon_mobile.svg";
 import right_eye_ribbon from "./right_eye_ribbon.svg";
 import right_eye_ribbon_mobile from "./right_eye_ribbon_mobile.svg";
+import mentorship_vector from "./mentorship_vector.svg";
+import mentorship_vector_mobile from "./mentorship_vector_mobile.svg";
 
 export {
   hero_mentorship,
@@ -29,5 +31,7 @@ export {
   left_eye_ribbon,
   left_eye_ribbon_mobile,
   right_eye_ribbon,
-  right_eye_ribbon_mobile
+  right_eye_ribbon_mobile,
+  mentorship_vector,
+  mentorship_vector_mobile
 };

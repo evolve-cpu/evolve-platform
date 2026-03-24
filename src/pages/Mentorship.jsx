@@ -17,7 +17,9 @@ import {
   right_eye_ribbon,
   left_eye_ribbon,
   right_eye_ribbon_mobile,
-  left_eye_ribbon_mobile
+  left_eye_ribbon_mobile,
+  mentorship_vector,
+  mentorship_vector_mobile
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
@@ -49,6 +51,36 @@ const TESTIMONIALS = [
       "i'm thankful to yagnesh for his invaluable perspectives. the practical advice he provided on navigating the job search process was truly valuable. his positive outlook on the design industry and his insights on how my background in creative direction can contribute to product design have significantly bolstered my confidence. i eagerly anticipate further sessions with him in the future.",
     name: "chinmay zinjal",
     role: "chemical engineering student, IIT Guwahati"
+  }
+];
+
+/* ─────────────────────────────────────────────
+   FAQ data
+───────────────────────────────────────────── */
+const FAQS = [
+  {
+    q: "who is this for?",
+    a: "design freshers, recent grads, career switchers, mid level designers... freshers are preferred, but we welcome anyone serious about finding clarity in their design career."
+  },
+  {
+    q: "how long does the mentorship run?",
+    a: "5 sessions of ~60 minutes each, spread across 2–3 months. the pace is deliberate — space between sessions matters."
+  },
+  {
+    q: "what do i walk away with?",
+    a: "a targeted resume, a structured portfolio, a shortlist of real companies and roles, and interview preparation specific to your goals."
+  },
+  {
+    q: "what happens after the sessions end?",
+    a: "support doesn't stop. you'll have ongoing access as you apply. we stay in your corner until you land."
+  },
+  {
+    q: "do i need prior design experience?",
+    a: "no. freshers are preferred. if you're serious about a design career and willing to put in the work, that's enough to start."
+  },
+  {
+    q: "how many people are in each batch?",
+    a: "maximum 5. this is intentional — small means you actually get attention, not a seat at the back of a room."
   }
 ];
 
@@ -588,6 +620,7 @@ const Mentorship = () => {
   const [applyHover, setApplyHover] = useState(false);
   const [howHover, setHowHover] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [openFAQ, setOpenFAQ] = useState(null);
 
   // CTA marquee refs
   const marqueeRef = useRef(null);
@@ -1562,6 +1595,340 @@ const Mentorship = () => {
           // style={{ height: "clamp(140px, 28vw, 220px)" }}
         />
         <MarqueeStrip isMobile={true} />
+      </section>
+
+      {/* ================= SECTION 9 — FAQ (Desktop) ================= */}
+      <section className="hidden md:flex bg-evolve-yellow min-h-screen">
+        {/* Left 35% — heading */}
+        <div
+          className="flex-shrink-0 flex flex-col"
+          style={{
+            width: "35%",
+            paddingTop: "clamp(80px, 10vh, 140px)",
+            paddingLeft: "clamp(40px, 5vw, 80px)",
+            paddingRight: "clamp(24px, 2vw, 40px)"
+          }}
+        >
+          <h2
+            className="font-extrabold lowercase text-black"
+            style={{
+              fontSize: "clamp(64px, 7vw, 96px)",
+              lineHeight: "1.05",
+              letterSpacing: "-0.53px"
+            }}
+          >
+            good
+            <br />
+            to know.
+          </h2>
+        </div>
+
+        {/* Right 65% — accordion */}
+        <div
+          className="flex-1 flex items-center"
+          style={{
+            paddingRight: "clamp(40px, 5vw, 80px)",
+            paddingTop: "clamp(48px, 6vh, 80px)",
+            paddingBottom: "clamp(48px, 6vh, 80px)"
+          }}
+        >
+          <div className="w-full">
+            {FAQS.map((item, i) => (
+              <div key={i}>
+                <div
+                  className="flex items-center justify-between cursor-pointer"
+                  style={{
+                    paddingTop: "clamp(20px, 4vh, 32px)",
+                    paddingBottom: "clamp(20px, 4vh, 32px)"
+                  }}
+                  onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+                >
+                  <span
+                    className="font-semibold lowercase text-black"
+                    style={{
+                      fontSize: "34px",
+                      letterSpacing: "-0.02em",
+                      lineHeight: "1.2"
+                    }}
+                  >
+                    {item.q}
+                  </span>
+                  <span className="ml-4 flex-shrink-0">
+                    <svg
+                      width="34"
+                      height="34"
+                      viewBox="0 0 32 32"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        transform:
+                          openFAQ === i ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.25s ease"
+                      }}
+                    >
+                      <path
+                        d="M8 12L16 20L24 12"
+                        stroke="black"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                {openFAQ === i && (
+                  <p
+                    className="font-normal lowercase text-black"
+                    style={{
+                      fontSize: "29px",
+                      lineHeight: "1.4",
+                      letterSpacing: "-0.02em",
+                      paddingBottom: "clamp(20px, 2.5vh, 32px)"
+                    }}
+                  >
+                    {item.a}
+                  </p>
+                )}
+                {i !== FAQS.length - 1 && (
+                  <div
+                    style={{
+                      height: "1px",
+                      backgroundColor: "#000000",
+                      width: "100%"
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 9 — FAQ (Mobile) ================= */}
+      <section
+        className="block md:hidden bg-evolve-yellow"
+        style={{
+          padding: "clamp(40px, 10vw, 64px) 20px clamp(48px, 10vw, 72px)"
+        }}
+      >
+        <h2
+          className="font-extrabold lowercase text-black"
+          style={{
+            fontSize: "clamp(40px, 12vw, 56px)",
+            lineHeight: "1.05",
+            letterSpacing: "-0.53px",
+            marginBottom: "clamp(28px, 7vw, 40px)"
+          }}
+        >
+          good
+          <br />
+          to know.
+        </h2>
+        <div className="w-full">
+          {FAQS.map((item, i) => (
+            <div key={i}>
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                style={{ paddingTop: "20px", paddingBottom: "20px" }}
+                onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+              >
+                <span
+                  className="font-semibold lowercase text-black"
+                  style={{
+                    fontSize: "clamp(17px, 5vw, 22px)",
+                    letterSpacing: "-0.02em",
+                    lineHeight: "1.2"
+                  }}
+                >
+                  {item.q}
+                </span>
+                <span className="ml-3 flex-shrink-0">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      transform:
+                        openFAQ === i ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.25s ease"
+                    }}
+                  >
+                    <path
+                      d="M8 12L16 20L24 12"
+                      stroke="black"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              {openFAQ === i && (
+                <p
+                  className="font-normal lowercase text-black"
+                  style={{
+                    fontSize: "clamp(15px, 4.5vw, 19px)",
+                    lineHeight: "1.4",
+                    letterSpacing: "-0.02em",
+                    paddingBottom: "20px"
+                  }}
+                >
+                  {item.a}
+                </p>
+              )}
+              {i !== FAQS.length - 1 && (
+                <div
+                  style={{
+                    height: "1px",
+                    backgroundColor: "#000000",
+                    width: "100%"
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= SECTION 10 — CLOSING CTA (Desktop) ================= */}
+      <section className="hidden md:flex relative bg-evolve-lavender-indigo overflow-hidden flex-col items-center justify-center min-h-screen">
+        {/* Content — vertically & horizontally centered */}
+        <div
+          className="relative z-10 flex flex-col  items-center text-center max-w-[50%] px-8"
+          style={{ paddingBottom: "clamp(120px, 18vh, 200px)" }}
+        >
+          {/* Batch heading */}
+          <h2
+            className="font-extrabold  lowercase text-evolve-yellow"
+            style={{
+              fontSize: "clamp(72px, 6vw, 128px)",
+              lineHeight: "0.9",
+              letterSpacing: "-0.03em"
+            }}
+          >
+            batch starts on 16th april
+          </h2>
+
+          {/* Limited seats */}
+          <p
+            className="font-normal lowercase text-white"
+            style={{
+              fontSize: "clamp(28px, 3vw, 48px)",
+              letterSpacing: "-3px",
+              marginTop: "clamp(16px, 2vh, 28px)"
+            }}
+          >
+            limited seats
+          </p>
+
+          {/* Applications close */}
+          <p
+            className="font-extrabold lowercase text-white"
+            style={{
+              fontSize: "clamp(28px, 3vw, 48px)",
+              letterSpacing: "-0.5px",
+              marginTop: "clamp(32px, 4vh, 56px)",
+              lineHeight: "1.1"
+            }}
+          >
+            applications close on 12th april
+          </p>
+
+          {/* Tagline */}
+          <p
+            className="font-normal lowercase text-white"
+            style={{
+              fontSize: "clamp(20px, 2vw, 32px)",
+              lineHeight: "1.2",
+              marginTop: "clamp(24px, 3vh, 40px)",
+              maxWidth: "60ch"
+            }}
+          >
+            if you're serious about your design career,
+            <br />
+            this is where to start.
+          </p>
+
+          {/* CTA button */}
+          <GetStartedButton />
+        </div>
+
+        {/* Bottom vector — full width */}
+        <img
+          src={mentorship_vector}
+          alt=""
+          className="absolute -bottom-[3rem] left-0 w-full z-0 block"
+        />
+      </section>
+
+      {/* ================= SECTION 10 — CLOSING CTA (Mobile) ================= */}
+      <section className="flex md:hidden relative bg-evolve-lavender-indigo overflow-hidden min-h-screen flex-col items-center justify-center">
+        <div
+          className="relative z-10 flex flex-col items-center text-center px-5"
+          style={{ paddingBottom: "clamp(100px, 32vw, 160px)" }}
+        >
+          {/* Batch heading */}
+          <h2
+            className="font-extrabold lowercase text-evolve-yellow"
+            style={{
+              fontSize: "clamp(44px, 12vw, 64px)",
+              lineHeight: "1.05",
+              letterSpacing: "-0.03em"
+            }}
+          >
+            batch starts on 16th april
+          </h2>
+
+          {/* Limited seats */}
+          <p
+            className="font-normal lowercase text-white"
+            style={{
+              fontSize: "clamp(20px, 5.5vw, 28px)",
+              letterSpacing: "-1px",
+              marginTop: "clamp(10px, 3vw, 18px)"
+            }}
+          >
+            limited seats
+          </p>
+
+          {/* Applications close */}
+          <p
+            className="font-extrabold lowercase text-white"
+            style={{
+              fontSize: "clamp(20px, 5.5vw, 28px)",
+              letterSpacing: "-0.5px",
+              marginTop: "clamp(20px, 6vw, 36px)",
+              lineHeight: "1.15"
+            }}
+          >
+            applications close on 12th april
+          </p>
+
+          {/* Tagline */}
+          <p
+            className="font-normal lowercase text-white"
+            style={{
+              fontSize: "clamp(16px, 4.5vw, 22px)",
+              lineHeight: "1.4",
+              marginTop: "clamp(16px, 5vw, 28px)",
+              maxWidth: "36ch"
+            }}
+          >
+            if you're serious about your design career, this is where to start.
+          </p>
+
+          {/* CTA button */}
+          <GetStartedButton />
+        </div>
+
+        {/* Bottom vector — full width */}
+        <img
+          src={mentorship_vector_mobile}
+          alt=""
+          className="absolute bottom-0 left-0 w-full z-0 block"
+        />
       </section>
     </div>
   );
