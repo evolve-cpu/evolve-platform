@@ -2558,8 +2558,9 @@ import {
 
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 import { useAuth } from "../hooks/useAuth";
-import { handleSignIn } from "../auth/signInLogic";
+// import { handleSignIn } from "../auth/signInLogic"; // old guest sign-in — replaced by AuthModal
 import { supabase } from "../supabaseClient";
+import AuthModal from "./AuthModal";
 
 const MIXED_BL = 16;
 const MIXED_BR = 16;
@@ -2567,6 +2568,7 @@ const MIXED_BR = 16;
 const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -2589,7 +2591,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     user?.avatar_url ||
     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "user"}`;
 
-  const fullName = user?.username || "";
+  const fullName = user?.name || "";
 
   const firstName = useMemo(() => {
     if (!fullName) return "";
@@ -2932,13 +2934,10 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   ref={accountBtnRef}
                   disabled={authLoading}
                   onClick={() => {
-                    // not logged in → guest signin
-                    if (!user) return handleSignIn(setUser, setAuthLoading);
+                    // not logged in → open sign-in modal
+                    if (!user) return setAuthModalOpen(true);
 
-                    // guest user → ignore for now
-                    if (user?.is_guest) return;
-
-                    // full user → open modal
+                    // logged-in user → open account dropdown
                     if (!accountOpen) openAccountModal();
                     else setAccountOpen(false);
                   }}
@@ -2972,7 +2971,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
       {accountOpen &&
         user &&
-        !user.is_guest &&
         ReactDOM.createPortal(
           <>
             {/* click outside */}
@@ -3015,7 +3013,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 />
 
                 <p className="text-black font-extrabold text-[20px] mt-4">
-                  {user.username}
+                  {user.name}
                 </p>
 
                 <p className="text-black font-normal text-[14px] mt-1">
@@ -3035,7 +3033,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         )}
 
       {/* ✅ MOBILE ACCOUNT MODAL */}
-      {accountOpen && user && !user.is_guest && (
+      {accountOpen && user && (
         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/40"
@@ -3069,7 +3067,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
             />
 
             <p className="text-black font-extrabold text-[18px] mt-4">
-              {user.username}
+              {user.name}
             </p>
 
             <p className="text-black font-normal text-[14px] mt-1">
@@ -3240,6 +3238,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
           />
         </div>
       </div>
+
+      {/* AUTH MODAL */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        user={user}
+      />
     </>
   );
 };
