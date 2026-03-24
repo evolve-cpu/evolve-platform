@@ -1289,11 +1289,13 @@ const AppLayout = () => {
 
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          cancel_on_tap_outside: false,
           callback: async (response) => {
-            await supabase.auth.signInWithIdToken({
+            const { error } = await supabase.auth.signInWithIdToken({
               provider: "google",
               token: response.credential
             });
+            if (error) console.error("One Tap sign-in error:", error);
           }
         });
       };
@@ -1309,19 +1311,20 @@ const AppLayout = () => {
     }
   }, [isLoading, googleScriptLoaded]);
 
-  // Prompt Google One Tap (only when navbar is shown)
+  // Prompt Google One Tap (only when navbar is shown and user not logged in)
   useEffect(() => {
     if (!showNavbar || !googleScriptLoaded) return;
 
-    const promptGoogleOneTap = () => {
+    const promptGoogleOneTap = async () => {
       if (!window.google?.accounts?.id) return;
+
+      // Don't show if user is already signed in
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) return;
 
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed()) {
-          console.log(
-            "One Tap not displayed:",
-            notification.getNotDisplayedReason()
-          );
+          console.log("One Tap not displayed:", notification.getNotDisplayedReason());
         }
         if (notification.isSkippedMoment()) {
           console.log("One Tap skipped:", notification.getSkippedReason());
@@ -1329,9 +1332,16 @@ const AppLayout = () => {
       });
     };
 
-    // Delay One Tap prompt
+    // Cancel One Tap as soon as user signs in (any method)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) window.google?.accounts?.id?.cancel();
+    });
+
     const timeoutId = setTimeout(promptGoogleOneTap, 1000);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      authListener.subscription.unsubscribe();
+    };
   }, [showNavbar, googleScriptLoaded]);
 
   return (
