@@ -235,7 +235,14 @@ export function useAuth() {
 
   useEffect(() => {
     // 1. restore existing session on mount
+    // clean OAuth callback params AFTER getSession() so Supabase can exchange the code first
     supabase.auth.getSession().then(({ data }) => {
+      // window.location.hash returns "" for a bare "#" — use href.includes instead
+      const hasFragment = window.location.href.includes("#");
+      const hasCode = new URLSearchParams(window.location.search).has("code");
+      if (hasFragment || hasCode) {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
       const authUser = data?.session?.user;
       if (authUser) loadProfile(authUser);
       else setAuthLoading(false);
@@ -243,6 +250,11 @@ export function useAuth() {
 
     // 2. react to every future sign-in / sign-out
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const hasFragment = window.location.href.includes("#");
+      const hasCode = new URLSearchParams(window.location.search).has("code");
+      if (hasFragment || hasCode) {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
       const authUser = session?.user;
       if (authUser) loadProfile(authUser);
       else { setUser(null); setAuthLoading(false); }

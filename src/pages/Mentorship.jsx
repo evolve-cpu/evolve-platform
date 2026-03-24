@@ -925,10 +925,10 @@ const Mentorship = () => {
         <img
           src={mentor_yagnesh}
           alt="Yagnesh Ahir"
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 object-contain object-bottom"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-10 object-contain object-bottom"
           style={{ height: "82%", width: "72%", maxWidth: "340px" }}
         />
-        <div className="relative z-20 flex flex-col px-5 pt-[30%]">
+        <div className="relative z-20 flex flex-col px-5 pt-[10%]">
           <h2
             className="text-black font-extrabold lowercase text-center w-full leading-tight"
             style={{
