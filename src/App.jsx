@@ -1282,22 +1282,36 @@ const AppLayout = () => {
       script.async = true;
       script.defer = true;
 
-      script.onload = () => {
-        setGoogleScriptLoaded(true);
+      script.onload = async () => {
+        if (!window.google) { setGoogleScriptLoaded(true); return; }
 
-        if (!window.google) return;
+        // Generate nonce: raw for signInWithIdToken, hashed for Google initialize
+        const rawNonce = btoa(
+          String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))
+        );
+        const hashBuffer = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(rawNonce)
+        );
+        const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+          .map(b => b.toString(16).padStart(2, "0"))
+          .join("");
 
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          nonce: hashedNonce,
           cancel_on_tap_outside: false,
           callback: async (response) => {
             const { error } = await supabase.auth.signInWithIdToken({
               provider: "google",
-              token: response.credential
+              token: response.credential,
+              nonce: rawNonce
             });
             if (error) console.error("One Tap sign-in error:", error);
           }
         });
+
+        setGoogleScriptLoaded(true);
       };
 
       document.body.appendChild(script);
