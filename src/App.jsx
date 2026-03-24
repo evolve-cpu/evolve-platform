@@ -1063,6 +1063,7 @@ import CollegeActivationVerify from "./pages/College_Activity_Page/CollegeActiva
 import AdminLogin from "./pages/admn/AdminLogin.jsx";
 import AdminDashboard from "./pages/admn/AdminDashboard.jsx";
 import AdminGuard from "./routes/AdminGuard.jsx";
+import Mentorship from "./pages/Mentorship.jsx";
 
 const queryClient = new QueryClient();
 
@@ -1418,6 +1419,7 @@ const AppLayout = () => {
             <Route path="/webinars" element={<Webinars />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/course" element={<Course />} />
             <Route path="/what-is-design" element={<WhatIsDesign />} />
             <Route path="*" element={<NotFound />} />

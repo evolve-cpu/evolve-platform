@@ -17,6 +17,7 @@ export default {
         bricolage: "Bricolage Grotesque, sans-serif",
         rg: "Random Grotesque",
         montserrat: "'Montserrat', sans-serif",
+        paralucent: "'Paralucent', sans-serif",
       },
       backgroundColor: {
         "input-field": "rgba(45, 45, 46,1)",

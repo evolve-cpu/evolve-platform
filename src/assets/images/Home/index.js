@@ -267,6 +267,7 @@ import door_closeup_mobile from "./door_closeup_mobile.svg";
 
 // ========== HIGH PRIORITY (Scene 1_1 - Second Screen) ==========
 // These load second - visible on first scroll
+import logo_main from "./logo_main.svg";
 import floor_2nd from "./floor_2nd.svg";
 import floor_2nd_mobile from "./floor_2nd_mobile.svg";
 import left_cloud from "./left_cloud.svg";
@@ -300,6 +301,8 @@ import left_element_eye from "./left_element_eye.svg";
 import left_element_eye_mobile from "./left_element_eye_mobile.svg";
 import right_element_eye from "./right_element_eye.svg";
 import right_element_eye_mobile from "./right_element_eye_mobile.svg";
+import vector_1_scenenew from "./vector_1_scenenew.svg";
+import curvey_circle_with_text from "./curvey_circle_with_text.svg";
 
 // ========== LOW PRIORITY (Scenes 2, 3, 4) ==========
 // These load last - only visible after scrolling
@@ -430,6 +433,7 @@ export {
   vector_2nd_mobile,
   left_thunder_mobile,
   right_thunder_mobile,
+  logo_main,
 
   // Medium Priority - Scene 1_1 Interactive
   left_element,
@@ -446,6 +450,8 @@ export {
   left_element_eye_mobile,
   right_element_eye,
   right_element_eye_mobile,
+  vector_1_scenenew,
+  curvey_circle_with_text,
 
   // Low Priority - Later Scenes
   left_wall,
