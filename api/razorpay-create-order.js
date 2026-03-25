@@ -12,6 +12,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // verify env vars are present
+    if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+    if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+    if (!process.env.SUPABASE_URL) return res.status(500).json({ error: "SUPABASE_URL missing" });
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
+
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { plan, phone, token } = body || {};
 
