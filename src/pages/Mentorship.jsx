@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import AuthModal from "../components/AuthModal";
 import gsap from "gsap";
 import {
   hero_mentorship,
@@ -23,6 +25,7 @@ import {
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
+import { supabase } from "../supabaseClient";
 
 /* ─────────────────────────────────────────────
    Testimonial data
@@ -49,8 +52,8 @@ const TESTIMONIALS = [
   {
     quote:
       "i'm thankful to yagnesh for his invaluable perspectives. the practical advice he provided on navigating the job search process was truly valuable. his positive outlook on the design industry and his insights on how my background in creative direction can contribute to product design have significantly bolstered my confidence. i eagerly anticipate further sessions with him in the future.",
-    name: "chinmay zinjal",
-    role: "chemical engineering student, IIT Guwahati"
+    name: "Pradyumna K S ",
+    role: "Product Designer, Kraverich"
   }
 ];
 
@@ -220,7 +223,7 @@ const TestimonialsMobile = () => {
    NOTE: uses apply_now_button / apply_now_button_hover
    from module-level imports above
 ───────────────────────────────────────────── */
-const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight }) => {
+const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight, onPay }) => {
   const [hover, setHover] = useState(false);
 
   return (
@@ -328,6 +331,7 @@ const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight }) => {
       <img
         src={hover ? apply_now_button_hover : apply_now_button}
         alt="apply now"
+        onClick={() => onPay(tier)}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         className="cursor-pointer transition-opacity duration-150"
@@ -345,7 +349,7 @@ const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight }) => {
    NOTE: uses apply_now_button / apply_now_button_hover
    from module-level imports above
 ───────────────────────────────────────────── */
-const PlanCardMobile = ({ tier, cutPrice, price, tagline, features }) => {
+const PlanCardMobile = ({ tier, cutPrice, price, tagline, features, onPay }) => {
   const [hover, setHover] = useState(false);
 
   return (
@@ -441,6 +445,7 @@ const PlanCardMobile = ({ tier, cutPrice, price, tagline, features }) => {
       <img
         src={hover ? apply_now_button_hover : apply_now_button}
         alt="apply now"
+        onClick={() => onPay(tier)}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         className="cursor-pointer transition-opacity duration-150"
@@ -511,9 +516,29 @@ const initMarquee = (groupRef, trackRef) => {
 };
 
 /* ─────────────────────────────────────────────
+   Helpers
+───────────────────────────────────────────── */
+function ordinalDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDate();
+  const sfx =
+    day >= 11 && day <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[day % 10] || "th";
+  const month = d.toLocaleString("en-US", { month: "long" }).toLowerCase();
+  return `${day}${sfx} ${month}`;
+}
+
+function closeDateLabel(startDateStr) {
+  const d = new Date(startDateStr + "T00:00:00");
+  d.setDate(d.getDate() - 4);
+  return ordinalDate(d.toISOString().split("T")[0]);
+}
+
+/* ─────────────────────────────────────────────
    MarqueeStrip — self-contained marquee band
 ───────────────────────────────────────────── */
-const MarqueeStrip = ({ isMobile }) => {
+const MarqueeStrip = ({ isMobile, spotsText, batchLabel }) => {
   const trackRef = useRef(null);
   const groupRef = useRef(null);
 
@@ -548,7 +573,7 @@ const MarqueeStrip = ({ isMobile }) => {
               isMobile ? "text-3xl" : "text-5xl"
             }`}
           >
-            batch starts on 16th april
+            {`batch starts on ${batchLabel}`}
           </span>
           <img
             src={marquee_vector_2}
@@ -560,7 +585,7 @@ const MarqueeStrip = ({ isMobile }) => {
               isMobile ? "text-3xl" : "text-5xl"
             }`}
           >
-            only 5 spots left
+            {spotsText}
           </span>
           <img
             src={marquee_vector_2}
@@ -572,7 +597,7 @@ const MarqueeStrip = ({ isMobile }) => {
               isMobile ? "text-3xl" : "text-5xl"
             }`}
           >
-            batch starts on 16th april
+            {`batch starts on ${batchLabel}`}
           </span>
           <img
             src={marquee_vector_2}
@@ -584,7 +609,7 @@ const MarqueeStrip = ({ isMobile }) => {
               isMobile ? "text-3xl" : "text-5xl"
             }`}
           >
-            only 5 spots left
+            {spotsText}
           </span>
         </div>
       </div>
@@ -621,6 +646,22 @@ const Mentorship = () => {
   const [howHover, setHowHover] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
+  const [batch, setBatch] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [payingPlan, setPayingPlan] = useState(null);   // plan being set up
+  const [paySuccess, setPaySuccess] = useState(false);
+  const [phoneModal, setPhoneModal] = useState(null);   // plan waiting for phone
+  const [phoneInput, setPhoneInput] = useState("");
+
+  const { user } = useAuth();
+
+  // derived batch values (fallback to hardcoded while loading)
+  const batchFull = batch !== null && batch.spots_remaining <= 0;
+  const spotsLeft = batchFull ? 0 : (batch?.spots_remaining ?? 5);
+  const batchLabel = batch ? ordinalDate(batch.start_date) : "16th april";
+  const closeLabel = batch ? closeDateLabel(batch.start_date) : "12th april";
+  // shown in marquee + CTA when batch is full or no open batch
+  const spotsText = batchFull ? "batch full — next batch coming soon" : `only ${spotsLeft} spots left`;
 
   // CTA marquee refs
   const marqueeRef = useRef(null);
@@ -640,6 +681,15 @@ const Mentorship = () => {
   }, []);
 
   useEffect(() => {
+    supabase
+      .from("batch_spots")
+      .select("*")
+      .eq("status", "open")
+      .single()
+      .then(({ data }) => { if (data) setBatch(data); });
+  }, []);
+
+  useEffect(() => {
     return initMarquee(marqueeGroupRef, marqueeTrackRef);
   }, []);
 
@@ -647,6 +697,73 @@ const Mentorship = () => {
     if (isMobile) return;
     return initMarquee(pricingMarqueeGroupRef, pricingMarqueeTrackRef);
   }, [isMobile]);
+
+  // load Razorpay checkout script on demand
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) { resolve(true); return; }
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.body.appendChild(s);
+    });
+
+  // step 1: clicking "apply now"
+  const handlePayment = (plan) => {
+    if (!user) { setAuthModalOpen(true); return; }
+    if (batchFull) { alert("this batch is full. the next batch opens soon."); return; }
+    // if user already has a phone saved, skip the phone modal
+    if (user.phone) {
+      triggerRazorpay(plan, user.phone);
+    } else {
+      setPhoneInput("");
+      setPhoneModal(plan);
+    }
+  };
+
+  // step 2: after phone is confirmed, open Razorpay
+  const triggerRazorpay = async (plan, phone) => {
+    try {
+      setPayingPlan(plan);
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded) { alert("razorpay failed to load. check your internet."); setPayingPlan(null); return; }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { setAuthModalOpen(true); setPayingPlan(null); return; }
+
+      const res = await fetch("/api/razorpay-create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, phone, token: session.access_token })
+      });
+      if (!res.ok) throw new Error("failed to create order");
+      const { order_id, amount, currency } = await res.json();
+
+      const rzp = new window.Razorpay({
+        key: import.meta.env.VITE_RAZORPAY_API_KEY,
+        amount: String(amount),
+        currency,
+        name: "Evolve Design",
+        description: `Mentorship — ${plan === "starter" ? "Starter" : "Accelerator"} Plan`,
+        order_id,
+        prefill: { name: user.name || "", email: user.email || "", contact: phone },
+        theme: { color: "#FFD600" },
+        handler: () => { setPaySuccess(true); setPayingPlan(null); },
+        modal: { ondismiss: () => setPayingPlan(null) }
+      });
+      rzp.on("payment.failed", () => {
+        alert("payment failed. please try again.");
+        setPayingPlan(null);
+      });
+      rzp.open();
+    } catch (err) {
+      console.error("payment error:", err);
+      alert("something went wrong. please try again.");
+      setPayingPlan(null);
+    }
+  };
 
   const starterFeatures = [
     "5 group sessions (~60 min each)",
@@ -792,7 +909,7 @@ const Mentorship = () => {
               <span
                 className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
               >
-                batch starts on 16th april
+                {`batch starts on ${batchLabel}`}
               </span>
               <img
                 src={marquee_vector_2}
@@ -802,7 +919,7 @@ const Mentorship = () => {
               <span
                 className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
               >
-                only 5 spots left
+                {spotsText}
               </span>
               <img
                 src={marquee_vector_2}
@@ -812,7 +929,7 @@ const Mentorship = () => {
               <span
                 className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
               >
-                batch starts on 16th april
+                {`batch starts on ${batchLabel}`}
               </span>
             </div>
           </div>
@@ -1172,7 +1289,7 @@ const Mentorship = () => {
               className="font-bold text-white mt-4"
               style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
             >
-              chinmay zinjal
+              Pradyumna K S
             </p>
             <p
               className="font-normal text-white"
@@ -1181,7 +1298,7 @@ const Mentorship = () => {
                 lineHeight: "1.3"
               }}
             >
-              chemical engineering student, IIT Guwahati
+              Product Designer, Kraverich
             </p>
           </div>
         </div>
@@ -1216,7 +1333,7 @@ const Mentorship = () => {
               lineHeight: "1.05"
             }}
           >
-            5 spots.
+            {spotsLeft} spots.
             <br />4 stages.
             <br />5 sessions.
           </h2>
@@ -1372,6 +1489,7 @@ const Mentorship = () => {
               tagline="for those who need a direction on where to start"
               features={starterFeatures}
               isRight={false}
+              onPay={handlePayment}
             />
           </div>
           <div style={{ flex: "0 0 50%" }}>
@@ -1382,6 +1500,7 @@ const Mentorship = () => {
               tagline="for those who have interviews lined up and need to crack it"
               features={acceleratorFeatures}
               isRight={true}
+              onPay={handlePayment}
             />
           </div>
         </div>
@@ -1436,6 +1555,7 @@ const Mentorship = () => {
             price="₹ 15,000"
             tagline="for those who need a direction on where to start"
             features={starterFeatures}
+            onPay={handlePayment}
           />
           <PlanCardMobile
             tier="accelerator"
@@ -1443,6 +1563,7 @@ const Mentorship = () => {
             price="₹ 35,000"
             tagline="for those who have interviews lined up and need to crack it"
             features={acceleratorFeatures}
+            onPay={handlePayment}
           />
         </div>
       </section>
@@ -1528,7 +1649,7 @@ const Mentorship = () => {
           className="absolute bottom-[4rem] left-0 z-20 w-[45%]"
           // style={{ height: "clamp(200px, 30vh, 420px)" }}
         />
-        <MarqueeStrip isMobile={false} />
+        <MarqueeStrip isMobile={false} spotsText={spotsText} batchLabel={batchLabel} />
       </section>
 
       {/* ================= SECTION 8 — WHY WE BUILT THIS (Mobile) ================= */}
@@ -1594,7 +1715,7 @@ const Mentorship = () => {
           className="absolute bottom-[4rem] left-0 z-10 w-auto"
           // style={{ height: "clamp(140px, 28vw, 220px)" }}
         />
-        <MarqueeStrip isMobile={true} />
+        <MarqueeStrip isMobile={true} spotsText={spotsText} batchLabel={batchLabel} />
       </section>
 
       {/* ================= SECTION 9 — FAQ (Desktop) ================= */}
@@ -1808,7 +1929,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            batch starts on 16th april
+            {`batch starts on ${batchLabel}`}
           </h2>
 
           {/* Limited seats */}
@@ -1820,7 +1941,7 @@ const Mentorship = () => {
               marginTop: "clamp(16px, 2vh, 28px)"
             }}
           >
-            limited seats
+            {spotsText}
           </p>
 
           {/* Applications close */}
@@ -1833,7 +1954,7 @@ const Mentorship = () => {
               lineHeight: "1.1"
             }}
           >
-            applications close on 12th april
+            {`applications close on ${closeLabel}`}
           </p>
 
           {/* Tagline */}
@@ -1878,7 +1999,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            batch starts on 16th april
+            {`batch starts on ${batchLabel}`}
           </h2>
 
           {/* Limited seats */}
@@ -1890,7 +2011,7 @@ const Mentorship = () => {
               marginTop: "clamp(10px, 3vw, 18px)"
             }}
           >
-            limited seats
+            {spotsText}
           </p>
 
           {/* Applications close */}
@@ -1903,7 +2024,7 @@ const Mentorship = () => {
               lineHeight: "1.15"
             }}
           >
-            applications close on 12th april
+            {`applications close on ${closeLabel}`}
           </p>
 
           {/* Tagline */}
@@ -1930,6 +2051,83 @@ const Mentorship = () => {
           className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
+
+      {/* Phone number modal — shown when user has no phone saved */}
+      {phoneModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setPhoneModal(null)} />
+          <div className="relative z-10 bg-evolve-yellow border-2 border-black rounded-2xl px-8 py-8 flex flex-col items-start shadow-[8px_8px_0px_rgba(0,0,0,0.25)] w-[90vw] max-w-sm">
+            <button
+              onClick={() => setPhoneModal(null)}
+              className="absolute top-4 right-5 text-black text-2xl font-extrabold"
+            >×</button>
+            <p className="font-extrabold text-black lowercase text-xl leading-tight">
+              one last thing
+            </p>
+            <p className="font-normal text-black/70 lowercase text-sm mt-1">
+              we need your phone number to complete the payment
+            </p>
+            <input
+              type="tel"
+              value={phoneInput}
+              onChange={e => setPhoneInput(e.target.value)}
+              placeholder="+91 98765 43210"
+              className="mt-5 w-full border-2 border-black rounded-xl px-4 py-3 text-black font-semibold text-sm bg-white outline-none focus:ring-2 focus:ring-black"
+            />
+            <button
+              onClick={() => {
+                const cleaned = phoneInput.trim();
+                if (cleaned.length < 10) { alert("please enter a valid phone number"); return; }
+                setPhoneModal(null);
+                triggerRazorpay(phoneModal, cleaned);
+              }}
+              className="mt-4 w-full bg-black text-evolve-yellow font-extrabold lowercase py-3 rounded-xl text-sm"
+            >
+              proceed to payment →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Auth modal — shown when unauthenticated user clicks pay */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        user={user}
+      />
+
+      {/* Payment success banner */}
+      {paySuccess && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setPaySuccess(false)}
+          />
+          <div className="relative z-10 bg-evolve-yellow border-2 border-black rounded-2xl px-10 py-10 flex flex-col items-center text-center shadow-[8px_8px_0px_rgba(0,0,0,0.25)] max-w-sm mx-4">
+            <p className="font-extrabold text-black lowercase text-3xl leading-tight">
+              you're in. 🎉
+            </p>
+            <p className="font-normal text-black lowercase text-base mt-3 max-w-[28ch]">
+              payment received. check your account for your receipt.
+            </p>
+            <button
+              onClick={() => setPaySuccess(false)}
+              className="mt-6 bg-black text-evolve-yellow font-extrabold lowercase px-8 py-3 rounded-xl text-sm"
+            >
+              close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading overlay while payment is being set up */}
+      {payingPlan && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30">
+          <div className="bg-evolve-yellow border-2 border-black rounded-2xl px-8 py-6 text-black font-extrabold lowercase text-lg">
+            setting up payment…
+          </div>
+        </div>
+      )}
     </div>
   );
 };

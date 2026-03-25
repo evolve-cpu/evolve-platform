@@ -2561,6 +2561,15 @@ import { useAuth } from "../hooks/useAuth";
 // import { handleSignIn } from "../auth/signInLogic"; // old guest sign-in — replaced by AuthModal
 import { supabase } from "../supabaseClient";
 import AuthModal from "./AuthModal";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+
+function ordinalDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDate();
+  const sfx = (day >= 11 && day <= 13) ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[day % 10] || "th");
+  return `${day}${sfx} ${d.toLocaleString("en-US", { month: "long" }).toLowerCase()}`;
+}
 
 const MIXED_BL = 16;
 const MIXED_BR = 16;
@@ -2569,6 +2578,10 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [payment, setPayment] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const receiptDesktopRef = useRef(null);
+  const receiptMobileRef = useRef(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -2721,6 +2734,36 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  // fetch user's latest successful payment when modal opens
+  useEffect(() => {
+    if (!accountOpen || !user) return;
+    setPaymentLoading(true);
+    supabase
+      .from("mentorship_payments")
+      .select("*, batch:mentorship_batches(batch_number, start_date)")
+      .eq("user_id", user.id)
+      .eq("status", "success")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setPayment(data || null);
+        setPaymentLoading(false);
+      });
+  }, [accountOpen, user]);
+
+  const downloadReceipt = async () => {
+    const ref = window.innerWidth >= 768 ? receiptDesktopRef : receiptMobileRef;
+    if (!ref.current || !payment) return;
+    const canvas = await html2canvas(ref.current, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+    const w = canvas.width / 2;
+    const h = canvas.height / 2;
+    const pdf = new jsPDF({ unit: "px", format: [w, h] });
+    pdf.addImage(imgData, "PNG", 0, 0, w, h);
+    pdf.save(`evolve-receipt-${payment.razorpay_payment_id || Date.now()}.pdf`);
   };
 
   // measure navbar height → push menu content below it
@@ -2984,6 +3027,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 hidden md:block
                 fixed z-[9999]
                 w-[340px]
+                max-h-[90vh] overflow-y-auto
                 rounded-[20px]
                 border-[2px] border-black
                 bg-evolve-yellow
@@ -3026,6 +3070,44 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 >
                   log out
                 </button>
+
+                {/* ── RECEIPT ── */}
+                {paymentLoading ? (
+                  <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>
+                ) : payment ? (
+                  <>
+                    <div
+                      ref={receiptDesktopRef}
+                      className="mt-5 w-full bg-white rounded-xl border border-black/15 p-4 text-left"
+                    >
+                      <p className="font-extrabold text-black text-[10px] uppercase tracking-widest mb-3 text-center">
+                        evolve mentorship · receipt
+                      </p>
+                      <div className="w-full h-px bg-black/10 mb-3" />
+                      {[
+                        ["plan", payment.plan === "starter" ? "starter" : "accelerator"],
+                        ["amount paid", `₹${Number(payment.amount).toLocaleString("en-IN")}`],
+                        ["date", new Date(payment.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
+                        ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
+                        ["starts on", payment.batch?.start_date ? ordinalDate(payment.batch.start_date) : "—"],
+                        ["ref", payment.razorpay_payment_id || "—"],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex justify-between items-start gap-3 mb-2">
+                          <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">{label}</span>
+                          <span className="text-black font-semibold text-[11px] text-right break-all">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={downloadReceipt}
+                      className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+                    >
+                      download receipt ↓
+                    </button>
+                  </>
+                ) : (
+                  <p className="mt-5 text-black/40 text-[13px]">no payments yet</p>
+                )}
               </div>
             </div>
           </>,
@@ -3080,6 +3162,44 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
             >
               log out
             </button>
+
+            {/* ── RECEIPT ── */}
+            {paymentLoading ? (
+              <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>
+            ) : payment ? (
+              <>
+                <div
+                  ref={receiptMobileRef}
+                  className="mt-5 w-full bg-white rounded-xl border border-black/15 p-4 text-left"
+                >
+                  <p className="font-extrabold text-black text-[10px] uppercase tracking-widest mb-3 text-center">
+                    evolve mentorship · receipt
+                  </p>
+                  <div className="w-full h-px bg-black/10 mb-3" />
+                  {[
+                    ["plan", payment.plan === "starter" ? "starter" : "accelerator"],
+                    ["amount paid", `₹${Number(payment.amount).toLocaleString("en-IN")}`],
+                    ["date", new Date(payment.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
+                    ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
+                    ["starts on", payment.batch?.start_date ? ordinalDate(payment.batch.start_date) : "—"],
+                    ["ref", payment.razorpay_payment_id || "—"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex justify-between items-start gap-3 mb-2">
+                      <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">{label}</span>
+                      <span className="text-black font-semibold text-[11px] text-right break-all">{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={downloadReceipt}
+                  className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+                >
+                  download receipt ↓
+                </button>
+              </>
+            ) : (
+              <p className="mt-5 text-black/40 text-[13px]">no payments yet</p>
+            )}
           </div>
         </div>
       )}
