@@ -14,6 +14,7 @@ import {
   mentor_yagnesh,
   get_started_button,
   // get_started_button_hover
+  explore_plans,
   // right_ribbon,
   impact_thing,
   impact_thing_mobile,
@@ -23,7 +24,12 @@ import {
   left_eye_ribbon_mobile,
   mentorship_vector,
   mentorship_vector_mobile,
-  apply_to_mentorship
+  apply_to_mentorship,
+  chinmayImg,
+  jonImg,
+  anishImg,
+  pradyumnaImg,
+  explore_mentorship
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
@@ -37,25 +43,29 @@ const TESTIMONIALS = [
     quote:
       "incredibly friendly from the get-go. he gave really clear and actionable points for me to move ahead in my design career.",
     name: "chinmay zinjal",
-    role: "chemical engineering student, IIT Guwahati"
+    role: "chemical engineering student, IIT Guwahati",
+    image: chinmayImg
   },
   {
     quote:
       "yagnesh gave me wonderful advice on how he approaches UX problems and runs a remote team. i walked away truly feeling inspired and enlightened.",
     name: "jon hwang",
-    role: "communication coach & UX research consultant"
+    role: "communication coach & UX research consultant",
+    image: jonImg
   },
   {
     quote:
       "he helped me a lot in understanding my path. i would 10/10 recommend him.",
     name: "anish kumar",
-    role: "lead product designer, smart energy waters"
+    role: "lead product designer, smart energy waters",
+    image: anishImg
   },
   {
     quote:
       "i'm thankful to yagnesh for his invaluable perspectives. the practical advice he provided on navigating the job search process was truly valuable. his positive outlook on the design industry and his insights on how my background in creative direction can contribute to product design have significantly bolstered my confidence. i eagerly anticipate further sessions with him in the future.",
-    name: "Pradyumna K S ",
-    role: "Product Designer, Kraverich"
+    name: "Pradyumna K S",
+    role: "Product Designer, Kraverich",
+    image: pradyumnaImg
   }
 ];
 
@@ -137,7 +147,7 @@ const TestimonialsMobile = () => {
         className="text-black font-extrabold lowercase text-center w-full leading-tight mb-10"
         style={{ fontSize: "clamp(32px, 10vw, 46px)", letterSpacing: "-0.5px" }}
       >
-        what people say.
+        what mentees said!
       </h2>
       <div
         className="relative flex items-center justify-center -mb-2"
@@ -178,21 +188,31 @@ const TestimonialsMobile = () => {
               >
                 {TESTIMONIALS[testimonialIdx].quote}
               </p>
-              <p
-                className="font-bold mt-5"
-                style={{
-                  fontSize: "15px",
-                  color: "var(--color-evolve-yellow, #FFD600)"
-                }}
-              >
-                {TESTIMONIALS[testimonialIdx].name}
-              </p>
-              <p
-                className="font-normal text-white"
-                style={{ fontSize: "13px", lineHeight: "1.3" }}
-              >
-                {TESTIMONIALS[testimonialIdx].role}
-              </p>
+              <div className="flex items-center gap-3 mt-5">
+                <img
+                  src={TESTIMONIALS[testimonialIdx].image}
+                  alt={TESTIMONIALS[testimonialIdx].name}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                  style={{ borderColor: "var(--color-evolve-yellow, #FFD600)" }}
+                />
+                <div>
+                  <p
+                    className="font-bold"
+                    style={{
+                      fontSize: "15px",
+                      color: "var(--color-evolve-yellow, #FFD600)"
+                    }}
+                  >
+                    {TESTIMONIALS[testimonialIdx].name}
+                  </p>
+                  <p
+                    className="font-normal text-white"
+                    style={{ fontSize: "13px", lineHeight: "1.3" }}
+                  >
+                    {TESTIMONIALS[testimonialIdx].role}
+                  </p>
+                </div>
+              </div>
             </div>
           );
         })}
@@ -642,7 +662,7 @@ const GetStartedButton = () => {
   return (
     <img
       // src={hover ? get_started_button_hover : get_started_button}
-      src={get_started_button}
+      src={apply_to_mentorship}
       alt="get started"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -809,7 +829,7 @@ const Mentorship = () => {
               </button>
             ) : (
               <img
-                src={applyHover ? apply_to_mentorship : apply_to_mentorship}
+                src={applyHover ? explore_mentorship : explore_mentorship}
                 alt="apply now"
                 onMouseEnter={() => setApplyHover(true)}
                 onMouseLeave={() => setApplyHover(false)}
@@ -1122,7 +1142,7 @@ const Mentorship = () => {
             marginBottom: "3vh"
           }}
         >
-          what people say
+          what mentees said!
         </h2>
         <div className="flex gap-2 flex-1 min-h-0">
           <div
@@ -1149,21 +1169,31 @@ const Mentorship = () => {
               incredibly friendly from the get-go. he gave really clear and
               actionable points for me to move ahead in my design career.
             </p>
-            <p
-              className="font-bold text-white mt-6"
-              style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
-            >
-              chinmay zinjal
-            </p>
-            <p
-              className="font-normal text-white"
-              style={{
-                fontSize: "clamp(11px, 1.1vw, 18px)",
-                lineHeight: "1.3"
-              }}
-            >
-              chemical engineering student, IIT Guwahati
-            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <img
+                src={TESTIMONIALS[0].image}
+                alt={TESTIMONIALS[0].name}
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                style={{ borderColor: "var(--color-evolve-yellow, #FFD600)" }}
+              />
+              <div>
+                <p
+                  className="font-bold text-white"
+                  style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
+                >
+                  chinmay zinjal
+                </p>
+                <p
+                  className="font-normal text-white"
+                  style={{
+                    fontSize: "clamp(11px, 1.1vw, 18px)",
+                    lineHeight: "1.3"
+                  }}
+                >
+                  chemical engineering student, IIT Guwahati
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-2" style={{ flex: "0 0 35%" }}>
             <div
@@ -1191,21 +1221,31 @@ const Mentorship = () => {
                 problems and runs a remote team. i walked away truly feeling
                 inspired and enlightened.
               </p>
-              <p
-                className="font-bold text-white mt-4"
-                style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
-              >
-                jon hwang
-              </p>
-              <p
-                className="font-normal text-white"
-                style={{
-                  fontSize: "clamp(11px, 1.1vw, 18px)",
-                  lineHeight: "1.3"
-                }}
-              >
-                communication coach &amp; UX research consultant
-              </p>
+              <div className="flex items-center gap-3 mt-6">
+                <img
+                  src={TESTIMONIALS[1].image}
+                  alt={TESTIMONIALS[1].name}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                  style={{ borderColor: "var(--color-evolve-yellow, #FFD600)" }}
+                />
+                <div>
+                  <p
+                    className="font-bold text-white"
+                    style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
+                  >
+                    jon hwang
+                  </p>
+                  <p
+                    className="font-normal text-white"
+                    style={{
+                      fontSize: "clamp(11px, 1.1vw, 18px)",
+                      lineHeight: "1.3"
+                    }}
+                  >
+                    communication coach &amp; UX research consultant
+                  </p>
+                </div>
+              </div>
             </div>
             <div
               className="rounded-2xl bg-[#7A44BC] flex flex-col justify-center p-8"
@@ -1231,21 +1271,31 @@ const Mentorship = () => {
                 he helped me a lot in understanding my path. i would 10/10
                 recommend him.
               </p>
-              <p
-                className="font-bold text-white mt-4"
-                style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
-              >
-                anish kumar
-              </p>
-              <p
-                className="font-normal text-white"
-                style={{
-                  fontSize: "clamp(11px, 1.1vw, 18px)",
-                  lineHeight: "1.3"
-                }}
-              >
-                lead product designer, smart energy waters
-              </p>
+              <div className="flex items-center gap-3 mt-6">
+                <img
+                  src={TESTIMONIALS[2].image}
+                  alt={TESTIMONIALS[2].name}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                  style={{ borderColor: "var(--color-evolve-yellow, #FFD600)" }}
+                />
+                <div>
+                  <p
+                    className="font-bold text-white"
+                    style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
+                  >
+                    anish kumar
+                  </p>
+                  <p
+                    className="font-normal text-white"
+                    style={{
+                      fontSize: "clamp(11px, 1.1vw, 18px)",
+                      lineHeight: "1.3"
+                    }}
+                  >
+                    lead product designer, smart energy waters
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <div
@@ -1277,21 +1327,31 @@ const Mentorship = () => {
               confidence. i eagerly anticipate further sessions with him in the
               future.
             </p>
-            <p
-              className="font-bold text-white mt-4"
-              style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
-            >
-              Pradyumna K S
-            </p>
-            <p
-              className="font-normal text-white"
-              style={{
-                fontSize: "clamp(11px, 1.1vw, 18px)",
-                lineHeight: "1.3"
-              }}
-            >
-              Product Designer, Kraverich
-            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <img
+                src={TESTIMONIALS[3].image}
+                alt={TESTIMONIALS[3].name}
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                style={{ borderColor: "var(--color-evolve-yellow, #FFD600)" }}
+              />
+              <div>
+                <p
+                  className="font-bold text-white"
+                  style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
+                >
+                  Pradyumna K S
+                </p>
+                <p
+                  className="font-normal text-white"
+                  style={{
+                    fontSize: "clamp(11px, 1.1vw, 18px)",
+                    lineHeight: "1.3"
+                  }}
+                >
+                  Product Designer, Kraverich
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1654,8 +1714,14 @@ const Mentorship = () => {
             what this is for.
           </p>
 
-          {/* Get started button */}
-          <GetStartedButton />
+          {/* Explore plans button */}
+          <img
+            src={explore_plans}
+            alt="explore plans"
+            onClick={() => handlePayment("starter")}
+            className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
+            style={{ width: "clamp(200px, 22vw, 320px)" }}
+          />
         </div>
 
         {/* Ribbons — bottom corners */}
@@ -1724,8 +1790,14 @@ const Mentorship = () => {
             what this is for.
           </p>
 
-          {/* Get started button */}
-          <GetStartedButton />
+          {/* Explore plans button */}
+          <img
+            src={explore_plans}
+            alt="explore plans"
+            onClick={() => handlePayment("starter")}
+            className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
+            style={{ width: "clamp(180px, 55vw, 260px)" }}
+          />
         </div>
 
         {/* Ribbons — bottom corners, mobile variants */}

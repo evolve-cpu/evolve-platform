@@ -1069,6 +1069,8 @@ import Mentorship from "./pages/Mentorship.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
 const Payment = lazy(() => import("./pages/Payment.jsx"));
 const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
+const Terms = lazy(() => import("./pages/Terms.jsx"));
+const Privacy = lazy(() => import("./pages/Privacy.jsx"));
 
 const queryClient = new QueryClient();
 
@@ -1462,6 +1464,8 @@ const AppLayout = () => {
             <Route path="/payment" element={<Payment />} />
             <Route path="/mentorship-session" element={<MentorshipSession />} />
             <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/course" element={<Course />} />
             <Route path="/what-is-design" element={<WhatIsDesign />} />
             <Route path="*" element={<NotFound />} />

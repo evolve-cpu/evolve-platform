@@ -18,6 +18,12 @@ import mentorship_vector_mobile from "./mentorship_vector_mobile.svg";
 import surprise_box from "./surprise_box.svg";
 import surprise_box_open from "./surprise_box_open.svg";
 import apply_to_mentorship from "./apply_for_mentorship.svg";
+import explore_mentorship from "./explore_mentorship.svg";
+import explore_plans from "./explore_plans.svg";
+import chinmayImg from "./chinmayImg.svg";
+import jonImg from "./jonImg.svg";
+import anishImg from "./anishImg.svg";
+import pradyumnaImg from "./pradyumnaImg.svg";
 
 export {
   hero_mentorship,
@@ -39,5 +45,11 @@ export {
   mentorship_vector_mobile,
   surprise_box,
   surprise_box_open,
-  apply_to_mentorship
+  apply_to_mentorship,
+  explore_mentorship,
+  explore_plans,
+  chinmayImg,
+  jonImg,
+  anishImg,
+  pradyumnaImg
 };

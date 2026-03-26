@@ -613,14 +613,15 @@ const Footer = () => {
   const navigationLinks = [
     { label: "home", path: "/" },
     { path: "/community", label: "community" },
-    { path: "/evolve-in-person", label: "evolve in-person" },
+    { path: "/mentorship", label: "mentorship" },
+    // { path: "/evolve-in-person", label: "evolve in-person" },
     { path: "/webinars", label: "webinars" },
-    { label: "contact us", path: "/contact" },
-    {
-      path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-      label: "rate this website",
-      external: true
-    }
+    { label: "contact us", path: "/contact" }
+    // {
+    //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+    //   label: "rate this website",
+    //   external: true
+    // }
   ];
 
   const socialLinks = [
@@ -741,6 +742,16 @@ const Footer = () => {
                 </ul>
               </div>
             </div>
+
+            <div className="mt-8 flex items-center gap-6">
+              <Link to="/privacy" className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200">
+                privacy policy
+              </Link>
+              <span className="text-black/30 text-sm">·</span>
+              <Link to="/terms" className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200">
+                t&amp;c conditions
+              </Link>
+            </div>
           </div>
 
           {/* decorative image */}
@@ -819,6 +830,16 @@ const Footer = () => {
 
           <div className="text-[0.9375rem] leading-6">
             @2025 evolve. all rights reserved
+          </div>
+
+          <div className="flex items-center gap-4 mt-3">
+            <Link to="/privacy" className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200">
+              privacy policy
+            </Link>
+            <span className="text-black/30 text-xs">·</span>
+            <Link to="/terms" className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200">
+              t&amp;c conditions
+            </Link>
           </div>
         </div>
 

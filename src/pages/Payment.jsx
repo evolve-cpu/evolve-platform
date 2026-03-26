@@ -20,10 +20,9 @@ const PLANS = {
   // },
   starter: {
     label: "starter",
-    price: "₹11",
+    price: "₹11",           // TODO: revert to "₹15,000" before launch
     originalPrice: "₹35,000",
-    // paise: 1500000
-    paise: 1100
+    paise: 1100             // TODO: revert to 1500000 before launch
   },
   accelerator: {
     label: "accelerator",

@@ -2567,7 +2567,10 @@ import html2canvas from "html2canvas";
 function ordinalDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
   const day = d.getDate();
-  const sfx = (day >= 11 && day <= 13) ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[day % 10] || "th");
+  const sfx =
+    day >= 11 && day <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[day % 10] || "th";
   return `${day}${sfx} ${d.toLocaleString("en-US", { month: "long" }).toLowerCase()}`;
 }
 
@@ -2622,14 +2625,15 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const navItems = [
     { path: "/", label: "home" },
     { path: "/community", label: "community" },
+    { path: "/mentorship", label: "mentorship" },
     { path: "/webinars", label: "webinars" },
-    { path: "/evolve-in-person", label: "evolve in-person" },
-    { path: "/contact", label: "contact us", isModal: true },
-    {
-      path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-      label: "rate this website",
-      external: true
-    }
+    // { path: "/evolve-in-person", label: "evolve in-person" },
+    { path: "/contact", label: "contact us", isModal: true }
+    // {
+    //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+    //   label: "rate this website",
+    //   external: true
+    // }
   ];
 
   const isActive = (p) => {
@@ -2978,7 +2982,10 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   disabled={authLoading}
                   onClick={() => {
                     // not logged in → go to sign-in page
-                    if (!user) return navigate("/signin", { state: { from: location.pathname } });
+                    if (!user)
+                      return navigate("/signin", {
+                        state: { from: location.pathname }
+                      });
 
                     // logged-in user → open account dropdown
                     if (!accountOpen) openAccountModal();
@@ -3073,7 +3080,9 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
                 {/* ── RECEIPT ── */}
                 {paymentLoading ? (
-                  <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>
+                  <p className="mt-5 text-black/40 text-[13px]">
+                    loading payment…
+                  </p>
                 ) : payment ? (
                   <>
                     <div
@@ -3085,16 +3094,43 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                       </p>
                       <div className="w-full h-px bg-black/10 mb-3" />
                       {[
-                        ["plan", payment.plan === "starter" ? "starter" : "accelerator"],
-                        ["amount paid", `₹${Number(payment.amount).toLocaleString("en-IN")}`],
-                        ["date", new Date(payment.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
-                        ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
-                        ["starts on", payment.batch?.start_date ? ordinalDate(payment.batch.start_date) : "—"],
-                        ["ref", payment.razorpay_payment_id || "—"],
+                        [
+                          "plan",
+                          payment.plan === "starter" ? "starter" : "accelerator"
+                        ],
+                        [
+                          "amount paid",
+                          `₹${Number(payment.amount).toLocaleString("en-IN")}`
+                        ],
+                        [
+                          "date",
+                          new Date(payment.created_at).toLocaleDateString(
+                            "en-IN",
+                            { day: "numeric", month: "long", year: "numeric" }
+                          )
+                        ],
+                        [
+                          "batch",
+                          `batch ${payment.batch?.batch_number ?? "—"}`
+                        ],
+                        [
+                          "starts on",
+                          payment.batch?.start_date
+                            ? ordinalDate(payment.batch.start_date)
+                            : "—"
+                        ],
+                        ["ref", payment.razorpay_payment_id || "—"]
                       ].map(([label, value]) => (
-                        <div key={label} className="flex justify-between items-start gap-3 mb-2">
-                          <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">{label}</span>
-                          <span className="text-black font-semibold text-[11px] text-right break-all">{value}</span>
+                        <div
+                          key={label}
+                          className="flex justify-between items-start gap-3 mb-2"
+                        >
+                          <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+                            {label}
+                          </span>
+                          <span className="text-black font-semibold text-[11px] text-right break-all">
+                            {value}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -3106,7 +3142,9 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     </button>
                   </>
                 ) : (
-                  <p className="mt-5 text-black/40 text-[13px]">no payments yet</p>
+                  <p className="mt-5 text-black/40 text-[13px]">
+                    no payments yet
+                  </p>
                 )}
               </div>
             </div>
@@ -3177,16 +3215,41 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   </p>
                   <div className="w-full h-px bg-black/10 mb-3" />
                   {[
-                    ["plan", payment.plan === "starter" ? "starter" : "accelerator"],
-                    ["amount paid", `₹${Number(payment.amount).toLocaleString("en-IN")}`],
-                    ["date", new Date(payment.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
+                    [
+                      "plan",
+                      payment.plan === "starter" ? "starter" : "accelerator"
+                    ],
+                    [
+                      "amount paid",
+                      `₹${Number(payment.amount).toLocaleString("en-IN")}`
+                    ],
+                    [
+                      "date",
+                      new Date(payment.created_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      })
+                    ],
                     ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
-                    ["starts on", payment.batch?.start_date ? ordinalDate(payment.batch.start_date) : "—"],
-                    ["ref", payment.razorpay_payment_id || "—"],
+                    [
+                      "starts on",
+                      payment.batch?.start_date
+                        ? ordinalDate(payment.batch.start_date)
+                        : "—"
+                    ],
+                    ["ref", payment.razorpay_payment_id || "—"]
                   ].map(([label, value]) => (
-                    <div key={label} className="flex justify-between items-start gap-3 mb-2">
-                      <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">{label}</span>
-                      <span className="text-black font-semibold text-[11px] text-right break-all">{value}</span>
+                    <div
+                      key={label}
+                      className="flex justify-between items-start gap-3 mb-2"
+                    >
+                      <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+                        {label}
+                      </span>
+                      <span className="text-black font-semibold text-[11px] text-right break-all">
+                        {value}
+                      </span>
                     </div>
                   ))}
                 </div>
