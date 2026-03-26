@@ -216,11 +216,22 @@ function AvatarSlot({ user }) {
   if (!user) return null;
   return (
     <div className="flex items-center gap-2 relative">
-      <span className="hidden md:block text-white text-sm font-semibold">{user.name}</span>
-      <button onClick={() => setProfileOpen((p) => !p)} className="focus:outline-none">
-        <img src={avatarSrc} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
+      <span className="hidden md:block text-white text-sm font-semibold">
+        {user.name}
+      </span>
+      <button
+        onClick={() => setProfileOpen((p) => !p)}
+        className="focus:outline-none"
+      >
+        <img
+          src={avatarSrc}
+          alt="avatar"
+          className="w-9 h-9 rounded-full object-cover"
+        />
       </button>
-      {profileOpen && <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />}
+      {profileOpen && (
+        <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />
+      )}
     </div>
   );
 }
@@ -466,7 +477,10 @@ export default function Payment() {
         className="min-h-screen flex flex-col"
         style={{ backgroundColor: "#161618" }}
       >
-        <BlackNav onLogoClick={() => navigate("/mentorship")} right={<AvatarSlot user={user} />} />
+        <BlackNav
+          onLogoClick={() => navigate("/mentorship")}
+          right={<AvatarSlot user={user} />}
+        />
 
         {/* gift1 base */}
         <div className="flex-1 flex items-center justify-center px-6">
@@ -556,7 +570,10 @@ export default function Payment() {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: "#161618" }}
     >
-      <BlackNav onLogoClick={() => navigate("/mentorship")} right={<AvatarSlot user={user} />} />
+      <BlackNav
+        onLogoClick={() => navigate("/mentorship")}
+        right={<AvatarSlot user={user} />}
+      />
 
       <div className="flex flex-col flex-1 px-6 pt-24 pb-12 md:items-center md:justify-center md:pt-0">
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
@@ -579,7 +596,7 @@ export default function Payment() {
               </div>
 
               <p className="text-white/35 text-xs -mt-2">
-                pick batch &gt;{" "}
+                {/* pick batch &gt;{" "} */}
                 <span className="text-evolve-yellow">choose plan</span>
               </p>
 
