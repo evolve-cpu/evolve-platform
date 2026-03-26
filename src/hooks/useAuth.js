@@ -232,6 +232,7 @@ import { supabase } from "../supabaseClient";
 export function useAuth() {
   const [user, setUser]               = useState(null);
   const [authLoading, setAuthLoading] = useState(true); // true on start to avoid UI flash
+  const [isNewUser, setIsNewUser]     = useState(false);
 
   useEffect(() => {
     // 1. restore existing session on mount
@@ -299,7 +300,10 @@ export function useAuth() {
       .select()
       .single();
 
-    if (newProfile) setUser(buildUser(authUser, newProfile));
+    if (newProfile) {
+      setIsNewUser(true);
+      setUser(buildUser(authUser, newProfile));
+    }
     setAuthLoading(false);
   }
 
@@ -319,5 +323,5 @@ export function useAuth() {
     if (data?.user) await loadProfile(data.user);
   };
 
-  return { user, setUser, authLoading, setAuthLoading, refreshUser };
+  return { user, setUser, authLoading, setAuthLoading, refreshUser, isNewUser };
 }

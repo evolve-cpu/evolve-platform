@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import AuthModal from "../components/AuthModal";
+
 import gsap from "gsap";
 import {
   hero_mentorship,
@@ -647,13 +648,13 @@ const Mentorship = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [payingPlan, setPayingPlan] = useState(null);   // plan being set up
   const [paySuccess, setPaySuccess] = useState(false);
   const [phoneModal, setPhoneModal] = useState(null);   // plan waiting for phone
   const [phoneInput, setPhoneInput] = useState("");
 
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // derived batch values (fallback to hardcoded while loading)
   const batchFull = batch !== null && batch.spots_remaining <= 0;
@@ -711,7 +712,7 @@ const Mentorship = () => {
 
   // step 1: clicking "apply now"
   const handlePayment = (plan) => {
-    if (!user) { setAuthModalOpen(true); return; }
+    if (!user) { navigate("/signin", { state: { from: "/mentorship" } }); return; }
     if (batchFull) { alert("this batch is full. the next batch opens soon."); return; }
     // if user already has a phone saved, skip the phone modal
     if (user.phone) {
@@ -731,7 +732,7 @@ const Mentorship = () => {
       if (!loaded) { alert("razorpay failed to load. check your internet."); setPayingPlan(null); return; }
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { setAuthModalOpen(true); setPayingPlan(null); return; }
+      if (!session?.access_token) { navigate("/signin", { state: { from: "/mentorship" } }); setPayingPlan(null); return; }
 
       const res = await fetch("/api/razorpay-create-order", {
         method: "POST",
@@ -2088,13 +2089,6 @@ const Mentorship = () => {
           </div>
         </div>
       )}
-
-      {/* Auth modal — shown when unauthenticated user clicks pay */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        user={user}
-      />
 
       {/* Payment success banner */}
       {paySuccess && (

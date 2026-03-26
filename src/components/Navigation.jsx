@@ -2977,8 +2977,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   ref={accountBtnRef}
                   disabled={authLoading}
                   onClick={() => {
-                    // not logged in → open sign-in modal
-                    if (!user) return setAuthModalOpen(true);
+                    // not logged in → go to sign-in page
+                    if (!user) return navigate("/signin", { state: { from: location.pathname } });
 
                     // logged-in user → open account dropdown
                     if (!accountOpen) openAccountModal();
