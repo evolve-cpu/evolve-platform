@@ -15,6 +15,8 @@ import right_eye_ribbon from "./right_eye_ribbon.svg";
 import right_eye_ribbon_mobile from "./right_eye_ribbon_mobile.svg";
 import mentorship_vector from "./mentorship_vector.svg";
 import mentorship_vector_mobile from "./mentorship_vector_mobile.svg";
+import surprise_box from "./surprise_box.svg";
+import surprise_box_open from "./surprise_box_open.svg";
 
 export {
   hero_mentorship,
@@ -33,5 +35,7 @@ export {
   right_eye_ribbon,
   right_eye_ribbon_mobile,
   mentorship_vector,
-  mentorship_vector_mobile
+  mentorship_vector_mobile,
+  surprise_box,
+  surprise_box_open
 };

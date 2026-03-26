@@ -648,10 +648,8 @@ const Mentorship = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
-  const [payingPlan, setPayingPlan] = useState(null);   // plan being set up
-  const [paySuccess, setPaySuccess] = useState(false);
-  const [phoneModal, setPhoneModal] = useState(null);   // plan waiting for phone
-  const [phoneInput, setPhoneInput] = useState("");
+  const [pricingTab, setPricingTab] = useState("starter");
+  const [hasPaid,    setHasPaid]    = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -691,6 +689,17 @@ const Mentorship = () => {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("mentorship_payments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "success")
+      .maybeSingle()
+      .then(({ data }) => setHasPaid(!!data));
+  }, [user]);
+
+  useEffect(() => {
     return initMarquee(marqueeGroupRef, marqueeTrackRef);
   }, []);
 
@@ -699,71 +708,15 @@ const Mentorship = () => {
     return initMarquee(pricingMarqueeGroupRef, pricingMarqueeTrackRef);
   }, [isMobile]);
 
-  // load Razorpay checkout script on demand
-  const loadRazorpayScript = () =>
-    new Promise((resolve) => {
-      if (window.Razorpay) { resolve(true); return; }
-      const s = document.createElement("script");
-      s.src = "https://checkout.razorpay.com/v1/checkout.js";
-      s.onload = () => resolve(true);
-      s.onerror = () => resolve(false);
-      document.body.appendChild(s);
-    });
-
-  // step 1: clicking "apply now"
   const handlePayment = (plan) => {
-    if (!user) { navigate("/signin", { state: { from: "/mentorship" } }); return; }
+    if (!user) {
+      sessionStorage.setItem("signin_via_apply", "1");
+      navigate("/signin", { state: { from: `/payment?plan=${plan}` } });
+      return;
+    }
+    if (hasPaid) { navigate("/mentorship-session"); return; }
     if (batchFull) { alert("this batch is full. the next batch opens soon."); return; }
-    // if user already has a phone saved, skip the phone modal
-    if (user.phone) {
-      triggerRazorpay(plan, user.phone);
-    } else {
-      setPhoneInput("");
-      setPhoneModal(plan);
-    }
-  };
-
-  // step 2: after phone is confirmed, open Razorpay
-  const triggerRazorpay = async (plan, phone) => {
-    try {
-      setPayingPlan(plan);
-
-      const loaded = await loadRazorpayScript();
-      if (!loaded) { alert("razorpay failed to load. check your internet."); setPayingPlan(null); return; }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { navigate("/signin", { state: { from: "/mentorship" } }); setPayingPlan(null); return; }
-
-      const res = await fetch("/api/razorpay-create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, phone, token: session.access_token })
-      });
-      if (!res.ok) throw new Error("failed to create order");
-      const { order_id, amount, currency } = await res.json();
-
-      const rzp = new window.Razorpay({
-        key: import.meta.env.VITE_RAZORPAY_API_KEY,
-        amount: String(amount),
-        currency,
-        name: "Evolve Design",
-        description: `Mentorship — ${plan === "starter" ? "Starter" : "Accelerator"} Plan`,
-        order_id,
-        prefill: { name: user.name || "", email: user.email || "", contact: phone },
-        theme: { color: "#FFD600" },
-        handler: () => { setPaySuccess(true); setPayingPlan(null); },
-        modal: { ondismiss: () => setPayingPlan(null) }
-      });
-      rzp.on("payment.failed", () => {
-        alert("payment failed. please try again.");
-        setPayingPlan(null);
-      });
-      rzp.open();
-    } catch (err) {
-      console.error("payment error:", err);
-      alert("something went wrong. please try again.");
-      setPayingPlan(null);
-    }
+    navigate(`/payment?plan=${plan}`);
   };
 
   const starterFeatures = [
@@ -859,14 +812,24 @@ const Mentorship = () => {
             corner until you land.
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
-            <img
-              src={applyHover ? apply_now_button_hover : apply_now_button}
-              alt="apply now"
-              onMouseEnter={() => setApplyHover(true)}
-              onMouseLeave={() => setApplyHover(false)}
-              className="cursor-pointer transition-opacity duration-150"
-              style={{ width: isMobile ? "270px" : "360px" }}
-            />
+            {hasPaid ? (
+              <button
+                onClick={() => navigate("/mentorship-session")}
+                className="font-extrabold lowercase text-evolve-yellow underline underline-offset-4 text-xl cursor-pointer"
+              >
+                my mentoring sessions →
+              </button>
+            ) : (
+              <img
+                src={applyHover ? apply_now_button_hover : apply_now_button}
+                alt="apply now"
+                onMouseEnter={() => setApplyHover(true)}
+                onMouseLeave={() => setApplyHover(false)}
+                onClick={() => handlePayment("starter")}
+                className="cursor-pointer transition-opacity duration-150"
+                style={{ width: isMobile ? "270px" : "360px" }}
+              />
+            )}
             <img
               src={howHover ? how_button_hover : how_button}
               alt="how it works"
@@ -1548,24 +1511,44 @@ const Mentorship = () => {
           </div>
         </div> */}
 
-        {/* ── MOBILE: stacked, no marquee ── */}
+        {/* ── MOBILE: tab system ── */}
         <div className="block md:hidden">
-          <PlanCardMobile
-            tier="starter"
-            cutPrice="₹ 35,000"
-            price="₹ 15,000"
-            tagline="for those who need a direction on where to start"
-            features={starterFeatures}
-            onPay={handlePayment}
-          />
-          <PlanCardMobile
-            tier="accelerator"
-            cutPrice="₹ 50,000"
-            price="₹ 35,000"
-            tagline="for those who have interviews lined up and need to crack it"
-            features={acceleratorFeatures}
-            onPay={handlePayment}
-          />
+          <div className="flex">
+            <button
+              onClick={() => setPricingTab("starter")}
+              className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
+              style={{ backgroundColor: pricingTab === "starter" ? "rgba(223,5,134,1)" : "rgba(255,208,7,1)" }}
+            >
+              starter
+            </button>
+            <button
+              onClick={() => setPricingTab("accelerator")}
+              className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
+              style={{ backgroundColor: pricingTab === "accelerator" ? "rgba(223,5,134,1)" : "rgba(255,208,7,1)" }}
+            >
+              accelerator
+            </button>
+          </div>
+          {pricingTab === "starter" && (
+            <PlanCardMobile
+              tier="starter"
+              cutPrice="₹ 35,000"
+              price="₹ 15,000"
+              tagline="for those who need a direction on where to start"
+              features={starterFeatures}
+              onPay={handlePayment}
+            />
+          )}
+          {pricingTab === "accelerator" && (
+            <PlanCardMobile
+              tier="accelerator"
+              cutPrice="₹ 50,000"
+              price="₹ 35,000"
+              tagline="for those who have interviews lined up and need to crack it"
+              features={acceleratorFeatures}
+              onPay={handlePayment}
+            />
+          )}
         </div>
       </section>
       {/* ================= SECTION 7 — IMPACT ================= */}
@@ -2053,75 +2036,6 @@ const Mentorship = () => {
         />
       </section>
 
-      {/* Phone number modal — shown when user has no phone saved */}
-      {phoneModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setPhoneModal(null)} />
-          <div className="relative z-10 bg-evolve-yellow border-2 border-black rounded-2xl px-8 py-8 flex flex-col items-start shadow-[8px_8px_0px_rgba(0,0,0,0.25)] w-[90vw] max-w-sm">
-            <button
-              onClick={() => setPhoneModal(null)}
-              className="absolute top-4 right-5 text-black text-2xl font-extrabold"
-            >×</button>
-            <p className="font-extrabold text-black lowercase text-xl leading-tight">
-              one last thing
-            </p>
-            <p className="font-normal text-black/70 lowercase text-sm mt-1">
-              we need your phone number to complete the payment
-            </p>
-            <input
-              type="tel"
-              value={phoneInput}
-              onChange={e => setPhoneInput(e.target.value)}
-              placeholder="+91 98765 43210"
-              className="mt-5 w-full border-2 border-black rounded-xl px-4 py-3 text-black font-semibold text-sm bg-white outline-none focus:ring-2 focus:ring-black"
-            />
-            <button
-              onClick={() => {
-                const cleaned = phoneInput.trim();
-                if (cleaned.length < 10) { alert("please enter a valid phone number"); return; }
-                setPhoneModal(null);
-                triggerRazorpay(phoneModal, cleaned);
-              }}
-              className="mt-4 w-full bg-black text-evolve-yellow font-extrabold lowercase py-3 rounded-xl text-sm"
-            >
-              proceed to payment →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Payment success banner */}
-      {paySuccess && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setPaySuccess(false)}
-          />
-          <div className="relative z-10 bg-evolve-yellow border-2 border-black rounded-2xl px-10 py-10 flex flex-col items-center text-center shadow-[8px_8px_0px_rgba(0,0,0,0.25)] max-w-sm mx-4">
-            <p className="font-extrabold text-black lowercase text-3xl leading-tight">
-              you're in. 🎉
-            </p>
-            <p className="font-normal text-black lowercase text-base mt-3 max-w-[28ch]">
-              payment received. check your account for your receipt.
-            </p>
-            <button
-              onClick={() => setPaySuccess(false)}
-              className="mt-6 bg-black text-evolve-yellow font-extrabold lowercase px-8 py-3 rounded-xl text-sm"
-            >
-              close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Loading overlay while payment is being set up */}
-      {payingPlan && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30">
-          <div className="bg-evolve-yellow border-2 border-black rounded-2xl px-8 py-6 text-black font-extrabold lowercase text-lg">
-            setting up payment…
-          </div>
-        </div>
-      )}
     </div>
   );
 };

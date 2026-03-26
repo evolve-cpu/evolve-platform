@@ -75,7 +75,10 @@ function LoadingStep({ label, sub, progress }) {
    Helpers
 ══════════════════════════════════════════════════════════════════════════════ */
 function goToFrom(navigate, from) {
-  sessionStorage.setItem("show_welcome_overlay", "1");
+  // Payment page shows its own welcome in the gift screen — skip the overlay
+  if (!from.startsWith("/payment")) {
+    sessionStorage.setItem("show_welcome_overlay", "1");
+  }
   sessionStorage.removeItem("signin_from");
   navigate(from, { replace: true });
 }

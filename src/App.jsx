@@ -1067,6 +1067,8 @@ import AdminDashboard from "./pages/admn/AdminDashboard.jsx";
 import AdminGuard from "./routes/AdminGuard.jsx";
 import Mentorship from "./pages/Mentorship.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
+const Payment = lazy(() => import("./pages/Payment.jsx"));
+const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
 
 const queryClient = new QueryClient();
 
@@ -1098,7 +1100,9 @@ const AppLayout = () => {
     "/evolve-in-person/activities",
     "/evolve-in-person/self-reflection",
     "/evolve-in-person/reality-check",
-    "/signin"
+    "/signin",
+    "/payment",
+    "/mentorship-session"
   ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
@@ -1146,7 +1150,11 @@ const AppLayout = () => {
     if (location.pathname === "/") {
       setShowNavbar(false);
       setIsHomeIntroActive(true);
-    } else if (location.pathname === "/signin") {
+    } else if (
+      location.pathname === "/signin" ||
+      location.pathname === "/payment" ||
+      location.pathname === "/mentorship-session"
+    ) {
       setShowNavbar(false);
       setIsHomeIntroActive(false);
     } else {
@@ -1451,6 +1459,8 @@ const AppLayout = () => {
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/mentorship-session" element={<MentorshipSession />} />
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/course" element={<Course />} />
             <Route path="/what-is-design" element={<WhatIsDesign />} />
