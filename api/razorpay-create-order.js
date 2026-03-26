@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const PLAN_AMOUNTS_PAISE = {
-  starter: 1500000,     // ₹15,000
+  starter: 1100,        // TODO: revert to 1500000 (₹15,000) before launch
   accelerator: 3500000  // ₹35,000
 };
 

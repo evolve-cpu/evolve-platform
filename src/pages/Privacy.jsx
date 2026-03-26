@@ -89,7 +89,7 @@ export default function Privacy() {
         >
           privacy policy
         </h1>
-        <p className="text-white/40 text-sm mb-12">last updated: March 2025</p>
+        <p className="text-white/40 text-sm mb-12">last updated: March 2026</p>
 
         <div className="flex flex-col gap-10">
           {SECTIONS.map((s) => (
