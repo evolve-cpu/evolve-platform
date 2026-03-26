@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
-import { evolve_logo_nav_yellow, three_wavy_lines_yellow } from "../assets/images/Nav";
+import BlackNav from "../components/BlackNav";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -139,30 +139,19 @@ function ProfileSheet({ user, onClose }) {
   );
 }
 
-/* ─── Nav ─────────────────────────────────────────────────────────────────── */
-function SessionNav({ user, onLogoClick }) {
+/* ─── Avatar slot (right side of BlackNav) ───────────────────────────────── */
+function AvatarSlot({ user }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const avatarSrc = user?.avatar_url
     || `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "u"}`;
+  if (!user) return null;
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center px-5 pt-6 pb-4 md:px-10"
-      style={{ background: "rgba(22,22,22,1)" }}
-    >
-      <img src={three_wavy_lines_yellow} alt="" className="h-5 md:h-6 flex-shrink-0" />
-      <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
-        <button onClick={onLogoClick} className="focus:outline-none pointer-events-auto">
-          <img src={evolve_logo_nav_yellow} alt="evolve" className="h-6 md:h-7" />
-        </button>
-      </div>
-      {user && (
-        <div className="ml-auto flex items-center gap-2 relative">
-          <span className="hidden md:block text-white text-sm font-semibold">{user.name}</span>
-          <button onClick={() => setProfileOpen(p => !p)} className="focus:outline-none relative z-10">
-            <img src={avatarSrc} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
-          </button>
-          {profileOpen && <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />}
-        </div>
-      )}
+    <div className="flex items-center gap-2 relative">
+      <span className="hidden md:block text-white text-sm font-semibold">{user.name}</span>
+      <button onClick={() => setProfileOpen(p => !p)} className="focus:outline-none">
+        <img src={avatarSrc} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
+      </button>
+      {profileOpen && <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
@@ -185,8 +174,8 @@ export default function MentorshipSession() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-evolve-black">
-      <SessionNav user={user} onLogoClick={() => navigate("/mentorship")} />
+    <div className="min-h-screen" style={{ backgroundColor: "#161618" }}>
+      <BlackNav onLogoClick={() => navigate("/mentorship")} right={<AvatarSlot user={user} />} />
 
       <div className="px-6 pt-24 pb-16 md:max-w-2xl md:mx-auto md:pt-28">
 

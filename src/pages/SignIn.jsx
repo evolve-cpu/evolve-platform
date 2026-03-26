@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { sendOtp, verifyOtp, signInWithGoogle } from "../auth/signInLogic";
 import { useAuth } from "../hooks/useAuth";
-import { evolve_logo_nav_yellow, three_wavy_lines_yellow } from "../assets/images/Nav";
+import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
 
 /* ─── Google icon ─────────────────────────────────────────────────────────── */
@@ -15,20 +15,6 @@ const GOOGLE_ICON = (
     <path d="M10 3.96c1.47 0 2.8.5 3.84 1.5l2.87-2.87A9.94 9.94 0 0 0 10 0 10 10 0 0 0 1.07 5.52l3.32 2.6C5.18 5.72 7.39 3.96 10 3.96Z" fill="#EA4335"/>
   </svg>
 );
-
-/* ─── Top nav ─────────────────────────────────────────────────────────────── */
-function TopNav({ onLogoClick }) {
-  return (
-    <div className="fixed top-0 left-0 right-0 z-20 flex items-center px-5 pt-6 pb-4 md:px-10">
-      <img src={three_wavy_lines_yellow} alt="" className="h-5 md:h-6 flex-shrink-0" />
-      <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
-        <button onClick={onLogoClick} aria-label="go to home" className="focus:outline-none pointer-events-auto">
-          <img src={evolve_logo_nav_yellow} alt="evolve" className="h-6 md:h-7" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Back button ─────────────────────────────────────────────────────────── */
 function BackBtn({ onBack }) {
@@ -250,8 +236,8 @@ export default function SignIn() {
      RENDER
   ═══════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-evolve-black flex flex-col">
-      <TopNav onLogoClick={() => navigate("/")} />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+      <BlackNav onLogoClick={() => navigate("/")} />
 
       {/* OPTIONS */}
       {step === "options" && (

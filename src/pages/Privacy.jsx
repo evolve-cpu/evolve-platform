@@ -1,8 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  evolve_logo_nav_yellow,
-  three_wavy_lines_yellow
-} from "../assets/images/Nav";
+import BlackNav from "../components/BlackNav";
 
 /* ─── sections — paste your Privacy Policy content here ──────────────────── */
 const SECTIONS = [
@@ -56,30 +53,8 @@ export default function Privacy() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-evolve-black">
-      {/* nav */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 flex items-center px-5 pt-6 pb-4 md:px-10"
-        style={{ background: "rgba(22,22,22,1)" }}
-      >
-        <img
-          src={three_wavy_lines_yellow}
-          alt=""
-          className="h-5 flex-shrink-0"
-        />
-        <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
-          <button
-            onClick={() => navigate("/")}
-            className="focus:outline-none pointer-events-auto"
-          >
-            <img
-              src={evolve_logo_nav_yellow}
-              alt="evolve"
-              className="h-6 md:h-7"
-            />
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen" style={{ backgroundColor: "#161618" }}>
+      <BlackNav onLogoClick={() => navigate("/")} />
 
       {/* content */}
       <div className="px-6 pt-28 pb-20 max-w-2xl mx-auto">

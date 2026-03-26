@@ -825,7 +825,7 @@ const Mentorship = () => {
           >
             Stop guessing your design career
           </p>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-col items-center gap-2">
             {hasPaid ? (
               <button
                 onClick={() => navigate("/mentorship-session")}
@@ -834,15 +834,18 @@ const Mentorship = () => {
                 my mentoring sessions →
               </button>
             ) : (
-              <img
-                src={applyHover ? explore_mentorship : explore_mentorship}
-                alt="apply now"
-                onMouseEnter={() => setApplyHover(true)}
-                onMouseLeave={() => setApplyHover(false)}
-                onClick={() => scrollTo(section5Ref)}
-                className="cursor-pointer transition-opacity duration-150"
-                style={{ width: isMobile ? "220px" : "220px" }}
-              />
+              <>
+                <img
+                  src={applyHover ? explore_mentorship : explore_mentorship}
+                  alt="apply now"
+                  onMouseEnter={() => setApplyHover(true)}
+                  onMouseLeave={() => setApplyHover(false)}
+                  onClick={() => scrollTo(section5Ref)}
+                  className="cursor-pointer transition-opacity duration-150"
+                  style={{ width: isMobile ? "220px" : "220px" }}
+                />
+                <p className="text-black text-sm font-semibold">*limited seats</p>
+              </>
             )}
           </div>
         </div>
@@ -1544,6 +1547,16 @@ const Mentorship = () => {
 
       {/* ================= SECTION 6 — PRICING ================= */}
       <section className="bg-evolve-yellow overflow-hidden">
+        {/* ── Full-width pink header banner ── */}
+        <div className="w-full bg-evolve-pink flex items-center justify-center py-5 md:py-7">
+          <h2
+            className="text-white font-extrabold lowercase text-center"
+            style={{ fontSize: "clamp(28px, 5vw, 56px)", letterSpacing: "-0.02em" }}
+          >
+            what it costs.
+          </h2>
+        </div>
+
         {/* ── DESKTOP: two columns ── */}
         <div className="hidden md:flex w-full">
           <div style={{ flex: "0 0 50%" }}>
@@ -1617,24 +1630,22 @@ const Mentorship = () => {
           <div className="flex">
             <button
               onClick={() => setPricingTab("starter")}
-              className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
+              className="flex-1 py-3 font-extrabold lowercase text-lg"
               style={{
                 backgroundColor:
-                  pricingTab === "starter"
-                    ? "rgba(223,5,134,1)"
-                    : "rgba(255,208,7,1)"
+                  pricingTab === "starter" ? "rgba(223,5,134,1)" : "#BF9C05",
+                color: pricingTab === "starter" ? "#fff" : "#000"
               }}
             >
               starter
             </button>
             <button
               onClick={() => setPricingTab("accelerator")}
-              className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
+              className="flex-1 py-3 font-extrabold lowercase text-lg"
               style={{
                 backgroundColor:
-                  pricingTab === "accelerator"
-                    ? "rgba(223,5,134,1)"
-                    : "rgba(255,208,7,1)"
+                  pricingTab === "accelerator" ? "rgba(223,5,134,1)" : "#BF9C05",
+                color: pricingTab === "accelerator" ? "#fff" : "#000"
               }}
             >
               accelerator
@@ -1761,7 +1772,7 @@ const Mentorship = () => {
       <section className="block md:hidden relative bg-evolve-yellow overflow-hidden min-h-screen">
         {/* Content */}
         <div
-          className="relative z-10 flex flex-col items-center text-center px-5"
+          className="relative z-30 flex flex-col items-center text-center px-5"
           style={{ paddingTop: "clamp(48px, 10vh, 80px)" }}
         >
           {/* Heading */}

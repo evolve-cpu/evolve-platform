@@ -4,11 +4,12 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
+import BlackNav from "../components/BlackNav";
 import {
-  evolve_logo_nav_yellow,
-  three_wavy_lines_yellow
-} from "../assets/images/Nav";
-import { surprise_box, surprise_box_open } from "../assets/images/Mentorship";
+  surprise_box,
+  surprise_box_open,
+  rays_payment
+} from "../assets/images/Mentorship";
 
 /* ─── plan config ─────────────────────────────────────────────────────────── */
 const PLANS = {
@@ -20,9 +21,9 @@ const PLANS = {
   // },
   starter: {
     label: "starter",
-    price: "₹11",           // TODO: revert to "₹15,000" before launch
+    price: "₹11", // TODO: revert to "₹15,000" before launch
     originalPrice: "₹35,000",
-    paise: 1100             // TODO: revert to 1500000 before launch
+    paise: 1100 // TODO: revert to 1500000 before launch
   },
   accelerator: {
     label: "accelerator",
@@ -206,54 +207,20 @@ function ProfileSheet({ user, onClose }) {
   );
 }
 
-/* ─── Shared nav ──────────────────────────────────────────────────────────── */
-function PayNav({ user, onLogoClick }) {
+/* ─── Avatar slot (right side of BlackNav) ───────────────────────────────── */
+function AvatarSlot({ user }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const avatarSrc =
     user?.avatar_url ||
     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "u"}`;
+  if (!user) return null;
   return (
-    <div
-      className="fixed top-0 left-0 right-0 z-50 flex items-center px-5 pt-6 pb-4 md:px-10"
-      style={{ background: "rgba(22,22,22,1)" }}
-    >
-      <img
-        src={three_wavy_lines_yellow}
-        alt=""
-        className="h-5 md:h-6 flex-shrink-0"
-      />
-      <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
-        <button
-          onClick={onLogoClick}
-          className="focus:outline-none pointer-events-auto"
-        >
-          <img
-            src={evolve_logo_nav_yellow}
-            alt="evolve"
-            className="h-6 md:h-7"
-          />
-        </button>
-      </div>
-      {user && (
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden md:block text-white text-sm font-semibold">
-            {user.name}
-          </span>
-          <button
-            onClick={() => setProfileOpen((p) => !p)}
-            className="focus:outline-none relative z-10"
-          >
-            <img
-              src={avatarSrc}
-              alt="avatar"
-              className="w-9 h-9 rounded-full object-cover"
-            />
-          </button>
-          {profileOpen && (
-            <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />
-          )}
-        </div>
-      )}
+    <div className="flex items-center gap-2 relative">
+      <span className="hidden md:block text-white text-sm font-semibold">{user.name}</span>
+      <button onClick={() => setProfileOpen((p) => !p)} className="focus:outline-none">
+        <img src={avatarSrc} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
+      </button>
+      {profileOpen && <ProfileSheet user={user} onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
@@ -276,36 +243,6 @@ function BackBtn({ onClick }) {
       </svg>
       <span className="text-sm font-semibold">back</span>
     </button>
-  );
-}
-
-/* ─── Sunburst SVG ────────────────────────────────────────────────────────── */
-function Sunburst() {
-  return (
-    <svg
-      viewBox="0 0 400 400"
-      xmlns="http://www.w3.org/2000/svg"
-      className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.35 }}
-    >
-      {Array.from({ length: 24 }).map((_, i) => {
-        const angle = (i * 360) / 24;
-        const rad = (angle * Math.PI) / 180;
-        const x2 = 200 + Math.cos(rad) * 300;
-        const y2 = 200 + Math.sin(rad) * 300;
-        return (
-          <line
-            key={i}
-            x1="200"
-            y1="200"
-            x2={x2}
-            y2={y2}
-            stroke="rgba(0,0,0,0.5)"
-            strokeWidth="1.5"
-          />
-        );
-      })}
-    </svg>
   );
 }
 
@@ -389,11 +326,11 @@ export default function Payment() {
       }
 
       // DEV bypass — skip real payment on localhost
-      // if (import.meta.env.DEV) {
-      //   setStep("success");
-      //   setPaying(false);
-      //   return;
-      // }
+      if (import.meta.env.DEV) {
+        setStep("success");
+        setPaying(false);
+        return;
+      }
 
       const res = await fetch("/api/razorpay-create-order", {
         method: "POST",
@@ -518,14 +455,20 @@ export default function Payment() {
   //     </div>
   //   );
   // }
-  if (step === "gift1") {
+  if (step === "gift1" || step === "gift2") {
     const viaApply = !!sessionStorage.getItem("signin_via_apply");
-    if (viaApply) sessionStorage.removeItem("signin_via_apply");
+    if (viaApply && step === "gift1")
+      sessionStorage.removeItem("signin_via_apply");
     const firstName = user?.name?.split(" ")[0] || "";
 
     return (
-      <div className="min-h-screen bg-evolve-black flex flex-col">
-        <PayNav user={user} onLogoClick={() => navigate("/mentorship")} />
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ backgroundColor: "#161618" }}
+      >
+        <BlackNav onLogoClick={() => navigate("/mentorship")} right={<AvatarSlot user={user} />} />
+
+        {/* gift1 base */}
         <div className="flex-1 flex items-center justify-center px-6">
           <div className="flex flex-col items-center gap-6 w-full max-w-xs text-center">
             <div className="flex flex-col gap-1">
@@ -552,62 +495,68 @@ export default function Payment() {
               onClick={() => setStep("gift2")}
               className="w-full bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80"
             >
-              {viaApply ? "claim your gift!" : "claim!"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "gift2") {
-    return (
-      <div className="min-h-screen bg-evolve-black flex flex-col">
-        <PayNav user={user} onLogoClick={() => navigate("/mentorship")} />
-        <div className="flex-1 flex items-center justify-center px-6 py-8">
-          <div
-            className="relative w-full max-w-xs rounded-3xl overflow-hidden flex flex-col items-center py-12 px-6 gap-4"
-            style={{ backgroundColor: "rgba(255,208,7,1)" }}
-          >
-            <Sunburst />
-            <div className="relative z-10 flex flex-col items-center gap-3 text-center">
-              <p
-                className="font-extrabold text-2xl leading-tight"
-                style={{ color: "rgba(223,5,134,1)" }}
-              >
-                be AI ready!!
-              </p>
-              <p className="text-evolve-black/80 text-sm max-w-[26ch] leading-relaxed">
-                we'll also show you how to stay visible as ai increasingly
-                filters who gets seen
-              </p>
-              <p className="font-extrabold text-evolve-black text-4xl mt-1">
-                free!
-              </p>
-              <p className="text-evolve-black/45 text-sm line-through">
-                ₹ 5,000
-              </p>
-            </div>
-            <img
-              src={surprise_box_open}
-              alt="open gift"
-              className="relative z-10 w-36 object-contain"
-            />
-            <button
-              onClick={() => setStep("details")}
-              className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80 mt-2"
-            >
               claim your gift!
             </button>
           </div>
         </div>
+
+        {/* gift2 overlay */}
+        {step === "gift2" && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center px-6 py-8"
+            style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+          >
+            <div
+              className="relative w-full max-w-xs rounded-3xl overflow-hidden flex flex-col items-center py-10 px-6 gap-4"
+              style={{ backgroundColor: "rgba(255,208,7,1)" }}
+            >
+              <img
+                src={rays_payment}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+              />
+              <div className="relative z-10 flex flex-col items-center gap-3 text-center">
+                <p
+                  className="font-extrabold text-2xl leading-tight"
+                  style={{ color: "rgba(223,5,134,1)" }}
+                >
+                  be AI ready!!
+                </p>
+                <p className="text-evolve-black/80 text-sm max-w-[26ch] leading-relaxed">
+                  we'll also show you how to stay visible as ai increasingly
+                  filters who gets seen
+                </p>
+                <p className="font-extrabold text-evolve-black text-4xl mt-1">
+                  free!
+                </p>
+                <p className="text-evolve-black/45 text-sm line-through">
+                  ₹ 5,000
+                </p>
+              </div>
+              <img
+                src={surprise_box_open}
+                alt="open gift"
+                className="relative z-10 w-36 object-contain"
+              />
+              <button
+                onClick={() => setStep("details")}
+                className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80 mt-2"
+              >
+                claim your gift!
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-evolve-black flex flex-col">
-      <PayNav user={user} onLogoClick={() => navigate("/mentorship")} />
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#161618" }}
+    >
+      <BlackNav onLogoClick={() => navigate("/mentorship")} right={<AvatarSlot user={user} />} />
 
       <div className="flex flex-col flex-1 px-6 pt-24 pb-12 md:items-center md:justify-center md:pt-0">
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
@@ -635,15 +584,16 @@ export default function Payment() {
               </p>
 
               {/* plan tabs */}
-              <div className="flex rounded-xl overflow-hidden">
+              <div className="flex gap-2">
                 {["starter", "accelerator"].map((t) => (
                   <button
                     key={t}
                     onClick={() => handlePlanChange(t)}
-                    className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-sm transition-colors"
+                    className="flex-1 py-3 font-extrabold lowercase text-sm transition-colors"
                     style={{
                       backgroundColor:
-                        plan === t ? "rgba(223,5,134,1)" : "rgba(255,208,7,1)"
+                        plan === t ? "rgba(223,5,134,1)" : "#BF9C05",
+                      color: plan === t ? "#fff" : "#000"
                     }}
                   >
                     {t}

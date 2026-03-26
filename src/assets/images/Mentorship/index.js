@@ -24,6 +24,7 @@ import chinmayImg from "./chinmayImg.svg";
 import jonImg from "./jonImg.svg";
 import anishImg from "./anishImg.svg";
 import pradyumnaImg from "./pradyumnaImg.svg";
+import rays_payment from "./rays_payment.svg";
 
 export {
   hero_mentorship,
@@ -51,5 +52,6 @@ export {
   chinmayImg,
   jonImg,
   anishImg,
-  pradyumnaImg
+  pradyumnaImg,
+  rays_payment
 };
