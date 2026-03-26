@@ -657,7 +657,7 @@ const MarqueeStrip = ({ isMobile, spotsText, batchLabel }) => {
 /* ─────────────────────────────────────────────
    GetStartedButton — shared hover button
 ───────────────────────────────────────────── */
-const GetStartedButton = () => {
+const GetStartedButton = ({ onClick }) => {
   const [hover, setHover] = useState(false);
   return (
     <img
@@ -666,6 +666,7 @@ const GetStartedButton = () => {
       alt="get started"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={onClick}
       className="cursor-pointer transition-opacity duration-150"
       style={{
         width: "clamp(200px, 22vw, 320px)",
@@ -689,6 +690,11 @@ const Mentorship = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const section5Ref = useRef(null); // framework
+  const section6Ref = useRef(null); // pricing
+
+  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: "smooth" });
 
   // derived batch values (fallback to hardcoded while loading)
   const batchFull = batch !== null && batch.spots_remaining <= 0;
@@ -833,7 +839,7 @@ const Mentorship = () => {
                 alt="apply now"
                 onMouseEnter={() => setApplyHover(true)}
                 onMouseLeave={() => setApplyHover(false)}
-                onClick={() => handlePayment("starter")}
+                onClick={() => scrollTo(section5Ref)}
                 className="cursor-pointer transition-opacity duration-150"
                 style={{ width: isMobile ? "220px" : "220px" }}
               />
@@ -883,6 +889,7 @@ const Mentorship = () => {
               alt="how it works"
               onMouseEnter={() => setHowHover(true)}
               onMouseLeave={() => setHowHover(false)}
+              onClick={() => scrollTo(section6Ref)}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
             />
@@ -1359,6 +1366,9 @@ const Mentorship = () => {
       {/* ================= SECTION 4 — TESTIMONIALS (Mobile) ================= */}
       <TestimonialsMobile />
 
+      {/* scroll anchor for section 5 */}
+      <div ref={section5Ref} />
+
       {/* ================= SECTION 5 — FRAMEWORK (Desktop) ================= */}
       <section
         className="hidden md:flex relative overflow-hidden"
@@ -1528,6 +1538,9 @@ const Mentorship = () => {
           ))}
         </div>
       </section>
+
+      {/* scroll anchor for section 6 */}
+      <div ref={section6Ref} />
 
       {/* ================= SECTION 6 — PRICING ================= */}
       <section className="bg-evolve-yellow overflow-hidden">
@@ -1718,7 +1731,7 @@ const Mentorship = () => {
           <img
             src={explore_plans}
             alt="explore plans"
-            onClick={() => handlePayment("starter")}
+            onClick={() => scrollTo(section6Ref)}
             className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
             style={{ width: "clamp(200px, 22vw, 320px)" }}
           />
@@ -1794,7 +1807,7 @@ const Mentorship = () => {
           <img
             src={explore_plans}
             alt="explore plans"
-            onClick={() => handlePayment("starter")}
+            onClick={() => scrollTo(section6Ref)}
             className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
             style={{ width: "clamp(180px, 55vw, 260px)" }}
           />
@@ -2075,7 +2088,7 @@ const Mentorship = () => {
           </p>
 
           {/* CTA button */}
-          <GetStartedButton />
+          <GetStartedButton onClick={() => scrollTo(section6Ref)} />
         </div>
 
         {/* Bottom vector — full width */}
@@ -2143,7 +2156,7 @@ const Mentorship = () => {
           </p>
 
           {/* CTA button */}
-          <GetStartedButton />
+          <GetStartedButton onClick={() => scrollTo(section6Ref)} />
         </div>
 
         {/* Bottom vector — full width */}
