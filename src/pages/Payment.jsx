@@ -20,7 +20,7 @@ const PLANS = {
   // },
   starter: {
     label: "starter",
-    price: "₹15,000",
+    price: "₹11",
     originalPrice: "₹35,000",
     // paise: 1500000
     paise: 1100
