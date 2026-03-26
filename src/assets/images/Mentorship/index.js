@@ -17,6 +17,7 @@ import mentorship_vector from "./mentorship_vector.svg";
 import mentorship_vector_mobile from "./mentorship_vector_mobile.svg";
 import surprise_box from "./surprise_box.svg";
 import surprise_box_open from "./surprise_box_open.svg";
+import apply_to_mentorship from "./apply_for_mentorship.svg";
 
 export {
   hero_mentorship,
@@ -37,5 +38,6 @@ export {
   mentorship_vector,
   mentorship_vector_mobile,
   surprise_box,
-  surprise_box_open
+  surprise_box_open,
+  apply_to_mentorship
 };

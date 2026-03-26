@@ -22,7 +22,8 @@ import {
   right_eye_ribbon_mobile,
   left_eye_ribbon_mobile,
   mentorship_vector,
-  mentorship_vector_mobile
+  mentorship_vector_mobile,
+  apply_to_mentorship
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
@@ -224,7 +225,15 @@ const TestimonialsMobile = () => {
    NOTE: uses apply_now_button / apply_now_button_hover
    from module-level imports above
 ───────────────────────────────────────────── */
-const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight, onPay }) => {
+const PlanColumn = ({
+  tier,
+  cutPrice,
+  price,
+  tagline,
+  features,
+  isRight,
+  onPay
+}) => {
   const [hover, setHover] = useState(false);
 
   return (
@@ -350,7 +359,14 @@ const PlanColumn = ({ tier, cutPrice, price, tagline, features, isRight, onPay }
    NOTE: uses apply_now_button / apply_now_button_hover
    from module-level imports above
 ───────────────────────────────────────────── */
-const PlanCardMobile = ({ tier, cutPrice, price, tagline, features, onPay }) => {
+const PlanCardMobile = ({
+  tier,
+  cutPrice,
+  price,
+  tagline,
+  features,
+  onPay
+}) => {
   const [hover, setHover] = useState(false);
 
   return (
@@ -649,7 +665,7 @@ const Mentorship = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
   const [pricingTab, setPricingTab] = useState("starter");
-  const [hasPaid,    setHasPaid]    = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -660,7 +676,9 @@ const Mentorship = () => {
   const batchLabel = batch ? ordinalDate(batch.start_date) : "16th april";
   const closeLabel = batch ? closeDateLabel(batch.start_date) : "12th april";
   // shown in marquee + CTA when batch is full or no open batch
-  const spotsText = batchFull ? "batch full — next batch coming soon" : `only ${spotsLeft} spots left`;
+  const spotsText = batchFull
+    ? "batch full — next batch coming soon"
+    : `only ${spotsLeft} spots left`;
 
   // CTA marquee refs
   const marqueeRef = useRef(null);
@@ -685,7 +703,9 @@ const Mentorship = () => {
       .select("*")
       .eq("status", "open")
       .single()
-      .then(({ data }) => { if (data) setBatch(data); });
+      .then(({ data }) => {
+        if (data) setBatch(data);
+      });
   }, []);
 
   useEffect(() => {
@@ -714,8 +734,14 @@ const Mentorship = () => {
       navigate("/signin", { state: { from: `/payment?plan=${plan}` } });
       return;
     }
-    if (hasPaid) { navigate("/mentorship-session"); return; }
-    if (batchFull) { alert("this batch is full. the next batch opens soon."); return; }
+    if (hasPaid) {
+      navigate("/mentorship-session");
+      return;
+    }
+    if (batchFull) {
+      alert("this batch is full. the next batch opens soon.");
+      return;
+    }
     navigate(`/payment?plan=${plan}`);
   };
 
@@ -740,9 +766,9 @@ const Mentorship = () => {
   return (
     <div className="bg-evolve-yellow">
       {/* ================= SECTION 1 — HERO ================= */}
-      <section className="relative min-h-screen bg-evolve-yellow overflow-hidden">
+      <section className="relative h-screen bg-evolve-yellow overflow-hidden">
         <div className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 top-[15%]">
-          <h1
+          {/* <h1
             className="lowercase text-black font-semibold max-w-[80vw]"
             style={{
               fontSize: "clamp(20px, 2.5vw, 32px)",
@@ -750,7 +776,7 @@ const Mentorship = () => {
             }}
           >
             evolve mentorship
-          </h1>
+          </h1> */}
           <p
             className="hidden lg:block mt-2 font-extrabold lowercase text-evolve-pink max-w-[100vw]"
             style={{
@@ -773,6 +799,26 @@ const Mentorship = () => {
           >
             Stop guessing your design career
           </p>
+          <div className="mt-6 flex justify-center">
+            {hasPaid ? (
+              <button
+                onClick={() => navigate("/mentorship-session")}
+                className="font-extrabold lowercase text-evolve-yellow underline underline-offset-4 text-xl cursor-pointer"
+              >
+                my mentoring sessions →
+              </button>
+            ) : (
+              <img
+                src={applyHover ? apply_to_mentorship : apply_to_mentorship}
+                alt="apply now"
+                onMouseEnter={() => setApplyHover(true)}
+                onMouseLeave={() => setApplyHover(false)}
+                onClick={() => handlePayment("starter")}
+                className="cursor-pointer transition-opacity duration-150"
+                style={{ width: isMobile ? "220px" : "220px" }}
+              />
+            )}
+          </div>
         </div>
         <img
           src={hero_mentorship_mobile}
@@ -812,24 +858,6 @@ const Mentorship = () => {
             corner until you land.
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
-            {hasPaid ? (
-              <button
-                onClick={() => navigate("/mentorship-session")}
-                className="font-extrabold lowercase text-evolve-yellow underline underline-offset-4 text-xl cursor-pointer"
-              >
-                my mentoring sessions →
-              </button>
-            ) : (
-              <img
-                src={applyHover ? apply_now_button_hover : apply_now_button}
-                alt="apply now"
-                onMouseEnter={() => setApplyHover(true)}
-                onMouseLeave={() => setApplyHover(false)}
-                onClick={() => handlePayment("starter")}
-                className="cursor-pointer transition-opacity duration-150"
-                style={{ width: isMobile ? "270px" : "360px" }}
-              />
-            )}
             <img
               src={howHover ? how_button_hover : how_button}
               alt="how it works"
@@ -971,7 +999,7 @@ const Mentorship = () => {
                 get there.
               </p>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 mt-6 text-white font-normal hover:opacity-70 transition-opacity duration-150 w-fit"
@@ -1055,7 +1083,7 @@ const Mentorship = () => {
               there.
             </p>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 mt-4 font-normal hover:opacity-70 transition-opacity duration-150 w-fit"
@@ -1517,14 +1545,24 @@ const Mentorship = () => {
             <button
               onClick={() => setPricingTab("starter")}
               className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
-              style={{ backgroundColor: pricingTab === "starter" ? "rgba(223,5,134,1)" : "rgba(255,208,7,1)" }}
+              style={{
+                backgroundColor:
+                  pricingTab === "starter"
+                    ? "rgba(223,5,134,1)"
+                    : "rgba(255,208,7,1)"
+              }}
             >
               starter
             </button>
             <button
               onClick={() => setPricingTab("accelerator")}
               className="flex-1 py-3 font-extrabold lowercase text-evolve-black text-lg"
-              style={{ backgroundColor: pricingTab === "accelerator" ? "rgba(223,5,134,1)" : "rgba(255,208,7,1)" }}
+              style={{
+                backgroundColor:
+                  pricingTab === "accelerator"
+                    ? "rgba(223,5,134,1)"
+                    : "rgba(255,208,7,1)"
+              }}
             >
               accelerator
             </button>
@@ -1633,7 +1671,11 @@ const Mentorship = () => {
           className="absolute bottom-[4rem] left-0 z-20 w-[45%]"
           // style={{ height: "clamp(200px, 30vh, 420px)" }}
         />
-        <MarqueeStrip isMobile={false} spotsText={spotsText} batchLabel={batchLabel} />
+        <MarqueeStrip
+          isMobile={false}
+          spotsText={spotsText}
+          batchLabel={batchLabel}
+        />
       </section>
 
       {/* ================= SECTION 8 — WHY WE BUILT THIS (Mobile) ================= */}
@@ -1699,7 +1741,11 @@ const Mentorship = () => {
           className="absolute bottom-[4rem] left-0 z-10 w-auto"
           // style={{ height: "clamp(140px, 28vw, 220px)" }}
         />
-        <MarqueeStrip isMobile={true} spotsText={spotsText} batchLabel={batchLabel} />
+        <MarqueeStrip
+          isMobile={true}
+          spotsText={spotsText}
+          batchLabel={batchLabel}
+        />
       </section>
 
       {/* ================= SECTION 9 — FAQ (Desktop) ================= */}
@@ -2035,7 +2081,6 @@ const Mentorship = () => {
           className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
-
     </div>
   );
 };

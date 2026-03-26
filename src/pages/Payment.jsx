@@ -12,11 +12,18 @@ import { surprise_box, surprise_box_open } from "../assets/images/Mentorship";
 
 /* ─── plan config ─────────────────────────────────────────────────────────── */
 const PLANS = {
+  // test: {
+  //   label: "test",
+  //   price: "₹11",
+  //   originalPrice: "₹11",
+  //   paise: 1100 // ← 11 rupees in paise
+  // },
   starter: {
     label: "starter",
     price: "₹15,000",
     originalPrice: "₹35,000",
-    paise: 1500000
+    // paise: 1500000
+    paise: 1100
   },
   accelerator: {
     label: "accelerator",
@@ -383,11 +390,11 @@ export default function Payment() {
       }
 
       // DEV bypass — skip real payment on localhost
-      if (import.meta.env.DEV) {
-        setStep("success");
-        setPaying(false);
-        return;
-      }
+      // if (import.meta.env.DEV) {
+      //   setStep("success");
+      //   setPaying(false);
+      //   return;
+      // }
 
       const res = await fetch("/api/razorpay-create-order", {
         method: "POST",
