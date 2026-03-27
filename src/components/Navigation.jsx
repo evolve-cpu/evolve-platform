@@ -3338,7 +3338,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               {/* JOIN US BUTTON */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
-                  href="https://discord.gg/wKRYG7cSWt"
+                  href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="cursor-pointer "

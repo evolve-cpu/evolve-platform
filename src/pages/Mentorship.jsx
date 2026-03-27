@@ -1498,7 +1498,7 @@ const Mentorship = () => {
               lineHeight: "1.05"
             }}
           >
-            1 batch.
+            5 spots.
             <br />4 stages.
             <br />5 sessions.
           </h2>

@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
@@ -91,18 +89,89 @@ function ProfileSheet({ user, onClose }) {
     onClose();
   };
 
-  const downloadReceipt = async () => {
-    if (!receiptRef.current || !payment) return;
-    const canvas = await html2canvas(receiptRef.current, {
-      scale: 2,
-      useCORS: true
+  const downloadReceipt = () => {
+    if (!payment) return;
+    const date = new Date(payment.created_at).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
     });
-    const imgData = canvas.toDataURL("image/png");
-    const w = canvas.width / 2;
-    const h = canvas.height / 2;
-    const pdf = new jsPDF({ unit: "px", format: [w, h] });
-    pdf.addImage(imgData, "PNG", 0, 0, w, h);
-    pdf.save(`evolve-receipt-${payment.razorpay_payment_id || Date.now()}.pdf`);
+    const batchNum = payment.batch?.batch_number ?? "—";
+    const startDate = payment.batch?.start_date
+      ? ordinalDate(payment.batch.start_date)
+      : "—";
+    const amount = `Rs. ${Number(payment.amount).toLocaleString("en-IN")}`;
+    const ref = payment.razorpay_payment_id || "—";
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Evolve Receipt</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #fff; color: #111; padding: 60px 80px; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .logo { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .logo span { color: #BF9C05; }
+    .subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: #aaa; }
+    .divider { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
+    .receipt-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-align: center; color: #555; margin-bottom: 28px; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto; /* label | value */
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 10px;
+}
+    .row:last-child { border-bottom: none; }
+    .label { font-size: 13px; color: #999; text-transform: lowercase; }
+    .value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  text-align: right;
+  word-break: break-word;  /* better */
+}
+  .value {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+    .badge { display: inline-block; background: #FFD007; color: #111; font-weight: 800; font-size: 11px; padding: 4px 14px; border-radius: 20px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    @media print {
+      body { padding: 40px 60px; }
+      @page { 
+  margin: 20px;
+  size: A4; 
+}
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">e<span>·</span>volve</div>
+    <div class="subtitle">be remarkable</div>
+  </div>
+  <hr class="divider"/>
+  <div class="receipt-title">mentorship receipt</div>
+  <div class="row"><span class="label">plan</span><span class="value">${payment.plan}</span></div>
+  <div class="row"><span class="label">amount paid</span><span class="value">${amount}</span></div>
+  <div class="row"><span class="label">date</span><span class="value">${date}</span></div>
+  <div class="row"><span class="label">batch</span><span class="value">batch ${batchNum}</span></div>
+  <div class="row"><span class="label">starts on</span><span class="value">${startDate}</span></div>
+  <div class="row"><span class="label">payment ref</span><span class="value">${ref}</span></div>
+  <hr class="divider"/>
+  <div class="footer">evolve design &nbsp;·&nbsp; evolvedesign.academy<br/>thank you for joining evolve mentorship.</div>
+</body>
+</html>`;
+
+    const w = window.open("", "_blank", "width=600,height=800");
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => {
+      w.print();
+    }, 400);
   };
 
   const rows = payment

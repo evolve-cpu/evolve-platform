@@ -690,7 +690,7 @@ const Footer = () => {
 
             <div className="mt-6">
               <a
-                href="https://discord.gg/wKRYG7cSWt"
+                href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block"
@@ -744,11 +744,17 @@ const Footer = () => {
             </div>
 
             <div className="mt-8 flex items-center gap-6">
-              <Link to="/privacy" className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200">
+              <Link
+                to="/privacy"
+                className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
+              >
                 privacy policy
               </Link>
               <span className="text-black/30 text-sm">·</span>
-              <Link to="/terms" className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200">
+              <Link
+                to="/terms"
+                className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
+              >
                 t&amp;c conditions
               </Link>
             </div>
@@ -833,11 +839,17 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center gap-4 mt-3">
-            <Link to="/privacy" className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200">
+            <Link
+              to="/privacy"
+              className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200"
+            >
               privacy policy
             </Link>
             <span className="text-black/30 text-xs">·</span>
-            <Link to="/terms" className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200">
+            <Link
+              to="/terms"
+              className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200"
+            >
               t&amp;c conditions
             </Link>
           </div>
