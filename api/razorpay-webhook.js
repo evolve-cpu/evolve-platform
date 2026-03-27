@@ -90,6 +90,45 @@ export default async function handler(req, res) {
             .eq("id", pmnt.batch_id);
         }
       }
+
+      // Send Brevo confirmation email
+      if (pmnt?.user_id) {
+        const { data: fullPmnt } = await supabase
+          .from("mentorship_payments")
+          .select("*, batch:mentorship_batches(batch_number, start_date)")
+          .eq("razorpay_order_id", payment.order_id)
+          .single();
+
+        const { data: { user: authUser } } = await supabase.auth.admin.getUserById(pmnt.user_id);
+
+        if (authUser?.email && process.env.BREVO_API_KEY) {
+          const firstName = (authUser.user_metadata?.full_name || authUser.user_metadata?.name || "").split(" ")[0] || "there";
+          const startDate = fullPmnt?.batch?.start_date
+            ? new Date(fullPmnt.batch.start_date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+            : "—";
+
+          await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "api-key": process.env.BREVO_API_KEY
+            },
+            body: JSON.stringify({
+              sender: { name: "evolve", email: "content@evolvedesign.academy" },
+              to: [{ email: authUser.email, name: authUser.user_metadata?.full_name || authUser.email }],
+              templateId: Number(process.env.BREVO_TEMPLATE_ID),
+              params: {
+                FIRSTNAME: firstName,
+                PLAN: fullPmnt?.plan || "starter",
+                AMOUNT: `Rs. ${Number(fullPmnt?.amount || 0).toLocaleString("en-IN")}`,
+                BATCH: `Batch ${fullPmnt?.batch?.batch_number ?? "—"}`,
+                START_DATE: startDate,
+                REF: payment.id || "—"
+              }
+            })
+          });
+        }
+      }
     } else if (event === "payment.failed") {
       await supabase
         .from("mentorship_payments")
