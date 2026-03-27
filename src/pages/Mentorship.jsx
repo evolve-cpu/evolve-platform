@@ -107,6 +107,7 @@ const TestimonialsMobile = () => {
   const [animating, setAnimating] = useState(false);
   const cardRefs = useRef([]);
   const rotations = [-3, 4, -6, 2];
+  const touchStartX = useRef(null);
 
   const advance = (direction) => {
     if (animating) return;
@@ -152,6 +153,14 @@ const TestimonialsMobile = () => {
       <div
         className="relative flex items-center justify-center -mb-2"
         style={{ height: "570px" }}
+        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const diff = e.changedTouches[0].clientX - touchStartX.current;
+          touchStartX.current = null;
+          if (Math.abs(diff) < 40) return;
+          advance(diff < 0 ? "right" : "left");
+        }}
       >
         {order.map((testimonialIdx, stackPos) => {
           const depthOffset = (order.length - 1 - stackPos) * 8;
