@@ -252,7 +252,8 @@ const PlanColumn = ({
   tagline,
   features,
   isRight,
-  onPay
+  onPay,
+  hasPaid
 }) => {
   const [hover, setHover] = useState(false);
 
@@ -358,18 +359,20 @@ const PlanColumn = ({
       </div>
 
       {/* Apply button */}
-      <img
-        src={hover ? apply_now_button_hover : apply_now_button}
-        alt="apply now"
-        onClick={() => onPay(tier)}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        className="cursor-pointer transition-opacity duration-150"
-        style={{
-          width: "clamp(200px, 22vw, 320px)",
-          marginTop: "clamp(20px, 3vh, 40px)"
-        }}
-      />
+      {!hasPaid && (
+        <img
+          src={hover ? apply_now_button_hover : apply_now_button}
+          alt="apply now"
+          onClick={() => onPay(tier)}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          className="cursor-pointer transition-opacity duration-150"
+          style={{
+            width: "clamp(200px, 22vw, 320px)",
+            marginTop: "clamp(20px, 3vh, 40px)"
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -385,7 +388,8 @@ const PlanCardMobile = ({
   price,
   tagline,
   features,
-  onPay
+  onPay,
+  hasPaid
 }) => {
   const [hover, setHover] = useState(false);
 
@@ -479,15 +483,17 @@ const PlanCardMobile = ({
       </div>
 
       {/* Button */}
-      <img
-        src={hover ? apply_now_button_hover : apply_now_button}
-        alt="apply now"
-        onClick={() => onPay(tier)}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        className="cursor-pointer transition-opacity duration-150"
-        style={{ width: "240px", marginTop: "28px" }}
-      />
+      {!hasPaid && (
+        <img
+          src={hover ? apply_now_button_hover : apply_now_button}
+          alt="apply now"
+          onClick={() => onPay(tier)}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          className="cursor-pointer transition-opacity duration-150"
+          style={{ width: "240px", marginTop: "28px" }}
+        />
+      )}
     </div>
   );
 };
@@ -832,9 +838,13 @@ const Mentorship = () => {
             {hasPaid ? (
               <button
                 onClick={() => navigate("/mentorship-session")}
-                className="font-extrabold lowercase text-evolve-yellow underline underline-offset-4 text-xl cursor-pointer"
+                className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+                style={{
+                  backgroundColor: "#000",
+                  boxShadow: "4px 4px 0 0 #BF9C05"
+                }}
               >
-                my mentoring sessions →
+                my mentorship session
               </button>
             ) : (
               <>
@@ -1576,6 +1586,7 @@ const Mentorship = () => {
               features={starterFeatures}
               isRight={false}
               onPay={handlePayment}
+              hasPaid={hasPaid}
             />
           </div>
           <div style={{ flex: "0 0 50%" }}>
@@ -1587,6 +1598,7 @@ const Mentorship = () => {
               features={acceleratorFeatures}
               isRight={true}
               onPay={handlePayment}
+              hasPaid={hasPaid}
             />
           </div>
         </div>
@@ -1635,32 +1647,34 @@ const Mentorship = () => {
 
         {/* ── MOBILE: tab system ── */}
         <div className="block md:hidden">
-          <div className="flex">
-            <button
-              onClick={() => setPricingTab("starter")}
-              className="flex-1 py-3 font-extrabold lowercase text-lg"
-              style={{
-                backgroundColor:
-                  pricingTab === "starter" ? "rgba(223,5,134,1)" : "#BF9C05",
-                color: pricingTab === "starter" ? "#fff" : "#000"
-              }}
-            >
-              starter
-            </button>
-            <button
-              onClick={() => setPricingTab("accelerator")}
-              className="flex-1 py-3 font-extrabold lowercase text-lg"
-              style={{
-                backgroundColor:
-                  pricingTab === "accelerator"
-                    ? "rgba(223,5,134,1)"
-                    : "#BF9C05",
-                color: pricingTab === "accelerator" ? "#fff" : "#000"
-              }}
-            >
-              accelerator
-            </button>
-          </div>
+          {!hasPaid && (
+            <div className="flex">
+              <button
+                onClick={() => setPricingTab("starter")}
+                className="flex-1 py-3 font-extrabold lowercase text-lg"
+                style={{
+                  backgroundColor:
+                    pricingTab === "starter" ? "rgba(223,5,134,1)" : "#BF9C05",
+                  color: pricingTab === "starter" ? "#fff" : "#000"
+                }}
+              >
+                starter
+              </button>
+              <button
+                onClick={() => setPricingTab("accelerator")}
+                className="flex-1 py-3 font-extrabold lowercase text-lg"
+                style={{
+                  backgroundColor:
+                    pricingTab === "accelerator"
+                      ? "rgba(223,5,134,1)"
+                      : "#BF9C05",
+                  color: pricingTab === "accelerator" ? "#fff" : "#000"
+                }}
+              >
+                accelerator
+              </button>
+            </div>
+          )}
           {pricingTab === "starter" && (
             <PlanCardMobile
               tier="starter"
@@ -1669,6 +1683,7 @@ const Mentorship = () => {
               tagline="for those who need a direction on where to start"
               features={starterFeatures}
               onPay={handlePayment}
+              hasPaid={hasPaid}
             />
           )}
           {pricingTab === "accelerator" && (
@@ -1679,6 +1694,7 @@ const Mentorship = () => {
               tagline="for those who have interviews lined up and need to crack it"
               features={acceleratorFeatures}
               onPay={handlePayment}
+              hasPaid={hasPaid}
             />
           )}
         </div>
@@ -1748,14 +1764,27 @@ const Mentorship = () => {
             what this is for.
           </p>
 
-          {/* Explore plans button */}
-          <img
-            src={explore_plans}
-            alt="explore plans"
-            onClick={() => scrollTo(section6Ref)}
-            className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
-            style={{ width: "clamp(200px, 22vw, 320px)" }}
-          />
+          {/* Explore plans / session button */}
+          {hasPaid ? (
+            <button
+              onClick={() => navigate("/mentorship-session")}
+              className="font-extrabold lowercase text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
+              style={{
+                backgroundColor: "#000",
+                boxShadow: "4px 4px 0 0 #BF9C05"
+              }}
+            >
+              my mentorship session
+            </button>
+          ) : (
+            <img
+              src={explore_plans}
+              alt="explore plans"
+              onClick={() => scrollTo(section6Ref)}
+              className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
+              style={{ width: "clamp(200px, 22vw, 320px)" }}
+            />
+          )}
         </div>
 
         {/* Ribbons — bottom corners */}
@@ -1824,14 +1853,27 @@ const Mentorship = () => {
             what this is for.
           </p>
 
-          {/* Explore plans button */}
-          <img
-            src={explore_plans}
-            alt="explore plans"
-            onClick={() => scrollTo(section6Ref)}
-            className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
-            style={{ width: "clamp(180px, 55vw, 260px)" }}
-          />
+          {/* Explore plans / session button */}
+          {hasPaid ? (
+            <button
+              onClick={() => navigate("/mentorship-session")}
+              className="font-extrabold lowercase text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
+              style={{
+                backgroundColor: "#000",
+                boxShadow: "4px 4px 0 0 #BF9C05"
+              }}
+            >
+              my mentorship session
+            </button>
+          ) : (
+            <img
+              src={explore_plans}
+              alt="explore plans"
+              onClick={() => scrollTo(section6Ref)}
+              className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
+              style={{ width: "clamp(180px, 55vw, 260px)" }}
+            />
+          )}
         </div>
 
         {/* Ribbons — bottom corners, mobile variants */}
@@ -2109,7 +2151,20 @@ const Mentorship = () => {
           </p>
 
           {/* CTA button */}
-          <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+          {hasPaid ? (
+            <button
+              onClick={() => navigate("/mentorship-session")}
+              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+              style={{
+                backgroundColor: "#000",
+                boxShadow: "4px 4px 0 0 #BF9C05"
+              }}
+            >
+              my mentorship session
+            </button>
+          ) : (
+            <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+          )}
         </div>
 
         {/* Bottom vector — full width */}
@@ -2165,7 +2220,7 @@ const Mentorship = () => {
 
           {/* Tagline */}
           <p
-            className="font-normal lowercase text-white"
+            className="font-normal lowercase mb-2 text-white"
             style={{
               fontSize: "clamp(16px, 4.5vw, 22px)",
               lineHeight: "1.4",
@@ -2177,7 +2232,20 @@ const Mentorship = () => {
           </p>
 
           {/* CTA button */}
-          <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+          {hasPaid ? (
+            <button
+              onClick={() => navigate("/mentorship-session")}
+              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+              style={{
+                backgroundColor: "#000",
+                boxShadow: "4px 4px 0 0 #BF9C05"
+              }}
+            >
+              my mentorship session
+            </button>
+          ) : (
+            <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+          )}
         </div>
 
         {/* Bottom vector — full width */}
