@@ -779,7 +779,7 @@ const Footer = () => {
 
           <div className="mt-4">
             <a
-              href="https://discord.gg/wKRYG7cSWt"
+              href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block"
