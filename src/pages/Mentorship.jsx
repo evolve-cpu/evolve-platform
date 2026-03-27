@@ -159,7 +159,7 @@ const TestimonialsMobile = () => {
           const diff = e.changedTouches[0].clientX - touchStartX.current;
           touchStartX.current = null;
           if (Math.abs(diff) < 40) return;
-          advance(diff < 0 ? "right" : "left");
+          advance(diff < 0 ? "left" : "right");
         }}
       >
         {order.map((testimonialIdx, stackPos) => {
