@@ -917,7 +917,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           opacity: 0
         }}
       >
-        the evolve toolkit
+        the evolve ecosystem
       </div>
 
       {/* Mini Ovals Container */}
@@ -1068,7 +1068,7 @@ const SceneNew = React.forwardRef((props, ref) => {
 
             <img
               ref={oval2Ref}
-              src={oval_3_1}
+              src={oval_2}
               alt="oval 2"
               className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
               onClick={() => handleCardClick(2)}
