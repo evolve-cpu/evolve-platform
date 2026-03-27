@@ -189,11 +189,7 @@ export default function MentorshipSession() {
         {/* ── Action boxes ─────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-3 mb-12">
           {/* Check email */}
-          <a
-            href="mailto:"
-            className="flex items-center gap-4 rounded-2xl border border-white/10 p-5 transition-opacity active:opacity-70"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-          >
+          <div className="flex items-center gap-4 px-1 py-2">
             <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ background: "rgba(255,208,7,0.12)" }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -206,7 +202,7 @@ export default function MentorshipSession() {
               <p className="text-white font-semibold text-base">check your email</p>
               <p className="text-white/40 text-sm">confirmation + calendar invite on the way</p>
             </div>
-          </a>
+          </div>
 
           {/* Join WhatsApp */}
           <a

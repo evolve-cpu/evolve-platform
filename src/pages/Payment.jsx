@@ -360,7 +360,6 @@ export default function Payment() {
         setPaying(false);
         return;
       }
-
       const res = await fetch("/api/razorpay-create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
