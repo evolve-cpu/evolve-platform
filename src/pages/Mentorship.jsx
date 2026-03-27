@@ -75,7 +75,7 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "who is this for?",
-    a: "design freshers, recent grads, career switchers, mid level designers... freshers are preferred, but we welcome anyone serious about finding clarity in their design career."
+    a: "created for anyone starting out in design, transitioning into the field, or building toward more advanced roles."
   },
   {
     q: "how long does the mentorship run?",
@@ -728,9 +728,12 @@ const Mentorship = () => {
       .from("batch_spots")
       .select("*")
       .eq("status", "open")
-      .single()
       .then(({ data }) => {
-        if (data) setBatch(data);
+        if (!data || data.length === 0) return;
+        const available = data
+          .filter((b) => b.spots_remaining > 0)
+          .sort((a, b) => a.batch_number - b.batch_number);
+        if (available.length > 0) setBatch(available[0]);
       });
   }, []);
 
@@ -844,7 +847,9 @@ const Mentorship = () => {
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 />
-                <p className="text-black text-sm font-semibold">*limited seats</p>
+                <p className="text-black text-sm font-semibold">
+                  *limited seats
+                </p>
               </>
             )}
           </div>
@@ -1551,7 +1556,10 @@ const Mentorship = () => {
         <div className="w-full bg-evolve-pink flex items-center justify-center py-5 md:py-7">
           <h2
             className="text-white font-extrabold lowercase text-center"
-            style={{ fontSize: "clamp(28px, 5vw, 56px)", letterSpacing: "-0.02em" }}
+            style={{
+              fontSize: "clamp(28px, 5vw, 56px)",
+              letterSpacing: "-0.02em"
+            }}
           >
             what it costs.
           </h2>
@@ -1644,7 +1652,9 @@ const Mentorship = () => {
               className="flex-1 py-3 font-extrabold lowercase text-lg"
               style={{
                 backgroundColor:
-                  pricingTab === "accelerator" ? "rgba(223,5,134,1)" : "#BF9C05",
+                  pricingTab === "accelerator"
+                    ? "rgba(223,5,134,1)"
+                    : "#BF9C05",
                 color: pricingTab === "accelerator" ? "#fff" : "#000"
               }}
             >

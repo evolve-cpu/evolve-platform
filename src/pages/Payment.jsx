@@ -21,9 +21,9 @@ const PLANS = {
   // },
   starter: {
     label: "starter",
-    price: "₹11", // TODO: revert to "₹15,000" before launch
+    price: "₹15,000",
     originalPrice: "₹35,000",
-    paise: 1100 // TODO: revert to 1500000 before launch
+    paise: 1500000
   },
   accelerator: {
     label: "accelerator",
@@ -287,6 +287,21 @@ export default function Payment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
+  /* ── already paid → skip to session ─────────────────────────────────────── */
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("mentorship_payments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "success")
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) navigate("/mentorship-session", { replace: true });
+      });
+  }, [user]);
+
   /* ── pre-fill phone from profile ────────────────────────────────────────── */
   useEffect(() => {
     if (user?.phone) setPhone(user.phone);
@@ -298,9 +313,12 @@ export default function Payment() {
       .from("batch_spots")
       .select("*")
       .eq("status", "open")
-      .maybeSingle()
       .then(({ data }) => {
-        if (data) setBatch(data);
+        if (!data || data.length === 0) return;
+        const available = data
+          .filter((b) => b.spots_remaining > 0)
+          .sort((a, b) => a.batch_number - b.batch_number);
+        if (available.length > 0) setBatch(available[0]);
       });
   }, []);
 
@@ -524,11 +542,11 @@ export default function Payment() {
               className="relative w-full max-w-xs rounded-3xl overflow-hidden flex flex-col items-center py-10 px-6 gap-4"
               style={{ backgroundColor: "rgba(255,208,7,1)" }}
             >
-              <img
+              {/* <img
                 src={rays_payment}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-              />
+              /> */}
               <div className="relative z-10 flex flex-col items-center gap-3 text-center">
                 <p
                   className="font-extrabold text-2xl leading-tight"

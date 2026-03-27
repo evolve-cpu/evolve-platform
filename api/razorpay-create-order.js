@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const PLAN_AMOUNTS_PAISE = {
-  starter: 1100,        // TODO: revert to 1500000 (₹15,000) before launch
+  starter: 1500000,     // ₹15,000
   accelerator: 3500000  // ₹35,000
 };
 
@@ -63,16 +63,19 @@ export default async function handler(req, res) {
     }
     const order = await orderRes.json();
 
-    // Get currently open batch
-    const { data: batch } = await supabase
-      .from("mentorship_batches")
-      .select("id")
-      .eq("status", "open")
-      .single();
+    // Get the lowest-numbered open batch with seats available
+    const { data: allBatches } = await supabase
+      .from("batch_spots")
+      .select("id, batch_number, spots_remaining")
+      .eq("status", "open");
+    const batch = (allBatches || [])
+      .filter((b) => b.spots_remaining > 0)
+      .sort((a, b) => a.batch_number - b.batch_number)[0] || null;
 
     // Insert pending payment row
     await supabase.from("mentorship_payments").insert({
       user_id: user.id,
+      user_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
       plan,
       amount: amount / 100, // store in rupees (15000 / 35000)
       currency: "INR",

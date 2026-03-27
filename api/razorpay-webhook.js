@@ -53,13 +53,23 @@ export default async function handler(req, res) {
         })
         .eq("razorpay_order_id", payment.order_id);
 
-      // Check if batch is now full → close it
+      // Fetch the updated payment row to get batch_id + user_id
       const { data: pmnt } = await supabase
         .from("mentorship_payments")
-        .select("batch_id")
+        .select("batch_id, user_id")
         .eq("razorpay_order_id", payment.order_id)
         .single();
 
+      // Assign user to the batch in mentorship_batches (enroll)
+      if (pmnt?.batch_id && pmnt?.user_id) {
+        // Upsert into batch_members table so user is enrolled
+        await supabase
+          .from("batch_members")
+          .upsert({ batch_id: pmnt.batch_id, user_id: pmnt.user_id }, { onConflict: "batch_id,user_id" });
+      }
+
+      // Check if batch is now full → close mentorship_batches row
+      // batch_spots is a view — closing mentorship_batches is sufficient
       if (pmnt?.batch_id) {
         const { data: batch } = await supabase
           .from("mentorship_batches")

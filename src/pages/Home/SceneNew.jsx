@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 
 import {
@@ -712,6 +713,7 @@ export const useSceneNewTimeline = (refs, isMobile) => {
 // Main Scene Component
 const SceneNew = React.forwardRef((props, ref) => {
   const { isMobile } = props;
+  const navigate = useNavigate();
 
   // Main refs
   const containerRef = useRef(null);
@@ -760,7 +762,7 @@ const SceneNew = React.forwardRef((props, ref) => {
   // Card URLs - Update these to your actual routes
   const cardLinks = {
     1: "/community",
-    2: "/toolkit/card-2",
+    2: "/mentorship",
     3: "/webinars"
   };
 
@@ -768,7 +770,7 @@ const SceneNew = React.forwardRef((props, ref) => {
   const handleCardClick = (cardNumber) => {
     const url = cardLinks[cardNumber];
     if (url) {
-      window.location.href = url;
+      navigate(url);
     }
   };
 
@@ -998,7 +1000,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           />
           <img
             ref={oval2Ref}
-            src={oval_3_1}
+            src={oval_2}
             alt="oval 2"
             className="cursor-pointer transition-transform duration-300 hover:scale-105"
             onClick={() => handleCardClick(2)}
