@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEO from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 
 import gsap from "gsap";
@@ -809,6 +810,11 @@ const Mentorship = () => {
 
   return (
     <div className="bg-evolve-yellow">
+      <SEO
+        title="Design mentorship — 1:1 guidance for aspiring designers"
+        description="Get paired with an industry designer for focused, personal guidance. evolve mentorship helps you find your niche, build your portfolio, and take the next step — on your terms."
+        path="/mentorship"
+      />
       {/* ================= SECTION 1 — HERO ================= */}
       <section className="relative h-screen bg-evolve-yellow overflow-hidden">
         <div className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 top-[15%]">

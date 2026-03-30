@@ -946,6 +946,7 @@
 // export default Community;
 
 import React, { useEffect, useRef, useState } from "react";
+import SEO from "../components/SEO";
 
 import {
   rays_community,
@@ -1213,6 +1214,11 @@ const Community = () => {
 
   return (
     <div className="bg-evolve-yellow">
+      <SEO
+        title="The evolve community — where the ecosystem comes alive"
+        description="A global space for designers at every stage — discussions, challenges, AMAs, book clubs, and more. The community is where everything you learn on evolve gets tested, shared, and built upon."
+        path="/community"
+      />
       {/* ================= HERO ================= */}
       <section className="relative min-h-screen bg-evolve-yellow overflow-hidden">
         <img

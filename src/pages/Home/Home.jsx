@@ -3796,6 +3796,7 @@ import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import SEO from "../../components/SEO";
 import Scene1 from "./Scene1";
 
 // NEW SCENE - First scrollable scene
@@ -4371,6 +4372,12 @@ const Home = ({
   }, [isMobile, setShowNavbar, isLoading, introDone, animationsReady]);
 
   return (
+    <>
+    <SEO
+      title="evolve — a design ecosystem built around your journey"
+      description="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design."
+      path="/"
+    />
     <div
       id="scroll-container"
       className="relative w-full h-screen bg-black lowercase"
@@ -4466,6 +4473,7 @@ const Home = ({
         <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
       </div>
     </div>
+    </>
   );
 };
 

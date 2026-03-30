@@ -3,37 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>evolve-platform</title>
-<meta property="og:title" content="evolve-website" />
-<meta property="og:description" content="evolve-be remarkable" />
-<meta property="og:type" content="website" />
-<!-- <meta property="og:url" content="https://yourdomain.com" /> -->
- <meta property="og:url" content="https://evolvedesign.academy" />
 
-<meta property="og:image" content="https://res.cloudinary.com/dvtcahjvh/image/upload/v1774607241/evolve_logo_-_yellow_dp1hoe.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
+    <!-- Default title & description (overridden per-page by react-helmet-async) -->
+    <title>evolve — a design ecosystem built around your journey</title>
+    <meta name="description" content="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://evolvedesign.academy" />
 
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://res.cloudinary.com/dvtcahjvh/image/upload/v1774607241/evolve_logo_-_yellow_dp1hoe.png" />
-<meta property="og:url" content="https://evolvedesign.academy" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/public/favicon.svg" />
-<link rel="icon" type="image/svg" sizes="32x32" href="/public/favicon.svg" />
-<link rel="icon" type="image/svg" sizes="16x16" href="/public/favicon.svg" />
-<!-- <link rel="manifest" href="/site.webmanifest" /> -->
-  
-<!-- Google tag (gtag.js) -->
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MSYRSW4MEH"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="evolve" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://evolvedesign.academy" />
+    <meta property="og:title" content="evolve — a design ecosystem built around your journey" />
+    <meta property="og:description" content="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design." />
+    <meta property="og:image" content="https://res.cloudinary.com/dvtcahjvh/image/upload/v1774607241/evolve_logo_-_yellow_dp1hoe.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="evolve — be remarkable" />
 
-  gtag('config', 'G-MSYRSW4MEH');
-</script>
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@evolvedesign" />
+    <meta name="twitter:title" content="evolve — a design ecosystem built around your journey" />
+    <meta name="twitter:description" content="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community." />
+    <meta name="twitter:image" content="https://res.cloudinary.com/dvtcahjvh/image/upload/v1774607241/evolve_logo_-_yellow_dp1hoe.png" />
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "evolve",
+      "url": "https://evolvedesign.academy",
+      "logo": "https://res.cloudinary.com/dvtcahjvh/image/upload/v1774607241/evolve_logo_-_yellow_dp1hoe.png",
+      "description": "A design ecosystem built around your journey — learning, mentorship, sessions, and community.",
+      "sameAs": []
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSYRSW4MEH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-MSYRSW4MEH');
+    </script>
   </head>
-
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

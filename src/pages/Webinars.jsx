@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import SEO from "../components/SEO";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 
@@ -396,6 +397,11 @@ const Webinars = () => {
 
   return (
     <main className="bg-evolve-yellow">
+      <SEO
+        title="Design sessions — webinars, workshops & live events by evolve"
+        description="From live webinars to hands-on workshops and informal design meetups — evolve sessions are where learning gets real. Online and offline, for every stage of your design journey."
+        path="/webinars"
+      />
       {/* Desktop/Tablet View */}
       <div className="hidden md:block">
         {/* Wrapper for the entire hero section */}

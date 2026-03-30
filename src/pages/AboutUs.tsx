@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO";
 const AboutUs = () => {
   return (
     <div className="min-h-screen lowercase bg-black">
+      <SEO
+        title="About evolve — why we built an ecosystem, not another course platform"
+        description="evolve was built because no single platform was enough. We combined learning, live sessions, mentorship, and community into one ecosystem — for designers at every stage of their journey."
+        path="/about"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gradient mb-6 animate-text-reveal">
