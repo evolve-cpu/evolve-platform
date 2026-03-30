@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const BASE_URL = "https://evolvedesign.academy";
-const DEFAULT_IMAGE = "https://res.cloudinary.com/dvtcahjvh/image/upload/w_1200,h_630,c_pad,b_FFD007/v1774607241/evolve_logo_-_yellow_dp1hoe.png";
+const DEFAULT_IMAGE = "https://res.cloudinary.com/dvtcahjvh/image/upload/v1774300362/logo_main_orzozo.svg";
 
 export default function SEO({ title, description, path = "", image = DEFAULT_IMAGE }) {
   const url = `${BASE_URL}${path}`;
