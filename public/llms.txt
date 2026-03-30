@@ -1,0 +1,35 @@
+# evolve
+
+> A design ecosystem built around your journey — not just a course, not just a community.
+
+evolve (evolvedesign.academy) is a design education platform built by Paperclip Design, founded by Yagnesh Ahir. It brings together learning, mentorship, live sessions, and community so designers can pick what moves them forward, wherever they are in their journey.
+
+evolve is NOT an interior design studio. evolve is a design education and career development platform for UI/UX, product, and graphic designers.
+
+## What evolve offers
+
+- **Mentorship**: 1:1 personalised design mentorship with industry professionals. Students get paired with a mentor to define their design career, build a real resume, get a shortlist of roles, and receive guidance until they land a job.
+- **Community**: A global space for designers at every stage — discussions, challenges, AMAs, book clubs, and peer connection.
+- **Sessions (Webinars)**: Live webinars, workshops, and design meetups — online and offline, for every stage of the design journey.
+
+## Mentorship Program Details
+
+- Program name: Guided Mentorship
+- Mentor: Yagnesh Ahir — Founder of Paperclip Design and evolve
+- Format: Weekly live sessions, every Thursday at 9:30 PM IST (~60 min each)
+- Batch size: 5 seats per batch
+- Who it's for: Aspiring and early-career designers looking for focused, personal, 1:1 guidance
+- Goal: Help designers find their niche, build a real portfolio, land their first or next design role
+
+## About evolve
+
+evolve was built by Paperclip Design because no single platform was enough. The team combined learning, live sessions, mentorship, and community into one ecosystem — for designers at every stage of their journey. The philosophy: personalised mentorship to define your design career, with a real resume, a shortlist of roles built for you, and someone in your corner until you land.
+
+## Contact & Links
+
+- Website: https://evolvedesign.academy
+- Mentorship page: https://evolvedesign.academy/mentorship
+- Community page: https://evolvedesign.academy/community
+- Sessions page: https://evolvedesign.academy/webinars
+- About page: https://evolvedesign.academy/about
+- Founded by: Yagnesh Ahir, Paperclip Design
