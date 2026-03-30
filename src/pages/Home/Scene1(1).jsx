@@ -19,7 +19,7 @@ import {
   dive_in_hover,
   logo_main
 } from "../../assets/images/Home";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottiePlayer from "../../components/LottiePlayer";
 
 const getHeadingFontSize = () => {
   const w = window.innerWidth;
@@ -505,7 +505,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
                 : { width: "100vw" }
             }
           >
-            <DotLottieReact
+            <LottiePlayer
               src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
               loop={false}
               autoplay={false}

@@ -590,7 +590,7 @@
 //         style={{ willChange: "transform, opacity", opacity: 0 }}
 //       >
 //         <div className={isMobile ? "w-[300%]" : "w-[100vw]"}>
-//           <DotLottieReact
+//           <LottiePlayer
 //             src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
 //             loop={false}
 //             autoplay={false}
@@ -695,7 +695,7 @@ import {
   dive_in,
   dive_in_hover
 } from "../../assets/images/Home";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottiePlayer from "../../components/LottiePlayer";
 
 // =========================
 // FONT SIZE LOGIC (H2)
@@ -1227,7 +1227,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
         style={{ willChange: "transform, opacity", opacity: 0 }}
       >
         <div className={isMobile ? "w-[300%]" : "w-[100vw]"}>
-          <DotLottieReact
+          <LottiePlayer
             src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
             loop={false}
             autoplay={false}
@@ -1253,7 +1253,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
               : {}
           }
         >
-          <DotLottieReact
+          <LottiePlayer
             src="https://lottie.host/07d82781-37a6-41c7-9250-1adf1c42956f/xdEKCbGV3S.lottie"
             loop={false}
             autoplay={false}
