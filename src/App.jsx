@@ -1495,7 +1495,7 @@ const App = () => {
       <BrowserRouter>
         <AppLayout />
       </BrowserRouter>
-      <Analytics />
+      {navigator.userAgent !== "ReactSnap" && <Analytics />}
       {/* </TooltipProvider> */}
     </QueryClientProvider>
   );
