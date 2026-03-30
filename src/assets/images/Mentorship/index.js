@@ -5,7 +5,7 @@ import apply_now_button from "./apply_now_button.svg";
 import apply_now_button_hover from "./apply_now_button_hover.svg";
 import how_button from "./how_button.svg";
 import how_button_hover from "./how_button_hover.svg";
-import mentor_yagnesh from "./mentor_yagnesh.svg";
+import mentor_yagnesh from "./mentor_yagnesh.webp";
 import impact_thing from "./impact_thing.svg";
 import impact_thing_mobile from "./impact_thing_mobile.svg";
 import get_started_button from "./get_started_button.svg";

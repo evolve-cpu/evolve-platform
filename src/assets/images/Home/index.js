@@ -263,7 +263,7 @@ import evolve_cube from "./evolve_cube.svg";
 import evolve_2d from "./evolve_2d.svg";
 import stairs_with_door from "./stairs_with_door.svg";
 import door_closeup from "./door_closeup.svg";
-import door_closeup_mobile from "./door_closeup_mobile.svg";
+import door_closeup_mobile from "./door_closeup_mobile.webp";
 
 // ========== HIGH PRIORITY (Scene 1_1 - Second Screen) ==========
 // These load second - visible on first scroll
@@ -402,9 +402,9 @@ import join_us_button from "./join_us_button.svg";
 import join_us_button_hover from "./join_us_button_hover.svg";
 
 // ========== BACKGROUND/TEXTURES (Load Separately) ==========
-import grain_texture from "./grain_texture.jpg";
-import noisy_background from "./noisy_background.jpg";
-import grains from "./grains.svg";
+// import grain_texture from "./grain_texture.jpg";
+// import noisy_background from "./noisy_background.jpg";
+// import grains from "./grains.svg";
 import down_arrow from "./down_arrow.svg";
 
 // Export all images (maintains backward compatibility)
@@ -550,8 +550,8 @@ export {
   join_us_button_hover,
 
   // Textures/Background
-  grain_texture,
-  noisy_background,
-  grains,
+  // grain_texture,
+  // noisy_background,
+  // grains,
   down_arrow
 };

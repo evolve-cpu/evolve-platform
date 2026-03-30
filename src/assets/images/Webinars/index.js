@@ -10,9 +10,9 @@ import rays_webinars from "./rays_webinars.svg";
 import rays_webinars_mobile from "./rays_webinars_mobile.svg";
 import barfi from "./barfi.svg";
 import barfi_mobile from "./barfi_mobile.svg";
-import hands_with_webinars_card from "./hands_with_webinars_card.svg";
-import hands_with_webinars_card_full from "./hands_with_webinars_card_full.svg";
-import hands_with_webinars_card_full_mobile from "./hands_with_webinars_card_full_mobile.svg";
+// import hands_with_webinars_card from "./hands_with_webinars_card.svg";
+import hands_with_webinars_card_full from "./hands_with_webinars_card_full.webp";
+import hands_with_webinars_card_full_mobile from "./hands_with_webinars_card_full_mobile.webp";
 import clock from "./clock.svg";
 import calendar from "./calendar.svg";
 import visual_design from "./visual_design.svg";
@@ -33,7 +33,7 @@ export {
   rays_webinars_mobile,
   barfi,
   barfi_mobile,
-  hands_with_webinars_card,
+  // hands_with_webinars_card,
   clock,
   calendar,
   hands_with_webinars_card_full,
