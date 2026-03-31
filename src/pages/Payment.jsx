@@ -349,6 +349,7 @@ export default function Payment() {
   const [waitlistPhone, setWaitlistPhone] = useState("");
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistError, setWaitlistError] = useState("");
+  const [waitlistChecking, setWaitlistChecking] = useState(isWaitlist);
 
   /* ── sync plan to URL ────────────────────────────────────────────────────── */
   const handlePlanChange = (newPlan) => {
@@ -376,6 +377,21 @@ export default function Payment() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) navigate("/mentorship-session", { replace: true });
+      });
+  }, [user]);
+
+  /* ── already on waitlist → skip to success ──────────────────────────────── */
+  useEffect(() => {
+    if (!user || !isWaitlist) return;
+    supabase
+      .from("mentorship_waitlist")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setStep("waitlist_success");
+        setWaitlistChecking(false);
       });
   }, [user]);
 
@@ -736,7 +752,7 @@ export default function Payment() {
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
 
           {/* ── WAITLIST FORM ────────────────────────────────────────────────── */}
-          {step === "waitlist" && (
+          {step === "waitlist" && !waitlistChecking && (
             <>
               <BackBtn onClick={() => navigate("/mentorship")} />
 
