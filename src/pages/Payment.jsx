@@ -383,11 +383,10 @@ export default function Payment() {
     supabase
       .from("batch_spots")
       .select("*")
-      .eq("status", "open")
       .then(({ data }) => {
         if (!data || data.length === 0) return;
         const available = data
-          .filter((b) => b.spots_remaining > 0)
+          .filter((b) => b.status === "open" && b.spots_remaining > 0)
           .sort((a, b) => a.batch_number - b.batch_number);
         setBatches(available);
         if (available.length > 0) {
@@ -399,7 +398,7 @@ export default function Payment() {
 
   const cfg = PLANS[plan] || PLANS.starter;
   const spotsLeft = batch?.spots_remaining ?? 5;
-  const batch1Full = !batches.some((b) => b.batch_number === 1);
+  const batch1Full = !batches.some((b) => b.batch_number === 1 && b.status === "open" && b.spots_remaining > 0);
   const showBatchPicker = batch1Full && batches.length > 0;
   const selectedBatch = batches.find((b) => b.id === selectedBatchId) || batch;
 

@@ -154,7 +154,9 @@ const TestimonialsMobile = () => {
       <div
         className="relative flex items-center justify-center -mb-2"
         style={{ height: "570px" }}
-        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+        }}
         onTouchEnd={(e) => {
           if (touchStartX.current === null) return;
           const diff = e.changedTouches[0].clientX - touchStartX.current;
@@ -616,54 +618,40 @@ const MarqueeStrip = ({ isMobile, spotsText, batchLabel }) => {
             isMobile ? "gap-8 pr-8" : "gap-14 pr-14"
           }`}
         >
-          <img
-            src={marquee_vector_2}
-            alt=""
-            className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-          />
-          <span
-            className={`flex-none font-paralucent lowercase text-evolve-yellow ${
-              isMobile ? "text-3xl" : "text-5xl"
-            }`}
-          >
-            {`batch starts on ${batchLabel}`}
-          </span>
-          <img
-            src={marquee_vector_2}
-            alt=""
-            className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-          />
-          <span
-            className={`flex-none font-paralucent lowercase text-evolve-yellow ${
-              isMobile ? "text-3xl" : "text-5xl"
-            }`}
-          >
-            {spotsText}
-          </span>
-          <img
-            src={marquee_vector_2}
-            alt=""
-            className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-          />
-          <span
-            className={`flex-none font-paralucent lowercase text-evolve-yellow ${
-              isMobile ? "text-3xl" : "text-5xl"
-            }`}
-          >
-            {`batch starts on ${batchLabel}`}
-          </span>
-          <img
-            src={marquee_vector_2}
-            alt=""
-            className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-          />
-          <span
-            className={`flex-none font-paralucent lowercase text-evolve-yellow ${
-              isMobile ? "text-3xl" : "text-5xl"
-            }`}
-          >
-            {spotsText}
-          </span>
+          {[0, 1, 2].map((i) => (
+            <>
+              <img
+                key={`icon-a-${i}`}
+                src={marquee_vector_2}
+                alt=""
+                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+              />
+              <span
+                key={`label-${i}`}
+                className={`flex-none font-paralucent lowercase text-evolve-yellow ${
+                  isMobile ? "text-3xl" : "text-5xl"
+                }`}
+              >
+                {batchLabel === "now open"
+                  ? "now open"
+                  : `batch starts on ${batchLabel}`}
+              </span>
+              <img
+                key={`icon-b-${i}`}
+                src={marquee_vector_2}
+                alt=""
+                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+              />
+              <span
+                key={`spots-${i}`}
+                className={`flex-none font-paralucent lowercase text-evolve-yellow ${
+                  isMobile ? "text-3xl" : "text-5xl"
+                }`}
+              >
+                {spotsText}
+              </span>
+            </>
+          ))}
         </div>
       </div>
     </div>
@@ -701,6 +689,7 @@ const Mentorship = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
+  const [batch1Full, setBatch1Full] = useState(false);
   const [pricingTab, setPricingTab] = useState("starter");
   const [hasPaid, setHasPaid] = useState(false);
 
@@ -713,14 +702,15 @@ const Mentorship = () => {
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: "smooth" });
 
   // derived batch values (fallback to hardcoded while loading)
-  const batchFull = batch !== null && batch.spots_remaining <= 0;
-  const spotsLeft = batchFull ? 0 : (batch?.spots_remaining ?? 5);
-  const batchLabel = batch ? ordinalDate(batch.start_date) : "16th april";
+  const spotsLeft = batch?.spots_remaining ?? 5;
+  const batchLabel = batch1Full
+    ? "now open"
+    : batch
+      ? ordinalDate(batch.start_date)
+      : "16th april";
   const closeLabel = batch ? closeDateLabel(batch.start_date) : "12th april";
-  // shown in marquee + CTA when batch is full or no open batch
-  const spotsText = batchFull
-    ? "batch full — next batch coming soon"
-    : `only ${spotsLeft} spots left`;
+  // shown in marquee + CTA when batch 1 is full
+  const spotsText = batch1Full ? "new batches" : `only ${spotsLeft} spots`;
 
   // CTA marquee refs
   const marqueeRef = useRef(null);
@@ -743,12 +733,17 @@ const Mentorship = () => {
     supabase
       .from("batch_spots")
       .select("*")
-      .eq("status", "open")
       .then(({ data }) => {
         if (!data || data.length === 0) return;
-        const available = data
-          .filter((b) => b.spots_remaining > 0)
-          .sort((a, b) => a.batch_number - b.batch_number);
+        const sorted = data.sort((a, b) => a.batch_number - b.batch_number);
+        const lowestBatch = sorted[0];
+        const isLowestFull =
+          lowestBatch &&
+          (lowestBatch.spots_remaining <= 0 || lowestBatch.status === "closed");
+        setBatch1Full(isLowestFull);
+        const available = sorted.filter(
+          (b) => b.status === "open" && b.spots_remaining > 0
+        );
         if (available.length > 0) setBatch(available[0]);
       });
   }, []);
@@ -766,7 +761,7 @@ const Mentorship = () => {
 
   useEffect(() => {
     return initMarquee(marqueeGroupRef, marqueeTrackRef);
-  }, []);
+  }, [batchLabel]);
 
   useEffect(() => {
     if (isMobile) return;
@@ -949,36 +944,36 @@ const Mentorship = () => {
               ref={marqueeGroupRef}
               className={`flex items-center flex-none ${isMobile ? "gap-8 pr-8" : "gap-14 pr-14"}`}
             >
-              <img
-                src={marquee_vector_2}
-                alt=""
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <span
-                className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
-              >
-                {`batch starts on ${batchLabel}`}
-              </span>
-              <img
-                src={marquee_vector_2}
-                alt=""
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <span
-                className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
-              >
-                {spotsText}
-              </span>
-              <img
-                src={marquee_vector_2}
-                alt=""
-                className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
-              />
-              <span
-                className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
-              >
-                {`batch starts on ${batchLabel}`}
-              </span>
+              {[0, 1, 2].map((i) => (
+                <>
+                  <img
+                    key={`icon-a-${i}`}
+                    src={marquee_vector_2}
+                    alt=""
+                    className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                  />
+                  <span
+                    key={`label-${i}`}
+                    className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
+                  >
+                    {batchLabel === "now open"
+                      ? "now open"
+                      : `batch starts on ${batchLabel}`}
+                  </span>
+                  <img
+                    key={`icon-b-${i}`}
+                    src={marquee_vector_2}
+                    alt=""
+                    className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
+                  />
+                  <span
+                    key={`spots-${i}`}
+                    className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
+                  >
+                    {spotsText}
+                  </span>
+                </>
+              ))}
             </div>
           </div>
         </div>
@@ -1812,6 +1807,7 @@ const Mentorship = () => {
           // style={{ height: "clamp(200px, 30vh, 420px)" }}
         />
         <MarqueeStrip
+          key={batchLabel}
           isMobile={false}
           spotsText={spotsText}
           batchLabel={batchLabel}
@@ -1901,6 +1897,7 @@ const Mentorship = () => {
           // style={{ height: "clamp(140px, 28vw, 220px)" }}
         />
         <MarqueeStrip
+          key={batchLabel}
           isMobile={true}
           spotsText={spotsText}
           batchLabel={batchLabel}
@@ -2118,7 +2115,9 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            {`batch starts on ${batchLabel}`}
+            {batchLabel === "now open"
+              ? "now open"
+              : `batch starts on ${batchLabel}`}
           </h2>
 
           {/* Limited seats */}
@@ -2201,7 +2200,9 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            {`batch starts on ${batchLabel}`}
+            {batchLabel === "now open"
+              ? "now open"
+              : `batch starts on ${batchLabel}`}
           </h2>
 
           {/* Limited seats */}
