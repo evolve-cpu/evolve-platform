@@ -30,7 +30,8 @@ import {
   jonImg,
   anishImg,
   pradyumnaImg,
-  explore_mentorship
+  explore_mentorship,
+  join_the_waitlist
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
@@ -265,7 +266,8 @@ const PlanColumn = ({
   features,
   isRight,
   onPay,
-  hasPaid
+  hasPaid,
+  allBatchesFull
 }) => {
   const [hover, setHover] = useState(false);
 
@@ -373,8 +375,8 @@ const PlanColumn = ({
       {/* Apply button */}
       {!hasPaid && (
         <img
-          src={hover ? apply_now_button_hover : apply_now_button}
-          alt="apply now"
+          src={allBatchesFull ? join_the_waitlist : (hover ? apply_now_button_hover : apply_now_button)}
+          alt={allBatchesFull ? "join the waitlist" : "apply now"}
           onClick={() => onPay(tier)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
@@ -401,7 +403,8 @@ const PlanCardMobile = ({
   tagline,
   features,
   onPay,
-  hasPaid
+  hasPaid,
+  allBatchesFull
 }) => {
   const [hover, setHover] = useState(false);
 
@@ -497,8 +500,8 @@ const PlanCardMobile = ({
       {/* Button */}
       {!hasPaid && (
         <img
-          src={hover ? apply_now_button_hover : apply_now_button}
-          alt="apply now"
+          src={allBatchesFull ? join_the_waitlist : (hover ? apply_now_button_hover : apply_now_button)}
+          alt={allBatchesFull ? "join the waitlist" : "apply now"}
           onClick={() => onPay(tier)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
@@ -593,7 +596,7 @@ function closeDateLabel(startDateStr) {
 /* ─────────────────────────────────────────────
    MarqueeStrip — self-contained marquee band
 ───────────────────────────────────────────── */
-const MarqueeStrip = ({ isMobile, spotsText, batchLabel }) => {
+const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
   const trackRef = useRef(null);
   const groupRef = useRef(null);
 
@@ -632,9 +635,7 @@ const MarqueeStrip = ({ isMobile, spotsText, batchLabel }) => {
                   isMobile ? "text-3xl" : "text-5xl"
                 }`}
               >
-                {batchLabel === "now open"
-                  ? "now open"
-                  : `batch starts on ${batchLabel}`}
+                {marqueeLabel}
               </span>
               <img
                 key={`icon-b-${i}`}
@@ -690,6 +691,7 @@ const Mentorship = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
   const [batch1Full, setBatch1Full] = useState(false);
+  const [allBatchesFull, setAllBatchesFull] = useState(false);
   const [pricingTab, setPricingTab] = useState("starter");
   const [hasPaid, setHasPaid] = useState(false);
 
@@ -709,8 +711,14 @@ const Mentorship = () => {
       ? ordinalDate(batch.start_date)
       : "16th april";
   const closeLabel = batch ? closeDateLabel(batch.start_date) : "12th april";
-  // shown in marquee + CTA when batch 1 is full
-  const spotsText = batch1Full ? "new batches" : `only ${spotsLeft} spots`;
+  // shown in marquee + CTA
+  const spotsText = allBatchesFull ? "join waitlist" : batch1Full ? "new batches" : `only ${spotsLeft} spots`;
+  // full display label used in marquee and section headings
+  const marqueeLabel = allBatchesFull
+    ? "batches full"
+    : batchLabel === "now open"
+      ? "now open"
+      : `batch starts on ${batchLabel}`;
 
   // CTA marquee refs
   const marqueeRef = useRef(null);
@@ -741,6 +749,10 @@ const Mentorship = () => {
           lowestBatch &&
           (lowestBatch.spots_remaining <= 0 || lowestBatch.status === "closed");
         setBatch1Full(isLowestFull);
+        const isAllFull = sorted.every(
+          (b) => b.spots_remaining <= 0 || b.status === "closed"
+        );
+        setAllBatchesFull(isAllFull);
         const available = sorted.filter(
           (b) => b.status === "open" && b.spots_remaining > 0
         );
@@ -761,7 +773,7 @@ const Mentorship = () => {
 
   useEffect(() => {
     return initMarquee(marqueeGroupRef, marqueeTrackRef);
-  }, [batchLabel]);
+  }, [marqueeLabel]);
 
   useEffect(() => {
     if (isMobile) return;
@@ -771,11 +783,16 @@ const Mentorship = () => {
   const handlePayment = (plan) => {
     if (!user) {
       sessionStorage.setItem("signin_via_apply", "1");
-      navigate("/signin", { state: { from: `/payment?plan=${plan}` } });
+      const dest = allBatchesFull ? "/payment?waitlist=true" : `/payment?plan=${plan}`;
+      navigate("/signin", { state: { from: dest } });
       return;
     }
     if (hasPaid) {
       navigate("/mentorship-session");
+      return;
+    }
+    if (allBatchesFull) {
+      navigate("/payment?waitlist=true");
       return;
     }
     navigate(`/payment?plan=${plan}`);
@@ -956,9 +973,7 @@ const Mentorship = () => {
                     key={`label-${i}`}
                     className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
-                    {batchLabel === "now open"
-                      ? "now open"
-                      : `batch starts on ${batchLabel}`}
+                    {marqueeLabel}
                   </span>
                   <img
                     key={`icon-b-${i}`}
@@ -1593,6 +1608,7 @@ const Mentorship = () => {
               isRight={false}
               onPay={handlePayment}
               hasPaid={hasPaid}
+              allBatchesFull={allBatchesFull}
             />
           </div>
           <div style={{ flex: "0 0 50%" }}>
@@ -1605,6 +1621,7 @@ const Mentorship = () => {
               isRight={true}
               onPay={handlePayment}
               hasPaid={hasPaid}
+              allBatchesFull={allBatchesFull}
             />
           </div>
         </div>
@@ -1690,6 +1707,7 @@ const Mentorship = () => {
               features={starterFeatures}
               onPay={handlePayment}
               hasPaid={hasPaid}
+              allBatchesFull={allBatchesFull}
             />
           )}
           {pricingTab === "accelerator" && (
@@ -1701,6 +1719,7 @@ const Mentorship = () => {
               features={acceleratorFeatures}
               onPay={handlePayment}
               hasPaid={hasPaid}
+              allBatchesFull={allBatchesFull}
             />
           )}
         </div>
@@ -1807,10 +1826,10 @@ const Mentorship = () => {
           // style={{ height: "clamp(200px, 30vh, 420px)" }}
         />
         <MarqueeStrip
-          key={batchLabel}
+          key={marqueeLabel}
           isMobile={false}
           spotsText={spotsText}
-          batchLabel={batchLabel}
+          marqueeLabel={marqueeLabel}
         />
       </section>
 
@@ -1897,10 +1916,10 @@ const Mentorship = () => {
           // style={{ height: "clamp(140px, 28vw, 220px)" }}
         />
         <MarqueeStrip
-          key={batchLabel}
+          key={marqueeLabel}
           isMobile={true}
           spotsText={spotsText}
-          batchLabel={batchLabel}
+          marqueeLabel={marqueeLabel}
         />
       </section>
 
@@ -2115,9 +2134,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            {batchLabel === "now open"
-              ? "now open"
-              : `batch starts on ${batchLabel}`}
+            {marqueeLabel}
           </h2>
 
           {/* Limited seats */}
@@ -2133,6 +2150,7 @@ const Mentorship = () => {
           </p>
 
           {/* Applications close */}
+          {!allBatchesFull && (
           <p
             className="font-extrabold lowercase text-white"
             style={{
@@ -2144,6 +2162,7 @@ const Mentorship = () => {
           >
             {`applications close on ${closeLabel}`}
           </p>
+          )}
 
           {/* Tagline */}
           <p
@@ -2200,9 +2219,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            {batchLabel === "now open"
-              ? "now open"
-              : `batch starts on ${batchLabel}`}
+            {marqueeLabel}
           </h2>
 
           {/* Limited seats */}
@@ -2218,7 +2235,7 @@ const Mentorship = () => {
           </p>
 
           {/* Applications close */}
-          <p
+          {!allBatchesFull && <p
             className="font-extrabold lowercase text-white"
             style={{
               fontSize: "clamp(20px, 5.5vw, 28px)",
@@ -2228,7 +2245,7 @@ const Mentorship = () => {
             }}
           >
             {`applications close on ${closeLabel}`}
-          </p>
+          </p>}
 
           {/* Tagline */}
           <p

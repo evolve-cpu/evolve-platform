@@ -25,6 +25,7 @@ import jonImg from "./jonImg.svg";
 import anishImg from "./anishImg.svg";
 import pradyumnaImg from "./pradyumnaImg.svg";
 import rays_payment from "./rays_payment.svg";
+import join_the_waitlist from "./join_the_waitlist.svg";
 
 export {
   hero_mentorship,
@@ -53,5 +54,6 @@ export {
   jonImg,
   anishImg,
   pradyumnaImg,
-  rays_payment
+  rays_payment,
+  join_the_waitlist
 };

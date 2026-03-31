@@ -334,15 +334,21 @@ export default function Payment() {
   const [params, setParams] = useSearchParams();
   const { user, authLoading } = useAuth();
 
+  const isWaitlist = params.get("waitlist") === "true";
+
   const [plan, setPlan] = useState(params.get("plan") || "starter");
-  const [step, setStep] = useState("gift1");
+  const [step, setStep] = useState(isWaitlist ? "waitlist" : "gift1");
   const [batch, setBatch] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [allBatchesFull, setAllBatchesFull] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+  const [waitlistPhone, setWaitlistPhone] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistError, setWaitlistError] = useState("");
 
   /* ── sync plan to URL ────────────────────────────────────────────────────── */
   const handlePlanChange = (newPlan) => {
@@ -375,7 +381,10 @@ export default function Payment() {
 
   /* ── pre-fill phone from profile ────────────────────────────────────────── */
   useEffect(() => {
-    if (user?.phone) setPhone(user.phone);
+    if (user?.phone) {
+      setPhone(user.phone);
+      setWaitlistPhone(user.phone);
+    }
   }, [user]);
 
   /* ── fetch open batches ─────────────────────────────────────────────────── */
@@ -385,6 +394,10 @@ export default function Payment() {
       .select("*")
       .then(({ data }) => {
         if (!data || data.length === 0) return;
+        const isAllFull = data.every(
+          (b) => b.spots_remaining <= 0 || b.status === "closed"
+        );
+        setAllBatchesFull(isAllFull);
         const available = data
           .filter((b) => b.status === "open" && b.spots_remaining > 0)
           .sort((a, b) => a.batch_number - b.batch_number);
@@ -478,6 +491,45 @@ export default function Payment() {
       console.error("payment error:", err);
       setError("something went wrong. please try again.");
       setPaying(false);
+    }
+  }
+
+  /* ── waitlist submit ────────────────────────────────────────────────────── */
+  async function handleWaitlistJoin() {
+    const cleaned = waitlistPhone.trim().replace(/\s+/g, "");
+    if (cleaned.length < 10) {
+      setWaitlistError("please enter a valid phone number");
+      return;
+    }
+    setWaitlistError("");
+    setWaitlistSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        navigate("/signin", { state: { from: "/payment?waitlist=true" } });
+        return;
+      }
+
+      // DEV bypass — skip API call on localhost
+      if (import.meta.env.DEV) {
+        setStep("waitlist_success");
+        return;
+      }
+
+      const res = await fetch("/api/waitlist-join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: cleaned,
+          token: session.access_token
+        })
+      });
+      if (!res.ok) throw new Error("failed");
+      setStep("waitlist_success");
+    } catch {
+      setWaitlistError("something went wrong. please try again.");
+    } finally {
+      setWaitlistSubmitting(false);
     }
   }
 
@@ -682,6 +734,113 @@ export default function Payment() {
 
       <div className="flex flex-col flex-1 px-6 pt-24 pb-12 md:items-center md:justify-center md:pt-0">
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
+
+          {/* ── WAITLIST FORM ────────────────────────────────────────────────── */}
+          {step === "waitlist" && (
+            <>
+              <BackBtn onClick={() => navigate("/mentorship")} />
+
+              <div>
+                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3 lowercase">
+                  all seats till july are taken
+                </span>
+                <h1
+                  className="text-white font-bold leading-tight"
+                  style={{ fontSize: "clamp(32px,8vw,44px)", letterSpacing: "-0.03em" }}
+                >
+                  join the waitlist
+                </h1>
+                <p className="text-white/50 text-sm mt-2">
+                  choose an upcoming date and we'll hold your spot.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Email — pre-filled, read-only */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/50 text-xs lowercase">enter your email</label>
+                  <input
+                    type="email"
+                    value={user?.email || ""}
+                    readOnly
+                    className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/50 text-xs lowercase">enter your phone</label>
+                  <div className="flex gap-2">
+                    <div
+                      className="flex items-center justify-center rounded-xl px-3 text-white text-sm font-semibold flex-none"
+                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    >
+                      +91
+                    </div>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="9289xxxxxx"
+                      value={waitlistPhone}
+                      onChange={(e) => setWaitlistPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="flex-1 rounded-xl px-4 py-3 text-white text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {waitlistError && (
+                <p className="text-red-400 text-sm">{waitlistError}</p>
+              )}
+
+              <button
+                onClick={handleWaitlistJoin}
+                disabled={waitlistSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-50 active:opacity-80"
+              >
+                {waitlistSubmitting ? "adding you..." : "add me to list"}
+                {!waitlistSubmitting && (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            </>
+          )}
+
+          {/* ── WAITLIST SUCCESS ─────────────────────────────────────────────── */}
+          {step === "waitlist_success" && (
+            <div className="flex flex-col items-center gap-6 text-center pt-4">
+              <div className="w-20 h-20 rounded-full border-4 border-green-400 flex items-center justify-center">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <path d="M8 18l7 7 13-14" stroke="#4ade80" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h1
+                  className="text-white font-bold"
+                  style={{ fontSize: 40, letterSpacing: "-0.16px" }}
+                >
+                  you're on<br />the waitlist
+                </h1>
+                <p className="text-white/50 text-sm mt-3 max-w-[28ch] mx-auto leading-relaxed">
+                  we've got your details. you'll be the first to know when the batches reopen
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/mentorship")}
+                className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 active:opacity-80"
+              >
+                back to evolve
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {/* ── BATCH PICK ───────────────────────────────────────────────────── */}
           {step === "batch_pick" && (
             <>
