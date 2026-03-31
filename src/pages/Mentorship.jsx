@@ -783,10 +783,6 @@ const Mentorship = () => {
       navigate("/mentorship-session");
       return;
     }
-    if (batchFull) {
-      alert("this batch is full. the next batch opens soon.");
-      return;
-    }
     navigate(`/payment?plan=${plan}`);
   };
 

@@ -337,6 +337,8 @@ export default function Payment() {
   const [plan, setPlan] = useState(params.get("plan") || "starter");
   const [step, setStep] = useState("gift1");
   const [batch, setBatch] = useState(null);
+  const [batches, setBatches] = useState([]);
+  const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -376,7 +378,7 @@ export default function Payment() {
     if (user?.phone) setPhone(user.phone);
   }, [user]);
 
-  /* ── fetch open batch ───────────────────────────────────────────────────── */
+  /* ── fetch open batches ─────────────────────────────────────────────────── */
   useEffect(() => {
     supabase
       .from("batch_spots")
@@ -387,12 +389,19 @@ export default function Payment() {
         const available = data
           .filter((b) => b.spots_remaining > 0)
           .sort((a, b) => a.batch_number - b.batch_number);
-        if (available.length > 0) setBatch(available[0]);
+        setBatches(available);
+        if (available.length > 0) {
+          setBatch(available[0]);
+          setSelectedBatchId(available[0].id);
+        }
       });
   }, []);
 
   const cfg = PLANS[plan] || PLANS.starter;
   const spotsLeft = batch?.spots_remaining ?? 5;
+  const batch1Full = !batches.some((b) => b.batch_number === 1);
+  const showBatchPicker = batch1Full && batches.length > 0;
+  const selectedBatch = batches.find((b) => b.id === selectedBatchId) || batch;
 
   /* ── pay handler ────────────────────────────────────────────────────────── */
   async function handlePay() {
@@ -435,7 +444,8 @@ export default function Payment() {
         body: JSON.stringify({
           plan,
           phone: cleaned,
-          token: session.access_token
+          token: session.access_token,
+          batch_id: selectedBatchId
         })
       });
       if (!res.ok) throw new Error("failed to create order");
@@ -476,6 +486,16 @@ export default function Payment() {
     if (!dateStr) return null;
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  }
+
+  function batchDate(dateStr) {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDate();
+    const s = ["th","st","nd","rd"];
+    const v = day % 100;
+    const suffix = s[(v - 20) % 10] || s[v] || s[0];
+    return `${day}${suffix} ${d.toLocaleDateString("en-IN", { month: "long" }).toLowerCase()}`;
   }
 
   if (authLoading) return null;
@@ -639,7 +659,7 @@ export default function Payment() {
                 className="relative z-10 w-36 object-contain"
               />
               <button
-                onClick={() => setStep("details")}
+                onClick={() => setStep(showBatchPicker ? "batch_pick" : "details")}
                 className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80 mt-2"
               >
                 claim your gift!
@@ -663,10 +683,80 @@ export default function Payment() {
 
       <div className="flex flex-col flex-1 px-6 pt-24 pb-12 md:items-center md:justify-center md:pt-0">
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
+          {/* ── BATCH PICK ───────────────────────────────────────────────────── */}
+          {step === "batch_pick" && (
+            <>
+              <BackBtn onClick={() => navigate("/mentorship")} />
+
+              <div>
+                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3 lowercase">
+                  batch 1 is full
+                </span>
+                <p className="text-white/35 text-xs mb-3">
+                  <span className="text-evolve-yellow">pick batch</span>
+                  {" > choose plan"}
+                </p>
+                <h1
+                  className="text-white font-bold leading-tight"
+                  style={{ fontSize: 36, letterSpacing: "-0.16px" }}
+                >
+                  pick your next batch
+                </h1>
+                <p className="text-white/50 text-sm mt-1">
+                  choose an upcoming date and we'll hold your spot.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {batches.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBatchId(b.id)}
+                    className="w-full rounded-2xl p-5 text-left transition-all"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      border: selectedBatchId === b.id
+                        ? "1.5px solid #FFD007"
+                        : "1.5px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <p className="text-evolve-yellow font-bold text-base lowercase">
+                      {batchDate(b.start_date)}
+                    </p>
+                    <p className="text-white/50 text-sm mt-0.5">
+                      batch {b.batch_number} · {b.spots_remaining} spot{b.spots_remaining !== 1 ? "s" : ""} available
+                    </p>
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-white/25 text-xs -mt-2">
+                note: once the payment is made, you won't be able to switch
+              </p>
+
+              <button
+                onClick={() => setStep("details")}
+                disabled={!selectedBatchId}
+                className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 active:opacity-80"
+              >
+                continue this selection
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
+
           {/* ── DETAILS ──────────────────────────────────────────────────────── */}
           {step === "details" && (
             <>
-              <BackBtn onClick={() => navigate("/mentorship")} />
+              <BackBtn onClick={() => showBatchPicker ? setStep("batch_pick") : navigate("/mentorship")} />
 
               <div>
                 <h1
@@ -682,7 +772,7 @@ export default function Payment() {
               </div>
 
               <p className="text-white/35 text-xs -mt-2">
-                {/* pick batch &gt;{" "} */}
+                {showBatchPicker && <span>pick batch{" > "}</span>}
                 <span className="text-evolve-yellow">choose plan</span>
               </p>
 
@@ -837,9 +927,9 @@ export default function Payment() {
                 <p className="text-white text-sm font-semibold">
                   {cfg.label} plan + AI-ready module
                 </p>
-                {batch && (
+                {selectedBatch && (
                   <p className="text-evolve-yellow text-sm font-semibold">
-                    batch starts {formatBatchDate(batch.start_date)}, 9:30pm ist
+                    batch {selectedBatch.batch_number} starts {formatBatchDate(selectedBatch.start_date)}, 9:30pm ist
                   </p>
                 )}
                 <p className="text-white/30 text-xs">

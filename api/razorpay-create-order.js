@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { plan, phone, token } = body || {};
+    const { plan, phone, token, batch_id } = body || {};
 
     if (!["starter", "accelerator"].includes(plan)) {
       return res.status(400).json({ error: "invalid plan" });
@@ -63,14 +63,26 @@ export default async function handler(req, res) {
     }
     const order = await orderRes.json();
 
-    // Get the lowest-numbered open batch with seats available
-    const { data: allBatches } = await supabase
-      .from("batch_spots")
-      .select("id, batch_number, spots_remaining")
-      .eq("status", "open");
-    const batch = (allBatches || [])
-      .filter((b) => b.spots_remaining > 0)
-      .sort((a, b) => a.batch_number - b.batch_number)[0] || null;
+    // Use user-chosen batch if provided, otherwise auto-pick lowest available
+    let batch = null;
+    if (batch_id) {
+      const { data: chosen } = await supabase
+        .from("batch_spots")
+        .select("id, batch_number, spots_remaining")
+        .eq("id", batch_id)
+        .eq("status", "open")
+        .single();
+      if (chosen && chosen.spots_remaining > 0) batch = chosen;
+    }
+    if (!batch) {
+      const { data: allBatches } = await supabase
+        .from("batch_spots")
+        .select("id, batch_number, spots_remaining")
+        .eq("status", "open");
+      batch = (allBatches || [])
+        .filter((b) => b.spots_remaining > 0)
+        .sort((a, b) => a.batch_number - b.batch_number)[0] || null;
+    }
 
     // Insert pending payment row
     await supabase.from("mentorship_payments").insert({
