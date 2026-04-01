@@ -1108,10 +1108,10 @@ const AppLayout = () => {
 
     const pageEvents = {
       "/mentorship": ["navigation", "page_view", "mentorship"],
-      "/payment":    ["conversion", "page_view", "payment"],
-      "/signin":     ["navigation", "page_view", "signin"],
-      "/community":  ["navigation", "page_view", "community"],
-      "/webinars":   ["navigation", "page_view", "sessions"],
+      "/payment": ["conversion", "page_view", "payment"],
+      "/signin": ["navigation", "page_view", "signin"],
+      "/community": ["navigation", "page_view", "community"],
+      "/webinars": ["navigation", "page_view", "sessions"]
     };
     const args = pageEvents[location.pathname];
     if (args) {
@@ -1127,7 +1127,9 @@ const AppLayout = () => {
     "/evolve-in-person/reality-check",
     "/signin",
     "/payment",
-    "/mentorship-session"
+    "/mentorship-session",
+    "/admin",
+    "/admin/dashboard"
   ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
@@ -1178,7 +1180,9 @@ const AppLayout = () => {
     } else if (
       location.pathname === "/signin" ||
       location.pathname === "/payment" ||
-      location.pathname === "/mentorship-session"
+      location.pathname === "/mentorship-session" ||
+      location.pathname === "/admin" ||
+      location.pathname === "/admin/dashboard"
     ) {
       setShowNavbar(false);
       setIsHomeIntroActive(false);
@@ -1322,7 +1326,10 @@ const AppLayout = () => {
       script.defer = true;
 
       script.onload = async () => {
-        if (!window.google) { setGoogleScriptLoaded(true); return; }
+        if (!window.google) {
+          setGoogleScriptLoaded(true);
+          return;
+        }
 
         // Generate nonce: raw for signInWithIdToken, hashed for Google initialize
         const rawNonce = btoa(
@@ -1333,7 +1340,7 @@ const AppLayout = () => {
           new TextEncoder().encode(rawNonce)
         );
         const hashedNonce = Array.from(new Uint8Array(hashBuffer))
-          .map(b => b.toString(16).padStart(2, "0"))
+          .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
 
         window.google.accounts.id.initialize({
@@ -1377,7 +1384,10 @@ const AppLayout = () => {
 
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed()) {
-          console.log("One Tap not displayed:", notification.getNotDisplayedReason());
+          console.log(
+            "One Tap not displayed:",
+            notification.getNotDisplayedReason()
+          );
         }
         if (notification.isSkippedMoment()) {
           console.log("One Tap skipped:", notification.getSkippedReason());
@@ -1386,9 +1396,11 @@ const AppLayout = () => {
     };
 
     // Cancel One Tap as soon as user signs in (any method)
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) window.google?.accounts?.id?.cancel();
-    });
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) window.google?.accounts?.id?.cancel();
+      }
+    );
 
     const timeoutId = setTimeout(promptGoogleOneTap, 1000);
     return () => {

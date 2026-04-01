@@ -375,7 +375,13 @@ const PlanColumn = ({
       {/* Apply button */}
       {!hasPaid && (
         <img
-          src={allBatchesFull ? join_the_waitlist : (hover ? apply_now_button_hover : apply_now_button)}
+          src={
+            allBatchesFull
+              ? join_the_waitlist
+              : hover
+                ? apply_now_button_hover
+                : apply_now_button
+          }
           alt={allBatchesFull ? "join the waitlist" : "apply now"}
           onClick={() => onPay(tier)}
           onMouseEnter={() => setHover(true)}
@@ -500,7 +506,13 @@ const PlanCardMobile = ({
       {/* Button */}
       {!hasPaid && (
         <img
-          src={allBatchesFull ? join_the_waitlist : (hover ? apply_now_button_hover : apply_now_button)}
+          src={
+            allBatchesFull
+              ? join_the_waitlist
+              : hover
+                ? apply_now_button_hover
+                : apply_now_button
+          }
           alt={allBatchesFull ? "join the waitlist" : "apply now"}
           onClick={() => onPay(tier)}
           onMouseEnter={() => setHover(true)}
@@ -712,7 +724,11 @@ const Mentorship = () => {
       : "16th april";
   const closeLabel = batch ? closeDateLabel(batch.start_date) : "12th april";
   // shown in marquee + CTA
-  const spotsText = allBatchesFull ? "join waitlist" : batch1Full ? "new batches" : `only ${spotsLeft} spots`;
+  const spotsText = allBatchesFull
+    ? "join waitlist"
+    : batch1Full
+      ? "new batches"
+      : `only ${spotsLeft} spots`;
   // full display label used in marquee and section headings
   const marqueeLabel = allBatchesFull
     ? "batches full"
@@ -727,6 +743,7 @@ const Mentorship = () => {
 
   // Pricing marquee refs
   // const pricingMarqueeRef = useRef(null);
+
   const pricingMarqueeTrackRef = useRef(null);
   const pricingMarqueeGroupRef = useRef(null);
 
@@ -783,7 +800,9 @@ const Mentorship = () => {
   const handlePayment = (plan) => {
     if (!user) {
       sessionStorage.setItem("signin_via_apply", "1");
-      const dest = allBatchesFull ? "/payment?waitlist=true" : `/payment?plan=${plan}`;
+      const dest = allBatchesFull
+        ? "/payment?waitlist=true"
+        : `/payment?plan=${plan}`;
       navigate("/signin", { state: { from: dest } });
       return;
     }
@@ -2151,17 +2170,17 @@ const Mentorship = () => {
 
           {/* Applications close */}
           {!allBatchesFull && (
-          <p
-            className="font-extrabold lowercase text-white"
-            style={{
-              fontSize: "clamp(28px, 3vw, 48px)",
-              letterSpacing: "-0.5px",
-              marginTop: "clamp(32px, 4vh, 56px)",
-              lineHeight: "1.1"
-            }}
-          >
-            {`applications close on ${closeLabel}`}
-          </p>
+            <p
+              className="font-extrabold lowercase text-white"
+              style={{
+                fontSize: "clamp(28px, 3vw, 48px)",
+                letterSpacing: "-0.5px",
+                marginTop: "clamp(32px, 4vh, 56px)",
+                lineHeight: "1.1"
+              }}
+            >
+              {`applications close on ${closeLabel}`}
+            </p>
           )}
 
           {/* Tagline */}
@@ -2235,17 +2254,19 @@ const Mentorship = () => {
           </p>
 
           {/* Applications close */}
-          {!allBatchesFull && <p
-            className="font-extrabold lowercase text-white"
-            style={{
-              fontSize: "clamp(20px, 5.5vw, 28px)",
-              letterSpacing: "-0.5px",
-              marginTop: "clamp(20px, 6vw, 36px)",
-              lineHeight: "1.15"
-            }}
-          >
-            {`applications close on ${closeLabel}`}
-          </p>}
+          {!allBatchesFull && (
+            <p
+              className="font-extrabold lowercase text-white"
+              style={{
+                fontSize: "clamp(20px, 5.5vw, 28px)",
+                letterSpacing: "-0.5px",
+                marginTop: "clamp(20px, 6vw, 36px)",
+                lineHeight: "1.15"
+              }}
+            >
+              {`applications close on ${closeLabel}`}
+            </p>
+          )}
 
           {/* Tagline */}
           <p
