@@ -400,6 +400,9 @@ import dive_in from "./dive_in.svg";
 import dive_in_hover from "./dive_in_hover.svg";
 import join_us_button from "./join_us_button.svg";
 import join_us_button_hover from "./join_us_button_hover.svg";
+import community_logo from "./community_logo.svg";
+import mentorship_logo from "./mentorship_logo.svg";
+import webinar_logo from "./webinar_logo.svg";
 
 // ========== BACKGROUND/TEXTURES (Load Separately) ==========
 // import grain_texture from "./grain_texture.jpg";
@@ -548,7 +551,9 @@ export {
   dive_in_hover,
   join_us_button,
   join_us_button_hover,
-
+  community_logo,
+  mentorship_logo,
+  webinar_logo,
   // Textures/Background
   // grain_texture,
   // noisy_background,

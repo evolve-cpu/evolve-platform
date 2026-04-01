@@ -184,16 +184,16 @@ const buildScene1Timeline = (refs, isMobile) => {
     .set(refs.rainbow, { opacity: 0, pointerEvents: "none" });
 
   // Pause after zoom completes
-  tl.to({}, { duration: 0.8 })
-    .to(refs.lottie, {
-      opacity: 1,
-      duration: 0.3,
-      ease: "power1.out",
-      force3D: true,
-      onStart: () => {
-        if (refs.playLottie) refs.playLottie();
-      }
-    })
+  // tl.to({}, { duration: 0.3 })
+  tl.to(refs.lottie, {
+    opacity: 1,
+    duration: 0.01,
+    ease: "power1.out",
+    force3D: true,
+    onStart: () => {
+      if (refs.playLottie) refs.playLottie();
+    }
+  })
     .to({}, { duration: 1.5 })
     .to(refs.lottie, {
       y: isMobile ? "-16vh" : "-20vh",

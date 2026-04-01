@@ -29,7 +29,7 @@ export const useScene1_4Timeline = (refs, isMobile) => {
   // );
   // start state
   // start state – visible immediately, no entrance animation
-  tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 1, y: 0 }, 0);
+  tl.set([refs.text2, refs.marquee], { opacity: 1, y: 0 }, 0);
 
   // tl.set([refs.text1, refs.text2, refs.marquee], { opacity: 0 }, 0);
 
@@ -159,7 +159,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
   const marqueeRef = useRef(null);
   const marqueeTrackRef = useRef(null);
   const marqueeGroupRef = useRef(null);
-  const text1Ref = useRef(null);
+  // const text1Ref = useRef(null);
   const text2Ref = useRef(null);
 
   // useImperativeHandle(ref, () => ({
@@ -175,7 +175,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
     marquee: marqueeRef.current,
     marqueeTrack: marqueeTrackRef.current,
     marqueeGroup: marqueeGroupRef.current,
-    text1: text1Ref.current,
+    // text1: text1Ref.current,
     text2: text2Ref.current,
     // holders for runtime objects (the hook will set these)
     marqueeTween: null,
@@ -190,7 +190,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
       {/* Text container - desktop */}
       {!isMobile && (
         <div className="flex flex-col items-center pt-[30vh] px-8">
-          <p
+          {/* <p
             ref={text1Ref}
             className="text-white lowercase mb-8 text-center"
             style={{
@@ -202,19 +202,20 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             }}
           >
             we're not here to hand out just certificates.
-          </p>
+          </p> */}
 
           <p
             ref={text2Ref}
             className="text-white lowercase font-extrabold text-center"
             style={{
-              fontSize: "4rem",
-              lineHeight: "4.5rem",
+              fontSize: "3.5rem",
+              lineHeight: "4rem",
               maxWidth: "62.5rem"
               // opacity: 0
             }}
           >
-            we're here to empower you to see new perspectives.
+            We’re here to change how you think, so you’ll never see the world,
+            the same way again.
           </p>
         </div>
       )}
@@ -222,7 +223,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
       {/* Text container - mobile */}
       {isMobile && (
         <div className="flex flex-col items-center pt-[30vh] px-6">
-          <p
+          {/* <p
             ref={text1Ref}
             className="text-white lowercase mb-4 text-center"
             style={{
@@ -234,7 +235,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             }}
           >
             we're not here to hand out just certificates.
-          </p>
+          </p> */}
 
           <p
             ref={text2Ref}
@@ -246,7 +247,8 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               // opacity: 0
             }}
           >
-            we're here to empower you to see new perspectives.
+            We’re here to change how you think, so you’ll never see the world,
+            the same way again.
           </p>
         </div>
       )}

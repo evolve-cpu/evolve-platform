@@ -16,13 +16,9 @@ import {
   curvey_circle_inner_part,
   vector_1st,
   vector_2nd,
-  oval_mini_1,
-  oval_mini_2,
-  oval_mini_3,
-  oval_1,
-  oval_2,
-  oval_3,
-  oval_3_1
+  community_logo,
+  mentorship_logo,
+  webinar_logo
 } from "../../assets/images/Home";
 import { rays_webinars } from "../../assets/images/Webinars";
 
@@ -39,6 +35,191 @@ export const SCENE_NEW_STEP_LABELS = [
   "scene_new_step10_card3_center", // Card 3 in center (mobile)
   "scene_new_step11_cards_interactive" // Final interactive state
 ];
+
+// ─── Oval Mini Card ───────────────────────────────────────────────────────────
+// Small pill card: lavender bg, yellow dashed inner border, logo centred
+const OvalMiniCard = React.forwardRef(({ logo, style }, ref) => (
+  <div ref={ref} style={{ display: "block", flexShrink: 0, ...style }}>
+    <div
+      style={{
+        background: "rgba(163,91,251,1)",
+        borderRadius: "180px",
+        width: "100%",
+        aspectRatio: "0.65 / 1",
+        position: "relative",
+        overflow: "hidden",
+        boxSizing: "border-box"
+      }}
+    >
+      {/* concentric dashed yellow border */}
+      <div
+        style={{
+          position: "absolute",
+          inset: "8%",
+          borderRadius: "150px",
+          border: "1.5px dashed rgba(255,208,7,0.85)",
+          pointerEvents: "none"
+        }}
+      />
+      <img
+        src={logo}
+        alt=""
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%,-50%)",
+          width: "62%",
+          height: "auto",
+          pointerEvents: "none"
+        }}
+      />
+    </div>
+  </div>
+));
+OvalMiniCard.displayName = "OvalMiniCard";
+
+// ─── Oval Full Card ────────────────────────────────────────────────────────────
+// Full card: lavender → pink on hover, logo + title + desc + arrow
+const CARD_DATA = {
+  community: {
+    title: "community",
+    desc: "a safe, active space to connect, share, and grow.",
+    logo: community_logo
+  },
+  mentorship: {
+    title: "mentorship",
+    desc: "1:1 support. learn from experienced designers.",
+    logo: mentorship_logo
+  },
+  webinar: {
+    title: "webinar",
+    desc: "expert-led sessions. learn, engage, and grow.",
+    logo: webinar_logo
+  }
+};
+
+const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
+  const innerRef = useRef(null);
+  const { title, desc, logo } = CARD_DATA[card];
+
+  const handleInteraction = (e) => {
+    e.stopPropagation();
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <div
+      ref={ref}
+      onClick={handleInteraction}
+      onTouchEnd={handleInteraction}
+      onMouseEnter={() => {
+        if (innerRef.current)
+          innerRef.current.style.background = "rgba(223,5,134,1)";
+      }}
+      onMouseLeave={() => {
+        if (innerRef.current)
+          innerRef.current.style.background = "rgba(163,91,251,1)";
+      }}
+      style={{
+        display: "block",
+        flexShrink: 0,
+        cursor: "pointer",
+        WebkitTapHighlightColor: "transparent",
+        ...style
+      }}
+    >
+      <div
+        ref={innerRef}
+        style={{
+          background: "rgba(163,91,251,1)",
+          transition: "background 0.22s ease",
+          borderRadius: "180px",
+          width: "100%",
+          aspectRatio: "0.65 / 1",
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16% 12% 12%",
+          boxSizing: "border-box",
+          gap: "4%"
+        }}
+      >
+        {/* concentric dashed yellow border — enough gap from edge */}
+        <div
+          style={{
+            position: "absolute",
+            inset: "5%",
+            borderRadius: "150px",
+            border: "1.5px dashed rgba(255,208,7,0.8)",
+            pointerEvents: "none"
+          }}
+        />
+        {/* logo */}
+        <img
+          src={logo}
+          alt={title}
+          style={{
+            width: "70%",
+            height: "auto",
+            flexShrink: 0,
+            position: "relative",
+            zIndex: 1
+          }}
+        />
+        {/* text */}
+        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+          <p
+            style={{
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: "1.4rem",
+              margin: 0,
+              marginBottom: "0.3rem",
+              fontFamily: "inherit",
+              letterSpacing: "-0.02em"
+            }}
+          >
+            {title}
+          </p>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.88)",
+              fontSize: "0.92rem",
+              margin: 0,
+              lineHeight: 1.45
+            }}
+          >
+            {desc}
+          </p>
+        </div>
+        {/* arrow */}
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "50%",
+            background: "rgba(20,20,20,0.92)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            zIndex: 1,
+            flexShrink: 0
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "1rem", lineHeight: 1 }}>
+            →
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+OvalFullCard.displayName = "OvalFullCard";
 
 // CombinedCircle Component
 const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
@@ -406,7 +587,7 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     tl.to(
       refs.ovalMini1,
       {
-        y: "-20vh",
+        y: "-15vh",
         scale: 1.5,
         duration: 0.8,
         ease: "power2.out"
@@ -446,6 +627,13 @@ export const useSceneNewTimeline = (refs, isMobile) => {
         duration: 0,
         ease: "power2.inOut"
       },
+      step10Start + 1.0
+    );
+
+    // Enable pointer events on mobile container as soon as first card appears
+    tl.set(
+      refs.mobileOvalsContainer,
+      { pointerEvents: "auto" },
       step10Start + 1.0
     );
 
@@ -568,19 +756,7 @@ export const useSceneNewTimeline = (refs, isMobile) => {
       step12Start + 2.5
     );
 
-    // Enable pointer events for mobile cards after animations complete
-    const mobileInteractiveStart = step12Start + 3.5;
-    tl.call(
-      () => {
-        // Make sure all visible cards are interactive
-        if (refs.oval3) {
-          refs.oval3.style.pointerEvents = "auto";
-        }
-      },
-      null,
-      null,
-      mobileInteractiveStart
-    );
+    // pointer events already enabled in oval1's onStart above
   } else {
     // ========== DESKTOP: ORIGINAL ANIMATION ==========
 
@@ -637,6 +813,13 @@ export const useSceneNewTimeline = (refs, isMobile) => {
         duration: 0,
         ease: "power2.inOut"
       },
+      transformStart + 0.6
+    );
+
+    // Enable pointer events on desktop container when cards appear (set is scrub-safe)
+    tl.set(
+      refs.fullOvalsContainer,
+      { pointerEvents: "auto" },
       transformStart + 0.6
     );
 
@@ -736,6 +919,7 @@ const SceneNew = React.forwardRef((props, ref) => {
   const oval2Ref = useRef(null);
   const oval3Ref = useRef(null);
   const fullOvalsContainerRef = useRef(null);
+  const mobileOvalsContainerRef = useRef(null);
 
   // Expose refs to parent
   React.useImperativeHandle(ref, () => ({
@@ -756,7 +940,8 @@ const SceneNew = React.forwardRef((props, ref) => {
     oval1: oval1Ref.current,
     oval2: oval2Ref.current,
     oval3: oval3Ref.current,
-    fullOvalsContainer: fullOvalsContainerRef.current
+    fullOvalsContainer: fullOvalsContainerRef.current,
+    mobileOvalsContainer: mobileOvalsContainerRef.current
   }));
 
   // Card URLs - Update these to your actual routes
@@ -851,8 +1036,8 @@ const SceneNew = React.forwardRef((props, ref) => {
         ref={textRef}
         className={[
           "absolute left-1/2 -translate-x-1/2 z-[20] text-center font-extrabold",
-          "text-[32px] leading-[1.2]",
-          "[@media(min-height:812px)]:text-[40px]",
+          "text-[28px] leading-[1.2]", // 👈 reduced for mobile
+          "[@media(min-height:812px)]:text-[32px]",
           "[@media(min-height:812px)]:leading-[1.2]",
           "md:text-[48px] md:leading-[1.2]",
           "[@media(min-width:1024px)]:[@media(min-height:900px)]:text-[64px]",
@@ -861,21 +1046,27 @@ const SceneNew = React.forwardRef((props, ref) => {
         style={{
           top: "20%",
           maxWidth: isMobile ? "90%" : "80%",
-          width: isMobile ? "90vw" : "80%",
+          width: isMobile ? "95vw" : "80%",
           opacity: 0,
           color: "rgb(0, 0, 0)"
         }}
       >
         {isMobile ? (
           <>
-            <div>Home to fearless</div>
+            {/* <div>Home to fearless</div>
             <div>design and untamed</div>
-            <div>creativity.</div>
+            <div>creativity.</div> */}
+            <div>where designers find</div>
+            <div>their people, their niche,</div>
+            <div>and their purpose.</div>
           </>
         ) : (
           <>
-            <div>Home to fearless design and</div>
-            <div>untamed creativity.</div>
+            <div>
+              where designers find their people,
+              <br />
+              their niche, and their purpose.
+            </div>
           </>
         )}
       </div>
@@ -924,47 +1115,41 @@ const SceneNew = React.forwardRef((props, ref) => {
       <div
         className="absolute left-1/2 -translate-x-1/2 z-[15]"
         style={{
-          bottom: isMobile ? "15%" : "20%",
+          bottom: isMobile ? "20%" : "20%",
           top: 0,
           display: "flex",
           flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? "16px" : "32px",
+          gap: isMobile ? "8px" : "32px",
           alignItems: "center",
           justifyContent: "center",
           pointerEvents: "none"
         }}
       >
-        <img
+        <OvalMiniCard
           ref={ovalMini3Ref}
-          src={oval_mini_3}
-          alt="oval mini 3"
-          className="pointer-events-none"
+          logo={webinar_logo}
           style={{
-            width: isMobile ? "60%" : "280px",
-            height: "auto",
-            opacity: 0
+            width: isMobile ? "21vw" : "200px",
+            opacity: 0,
+            pointerEvents: "none"
           }}
         />
-        <img
+        <OvalMiniCard
           ref={ovalMini2Ref}
-          src={oval_mini_2}
-          alt="oval mini 2"
-          className="pointer-events-none"
+          logo={mentorship_logo}
           style={{
-            width: isMobile ? "60%" : "280px",
-            height: "auto",
-            opacity: 0
+            width: isMobile ? "21vw" : "200px",
+            opacity: 0,
+            pointerEvents: "none"
           }}
         />
-        <img
+        <OvalMiniCard
           ref={ovalMini1Ref}
-          src={oval_mini_1}
-          alt="oval mini 1"
-          className="pointer-events-none"
+          logo={community_logo}
           style={{
-            width: isMobile ? "60%" : "280px",
-            height: "auto",
-            opacity: 0
+            width: isMobile ? "21vw" : "200px",
+            opacity: 0,
+            pointerEvents: "none"
           }}
         />
       </div>
@@ -985,44 +1170,23 @@ const SceneNew = React.forwardRef((props, ref) => {
             pointerEvents: "none"
           }}
         >
-          <img
-            ref={oval3Ref}
-            src={oval_3}
-            alt="oval 3"
-            className="cursor-pointer transition-transform duration-300 hover:scale-110"
-            onClick={() => handleCardClick(3)}
-            style={{
-              width: "380px",
-              height: "auto",
-              opacity: 0,
-              pointerEvents: "auto"
-            }}
-          />
-          <img
-            ref={oval2Ref}
-            src={oval_2}
-            alt="oval 2"
-            className="cursor-pointer transition-transform duration-300 hover:scale-105"
-            onClick={() => handleCardClick(2)}
-            style={{
-              width: "380px",
-              height: "auto",
-              opacity: 0,
-              pointerEvents: "auto"
-            }}
-          />
-          <img
+          <OvalFullCard
             ref={oval1Ref}
-            src={oval_1}
-            alt="oval 1"
-            className="cursor-pointer transition-transform duration-300 hover:scale-105"
+            card="community"
             onClick={() => handleCardClick(1)}
-            style={{
-              width: "380px",
-              height: "auto",
-              opacity: 0,
-              pointerEvents: "auto"
-            }}
+            style={{ width: "330px", opacity: 0 }}
+          />
+          <OvalFullCard
+            ref={oval2Ref}
+            card="mentorship"
+            onClick={() => handleCardClick(2)}
+            style={{ width: "330px", opacity: 0 }}
+          />
+          <OvalFullCard
+            ref={oval3Ref}
+            card="webinar"
+            onClick={() => handleCardClick(3)}
+            style={{ width: "330px", opacity: 0 }}
           />
         </div>
       )}
@@ -1030,6 +1194,7 @@ const SceneNew = React.forwardRef((props, ref) => {
       {/* Full Ovals Container - MOBILE - with clipping mask (REPLICATED FROM SCENE1_1) */}
       {isMobile && (
         <div
+          ref={mobileOvalsContainerRef}
           className="absolute z-[16]"
           style={{
             left: 0,
@@ -1037,7 +1202,7 @@ const SceneNew = React.forwardRef((props, ref) => {
             top: 0,
             bottom: "20vh", // Boundary stops here (above text8)
             overflow: "hidden", // This clips the content
-            pointerEvents: "auto"
+            pointerEvents: "none"
           }}
         >
           {/* Inner positioned container - this is what moves */}
@@ -1051,48 +1216,45 @@ const SceneNew = React.forwardRef((props, ref) => {
               maxWidth: "380px"
             }}
           >
-            <img
+            <OvalFullCard
               ref={oval1Ref}
-              src={oval_1}
-              alt="oval 1"
-              className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
-              onClick={() => handleCardClick(3)}
-              style={{
-                width: "100%",
-                height: "auto",
-                opacity: 0,
-                top: 0,
-                pointerEvents: "auto"
-              }}
-            />
-
-            <img
-              ref={oval2Ref}
-              src={oval_2}
-              alt="oval 2"
-              className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
-              onClick={() => handleCardClick(2)}
-              style={{
-                width: "100%",
-                height: "auto",
-                opacity: 0,
-                top: 0,
-                pointerEvents: "auto"
-              }}
-            />
-
-            <img
-              ref={oval3Ref}
-              src={oval_3}
-              alt="oval 3"
-              className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
+              card="community"
               onClick={() => handleCardClick(1)}
               style={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
                 width: "100%",
-                height: "auto",
                 opacity: 0,
-                top: 0,
-                pointerEvents: "auto"
+                top: 0
+              }}
+            />
+
+            <OvalFullCard
+              ref={oval2Ref}
+              card="mentorship"
+              onClick={() => handleCardClick(2)}
+              style={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100%",
+                opacity: 0,
+                top: 0
+              }}
+            />
+
+            <OvalFullCard
+              ref={oval3Ref}
+              card="webinar"
+              onClick={() => handleCardClick(3)}
+              style={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100%",
+                opacity: 0,
+                top: 0
               }}
             />
           </div>
