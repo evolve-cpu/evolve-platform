@@ -493,6 +493,8 @@ export default function Payment() {
         },
         theme: { color: "#FFD600" },
         handler: () => {
+          window._uxa = window._uxa || [];
+          window._uxa.push(["trackEvent", "conversion", "payment_success", plan]);
           setStep("success");
           setPaying(false);
         },

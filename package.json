@@ -16,9 +16,20 @@
     "destination": "dist",
     "inlineCss": false,
     "puppeteerExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ],
     "skipThirdPartyRequests": true,
-    "routes": ["/", "/about", "/community", "/webinars", "/mentorship", "/terms", "/privacy"]
+    "routes": [
+      "/",
+      "/about",
+      "/community",
+      "/webinars",
+      "/mentorship",
+      "/terms",
+      "/privacy"
+    ]
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -70,6 +81,7 @@
     "react-dom": "^18.3.1",
     "react-helmet-async": "^3.0.0",
     "react-hook-form": "^7.61.1",
+    "react-hotjar": "^6.3.1",
     "react-razorpay": "^3.0.1",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
