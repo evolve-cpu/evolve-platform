@@ -1305,11 +1305,18 @@ const Community = () => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            <img
-              src={hover ? join_us_button_hover : join_us_button}
-              alt="join us"
-              className="w-[200px] md:w-[240px]"
-            />
+            <a
+              href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <img
+                src={hover ? join_us_button_hover : join_us_button}
+                alt="join us"
+                className="w-[200px] md:w-[240px]"
+              />
+            </a>
           </div>
         </div>
       </section>
