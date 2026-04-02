@@ -1055,6 +1055,9 @@ const Webinars = lazy(() => import("./pages/Webinars.jsx"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const Community = lazy(() => import("./pages/Community.jsx"));
 const PortfolioReview = lazy(() => import("./pages/PortfolioReview.jsx"));
+const PortfolioReviewForm = lazy(
+  () => import("./pages/PortfolioReviewForm.jsx")
+);
 const Course = lazy(() => import("./pages/Course"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
@@ -1130,7 +1133,8 @@ const AppLayout = () => {
     "/payment",
     "/mentorship-session",
     "/admin",
-    "/admin/dashboard"
+    "/admin/dashboard",
+    "/community/portfolio-review/form"
   ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
@@ -1496,7 +1500,14 @@ const AppLayout = () => {
             <Route path="/webinars" element={<Webinars />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
-            <Route path="/community/portfolio-review" element={<PortfolioReview />} />
+            <Route
+              path="/community/portfolio-review"
+              element={<PortfolioReview />}
+            />
+            <Route
+              path="/community/portfolio-review/form"
+              element={<PortfolioReviewForm />}
+            />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/mentorship-session" element={<MentorshipSession />} />

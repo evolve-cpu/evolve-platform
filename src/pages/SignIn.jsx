@@ -62,7 +62,11 @@ function LoadingStep({ label, sub, progress }) {
 ══════════════════════════════════════════════════════════════════════════════ */
 function goToFrom(navigate, from) {
   // Payment page shows its own welcome in the gift screen — skip the overlay
-  if (!from.startsWith("/payment")) {
+  // Portfolio review form handles its own post-signin flow — skip the overlay
+  const skipOverlay =
+    from.startsWith("/payment") ||
+    from.startsWith("/community/portfolio-review");
+  if (!skipOverlay) {
     sessionStorage.setItem("show_welcome_overlay", "1");
   }
   sessionStorage.removeItem("signin_from");

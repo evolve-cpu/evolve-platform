@@ -88,7 +88,7 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <ShareYourWorkButton to="/form" />
+            <ShareYourWorkButton to="/community/portfolio-review/form" />
           </div>
         </div>
 
@@ -143,7 +143,7 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <ShareYourWorkButton to="/form" />
+            <ShareYourWorkButton to="/community/portfolio-review/form" />
           </div>
         </div>
 
@@ -199,12 +199,11 @@ const PortfolioReview = () => {
             {STEPS.map((item, i) => (
               <div key={i}>
                 <div
-                  className="flex items-center justify-between cursor-pointer"
+                  className="flex items-start justify-between"
                   style={{
                     paddingTop: "clamp(20px, 4vh, 32px)",
-                    paddingBottom: "clamp(20px, 4vh, 32px)"
+                    paddingBottom: "clamp(12px, 2vh, 20px)"
                   }}
-                  onClick={() => setOpenStep(openStep === i ? null : i)}
                 >
                   <span
                     className="font-semibold lowercase text-black"
@@ -216,43 +215,22 @@ const PortfolioReview = () => {
                   >
                     {item.q}
                   </span>
-                  <span className="ml-4 flex-shrink-0">
-                    <svg
-                      width="34"
-                      height="34"
-                      viewBox="0 0 32 32"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      style={{
-                        transform:
-                          openStep === i ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.25s ease"
-                      }}
-                    >
-                      <path
-                        d="M8 12L16 20L24 12"
-                        stroke="black"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
-                {openStep === i && (
-                  <p
-                    className="font-normal lowercase text-black"
-                    style={{
-                      fontSize: "29px",
-                      lineHeight: "1.4",
-                      letterSpacing: "-0.02em",
-                      paddingBottom: "clamp(20px, 2.5vh, 32px)",
-                      whiteSpace: "pre-line"
-                    }}
-                  >
-                    {item.a}
-                  </p>
-                )}
+
+                {/* Always visible */}
+                <p
+                  className="font-normal lowercase text-black"
+                  style={{
+                    fontSize: "29px",
+                    lineHeight: "1.4",
+                    letterSpacing: "-0.02em",
+                    paddingBottom: "clamp(20px, 2.5vh, 32px)",
+                    whiteSpace: "pre-line"
+                  }}
+                >
+                  {item.a}
+                </p>
+
                 {i !== STEPS.length - 1 && (
                   <div
                     style={{
@@ -292,9 +270,8 @@ const PortfolioReview = () => {
           {STEPS.map((item, i) => (
             <div key={i}>
               <div
-                className="flex items-center justify-between cursor-pointer"
-                style={{ paddingTop: "20px", paddingBottom: "20px" }}
-                onClick={() => setOpenStep(openStep === i ? null : i)}
+                className="flex items-start justify-between"
+                style={{ paddingTop: "20px", paddingBottom: "10px" }}
               >
                 <span
                   className="font-semibold lowercase text-black"
@@ -306,43 +283,22 @@ const PortfolioReview = () => {
                 >
                   {item.q}
                 </span>
-                <span className="ml-3 flex-shrink-0">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 32 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      transform:
-                        openStep === i ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.25s ease"
-                    }}
-                  >
-                    <path
-                      d="M8 12L16 20L24 12"
-                      stroke="black"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
               </div>
-              {openStep === i && (
-                <p
-                  className="font-normal lowercase text-black"
-                  style={{
-                    fontSize: "clamp(15px, 4.5vw, 19px)",
-                    lineHeight: "1.4",
-                    letterSpacing: "-0.02em",
-                    paddingBottom: "20px",
-                    whiteSpace: "pre-line"
-                  }}
-                >
-                  {item.a}
-                </p>
-              )}
+
+              {/* Always visible */}
+              <p
+                className="font-normal lowercase text-black"
+                style={{
+                  fontSize: "clamp(15px, 4.5vw, 19px)",
+                  lineHeight: "1.4",
+                  letterSpacing: "-0.02em",
+                  paddingBottom: "20px",
+                  whiteSpace: "pre-line"
+                }}
+              >
+                {item.a}
+              </p>
+
               {i !== STEPS.length - 1 && (
                 <div
                   style={{
@@ -392,7 +348,7 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <ShareYourWorkButton to="/form" />
+            <ShareYourWorkButton to="/community/portfolio-review/form" />
           </div>
         </div>
 
@@ -439,7 +395,7 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <ShareYourWorkButton to="/form" />
+            <ShareYourWorkButton to="/community/portfolio-review/form" />
           </div>
         </div>
 
