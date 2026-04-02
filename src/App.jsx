@@ -1054,6 +1054,7 @@ const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Webinars = lazy(() => import("./pages/Webinars.jsx"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const Community = lazy(() => import("./pages/Community.jsx"));
+const PortfolioReview = lazy(() => import("./pages/PortfolioReview.jsx"));
 const Course = lazy(() => import("./pages/Course"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
@@ -1495,6 +1496,7 @@ const AppLayout = () => {
             <Route path="/webinars" element={<Webinars />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/community/portfolio-review" element={<PortfolioReview />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/mentorship-session" element={<MentorshipSession />} />

@@ -947,6 +947,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import SEO from "../components/SEO";
+import ShareYourWorkButton from "../components/ShareYourWorkButton";
 
 import {
   rays_community,
@@ -991,7 +992,8 @@ const CARDS = [
     descriptionDesktop:
       "share your work and get direct, no-sugarcoating feedback from experienced designers. understand what works, what doesn’t, and how to level up.",
     desktopImages: [{ src: portfolio_reviews, position: "center" }],
-    mobileImage: portfolio_reviews_mobile
+    mobileImage: portfolio_reviews_mobile,
+    ctaLink: "/community/portfolio-review"
   },
   {
     title: "challenges",
@@ -1405,6 +1407,13 @@ const Community = () => {
               <p className="mt-3 max-w-2xl text-black font-normal text-[20px] leading-tight hidden md:block">
                 {card.descriptionDesktop}
               </p>
+
+              {/* CTA Button — only for cards that have one */}
+              {card.ctaLink && (
+                <div className="mt-5">
+                  <ShareYourWorkButton to={card.ctaLink} />
+                </div>
+              )}
             </div>
 
             {/* Desktop Images */}
