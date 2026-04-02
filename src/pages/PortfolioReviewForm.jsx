@@ -64,7 +64,23 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
       style={{ backgroundColor: "#161618" }}
     >
       <BlackNav onLogoClick={onBackToCommunity} />
-
+      <div className="absolute top-20 left-6 z-50">
+        <button
+          onClick={onBackToCommunity}
+          className="text-evolve-yellow text-xs hover:opacity-80 transition-colors flex items-center gap-1 font-semibold"
+        >
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M12.5 15L7.5 10L12.5 5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          back to community
+        </button>
+      </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6 text-center">
           {/* Green checkmark icon — same as payment success */}
@@ -117,7 +133,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
 
           {/* While you wait */}
           <div className="w-full text-left">
-            <p className="text-evolve-yellow text-xs font-bold uppercase tracking-widest mb-3">
+            <p className="text-evolve-yellow text-sm font-bold mb-3">
               while you wait —
             </p>
             <p className="text-white/60 text-sm leading-relaxed mb-4">
@@ -133,7 +149,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
             {/* Mentorship CTA card */}
             <button
               onClick={onApplyMentorship}
-              className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-white/10 hover:border-white/25 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-yellow-300 hover:border-evolve-yellow transition-colors"
               style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
             >
               <div className="text-left">
@@ -149,11 +165,11 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
                 height="20"
                 viewBox="0 0 20 20"
                 fill="none"
-                className="flex-shrink-0 ml-3"
+                className="flex-shrink-0 ml-3 text-evolve-yellow"
               >
                 <path
                   d="M4.5 10h11M10.5 5l5 5-5 5"
-                  stroke="#A35BFB"
+                  stroke="#FFD007"
                   strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -162,10 +178,10 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
             </button>
           </div>
 
-          <div className="h-px w-full bg-white/10" />
+          {/* <div className="h-px w-full bg-white/10" /> */}
 
           {/* Footer */}
-          <div className="w-full flex items-center justify-between">
+          {/* <div className="w-full flex items-center justify-between">
             <span className="text-white/30 text-xs font-bold uppercase tracking-widest font-bricolage">
               evolve community
             </span>
@@ -184,7 +200,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
               </svg>
               back to community
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
@@ -224,8 +240,8 @@ function AlreadySubmittedScreen({ onBack }) {
               already submitted.
             </h1>
             <p className="text-white/50 text-sm mt-3 max-w-[30ch] mx-auto leading-relaxed">
-              we already have your portfolio. sit tight — feedback is on its
-              way within 24–48 hours.
+              we already have your portfolio. sit tight — feedback is on its way
+              within 24–48 hours.
             </p>
           </div>
           <button
@@ -277,10 +293,7 @@ function MobileForm({
       className="font-bricolage flex md:hidden min-h-screen flex-col"
       style={{ backgroundColor: "#161618" }}
     >
-      <BlackNav
-        onLogoClick={onBack}
-        right={<AvatarSlot user={user} />}
-      />
+      <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
 
       <div className="flex-1 flex flex-col px-5 pt-20 pb-10 gap-6">
         {/* Back */}
@@ -496,10 +509,7 @@ function DesktopForm({
       className="font-bricolage hidden md:flex min-h-screen flex-col"
       style={{ backgroundColor: "#161618" }}
     >
-      <BlackNav
-        onLogoClick={onBack}
-        right={<AvatarSlot user={user} />}
-      />
+      <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
 
       <div className="flex flex-1 pt-14">
         {/* ─── LEFT PANEL ─── */}
@@ -578,7 +588,12 @@ function DesktopForm({
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
                       style={{
-                        backgroundColor: ["#DF0586", "#A35BFB", "#FFD007", "#4ade80"][i % 4]
+                        backgroundColor: [
+                          "#DF0586",
+                          "#A35BFB",
+                          "#FFD007",
+                          "#4ade80"
+                        ][i % 4]
                       }}
                     />
                     <span className="text-white/60 text-sm leading-snug">
@@ -799,8 +814,8 @@ function DesktopForm({
                 </p>
               </div>
               <p className="text-white/40 text-xs pl-10 leading-relaxed">
-                helps us give you more relevant feedback — where you're at,
-                what you're going for.
+                helps us give you more relevant feedback — where you're at, what
+                you're going for.
               </p>
               <textarea
                 rows={3}
@@ -916,7 +931,8 @@ export default function PortfolioReviewForm() {
         const { error: uploadErr } = await supabase.storage
           .from("portfolio-files")
           .upload(path, portfolioFile, { upsert: true });
-        if (uploadErr) throw new Error("file upload failed: " + uploadErr.message);
+        if (uploadErr)
+          throw new Error("file upload failed: " + uploadErr.message);
         const { data: urlData } = supabase.storage
           .from("portfolio-files")
           .getPublicUrl(path);
