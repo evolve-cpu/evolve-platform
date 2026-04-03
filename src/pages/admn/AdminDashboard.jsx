@@ -116,6 +116,7 @@ export default function AdminDashboard() {
   const [batches, setBatches] = useState([]);
   const [waitlist, setWaitlist] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [portfolioReviews, setPortfolioReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -155,7 +156,8 @@ export default function AdminDashboard() {
         { data: pData, error: pErr },
         { data: bData, error: bErr },
         { data: wData, error: wErr },
-        { data: prData, error: prErr }
+        { data: prData, error: prErr },
+        { data: reviewData, error: reviewErr } // 👈 ADD THIS
       ] = await Promise.all([
         supabase
           .from("mentorship_payments")
@@ -163,13 +165,22 @@ export default function AdminDashboard() {
             "*, batch:mentorship_batches(batch_number, start_date, total_seats)"
           )
           .order("created_at", { ascending: false }),
+
         supabase.from("mentorship_batches").select("*").order("batch_number"),
+
         supabase
           .from("mentorship_waitlist")
           .select("*")
           .order("created_at", { ascending: false }),
+
         supabase
           .from("profiles")
+          .select("*")
+          .order("created_at", { ascending: false }),
+
+        // 👇 NEW TABLE
+        supabase
+          .from("portfolio_reviews")
           .select("*")
           .order("created_at", { ascending: false })
       ]);
@@ -178,6 +189,9 @@ export default function AdminDashboard() {
       if (bErr) throw bErr;
       if (wErr) throw wErr;
       if (prErr) throw prErr;
+      if (reviewErr) throw reviewErr;
+
+      setPortfolioReviews(reviewData || []);
 
       setPayments(pData || []);
       setBatches(bData || []);
@@ -335,6 +349,16 @@ export default function AdminDashboard() {
     );
   }, [profiles, search]);
 
+  const filteredReviews = useMemo(() => {
+    if (!search.trim()) return portfolioReviews;
+    const q = search.toLowerCase();
+    return portfolioReviews.filter(
+      (r) =>
+        (r.user_name || "").toLowerCase().includes(q) ||
+        (r.status || "").toLowerCase().includes(q)
+    );
+  }, [portfolioReviews, search]);
+
   /* set of enrolled user_ids for quick lookup */
   const enrolledIds = useMemo(
     () =>
@@ -427,10 +451,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
   const TABS = [
     { id: "overview", label: "overview" },
-    { id: "tables",   label: "all tables" },
+    { id: "tables", label: "all tables" },
     { id: "payments", label: `payments (${payments.length})` },
-    { id: "batches",  label: `batches (${batches.length})` },
-    { id: "waitlist", label: `waitlist (${stats.waitlistCount})` }
+    { id: "batches", label: `batches (${batches.length})` },
+    { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
+    { id: "reviews", label: `reviews (${portfolioReviews.length})` }
   ];
 
   return (
@@ -1188,61 +1213,285 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </div>
           </div>
         )}
+        {activeTab === "reviews" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="search by name or status…"
+                className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                style={{
+                  background: "#111",
+                  border: "1px solid #222",
+                  color: "#fff"
+                }}
+              />
+              <span className="text-xs" style={{ color: "#555" }}>
+                {filteredReviews.length} reviews
+              </span>
+            </div>
+
+            <div
+              className="rounded-xl border overflow-x-auto"
+              style={{ borderColor: "#222" }}
+            >
+              <table className="w-full text-sm">
+                <thead>
+                  <tr
+                    style={{
+                      background: "#111",
+                      borderBottom: "1px solid #222"
+                    }}
+                  >
+                    {[
+                      "name",
+                      "email",
+                      "portfolio",
+                      "walkthrough",
+                      "notes",
+                      "submitted"
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left font-semibold"
+                        style={{ color: "#555" }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredReviews.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center"
+                        style={{ color: "#444" }}
+                      >
+                        no portfolio reviews
+                      </td>
+                    </tr>
+                  )}
+
+                  {filteredReviews.map((r, i) => (
+                    <tr
+                      key={r.id || i}
+                      style={{
+                        borderBottom: "1px solid #1a1a1a",
+                        background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                      }}
+                    >
+                      {/* NAME */}
+                      <td className="px-4 py-3 font-semibold text-white">
+                        {r.name || "—"}
+                      </td>
+
+                      {/* EMAIL */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{ color: "#888" }}
+                      >
+                        {r.email || "—"}
+                      </td>
+
+                      {/* PORTFOLIO */}
+                      <td className="px-4 py-3 text-xs">
+                        {r.portfolio_link ? (
+                          <a
+                            href={r.portfolio_link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-yellow-400 underline"
+                          >
+                            open link
+                          </a>
+                        ) : r.portfolio_file_url ? (
+                          <a
+                            href={r.portfolio_file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-yellow-400 underline"
+                          >
+                            view file
+                          </a>
+                        ) : (
+                          <span style={{ color: "#444" }}>—</span>
+                        )}
+                      </td>
+
+                      {/* WALKTHROUGH */}
+                      <td className="px-4 py-3 text-xs">
+                        {r.walkthrough_link ? (
+                          <a
+                            href={r.walkthrough_link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-yellow-400 underline"
+                          >
+                            watch
+                          </a>
+                        ) : (
+                          <span style={{ color: "#444" }}>—</span>
+                        )}
+                      </td>
+
+                      {/* NOTES */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{
+                          color: "#aaa",
+                          maxWidth: 300,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
+                        title={r.notes}
+                      >
+                        {r.notes || "—"}
+                      </td>
+
+                      {/* DATE */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{ color: "#666" }}
+                      >
+                        {fmtDate(r.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* ══════════════════════════════════════════════════════════════
             ALL TABLES TAB — profiles → payments → batches → waitlist
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "tables" && (
           <div className="space-y-8">
-
             {/* global search */}
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="search across all tables…"
               className="w-full max-w-md px-4 py-2 rounded-lg text-sm outline-none"
-              style={{ background: "#111", border: "1px solid #222", color: "#fff" }}
+              style={{
+                background: "#111",
+                border: "1px solid #222",
+                color: "#fff"
+              }}
             />
 
             {/* ── PROFILES ── */}
             <section>
               <div className="flex items-center gap-3 mb-3">
                 <h2 className="text-base font-black text-white">profiles</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "#1a1a1a", color: "#666" }}>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "#1a1a1a", color: "#666" }}
+                >
                   {filteredProfiles.length} rows
                 </span>
               </div>
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
+              <div
+                className="rounded-xl border overflow-x-auto"
+                style={{ borderColor: "#222" }}
+              >
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
-                      {["avatar", "name", "email", "phone", "enrolled?", "joined"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: "#555" }}>{h}</th>
+                    <tr
+                      style={{
+                        background: "#111",
+                        borderBottom: "1px solid #222"
+                      }}
+                    >
+                      {[
+                        "avatar",
+                        "name",
+                        "email",
+                        "phone",
+                        "enrolled?",
+                        "joined"
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredProfiles.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center" style={{ color: "#444" }}>no users found</td></tr>
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-8 text-center"
+                          style={{ color: "#444" }}
+                        >
+                          no users found
+                        </td>
+                      </tr>
                     )}
                     {filteredProfiles.map((p, i) => {
                       const paid = enrolledIds.has(p.id);
                       return (
-                        <tr key={p.id || i} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
+                        <tr
+                          key={p.id || i}
+                          style={{
+                            borderBottom: "1px solid #1a1a1a",
+                            background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                          }}
+                        >
                           <td className="px-4 py-3">
                             <img
-                              src={p.avatar_url || `https://api.dicebear.com/7.x/thumbs/svg?seed=${p.id}`}
-                              alt="" className="w-8 h-8 rounded-full object-cover"
-                              onError={e => { e.target.style.display = "none"; }}
+                              src={
+                                p.avatar_url ||
+                                `https://api.dicebear.com/7.x/thumbs/svg?seed=${p.id}`
+                              }
+                              alt=""
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
                             />
                           </td>
-                          <td className="px-4 py-3 font-semibold text-white">{p.name || p.username || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{p.email || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{p.phone || "—"}</td>
-                          <td className="px-4 py-3">
-                            {paid ? <Badge color={GR} text="#000">enrolled</Badge> : <span style={{ color: "#333" }}>—</span>}
+                          <td className="px-4 py-3 font-semibold text-white">
+                            {p.name || p.username || "—"}
                           </td>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>{fmtDate(p.created_at)}</td>
+                          <td
+                            className="px-4 py-3 text-xs"
+                            style={{ color: "#666" }}
+                          >
+                            {p.email || "—"}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs"
+                            style={{ color: "#666" }}
+                          >
+                            {p.phone || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {paid ? (
+                              <Badge color={GR} text="#000">
+                                enrolled
+                              </Badge>
+                            ) : (
+                              <span style={{ color: "#333" }}>—</span>
+                            )}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs"
+                            style={{ color: "#555" }}
+                          >
+                            {fmtDate(p.created_at)}
+                          </td>
                         </tr>
                       );
                     })}
@@ -1254,35 +1503,125 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             {/* ── PAYMENTS ── */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-base font-black text-white">mentorship_payments</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "#1a1a1a", color: "#666" }}>
+                <h2 className="text-base font-black text-white">
+                  mentorship_payments
+                </h2>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "#1a1a1a", color: "#666" }}
+                >
                   {filteredPayments.length} rows
                 </span>
               </div>
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
+              <div
+                className="rounded-xl border overflow-x-auto"
+                style={{ borderColor: "#222" }}
+              >
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
-                      {["name", "plan", "amount", "batch", "status", "test?", "phone", "date", "razorpay ref"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: "#555" }}>{h}</th>
+                    <tr
+                      style={{
+                        background: "#111",
+                        borderBottom: "1px solid #222"
+                      }}
+                    >
+                      {[
+                        "name",
+                        "plan",
+                        "amount",
+                        "batch",
+                        "status",
+                        "test?",
+                        "phone",
+                        "date",
+                        "razorpay ref"
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredPayments.length === 0 && (
-                      <tr><td colSpan={9} className="px-4 py-8 text-center" style={{ color: "#444" }}>no payments</td></tr>
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="px-4 py-8 text-center"
+                          style={{ color: "#444" }}
+                        >
+                          no payments
+                        </td>
+                      </tr>
                     )}
                     {filteredPayments.map((p, i) => (
-                      <tr key={p.id || i} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
-                        <td className="px-4 py-3 font-semibold text-white">{p.user_name || "—"}</td>
-                        <td className="px-4 py-3"><Badge color={PLAN_COLORS[p.plan] || "#333"} text="#000">{p.plan || "—"}</Badge></td>
-                        <td className="px-4 py-3 font-bold" style={{ color: Y }}>{p.amount ? fmt(p.amount) : "—"}</td>
-                        <td className="px-4 py-3" style={{ color: "#888" }}>{p.batch?.batch_number ? `Batch ${p.batch.batch_number}` : "—"}</td>
-                        <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                        <td className="px-4 py-3">{p.is_test ? <Badge color="#333" text="#aaa">test</Badge> : <span style={{ color: "#333" }}>—</span>}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{p.phone || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>{fmtDate(p.created_at)}</td>
-                        <td className="px-4 py-3 text-xs font-mono" style={{ color: "#444", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <tr
+                        key={p.id || i}
+                        style={{
+                          borderBottom: "1px solid #1a1a1a",
+                          background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                        }}
+                      >
+                        <td className="px-4 py-3 font-semibold text-white">
+                          {p.user_name || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            color={PLAN_COLORS[p.plan] || "#333"}
+                            text="#000"
+                          >
+                            {p.plan || "—"}
+                          </Badge>
+                        </td>
+                        <td
+                          className="px-4 py-3 font-bold"
+                          style={{ color: Y }}
+                        >
+                          {p.amount ? fmt(p.amount) : "—"}
+                        </td>
+                        <td className="px-4 py-3" style={{ color: "#888" }}>
+                          {p.batch?.batch_number
+                            ? `Batch ${p.batch.batch_number}`
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={p.status} />
+                        </td>
+                        <td className="px-4 py-3">
+                          {p.is_test ? (
+                            <Badge color="#333" text="#aaa">
+                              test
+                            </Badge>
+                          ) : (
+                            <span style={{ color: "#333" }}>—</span>
+                          )}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
+                          {p.phone || "—"}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#555" }}
+                        >
+                          {fmtDate(p.created_at)}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs font-mono"
+                          style={{
+                            color: "#444",
+                            maxWidth: 140,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
                           {p.razorpay_payment_id || p.razorpay_order_id || "—"}
                         </td>
                       </tr>
@@ -1295,40 +1634,112 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             {/* ── BATCHES ── */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-base font-black text-white">mentorship_batches</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "#1a1a1a", color: "#666" }}>
+                <h2 className="text-base font-black text-white">
+                  mentorship_batches
+                </h2>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "#1a1a1a", color: "#666" }}
+                >
                   {batches.length} rows
                 </span>
               </div>
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
+              <div
+                className="rounded-xl border overflow-x-auto"
+                style={{ borderColor: "#222" }}
+              >
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
-                      {["batch #", "start date", "total seats", "enrolled", "spots left", "status", "created"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: "#555" }}>{h}</th>
+                    <tr
+                      style={{
+                        background: "#111",
+                        borderBottom: "1px solid #222"
+                      }}
+                    >
+                      {[
+                        "batch #",
+                        "start date",
+                        "total seats",
+                        "enrolled",
+                        "spots left",
+                        "status",
+                        "created"
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {batches.length === 0 && (
-                      <tr><td colSpan={7} className="px-4 py-8 text-center" style={{ color: "#444" }}>no batches</td></tr>
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-4 py-8 text-center"
+                          style={{ color: "#444" }}
+                        >
+                          no batches
+                        </td>
+                      </tr>
                     )}
                     {batches.map((b, i) => {
-                      const enrolled = payments.filter(p => p.status === "success" && !p.is_test && p.batch?.batch_number === b.batch_number).length;
+                      const enrolled = payments.filter(
+                        (p) =>
+                          p.status === "success" &&
+                          !p.is_test &&
+                          p.batch?.batch_number === b.batch_number
+                      ).length;
                       const spotsLeft = Math.max(0, b.total_seats - enrolled);
                       return (
-                        <tr key={b.id || i} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
-                          <td className="px-4 py-3 font-black text-white">Batch {b.batch_number}</td>
-                          <td className="px-4 py-3" style={{ color: "#888" }}>{fmtDate(b.start_date)}</td>
-                          <td className="px-4 py-3" style={{ color: "#888" }}>{b.total_seats}</td>
-                          <td className="px-4 py-3 font-bold" style={{ color: Y }}>{enrolled}</td>
-                          <td className="px-4 py-3">
-                            <span className="font-bold" style={{ color: spotsLeft === 0 ? P : GR }}>{spotsLeft}</span>
+                        <tr
+                          key={b.id || i}
+                          style={{
+                            borderBottom: "1px solid #1a1a1a",
+                            background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                          }}
+                        >
+                          <td className="px-4 py-3 font-black text-white">
+                            Batch {b.batch_number}
+                          </td>
+                          <td className="px-4 py-3" style={{ color: "#888" }}>
+                            {fmtDate(b.start_date)}
+                          </td>
+                          <td className="px-4 py-3" style={{ color: "#888" }}>
+                            {b.total_seats}
+                          </td>
+                          <td
+                            className="px-4 py-3 font-bold"
+                            style={{ color: Y }}
+                          >
+                            {enrolled}
                           </td>
                           <td className="px-4 py-3">
-                            <Badge color={b.status === "open" ? GR : "#333"} text={b.status === "open" ? "#000" : "#aaa"}>{b.status}</Badge>
+                            <span
+                              className="font-bold"
+                              style={{ color: spotsLeft === 0 ? P : GR }}
+                            >
+                              {spotsLeft}
+                            </span>
                           </td>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>{fmtDate(b.created_at)}</td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              color={b.status === "open" ? GR : "#333"}
+                              text={b.status === "open" ? "#000" : "#aaa"}
+                            >
+                              {b.status}
+                            </Badge>
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs"
+                            style={{ color: "#555" }}
+                          >
+                            {fmtDate(b.created_at)}
+                          </td>
                         </tr>
                       );
                     })}
@@ -1340,31 +1751,86 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             {/* ── WAITLIST ── */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-base font-black text-white">mentorship_waitlist</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "#1a1a1a", color: "#666" }}>
+                <h2 className="text-base font-black text-white">
+                  mentorship_waitlist
+                </h2>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "#1a1a1a", color: "#666" }}
+                >
                   {filteredWaitlist.length} rows
                 </span>
               </div>
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
+              <div
+                className="rounded-xl border overflow-x-auto"
+                style={{ borderColor: "#222" }}
+              >
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
-                      {["#", "name", "email", "phone", "joined"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: "#555" }}>{h}</th>
+                    <tr
+                      style={{
+                        background: "#111",
+                        borderBottom: "1px solid #222"
+                      }}
+                    >
+                      {["#", "name", "email", "phone", "joined"].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredWaitlist.length === 0 && (
-                      <tr><td colSpan={5} className="px-4 py-8 text-center" style={{ color: "#444" }}>waitlist is empty</td></tr>
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center"
+                          style={{ color: "#444" }}
+                        >
+                          waitlist is empty
+                        </td>
+                      </tr>
                     )}
                     {filteredWaitlist.map((w, i) => (
-                      <tr key={w.id || i} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#444" }}>{i + 1}</td>
-                        <td className="px-4 py-3 font-semibold text-white">{w.user_name || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{w.email || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{w.phone || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>{fmtDate(w.created_at)}</td>
+                      <tr
+                        key={w.id || i}
+                        style={{
+                          borderBottom: "1px solid #1a1a1a",
+                          background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                        }}
+                      >
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#444" }}
+                        >
+                          {i + 1}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-white">
+                          {w.user_name || "—"}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
+                          {w.email || "—"}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
+                          {w.phone || "—"}
+                        </td>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#555" }}
+                        >
+                          {fmtDate(w.created_at)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1372,6 +1838,154 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               </div>
             </section>
 
+            {/* ── PORTFOLIO REVIEWS ── */}
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-base font-black text-white">
+                  portfolio_reviews
+                </h2>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "#1a1a1a", color: "#666" }}
+                >
+                  {filteredReviews.length} rows
+                </span>
+              </div>
+
+              <div
+                className="rounded-xl border overflow-x-auto"
+                style={{ borderColor: "#222" }}
+              >
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr
+                      style={{
+                        background: "#111",
+                        borderBottom: "1px solid #222"
+                      }}
+                    >
+                      {[
+                        "name",
+                        "email",
+                        "portfolio",
+                        "walkthrough",
+                        "notes",
+                        "submitted"
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredReviews.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-8 text-center"
+                          style={{ color: "#444" }}
+                        >
+                          no portfolio reviews
+                        </td>
+                      </tr>
+                    )}
+
+                    {filteredReviews.map((r, i) => (
+                      <tr
+                        key={r.id || i}
+                        style={{
+                          borderBottom: "1px solid #1a1a1a",
+                          background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                        }}
+                      >
+                        {/* NAME */}
+                        <td className="px-4 py-3 font-semibold text-white">
+                          {r.name || "—"}
+                        </td>
+
+                        {/* EMAIL */}
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#888" }}
+                        >
+                          {r.email || "—"}
+                        </td>
+
+                        {/* PORTFOLIO */}
+                        <td className="px-4 py-3 text-xs">
+                          {r.portfolio_link ? (
+                            <a
+                              href={r.portfolio_link}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-yellow-400 underline"
+                            >
+                              open link
+                            </a>
+                          ) : r.portfolio_file_url ? (
+                            <a
+                              href={r.portfolio_file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-yellow-400 underline"
+                            >
+                              view file
+                            </a>
+                          ) : (
+                            <span style={{ color: "#444" }}>—</span>
+                          )}
+                        </td>
+
+                        {/* WALKTHROUGH */}
+                        <td className="px-4 py-3 text-xs">
+                          {r.walkthrough_link ? (
+                            <a
+                              href={r.walkthrough_link}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-yellow-400 underline"
+                            >
+                              watch
+                            </a>
+                          ) : (
+                            <span style={{ color: "#444" }}>—</span>
+                          )}
+                        </td>
+
+                        {/* NOTES */}
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{
+                            color: "#aaa",
+                            maxWidth: 300,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                          title={r.notes}
+                        >
+                          {r.notes || "—"}
+                        </td>
+
+                        {/* DATE */}
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
+                          {fmtDate(r.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         )}
       </div>
