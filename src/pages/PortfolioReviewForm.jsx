@@ -454,8 +454,11 @@ function MobileForm({
           )} */}
           {portfolioMode === "file" && (
             <div className="w-full">
-              <div className="relative rounded-2xl border overflow-hidden">
-                <div className="px-4 py-8 flex flex-col items-center justify-center gap-2">
+              <label
+                style={{ pointerEvents: portfolioFile ? "none" : "auto" }}
+                className="block cursor-pointer"
+              >
+                <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
                   {portfolioFile ? (
                     <p className="text-evolve-yellow text-sm font-semibold text-center">
                       {portfolioFile.name}
@@ -471,38 +474,24 @@ function MobileForm({
                     </>
                   )}
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_TYPES}
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0])}
+                />
+              </label>
 
-                {!portfolioFile && (
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={ACCEPTED_TYPES}
-                    onChange={(e) => handleFile(e.target.files?.[0])}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      opacity: 0.001, // ← not 0, Safari blocks fully invisible inputs
-                      cursor: "pointer",
-                      fontSize: "16px", // ← prevents iOS zoom on focus
-                      zIndex: 10 // ← ensure it's on top
-                    }}
-                  />
-                )}
-              </div>
-
+              {/* When file is selected, label is pointer-events:none so this button works cleanly */}
               {portfolioFile && (
                 <button
                   type="button"
                   onClick={() => {
                     setPortfolioFile(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
-                    {
-                      /* ← same */
-                    }
                   }}
-                  className="w-full text-center text-white/40 text-xs mt-2"
+                  className="w-full text-center text-white/40 text-xs mt-2 py-1"
                 >
                   × remove file
                 </button>
