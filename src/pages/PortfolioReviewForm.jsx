@@ -832,7 +832,7 @@ function DesktopForm({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+              className="w-full ml-10 flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
             >
               {submitting ? (
                 "submitting…"
