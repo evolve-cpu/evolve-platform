@@ -975,16 +975,6 @@ import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 
 const CARDS = [
   {
-    title: "ama sessions",
-    subtitle: "ask what really matters.",
-    descriptionMobile:
-      "ask anything in open sessions with professionals who’ve done it for real.",
-    descriptionDesktop:
-      "ask anything in open sessions with working professionals. get answers from people who’ve been there and know how it actually works.",
-    desktopImages: [{ src: ama_session, position: "center" }],
-    mobileImage: ama_session_mobile
-  },
-  {
     title: "portfolio reviews",
     subtitle: "honest feedback. real growth.",
     descriptionMobile:
@@ -995,6 +985,17 @@ const CARDS = [
     mobileImage: portfolio_reviews_mobile,
     ctaLink: "/community/portfolio-review"
   },
+  {
+    title: "ama sessions",
+    subtitle: "ask what really matters.",
+    descriptionMobile:
+      "ask anything in open sessions with professionals who’ve done it for real.",
+    descriptionDesktop:
+      "ask anything in open sessions with working professionals. get answers from people who’ve been there and know how it actually works.",
+    desktopImages: [{ src: ama_session, position: "center" }],
+    mobileImage: ama_session_mobile
+  },
+
   {
     title: "challenges",
     subtitle: "learn by doing.",
