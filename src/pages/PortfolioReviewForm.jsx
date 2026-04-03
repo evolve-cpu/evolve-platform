@@ -370,7 +370,7 @@ function MobileForm({
             />
           )}
 
-          {portfolioMode === "file" && (
+          {/* {portfolioMode === "file" && (
             // <label className="w-full cursor-pointer">
             //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
             //     {portfolioFile ? (
@@ -450,6 +450,54 @@ function MobileForm({
                 className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
+            </div>
+          )} */}
+          {portfolioMode === "file" && (
+            <div className="w-full">
+              <div className="relative rounded-2xl border overflow-hidden">
+                <div className="px-4 py-8 flex flex-col items-center justify-center gap-2">
+                  {portfolioFile ? (
+                    <p className="text-evolve-yellow text-sm font-semibold text-center">
+                      {portfolioFile.name}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-white/40 text-sm text-center">
+                        tap to upload
+                      </p>
+                      <p className="text-white/25 text-xs text-center">
+                        pdf, pptx or zip. max 10mb
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {!portfolioFile && (
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED_TYPES}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                )}
+              </div>
+
+              {portfolioFile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPortfolioFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    {
+                      /* ← same */
+                    }
+                  }}
+                  className="w-full text-center text-white/40 text-xs mt-2"
+                >
+                  × remove file
+                </button>
+              )}
             </div>
           )}
         </div>
