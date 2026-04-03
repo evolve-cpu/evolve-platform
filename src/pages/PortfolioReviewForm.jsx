@@ -370,7 +370,48 @@ function MobileForm({
           )}
 
           {portfolioMode === "file" && (
-            <label className="w-full cursor-pointer">
+            // <label className="w-full cursor-pointer">
+            //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
+            //     {portfolioFile ? (
+            //       <div className="flex flex-col items-center gap-2">
+            //         <p className="text-evolve-yellow text-sm font-semibold text-center">
+            //           {portfolioFile.name}
+            //         </p>
+            //         <button
+            //           type="button"
+            //           onClick={(e) => {
+            //             e.stopPropagation();
+            //             setPortfolioFile(null);
+            //           }}
+            //           className="text-white/40 text-xs"
+            //         >
+            //           × remove file
+            //         </button>
+            //       </div>
+            //     ) : (
+            //       <>
+            //         <p className="text-white/40 text-sm text-center">
+            //           tap to upload
+            //         </p>
+            //         <p className="text-white/25 text-xs text-center">
+            //           pdf, pptx or zip. max 10mb
+            //         </p>
+            //       </>
+            //     )}
+            //   </div>
+
+            //   <input
+            //     type="file"
+            //     accept={ACCEPTED_TYPES}
+            //     className="hidden"
+            //     onChange={(e) => handleFile(e.target.files?.[0])}
+            //   />
+            // </label>
+            // Replace the <label> wrapper with a div + onClick:
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full cursor-pointer"
+            >
               <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
                 {portfolioFile ? (
                   <div className="flex flex-col items-center gap-2">
@@ -380,8 +421,10 @@ function MobileForm({
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // now actually stops the file picker
                         setPortfolioFile(null);
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
                       }}
                       className="text-white/40 text-xs"
                     >
@@ -399,14 +442,14 @@ function MobileForm({
                   </>
                 )}
               </div>
-
               <input
+                ref={fileInputRef}
                 type="file"
                 accept={ACCEPTED_TYPES}
                 className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
-            </label>
+            </div>
           )}
         </div>
 
