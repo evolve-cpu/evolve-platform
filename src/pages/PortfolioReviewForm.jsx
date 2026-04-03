@@ -342,6 +342,7 @@ function MobileForm({
               paste a link
             </button>
             <button
+              type="button"
               onClick={() => setPortfolioMode("file")}
               className="flex-1 py-3 text-sm font-bold lowercase transition-colors"
               style={{
@@ -882,10 +883,22 @@ export default function PortfolioReviewForm() {
   }
 
   /* ── auth guard ─────────────────────────────────────────────────────────── */
+  // useEffect(() => {
+  //   if (!authLoading && !user) {
+  //     sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
+  //     navigate("/signin", { replace: true });
+  //   }
+  // }, [user, authLoading, navigate]);
+
   useEffect(() => {
-    if (!authLoading && !user) {
-      sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
-      navigate("/signin", { replace: true });
+    if (!authLoading && user === null) {
+      const timeout = setTimeout(() => {
+        if (!user) {
+          navigate("/signin", { replace: true });
+        }
+      }, 800); // delay prevents mobile flicker
+
+      return () => clearTimeout(timeout);
     }
   }, [user, authLoading, navigate]);
 
@@ -942,9 +955,7 @@ export default function PortfolioReviewForm() {
       return;
     }
     if (!isValidUrl(walkthroughLink)) {
-      setError(
-        "that walkthrough link doesn't look valid — try starting with https://"
-      );
+      setError("that walkthrough link doesn't look valid");
       return;
     }
 
