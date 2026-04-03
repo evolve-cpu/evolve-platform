@@ -444,11 +444,20 @@ function MobileForm({
                 )}
               </div>
               <input
+                id="mobile-file-input"
                 ref={fileInputRef}
                 type="file"
                 accept={ACCEPTED_TYPES}
-                className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
+                style={{
+                  position: "absolute",
+                  width: "1px",
+                  height: "1px",
+                  opacity: 0,
+                  overflow: "hidden",
+                  clip: "rect(0,0,0,0)",
+                  whiteSpace: "nowrap"
+                }}
               />
             </div>
           )}
