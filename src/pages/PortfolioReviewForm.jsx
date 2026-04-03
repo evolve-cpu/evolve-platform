@@ -369,62 +369,43 @@ function MobileForm({
           )}
 
           {portfolioMode === "file" && (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                handleFile(e.dataTransfer.files?.[0]);
-              }}
-              className="w-full rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 cursor-pointer border transition-colors"
-              style={{
-                backgroundColor: dragOver
-                  ? "rgba(255,208,7,0.06)"
-                  : "rgba(255,255,255,0.04)",
-                borderColor: dragOver
-                  ? "rgba(255,208,7,0.4)"
-                  : "rgba(255,255,255,0.12)"
-              }}
-            >
-              {portfolioFile ? (
-                <div className="flex flex-col items-center gap-2">
-                  <p className="text-evolve-yellow text-sm font-semibold text-center">
-                    {portfolioFile.name}
-                  </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPortfolioFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="text-white/40 hover:text-red-400 text-xs font-semibold transition-colors"
-                  >
-                    × remove file
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <p className="text-white/40 text-sm text-center">
-                    drag & drop or click to upload
-                  </p>
-                  <p className="text-white/25 text-xs text-center">
-                    pdf, pptx or zip. max size 10mb
-                  </p>
-                </>
-              )}
+            <label className="w-full cursor-pointer">
+              <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
+                {portfolioFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-evolve-yellow text-sm font-semibold text-center">
+                      {portfolioFile.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPortfolioFile(null);
+                      }}
+                      className="text-white/40 text-xs"
+                    >
+                      × remove file
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-white/40 text-sm text-center">
+                      tap to upload
+                    </p>
+                    <p className="text-white/25 text-xs text-center">
+                      pdf, pptx or zip. max 10mb
+                    </p>
+                  </>
+                )}
+              </div>
+
               <input
-                ref={fileInputRef}
                 type="file"
                 accept={ACCEPTED_TYPES}
                 className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
-            </div>
+            </label>
           )}
         </div>
 
