@@ -285,7 +285,7 @@ function MobileForm({
   dragOver,
   setDragOver,
   fileInputRef,
-
+  debugMsg,
   handleFile,
   handleSubmit,
   onBack
@@ -495,7 +495,11 @@ function MobileForm({
             style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
           />
         </div>
-
+        {/* TEMP DEBUG — remove after fixing */}
+        <p className="text-white text-xs">
+          file state: {portfolioFile ? portfolioFile.name : "null"}
+        </p>
+        <p className="text-white text-xs">last attempt: {debugMsg}</p>
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
         <button
@@ -917,6 +921,7 @@ export default function PortfolioReviewForm() {
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
   const mobileFileInputRef = useRef(null); // mobile ← add this
+  const [debugMsg, setDebugMsg] = useState("none"); // ← add here alongside other useState
 
   function isValidUrl(str) {
     try {
@@ -928,24 +933,24 @@ export default function PortfolioReviewForm() {
   }
 
   /* ── auth guard ─────────────────────────────────────────────────────────── */
-  // useEffect(() => {
-  //   if (!authLoading && !user) {
-  //     sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
-  //     navigate("/signin", { replace: true });
-  //   }
-  // }, [user, authLoading, navigate]);
-
   useEffect(() => {
-    if (!authLoading && user === null) {
-      const timeout = setTimeout(() => {
-        if (!user) {
-          navigate("/signin", { replace: true });
-        }
-      }, 800); // delay prevents mobile flicker
-
-      return () => clearTimeout(timeout);
+    if (!authLoading && !user) {
+      sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
+      navigate("/signin", { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  // useEffect(() => {
+  //   if (!authLoading && user === null) {
+  //     const timeout = setTimeout(() => {
+  //       if (!user) {
+  //         navigate("/signin", { replace: true });
+  //       }
+  //     }, 800); // delay prevents mobile flicker
+
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [user, authLoading, navigate]);
 
   /* ── check if already submitted ─────────────────────────────────────────── */
   useEffect(() => {
@@ -974,14 +979,18 @@ export default function PortfolioReviewForm() {
   // };
 
   const handleFile = (file) => {
-    if (!file) return;
+    setDebugMsg("handleFile called: " + (file?.name || "no file"));
+    if (!file) {
+      setDebugMsg("file was null/undefined");
+      return;
+    }
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
       setError(`file too large — max ${MAX_FILE_MB}mb`);
       return;
     }
     setError("");
-    const stableFile = new File([file], file.name, { type: file.type }); // ← only change
-    setPortfolioFile(stableFile);
+    setPortfolioFile(file);
+    setDebugMsg("file set: " + file.name);
   };
 
   /* ── submit ─────────────────────────────────────────────────────────────── */
@@ -1103,6 +1112,7 @@ export default function PortfolioReviewForm() {
     fileInputRef,
     handleFile,
     handleSubmit,
+    debugMsg,
     onBack: () => navigate("/community/portfolio-review")
   };
 
