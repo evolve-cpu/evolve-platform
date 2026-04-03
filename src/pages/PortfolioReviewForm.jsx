@@ -285,6 +285,7 @@ function MobileForm({
   dragOver,
   setDragOver,
   fileInputRef,
+
   handleFile,
   handleSubmit,
   onBack
@@ -915,6 +916,7 @@ export default function PortfolioReviewForm() {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
+  const mobileFileInputRef = useRef(null); // mobile ← add this
 
   function isValidUrl(str) {
     try {
@@ -1093,9 +1095,14 @@ export default function PortfolioReviewForm() {
     onBack: () => navigate("/community/portfolio-review")
   };
 
+  const mobileFormProps = {
+    ...formProps,
+    fileInputRef: mobileFileInputRef // ← override with mobile ref
+  };
+
   return (
     <>
-      <MobileForm {...formProps} />
+      <MobileForm {...mobileFormProps} />
       <DesktopForm {...formProps} />
     </>
   );
