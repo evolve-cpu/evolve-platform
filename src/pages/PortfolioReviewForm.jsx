@@ -370,7 +370,7 @@ function MobileForm({
             />
           )}
 
-          {/* {portfolioMode === "file" && (
+          {portfolioMode === "file" && (
             // <label className="w-full cursor-pointer">
             //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
             //     {portfolioFile ? (
@@ -450,52 +450,6 @@ function MobileForm({
                 className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
-            </div>
-          )} */}
-          {portfolioMode === "file" && (
-            <div className="w-full">
-              <label
-                style={{ pointerEvents: portfolioFile ? "none" : "auto" }}
-                className="block cursor-pointer"
-              >
-                <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
-                  {portfolioFile ? (
-                    <p className="text-evolve-yellow text-sm font-semibold text-center">
-                      {portfolioFile.name}
-                    </p>
-                  ) : (
-                    <>
-                      <p className="text-white/40 text-sm text-center">
-                        tap to upload
-                      </p>
-                      <p className="text-white/25 text-xs text-center">
-                        pdf, pptx or zip. max 10mb
-                      </p>
-                    </>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPTED_TYPES}
-                  className="hidden"
-                  onChange={(e) => handleFile(e.target.files?.[0])}
-                />
-              </label>
-
-              {/* When file is selected, label is pointer-events:none so this button works cleanly */}
-              {portfolioFile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPortfolioFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="w-full text-center text-white/40 text-xs mt-2 py-1"
-                >
-                  × remove file
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -1009,6 +963,16 @@ export default function PortfolioReviewForm() {
   }, [user]);
 
   /* ── file helper ─────────────────────────────────────────────────────────── */
+  // const handleFile = (file) => {
+  //   if (!file) return;
+  //   if (file.size > MAX_FILE_MB * 1024 * 1024) {
+  //     setError(`file too large — max ${MAX_FILE_MB}mb`);
+  //     return;
+  //   }
+  //   setError("");
+  //   setPortfolioFile(file);
+  // };
+
   const handleFile = (file) => {
     if (!file) return;
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
@@ -1016,7 +980,8 @@ export default function PortfolioReviewForm() {
       return;
     }
     setError("");
-    setPortfolioFile(file);
+    const stableFile = new File([file], file.name, { type: file.type }); // ← only change
+    setPortfolioFile(stableFile);
   };
 
   /* ── submit ─────────────────────────────────────────────────────────────── */
