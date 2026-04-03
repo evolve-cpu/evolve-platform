@@ -477,8 +477,17 @@ function MobileForm({
                     ref={fileInputRef}
                     type="file"
                     accept={ACCEPTED_TYPES}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleFile(e.target.files?.[0])}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      opacity: 0.001, // ← not 0, Safari blocks fully invisible inputs
+                      cursor: "pointer",
+                      fontSize: "16px", // ← prevents iOS zoom on focus
+                      zIndex: 10 // ← ensure it's on top
+                    }}
                   />
                 )}
               </div>
