@@ -1,1154 +1,2544 @@
-// import { useState, useEffect, useRef } from "react";
-// import { Link, useLocation, useNavigate } from "react-router-dom";
-// import gsap from "gsap";
-
-// import {
-//   evolve_logo_nav as evolve_logo,
-//   evolve_logo_mobile,
-//   three_wavy_lines,
-//   three_wavy_lines_pink,
-//   marquee_vector_1,
-//   evolve_text,
-//   marquee_vector_2,
-//   cross_line_pink
-// } from "../assets/images/Nav";
-// import { join_us_button, join_us_button_hover } from "../assets/images/Home";
-// import { useAuth } from "../hooks/useAuth";
-// import { handleSignIn } from "../auth/signInLogic";
-
-// const MIXED_BL = 16;
-// const MIXED_BR = 16;
-
-// const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
-//   const [menuOpen, setMenuOpen] = useState(false);
-//   const location = useLocation();
-//   const navigate = useNavigate();
-
-//   const outerRef = useRef(null);
-//   const navbarRef = useRef(null);
-
-//   const menuUnderlayRef = useRef(null);
-//   const menuPanelRef = useRef(null);
-//   const menuContentRef = useRef(null);
-
-//   const marqueeTrackRef = useRef(null);
-//   const marqueeGroupRef = useRef(null);
-//   const marqueeTLRef = useRef(null);
-
-//   const navHeightRef = useRef(0);
-
-//   // const { user, setUser } = useAuth();
-//   const { user, setUser, authLoading, setAuthLoading } = useAuth();
-
-//   // const navItems = [
-//   //   { path: "/", label: "home" },
-//   //   { path: "/contact", label: "contact us" },
-//   //   {
-//   //     path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-//   //     label: "rate this website",
-//   //     external: true
-//   //   }
-//   // ];
-
-//   const navItems = [
-//     { path: "/", label: "home" },
-//     { path: "/community", label: "community" },
-//     { path: "/webinars", label: "webinars" },
-//     { path: "/college-activation", label: "offline activity" },
-//     { path: "/contact", label: "contact us", isModal: true }, // Add isModal flag
-//     {
-//       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-//       label: "rate this website",
-//       external: true
-//     }
-//   ];
-
-//   const isActive = (p) => {
-//     if (p === "/" && location.pathname === "/") return true;
-//     if (p !== "/" && location.pathname === p) return true;
-//     return false;
-//   };
-
-//   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
-
-//   const handleLogoClick = () => {
-//     if (location.pathname !== "/") {
-//       navigate("/");
-//     }
-//     if (onLogoClick) {
-//       onLogoClick();
-//     }
-//   };
-
-//   // measure navbar height → push menu content below it
-//   useEffect(() => {
-//     const measure = () => {
-//       if (!outerRef.current) return;
-//       navHeightRef.current = outerRef.current.offsetHeight || 0;
-//       if (menuContentRef.current) {
-//         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
-//       }
-//     };
-//     measure();
-//     const ro = new ResizeObserver(measure);
-//     if (outerRef.current) ro.observe(outerRef.current);
-//     window.addEventListener("resize", measure);
-//     return () => {
-//       ro.disconnect();
-//       window.removeEventListener("resize", measure);
-//     };
-//   }, []);
-
-//   // Navbar slide-in animation on mount
-//   const hasAnimatedRef = useRef(false);
-
-//   // navbar slide in / out based on showNavbar
-//   useEffect(() => {
-//     if (!outerRef.current) return;
-//     const el = outerRef.current;
-
-//     // 🔹 first render: just set position, no animation
-//     if (!hasAnimatedRef.current) {
-//       gsap.set(el, { y: showNavbar ? 0 : -100 });
-//       el.style.pointerEvents = showNavbar ? "auto" : "none";
-//       hasAnimatedRef.current = true;
-//       return;
-//     }
-
-//     // 🔹 subsequent changes: animate
-//     if (showNavbar) {
-//       gsap.to(el, {
-//         y: 0,
-//         duration: 0.6,
-//         ease: "power3.out",
-//         onStart: () => {
-//           el.style.pointerEvents = "auto";
-//         }
-//       });
-//     } else {
-//       gsap.to(el, {
-//         y: -100,
-//         duration: 0.4,
-//         ease: "power2.in",
-//         onComplete: () => {
-//           el.style.pointerEvents = "none";
-//         }
-//       });
-//     }
-//   }, [showNavbar]);
-
-//   // open/close animations - FIXED + prevent scroll
-//   useEffect(() => {
-//     const underlay = menuUnderlayRef.current;
-//     const panel = menuPanelRef.current;
-//     if (!underlay || !panel) return;
-
-//     if (menuOpen) {
-//       // Prevent body scroll
-//       document.body.style.overflow = "hidden";
-
-//       if (isDesktop()) {
-//         gsap.set(underlay, { display: "block", opacity: 0 });
-//         gsap.set(panel, { xPercent: -100 });
-//         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
-//         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
-//       } else {
-//         gsap.set(underlay, { display: "block", yPercent: -100 });
-//         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
-//       }
-//     } else {
-//       // Restore body scroll
-//       document.body.style.overflow = "";
-
-//       if (isDesktop()) {
-//         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
-//         gsap.to(underlay, {
-//           opacity: 0,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       } else {
-//         gsap.to(underlay, {
-//           yPercent: -100,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       }
-//     }
-//   }, [menuOpen]);
-
-//   // close on route change
-//   useEffect(() => setMenuOpen(false), [location.pathname]);
-
-//   // esc to close
-//   useEffect(() => {
-//     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
-//     window.addEventListener("keydown", onKey);
-//     return () => window.removeEventListener("keydown", onKey);
-//   }, []);
-
-//   // marquee (clone once for seamless)
-//   useEffect(() => {
-//     if (!menuOpen) {
-//       if (marqueeTLRef.current) {
-//         marqueeTLRef.current.kill();
-//         marqueeTLRef.current = null;
-//       }
-//       return;
-//     }
-//     const track = marqueeTrackRef.current;
-//     const group = marqueeGroupRef.current;
-//     if (!track || !group) return;
-
-//     if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//     gsap.set(track, { x: 0 });
-
-//     while (track.children.length > 1) track.removeChild(track.lastChild);
-//     const clone = group.cloneNode(true);
-//     track.appendChild(clone);
-
-//     const groupWidth = group.getBoundingClientRect().width;
-//     const tl = gsap.timeline({ repeat: -1 });
-//     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
-//     marqueeTLRef.current = tl;
-
-//     return () => {
-//       if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//       marqueeTLRef.current = null;
-//     };
-//   }, [menuOpen]);
-
-//   return (
-//     <>
-//       {/* NAVBAR */}
-//       {/* <nav
-//         className={`fixed top-0 left-0 right-0 z-50 transition-opacity duration-500 ${
-//           showNavbar ? "opacity-100" : "opacity-0 pointer-events-none"
-//         }`}
-//       > */}
-//       <nav className="fixed top-0 left-0 right-0 z-50">
-//         <div
-//           ref={outerRef}
-//           className="w-full border-2 border-black bg-transparent"
-//           style={{
-//             borderBottomLeftRadius: MIXED_BL,
-//             borderBottomRightRadius: MIXED_BR
-//           }}
-//         >
-//           <div
-//             ref={navbarRef}
-//             className="w-full overflow-hidden"
-//             style={{
-//               borderBottomLeftRadius: MIXED_BL,
-//               borderBottomRightRadius: MIXED_BR
-//             }}
-//           >
-//             <div
-//               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
-//               style={{
-//                 height: "56px",
-//                 boxShadow: `
-//                 inset 6px 6px 0 rgba(0, 0, 0, 0.15),
-//                 inset 6px 6px 0 rgba(0, 0, 0, 0.15)
-//               `
-//               }}
-//             >
-//               <button
-//                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
-//                 onClick={() => setMenuOpen((v) => !v)}
-//                 aria-label="open menu"
-//                 style={{ width: "72px" }}
-//               >
-//                 <img
-//                   src={menuOpen ? cross_line_pink : three_wavy_lines}
-//                   alt="menu"
-//                   className="h-5 w-auto md:h-6"
-//                 />
-//               </button>
-
-//               <div
-//                 onClick={handleLogoClick}
-//                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
-//               >
-//                 <img
-//                   src={evolve_logo_mobile}
-//                   alt="evolve logo"
-//                   className="h-7 w-auto md:hidden"
-//                 />
-//                 <img
-//                   src={evolve_logo}
-//                   alt="evolve logo"
-//                   className="hidden md:block h-7 w-auto"
-//                 />
-//               </div>
-
-//               {/* <a
-//                 href="https://discord.gg/wKRYG7cSWt"
-//                 target="_blank"
-//                 rel="noopener noreferrer"
-//                 className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] flex-shrink-0 cursor-pointer"
-//               >
-//                 join us
-//               </a> */}
-//               <button
-//                 disabled={authLoading}
-//                 onClick={() => handleSignIn(setUser, setAuthLoading)}
-//                 className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
-//               >
-//                 {authLoading ? (
-//                   <>
-//                     <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
-//                     <span>signing in…</span>
-//                   </>
-//                 ) : user ? (
-//                   <>
-//                     <img
-//                       src={user.avatar_url}
-//                       className="h-6 w-6 rounded-full"
-//                     />
-//                     <span>{user.username}</span>
-//                   </>
-//                 ) : (
-//                   "sign in"
-//                 )}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </nav>
-
-//       {/* UNDERLAY (behind navbar) */}
-//       <div
-//         ref={menuUnderlayRef}
-//         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
-//         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
-//       >
-//         <div className="relative h-full w-full flex">
-//           {/* DESKTOP OVERLAY (shadow/backdrop) */}
-//           <div className="hidden md:block absolute inset-0 bg-black/30" />
-
-//           {/* LEFT PANEL */}
-//           <div
-//             ref={menuPanelRef}
-//             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
-//             style={{
-//               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
-//             }}
-//           >
-//             <div ref={menuContentRef} className="h-full flex flex-col">
-//               {/* middle area: nav items */}
-//               <div className="flex-1 flex items-center">
-//                 <div className="w-full flex justify-center px-6 md:px-8">
-//                   <div className="flex flex-col items-start space-y-2 tracking-normal">
-//                     {/* {navItems.map((item) =>
-//                       item.external ? (
-//                         <a
-//                           key={item.path}
-//                           href={item.path}
-//                           target="_blank"
-//                           rel="noopener noreferrer"
-//                           onClick={() => setMenuOpen(false)}
-//                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
-//                         >
-//                           {item.label}
-//                         </a>
-//                       ) : (
-//                         <Link
-//                           key={item.path}
-//                           to={item.path}
-//                           onClick={() => setMenuOpen(false)}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             isActive(item.path)
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </Link>
-//                       )
-//                     )} */}
-
-//                     {navItems.map((item) =>
-//                       item.external ? (
-//                         <a
-//                           key={item.path}
-//                           href={item.path}
-//                           target="_blank"
-//                           rel="noopener noreferrer"
-//                           onClick={() => setMenuOpen(false)}
-//                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
-//                         >
-//                           {item.label}
-//                         </a>
-//                       ) : item.isModal ? (
-//                         <button
-//                           key={item.path}
-//                           onClick={() => {
-//                             setMenuOpen(false);
-//                             if (onContactClick) {
-//                               onContactClick();
-//                             }
-//                           }}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             location.pathname === item.path
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </button>
-//                       ) : (
-//                         <Link
-//                           key={item.path}
-//                           to={item.path}
-//                           onClick={() => setMenuOpen(false)}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             isActive(item.path)
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </Link>
-//                       )
-//                     )}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* JOIN US BUTTON (full menu) */}
-//               <div className="w-full flex justify-center mb-5 md:mb-6">
-//                 <a
-//                   href="https://discord.gg/wKRYG7cSWt"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                   className="cursor-pointer "
-//                 >
-//                   <img
-//                     src={join_us_button}
-//                     onMouseEnter={(e) =>
-//                       (e.currentTarget.src = join_us_button_hover)
-//                     }
-//                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
-//                     alt="join evolve community"
-//                     className="w-auto h-12 md:h-16"
-//                   />
-//                 </a>
-//               </div>
-
-//               {/* marquee: smaller on mobile, bigger on desktop */}
-//               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
-//                 <div
-//                   ref={marqueeTrackRef}
-//                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
-//                   style={{ willChange: "transform" }}
-//                 >
-//                   <div
-//                     ref={marqueeGroupRef}
-//                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
-//                   >
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 1"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 1"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* RIGHT CLICK-TO-CLOSE AREA (desktop only) */}
-//           <button
-//             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
-//             onClick={() => setMenuOpen(false)}
-//             aria-label="close menu overlay"
-//           />
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default Navigation;
-
-// import { useState, useEffect, useRef } from "react";
-// import { Link, useLocation, useNavigate } from "react-router-dom";
-// import gsap from "gsap";
-
-// import {
-//   evolve_logo_nav as evolve_logo,
-//   evolve_logo_mobile,
-//   three_wavy_lines,
-//   marquee_vector_1,
-//   evolve_text,
-//   marquee_vector_2,
-//   cross_line_pink
-// } from "../assets/images/Nav";
-
-// import { join_us_button, join_us_button_hover } from "../assets/images/Home";
-// import { useAuth } from "../hooks/useAuth";
-// import { handleSignIn } from "../auth/signInLogic";
-// import { supabase } from "../supabaseClient";
-
-// const MIXED_BL = 16;
-// const MIXED_BR = 16;
-
-// const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
-//   const [menuOpen, setMenuOpen] = useState(false);
-
-//   // ✅ account modal state
-//   const [accountOpen, setAccountOpen] = useState(false);
-//   const accountRef = useRef(null);
-
-//   const location = useLocation();
-//   const navigate = useNavigate();
-
-//   const outerRef = useRef(null);
-//   const navbarRef = useRef(null);
-
-//   const menuUnderlayRef = useRef(null);
-//   const menuPanelRef = useRef(null);
-//   const menuContentRef = useRef(null);
-
-//   const marqueeTrackRef = useRef(null);
-//   const marqueeGroupRef = useRef(null);
-//   const marqueeTLRef = useRef(null);
-
-//   const navHeightRef = useRef(0);
-
-//   const { user, setUser, authLoading, setAuthLoading } = useAuth();
-
-//   const navItems = [
-//     { path: "/", label: "home" },
-//     { path: "/community", label: "community" },
-//     { path: "/webinars", label: "webinars" },
-//     { path: "/college-activation", label: "offline activity" },
-//     { path: "/contact", label: "contact us", isModal: true },
-//     {
-//       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-//       label: "rate this website",
-//       external: true
-//     }
-//   ];
-
-//   const isActive = (p) => {
-//     if (p === "/" && location.pathname === "/") return true;
-//     if (p !== "/" && location.pathname === p) return true;
-//     return false;
-//   };
-
-//   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
-
-//   const handleLogoClick = () => {
-//     if (location.pathname !== "/") {
-//       navigate("/");
-//     }
-//     if (onLogoClick) {
-//       onLogoClick();
-//     }
-//   };
-
-//   // ✅ logout
-//   const handleLogout = async () => {
-//     try {
-//       setAuthLoading(true);
-//       setAccountOpen(false);
-
-//       await supabase.auth.signOut();
-
-//       setUser(null);
-
-//       // ✅ redirect after logout
-//       navigate("/college-activation");
-//     } catch (err) {
-//       console.log("logout error:", err.message);
-//     } finally {
-//       setAuthLoading(false);
-//     }
-//   };
-
-//   // ✅ close account modal on outside click + esc
-//   useEffect(() => {
-//     if (!accountOpen) return;
-
-//     const handleOutside = (e) => {
-//       if (!accountRef.current) return;
-//       if (!accountRef.current.contains(e.target)) setAccountOpen(false);
-//     };
-
-//     const handleEsc = (e) => {
-//       if (e.key === "Escape") setAccountOpen(false);
-//     };
-
-//     document.addEventListener("mousedown", handleOutside);
-//     window.addEventListener("keydown", handleEsc);
-
-//     return () => {
-//       document.removeEventListener("mousedown", handleOutside);
-//       window.removeEventListener("keydown", handleEsc);
-//     };
-//   }, [accountOpen]);
-
-//   // ✅ measure navbar height → push menu content below it
-//   useEffect(() => {
-//     const measure = () => {
-//       if (!outerRef.current) return;
-//       navHeightRef.current = outerRef.current.offsetHeight || 0;
-//       if (menuContentRef.current) {
-//         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
-//       }
-//     };
-//     measure();
-//     const ro = new ResizeObserver(measure);
-//     if (outerRef.current) ro.observe(outerRef.current);
-//     window.addEventListener("resize", measure);
-//     return () => {
-//       ro.disconnect();
-//       window.removeEventListener("resize", measure);
-//     };
-//   }, []);
-
-//   // Navbar slide-in animation on mount
-//   const hasAnimatedRef = useRef(false);
-
-//   // navbar slide in / out based on showNavbar
-//   useEffect(() => {
-//     if (!outerRef.current) return;
-//     const el = outerRef.current;
-
-//     // first render: no animation
-//     if (!hasAnimatedRef.current) {
-//       gsap.set(el, { y: showNavbar ? 0 : -100 });
-//       el.style.pointerEvents = showNavbar ? "auto" : "none";
-//       hasAnimatedRef.current = true;
-//       return;
-//     }
-
-//     // animate
-//     if (showNavbar) {
-//       gsap.to(el, {
-//         y: 0,
-//         duration: 0.6,
-//         ease: "power3.out",
-//         onStart: () => {
-//           el.style.pointerEvents = "auto";
-//         }
-//       });
-//     } else {
-//       gsap.to(el, {
-//         y: -100,
-//         duration: 0.4,
-//         ease: "power2.in",
-//         onComplete: () => {
-//           el.style.pointerEvents = "none";
-//         }
-//       });
-//     }
-//   }, [showNavbar]);
-
-//   // open/close animations - FIXED + prevent scroll
-//   useEffect(() => {
-//     const underlay = menuUnderlayRef.current;
-//     const panel = menuPanelRef.current;
-//     if (!underlay || !panel) return;
-
-//     if (menuOpen) {
-//       document.body.style.overflow = "hidden";
-
-//       if (isDesktop()) {
-//         gsap.set(underlay, { display: "block", opacity: 0 });
-//         gsap.set(panel, { xPercent: -100 });
-//         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
-//         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
-//       } else {
-//         gsap.set(underlay, { display: "block", yPercent: -100 });
-//         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
-//       }
-//     } else {
-//       document.body.style.overflow = "";
-
-//       if (isDesktop()) {
-//         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
-//         gsap.to(underlay, {
-//           opacity: 0,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       } else {
-//         gsap.to(underlay, {
-//           yPercent: -100,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       }
-//     }
-//   }, [menuOpen]);
-
-//   // close on route change
-//   useEffect(() => {
-//     setMenuOpen(false);
-//     setAccountOpen(false);
-//   }, [location.pathname]);
-
-//   // esc to close menu overlay too
-//   useEffect(() => {
-//     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
-//     window.addEventListener("keydown", onKey);
-//     return () => window.removeEventListener("keydown", onKey);
-//   }, []);
-
-//   // marquee (clone once for seamless)
-//   useEffect(() => {
-//     if (!menuOpen) {
-//       if (marqueeTLRef.current) {
-//         marqueeTLRef.current.kill();
-//         marqueeTLRef.current = null;
-//       }
-//       return;
-//     }
-//     const track = marqueeTrackRef.current;
-//     const group = marqueeGroupRef.current;
-//     if (!track || !group) return;
-
-//     if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//     gsap.set(track, { x: 0 });
-
-//     while (track.children.length > 1) track.removeChild(track.lastChild);
-//     const clone = group.cloneNode(true);
-//     track.appendChild(clone);
-
-//     const groupWidth = group.getBoundingClientRect().width;
-//     const tl = gsap.timeline({ repeat: -1 });
-//     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
-//     marqueeTLRef.current = tl;
-
-//     return () => {
-//       if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//       marqueeTLRef.current = null;
-//     };
-//   }, [menuOpen]);
-
-//   return (
-//     <>
-//       {/* ✅ NAVBAR */}
-//       <nav className="fixed top-0 left-0 right-0 z-50">
-//         <div
-//           ref={outerRef}
-//           className="w-full border-2 border-black bg-transparent"
-//           style={{
-//             borderBottomLeftRadius: MIXED_BL,
-//             borderBottomRightRadius: MIXED_BR
-//           }}
-//         >
-//           <div
-//             ref={navbarRef}
-//             className="w-full overflow-hidden"
-//             // className="w-full overflow-visible"
-//             style={{
-//               borderBottomLeftRadius: MIXED_BL,
-//               borderBottomRightRadius: MIXED_BR
-//             }}
-//           >
-//             <div
-//               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
-//               style={{
-//                 height: "56px",
-//                 boxShadow: `
-//                 inset 6px 6px 0 rgba(0, 0, 0, 0.15),
-//                 inset 6px 6px 0 rgba(0, 0, 0, 0.15)
-//               `
-//               }}
-//             >
-//               {/* MENU */}
-//               <button
-//                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
-//                 onClick={() => {
-//                   setMenuOpen((v) => !v);
-//                   setAccountOpen(false);
-//                 }}
-//                 aria-label="open menu"
-//                 style={{ width: "72px" }}
-//               >
-//                 <img
-//                   src={menuOpen ? cross_line_pink : three_wavy_lines}
-//                   alt="menu"
-//                   className="h-5 w-auto md:h-6"
-//                 />
-//               </button>
-
-//               {/* LOGO */}
-//               <div
-//                 onClick={handleLogoClick}
-//                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
-//               >
-//                 <img
-//                   src={evolve_logo_mobile}
-//                   alt="evolve logo"
-//                   className="h-7 w-auto md:hidden"
-//                 />
-//                 <img
-//                   src={evolve_logo}
-//                   alt="evolve logo"
-//                   className="hidden md:block h-7 w-auto"
-//                 />
-//               </div>
-
-//               {/* ✅ RIGHT USER AREA */}
-//               <div className="relative" ref={accountRef}>
-//                 <button
-//                   disabled={authLoading}
-//                   onClick={() => {
-//                     // ✅ full account → open modal
-//                     if (user && !user.is_guest) {
-//                       setMenuOpen(false);
-//                       setAccountOpen((p) => !p);
-//                       return;
-//                     }
-
-//                     // ✅ guest / not logged in → existing sign in flow
-//                     handleSignIn(setUser, setAuthLoading);
-//                   }}
-//                   className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
-//                 >
-//                   {authLoading ? (
-//                     <>
-//                       <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
-//                       <span>signing in…</span>
-//                     </>
-//                   ) : user ? (
-//                     <>
-//                       <img
-//                         src={user.avatar_url}
-//                         className="h-6 w-6 rounded-full"
-//                         alt="avatar"
-//                       />
-//                       <span>{user.username}</span>
-//                     </>
-//                   ) : (
-//                     "sign in"
-//                   )}
-//                 </button>
-
-//                 {/* ✅ DESKTOP ACCOUNT DROPDOWN */}
-//                 {user && !user.is_guest && accountOpen && (
-//                   // <div
-//                   //   className="
-//                   //     hidden md:block
-//                   //     absolute right-0 top-[calc(100%+12px)]
-//                   //     w-[340px]
-//                   //     rounded-[20px]
-//                   //     border-[2px] border-black
-//                   //     bg-evolve-yellow
-//                   //     shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-//                   //     p-6
-//                   //     z-[999]
-//                   //   "
-//                   // >
-//                   <div
-//                     className="
-//     hidden md:block
-//     absolute right-0 top-[calc(100%+10px)]
-//     w-[340px]
-//     rounded-[20px]
-//     border-[2px] border-black
-//     bg-evolve-yellow
-//     shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-//     p-6
-//     z-[9999]
-//   "
-//                   >
-//                     <button
-//                       onClick={() => setAccountOpen(false)}
-//                       className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
-//                       aria-label="close account"
-//                     >
-//                       ✕
-//                     </button>
-
-//                     <div className="flex flex-col items-center text-center">
-//                       <img
-//                         src={user.avatar_url}
-//                         alt="avatar"
-//                         className="w-16 h-16 rounded-full mb-4"
-//                       />
-
-//                       <p className="text-black font-extrabold text-[22px] tracking-[-0.04em]">
-//                         {user.username}
-//                       </p>
-
-//                       <p className="text-black/80 font-normal text-[16px] mt-1">
-//                         {user.email}
-//                       </p>
-
-//                       <button
-//                         onClick={handleLogout}
-//                         className="mt-5 text-black font-extrabold underline flex items-center gap-2"
-//                       >
-//                         log out
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </nav>
-
-//       {/* ✅ MOBILE ACCOUNT MODAL */}
-//       {user && !user.is_guest && accountOpen && (
-//         <div className="md:hidden fixed inset-0 z-[999] flex items-center justify-center">
-//           {/* overlay */}
-//           <button
-//             className="absolute inset-0 bg-black/40"
-//             onClick={() => setAccountOpen(false)}
-//             aria-label="close overlay"
-//           />
-
-//           {/* modal */}
-//           <div
-//             className="
-//               relative w-[88%] max-w-[360px]
-//               rounded-[20px]
-//               border-[2px] border-black
-//               bg-evolve-yellow
-//               shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-//               p-6
-//             "
-//           >
-//             <button
-//               onClick={() => setAccountOpen(false)}
-//               className="absolute top-4 right-4 text-black text-[28px] font-extrabold"
-//               aria-label="close"
-//             >
-//               ✕
-//             </button>
-
-//             <div className="flex flex-col items-center text-center">
-//               <img
-//                 src={user.avatar_url}
-//                 alt="avatar"
-//                 className="w-20 h-20 rounded-full mb-4"
-//               />
-
-//               <p className="text-black font-extrabold text-[22px] tracking-[-0.04em]">
-//                 {user.username}
-//               </p>
-
-//               <p className="text-black/80 font-normal text-[16px] mt-1">
-//                 {user.email}
-//               </p>
-
-//               <button
-//                 onClick={handleLogout}
-//                 className="mt-5 text-black font-extrabold underline flex items-center gap-2"
-//               >
-//                 log out
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* ✅ UNDERLAY MENU */}
-//       <div
-//         ref={menuUnderlayRef}
-//         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
-//         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
-//       >
-//         <div className="relative h-full w-full flex">
-//           {/* DESKTOP OVERLAY */}
-//           <div className="hidden md:block absolute inset-0 bg-black/30" />
-
-//           {/* LEFT PANEL */}
-//           <div
-//             ref={menuPanelRef}
-//             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
-//             style={{
-//               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
-//             }}
-//           >
-//             <div ref={menuContentRef} className="h-full flex flex-col">
-//               {/* NAV LINKS */}
-//               <div className="flex-1 flex items-center">
-//                 <div className="w-full flex justify-center px-6 md:px-8">
-//                   <div className="flex flex-col items-start space-y-2 tracking-normal">
-//                     {navItems.map((item) =>
-//                       item.external ? (
-//                         <a
-//                           key={item.path}
-//                           href={item.path}
-//                           target="_blank"
-//                           rel="noopener noreferrer"
-//                           onClick={() => setMenuOpen(false)}
-//                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
-//                         >
-//                           {item.label}
-//                         </a>
-//                       ) : item.isModal ? (
-//                         <button
-//                           key={item.path}
-//                           onClick={() => {
-//                             setMenuOpen(false);
-//                             if (onContactClick) onContactClick();
-//                           }}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             location.pathname === item.path
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </button>
-//                       ) : (
-//                         <Link
-//                           key={item.path}
-//                           to={item.path}
-//                           onClick={() => setMenuOpen(false)}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             isActive(item.path)
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </Link>
-//                       )
-//                     )}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* JOIN US BUTTON */}
-//               <div className="w-full flex justify-center mb-5 md:mb-6">
-//                 <a
-//                   href="https://discord.gg/wKRYG7cSWt"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                   className="cursor-pointer "
-//                 >
-//                   <img
-//                     src={join_us_button}
-//                     onMouseEnter={(e) =>
-//                       (e.currentTarget.src = join_us_button_hover)
-//                     }
-//                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
-//                     alt="join evolve community"
-//                     className="w-auto h-12 md:h-16"
-//                   />
-//                 </a>
-//               </div>
-
-//               {/* MARQUEE */}
-//               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
-//                 <div
-//                   ref={marqueeTrackRef}
-//                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
-//                   style={{ willChange: "transform" }}
-//                 >
-//                   <div
-//                     ref={marqueeGroupRef}
-//                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
-//                   >
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 1"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 1"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* RIGHT CLICK-TO-CLOSE AREA */}
-//           <button
-//             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
-//             onClick={() => setMenuOpen(false)}
-//             aria-label="close menu overlay"
-//           />
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default Navigation;
+// // import { useState, useEffect, useRef } from "react";
+// // import { Link, useLocation, useNavigate } from "react-router-dom";
+// // import gsap from "gsap";
+
+// // import {
+// //   evolve_logo_nav as evolve_logo,
+// //   evolve_logo_mobile,
+// //   three_wavy_lines,
+// //   three_wavy_lines_pink,
+// //   marquee_vector_1,
+// //   evolve_text,
+// //   marquee_vector_2,
+// //   cross_line_pink
+// // } from "../assets/images/Nav";
+// // import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+// // import { useAuth } from "../hooks/useAuth";
+// // import { handleSignIn } from "../auth/signInLogic";
+
+// // const MIXED_BL = 16;
+// // const MIXED_BR = 16;
+
+// // const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
+// //   const [menuOpen, setMenuOpen] = useState(false);
+// //   const location = useLocation();
+// //   const navigate = useNavigate();
+
+// //   const outerRef = useRef(null);
+// //   const navbarRef = useRef(null);
+
+// //   const menuUnderlayRef = useRef(null);
+// //   const menuPanelRef = useRef(null);
+// //   const menuContentRef = useRef(null);
+
+// //   const marqueeTrackRef = useRef(null);
+// //   const marqueeGroupRef = useRef(null);
+// //   const marqueeTLRef = useRef(null);
+
+// //   const navHeightRef = useRef(0);
+
+// //   // const { user, setUser } = useAuth();
+// //   const { user, setUser, authLoading, setAuthLoading } = useAuth();
+
+// //   // const navItems = [
+// //   //   { path: "/", label: "home" },
+// //   //   { path: "/contact", label: "contact us" },
+// //   //   {
+// //   //     path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+// //   //     label: "rate this website",
+// //   //     external: true
+// //   //   }
+// //   // ];
+
+// //   const navItems = [
+// //     { path: "/", label: "home" },
+// //     { path: "/community", label: "community" },
+// //     { path: "/webinars", label: "webinars" },
+// //     { path: "/college-activation", label: "offline activity" },
+// //     { path: "/contact", label: "contact us", isModal: true }, // Add isModal flag
+// //     {
+// //       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+// //       label: "rate this website",
+// //       external: true
+// //     }
+// //   ];
+
+// //   const isActive = (p) => {
+// //     if (p === "/" && location.pathname === "/") return true;
+// //     if (p !== "/" && location.pathname === p) return true;
+// //     return false;
+// //   };
+
+// //   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+
+// //   const handleLogoClick = () => {
+// //     if (location.pathname !== "/") {
+// //       navigate("/");
+// //     }
+// //     if (onLogoClick) {
+// //       onLogoClick();
+// //     }
+// //   };
+
+// //   // measure navbar height → push menu content below it
+// //   useEffect(() => {
+// //     const measure = () => {
+// //       if (!outerRef.current) return;
+// //       navHeightRef.current = outerRef.current.offsetHeight || 0;
+// //       if (menuContentRef.current) {
+// //         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
+// //       }
+// //     };
+// //     measure();
+// //     const ro = new ResizeObserver(measure);
+// //     if (outerRef.current) ro.observe(outerRef.current);
+// //     window.addEventListener("resize", measure);
+// //     return () => {
+// //       ro.disconnect();
+// //       window.removeEventListener("resize", measure);
+// //     };
+// //   }, []);
+
+// //   // Navbar slide-in animation on mount
+// //   const hasAnimatedRef = useRef(false);
+
+// //   // navbar slide in / out based on showNavbar
+// //   useEffect(() => {
+// //     if (!outerRef.current) return;
+// //     const el = outerRef.current;
+
+// //     // 🔹 first render: just set position, no animation
+// //     if (!hasAnimatedRef.current) {
+// //       gsap.set(el, { y: showNavbar ? 0 : -100 });
+// //       el.style.pointerEvents = showNavbar ? "auto" : "none";
+// //       hasAnimatedRef.current = true;
+// //       return;
+// //     }
+
+// //     // 🔹 subsequent changes: animate
+// //     if (showNavbar) {
+// //       gsap.to(el, {
+// //         y: 0,
+// //         duration: 0.6,
+// //         ease: "power3.out",
+// //         onStart: () => {
+// //           el.style.pointerEvents = "auto";
+// //         }
+// //       });
+// //     } else {
+// //       gsap.to(el, {
+// //         y: -100,
+// //         duration: 0.4,
+// //         ease: "power2.in",
+// //         onComplete: () => {
+// //           el.style.pointerEvents = "none";
+// //         }
+// //       });
+// //     }
+// //   }, [showNavbar]);
+
+// //   // open/close animations - FIXED + prevent scroll
+// //   useEffect(() => {
+// //     const underlay = menuUnderlayRef.current;
+// //     const panel = menuPanelRef.current;
+// //     if (!underlay || !panel) return;
+
+// //     if (menuOpen) {
+// //       // Prevent body scroll
+// //       document.body.style.overflow = "hidden";
+
+// //       if (isDesktop()) {
+// //         gsap.set(underlay, { display: "block", opacity: 0 });
+// //         gsap.set(panel, { xPercent: -100 });
+// //         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+// //         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       } else {
+// //         gsap.set(underlay, { display: "block", yPercent: -100 });
+// //         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       }
+// //     } else {
+// //       // Restore body scroll
+// //       document.body.style.overflow = "";
+
+// //       if (isDesktop()) {
+// //         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
+// //         gsap.to(underlay, {
+// //           opacity: 0,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       } else {
+// //         gsap.to(underlay, {
+// //           yPercent: -100,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       }
+// //     }
+// //   }, [menuOpen]);
+
+// //   // close on route change
+// //   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+// //   // esc to close
+// //   useEffect(() => {
+// //     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+// //     window.addEventListener("keydown", onKey);
+// //     return () => window.removeEventListener("keydown", onKey);
+// //   }, []);
+
+// //   // marquee (clone once for seamless)
+// //   useEffect(() => {
+// //     if (!menuOpen) {
+// //       if (marqueeTLRef.current) {
+// //         marqueeTLRef.current.kill();
+// //         marqueeTLRef.current = null;
+// //       }
+// //       return;
+// //     }
+// //     const track = marqueeTrackRef.current;
+// //     const group = marqueeGroupRef.current;
+// //     if (!track || !group) return;
+
+// //     if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //     gsap.set(track, { x: 0 });
+
+// //     while (track.children.length > 1) track.removeChild(track.lastChild);
+// //     const clone = group.cloneNode(true);
+// //     track.appendChild(clone);
+
+// //     const groupWidth = group.getBoundingClientRect().width;
+// //     const tl = gsap.timeline({ repeat: -1 });
+// //     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
+// //     marqueeTLRef.current = tl;
+
+// //     return () => {
+// //       if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //       marqueeTLRef.current = null;
+// //     };
+// //   }, [menuOpen]);
+
+// //   return (
+// //     <>
+// //       {/* NAVBAR */}
+// //       {/* <nav
+// //         className={`fixed top-0 left-0 right-0 z-50 transition-opacity duration-500 ${
+// //           showNavbar ? "opacity-100" : "opacity-0 pointer-events-none"
+// //         }`}
+// //       > */}
+// //       <nav className="fixed top-0 left-0 right-0 z-50">
+// //         <div
+// //           ref={outerRef}
+// //           className="w-full border-2 border-black bg-transparent"
+// //           style={{
+// //             borderBottomLeftRadius: MIXED_BL,
+// //             borderBottomRightRadius: MIXED_BR
+// //           }}
+// //         >
+// //           <div
+// //             ref={navbarRef}
+// //             className="w-full overflow-hidden"
+// //             style={{
+// //               borderBottomLeftRadius: MIXED_BL,
+// //               borderBottomRightRadius: MIXED_BR
+// //             }}
+// //           >
+// //             <div
+// //               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+// //               style={{
+// //                 height: "56px",
+// //                 boxShadow: `
+// //                 inset 6px 6px 0 rgba(0, 0, 0, 0.15),
+// //                 inset 6px 6px 0 rgba(0, 0, 0, 0.15)
+// //               `
+// //               }}
+// //             >
+// //               <button
+// //                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
+// //                 onClick={() => setMenuOpen((v) => !v)}
+// //                 aria-label="open menu"
+// //                 style={{ width: "72px" }}
+// //               >
+// //                 <img
+// //                   src={menuOpen ? cross_line_pink : three_wavy_lines}
+// //                   alt="menu"
+// //                   className="h-5 w-auto md:h-6"
+// //                 />
+// //               </button>
+
+// //               <div
+// //                 onClick={handleLogoClick}
+// //                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
+// //               >
+// //                 <img
+// //                   src={evolve_logo_mobile}
+// //                   alt="evolve logo"
+// //                   className="h-7 w-auto md:hidden"
+// //                 />
+// //                 <img
+// //                   src={evolve_logo}
+// //                   alt="evolve logo"
+// //                   className="hidden md:block h-7 w-auto"
+// //                 />
+// //               </div>
+
+// //               {/* <a
+// //                 href="https://discord.gg/wKRYG7cSWt"
+// //                 target="_blank"
+// //                 rel="noopener noreferrer"
+// //                 className="text-black font-extrabold leading-none tracking-normal text-[16px] md:text-[20px] flex-shrink-0 cursor-pointer"
+// //               >
+// //                 join us
+// //               </a> */}
+// //               <button
+// //                 disabled={authLoading}
+// //                 onClick={() => handleSignIn(setUser, setAuthLoading)}
+// //                 className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+// //               >
+// //                 {authLoading ? (
+// //                   <>
+// //                     <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+// //                     <span>signing in…</span>
+// //                   </>
+// //                 ) : user ? (
+// //                   <>
+// //                     <img
+// //                       src={user.avatar_url}
+// //                       className="h-6 w-6 rounded-full"
+// //                     />
+// //                     <span>{user.username}</span>
+// //                   </>
+// //                 ) : (
+// //                   "sign in"
+// //                 )}
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+// //       </nav>
+
+// //       {/* UNDERLAY (behind navbar) */}
+// //       <div
+// //         ref={menuUnderlayRef}
+// //         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+// //         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+// //       >
+// //         <div className="relative h-full w-full flex">
+// //           {/* DESKTOP OVERLAY (shadow/backdrop) */}
+// //           <div className="hidden md:block absolute inset-0 bg-black/30" />
+
+// //           {/* LEFT PANEL */}
+// //           <div
+// //             ref={menuPanelRef}
+// //             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+// //             style={{
+// //               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
+// //             }}
+// //           >
+// //             <div ref={menuContentRef} className="h-full flex flex-col">
+// //               {/* middle area: nav items */}
+// //               <div className="flex-1 flex items-center">
+// //                 <div className="w-full flex justify-center px-6 md:px-8">
+// //                   <div className="flex flex-col items-start space-y-2 tracking-normal">
+// //                     {/* {navItems.map((item) =>
+// //                       item.external ? (
+// //                         <a
+// //                           key={item.path}
+// //                           href={item.path}
+// //                           target="_blank"
+// //                           rel="noopener noreferrer"
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+// //                         >
+// //                           {item.label}
+// //                         </a>
+// //                       ) : (
+// //                         <Link
+// //                           key={item.path}
+// //                           to={item.path}
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             isActive(item.path)
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </Link>
+// //                       )
+// //                     )} */}
+
+// //                     {navItems.map((item) =>
+// //                       item.external ? (
+// //                         <a
+// //                           key={item.path}
+// //                           href={item.path}
+// //                           target="_blank"
+// //                           rel="noopener noreferrer"
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+// //                         >
+// //                           {item.label}
+// //                         </a>
+// //                       ) : item.isModal ? (
+// //                         <button
+// //                           key={item.path}
+// //                           onClick={() => {
+// //                             setMenuOpen(false);
+// //                             if (onContactClick) {
+// //                               onContactClick();
+// //                             }
+// //                           }}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             location.pathname === item.path
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </button>
+// //                       ) : (
+// //                         <Link
+// //                           key={item.path}
+// //                           to={item.path}
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             isActive(item.path)
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </Link>
+// //                       )
+// //                     )}
+// //                   </div>
+// //                 </div>
+// //               </div>
+
+// //               {/* JOIN US BUTTON (full menu) */}
+// //               <div className="w-full flex justify-center mb-5 md:mb-6">
+// //                 <a
+// //                   href="https://discord.gg/wKRYG7cSWt"
+// //                   target="_blank"
+// //                   rel="noopener noreferrer"
+// //                   className="cursor-pointer "
+// //                 >
+// //                   <img
+// //                     src={join_us_button}
+// //                     onMouseEnter={(e) =>
+// //                       (e.currentTarget.src = join_us_button_hover)
+// //                     }
+// //                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
+// //                     alt="join evolve community"
+// //                     className="w-auto h-12 md:h-16"
+// //                   />
+// //                 </a>
+// //               </div>
+
+// //               {/* marquee: smaller on mobile, bigger on desktop */}
+// //               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+// //                 <div
+// //                   ref={marqueeTrackRef}
+// //                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+// //                   style={{ willChange: "transform" }}
+// //                 >
+// //                   <div
+// //                     ref={marqueeGroupRef}
+// //                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
+// //                   >
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             </div>
+// //           </div>
+
+// //           {/* RIGHT CLICK-TO-CLOSE AREA (desktop only) */}
+// //           <button
+// //             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
+// //             onClick={() => setMenuOpen(false)}
+// //             aria-label="close menu overlay"
+// //           />
+// //         </div>
+// //       </div>
+// //     </>
+// //   );
+// // };
+
+// // export default Navigation;
+
+// // import { useState, useEffect, useRef } from "react";
+// // import { Link, useLocation, useNavigate } from "react-router-dom";
+// // import gsap from "gsap";
+
+// // import {
+// //   evolve_logo_nav as evolve_logo,
+// //   evolve_logo_mobile,
+// //   three_wavy_lines,
+// //   marquee_vector_1,
+// //   evolve_text,
+// //   marquee_vector_2,
+// //   cross_line_pink
+// // } from "../assets/images/Nav";
+
+// // import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+// // import { useAuth } from "../hooks/useAuth";
+// // import { handleSignIn } from "../auth/signInLogic";
+// // import { supabase } from "../supabaseClient";
+
+// // const MIXED_BL = 16;
+// // const MIXED_BR = 16;
+
+// // const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
+// //   const [menuOpen, setMenuOpen] = useState(false);
+
+// //   // ✅ account modal state
+// //   const [accountOpen, setAccountOpen] = useState(false);
+// //   const accountRef = useRef(null);
+
+// //   const location = useLocation();
+// //   const navigate = useNavigate();
+
+// //   const outerRef = useRef(null);
+// //   const navbarRef = useRef(null);
+
+// //   const menuUnderlayRef = useRef(null);
+// //   const menuPanelRef = useRef(null);
+// //   const menuContentRef = useRef(null);
+
+// //   const marqueeTrackRef = useRef(null);
+// //   const marqueeGroupRef = useRef(null);
+// //   const marqueeTLRef = useRef(null);
+
+// //   const navHeightRef = useRef(0);
+
+// //   const { user, setUser, authLoading, setAuthLoading } = useAuth();
+
+// //   const navItems = [
+// //     { path: "/", label: "home" },
+// //     { path: "/community", label: "community" },
+// //     { path: "/webinars", label: "webinars" },
+// //     { path: "/college-activation", label: "offline activity" },
+// //     { path: "/contact", label: "contact us", isModal: true },
+// //     {
+// //       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+// //       label: "rate this website",
+// //       external: true
+// //     }
+// //   ];
+
+// //   const isActive = (p) => {
+// //     if (p === "/" && location.pathname === "/") return true;
+// //     if (p !== "/" && location.pathname === p) return true;
+// //     return false;
+// //   };
+
+// //   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+
+// //   const handleLogoClick = () => {
+// //     if (location.pathname !== "/") {
+// //       navigate("/");
+// //     }
+// //     if (onLogoClick) {
+// //       onLogoClick();
+// //     }
+// //   };
+
+// //   // ✅ logout
+// //   const handleLogout = async () => {
+// //     try {
+// //       setAuthLoading(true);
+// //       setAccountOpen(false);
+
+// //       await supabase.auth.signOut();
+
+// //       setUser(null);
+
+// //       // ✅ redirect after logout
+// //       navigate("/college-activation");
+// //     } catch (err) {
+// //       console.log("logout error:", err.message);
+// //     } finally {
+// //       setAuthLoading(false);
+// //     }
+// //   };
+
+// //   // ✅ close account modal on outside click + esc
+// //   useEffect(() => {
+// //     if (!accountOpen) return;
+
+// //     const handleOutside = (e) => {
+// //       if (!accountRef.current) return;
+// //       if (!accountRef.current.contains(e.target)) setAccountOpen(false);
+// //     };
+
+// //     const handleEsc = (e) => {
+// //       if (e.key === "Escape") setAccountOpen(false);
+// //     };
+
+// //     document.addEventListener("mousedown", handleOutside);
+// //     window.addEventListener("keydown", handleEsc);
+
+// //     return () => {
+// //       document.removeEventListener("mousedown", handleOutside);
+// //       window.removeEventListener("keydown", handleEsc);
+// //     };
+// //   }, [accountOpen]);
+
+// //   // ✅ measure navbar height → push menu content below it
+// //   useEffect(() => {
+// //     const measure = () => {
+// //       if (!outerRef.current) return;
+// //       navHeightRef.current = outerRef.current.offsetHeight || 0;
+// //       if (menuContentRef.current) {
+// //         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
+// //       }
+// //     };
+// //     measure();
+// //     const ro = new ResizeObserver(measure);
+// //     if (outerRef.current) ro.observe(outerRef.current);
+// //     window.addEventListener("resize", measure);
+// //     return () => {
+// //       ro.disconnect();
+// //       window.removeEventListener("resize", measure);
+// //     };
+// //   }, []);
+
+// //   // Navbar slide-in animation on mount
+// //   const hasAnimatedRef = useRef(false);
+
+// //   // navbar slide in / out based on showNavbar
+// //   useEffect(() => {
+// //     if (!outerRef.current) return;
+// //     const el = outerRef.current;
+
+// //     // first render: no animation
+// //     if (!hasAnimatedRef.current) {
+// //       gsap.set(el, { y: showNavbar ? 0 : -100 });
+// //       el.style.pointerEvents = showNavbar ? "auto" : "none";
+// //       hasAnimatedRef.current = true;
+// //       return;
+// //     }
+
+// //     // animate
+// //     if (showNavbar) {
+// //       gsap.to(el, {
+// //         y: 0,
+// //         duration: 0.6,
+// //         ease: "power3.out",
+// //         onStart: () => {
+// //           el.style.pointerEvents = "auto";
+// //         }
+// //       });
+// //     } else {
+// //       gsap.to(el, {
+// //         y: -100,
+// //         duration: 0.4,
+// //         ease: "power2.in",
+// //         onComplete: () => {
+// //           el.style.pointerEvents = "none";
+// //         }
+// //       });
+// //     }
+// //   }, [showNavbar]);
+
+// //   // open/close animations - FIXED + prevent scroll
+// //   useEffect(() => {
+// //     const underlay = menuUnderlayRef.current;
+// //     const panel = menuPanelRef.current;
+// //     if (!underlay || !panel) return;
+
+// //     if (menuOpen) {
+// //       document.body.style.overflow = "hidden";
+
+// //       if (isDesktop()) {
+// //         gsap.set(underlay, { display: "block", opacity: 0 });
+// //         gsap.set(panel, { xPercent: -100 });
+// //         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+// //         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       } else {
+// //         gsap.set(underlay, { display: "block", yPercent: -100 });
+// //         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       }
+// //     } else {
+// //       document.body.style.overflow = "";
+
+// //       if (isDesktop()) {
+// //         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
+// //         gsap.to(underlay, {
+// //           opacity: 0,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       } else {
+// //         gsap.to(underlay, {
+// //           yPercent: -100,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       }
+// //     }
+// //   }, [menuOpen]);
+
+// //   // close on route change
+// //   useEffect(() => {
+// //     setMenuOpen(false);
+// //     setAccountOpen(false);
+// //   }, [location.pathname]);
+
+// //   // esc to close menu overlay too
+// //   useEffect(() => {
+// //     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+// //     window.addEventListener("keydown", onKey);
+// //     return () => window.removeEventListener("keydown", onKey);
+// //   }, []);
+
+// //   // marquee (clone once for seamless)
+// //   useEffect(() => {
+// //     if (!menuOpen) {
+// //       if (marqueeTLRef.current) {
+// //         marqueeTLRef.current.kill();
+// //         marqueeTLRef.current = null;
+// //       }
+// //       return;
+// //     }
+// //     const track = marqueeTrackRef.current;
+// //     const group = marqueeGroupRef.current;
+// //     if (!track || !group) return;
+
+// //     if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //     gsap.set(track, { x: 0 });
+
+// //     while (track.children.length > 1) track.removeChild(track.lastChild);
+// //     const clone = group.cloneNode(true);
+// //     track.appendChild(clone);
+
+// //     const groupWidth = group.getBoundingClientRect().width;
+// //     const tl = gsap.timeline({ repeat: -1 });
+// //     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
+// //     marqueeTLRef.current = tl;
+
+// //     return () => {
+// //       if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //       marqueeTLRef.current = null;
+// //     };
+// //   }, [menuOpen]);
+
+// //   return (
+// //     <>
+// //       {/* ✅ NAVBAR */}
+// //       <nav className="fixed top-0 left-0 right-0 z-50">
+// //         <div
+// //           ref={outerRef}
+// //           className="w-full border-2 border-black bg-transparent"
+// //           style={{
+// //             borderBottomLeftRadius: MIXED_BL,
+// //             borderBottomRightRadius: MIXED_BR
+// //           }}
+// //         >
+// //           <div
+// //             ref={navbarRef}
+// //             className="w-full overflow-hidden"
+// //             // className="w-full overflow-visible"
+// //             style={{
+// //               borderBottomLeftRadius: MIXED_BL,
+// //               borderBottomRightRadius: MIXED_BR
+// //             }}
+// //           >
+// //             <div
+// //               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+// //               style={{
+// //                 height: "56px",
+// //                 boxShadow: `
+// //                 inset 6px 6px 0 rgba(0, 0, 0, 0.15),
+// //                 inset 6px 6px 0 rgba(0, 0, 0, 0.15)
+// //               `
+// //               }}
+// //             >
+// //               {/* MENU */}
+// //               <button
+// //                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
+// //                 onClick={() => {
+// //                   setMenuOpen((v) => !v);
+// //                   setAccountOpen(false);
+// //                 }}
+// //                 aria-label="open menu"
+// //                 style={{ width: "72px" }}
+// //               >
+// //                 <img
+// //                   src={menuOpen ? cross_line_pink : three_wavy_lines}
+// //                   alt="menu"
+// //                   className="h-5 w-auto md:h-6"
+// //                 />
+// //               </button>
+
+// //               {/* LOGO */}
+// //               <div
+// //                 onClick={handleLogoClick}
+// //                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
+// //               >
+// //                 <img
+// //                   src={evolve_logo_mobile}
+// //                   alt="evolve logo"
+// //                   className="h-7 w-auto md:hidden"
+// //                 />
+// //                 <img
+// //                   src={evolve_logo}
+// //                   alt="evolve logo"
+// //                   className="hidden md:block h-7 w-auto"
+// //                 />
+// //               </div>
+
+// //               {/* ✅ RIGHT USER AREA */}
+// //               <div className="relative" ref={accountRef}>
+// //                 <button
+// //                   disabled={authLoading}
+// //                   onClick={() => {
+// //                     // ✅ full account → open modal
+// //                     if (user && !user.is_guest) {
+// //                       setMenuOpen(false);
+// //                       setAccountOpen((p) => !p);
+// //                       return;
+// //                     }
+
+// //                     // ✅ guest / not logged in → existing sign in flow
+// //                     handleSignIn(setUser, setAuthLoading);
+// //                   }}
+// //                   className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+// //                 >
+// //                   {authLoading ? (
+// //                     <>
+// //                       <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+// //                       <span>signing in…</span>
+// //                     </>
+// //                   ) : user ? (
+// //                     <>
+// //                       <img
+// //                         src={user.avatar_url}
+// //                         className="h-6 w-6 rounded-full"
+// //                         alt="avatar"
+// //                       />
+// //                       <span>{user.username}</span>
+// //                     </>
+// //                   ) : (
+// //                     "sign in"
+// //                   )}
+// //                 </button>
+
+// //                 {/* ✅ DESKTOP ACCOUNT DROPDOWN */}
+// //                 {user && !user.is_guest && accountOpen && (
+// //                   // <div
+// //                   //   className="
+// //                   //     hidden md:block
+// //                   //     absolute right-0 top-[calc(100%+12px)]
+// //                   //     w-[340px]
+// //                   //     rounded-[20px]
+// //                   //     border-[2px] border-black
+// //                   //     bg-evolve-yellow
+// //                   //     shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //                   //     p-6
+// //                   //     z-[999]
+// //                   //   "
+// //                   // >
+// //                   <div
+// //                     className="
+// //     hidden md:block
+// //     absolute right-0 top-[calc(100%+10px)]
+// //     w-[340px]
+// //     rounded-[20px]
+// //     border-[2px] border-black
+// //     bg-evolve-yellow
+// //     shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //     p-6
+// //     z-[9999]
+// //   "
+// //                   >
+// //                     <button
+// //                       onClick={() => setAccountOpen(false)}
+// //                       className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
+// //                       aria-label="close account"
+// //                     >
+// //                       ✕
+// //                     </button>
+
+// //                     <div className="flex flex-col items-center text-center">
+// //                       <img
+// //                         src={user.avatar_url}
+// //                         alt="avatar"
+// //                         className="w-16 h-16 rounded-full mb-4"
+// //                       />
+
+// //                       <p className="text-black font-extrabold text-[22px] tracking-[-0.04em]">
+// //                         {user.username}
+// //                       </p>
+
+// //                       <p className="text-black/80 font-normal text-[16px] mt-1">
+// //                         {user.email}
+// //                       </p>
+
+// //                       <button
+// //                         onClick={handleLogout}
+// //                         className="mt-5 text-black font-extrabold underline flex items-center gap-2"
+// //                       >
+// //                         log out
+// //                       </button>
+// //                     </div>
+// //                   </div>
+// //                 )}
+// //               </div>
+// //             </div>
+// //           </div>
+// //         </div>
+// //       </nav>
+
+// //       {/* ✅ MOBILE ACCOUNT MODAL */}
+// //       {user && !user.is_guest && accountOpen && (
+// //         <div className="md:hidden fixed inset-0 z-[999] flex items-center justify-center">
+// //           {/* overlay */}
+// //           <button
+// //             className="absolute inset-0 bg-black/40"
+// //             onClick={() => setAccountOpen(false)}
+// //             aria-label="close overlay"
+// //           />
+
+// //           {/* modal */}
+// //           <div
+// //             className="
+// //               relative w-[88%] max-w-[360px]
+// //               rounded-[20px]
+// //               border-[2px] border-black
+// //               bg-evolve-yellow
+// //               shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //               p-6
+// //             "
+// //           >
+// //             <button
+// //               onClick={() => setAccountOpen(false)}
+// //               className="absolute top-4 right-4 text-black text-[28px] font-extrabold"
+// //               aria-label="close"
+// //             >
+// //               ✕
+// //             </button>
+
+// //             <div className="flex flex-col items-center text-center">
+// //               <img
+// //                 src={user.avatar_url}
+// //                 alt="avatar"
+// //                 className="w-20 h-20 rounded-full mb-4"
+// //               />
+
+// //               <p className="text-black font-extrabold text-[22px] tracking-[-0.04em]">
+// //                 {user.username}
+// //               </p>
+
+// //               <p className="text-black/80 font-normal text-[16px] mt-1">
+// //                 {user.email}
+// //               </p>
+
+// //               <button
+// //                 onClick={handleLogout}
+// //                 className="mt-5 text-black font-extrabold underline flex items-center gap-2"
+// //               >
+// //                 log out
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+
+// //       {/* ✅ UNDERLAY MENU */}
+// //       <div
+// //         ref={menuUnderlayRef}
+// //         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+// //         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+// //       >
+// //         <div className="relative h-full w-full flex">
+// //           {/* DESKTOP OVERLAY */}
+// //           <div className="hidden md:block absolute inset-0 bg-black/30" />
+
+// //           {/* LEFT PANEL */}
+// //           <div
+// //             ref={menuPanelRef}
+// //             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+// //             style={{
+// //               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
+// //             }}
+// //           >
+// //             <div ref={menuContentRef} className="h-full flex flex-col">
+// //               {/* NAV LINKS */}
+// //               <div className="flex-1 flex items-center">
+// //                 <div className="w-full flex justify-center px-6 md:px-8">
+// //                   <div className="flex flex-col items-start space-y-2 tracking-normal">
+// //                     {navItems.map((item) =>
+// //                       item.external ? (
+// //                         <a
+// //                           key={item.path}
+// //                           href={item.path}
+// //                           target="_blank"
+// //                           rel="noopener noreferrer"
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+// //                         >
+// //                           {item.label}
+// //                         </a>
+// //                       ) : item.isModal ? (
+// //                         <button
+// //                           key={item.path}
+// //                           onClick={() => {
+// //                             setMenuOpen(false);
+// //                             if (onContactClick) onContactClick();
+// //                           }}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             location.pathname === item.path
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </button>
+// //                       ) : (
+// //                         <Link
+// //                           key={item.path}
+// //                           to={item.path}
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             isActive(item.path)
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </Link>
+// //                       )
+// //                     )}
+// //                   </div>
+// //                 </div>
+// //               </div>
+
+// //               {/* JOIN US BUTTON */}
+// //               <div className="w-full flex justify-center mb-5 md:mb-6">
+// //                 <a
+// //                   href="https://discord.gg/wKRYG7cSWt"
+// //                   target="_blank"
+// //                   rel="noopener noreferrer"
+// //                   className="cursor-pointer "
+// //                 >
+// //                   <img
+// //                     src={join_us_button}
+// //                     onMouseEnter={(e) =>
+// //                       (e.currentTarget.src = join_us_button_hover)
+// //                     }
+// //                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
+// //                     alt="join evolve community"
+// //                     className="w-auto h-12 md:h-16"
+// //                   />
+// //                 </a>
+// //               </div>
+
+// //               {/* MARQUEE */}
+// //               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+// //                 <div
+// //                   ref={marqueeTrackRef}
+// //                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+// //                   style={{ willChange: "transform" }}
+// //                 >
+// //                   <div
+// //                     ref={marqueeGroupRef}
+// //                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
+// //                   >
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             </div>
+// //           </div>
+
+// //           {/* RIGHT CLICK-TO-CLOSE AREA */}
+// //           <button
+// //             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
+// //             onClick={() => setMenuOpen(false)}
+// //             aria-label="close menu overlay"
+// //           />
+// //         </div>
+// //       </div>
+// //     </>
+// //   );
+// // };
+
+// // export default Navigation;
+
+// // import { useState, useEffect, useRef, useMemo } from "react";
+// // import ReactDOM from "react-dom";
+// // import { Link, useLocation, useNavigate } from "react-router-dom";
+// // import gsap from "gsap";
+
+// // import {
+// //   evolve_logo_nav as evolve_logo,
+// //   evolve_logo_mobile,
+// //   three_wavy_lines,
+// //   marquee_vector_1,
+// //   evolve_text,
+// //   marquee_vector_2,
+// //   cross_line_pink,
+// //   evolve_be_remarkable
+// // } from "../assets/images/Nav";
+
+// // import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+// // import { useAuth } from "../hooks/useAuth";
+// // import { handleSignIn } from "../auth/signInLogic";
+// // import { supabase } from "../supabaseClient";
+
+// // const MIXED_BL = 16;
+// // const MIXED_BR = 16;
+
+// // const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
+// //   const [menuOpen, setMenuOpen] = useState(false);
+// //   const [accountOpen, setAccountOpen] = useState(false);
+
+// //   const location = useLocation();
+// //   const navigate = useNavigate();
+
+// //   const outerRef = useRef(null);
+// //   const navbarRef = useRef(null);
+
+// //   const menuUnderlayRef = useRef(null);
+// //   const menuPanelRef = useRef(null);
+// //   const menuContentRef = useRef(null);
+
+// //   const marqueeTrackRef = useRef(null);
+// //   const marqueeGroupRef = useRef(null);
+// //   const marqueeTLRef = useRef(null);
+
+// //   const navHeightRef = useRef(0);
+
+// //   const { user, setUser, authLoading, setAuthLoading } = useAuth();
+// //   const avatarSrc =
+// //     user?.avatar_url ||
+// //     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "user"}`;
+
+// //   const fullName = user?.username || "";
+
+// //   const firstName = useMemo(() => {
+// //     if (!fullName) return "";
+// //     return fullName.trim().split(" ")[0]; // ✅ first word only
+// //   }, [fullName]);
+
+// //   // const avatarSrc =
+// //   // user?.avatar_url || `https://api.multiavatar.com/${user?.id || "user"}.png`;
+// //   // user?.avatar_url || `https://robohash.org/${user?.id || "user"}?set=set3`;
+
+// //   // ✅ account dropdown anchor (desktop)
+// //   const accountBtnRef = useRef(null);
+// //   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
+
+// //   const navItems = [
+// //     { path: "/", label: "home" },
+// //     { path: "/community", label: "community" },
+// //     { path: "/webinars", label: "webinars" },
+// //     { path: "/evolve-in-person", label: "evolve in-person" },
+// //     { path: "/contact", label: "contact us", isModal: true },
+// //     {
+// //       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+// //       label: "rate this website",
+// //       external: true
+// //     }
+// //   ];
+
+// //   const isActive = (p) => {
+// //     if (p === "/" && location.pathname === "/") return true;
+// //     if (p !== "/" && location.pathname === p) return true;
+// //     return false;
+// //   };
+
+// //   const hideAuthButton = ["/evolve-in-person", "/evolve-in-person/"].includes(
+// //     location.pathname
+// //   );
+// //   // const hideAuthButton = location.pathname === "/evolve-in-person/";
+
+// //   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+
+// //   const isCollegeProtectedRoute = (pathname) => {
+// //     return (
+// //       pathname === "/evolve-in-person/activities" ||
+// //       pathname === "/evolve-in-person/self-reflection" ||
+// //       pathname === "/evolve-in-person/reality-check"
+// //     );
+// //   };
+
+// //   const handleLogoClick = () => {
+// //     if (location.pathname !== "/") {
+// //       navigate("/");
+// //     }
+// //     if (onLogoClick) onLogoClick();
+// //   };
+
+// //   // ✅ open desktop account modal (calculate position)
+// //   // const openAccountModal = () => {
+// //   //   if (!accountBtnRef.current) return;
+
+// //   //   const rect = accountBtnRef.current.getBoundingClientRect();
+
+// //   //   setAccountPos({
+// //   //     top: rect.bottom + 10 + window.scrollY,
+// //   //     left: rect.right - 340 + window.scrollX
+// //   //   });
+
+// //   //   setAccountOpen(true);
+// //   // };
+// //   const openAccountModal = () => {
+// //     if (!accountBtnRef.current) return;
+
+// //     const rect = accountBtnRef.current.getBoundingClientRect();
+
+// //     const modalWidth = 315;
+// //     const gap = 10;
+
+// //     let left = rect.right - modalWidth;
+// //     if (left < gap) left = gap; // ✅ keep inside screen
+// //     if (left + modalWidth > window.innerWidth - gap) {
+// //       left = window.innerWidth - modalWidth - gap;
+// //     }
+
+// //     setAccountPos({
+// //       top: rect.bottom + gap,
+// //       left
+// //     });
+
+// //     setAccountOpen(true);
+// //   };
+
+// //   const handleLogout = async () => {
+// //     try {
+// //       setAuthLoading(true);
+// //       setAccountOpen(false);
+
+// //       await supabase.auth.signOut();
+// //       setUser(null);
+
+// //       // ✅ redirect only for specific college routes
+// //       if (isCollegeProtectedRoute(location.pathname)) {
+// //         navigate("/evolve-in-person");
+// //       }
+// //     } catch (err) {
+// //       console.log("logout error:", err.message);
+// //     } finally {
+// //       setAuthLoading(false);
+// //     }
+// //   };
+
+// //   // measure navbar height → push menu content below it
+// //   useEffect(() => {
+// //     const measure = () => {
+// //       if (!outerRef.current) return;
+// //       navHeightRef.current = outerRef.current.offsetHeight || 0;
+// //       if (menuContentRef.current) {
+// //         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
+// //       }
+// //     };
+// //     measure();
+// //     const ro = new ResizeObserver(measure);
+// //     if (outerRef.current) ro.observe(outerRef.current);
+// //     window.addEventListener("resize", measure);
+// //     return () => {
+// //       ro.disconnect();
+// //       window.removeEventListener("resize", measure);
+// //     };
+// //   }, []);
+
+// //   // navbar slide in / out based on showNavbar
+// //   const hasAnimatedRef = useRef(false);
+
+// //   useEffect(() => {
+// //     if (!outerRef.current) return;
+// //     const el = outerRef.current;
+
+// //     if (!hasAnimatedRef.current) {
+// //       gsap.set(el, { y: showNavbar ? 0 : -100 });
+// //       el.style.pointerEvents = showNavbar ? "auto" : "none";
+// //       hasAnimatedRef.current = true;
+// //       return;
+// //     }
+
+// //     if (showNavbar) {
+// //       gsap.to(el, {
+// //         y: 0,
+// //         duration: 0.6,
+// //         ease: "power3.out",
+// //         onStart: () => {
+// //           el.style.pointerEvents = "auto";
+// //         }
+// //       });
+// //     } else {
+// //       gsap.to(el, {
+// //         y: -100,
+// //         duration: 0.4,
+// //         ease: "power2.in",
+// //         onComplete: () => {
+// //           el.style.pointerEvents = "none";
+// //         }
+// //       });
+// //     }
+// //   }, [showNavbar]);
+
+// //   // open/close animations - prevent scroll
+// //   useEffect(() => {
+// //     const underlay = menuUnderlayRef.current;
+// //     const panel = menuPanelRef.current;
+// //     if (!underlay || !panel) return;
+
+// //     if (menuOpen) {
+// //       document.body.style.overflow = "hidden";
+
+// //       if (isDesktop()) {
+// //         gsap.set(underlay, { display: "block", opacity: 0 });
+// //         gsap.set(panel, { xPercent: -100 });
+// //         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+// //         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       } else {
+// //         gsap.set(underlay, { display: "block", yPercent: -100 });
+// //         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       }
+// //     } else {
+// //       document.body.style.overflow = "";
+
+// //       if (isDesktop()) {
+// //         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
+// //         gsap.to(underlay, {
+// //           opacity: 0,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       } else {
+// //         gsap.to(underlay, {
+// //           yPercent: -100,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       }
+// //     }
+// //   }, [menuOpen]);
+
+// //   // close on route change
+// //   useEffect(() => {
+// //     setMenuOpen(false);
+// //     setAccountOpen(false);
+// //   }, [location.pathname]);
+
+// //   // esc to close menu + account
+// //   useEffect(() => {
+// //     const onKey = (e) => {
+// //       if (e.key === "Escape") {
+// //         setMenuOpen(false);
+// //         setAccountOpen(false);
+// //       }
+// //     };
+// //     window.addEventListener("keydown", onKey);
+// //     return () => window.removeEventListener("keydown", onKey);
+// //   }, []);
+
+// //   // marquee (clone once for seamless)
+// //   useEffect(() => {
+// //     if (!menuOpen) {
+// //       if (marqueeTLRef.current) {
+// //         marqueeTLRef.current.kill();
+// //         marqueeTLRef.current = null;
+// //       }
+// //       return;
+// //     }
+// //     const track = marqueeTrackRef.current;
+// //     const group = marqueeGroupRef.current;
+// //     if (!track || !group) return;
+
+// //     if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //     gsap.set(track, { x: 0 });
+
+// //     while (track.children.length > 1) track.removeChild(track.lastChild);
+// //     const clone = group.cloneNode(true);
+// //     track.appendChild(clone);
+
+// //     const groupWidth = group.getBoundingClientRect().width;
+// //     const tl = gsap.timeline({ repeat: -1 });
+// //     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
+// //     marqueeTLRef.current = tl;
+
+// //     return () => {
+// //       if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //       marqueeTLRef.current = null;
+// //     };
+// //   }, [menuOpen]);
+
+// //   return (
+// //     <>
+// //       {/* NAVBAR */}
+// //       <nav className="fixed top-0 left-0 right-0 z-50">
+// //         <div
+// //           ref={outerRef}
+// //           className="w-full border-2 border-black bg-transparent"
+// //           style={{
+// //             borderBottomLeftRadius: MIXED_BL,
+// //             borderBottomRightRadius: MIXED_BR
+// //           }}
+// //         >
+// //           <div
+// //             ref={navbarRef}
+// //             className="w-full overflow-hidden"
+// //             style={{
+// //               borderBottomLeftRadius: MIXED_BL,
+// //               borderBottomRightRadius: MIXED_BR
+// //             }}
+// //           >
+// //             <div
+// //               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+// //               style={{
+// //                 height: "56px",
+// //                 boxShadow: `
+// //                   inset 6px 6px 0 rgba(0, 0, 0, 0.15),
+// //                   inset 6px 6px 0 rgba(0, 0, 0, 0.15)
+// //                 `
+// //               }}
+// //             >
+// //               {/* MENU BUTTON */}
+// //               <button
+// //                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
+// //                 onClick={() => setMenuOpen((v) => !v)}
+// //                 aria-label="open menu"
+// //                 style={{ width: "72px" }}
+// //               >
+// //                 <img
+// //                   src={menuOpen ? cross_line_pink : three_wavy_lines}
+// //                   alt="menu"
+// //                   className="h-5 w-auto md:h-6"
+// //                 />
+// //               </button>
+
+// //               {/* LOGO */}
+// //               <div
+// //                 onClick={handleLogoClick}
+// //                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
+// //               >
+// //                 <img
+// //                   src={evolve_logo_mobile}
+// //                   alt="evolve logo"
+// //                   className="h-7 w-auto md:hidden"
+// //                 />
+// //                 <img
+// //                   src={evolve_logo}
+// //                   alt="evolve logo"
+// //                   className="hidden md:block h-7 w-auto"
+// //                 />
+// //               </div>
+
+// //               {/* AUTH BUTTON / ACCOUNT */}
+// //               {/* AUTH BUTTON / ACCOUNT */}
+// //               {!hideAuthButton && (
+// //                 <button
+// //                   ref={accountBtnRef}
+// //                   disabled={authLoading}
+// //                   onClick={() => {
+// //                     // not logged in → guest signin
+// //                     if (!user) return handleSignIn(setUser, setAuthLoading);
+
+// //                     // guest user → ignore for now
+// //                     if (user?.is_guest) return;
+
+// //                     // full user → open modal
+// //                     if (!accountOpen) openAccountModal();
+// //                     else setAccountOpen(false);
+// //                   }}
+// //                   className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+// //                 >
+// //                   {authLoading ? (
+// //                     <>
+// //                       <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+// //                       <span>loading…</span>
+// //                     </>
+// //                   ) : user ? (
+// //                     <>
+// //                       <img
+// //                         src={avatarSrc}
+// //                         alt="avatar"
+// //                         className="h-10 w-10 rounded-full"
+// //                       />
+// //                       <span className="hidden md:inline">{fullName}</span>
+// //                       {/* <span className="md:hidden">{firstName}</span> */}
+// //                     </>
+// //                   ) : (
+// //                     "sign in"
+// //                   )}
+// //                 </button>
+// //               )}
+// //             </div>
+// //           </div>
+// //         </div>
+// //       </nav>
+
+// //       {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
+// //       {accountOpen &&
+// //         user &&
+// //         !user.is_guest &&
+// //         ReactDOM.createPortal(
+// //           <>
+// //             {/* click outside */}
+// //             <div
+// //               className="hidden md:block fixed inset-0 z-[9998]"
+// //               onClick={() => setAccountOpen(false)}
+// //             />
+
+// //             <div
+// //               className="
+// //                 hidden md:block
+// //                 fixed z-[9999]
+// //                 w-[340px]
+// //                 rounded-[20px]
+// //                 border-[2px] border-black
+// //                 bg-evolve-yellow
+// //                 shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //                 pl-6 pr-6 pt-0 pb-6
+// //               "
+// //               style={{
+// //                 top: accountPos.top,
+// //                 left: accountPos.left
+// //               }}
+// //             >
+// //               <div className="flex justify-end">
+// //                 <button
+// //                   onClick={() => setAccountOpen(false)}
+// //                   className="text-black text-[28px] font-extrabold mt-2"
+// //                 >
+// //                   ×
+// //                 </button>
+// //               </div>
+
+// //               <div className="flex flex-col items-center text-center">
+// //                 <img
+// //                   // src={user.avatar_url}
+// //                   src={avatarSrc}
+// //                   alt="avatar"
+// //                   className="w-[5.5rem] h-[5.5rem] rounded-full"
+// //                 />
+
+// //                 <p className="text-black font-extrabold text-[20px] mt-4">
+// //                   {user.username}
+// //                 </p>
+
+// //                 <p className="text-black font-normal text-[14px] mt-1">
+// //                   {user.email}
+// //                 </p>
+
+// //                 <button
+// //                   onClick={handleLogout}
+// //                   className="mt-5 text-black font-extrabold underline flex items-center gap-2"
+// //                 >
+// //                   log out
+// //                 </button>
+// //               </div>
+// //             </div>
+// //           </>,
+// //           document.body
+// //         )}
+
+// //       {/* ✅ MOBILE ACCOUNT MODAL */}
+// //       {accountOpen && user && !user.is_guest && (
+// //         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
+// //           <div
+// //             className="absolute inset-0 bg-black/40"
+// //             onClick={() => setAccountOpen(false)}
+// //           />
+
+// //           <div
+// //             className="
+// //               relative z-10
+// //               w-[85vw] max-w-[360px]
+// //               bg-evolve-yellow
+// //               border-[2px] border-black
+// //               rounded-[18px]
+// //               shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //               px-6 py-8
+// //               flex flex-col items-center text-center
+// //             "
+// //           >
+// //             <button
+// //               onClick={() => setAccountOpen(false)}
+// //               className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
+// //             >
+// //               ×
+// //             </button>
+
+// //             <img
+// //               // src={user.avatar_url}
+// //               src={avatarSrc}
+// //               alt="avatar"
+// //               className="w-16 h-16 rounded-full"
+// //             />
+
+// //             <p className="text-black font-extrabold text-[18px] mt-4">
+// //               {user.username}
+// //             </p>
+
+// //             <p className="text-black font-normal text-[14px] mt-1">
+// //               {user.email}
+// //             </p>
+
+// //             <button
+// //               onClick={handleLogout}
+// //               className="mt-5 text-black font-extrabold underline"
+// //             >
+// //               log out
+// //             </button>
+// //           </div>
+// //         </div>
+// //       )}
+
+// //       {/* UNDERLAY (MENU) */}
+// //       <div
+// //         ref={menuUnderlayRef}
+// //         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+// //         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+// //       >
+// //         <div className="relative h-full w-full flex">
+// //           {/* DESKTOP OVERLAY */}
+// //           <div className="hidden md:block absolute inset-0 bg-black/30" />
+
+// //           {/* LEFT PANEL */}
+// //           <div
+// //             ref={menuPanelRef}
+// //             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+// //             style={{
+// //               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
+// //             }}
+// //           >
+// //             <div ref={menuContentRef} className="h-full flex flex-col">
+// //               <div className="flex-1 flex items-center">
+// //                 <div className="w-full flex justify-center px-6 md:px-8">
+// //                   <div className="flex flex-col items-start space-y-2 tracking-normal">
+// //                     {navItems.map((item) =>
+// //                       item.external ? (
+// //                         <a
+// //                           key={item.path}
+// //                           href={item.path}
+// //                           target="_blank"
+// //                           rel="noopener noreferrer"
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+// //                         >
+// //                           {item.label}
+// //                         </a>
+// //                       ) : item.isModal ? (
+// //                         <button
+// //                           key={item.path}
+// //                           onClick={() => {
+// //                             setMenuOpen(false);
+// //                             if (onContactClick) onContactClick();
+// //                           }}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             location.pathname === item.path
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </button>
+// //                       ) : (
+// //                         <Link
+// //                           key={item.path}
+// //                           to={item.path}
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             isActive(item.path)
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </Link>
+// //                       )
+// //                     )}
+// //                   </div>
+// //                 </div>
+// //               </div>
+
+// //               {/* JOIN US BUTTON */}
+// //               <div className="w-full flex justify-center mb-5 md:mb-6">
+// //                 <a
+// //                   href="https://discord.gg/wKRYG7cSWt"
+// //                   target="_blank"
+// //                   rel="noopener noreferrer"
+// //                   className="cursor-pointer "
+// //                 >
+// //                   <img
+// //                     src={join_us_button}
+// //                     onMouseEnter={(e) =>
+// //                       (e.currentTarget.src = join_us_button_hover)
+// //                     }
+// //                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
+// //                     alt="join evolve community"
+// //                     className="w-auto h-12 md:h-16"
+// //                   />
+// //                 </a>
+// //               </div>
+
+// //               {/* MARQUEE */}
+// //               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+// //                 <div
+// //                   ref={marqueeTrackRef}
+// //                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+// //                   style={{ willChange: "transform" }}
+// //                 >
+// //                   <div
+// //                     ref={marqueeGroupRef}
+// //                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
+// //                   >
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_be_remarkable}
+// //                       alt="vector 2"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_be_remarkable}
+// //                       alt="vector 2"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             </div>
+// //           </div>
+
+// //           {/* RIGHT CLICK-TO-CLOSE (desktop) */}
+// //           <button
+// //             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
+// //             onClick={() => setMenuOpen(false)}
+// //             aria-label="close menu overlay"
+// //           />
+// //         </div>
+// //       </div>
+// //     </>
+// //   );
+// // };
+
+// // export default Navigation;
+
+// // import { useState, useEffect, useRef, useMemo } from "react";
+// // import ReactDOM from "react-dom";
+// // import { Link, useLocation, useNavigate } from "react-router-dom";
+// // import gsap from "gsap";
+
+// // import {
+// //   evolve_logo_nav as evolve_logo,
+// //   evolve_logo_mobile,
+// //   three_wavy_lines,
+// //   marquee_vector_1,
+// //   evolve_text,
+// //   marquee_vector_2,
+// //   cross_line_pink,
+// //   evolve_be_remarkable
+// // } from "../assets/images/Nav";
+
+// // import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+// // import { useAuth } from "../hooks/useAuth";
+// // import { handleSignIn } from "../auth/signInLogic";
+// // import { supabase } from "../supabaseClient";
+
+// // const MIXED_BL = 16;
+// // const MIXED_BR = 16;
+
+// // const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
+// //   const [menuOpen, setMenuOpen] = useState(false);
+// //   const [accountOpen, setAccountOpen] = useState(false);
+
+// //   const location = useLocation();
+// //   const navigate = useNavigate();
+
+// //   const outerRef = useRef(null);
+// //   const navbarRef = useRef(null);
+
+// //   const menuUnderlayRef = useRef(null);
+// //   const menuPanelRef = useRef(null);
+// //   const menuContentRef = useRef(null);
+
+// //   const marqueeTrackRef = useRef(null);
+// //   const marqueeGroupRef = useRef(null);
+// //   const marqueeTLRef = useRef(null);
+
+// //   const navHeightRef = useRef(0);
+
+// //   const { user, setUser, authLoading, setAuthLoading } = useAuth();
+// //   const avatarSrc =
+// //     user?.avatar_url ||
+// //     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "user"}`;
+
+// //   const fullName = user?.username || "";
+
+// //   const firstName = useMemo(() => {
+// //     if (!fullName) return "";
+// //     return fullName.trim().split(" ")[0]; // ✅ first word only
+// //   }, [fullName]);
+
+// //   // const avatarSrc =
+// //   // user?.avatar_url || `https://api.multiavatar.com/${user?.id || "user"}.png`;
+// //   // user?.avatar_url || `https://robohash.org/${user?.id || "user"}?set=set3`;
+
+// //   // ✅ account dropdown anchor (desktop)
+// //   const accountBtnRef = useRef(null);
+// //   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
+
+// //   const navItems = [
+// //     { path: "/", label: "home" },
+// //     { path: "/community", label: "community" },
+// //     { path: "/webinars", label: "webinars" },
+// //     { path: "/evolve-in-person", label: "evolve in-person" },
+// //     { path: "/contact", label: "contact us", isModal: true },
+// //     {
+// //       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+// //       label: "rate this website",
+// //       external: true
+// //     }
+// //   ];
+
+// //   const isActive = (p) => {
+// //     if (p === "/" && location.pathname === "/") return true;
+// //     if (p !== "/" && location.pathname === p) return true;
+// //     return false;
+// //   };
+
+// //   const hideAuthButton = ["/evolve-in-person", "/evolve-in-person/"].includes(
+// //     location.pathname
+// //   );
+// //   // const hideAuthButton = location.pathname === "/evolve-in-person/";
+
+// //   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+
+// //   const isCollegeProtectedRoute = (pathname) => {
+// //     return (
+// //       pathname === "/evolve-in-person/activities" ||
+// //       pathname === "/evolve-in-person/self-reflection" ||
+// //       pathname === "/evolve-in-person/reality-check"
+// //     );
+// //   };
+
+// //   // ========== FIXED LOGO CLICK HANDLER ==========
+// //   const handleLogoClick = () => {
+// //     const isOnHomePage =
+// //       location.pathname === "/" || location.pathname === "/home";
+
+// //     console.log("=== NAVBAR LOGO CLICKED ===");
+// //     console.log("Current path:", location.pathname);
+// //     console.log("Is on home page:", isOnHomePage);
+// //     console.log(
+// //       "window.handleLogoClick exists:",
+// //       typeof window.handleLogoClick === "function"
+// //     );
+// //     console.log("window.isOnHomePage:", window.isOnHomePage);
+
+// //     // If we're on home page and the scroll handler exists, use it
+// //     if (isOnHomePage && typeof window.handleLogoClick === "function") {
+// //       console.log("Calling window.handleLogoClick() to scroll to first scene");
+// //       window.handleLogoClick();
+// //       return; // Important: don't navigate
+// //     }
+
+// //     // Otherwise navigate to home
+// //     console.log("Navigating to home page");
+// //     navigate("/");
+
+// //     // Call the prop callback if provided
+// //     if (onLogoClick) onLogoClick();
+// //   };
+
+// //   // ✅ open desktop account modal (calculate position)
+// //   // const openAccountModal = () => {
+// //   //   if (!accountBtnRef.current) return;
+
+// //   //   const rect = accountBtnRef.current.getBoundingClientRect();
+
+// //   //   setAccountPos({
+// //   //     top: rect.bottom + 10 + window.scrollY,
+// //   //     left: rect.right - 340 + window.scrollX
+// //   //   });
+
+// //   //   setAccountOpen(true);
+// //   // };
+// //   const openAccountModal = () => {
+// //     if (!accountBtnRef.current) return;
+
+// //     const rect = accountBtnRef.current.getBoundingClientRect();
+
+// //     const modalWidth = 315;
+// //     const gap = 10;
+
+// //     let left = rect.right - modalWidth;
+// //     if (left < gap) left = gap; // ✅ keep inside screen
+// //     if (left + modalWidth > window.innerWidth - gap) {
+// //       left = window.innerWidth - modalWidth - gap;
+// //     }
+
+// //     setAccountPos({
+// //       top: rect.bottom + gap,
+// //       left
+// //     });
+
+// //     setAccountOpen(true);
+// //   };
+
+// //   const handleLogout = async () => {
+// //     try {
+// //       setAuthLoading(true);
+// //       setAccountOpen(false);
+
+// //       await supabase.auth.signOut();
+// //       setUser(null);
+
+// //       // ✅ redirect only for specific college routes
+// //       if (isCollegeProtectedRoute(location.pathname)) {
+// //         navigate("/evolve-in-person");
+// //       }
+// //     } catch (err) {
+// //       console.log("logout error:", err.message);
+// //     } finally {
+// //       setAuthLoading(false);
+// //     }
+// //   };
+
+// //   // measure navbar height → push menu content below it
+// //   useEffect(() => {
+// //     const measure = () => {
+// //       if (!outerRef.current) return;
+// //       navHeightRef.current = outerRef.current.offsetHeight || 0;
+// //       if (menuContentRef.current) {
+// //         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
+// //       }
+// //     };
+// //     measure();
+// //     const ro = new ResizeObserver(measure);
+// //     if (outerRef.current) ro.observe(outerRef.current);
+// //     window.addEventListener("resize", measure);
+// //     return () => {
+// //       ro.disconnect();
+// //       window.removeEventListener("resize", measure);
+// //     };
+// //   }, []);
+
+// //   // navbar slide in / out based on showNavbar
+// //   const hasAnimatedRef = useRef(false);
+
+// //   useEffect(() => {
+// //     if (!outerRef.current) return;
+// //     const el = outerRef.current;
+
+// //     if (!hasAnimatedRef.current) {
+// //       gsap.set(el, { y: showNavbar ? 0 : -100 });
+// //       el.style.pointerEvents = showNavbar ? "auto" : "none";
+// //       hasAnimatedRef.current = true;
+// //       return;
+// //     }
+
+// //     if (showNavbar) {
+// //       gsap.to(el, {
+// //         y: 0,
+// //         duration: 0.6,
+// //         ease: "power3.out",
+// //         onStart: () => {
+// //           el.style.pointerEvents = "auto";
+// //         }
+// //       });
+// //     } else {
+// //       gsap.to(el, {
+// //         y: -100,
+// //         duration: 0.4,
+// //         ease: "power2.in",
+// //         onComplete: () => {
+// //           el.style.pointerEvents = "none";
+// //         }
+// //       });
+// //     }
+// //   }, [showNavbar]);
+
+// //   // open/close animations - prevent scroll
+// //   useEffect(() => {
+// //     const underlay = menuUnderlayRef.current;
+// //     const panel = menuPanelRef.current;
+// //     if (!underlay || !panel) return;
+
+// //     if (menuOpen) {
+// //       document.body.style.overflow = "hidden";
+
+// //       if (isDesktop()) {
+// //         gsap.set(underlay, { display: "block", opacity: 0 });
+// //         gsap.set(panel, { xPercent: -100 });
+// //         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+// //         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       } else {
+// //         gsap.set(underlay, { display: "block", yPercent: -100 });
+// //         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
+// //       }
+// //     } else {
+// //       document.body.style.overflow = "";
+
+// //       if (isDesktop()) {
+// //         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
+// //         gsap.to(underlay, {
+// //           opacity: 0,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       } else {
+// //         gsap.to(underlay, {
+// //           yPercent: -100,
+// //           duration: 0.45,
+// //           ease: "power2.in",
+// //           onComplete: () => gsap.set(underlay, { display: "none" })
+// //         });
+// //       }
+// //     }
+// //   }, [menuOpen]);
+
+// //   // close on route change
+// //   useEffect(() => {
+// //     setMenuOpen(false);
+// //     setAccountOpen(false);
+// //   }, [location.pathname]);
+
+// //   // esc to close menu + account
+// //   useEffect(() => {
+// //     const onKey = (e) => {
+// //       if (e.key === "Escape") {
+// //         setMenuOpen(false);
+// //         setAccountOpen(false);
+// //       }
+// //     };
+// //     window.addEventListener("keydown", onKey);
+// //     return () => window.removeEventListener("keydown", onKey);
+// //   }, []);
+
+// //   // marquee (clone once for seamless)
+// //   useEffect(() => {
+// //     if (!menuOpen) {
+// //       if (marqueeTLRef.current) {
+// //         marqueeTLRef.current.kill();
+// //         marqueeTLRef.current = null;
+// //       }
+// //       return;
+// //     }
+// //     const track = marqueeTrackRef.current;
+// //     const group = marqueeGroupRef.current;
+// //     if (!track || !group) return;
+
+// //     if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //     gsap.set(track, { x: 0 });
+
+// //     while (track.children.length > 1) track.removeChild(track.lastChild);
+// //     const clone = group.cloneNode(true);
+// //     track.appendChild(clone);
+
+// //     const groupWidth = group.getBoundingClientRect().width;
+// //     const tl = gsap.timeline({ repeat: -1 });
+// //     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
+// //     marqueeTLRef.current = tl;
+
+// //     return () => {
+// //       if (marqueeTLRef.current) marqueeTLRef.current.kill();
+// //       marqueeTLRef.current = null;
+// //     };
+// //   }, [menuOpen]);
+
+// //   return (
+// //     <>
+// //       {/* NAVBAR */}
+// //       <nav className="fixed top-0 left-0 right-0 z-50">
+// //         <div
+// //           ref={outerRef}
+// //           className="w-full border-2 border-black bg-transparent"
+// //           style={{
+// //             borderBottomLeftRadius: MIXED_BL,
+// //             borderBottomRightRadius: MIXED_BR
+// //           }}
+// //         >
+// //           <div
+// //             ref={navbarRef}
+// //             className="w-full overflow-hidden"
+// //             style={{
+// //               borderBottomLeftRadius: MIXED_BL,
+// //               borderBottomRightRadius: MIXED_BR
+// //             }}
+// //           >
+// //             <div
+// //               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+// //               style={{
+// //                 height: "56px",
+// //                 boxShadow: `
+// //                   inset 6px 6px 0 rgba(0, 0, 0, 0.15),
+// //                   inset 6px 6px 0 rgba(0, 0, 0, 0.15)
+// //                 `
+// //               }}
+// //             >
+// //               {/* MENU BUTTON */}
+// //               <button
+// //                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
+// //                 onClick={() => setMenuOpen((v) => !v)}
+// //                 aria-label="open menu"
+// //                 style={{ width: "72px" }}
+// //               >
+// //                 <img
+// //                   src={menuOpen ? cross_line_pink : three_wavy_lines}
+// //                   alt="menu"
+// //                   className="h-5 w-auto md:h-6"
+// //                 />
+// //               </button>
+
+// //               {/* LOGO */}
+// //               <div
+// //                 onClick={handleLogoClick}
+// //                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
+// //               >
+// //                 <img
+// //                   src={evolve_logo_mobile}
+// //                   alt="evolve logo"
+// //                   className="h-7 w-auto md:hidden"
+// //                 />
+// //                 <img
+// //                   src={evolve_logo}
+// //                   alt="evolve logo"
+// //                   className="hidden md:block h-7 w-auto"
+// //                 />
+// //               </div>
+
+// //               {/* AUTH BUTTON / ACCOUNT */}
+// //               {/* AUTH BUTTON / ACCOUNT */}
+// //               {!hideAuthButton && (
+// //                 <button
+// //                   ref={accountBtnRef}
+// //                   disabled={authLoading}
+// //                   onClick={() => {
+// //                     // not logged in → guest signin
+// //                     if (!user) return handleSignIn(setUser, setAuthLoading);
+
+// //                     // guest user → ignore for now
+// //                     if (user?.is_guest) return;
+
+// //                     // full user → open modal
+// //                     if (!accountOpen) openAccountModal();
+// //                     else setAccountOpen(false);
+// //                   }}
+// //                   className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+// //                 >
+// //                   {authLoading ? (
+// //                     <>
+// //                       <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+// //                       <span>loading…</span>
+// //                     </>
+// //                   ) : user ? (
+// //                     <>
+// //                       <img
+// //                         src={avatarSrc}
+// //                         alt="avatar"
+// //                         className="h-10 w-10 rounded-full"
+// //                       />
+// //                       <span className="hidden md:inline">{fullName}</span>
+// //                       {/* <span className="md:hidden">{firstName}</span> */}
+// //                     </>
+// //                   ) : (
+// //                     "sign in"
+// //                   )}
+// //                 </button>
+// //               )}
+// //             </div>
+// //           </div>
+// //         </div>
+// //       </nav>
+
+// //       {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
+// //       {accountOpen &&
+// //         user &&
+// //         !user.is_guest &&
+// //         ReactDOM.createPortal(
+// //           <>
+// //             {/* click outside */}
+// //             <div
+// //               className="hidden md:block fixed inset-0 z-[9998]"
+// //               onClick={() => setAccountOpen(false)}
+// //             />
+
+// //             <div
+// //               className="
+// //                 hidden md:block
+// //                 fixed z-[9999]
+// //                 w-[340px]
+// //                 rounded-[20px]
+// //                 border-[2px] border-black
+// //                 bg-evolve-yellow
+// //                 shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //                 pl-6 pr-6 pt-0 pb-6
+// //               "
+// //               style={{
+// //                 top: accountPos.top,
+// //                 left: accountPos.left
+// //               }}
+// //             >
+// //               <div className="flex justify-end">
+// //                 <button
+// //                   onClick={() => setAccountOpen(false)}
+// //                   className="text-black text-[28px] font-extrabold mt-2"
+// //                 >
+// //                   ×
+// //                 </button>
+// //               </div>
+
+// //               <div className="flex flex-col items-center text-center">
+// //                 <img
+// //                   // src={user.avatar_url}
+// //                   src={avatarSrc}
+// //                   alt="avatar"
+// //                   className="w-[5.5rem] h-[5.5rem] rounded-full"
+// //                 />
+
+// //                 <p className="text-black font-extrabold text-[20px] mt-4">
+// //                   {user.username}
+// //                 </p>
+
+// //                 <p className="text-black font-normal text-[14px] mt-1">
+// //                   {user.email}
+// //                 </p>
+
+// //                 <button
+// //                   onClick={handleLogout}
+// //                   className="mt-5 text-black font-extrabold underline flex items-center gap-2"
+// //                 >
+// //                   log out
+// //                 </button>
+// //               </div>
+// //             </div>
+// //           </>,
+// //           document.body
+// //         )}
+
+// //       {/* ✅ MOBILE ACCOUNT MODAL */}
+// //       {accountOpen && user && !user.is_guest && (
+// //         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
+// //           <div
+// //             className="absolute inset-0 bg-black/40"
+// //             onClick={() => setAccountOpen(false)}
+// //           />
+
+// //           <div
+// //             className="
+// //               relative z-10
+// //               w-[85vw] max-w-[360px]
+// //               bg-evolve-yellow
+// //               border-[2px] border-black
+// //               rounded-[18px]
+// //               shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
+// //               px-6 py-8
+// //               flex flex-col items-center text-center
+// //             "
+// //           >
+// //             <button
+// //               onClick={() => setAccountOpen(false)}
+// //               className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
+// //             >
+// //               ×
+// //             </button>
+
+// //             <img
+// //               // src={user.avatar_url}
+// //               src={avatarSrc}
+// //               alt="avatar"
+// //               className="w-16 h-16 rounded-full"
+// //             />
+
+// //             <p className="text-black font-extrabold text-[18px] mt-4">
+// //               {user.username}
+// //             </p>
+
+// //             <p className="text-black font-normal text-[14px] mt-1">
+// //               {user.email}
+// //             </p>
+
+// //             <button
+// //               onClick={handleLogout}
+// //               className="mt-5 text-black font-extrabold underline"
+// //             >
+// //               log out
+// //             </button>
+// //           </div>
+// //         </div>
+// //       )}
+
+// //       {/* UNDERLAY (MENU) */}
+// //       <div
+// //         ref={menuUnderlayRef}
+// //         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+// //         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+// //       >
+// //         <div className="relative h-full w-full flex">
+// //           {/* DESKTOP OVERLAY */}
+// //           <div className="hidden md:block absolute inset-0 bg-black/30" />
+
+// //           {/* LEFT PANEL */}
+// //           <div
+// //             ref={menuPanelRef}
+// //             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
+// //             style={{
+// //               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
+// //             }}
+// //           >
+// //             <div ref={menuContentRef} className="h-full flex flex-col">
+// //               <div className="flex-1 flex items-center">
+// //                 <div className="w-full flex justify-center px-6 md:px-8">
+// //                   <div className="flex flex-col items-start space-y-2 tracking-normal">
+// //                     {navItems.map((item) =>
+// //                       item.external ? (
+// //                         <a
+// //                           key={item.path}
+// //                           href={item.path}
+// //                           target="_blank"
+// //                           rel="noopener noreferrer"
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
+// //                         >
+// //                           {item.label}
+// //                         </a>
+// //                       ) : item.isModal ? (
+// //                         <button
+// //                           key={item.path}
+// //                           onClick={() => {
+// //                             setMenuOpen(false);
+// //                             if (onContactClick) onContactClick();
+// //                           }}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             location.pathname === item.path
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </button>
+// //                       ) : (
+// //                         <Link
+// //                           key={item.path}
+// //                           to={item.path}
+// //                           onClick={() => setMenuOpen(false)}
+// //                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+// //                             isActive(item.path)
+// //                               ? "text-evolve-pink"
+// //                               : "text-black hover:text-evolve-pink"
+// //                           }`}
+// //                         >
+// //                           {item.label}
+// //                         </Link>
+// //                       )
+// //                     )}
+// //                   </div>
+// //                 </div>
+// //               </div>
+
+// //               {/* JOIN US BUTTON */}
+// //               <div className="w-full flex justify-center mb-5 md:mb-6">
+// //                 <a
+// //                   href="https://discord.gg/wKRYG7cSWt"
+// //                   target="_blank"
+// //                   rel="noopener noreferrer"
+// //                   className="cursor-pointer "
+// //                 >
+// //                   <img
+// //                     src={join_us_button}
+// //                     onMouseEnter={(e) =>
+// //                       (e.currentTarget.src = join_us_button_hover)
+// //                     }
+// //                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
+// //                     alt="join evolve community"
+// //                     className="w-auto h-12 md:h-16"
+// //                   />
+// //                 </a>
+// //               </div>
+
+// //               {/* MARQUEE */}
+// //               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
+// //                 <div
+// //                   ref={marqueeTrackRef}
+// //                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
+// //                   style={{ willChange: "transform" }}
+// //                 >
+// //                   <div
+// //                     ref={marqueeGroupRef}
+// //                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
+// //                   >
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 1"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_be_remarkable}
+// //                       alt="vector 2"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_1}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+
+// //                     <img
+// //                       src={evolve_text}
+// //                       alt="evolve text"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={marquee_vector_2}
+// //                       alt="vector 2"
+// //                       className="h-10 md:h-14 w-auto flex-none"
+// //                     />
+// //                     <img
+// //                       src={evolve_be_remarkable}
+// //                       alt="vector 2"
+// //                       className="h-8 md:h-10 w-auto flex-none"
+// //                     />
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             </div>
+// //           </div>
+
+// //           {/* RIGHT CLICK-TO-CLOSE (desktop) */}
+// //           <button
+// //             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
+// //             onClick={() => setMenuOpen(false)}
+// //             aria-label="close menu overlay"
+// //           />
+// //         </div>
+// //       </div>
+// //     </>
+// //   );
+// // };
+
+// // export default Navigation;
 
 // import { useState, useEffect, useRef, useMemo } from "react";
 // import ReactDOM from "react-dom";
@@ -1168,8 +2558,21 @@
 
 // import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 // import { useAuth } from "../hooks/useAuth";
-// import { handleSignIn } from "../auth/signInLogic";
+// // import { handleSignIn } from "../auth/signInLogic"; // old guest sign-in — replaced by AuthModal
 // import { supabase } from "../supabaseClient";
+// import AuthModal from "./AuthModal";
+// import { jsPDF } from "jspdf";
+// import html2canvas from "html2canvas";
+
+// function ordinalDate(dateStr) {
+//   const d = new Date(dateStr + "T00:00:00");
+//   const day = d.getDate();
+//   const sfx =
+//     day >= 11 && day <= 13
+//       ? "th"
+//       : { 1: "st", 2: "nd", 3: "rd" }[day % 10] || "th";
+//   return `${day}${sfx} ${d.toLocaleString("en-US", { month: "long" }).toLowerCase()}`;
+// }
 
 // const MIXED_BL = 16;
 // const MIXED_BR = 16;
@@ -1177,6 +2580,11 @@
 // const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 //   const [menuOpen, setMenuOpen] = useState(false);
 //   const [accountOpen, setAccountOpen] = useState(false);
+//   const [authModalOpen, setAuthModalOpen] = useState(false);
+//   const [payment, setPayment] = useState(null);
+//   const [paymentLoading, setPaymentLoading] = useState(false);
+//   const receiptDesktopRef = useRef(null);
+//   const receiptMobileRef = useRef(null);
 
 //   const location = useLocation();
 //   const navigate = useNavigate();
@@ -1199,7 +2607,7 @@
 //     user?.avatar_url ||
 //     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "user"}`;
 
-//   const fullName = user?.username || "";
+//   const fullName = user?.name || "";
 
 //   const firstName = useMemo(() => {
 //     if (!fullName) return "";
@@ -1217,698 +2625,15 @@
 //   const navItems = [
 //     { path: "/", label: "home" },
 //     { path: "/community", label: "community" },
+//     { path: "/mentorship", label: "mentorship" },
 //     { path: "/webinars", label: "webinars" },
-//     { path: "/evolve-in-person", label: "evolve in-person" },
-//     { path: "/contact", label: "contact us", isModal: true },
-//     {
-//       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-//       label: "rate this website",
-//       external: true
-//     }
-//   ];
-
-//   const isActive = (p) => {
-//     if (p === "/" && location.pathname === "/") return true;
-//     if (p !== "/" && location.pathname === p) return true;
-//     return false;
-//   };
-
-//   const hideAuthButton = ["/evolve-in-person", "/evolve-in-person/"].includes(
-//     location.pathname
-//   );
-//   // const hideAuthButton = location.pathname === "/evolve-in-person/";
-
-//   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
-
-//   const isCollegeProtectedRoute = (pathname) => {
-//     return (
-//       pathname === "/evolve-in-person/activities" ||
-//       pathname === "/evolve-in-person/self-reflection" ||
-//       pathname === "/evolve-in-person/reality-check"
-//     );
-//   };
-
-//   const handleLogoClick = () => {
-//     if (location.pathname !== "/") {
-//       navigate("/");
-//     }
-//     if (onLogoClick) onLogoClick();
-//   };
-
-//   // ✅ open desktop account modal (calculate position)
-//   // const openAccountModal = () => {
-//   //   if (!accountBtnRef.current) return;
-
-//   //   const rect = accountBtnRef.current.getBoundingClientRect();
-
-//   //   setAccountPos({
-//   //     top: rect.bottom + 10 + window.scrollY,
-//   //     left: rect.right - 340 + window.scrollX
-//   //   });
-
-//   //   setAccountOpen(true);
-//   // };
-//   const openAccountModal = () => {
-//     if (!accountBtnRef.current) return;
-
-//     const rect = accountBtnRef.current.getBoundingClientRect();
-
-//     const modalWidth = 315;
-//     const gap = 10;
-
-//     let left = rect.right - modalWidth;
-//     if (left < gap) left = gap; // ✅ keep inside screen
-//     if (left + modalWidth > window.innerWidth - gap) {
-//       left = window.innerWidth - modalWidth - gap;
-//     }
-
-//     setAccountPos({
-//       top: rect.bottom + gap,
-//       left
-//     });
-
-//     setAccountOpen(true);
-//   };
-
-//   const handleLogout = async () => {
-//     try {
-//       setAuthLoading(true);
-//       setAccountOpen(false);
-
-//       await supabase.auth.signOut();
-//       setUser(null);
-
-//       // ✅ redirect only for specific college routes
-//       if (isCollegeProtectedRoute(location.pathname)) {
-//         navigate("/evolve-in-person");
-//       }
-//     } catch (err) {
-//       console.log("logout error:", err.message);
-//     } finally {
-//       setAuthLoading(false);
-//     }
-//   };
-
-//   // measure navbar height → push menu content below it
-//   useEffect(() => {
-//     const measure = () => {
-//       if (!outerRef.current) return;
-//       navHeightRef.current = outerRef.current.offsetHeight || 0;
-//       if (menuContentRef.current) {
-//         menuContentRef.current.style.paddingTop = `${navHeightRef.current}px`;
-//       }
-//     };
-//     measure();
-//     const ro = new ResizeObserver(measure);
-//     if (outerRef.current) ro.observe(outerRef.current);
-//     window.addEventListener("resize", measure);
-//     return () => {
-//       ro.disconnect();
-//       window.removeEventListener("resize", measure);
-//     };
-//   }, []);
-
-//   // navbar slide in / out based on showNavbar
-//   const hasAnimatedRef = useRef(false);
-
-//   useEffect(() => {
-//     if (!outerRef.current) return;
-//     const el = outerRef.current;
-
-//     if (!hasAnimatedRef.current) {
-//       gsap.set(el, { y: showNavbar ? 0 : -100 });
-//       el.style.pointerEvents = showNavbar ? "auto" : "none";
-//       hasAnimatedRef.current = true;
-//       return;
-//     }
-
-//     if (showNavbar) {
-//       gsap.to(el, {
-//         y: 0,
-//         duration: 0.6,
-//         ease: "power3.out",
-//         onStart: () => {
-//           el.style.pointerEvents = "auto";
-//         }
-//       });
-//     } else {
-//       gsap.to(el, {
-//         y: -100,
-//         duration: 0.4,
-//         ease: "power2.in",
-//         onComplete: () => {
-//           el.style.pointerEvents = "none";
-//         }
-//       });
-//     }
-//   }, [showNavbar]);
-
-//   // open/close animations - prevent scroll
-//   useEffect(() => {
-//     const underlay = menuUnderlayRef.current;
-//     const panel = menuPanelRef.current;
-//     if (!underlay || !panel) return;
-
-//     if (menuOpen) {
-//       document.body.style.overflow = "hidden";
-
-//       if (isDesktop()) {
-//         gsap.set(underlay, { display: "block", opacity: 0 });
-//         gsap.set(panel, { xPercent: -100 });
-//         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
-//         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
-//       } else {
-//         gsap.set(underlay, { display: "block", yPercent: -100 });
-//         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
-//       }
-//     } else {
-//       document.body.style.overflow = "";
-
-//       if (isDesktop()) {
-//         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
-//         gsap.to(underlay, {
-//           opacity: 0,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       } else {
-//         gsap.to(underlay, {
-//           yPercent: -100,
-//           duration: 0.45,
-//           ease: "power2.in",
-//           onComplete: () => gsap.set(underlay, { display: "none" })
-//         });
-//       }
-//     }
-//   }, [menuOpen]);
-
-//   // close on route change
-//   useEffect(() => {
-//     setMenuOpen(false);
-//     setAccountOpen(false);
-//   }, [location.pathname]);
-
-//   // esc to close menu + account
-//   useEffect(() => {
-//     const onKey = (e) => {
-//       if (e.key === "Escape") {
-//         setMenuOpen(false);
-//         setAccountOpen(false);
-//       }
-//     };
-//     window.addEventListener("keydown", onKey);
-//     return () => window.removeEventListener("keydown", onKey);
-//   }, []);
-
-//   // marquee (clone once for seamless)
-//   useEffect(() => {
-//     if (!menuOpen) {
-//       if (marqueeTLRef.current) {
-//         marqueeTLRef.current.kill();
-//         marqueeTLRef.current = null;
-//       }
-//       return;
-//     }
-//     const track = marqueeTrackRef.current;
-//     const group = marqueeGroupRef.current;
-//     if (!track || !group) return;
-
-//     if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//     gsap.set(track, { x: 0 });
-
-//     while (track.children.length > 1) track.removeChild(track.lastChild);
-//     const clone = group.cloneNode(true);
-//     track.appendChild(clone);
-
-//     const groupWidth = group.getBoundingClientRect().width;
-//     const tl = gsap.timeline({ repeat: -1 });
-//     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
-//     marqueeTLRef.current = tl;
-
-//     return () => {
-//       if (marqueeTLRef.current) marqueeTLRef.current.kill();
-//       marqueeTLRef.current = null;
-//     };
-//   }, [menuOpen]);
-
-//   return (
-//     <>
-//       {/* NAVBAR */}
-//       <nav className="fixed top-0 left-0 right-0 z-50">
-//         <div
-//           ref={outerRef}
-//           className="w-full border-2 border-black bg-transparent"
-//           style={{
-//             borderBottomLeftRadius: MIXED_BL,
-//             borderBottomRightRadius: MIXED_BR
-//           }}
-//         >
-//           <div
-//             ref={navbarRef}
-//             className="w-full overflow-hidden"
-//             style={{
-//               borderBottomLeftRadius: MIXED_BL,
-//               borderBottomRightRadius: MIXED_BR
-//             }}
-//           >
-//             <div
-//               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
-//               style={{
-//                 height: "56px",
-//                 boxShadow: `
-//                   inset 6px 6px 0 rgba(0, 0, 0, 0.15),
-//                   inset 6px 6px 0 rgba(0, 0, 0, 0.15)
-//                 `
-//               }}
-//             >
-//               {/* MENU BUTTON */}
-//               <button
-//                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
-//                 onClick={() => setMenuOpen((v) => !v)}
-//                 aria-label="open menu"
-//                 style={{ width: "72px" }}
-//               >
-//                 <img
-//                   src={menuOpen ? cross_line_pink : three_wavy_lines}
-//                   alt="menu"
-//                   className="h-5 w-auto md:h-6"
-//                 />
-//               </button>
-
-//               {/* LOGO */}
-//               <div
-//                 onClick={handleLogoClick}
-//                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
-//               >
-//                 <img
-//                   src={evolve_logo_mobile}
-//                   alt="evolve logo"
-//                   className="h-7 w-auto md:hidden"
-//                 />
-//                 <img
-//                   src={evolve_logo}
-//                   alt="evolve logo"
-//                   className="hidden md:block h-7 w-auto"
-//                 />
-//               </div>
-
-//               {/* AUTH BUTTON / ACCOUNT */}
-//               {/* AUTH BUTTON / ACCOUNT */}
-//               {!hideAuthButton && (
-//                 <button
-//                   ref={accountBtnRef}
-//                   disabled={authLoading}
-//                   onClick={() => {
-//                     // not logged in → guest signin
-//                     if (!user) return handleSignIn(setUser, setAuthLoading);
-
-//                     // guest user → ignore for now
-//                     if (user?.is_guest) return;
-
-//                     // full user → open modal
-//                     if (!accountOpen) openAccountModal();
-//                     else setAccountOpen(false);
-//                   }}
-//                   className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
-//                 >
-//                   {authLoading ? (
-//                     <>
-//                       <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
-//                       <span>loading…</span>
-//                     </>
-//                   ) : user ? (
-//                     <>
-//                       <img
-//                         src={avatarSrc}
-//                         alt="avatar"
-//                         className="h-10 w-10 rounded-full"
-//                       />
-//                       <span className="hidden md:inline">{fullName}</span>
-//                       {/* <span className="md:hidden">{firstName}</span> */}
-//                     </>
-//                   ) : (
-//                     "sign in"
-//                   )}
-//                 </button>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       </nav>
-
-//       {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
-//       {accountOpen &&
-//         user &&
-//         !user.is_guest &&
-//         ReactDOM.createPortal(
-//           <>
-//             {/* click outside */}
-//             <div
-//               className="hidden md:block fixed inset-0 z-[9998]"
-//               onClick={() => setAccountOpen(false)}
-//             />
-
-//             <div
-//               className="
-//                 hidden md:block
-//                 fixed z-[9999]
-//                 w-[340px]
-//                 rounded-[20px]
-//                 border-[2px] border-black
-//                 bg-evolve-yellow
-//                 shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-//                 pl-6 pr-6 pt-0 pb-6
-//               "
-//               style={{
-//                 top: accountPos.top,
-//                 left: accountPos.left
-//               }}
-//             >
-//               <div className="flex justify-end">
-//                 <button
-//                   onClick={() => setAccountOpen(false)}
-//                   className="text-black text-[28px] font-extrabold mt-2"
-//                 >
-//                   ×
-//                 </button>
-//               </div>
-
-//               <div className="flex flex-col items-center text-center">
-//                 <img
-//                   // src={user.avatar_url}
-//                   src={avatarSrc}
-//                   alt="avatar"
-//                   className="w-[5.5rem] h-[5.5rem] rounded-full"
-//                 />
-
-//                 <p className="text-black font-extrabold text-[20px] mt-4">
-//                   {user.username}
-//                 </p>
-
-//                 <p className="text-black font-normal text-[14px] mt-1">
-//                   {user.email}
-//                 </p>
-
-//                 <button
-//                   onClick={handleLogout}
-//                   className="mt-5 text-black font-extrabold underline flex items-center gap-2"
-//                 >
-//                   log out
-//                 </button>
-//               </div>
-//             </div>
-//           </>,
-//           document.body
-//         )}
-
-//       {/* ✅ MOBILE ACCOUNT MODAL */}
-//       {accountOpen && user && !user.is_guest && (
-//         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
-//           <div
-//             className="absolute inset-0 bg-black/40"
-//             onClick={() => setAccountOpen(false)}
-//           />
-
-//           <div
-//             className="
-//               relative z-10
-//               w-[85vw] max-w-[360px]
-//               bg-evolve-yellow
-//               border-[2px] border-black
-//               rounded-[18px]
-//               shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-//               px-6 py-8
-//               flex flex-col items-center text-center
-//             "
-//           >
-//             <button
-//               onClick={() => setAccountOpen(false)}
-//               className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
-//             >
-//               ×
-//             </button>
-
-//             <img
-//               // src={user.avatar_url}
-//               src={avatarSrc}
-//               alt="avatar"
-//               className="w-16 h-16 rounded-full"
-//             />
-
-//             <p className="text-black font-extrabold text-[18px] mt-4">
-//               {user.username}
-//             </p>
-
-//             <p className="text-black font-normal text-[14px] mt-1">
-//               {user.email}
-//             </p>
-
-//             <button
-//               onClick={handleLogout}
-//               className="mt-5 text-black font-extrabold underline"
-//             >
-//               log out
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* UNDERLAY (MENU) */}
-//       <div
-//         ref={menuUnderlayRef}
-//         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
-//         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
-//       >
-//         <div className="relative h-full w-full flex">
-//           {/* DESKTOP OVERLAY */}
-//           <div className="hidden md:block absolute inset-0 bg-black/30" />
-
-//           {/* LEFT PANEL */}
-//           <div
-//             ref={menuPanelRef}
-//             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
-//             style={{
-//               boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
-//             }}
-//           >
-//             <div ref={menuContentRef} className="h-full flex flex-col">
-//               <div className="flex-1 flex items-center">
-//                 <div className="w-full flex justify-center px-6 md:px-8">
-//                   <div className="flex flex-col items-start space-y-2 tracking-normal">
-//                     {navItems.map((item) =>
-//                       item.external ? (
-//                         <a
-//                           key={item.path}
-//                           href={item.path}
-//                           target="_blank"
-//                           rel="noopener noreferrer"
-//                           onClick={() => setMenuOpen(false)}
-//                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
-//                         >
-//                           {item.label}
-//                         </a>
-//                       ) : item.isModal ? (
-//                         <button
-//                           key={item.path}
-//                           onClick={() => {
-//                             setMenuOpen(false);
-//                             if (onContactClick) onContactClick();
-//                           }}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             location.pathname === item.path
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </button>
-//                       ) : (
-//                         <Link
-//                           key={item.path}
-//                           to={item.path}
-//                           onClick={() => setMenuOpen(false)}
-//                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-//                             isActive(item.path)
-//                               ? "text-evolve-pink"
-//                               : "text-black hover:text-evolve-pink"
-//                           }`}
-//                         >
-//                           {item.label}
-//                         </Link>
-//                       )
-//                     )}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* JOIN US BUTTON */}
-//               <div className="w-full flex justify-center mb-5 md:mb-6">
-//                 <a
-//                   href="https://discord.gg/wKRYG7cSWt"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                   className="cursor-pointer "
-//                 >
-//                   <img
-//                     src={join_us_button}
-//                     onMouseEnter={(e) =>
-//                       (e.currentTarget.src = join_us_button_hover)
-//                     }
-//                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
-//                     alt="join evolve community"
-//                     className="w-auto h-12 md:h-16"
-//                   />
-//                 </a>
-//               </div>
-
-//               {/* MARQUEE */}
-//               <div className="w-full h-16 md:h-28 border-t-2 border-black bg-evolve-lavender-indigo overflow-hidden relative">
-//                 <div
-//                   ref={marqueeTrackRef}
-//                   className="absolute top-1/2 -translate-y-1/2 left-0 flex"
-//                   style={{ willChange: "transform" }}
-//                 >
-//                   <div
-//                     ref={marqueeGroupRef}
-//                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
-//                   >
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 1"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_be_remarkable}
-//                       alt="vector 2"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_1}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-
-//                     <img
-//                       src={evolve_text}
-//                       alt="evolve text"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={marquee_vector_2}
-//                       alt="vector 2"
-//                       className="h-10 md:h-14 w-auto flex-none"
-//                     />
-//                     <img
-//                       src={evolve_be_remarkable}
-//                       alt="vector 2"
-//                       className="h-8 md:h-10 w-auto flex-none"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* RIGHT CLICK-TO-CLOSE (desktop) */}
-//           <button
-//             className="hidden md:block flex-1 h-full bg-transparent relative z-10"
-//             onClick={() => setMenuOpen(false)}
-//             aria-label="close menu overlay"
-//           />
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default Navigation;
-
-// import { useState, useEffect, useRef, useMemo } from "react";
-// import ReactDOM from "react-dom";
-// import { Link, useLocation, useNavigate } from "react-router-dom";
-// import gsap from "gsap";
-
-// import {
-//   evolve_logo_nav as evolve_logo,
-//   evolve_logo_mobile,
-//   three_wavy_lines,
-//   marquee_vector_1,
-//   evolve_text,
-//   marquee_vector_2,
-//   cross_line_pink,
-//   evolve_be_remarkable
-// } from "../assets/images/Nav";
-
-// import { join_us_button, join_us_button_hover } from "../assets/images/Home";
-// import { useAuth } from "../hooks/useAuth";
-// import { handleSignIn } from "../auth/signInLogic";
-// import { supabase } from "../supabaseClient";
-
-// const MIXED_BL = 16;
-// const MIXED_BR = 16;
-
-// const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
-//   const [menuOpen, setMenuOpen] = useState(false);
-//   const [accountOpen, setAccountOpen] = useState(false);
-
-//   const location = useLocation();
-//   const navigate = useNavigate();
-
-//   const outerRef = useRef(null);
-//   const navbarRef = useRef(null);
-
-//   const menuUnderlayRef = useRef(null);
-//   const menuPanelRef = useRef(null);
-//   const menuContentRef = useRef(null);
-
-//   const marqueeTrackRef = useRef(null);
-//   const marqueeGroupRef = useRef(null);
-//   const marqueeTLRef = useRef(null);
-
-//   const navHeightRef = useRef(0);
-
-//   const { user, setUser, authLoading, setAuthLoading } = useAuth();
-//   const avatarSrc =
-//     user?.avatar_url ||
-//     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "user"}`;
-
-//   const fullName = user?.username || "";
-
-//   const firstName = useMemo(() => {
-//     if (!fullName) return "";
-//     return fullName.trim().split(" ")[0]; // ✅ first word only
-//   }, [fullName]);
-
-//   // const avatarSrc =
-//   // user?.avatar_url || `https://api.multiavatar.com/${user?.id || "user"}.png`;
-//   // user?.avatar_url || `https://robohash.org/${user?.id || "user"}?set=set3`;
-
-//   // ✅ account dropdown anchor (desktop)
-//   const accountBtnRef = useRef(null);
-//   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
-
-//   const navItems = [
-//     { path: "/", label: "home" },
-//     { path: "/community", label: "community" },
-//     { path: "/webinars", label: "webinars" },
-//     { path: "/evolve-in-person", label: "evolve in-person" },
-//     { path: "/contact", label: "contact us", isModal: true },
-//     {
-//       path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-//       label: "rate this website",
-//       external: true
-//     }
+//     // { path: "/evolve-in-person", label: "evolve in-person" },
+//     { path: "/contact", label: "contact us", isModal: true }
+//     // {
+//     //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+//     //   label: "rate this website",
+//     //   external: true
+//     // }
 //   ];
 
 //   const isActive = (p) => {
@@ -2015,6 +2740,36 @@
 //     }
 //   };
 
+//   // fetch user's latest successful payment when modal opens
+//   useEffect(() => {
+//     if (!accountOpen || !user) return;
+//     setPaymentLoading(true);
+//     supabase
+//       .from("mentorship_payments")
+//       .select("*, batch:mentorship_batches(batch_number, start_date)")
+//       .eq("user_id", user.id)
+//       .eq("status", "success")
+//       .order("created_at", { ascending: false })
+//       .limit(1)
+//       .maybeSingle()
+//       .then(({ data }) => {
+//         setPayment(data || null);
+//         setPaymentLoading(false);
+//       });
+//   }, [accountOpen, user]);
+
+//   const downloadReceipt = async () => {
+//     const ref = window.innerWidth >= 768 ? receiptDesktopRef : receiptMobileRef;
+//     if (!ref.current || !payment) return;
+//     const canvas = await html2canvas(ref.current, { scale: 2, useCORS: true });
+//     const imgData = canvas.toDataURL("image/png");
+//     const w = canvas.width / 2;
+//     const h = canvas.height / 2;
+//     const pdf = new jsPDF({ unit: "px", format: [w, h] });
+//     pdf.addImage(imgData, "PNG", 0, 0, w, h);
+//     pdf.save(`evolve-receipt-${payment.razorpay_payment_id || Date.now()}.pdf`);
+//   };
+
 //   // measure navbar height → push menu content below it
 //   useEffect(() => {
 //     const measure = () => {
@@ -2226,13 +2981,13 @@
 //                   ref={accountBtnRef}
 //                   disabled={authLoading}
 //                   onClick={() => {
-//                     // not logged in → guest signin
-//                     if (!user) return handleSignIn(setUser, setAuthLoading);
+//                     // not logged in → go to sign-in page
+//                     if (!user)
+//                       return navigate("/signin", {
+//                         state: { from: location.pathname }
+//                       });
 
-//                     // guest user → ignore for now
-//                     if (user?.is_guest) return;
-
-//                     // full user → open modal
+//                     // logged-in user → open account dropdown
 //                     if (!accountOpen) openAccountModal();
 //                     else setAccountOpen(false);
 //                   }}
@@ -2266,7 +3021,6 @@
 //       {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
 //       {accountOpen &&
 //         user &&
-//         !user.is_guest &&
 //         ReactDOM.createPortal(
 //           <>
 //             {/* click outside */}
@@ -2280,6 +3034,7 @@
 //                 hidden md:block
 //                 fixed z-[9999]
 //                 w-[340px]
+//                 max-h-[90vh] overflow-y-auto
 //                 rounded-[20px]
 //                 border-[2px] border-black
 //                 bg-evolve-yellow
@@ -2309,7 +3064,7 @@
 //                 />
 
 //                 <p className="text-black font-extrabold text-[20px] mt-4">
-//                   {user.username}
+//                   {user.name}
 //                 </p>
 
 //                 <p className="text-black font-normal text-[14px] mt-1">
@@ -2322,6 +3077,75 @@
 //                 >
 //                   log out
 //                 </button>
+
+//                 {/* ── RECEIPT ── */}
+//                 {paymentLoading ? (
+//                   <p className="mt-5 text-black/40 text-[13px]">
+//                     loading payment…
+//                   </p>
+//                 ) : payment ? (
+//                   <>
+//                     <div
+//                       ref={receiptDesktopRef}
+//                       className="mt-5 w-full bg-white rounded-xl border border-black/15 p-4 text-left"
+//                     >
+//                       <p className="font-extrabold text-black text-[10px] uppercase tracking-widest mb-3 text-center">
+//                         evolve mentorship · receipt
+//                       </p>
+//                       <div className="w-full h-px bg-black/10 mb-3" />
+//                       {[
+//                         [
+//                           "plan",
+//                           payment.plan === "starter" ? "starter" : "accelerator"
+//                         ],
+//                         [
+//                           "amount paid",
+//                           `₹${Number(payment.amount).toLocaleString("en-IN")}`
+//                         ],
+//                         [
+//                           "date",
+//                           new Date(payment.created_at).toLocaleDateString(
+//                             "en-IN",
+//                             { day: "numeric", month: "long", year: "numeric" }
+//                           )
+//                         ],
+//                         [
+//                           "batch",
+//                           `batch ${payment.batch?.batch_number ?? "—"}`
+//                         ],
+//                         [
+//                           "starts on",
+//                           payment.batch?.start_date
+//                             ? ordinalDate(payment.batch.start_date)
+//                             : "—"
+//                         ],
+//                         ["ref", payment.razorpay_payment_id || "—"]
+//                       ].map(([label, value]) => (
+//                         <div
+//                           key={label}
+//                           className="flex justify-between items-start gap-3 mb-2"
+//                         >
+//                           <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+//                             {label}
+//                           </span>
+//                           <span className="text-black font-semibold text-[11px] text-right break-all">
+//                             {value}
+//                           </span>
+//                         </div>
+//                       ))}
+//                     </div>
+//                     <button
+//                       onClick={downloadReceipt}
+//                       className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+//                     >
+//                       download receipt ↓
+//                     </button>
+//                   </>
+//                 ) : (
+//                   <p className="mt-5 text-black/40 text-[13px]">
+//                     no payments yet
+//                   </p>
+//                 )}
 //               </div>
 //             </div>
 //           </>,
@@ -2329,7 +3153,7 @@
 //         )}
 
 //       {/* ✅ MOBILE ACCOUNT MODAL */}
-//       {accountOpen && user && !user.is_guest && (
+//       {accountOpen && user && (
 //         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
 //           <div
 //             className="absolute inset-0 bg-black/40"
@@ -2363,7 +3187,7 @@
 //             />
 
 //             <p className="text-black font-extrabold text-[18px] mt-4">
-//               {user.username}
+//               {user.name}
 //             </p>
 
 //             <p className="text-black font-normal text-[14px] mt-1">
@@ -2376,6 +3200,69 @@
 //             >
 //               log out
 //             </button>
+
+//             {/* ── RECEIPT ── */}
+//             {paymentLoading ? (
+//               <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>
+//             ) : payment ? (
+//               <>
+//                 <div
+//                   ref={receiptMobileRef}
+//                   className="mt-5 w-full bg-white rounded-xl border border-black/15 p-4 text-left"
+//                 >
+//                   <p className="font-extrabold text-black text-[10px] uppercase tracking-widest mb-3 text-center">
+//                     evolve mentorship · receipt
+//                   </p>
+//                   <div className="w-full h-px bg-black/10 mb-3" />
+//                   {[
+//                     [
+//                       "plan",
+//                       payment.plan === "starter" ? "starter" : "accelerator"
+//                     ],
+//                     [
+//                       "amount paid",
+//                       `₹${Number(payment.amount).toLocaleString("en-IN")}`
+//                     ],
+//                     [
+//                       "date",
+//                       new Date(payment.created_at).toLocaleDateString("en-IN", {
+//                         day: "numeric",
+//                         month: "long",
+//                         year: "numeric"
+//                       })
+//                     ],
+//                     ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
+//                     [
+//                       "starts on",
+//                       payment.batch?.start_date
+//                         ? ordinalDate(payment.batch.start_date)
+//                         : "—"
+//                     ],
+//                     ["ref", payment.razorpay_payment_id || "—"]
+//                   ].map(([label, value]) => (
+//                     <div
+//                       key={label}
+//                       className="flex justify-between items-start gap-3 mb-2"
+//                     >
+//                       <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+//                         {label}
+//                       </span>
+//                       <span className="text-black font-semibold text-[11px] text-right break-all">
+//                         {value}
+//                       </span>
+//                     </div>
+//                   ))}
+//                 </div>
+//                 <button
+//                   onClick={downloadReceipt}
+//                   className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+//                 >
+//                   download receipt ↓
+//                 </button>
+//               </>
+//             ) : (
+//               <p className="mt-5 text-black/40 text-[13px]">no payments yet</p>
+//             )}
 //           </div>
 //         </div>
 //       )}
@@ -2451,7 +3338,7 @@
 //               {/* JOIN US BUTTON */}
 //               <div className="w-full flex justify-center mb-5 md:mb-6">
 //                 <a
-//                   href="https://discord.gg/wKRYG7cSWt"
+//                   href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
 //                   target="_blank"
 //                   rel="noopener noreferrer"
 //                   className="cursor-pointer "
@@ -2534,6 +3421,13 @@
 //           />
 //         </div>
 //       </div>
+
+//       {/* AUTH MODAL */}
+//       <AuthModal
+//         isOpen={authModalOpen}
+//         onClose={() => setAuthModalOpen(false)}
+//         user={user}
+//       />
 //     </>
 //   );
 // };
@@ -2558,7 +3452,6 @@ import {
 
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 import { useAuth } from "../hooks/useAuth";
-// import { handleSignIn } from "../auth/signInLogic"; // old guest sign-in — replaced by AuthModal
 import { supabase } from "../supabaseClient";
 import AuthModal from "./AuthModal";
 import { jsPDF } from "jspdf";
@@ -2611,29 +3504,23 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const firstName = useMemo(() => {
     if (!fullName) return "";
-    return fullName.trim().split(" ")[0]; // ✅ first word only
+    return fullName.trim().split(" ")[0];
   }, [fullName]);
 
-  // const avatarSrc =
-  // user?.avatar_url || `https://api.multiavatar.com/${user?.id || "user"}.png`;
-  // user?.avatar_url || `https://robohash.org/${user?.id || "user"}?set=set3`;
-
-  // ✅ account dropdown anchor (desktop)
   const accountBtnRef = useRef(null);
   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
 
   const navItems = [
     { path: "/", label: "home" },
     { path: "/community", label: "community" },
+    {
+      path: "/community/portfolio-review",
+      label: "- portfolio review",
+      sub: true
+    },
     { path: "/mentorship", label: "mentorship" },
     { path: "/webinars", label: "webinars" },
-    // { path: "/evolve-in-person", label: "evolve in-person" },
     { path: "/contact", label: "contact us", isModal: true }
-    // {
-    //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-    //   label: "rate this website",
-    //   external: true
-    // }
   ];
 
   const isActive = (p) => {
@@ -2645,7 +3532,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const hideAuthButton = ["/evolve-in-person", "/evolve-in-person/"].includes(
     location.pathname
   );
-  // const hideAuthButton = location.pathname === "/evolve-in-person/";
 
   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
@@ -2657,67 +3543,33 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     );
   };
 
-  // ========== FIXED LOGO CLICK HANDLER ==========
   const handleLogoClick = () => {
     const isOnHomePage =
       location.pathname === "/" || location.pathname === "/home";
 
-    console.log("=== NAVBAR LOGO CLICKED ===");
-    console.log("Current path:", location.pathname);
-    console.log("Is on home page:", isOnHomePage);
-    console.log(
-      "window.handleLogoClick exists:",
-      typeof window.handleLogoClick === "function"
-    );
-    console.log("window.isOnHomePage:", window.isOnHomePage);
-
-    // If we're on home page and the scroll handler exists, use it
     if (isOnHomePage && typeof window.handleLogoClick === "function") {
-      console.log("Calling window.handleLogoClick() to scroll to first scene");
       window.handleLogoClick();
-      return; // Important: don't navigate
+      return;
     }
 
-    // Otherwise navigate to home
-    console.log("Navigating to home page");
     navigate("/");
-
-    // Call the prop callback if provided
     if (onLogoClick) onLogoClick();
   };
 
-  // ✅ open desktop account modal (calculate position)
-  // const openAccountModal = () => {
-  //   if (!accountBtnRef.current) return;
-
-  //   const rect = accountBtnRef.current.getBoundingClientRect();
-
-  //   setAccountPos({
-  //     top: rect.bottom + 10 + window.scrollY,
-  //     left: rect.right - 340 + window.scrollX
-  //   });
-
-  //   setAccountOpen(true);
-  // };
   const openAccountModal = () => {
     if (!accountBtnRef.current) return;
 
     const rect = accountBtnRef.current.getBoundingClientRect();
-
     const modalWidth = 315;
     const gap = 10;
 
     let left = rect.right - modalWidth;
-    if (left < gap) left = gap; // ✅ keep inside screen
+    if (left < gap) left = gap;
     if (left + modalWidth > window.innerWidth - gap) {
       left = window.innerWidth - modalWidth - gap;
     }
 
-    setAccountPos({
-      top: rect.bottom + gap,
-      left
-    });
-
+    setAccountPos({ top: rect.bottom + gap, left });
     setAccountOpen(true);
   };
 
@@ -2725,11 +3577,8 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     try {
       setAuthLoading(true);
       setAccountOpen(false);
-
       await supabase.auth.signOut();
       setUser(null);
-
-      // ✅ redirect only for specific college routes
       if (isCollegeProtectedRoute(location.pathname)) {
         navigate("/evolve-in-person");
       }
@@ -2740,7 +3589,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     }
   };
 
-  // fetch user's latest successful payment when modal opens
   useEffect(() => {
     if (!accountOpen || !user) return;
     setPaymentLoading(true);
@@ -2770,7 +3618,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     pdf.save(`evolve-receipt-${payment.razorpay_payment_id || Date.now()}.pdf`);
   };
 
-  // measure navbar height → push menu content below it
   useEffect(() => {
     const measure = () => {
       if (!outerRef.current) return;
@@ -2789,7 +3636,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     };
   }, []);
 
-  // navbar slide in / out based on showNavbar
   const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
@@ -2824,7 +3670,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     }
   }, [showNavbar]);
 
-  // open/close animations - prevent scroll
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
     const panel = menuPanelRef.current;
@@ -2864,13 +3709,11 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     }
   }, [menuOpen]);
 
-  // close on route change
   useEffect(() => {
     setMenuOpen(false);
     setAccountOpen(false);
   }, [location.pathname]);
 
-  // esc to close menu + account
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -2882,7 +3725,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // marquee (clone once for seamless)
   useEffect(() => {
     if (!menuOpen) {
       if (marqueeTLRef.current) {
@@ -2913,6 +3755,30 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     };
   }, [menuOpen]);
 
+  /* ── receipt rows helper ── */
+  const receiptRows = payment
+    ? [
+        ["plan", payment.plan === "starter" ? "starter" : "accelerator"],
+        ["amount paid", `₹${Number(payment.amount).toLocaleString("en-IN")}`],
+        [
+          "date",
+          new Date(payment.created_at).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          })
+        ],
+        ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
+        [
+          "starts on",
+          payment.batch?.start_date
+            ? ordinalDate(payment.batch.start_date)
+            : "—"
+        ],
+        ["ref", payment.razorpay_payment_id || "—"]
+      ]
+    : [];
+
   return (
     <>
       {/* NAVBAR */}
@@ -2937,10 +3803,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
               style={{
                 height: "56px",
-                boxShadow: `
-                  inset 6px 6px 0 rgba(0, 0, 0, 0.15),
-                  inset 6px 6px 0 rgba(0, 0, 0, 0.15)
-                `
+                boxShadow: `inset 6px 6px 0 rgba(0,0,0,0.15), inset 6px 6px 0 rgba(0,0,0,0.15)`
               }}
             >
               {/* MENU BUTTON */}
@@ -2974,20 +3837,16 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 />
               </div>
 
-              {/* AUTH BUTTON / ACCOUNT */}
-              {/* AUTH BUTTON / ACCOUNT */}
+              {/* AUTH BUTTON */}
               {!hideAuthButton && (
                 <button
                   ref={accountBtnRef}
                   disabled={authLoading}
                   onClick={() => {
-                    // not logged in → go to sign-in page
                     if (!user)
                       return navigate("/signin", {
                         state: { from: location.pathname }
                       });
-
-                    // logged-in user → open account dropdown
                     if (!accountOpen) openAccountModal();
                     else setAccountOpen(false);
                   }}
@@ -3006,7 +3865,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                         className="h-10 w-10 rounded-full"
                       />
                       <span className="hidden md:inline">{fullName}</span>
-                      {/* <span className="md:hidden">{firstName}</span> */}
                     </>
                   ) : (
                     "sign in"
@@ -3018,33 +3876,18 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         </div>
       </nav>
 
-      {/* ✅ DESKTOP ACCOUNT MODAL (Portal, no overflow issues) */}
+      {/* DESKTOP ACCOUNT MODAL */}
       {accountOpen &&
         user &&
         ReactDOM.createPortal(
           <>
-            {/* click outside */}
             <div
               className="hidden md:block fixed inset-0 z-[9998]"
               onClick={() => setAccountOpen(false)}
             />
-
             <div
-              className="
-                hidden md:block
-                fixed z-[9999]
-                w-[340px]
-                max-h-[90vh] overflow-y-auto
-                rounded-[20px]
-                border-[2px] border-black
-                bg-evolve-yellow
-                shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-                pl-6 pr-6 pt-0 pb-6
-              "
-              style={{
-                top: accountPos.top,
-                left: accountPos.left
-              }}
+              className="hidden md:block fixed z-[9999] w-[340px] max-h-[90vh] overflow-y-auto rounded-[20px] border-[2px] border-black bg-evolve-yellow shadow-[8px_8px_0px_rgba(0,0,0,0.25)] pl-6 pr-6 pt-0 pb-6"
+              style={{ top: accountPos.top, left: accountPos.left }}
             >
               <div className="flex justify-end">
                 <button
@@ -3054,31 +3897,24 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   ×
                 </button>
               </div>
-
               <div className="flex flex-col items-center text-center">
                 <img
-                  // src={user.avatar_url}
                   src={avatarSrc}
                   alt="avatar"
                   className="w-[5.5rem] h-[5.5rem] rounded-full"
                 />
-
                 <p className="text-black font-extrabold text-[20px] mt-4">
                   {user.name}
                 </p>
-
                 <p className="text-black font-normal text-[14px] mt-1">
                   {user.email}
                 </p>
-
                 <button
                   onClick={handleLogout}
                   className="mt-5 text-black font-extrabold underline flex items-center gap-2"
                 >
                   log out
                 </button>
-
-                {/* ── RECEIPT ── */}
                 {paymentLoading ? (
                   <p className="mt-5 text-black/40 text-[13px]">
                     loading payment…
@@ -3093,34 +3929,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                         evolve mentorship · receipt
                       </p>
                       <div className="w-full h-px bg-black/10 mb-3" />
-                      {[
-                        [
-                          "plan",
-                          payment.plan === "starter" ? "starter" : "accelerator"
-                        ],
-                        [
-                          "amount paid",
-                          `₹${Number(payment.amount).toLocaleString("en-IN")}`
-                        ],
-                        [
-                          "date",
-                          new Date(payment.created_at).toLocaleDateString(
-                            "en-IN",
-                            { day: "numeric", month: "long", year: "numeric" }
-                          )
-                        ],
-                        [
-                          "batch",
-                          `batch ${payment.batch?.batch_number ?? "—"}`
-                        ],
-                        [
-                          "starts on",
-                          payment.batch?.start_date
-                            ? ordinalDate(payment.batch.start_date)
-                            : "—"
-                        ],
-                        ["ref", payment.razorpay_payment_id || "—"]
-                      ].map(([label, value]) => (
+                      {receiptRows.map(([label, value]) => (
                         <div
                           key={label}
                           className="flex justify-between items-start gap-3 mb-2"
@@ -3152,56 +3961,37 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
           document.body
         )}
 
-      {/* ✅ MOBILE ACCOUNT MODAL */}
+      {/* MOBILE ACCOUNT MODAL */}
       {accountOpen && user && (
         <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setAccountOpen(false)}
           />
-
-          <div
-            className="
-              relative z-10
-              w-[85vw] max-w-[360px]
-              bg-evolve-yellow
-              border-[2px] border-black
-              rounded-[18px]
-              shadow-[8px_8px_0px_rgba(0,0,0,0.25)]
-              px-6 py-8
-              flex flex-col items-center text-center
-            "
-          >
+          <div className="relative z-10 w-[85vw] max-w-[360px] bg-evolve-yellow border-[2px] border-black rounded-[18px] shadow-[8px_8px_0px_rgba(0,0,0,0.25)] px-6 py-8 flex flex-col items-center text-center">
             <button
               onClick={() => setAccountOpen(false)}
               className="absolute top-4 right-4 text-black text-[26px] font-extrabold"
             >
               ×
             </button>
-
             <img
-              // src={user.avatar_url}
               src={avatarSrc}
               alt="avatar"
               className="w-16 h-16 rounded-full"
             />
-
             <p className="text-black font-extrabold text-[18px] mt-4">
               {user.name}
             </p>
-
             <p className="text-black font-normal text-[14px] mt-1">
               {user.email}
             </p>
-
             <button
               onClick={handleLogout}
               className="mt-5 text-black font-extrabold underline"
             >
               log out
             </button>
-
-            {/* ── RECEIPT ── */}
             {paymentLoading ? (
               <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>
             ) : payment ? (
@@ -3214,32 +4004,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     evolve mentorship · receipt
                   </p>
                   <div className="w-full h-px bg-black/10 mb-3" />
-                  {[
-                    [
-                      "plan",
-                      payment.plan === "starter" ? "starter" : "accelerator"
-                    ],
-                    [
-                      "amount paid",
-                      `₹${Number(payment.amount).toLocaleString("en-IN")}`
-                    ],
-                    [
-                      "date",
-                      new Date(payment.created_at).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric"
-                      })
-                    ],
-                    ["batch", `batch ${payment.batch?.batch_number ?? "—"}`],
-                    [
-                      "starts on",
-                      payment.batch?.start_date
-                        ? ordinalDate(payment.batch.start_date)
-                        : "—"
-                    ],
-                    ["ref", payment.razorpay_payment_id || "—"]
-                  ].map(([label, value]) => (
+                  {receiptRows.map(([label, value]) => (
                     <div
                       key={label}
                       className="flex justify-between items-start gap-3 mb-2"
@@ -3267,61 +4032,71 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         </div>
       )}
 
-      {/* UNDERLAY (MENU) */}
+      {/* MENU UNDERLAY */}
       <div
         ref={menuUnderlayRef}
         className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
       >
         <div className="relative h-full w-full flex">
-          {/* DESKTOP OVERLAY */}
           <div className="hidden md:block absolute inset-0 bg-black/30" />
 
           {/* LEFT PANEL */}
           <div
             ref={menuPanelRef}
             className="relative w-full md:w-[40%] bg-evolve-yellow border-b-2 border-r-2 border-black overflow-hidden"
-            style={{
-              boxShadow: "0 24px 48px rgba(0,0,0,0.28)"
-            }}
+            style={{ boxShadow: "0 24px 48px rgba(0,0,0,0.28)" }}
           >
             <div ref={menuContentRef} className="h-full flex flex-col">
               <div className="flex-1 flex items-center">
                 <div className="w-full flex justify-center px-6 md:px-8">
                   <div className="flex flex-col items-start space-y-2 tracking-normal">
-                    {navItems.map((item) =>
-                      item.external ? (
-                        <a
-                          key={item.path}
-                          href={item.path}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setMenuOpen(false)}
-                          className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.isModal ? (
-                        <button
-                          key={item.path}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            if (onContactClick) onContactClick();
-                          }}
-                          className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
-                            location.pathname === item.path
-                              ? "text-evolve-pink"
-                              : "text-black hover:text-evolve-pink"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ) : (
+                    {navItems.map((item) => {
+                      /* sub-item styling */
+                      const subClass = item.sub
+                        ? "text-[20px] md:text-[26px] text-black/50 pl-5 md:pl-6"
+                        : "text-[32px] md:text-[40px]";
+
+                      if (item.external) {
+                        return (
+                          <a
+                            key={item.path}
+                            href={item.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setMenuOpen(false)}
+                            className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink`}
+                          >
+                            {item.label}
+                          </a>
+                        );
+                      }
+
+                      if (item.isModal) {
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => {
+                              setMenuOpen(false);
+                              if (onContactClick) onContactClick();
+                            }}
+                            className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                              location.pathname === item.path
+                                ? "text-evolve-pink"
+                                : "text-black hover:text-evolve-pink"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      }
+
+                      return (
                         <Link
                           key={item.path}
                           to={item.path}
                           onClick={() => setMenuOpen(false)}
-                          className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                          className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
                             isActive(item.path)
                               ? "text-evolve-pink"
                               : "text-black hover:text-evolve-pink"
@@ -3329,19 +4104,18 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                         >
                           {item.label}
                         </Link>
-                      )
-                    )}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* JOIN US BUTTON */}
+              {/* JOIN US */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
                   href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="cursor-pointer "
                 >
                   <img
                     src={join_us_button}
@@ -3383,15 +4157,14 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     />
                     <img
                       src={evolve_be_remarkable}
-                      alt="vector 2"
+                      alt="be remarkable"
                       className="h-8 md:h-10 w-auto flex-none"
                     />
                     <img
                       src={marquee_vector_1}
-                      alt="vector 2"
+                      alt="vector 1"
                       className="h-10 md:h-14 w-auto flex-none"
                     />
-
                     <img
                       src={evolve_text}
                       alt="evolve text"
@@ -3404,7 +4177,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     />
                     <img
                       src={evolve_be_remarkable}
-                      alt="vector 2"
+                      alt="be remarkable"
                       className="h-8 md:h-10 w-auto flex-none"
                     />
                   </div>

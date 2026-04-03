@@ -275,6 +275,7 @@ function MobileForm({
   portfolioLink,
   setPortfolioLink,
   portfolioFile,
+  setPortfolioFile,
   walkthroughLink,
   setWalkthroughLink,
   notes,
@@ -391,9 +392,21 @@ function MobileForm({
               }}
             >
               {portfolioFile ? (
-                <p className="text-evolve-yellow text-sm font-semibold text-center">
-                  {portfolioFile.name}
-                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-evolve-yellow text-sm font-semibold text-center">
+                    {portfolioFile.name}
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPortfolioFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-white/40 hover:text-red-400 text-xs font-semibold transition-colors"
+                  >
+                    × remove file
+                  </button>
+                </div>
               ) : (
                 <>
                   <p className="text-white/40 text-sm text-center">
@@ -491,6 +504,7 @@ function DesktopForm({
   portfolioLink,
   setPortfolioLink,
   portfolioFile,
+  setPortfolioFile,
   walkthroughLink,
   setWalkthroughLink,
   notes,
@@ -518,7 +532,6 @@ function DesktopForm({
           style={{ width: "38%" }}
         >
           <div className="flex flex-col gap-8 mt-4">
-            {/* Label */}
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-evolve-pink flex-shrink-0" />
               <span className="text-white/50 text-xs font-bold uppercase tracking-widest">
@@ -526,7 +539,6 @@ function DesktopForm({
               </span>
             </div>
 
-            {/* Big heading */}
             <div>
               <h1
                 className="font-extrabold lowercase leading-none"
@@ -547,7 +559,6 @@ function DesktopForm({
               </p>
             </div>
 
-            {/* User card */}
             <div
               className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/10"
               style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
@@ -577,7 +588,6 @@ function DesktopForm({
               </span>
             </div>
 
-            {/* What we look at */}
             <div>
               <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-3">
                 what we look at
@@ -605,7 +615,6 @@ function DesktopForm({
             </div>
           </div>
 
-          {/* Feedback badge */}
           <div
             className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/10 w-fit"
             style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
@@ -619,7 +628,6 @@ function DesktopForm({
 
         {/* ─── RIGHT PANEL (form) ─── */}
         <div className="flex-1 flex flex-col px-10 py-10 overflow-y-auto">
-          {/* Header row */}
           <div className="flex items-center justify-between mb-8">
             <BackBtn onClick={onBack} />
             <button
@@ -735,9 +743,22 @@ function DesktopForm({
                   }}
                 >
                   {portfolioFile ? (
-                    <p className="text-evolve-yellow text-sm font-semibold text-center">
-                      {portfolioFile.name}
-                    </p>
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-evolve-yellow text-sm font-semibold text-center">
+                        {portfolioFile.name}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPortfolioFile(null);
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = "";
+                        }}
+                        className="text-white/40 hover:text-red-400 text-xs font-semibold transition-colors"
+                      >
+                        × remove file
+                      </button>
+                    </div>
                   ) : (
                     <>
                       <p className="text-white/40 text-sm text-center">
@@ -832,7 +853,7 @@ function DesktopForm({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full ml-10 flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+              className="ml-10 w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
             >
               {submitting ? (
                 "submitting…"
@@ -869,6 +890,15 @@ export default function PortfolioReviewForm() {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
+
+  function isValidUrl(str) {
+    try {
+      const url = new URL(str.trim());
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
 
   /* ── auth guard ─────────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -908,18 +938,45 @@ export default function PortfolioReviewForm() {
   const handleSubmit = async () => {
     setError("");
 
-    if (portfolioMode === "link" && !portfolioLink.trim()) {
-      setError("please paste your portfolio link");
-      return;
+    if (portfolioMode === "link") {
+      if (!portfolioLink.trim()) {
+        setError("please paste your portfolio link");
+        return;
+      }
+      if (!isValidUrl(portfolioLink)) {
+        setError(
+          "that doesn't look like a valid URL — try starting with https://"
+        );
+        return;
+      }
     }
+
     if (portfolioMode === "file" && !portfolioFile) {
       setError("please upload your portfolio file");
       return;
     }
+
     if (!walkthroughLink.trim()) {
       setError("please add your walkthrough recording link");
       return;
     }
+    if (!isValidUrl(walkthroughLink)) {
+      setError(
+        "that walkthrough link doesn't look valid — try starting with https://"
+      );
+      return;
+    }
+
+    if (
+      portfolioMode === "link" &&
+      portfolioLink.trim() &&
+      portfolioLink.trim() === walkthroughLink.trim()
+    ) {
+      setError("your portfolio and walkthrough links can't be the same URL");
+      return;
+    }
+
+    // ... rest of the submit logic unchanged
 
     setSubmitting(true);
     try {
@@ -986,6 +1043,7 @@ export default function PortfolioReviewForm() {
     portfolioLink,
     setPortfolioLink,
     portfolioFile,
+    setPortfolioFile, // ← add this
     walkthroughLink,
     setWalkthroughLink,
     notes,
