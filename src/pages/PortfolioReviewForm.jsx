@@ -444,20 +444,11 @@ function MobileForm({
                 )}
               </div>
               <input
-                id="mobile-file-input"
                 ref={fileInputRef}
                 type="file"
                 accept={ACCEPTED_TYPES}
+                className="hidden"
                 onChange={(e) => handleFile(e.target.files?.[0])}
-                style={{
-                  position: "absolute",
-                  width: "1px",
-                  height: "1px",
-                  opacity: 0,
-                  overflow: "hidden",
-                  clip: "rect(0,0,0,0)",
-                  whiteSpace: "nowrap"
-                }}
               />
             </div>
           )}
@@ -504,11 +495,7 @@ function MobileForm({
             style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
           />
         </div>
-        {/* TEMP DEBUG — remove after fixing */}
-        <p className="text-white text-xs">
-          file state: {portfolioFile ? portfolioFile.name : "null"}
-        </p>
-        <p className="text-white text-xs">last attempt: {debugMsg}</p>
+
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
         <button
