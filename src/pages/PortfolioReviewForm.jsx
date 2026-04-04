@@ -325,7 +325,6 @@ function MobileForm({
           <p className="text-white text-sm font-semibold lowercase">
             your portfolio
           </p>
-
           {/* Tabs */}
           <div className="flex rounded-xl overflow-hidden border border-white/10">
             <button
@@ -358,7 +357,6 @@ function MobileForm({
               upload a file
             </button>
           </div>
-
           {portfolioMode === "link" && (
             <input
               type="url"
@@ -369,8 +367,7 @@ function MobileForm({
               style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
             />
           )}
-
-          {portfolioMode === "file" && (
+          {/* {portfolioMode === "file" && (
             // <label className="w-full cursor-pointer">
             //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
             //     {portfolioFile ? (
@@ -497,7 +494,60 @@ function MobileForm({
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
             </label>
+          )} */}
+          {portfolioMode === "file" && (
+            <label
+              htmlFor="portfolio-file-mobile"
+              className="w-full cursor-pointer"
+              onClick={(e) => {
+                if (e.target.closest("button")) e.preventDefault();
+              }}
+            >
+              <div
+                className="rounded-2xl px-4 py-8 flex flex-col
+                   items-center justify-center gap-2 border border-white/10"
+              >
+                {portfolioFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-evolve-yellow text-sm font-semibold text-center">
+                      {portfolioFile.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPortfolioFile(null);
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
+                      }}
+                      className="text-white/40 text-xs"
+                    >
+                      × remove file
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-white/40 text-sm text-center">
+                      tap to upload
+                    </p>
+                    <p className="text-white/25 text-xs text-center">
+                      pdf, pptx or zip. max 10mb
+                    </p>
+                  </>
+                )}
+              </div>
+            </label>
           )}
+          {/* ↓ OUTSIDE the conditional — always in the DOM, never unmounts */}
+          <input
+            ref={fileInputRef}
+            id="portfolio-file-mobile"
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
         </div>
 
         {/* ── Walkthrough ── */}
