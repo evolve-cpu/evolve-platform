@@ -288,7 +288,9 @@ function MobileForm({
   debugMsg,
   handleFile,
   handleSubmit,
-  onBack
+  onBack,
+  fileLoading, // ← add this
+  setFileLoading
 }) {
   return (
     <div
@@ -504,10 +506,43 @@ function MobileForm({
               }}
             >
               <div
-                className="rounded-2xl px-4 py-8 flex flex-col
-                   items-center justify-center gap-2 border border-white/10"
+                className="rounded-2xl px-4 py-8 flex flex-col items-center
+                 justify-center gap-3 border border-white/10 min-h-[96px]"
+                style={{
+                  transition: "border-color 0.2s",
+                  borderColor: fileLoading ? "rgba(255,208,7,0.4)" : undefined
+                }}
               >
-                {portfolioFile ? (
+                {fileLoading ? (
+                  /* ── yellow spinning loader ── */
+                  <>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 28 28"
+                      fill="none"
+                      style={{ animation: "spin 0.9s linear infinite" }}
+                    >
+                      <circle
+                        cx="14"
+                        cy="14"
+                        r="11"
+                        stroke="rgba(255,208,7,0.2)"
+                        strokeWidth="2.5"
+                      />
+                      <path
+                        d="M14 3 a11 11 0 0 1 11 11"
+                        stroke="#FFD007"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <p className="text-evolve-yellow text-xs font-semibold">
+                      loading file…
+                    </p>
+                  </>
+                ) : portfolioFile ? (
+                  /* ── file selected ── */
                   <div className="flex flex-col items-center gap-2">
                     <p className="text-evolve-yellow text-sm font-semibold text-center">
                       {portfolioFile.name}
@@ -518,6 +553,7 @@ function MobileForm({
                         e.preventDefault();
                         e.stopPropagation();
                         setPortfolioFile(null);
+                        setFileLoading(false);
                         if (fileInputRef.current)
                           fileInputRef.current.value = "";
                       }}
@@ -527,6 +563,7 @@ function MobileForm({
                     </button>
                   </div>
                 ) : (
+                  /* ── empty state ── */
                   <>
                     <p className="text-white/40 text-sm text-center">
                       tap to upload
@@ -539,14 +576,17 @@ function MobileForm({
               </div>
             </label>
           )}
-          {/* ↓ OUTSIDE the conditional — always in the DOM, never unmounts */}
+          {/* // input always outside the conditional — never unmounts */}
           <input
             ref={fileInputRef}
             id="portfolio-file-mobile"
             type="file"
             accept={ACCEPTED_TYPES}
             className="hidden"
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            onChange={(e) => {
+              setFileLoading(true); // show loader immediately on return from picker
+              handleFile(e.target.files?.[0]);
+            }}
           />
         </div>
 
@@ -1070,19 +1110,36 @@ export default function PortfolioReviewForm() {
   //   setPortfolioFile(file);
   // };
 
+  // const handleFile = (file) => {
+  //   setDebugMsg("handleFile called: " + (file?.name || "no file"));
+  //   if (!file) {
+  //     setDebugMsg("file was null/undefined");
+  //     return;
+  //   }
+  //   if (file.size > MAX_FILE_MB * 1024 * 1024) {
+  //     setError(`file too large — max ${MAX_FILE_MB}mb`);
+  //     return;
+  //   }
+  //   setError("");
+  //   setPortfolioFile(file);
+  //   setDebugMsg("file set: " + file.name);
+  // };
+  // add alongside your other useState calls
+  const [fileLoading, setFileLoading] = useState(false);
+
+  // update handleFile to set it
   const handleFile = (file) => {
-    setDebugMsg("handleFile called: " + (file?.name || "no file"));
-    if (!file) {
-      setDebugMsg("file was null/undefined");
-      return;
-    }
+    if (!file || !(file instanceof File)) return;
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
       setError(`file too large — max ${MAX_FILE_MB}mb`);
+      setFileLoading(false);
       return;
     }
     setError("");
+    setFileLoading(true);
     setPortfolioFile(file);
-    setDebugMsg("file set: " + file.name);
+    // short delay so user sees the loader before it resolves
+    setTimeout(() => setFileLoading(false), 600);
   };
 
   /* ── submit ─────────────────────────────────────────────────────────────── */
@@ -1205,6 +1262,8 @@ export default function PortfolioReviewForm() {
     handleFile,
     handleSubmit,
     debugMsg,
+    fileLoading,
+    setFileLoading,
     onBack: () => navigate("/community/portfolio-review")
   };
 
