@@ -993,10 +993,13 @@ const Footer = () => {
 
   const socialLinks = [
     { label: "instagram", url: "https://www.instagram.com/evolvebypaperclip/" },
-    { label: "facebook", url: "#" },
+    // { label: "facebook", url: "#" },
     { label: "youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
-    { label: "medium", url: "#" },
-    { label: "linkedin", url: "#" },
+    { label: "medium", url: "https://medium.com/@evolvebypaperclip" },
+    {
+      label: "linkedin",
+      url: "https://www.linkedin.com/company/evolvedesignacademy/"
+    },
     {
       label: "discord",
       // url: "https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
