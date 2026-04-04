@@ -290,7 +290,8 @@ function MobileForm({
   handleSubmit,
   onBack,
   fileLoading, // ← add this
-  setFileLoading
+  setFileLoading,
+  setIsPickingFile
 }) {
   return (
     <div
@@ -501,9 +502,8 @@ function MobileForm({
             <>
               <div
                 onClick={() => {
-                  if (!fileLoading) {
-                    fileInputRef.current?.click();
-                  }
+                  setIsPickingFile(true);
+                  fileInputRef.current?.click();
                 }}
                 className="w-full cursor-pointer"
               >
@@ -584,21 +584,27 @@ function MobileForm({
                 type="file"
                 accept={ACCEPTED_TYPES}
                 className="hidden"
+                // onChange={(e) => {
+                //   const file = e.target.files?.[0];
+
+                //   if (!file) {
+                //     setError("file not selected, try again");
+                //     return;
+                //   }
+
+                //   setFileLoading(true);
+                //   handleFile(file);
+
+                //   // 🔥 CRITICAL for mobile consistency
+                //   if (fileInputRef.current) {
+                //     fileInputRef.current.value = "";
+                //   }
+                // }}
                 onChange={(e) => {
+                  setIsPickingFile(false);
+
                   const file = e.target.files?.[0];
-
-                  if (!file) {
-                    setError("file not selected, try again");
-                    return;
-                  }
-
-                  setFileLoading(true);
                   handleFile(file);
-
-                  // 🔥 CRITICAL for mobile consistency
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                  }
                 }}
               />
             </>
@@ -1155,17 +1161,39 @@ export default function PortfolioReviewForm() {
   const [fileLoading, setFileLoading] = useState(false);
 
   // update handleFile to set it
+  // const handleFile = (file) => {
+  //   if (!file || !(file instanceof File)) return;
+  //   if (file.size > MAX_FILE_MB * 1024 * 1024) {
+  //     setError(`file too large — max ${MAX_FILE_MB}mb`);
+  //     setFileLoading(false);
+  //     return;
+  //   }
+  //   setError("");
+  //   setFileLoading(true);
+  //   setPortfolioFile(file);
+  //   // short delay so user sees the loader before it resolves
+  //   setTimeout(() => setFileLoading(false), 600);
+  // };
+
+  const [isPickingFile, setIsPickingFile] = useState(false);
+
   const handleFile = (file) => {
-    if (!file || !(file instanceof File)) return;
+    if (!file) {
+      setError("file not selected, try again");
+      return;
+    }
+
+    setFileLoading(true); // ✅ ONLY HERE
+
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
       setError(`file too large — max ${MAX_FILE_MB}mb`);
       setFileLoading(false);
       return;
     }
+
     setError("");
-    setFileLoading(true);
     setPortfolioFile(file);
-    // short delay so user sees the loader before it resolves
+
     setTimeout(() => setFileLoading(false), 600);
   };
 
@@ -1291,6 +1319,7 @@ export default function PortfolioReviewForm() {
     debugMsg,
     fileLoading,
     setFileLoading,
+    setIsPickingFile,
     onBack: () => navigate("/community/portfolio-review")
   };
 
