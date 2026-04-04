@@ -370,134 +370,6 @@ function MobileForm({
               style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
             />
           )}
-          {/* {portfolioMode === "file" && (
-            // <label className="w-full cursor-pointer">
-            //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
-            //     {portfolioFile ? (
-            //       <div className="flex flex-col items-center gap-2">
-            //         <p className="text-evolve-yellow text-sm font-semibold text-center">
-            //           {portfolioFile.name}
-            //         </p>
-            //         <button
-            //           type="button"
-            //           onClick={(e) => {
-            //             e.stopPropagation();
-            //             setPortfolioFile(null);
-            //           }}
-            //           className="text-white/40 text-xs"
-            //         >
-            //           × remove file
-            //         </button>
-            //       </div>
-            //     ) : (
-            //       <>
-            //         <p className="text-white/40 text-sm text-center">
-            //           tap to upload
-            //         </p>
-            //         <p className="text-white/25 text-xs text-center">
-            //           pdf, pptx or zip. max 10mb
-            //         </p>
-            //       </>
-            //     )}
-            //   </div>
-
-            //   <input
-            //     type="file"
-            //     accept={ACCEPTED_TYPES}
-            //     className="hidden"
-            //     onChange={(e) => handleFile(e.target.files?.[0])}
-            //   />
-            // </label>
-            // Replace the <label> wrapper with a div + onClick:
-            // <div
-            //   onClick={() => fileInputRef.current?.click()}
-            //   className="w-full cursor-pointer"
-            // >
-            //   <div className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-2 border">
-            //     {portfolioFile ? (
-            //       <div className="flex flex-col items-center gap-2">
-            //         <p className="text-evolve-yellow text-sm font-semibold text-center">
-            //           {portfolioFile.name}
-            //         </p>
-            //         <button
-            //           type="button"
-            //           onClick={(e) => {
-            //             e.stopPropagation(); // now actually stops the file picker
-            //             setPortfolioFile(null);
-            //             if (fileInputRef.current)
-            //               fileInputRef.current.value = "";
-            //           }}
-            //           className="text-white/40 text-xs"
-            //         >
-            //           × remove file
-            //         </button>
-            //       </div>
-            //     ) : (
-            //       <>
-            //         <p className="text-white/40 text-sm text-center">
-            //           tap to upload
-            //         </p>
-            //         <p className="text-white/25 text-xs text-center">
-            //           pdf, pptx or zip. max 10mb
-            //         </p>
-            //       </>
-            //     )}
-            //   </div>
-            //   <input
-            //     ref={fileInputRef}
-            //     type="file"
-            //     accept={ACCEPTED_TYPES}
-            //     className="hidden"
-            //     onChange={(e) => handleFile(e.target.files?.[0])}
-            //   />
-            // </div>
-            // label htmlFor → input id is always a trusted gesture on all browsers
-            <label
-              htmlFor="portfolio-file-mobile"
-              className="w-full cursor-pointer"
-              onClick={(e) => {
-                // Prevent label from opening picker when clicking remove btn
-                if (e.target.closest("button")) e.preventDefault();
-              }}
-            >
-              <div className="rounded-2xl px-4 py-8 flex flex-col items-center ...">
-                {portfolioFile ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <p>{portfolioFile.name}</p>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault(); // stop label from triggering file picker
-                        e.stopPropagation(); // stop bubbling to label onClick
-                        setPortfolioFile(null);
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                    >
-                      × remove file
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-white/40 text-sm text-center">
-                      tap to upload
-                    </p>
-                    <p className="text-white/25 text-xs text-center">
-                      pdf, pptx or zip. max 10mb
-                    </p>
-                  </>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
-                id="portfolio-file-mobile"
-                type="file"
-                accept={ACCEPTED_TYPES}
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0])}
-              />
-            </label>
-          )} */}
           {portfolioMode === "file" && (
             <>
               <div
@@ -609,18 +481,6 @@ function MobileForm({
               />
             </>
           )}
-          {/* // input always outside the conditional — never unmounts */}
-          {/* <input
-            ref={fileInputRef}
-            id="portfolio-file-mobile"
-            type="file"
-            accept={ACCEPTED_TYPES}
-            className="hidden"
-            onChange={(e) => {
-              setFileLoading(true); // show loader immediately on return from picker
-              handleFile(e.target.files?.[0]);
-            }}
-          /> */}
         </div>
 
         {/* ── Walkthrough ── */}
@@ -1197,6 +1057,33 @@ export default function PortfolioReviewForm() {
     setTimeout(() => setFileLoading(false), 600);
   };
 
+  // 📱 MOBILE (more strict + reset logic)
+  const handleMobileFile = (file) => {
+    if (!file) {
+      setError("file not selected, try again");
+      return;
+    }
+
+    setFileLoading(true);
+
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(`file too large — max ${MAX_FILE_MB}mb`);
+      setFileLoading(false);
+      return;
+    }
+
+    setError("");
+    setPortfolioFile(file);
+
+    // 🔥 CRITICAL: mobile fix
+    if (mobileFileInputRef.current) {
+      mobileFileInputRef.current.value = "";
+    }
+
+    // small delay so loader shows
+    setTimeout(() => setFileLoading(false), 600);
+  };
+
   /* ── submit ─────────────────────────────────────────────────────────────── */
   const handleSubmit = async () => {
     setError("");
@@ -1325,7 +1212,8 @@ export default function PortfolioReviewForm() {
 
   const mobileFormProps = {
     ...formProps,
-    fileInputRef: mobileFileInputRef // ← override with mobile ref
+    fileInputRef: mobileFileInputRef, // ← override with mobile ref
+    handleFile: handleMobileFile // ← override with mobile file handler
   };
 
   return (
