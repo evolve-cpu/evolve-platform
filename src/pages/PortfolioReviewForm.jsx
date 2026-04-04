@@ -498,86 +498,113 @@ function MobileForm({
             </label>
           )} */}
           {portfolioMode === "file" && (
-            <label
-              htmlFor="portfolio-file-mobile"
-              className="w-full cursor-pointer"
-              onClick={(e) => {
-                if (e.target.closest("button")) e.preventDefault();
-              }}
-            >
+            <>
               <div
-                className="rounded-2xl px-4 py-8 flex flex-col items-center
-                 justify-center gap-3 border border-white/10 min-h-[96px]"
-                style={{
-                  transition: "border-color 0.2s",
-                  borderColor: fileLoading ? "rgba(255,208,7,0.4)" : undefined
+                onClick={() => {
+                  if (!fileLoading) {
+                    fileInputRef.current?.click();
+                  }
                 }}
+                className="w-full cursor-pointer"
               >
-                {fileLoading ? (
-                  /* ── yellow spinning loader ── */
-                  <>
-                    <svg
-                      width="28"
-                      height="28"
-                      viewBox="0 0 28 28"
-                      fill="none"
-                      style={{ animation: "spin 0.9s linear infinite" }}
-                    >
-                      <circle
-                        cx="14"
-                        cy="14"
-                        r="11"
-                        stroke="rgba(255,208,7,0.2)"
-                        strokeWidth="2.5"
-                      />
-                      <path
-                        d="M14 3 a11 11 0 0 1 11 11"
-                        stroke="#FFD007"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <p className="text-evolve-yellow text-xs font-semibold">
-                      loading file…
-                    </p>
-                  </>
-                ) : portfolioFile ? (
-                  /* ── file selected ── */
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-evolve-yellow text-sm font-semibold text-center">
-                      {portfolioFile.name}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setPortfolioFile(null);
-                        setFileLoading(false);
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                      className="text-white/40 text-xs"
-                    >
-                      × remove file
-                    </button>
-                  </div>
-                ) : (
-                  /* ── empty state ── */
-                  <>
-                    <p className="text-white/40 text-sm text-center">
-                      tap to upload
-                    </p>
-                    <p className="text-white/25 text-xs text-center">
-                      pdf, pptx or zip. max 10mb
-                    </p>
-                  </>
-                )}
+                <div
+                  className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-3 border border-white/10 min-h-[96px]"
+                  style={{
+                    borderColor: fileLoading ? "rgba(255,208,7,0.4)" : undefined
+                  }}
+                >
+                  {fileLoading ? (
+                    <>
+                      {/* 🔄 loader */}
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 28 28"
+                        fill="none"
+                        style={{ animation: "spin 0.9s linear infinite" }}
+                      >
+                        <circle
+                          cx="14"
+                          cy="14"
+                          r="11"
+                          stroke="rgba(255,208,7,0.2)"
+                          strokeWidth="2.5"
+                        />
+                        <path
+                          d="M14 3 a11 11 0 0 1 11 11"
+                          stroke="#FFD007"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <p className="text-evolve-yellow text-xs font-semibold">
+                        loading file…
+                      </p>
+                    </>
+                  ) : portfolioFile ? (
+                    <>
+                      {/* ✅ file selected */}
+                      <p className="text-evolve-yellow text-sm font-semibold text-center">
+                        {portfolioFile.name}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPortfolioFile(null);
+                          setFileLoading(false);
+
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                        }}
+                        className="text-white/40 text-xs"
+                      >
+                        × remove file
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* ✅ empty state */}
+                      <p className="text-white/40 text-sm text-center">
+                        tap to upload
+                      </p>
+                      <p className="text-white/25 text-xs text-center">
+                        pdf, pptx or zip. max 10mb
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
-            </label>
+
+              {/* ✅ hidden input (DO NOT wrap in label) */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_TYPES}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+
+                  if (!file) {
+                    setError("file not selected, try again");
+                    return;
+                  }
+
+                  setFileLoading(true);
+                  handleFile(file);
+
+                  // 🔥 CRITICAL for mobile consistency
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }}
+              />
+            </>
           )}
           {/* // input always outside the conditional — never unmounts */}
-          <input
+          {/* <input
             ref={fileInputRef}
             id="portfolio-file-mobile"
             type="file"
@@ -587,7 +614,7 @@ function MobileForm({
               setFileLoading(true); // show loader immediately on return from picker
               handleFile(e.target.files?.[0]);
             }}
-          />
+          /> */}
         </div>
 
         {/* ── Walkthrough ── */}
