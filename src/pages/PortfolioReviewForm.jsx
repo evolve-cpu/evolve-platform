@@ -282,16 +282,12 @@ function MobileForm({
   setNotes,
   submitting,
   error,
-  dragOver,
-  setDragOver,
   fileInputRef,
-  debugMsg,
   handleFile,
   handleSubmit,
   onBack,
-  fileLoading, // ← add this
-  setFileLoading,
-  setIsPickingFile
+  fileLoading,
+  setFileLoading
 }) {
   return (
     <div
@@ -372,12 +368,10 @@ function MobileForm({
           )}
           {portfolioMode === "file" && (
             <>
-              <div
-                onClick={() => {
-                  setIsPickingFile(true);
-                  fileInputRef.current?.click();
-                }}
-                className="w-full cursor-pointer"
+              {/* Native label→input pattern — reliable on iOS Safari and all Android browsers */}
+              <label
+                htmlFor="mobile-portfolio-file"
+                className="w-full cursor-pointer block"
               >
                 <div
                   className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-3 border border-white/10 min-h-[96px]"
@@ -387,7 +381,6 @@ function MobileForm({
                 >
                   {fileLoading ? (
                     <>
-                      {/* 🔄 loader */}
                       <svg
                         width="28"
                         height="28"
@@ -414,31 +407,11 @@ function MobileForm({
                       </p>
                     </>
                   ) : portfolioFile ? (
-                    <>
-                      {/* ✅ file selected */}
-                      <p className="text-evolve-yellow text-sm font-semibold text-center">
-                        {portfolioFile.name}
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPortfolioFile(null);
-                          setFileLoading(false);
-
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = "";
-                          }
-                        }}
-                        className="text-white/40 text-xs"
-                      >
-                        × remove file
-                      </button>
-                    </>
+                    <p className="text-evolve-yellow text-sm font-semibold text-center">
+                      {portfolioFile.name}
+                    </p>
                   ) : (
                     <>
-                      {/* ✅ empty state */}
                       <p className="text-white/40 text-sm text-center">
                         tap to upload
                       </p>
@@ -448,33 +421,29 @@ function MobileForm({
                     </>
                   )}
                 </div>
-              </div>
+              </label>
 
-              {/* ✅ hidden input (DO NOT wrap in label) */}
+              {portfolioFile && !fileLoading && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPortfolioFile(null);
+                    setFileLoading(false);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="text-white/40 text-xs text-center w-full -mt-1"
+                >
+                  × remove file
+                </button>
+              )}
+
               <input
+                id="mobile-portfolio-file"
                 ref={fileInputRef}
                 type="file"
                 accept={ACCEPTED_TYPES}
-                className="hidden"
-                // onChange={(e) => {
-                //   const file = e.target.files?.[0];
-
-                //   if (!file) {
-                //     setError("file not selected, try again");
-                //     return;
-                //   }
-
-                //   setFileLoading(true);
-                //   handleFile(file);
-
-                //   // 🔥 CRITICAL for mobile consistency
-                //   if (fileInputRef.current) {
-                //     fileInputRef.current.value = "";
-                //   }
-                // }}
+                className="sr-only"
                 onChange={(e) => {
-                  setIsPickingFile(false);
-
                   const file = e.target.files?.[0];
                   handleFile(file);
                 }}
@@ -1212,8 +1181,8 @@ export default function PortfolioReviewForm() {
 
   const mobileFormProps = {
     ...formProps,
-    fileInputRef: mobileFileInputRef, // ← override with mobile ref
-    handleFile: handleMobileFile // ← override with mobile file handler
+    fileInputRef: mobileFileInputRef,
+    handleFile: handleMobileFile
   };
 
   return (
