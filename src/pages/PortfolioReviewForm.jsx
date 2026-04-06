@@ -282,7 +282,6 @@ function MobileForm({
   setNotes,
   submitting,
   error,
-  fileInputRef,
   handleFile,
   handleSubmit,
   onBack,
@@ -367,88 +366,94 @@ function MobileForm({
             />
           )}
           {portfolioMode === "file" && (
-            <>
-              {/* Native label→input pattern — reliable on iOS Safari and all Android browsers */}
-              <label
-                htmlFor="mobile-portfolio-file"
-                className="w-full cursor-pointer block"
+            <div className="relative w-full">
+              {/* Visual display layer */}
+              <div
+                className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-3 border border-white/10 min-h-[96px]"
+                style={{
+                  borderColor: fileLoading
+                    ? "rgba(255,208,7,0.4)"
+                    : undefined
+                }}
               >
-                <div
-                  className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-3 border border-white/10 min-h-[96px]"
-                  style={{
-                    borderColor: fileLoading ? "rgba(255,208,7,0.4)" : undefined
-                  }}
-                >
-                  {fileLoading ? (
-                    <>
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 28 28"
-                        fill="none"
-                        style={{ animation: "spin 0.9s linear infinite" }}
-                      >
-                        <circle
-                          cx="14"
-                          cy="14"
-                          r="11"
-                          stroke="rgba(255,208,7,0.2)"
-                          strokeWidth="2.5"
-                        />
-                        <path
-                          d="M14 3 a11 11 0 0 1 11 11"
-                          stroke="#FFD007"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <p className="text-evolve-yellow text-xs font-semibold">
-                        loading file…
-                      </p>
-                    </>
-                  ) : portfolioFile ? (
+                {fileLoading ? (
+                  <>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 28 28"
+                      fill="none"
+                      style={{ animation: "spin 0.9s linear infinite" }}
+                    >
+                      <circle
+                        cx="14"
+                        cy="14"
+                        r="11"
+                        stroke="rgba(255,208,7,0.2)"
+                        strokeWidth="2.5"
+                      />
+                      <path
+                        d="M14 3 a11 11 0 0 1 11 11"
+                        stroke="#FFD007"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <p className="text-evolve-yellow text-xs font-semibold">
+                      loading file…
+                    </p>
+                  </>
+                ) : portfolioFile ? (
+                  <>
                     <p className="text-evolve-yellow text-sm font-semibold text-center">
                       {portfolioFile.name}
                     </p>
-                  ) : (
-                    <>
-                      <p className="text-white/40 text-sm text-center">
-                        tap to upload
-                      </p>
-                      <p className="text-white/25 text-xs text-center">
-                        pdf, pptx or zip. max 10mb
-                      </p>
-                    </>
-                  )}
-                </div>
-              </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPortfolioFile(null);
+                        setFileLoading(false);
+                      }}
+                      className="text-white/40 text-xs"
+                    >
+                      × remove file
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-white/40 text-sm text-center">
+                      tap to upload
+                    </p>
+                    <p className="text-white/25 text-xs text-center">
+                      pdf, pptx or zip. max 10mb
+                    </p>
+                  </>
+                )}
+              </div>
 
-              {portfolioFile && !fileLoading && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPortfolioFile(null);
-                    setFileLoading(false);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
+              {/* Full-area transparent input overlay — user taps directly on the input,
+                  no JS click() or label indirection needed. Unmounts once file is chosen
+                  so it's always fresh on re-mount (no value reset required). */}
+              {!portfolioFile && !fileLoading && (
+                <input
+                  type="file"
+                  accept={ACCEPTED_TYPES}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    opacity: 0,
+                    cursor: "pointer"
                   }}
-                  className="text-white/40 text-xs text-center w-full -mt-1"
-                >
-                  × remove file
-                </button>
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFile(file);
+                  }}
+                />
               )}
-
-              <input
-                id="mobile-portfolio-file"
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_TYPES}
-                className="sr-only"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  handleFile(file);
-                }}
-              />
-            </>
+            </div>
           )}
         </div>
 
@@ -914,7 +919,6 @@ export default function PortfolioReviewForm() {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
-  const mobileFileInputRef = useRef(null); // mobile ← add this
   const [debugMsg, setDebugMsg] = useState("none"); // ← add here alongside other useState
 
   function isValidUrl(str) {
@@ -1026,30 +1030,18 @@ export default function PortfolioReviewForm() {
     setTimeout(() => setFileLoading(false), 600);
   };
 
-  // 📱 MOBILE (more strict + reset logic)
+  // 📱 MOBILE — overlay input unmounts after selection so no ref reset needed
   const handleMobileFile = (file) => {
-    if (!file) {
-      setError("file not selected, try again");
-      return;
-    }
-
-    setFileLoading(true);
+    if (!file) return;
 
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
       setError(`file too large — max ${MAX_FILE_MB}mb`);
-      setFileLoading(false);
       return;
     }
 
     setError("");
+    setFileLoading(true);
     setPortfolioFile(file);
-
-    // 🔥 CRITICAL: mobile fix
-    if (mobileFileInputRef.current) {
-      mobileFileInputRef.current.value = "";
-    }
-
-    // small delay so loader shows
     setTimeout(() => setFileLoading(false), 600);
   };
 
@@ -1181,7 +1173,6 @@ export default function PortfolioReviewForm() {
 
   const mobileFormProps = {
     ...formProps,
-    fileInputRef: mobileFileInputRef,
     handleFile: handleMobileFile
   };
 
