@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -177,7 +178,7 @@ function ReviewUploadCell({ review, onDone }) {
 
     // 1. Upload PDF to Supabase Storage bucket "review-reports"
     const path = `${review.user_id}/${review.id}.pdf`;
-    const { error: upErr } = await supabase.storage
+    const { error: upErr } = await supabaseAdmin.storage
       .from("review-reports")
       .upload(path, file, { upsert: true, contentType: "application/pdf" });
 
@@ -187,13 +188,13 @@ function ReviewUploadCell({ review, onDone }) {
       return;
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseAdmin.storage
       .from("review-reports")
       .getPublicUrl(path);
     const reportUrl = urlData?.publicUrl;
 
     // 2. Save URL + mark done in portfolio_reviews row
-    const { error: dbErr } = await supabase
+    const { error: dbErr } = await supabaseAdmin
       .from("portfolio_reviews")
       .update({ review_report_url: reportUrl, review_status: "done" })
       .eq("id", review.id);
