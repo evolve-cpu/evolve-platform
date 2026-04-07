@@ -158,6 +158,7 @@ function AiBlock({ text }) {
 
 /* ─── Review upload + send cell ──────────────────────────────────────────── */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
   .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
 
@@ -210,7 +211,11 @@ function ReviewUploadCell({ review, onDone }) {
     const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
     const res = await fetch(fnUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
       body: JSON.stringify({
         to_email: review.email,
         to_name: review.name,
@@ -222,7 +227,7 @@ function ReviewUploadCell({ review, onDone }) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       setState("error");
-      setMsg(err.error || "email send failed");
+      setMsg(err.error || err.message || `email failed (${res.status})`);
       return;
     }
 
