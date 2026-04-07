@@ -208,7 +208,8 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
 }
 
 /* ─── Already Submitted Screen ────────────────────────────────────────────── */
-function AlreadySubmittedScreen({ onBack }) {
+function AlreadySubmittedScreen({ onBack, reportUrl }) {
+  const reviewDone = !!reportUrl;
   return (
     <div
       className="font-bricolage min-h-screen flex flex-col"
@@ -217,17 +218,22 @@ function AlreadySubmittedScreen({ onBack }) {
       <BlackNav onLogoClick={onBack} />
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6 text-center">
-          <div className="w-20 h-20 rounded-full border-4 border-evolve-yellow flex items-center justify-center">
+          {/* Icon — green if done, yellow if pending */}
+          <div
+            className="w-20 h-20 rounded-full border-4 flex items-center justify-center"
+            style={{ borderColor: reviewDone ? "#4ade80" : "#FFD007" }}
+          >
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <path
                 d="M8 18l7 7 13-14"
-                stroke="#FFD007"
+                stroke={reviewDone ? "#4ade80" : "#FFD007"}
                 strokeWidth="3.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           </div>
+
           <div>
             <h1
               className="text-white font-extrabold"
@@ -237,13 +243,39 @@ function AlreadySubmittedScreen({ onBack }) {
                 lineHeight: "1.1"
               }}
             >
-              already submitted.
+              {reviewDone ? "your review is in." : "already submitted."}
             </h1>
             <p className="text-white/50 text-sm mt-3 max-w-[30ch] mx-auto leading-relaxed">
-              we already have your portfolio. sit tight — feedback is on its way
-              within 24–48 working hours.
+              {reviewDone
+                ? "your personalised feedback report is ready. download it below."
+                : "we already have your portfolio. sit tight — feedback is on its way within 24–48 working hours."}
             </p>
           </div>
+
+          {reviewDone && (
+            <a
+              href={reportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 transition-opacity active:opacity-80"
+              style={{ backgroundColor: "#DF0586", color: "#fff" }}
+            >
+              download the report ↓
+            </a>
+          )}
+
+          {!reviewDone && (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/15"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            >
+              <span className="w-2 h-2 rounded-full bg-evolve-yellow flex-shrink-0" />
+              <span className="text-white/70 text-xs font-semibold lowercase tracking-wide">
+                review in progress · 24–48 working hrs
+              </span>
+            </div>
+          )}
+
           <button
             onClick={onBack}
             className="text-evolve-yellow text-sm font-semibold flex items-center gap-1.5"
@@ -934,6 +966,7 @@ export default function PortfolioReviewForm() {
   const [done, setDone] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [reportUrl, setReportUrl] = useState(null);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
 
@@ -971,12 +1004,15 @@ export default function PortfolioReviewForm() {
     if (!user) return;
     supabase
       .from("portfolio_reviews")
-      .select("id")
+      .select("id, review_report_url")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setAlreadySubmitted(true);
+        if (data) {
+          setAlreadySubmitted(true);
+          if (data.review_report_url) setReportUrl(data.review_report_url);
+        }
         setCheckingSubmission(false);
       });
   }, [user]);
@@ -1144,7 +1180,7 @@ export default function PortfolioReviewForm() {
   }
 
   if (alreadySubmitted) {
-    return <AlreadySubmittedScreen onBack={() => navigate("/community")} />;
+    return <AlreadySubmittedScreen onBack={() => navigate("/community")} reportUrl={reportUrl} />;
   }
 
   /* ── shared props ───────────────────────────────────────────────────────── */

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,7 +33,6 @@ const fmtDate = (d) =>
       })
     : "—";
 
-
 function downloadCSV(filename, rows) {
   if (!rows.length) return;
   const headers = Object.keys(rows[0]);
@@ -48,7 +47,9 @@ function downloadCSV(filename, rows) {
     headers.join(","),
     ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))
   ];
-  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], {
+    type: "text/csv;charset=utf-8;"
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -150,6 +151,143 @@ function AiBlock({ text }) {
         const bold = line.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
         return <p key={i} dangerouslySetInnerHTML={{ __html: bold }} />;
       })}
+    </div>
+  );
+}
+
+/* ─── Review upload + send cell ──────────────────────────────────────────── */
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
+  .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
+
+function ReviewUploadCell({ review, onDone }) {
+  const [state, setState] = useState("idle"); // idle | uploading | sending | done | error
+  const [msg, setMsg] = useState("");
+  const inputRef = useRef(null);
+
+  const handle = async (file) => {
+    if (!file || file.type !== "application/pdf") {
+      setMsg("PDF only");
+      setState("error");
+      return;
+    }
+
+    setState("uploading");
+    setMsg("");
+
+    // 1. Upload PDF to Supabase Storage bucket "review-reports"
+    const path = `${review.user_id}/${review.id}.pdf`;
+    const { error: upErr } = await supabase.storage
+      .from("review-reports")
+      .upload(path, file, { upsert: true, contentType: "application/pdf" });
+
+    if (upErr) {
+      setState("error");
+      setMsg(upErr.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("review-reports")
+      .getPublicUrl(path);
+    const reportUrl = urlData?.publicUrl;
+
+    // 2. Save URL + mark done in portfolio_reviews row
+    const { error: dbErr } = await supabase
+      .from("portfolio_reviews")
+      .update({ review_report_url: reportUrl, review_status: "done" })
+      .eq("id", review.id);
+
+    if (dbErr) {
+      setState("error");
+      setMsg(dbErr.message);
+      return;
+    }
+
+    // 3. Call edge function to send Brevo email with PDF attachment
+    setState("sending");
+    const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
+    const res = await fetch(fnUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to_email: review.email,
+        to_name: review.name,
+        report_url: reportUrl,
+        template_id: BREVO_PORTFOLIO_TEMPLATE_ID
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setState("error");
+      setMsg(err.error || "email send failed");
+      return;
+    }
+
+    setState("done");
+    setMsg("sent ✓");
+    onDone(review.id, reportUrl);
+  };
+
+  if (state === "done") {
+    return (
+      <span className="text-xs font-bold" style={{ color: GR }}>
+        sent ✓
+      </span>
+    );
+  }
+
+  if (review.review_report_url) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold" style={{ color: GR }}>
+          done
+        </span>
+        <a
+          href={review.review_report_url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs underline"
+          style={{ color: "#888" }}
+        >
+          pdf
+        </a>
+      </div>
+    );
+  }
+
+  const busy = state === "uploading" || state === "sending";
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+        className="text-xs px-3 py-1.5 rounded-lg font-semibold disabled:opacity-40 whitespace-nowrap"
+        style={{ background: Y, color: "#000" }}
+      >
+        {state === "uploading"
+          ? "uploading…"
+          : state === "sending"
+            ? "sending…"
+            : "↑ upload report"}
+      </button>
+      {msg && (
+        <span
+          className="text-xs"
+          style={{ color: state === "error" ? "#ef4444" : GR }}
+        >
+          {msg}
+        </span>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={(e) => handle(e.target.files?.[0])}
+      />
     </div>
   );
 }
@@ -256,6 +394,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  /* ── optimistic update after report upload ──────────────────────────── */
+  const handleReportDone = (reviewId, reportUrl) => {
+    setPortfolioReviews((prev) =>
+      prev.map((r) =>
+        r.id === reviewId
+          ? { ...r, review_report_url: reportUrl, review_status: "done" }
+          : r
+      )
+    );
+  };
 
   /* ── stats ──────────────────────────────────────────────────────────── */
   const stats = useMemo(() => {
@@ -956,7 +1105,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   )
                 }
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: Y }}
+                style={{
+                  background: "#111",
+                  border: "1px solid #333",
+                  color: Y
+                }}
               >
                 ↓ csv
               </button>
@@ -1227,7 +1380,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   )
                 }
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: Y }}
+                style={{
+                  background: "#111",
+                  border: "1px solid #333",
+                  color: Y
+                }}
               >
                 ↓ csv
               </button>
@@ -1338,7 +1495,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   )
                 }
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: Y }}
+                style={{
+                  background: "#111",
+                  border: "1px solid #333",
+                  color: Y
+                }}
               >
                 ↓ csv
               </button>
@@ -1356,17 +1517,22 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       borderBottom: "1px solid #222"
                     }}
                   >
-                    {["avatar", "name", "email", "phone", "enrolled?", "joined"].map(
-                      (h) => (
-                        <th
-                          key={h}
-                          className="px-4 py-3 text-left font-semibold"
-                          style={{ color: "#555" }}
-                        >
-                          {h}
-                        </th>
-                      )
-                    )}
+                    {[
+                      "avatar",
+                      "name",
+                      "email",
+                      "phone",
+                      "enrolled?",
+                      "joined"
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left font-semibold"
+                        style={{ color: "#555" }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -1392,15 +1558,24 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         }}
                       >
                         <td className="px-4 py-3">
-                          <AvatarCell name={p.name || p.username} url={p.avatar_url} />
+                          <AvatarCell
+                            name={p.name || p.username}
+                            url={p.avatar_url}
+                          />
                         </td>
                         <td className="px-4 py-3 font-semibold text-white">
                           {p.name || p.username || "—"}
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
                           {p.email || "—"}
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#666" }}
+                        >
                           {p.phone || "—"}
                         </td>
                         <td className="px-4 py-3">
@@ -1412,7 +1587,10 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             <span style={{ color: "#333" }}>—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#555" }}
+                        >
                           {fmtDate(p.created_at)}
                         </td>
                       </tr>
@@ -1458,7 +1636,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   )
                 }
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: Y }}
+                style={{
+                  background: "#111",
+                  border: "1px solid #333",
+                  color: Y
+                }}
               >
                 ↓ csv
               </button>
@@ -1483,7 +1665,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       "target roles",
                       "proud project",
                       "notes",
-                      "submitted"
+                      "submitted",
+                      "report"
                     ].map((h) => (
                       <th
                         key={h}
@@ -1500,7 +1683,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   {filteredReviews.length === 0 && (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="px-4 py-8 text-center"
                         style={{ color: "#444" }}
                       >
@@ -1558,7 +1741,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       {/* TARGET ROLES */}
                       <td
                         className="px-4 py-3 text-xs"
-                        style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                        style={{
+                          color: "#aaa",
+                          maxWidth: 200,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
                         title={r.target_roles}
                       >
                         {r.target_roles || "—"}
@@ -1567,7 +1756,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       {/* PROUD PROJECT */}
                       <td
                         className="px-4 py-3 text-xs"
-                        style={{ color: "#aaa", maxWidth: 250, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                        style={{
+                          color: "#aaa",
+                          maxWidth: 250,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
                         title={r.proud_project}
                       >
                         {r.proud_project || "—"}
@@ -1594,6 +1789,14 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         style={{ color: "#666" }}
                       >
                         {fmtDate(r.created_at)}
+                      </td>
+
+                      {/* REPORT — upload + auto-send */}
+                      <td className="px-4 py-3">
+                        <ReviewUploadCell
+                          review={r}
+                          onDone={handleReportDone}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -1645,7 +1848,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     )
                   }
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
-                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    color: Y
+                  }}
                 >
                   ↓ csv
                 </button>
@@ -1789,7 +1996,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     )
                   }
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
-                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    color: Y
+                  }}
                 >
                   ↓ csv
                 </button>
@@ -1948,7 +2159,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     )
                   }
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
-                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    color: Y
+                  }}
                 >
                   ↓ csv
                 </button>
@@ -2082,7 +2297,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     )
                   }
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
-                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    color: Y
+                  }}
                 >
                   ↓ csv
                 </button>
@@ -2193,7 +2412,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     )
                   }
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
-                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    color: Y
+                  }}
                 >
                   ↓ csv
                 </button>
@@ -2293,7 +2516,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         {/* TARGET ROLES */}
                         <td
                           className="px-4 py-3 text-xs"
-                          style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          style={{
+                            color: "#aaa",
+                            maxWidth: 200,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
                           title={r.target_roles}
                         >
                           {r.target_roles || "—"}
@@ -2302,7 +2531,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         {/* PROUD PROJECT */}
                         <td
                           className="px-4 py-3 text-xs"
-                          style={{ color: "#aaa", maxWidth: 250, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          style={{
+                            color: "#aaa",
+                            maxWidth: 250,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
                           title={r.proud_project}
                         >
                           {r.proud_project || "—"}
