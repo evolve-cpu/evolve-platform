@@ -33,6 +33,30 @@ const fmtDate = (d) =>
       })
     : "—";
 
+
+function downloadCSV(filename, rows) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const escape = (v) => {
+    // Prefix with a tab so Excel treats the cell as plain text, not a date/number
+    const s = String(v ?? "").replace(/"/g, '""');
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s}"`
+      : s;
+  };
+  const lines = [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))
+  ];
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function KpiCard({ label, value, sub, accent = Y }) {
   return (
     <div
@@ -89,6 +113,30 @@ const TOOLTIP_STYLE = {
   color: "#fff",
   fontSize: 13
 };
+
+function AvatarCell({ name, url }) {
+  const initial = (name || "?")[0].toUpperCase();
+  const [failed, setFailed] = useState(false);
+  if (url && !failed) {
+    return (
+      <img
+        src={url}
+        alt=""
+        referrerPolicy="no-referrer"
+        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+      style={{ background: "#2a2a2a", color: "#888" }}
+    >
+      {initial}
+    </div>
+  );
+}
 
 /* ─── AI renderer ─────────────────────────────────────────────────────────── */
 function AiBlock({ text }) {
@@ -354,8 +402,8 @@ export default function AdminDashboard() {
     const q = search.toLowerCase();
     return portfolioReviews.filter(
       (r) =>
-        (r.user_name || "").toLowerCase().includes(q) ||
-        (r.status || "").toLowerCase().includes(q)
+        (r.name || "").toLowerCase().includes(q) ||
+        (r.email || "").toLowerCase().includes(q)
     );
   }, [portfolioReviews, search]);
 
@@ -455,6 +503,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "payments", label: `payments (${payments.length})` },
     { id: "batches", label: `batches (${batches.length})` },
     { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
+    { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` }
   ];
 
@@ -886,6 +935,31 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               <span className="text-xs" style={{ color: "#555" }}>
                 {filteredPayments.length} rows
               </span>
+              <button
+                onClick={() =>
+                  downloadCSV(
+                    "payments.csv",
+                    filteredPayments.map((p) => ({
+                      name: p.user_name || "",
+                      plan: p.plan || "",
+                      amount: p.amount || "",
+                      batch: p.batch?.batch_number
+                        ? `Batch ${p.batch.batch_number}`
+                        : "",
+                      status: p.status || "",
+                      is_test: p.is_test ? "yes" : "no",
+                      phone: p.phone || "",
+                      date: fmtDate(p.created_at),
+                      razorpay_ref:
+                        p.razorpay_payment_id || p.razorpay_order_id || ""
+                    }))
+                  )
+                }
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "#111", border: "1px solid #333", color: Y }}
+              >
+                ↓ csv
+              </button>
             </div>
 
             {/* table */}
@@ -1140,6 +1214,23 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               <span className="text-xs" style={{ color: "#555" }}>
                 {filteredWaitlist.length} on waitlist
               </span>
+              <button
+                onClick={() =>
+                  downloadCSV(
+                    "waitlist.csv",
+                    filteredWaitlist.map((w) => ({
+                      name: w.user_name || "",
+                      email: w.email || "",
+                      phone: w.phone || "",
+                      joined: fmtDate(w.created_at)
+                    }))
+                  )
+                }
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "#111", border: "1px solid #333", color: Y }}
+              >
+                ↓ csv
+              </button>
             </div>
 
             <div
@@ -1213,13 +1304,133 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </div>
           </div>
         )}
+        {/* ══════════════════════════════════════════════════════════════
+            PROFILES TAB
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "profiles" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="search by name or email…"
+                className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                style={{
+                  background: "#111",
+                  border: "1px solid #222",
+                  color: "#fff"
+                }}
+              />
+              <span className="text-xs" style={{ color: "#555" }}>
+                {filteredProfiles.length} users
+              </span>
+              <button
+                onClick={() =>
+                  downloadCSV(
+                    "profiles.csv",
+                    filteredProfiles.map((p) => ({
+                      name: p.name || p.username || "",
+                      email: p.email || "",
+                      phone: p.phone || "",
+                      enrolled: enrolledIds.has(p.id) ? "yes" : "no",
+                      joined: fmtDate(p.created_at)
+                    }))
+                  )
+                }
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "#111", border: "1px solid #333", color: Y }}
+              >
+                ↓ csv
+              </button>
+            </div>
+
+            <div
+              className="rounded-xl border overflow-x-auto"
+              style={{ borderColor: "#222" }}
+            >
+              <table className="w-full text-sm">
+                <thead>
+                  <tr
+                    style={{
+                      background: "#111",
+                      borderBottom: "1px solid #222"
+                    }}
+                  >
+                    {["avatar", "name", "email", "phone", "enrolled?", "joined"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left font-semibold"
+                          style={{ color: "#555" }}
+                        >
+                          {h}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProfiles.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center"
+                        style={{ color: "#444" }}
+                      >
+                        no users found
+                      </td>
+                    </tr>
+                  )}
+                  {filteredProfiles.map((p, i) => {
+                    const paid = enrolledIds.has(p.id);
+                    return (
+                      <tr
+                        key={p.id || i}
+                        style={{
+                          borderBottom: "1px solid #1a1a1a",
+                          background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
+                        }}
+                      >
+                        <td className="px-4 py-3">
+                          <AvatarCell name={p.name || p.username} url={p.avatar_url} />
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-white">
+                          {p.name || p.username || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>
+                          {p.email || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>
+                          {p.phone || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {paid ? (
+                            <Badge color={GR} text="#000">
+                              enrolled
+                            </Badge>
+                          ) : (
+                            <span style={{ color: "#333" }}>—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>
+                          {fmtDate(p.created_at)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {activeTab === "reviews" && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="search by name or status…"
+                placeholder="search by name or email…"
                 className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
                 style={{
                   background: "#111",
@@ -1230,6 +1441,27 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               <span className="text-xs" style={{ color: "#555" }}>
                 {filteredReviews.length} reviews
               </span>
+              <button
+                onClick={() =>
+                  downloadCSV(
+                    "portfolio_reviews.csv",
+                    filteredReviews.map((r) => ({
+                      name: r.name || "",
+                      email: r.email || "",
+                      portfolio_link: r.portfolio_link || "",
+                      portfolio_file: r.portfolio_file_url || "",
+                      target_roles: r.target_roles || "",
+                      proud_project: r.proud_project || "",
+                      notes: r.notes || "",
+                      submitted: fmtDate(r.created_at)
+                    }))
+                  )
+                }
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "#111", border: "1px solid #333", color: Y }}
+              >
+                ↓ csv
+              </button>
             </div>
 
             <div
@@ -1248,7 +1480,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       "name",
                       "email",
                       "portfolio",
-                      "walkthrough",
+                      "target roles",
+                      "proud project",
                       "notes",
                       "submitted"
                     ].map((h) => (
@@ -1267,7 +1500,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   {filteredReviews.length === 0 && (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-4 py-8 text-center"
                         style={{ color: "#444" }}
                       >
@@ -1322,20 +1555,22 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         )}
                       </td>
 
-                      {/* WALKTHROUGH */}
-                      <td className="px-4 py-3 text-xs">
-                        {r.walkthrough_link ? (
-                          <a
-                            href={r.walkthrough_link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-yellow-400 underline"
-                          >
-                            watch
-                          </a>
-                        ) : (
-                          <span style={{ color: "#444" }}>—</span>
-                        )}
+                      {/* TARGET ROLES */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                        title={r.target_roles}
+                      >
+                        {r.target_roles || "—"}
+                      </td>
+
+                      {/* PROUD PROJECT */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{ color: "#aaa", maxWidth: 250, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                        title={r.proud_project}
+                      >
+                        {r.proud_project || "—"}
                       </td>
 
                       {/* NOTES */}
@@ -1343,7 +1578,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         className="px-4 py-3 text-xs"
                         style={{
                           color: "#aaa",
-                          maxWidth: 300,
+                          maxWidth: 200,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis"
@@ -1396,6 +1631,24 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 >
                   {filteredProfiles.length} rows
                 </span>
+                <button
+                  onClick={() =>
+                    downloadCSV(
+                      "profiles.csv",
+                      filteredProfiles.map((p) => ({
+                        name: p.name || p.username || "",
+                        email: p.email || "",
+                        phone: p.phone || "",
+                        enrolled: enrolledIds.has(p.id) ? "yes" : "no",
+                        joined: fmtDate(p.created_at)
+                      }))
+                    )
+                  }
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
+                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                >
+                  ↓ csv
+                </button>
               </div>
               <div
                 className="rounded-xl border overflow-x-auto"
@@ -1450,17 +1703,20 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           }}
                         >
                           <td className="px-4 py-3">
-                            <img
-                              src={
-                                p.avatar_url ||
-                                `https://api.dicebear.com/7.x/thumbs/svg?seed=${p.id}`
-                              }
-                              alt=""
-                              className="w-8 h-8 rounded-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                              }}
-                            />
+                            {p.avatar_url ? (
+                              <img
+                                src={p.avatar_url}
+                                alt=""
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                style={{ background: "#2a2a2a", color: "#888" }}
+                              >
+                                {(p.name || p.username || "?")[0].toUpperCase()}
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-3 font-semibold text-white">
                             {p.name || p.username || "—"}
@@ -1512,6 +1768,31 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 >
                   {filteredPayments.length} rows
                 </span>
+                <button
+                  onClick={() =>
+                    downloadCSV(
+                      "payments.csv",
+                      filteredPayments.map((p) => ({
+                        name: p.user_name || "",
+                        plan: p.plan || "",
+                        amount: p.amount || "",
+                        batch: p.batch?.batch_number
+                          ? `Batch ${p.batch.batch_number}`
+                          : "",
+                        status: p.status || "",
+                        is_test: p.is_test ? "yes" : "no",
+                        phone: p.phone || "",
+                        date: fmtDate(p.created_at),
+                        razorpay_ref:
+                          p.razorpay_payment_id || p.razorpay_order_id || ""
+                      }))
+                    )
+                  }
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
+                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                >
+                  ↓ csv
+                </button>
               </div>
               <div
                 className="rounded-xl border overflow-x-auto"
@@ -1643,6 +1924,34 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 >
                   {batches.length} rows
                 </span>
+                <button
+                  onClick={() =>
+                    downloadCSV(
+                      "batches.csv",
+                      batches.map((b) => {
+                        const enrolled = payments.filter(
+                          (p) =>
+                            p.status === "success" &&
+                            !p.is_test &&
+                            p.batch?.batch_number === b.batch_number
+                        ).length;
+                        return {
+                          batch_number: b.batch_number,
+                          start_date: fmtDate(b.start_date),
+                          total_seats: b.total_seats,
+                          enrolled,
+                          spots_left: Math.max(0, b.total_seats - enrolled),
+                          status: b.status || "",
+                          created: fmtDate(b.created_at)
+                        };
+                      })
+                    )
+                  }
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
+                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                >
+                  ↓ csv
+                </button>
               </div>
               <div
                 className="rounded-xl border overflow-x-auto"
@@ -1760,6 +2069,23 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 >
                   {filteredWaitlist.length} rows
                 </span>
+                <button
+                  onClick={() =>
+                    downloadCSV(
+                      "waitlist.csv",
+                      filteredWaitlist.map((w) => ({
+                        name: w.user_name || "",
+                        email: w.email || "",
+                        phone: w.phone || "",
+                        joined: fmtDate(w.created_at)
+                      }))
+                    )
+                  }
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
+                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                >
+                  ↓ csv
+                </button>
               </div>
               <div
                 className="rounded-xl border overflow-x-auto"
@@ -1850,6 +2176,27 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 >
                   {filteredReviews.length} rows
                 </span>
+                <button
+                  onClick={() =>
+                    downloadCSV(
+                      "portfolio_reviews.csv",
+                      filteredReviews.map((r) => ({
+                        name: r.name || "",
+                        email: r.email || "",
+                        portfolio_link: r.portfolio_link || "",
+                        portfolio_file: r.portfolio_file_url || "",
+                        target_roles: r.target_roles || "",
+                        proud_project: r.proud_project || "",
+                        notes: r.notes || "",
+                        submitted: fmtDate(r.created_at)
+                      }))
+                    )
+                  }
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold ml-auto"
+                  style={{ background: "#1a1a1a", border: "1px solid #333", color: Y }}
+                >
+                  ↓ csv
+                </button>
               </div>
 
               <div
@@ -1868,7 +2215,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         "name",
                         "email",
                         "portfolio",
-                        "walkthrough",
+                        "target roles",
+                        "proud project",
                         "notes",
                         "submitted"
                       ].map((h) => (
@@ -1887,7 +2235,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     {filteredReviews.length === 0 && (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="px-4 py-8 text-center"
                           style={{ color: "#444" }}
                         >
@@ -1942,20 +2290,22 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           )}
                         </td>
 
-                        {/* WALKTHROUGH */}
-                        <td className="px-4 py-3 text-xs">
-                          {r.walkthrough_link ? (
-                            <a
-                              href={r.walkthrough_link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-yellow-400 underline"
-                            >
-                              watch
-                            </a>
-                          ) : (
-                            <span style={{ color: "#444" }}>—</span>
-                          )}
+                        {/* TARGET ROLES */}
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          title={r.target_roles}
+                        >
+                          {r.target_roles || "—"}
+                        </td>
+
+                        {/* PROUD PROJECT */}
+                        <td
+                          className="px-4 py-3 text-xs"
+                          style={{ color: "#aaa", maxWidth: 250, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          title={r.proud_project}
+                        >
+                          {r.proud_project || "—"}
                         </td>
 
                         {/* NOTES */}
@@ -1963,7 +2313,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           className="px-4 py-3 text-xs"
                           style={{
                             color: "#aaa",
-                            maxWidth: 300,
+                            maxWidth: 200,
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis"

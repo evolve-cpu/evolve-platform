@@ -112,7 +112,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
               your portfolio is with us. we'll review it and get back to you
               with{" "}
               <span className="text-evolve-yellow font-semibold">
-                personalised feedback within 24–48 hours
+                personalised feedback within 24–48 working hours
               </span>{" "}
               — straight to your inbox.
             </p>
@@ -125,7 +125,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
             <span className="text-white/70 text-xs font-semibold lowercase tracking-wide">
-              review in progress · 24–48 hrs
+              review in progress · 24–48 working hrs
             </span>
           </div>
 
@@ -241,7 +241,7 @@ function AlreadySubmittedScreen({ onBack }) {
             </h1>
             <p className="text-white/50 text-sm mt-3 max-w-[30ch] mx-auto leading-relaxed">
               we already have your portfolio. sit tight — feedback is on its way
-              within 24–48 hours.
+              within 24–48 working hours.
             </p>
           </div>
           <button
@@ -276,8 +276,10 @@ function MobileForm({
   setPortfolioLink,
   portfolioFile,
   setPortfolioFile,
-  walkthroughLink,
-  setWalkthroughLink,
+  targetRoles,
+  setTargetRoles,
+  proudProject,
+  setProudProject,
   notes,
   setNotes,
   submitting,
@@ -371,9 +373,7 @@ function MobileForm({
               <div
                 className="rounded-2xl px-4 py-8 flex flex-col items-center justify-center gap-3 border border-white/10 min-h-[96px]"
                 style={{
-                  borderColor: fileLoading
-                    ? "rgba(255,208,7,0.4)"
-                    : undefined
+                  borderColor: fileLoading ? "rgba(255,208,7,0.4)" : undefined
                 }}
               >
                 {fileLoading ? (
@@ -457,33 +457,45 @@ function MobileForm({
           )}
         </div>
 
-        {/* ── Walkthrough ── */}
+        {/* ── Q2: Target roles ── */}
         <div className="flex flex-col gap-2">
           <p className="text-white text-sm font-semibold lowercase">
-            your walkthrough recording
+            what kind of design roles are you targeting?
           </p>
           <p className="text-white/40 text-xs leading-relaxed">
-            no face cam needed. just walk us through your work.{" "}
-            <a
-              href="https://loom.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-evolve-yellow underline underline-offset-2"
-            >
-              record with loom
-            </a>
+            to give you feedback aligned with your target roles.
           </p>
-          <input
-            type="url"
-            placeholder="https://loom.com/share/..."
-            value={walkthroughLink}
-            onChange={(e) => setWalkthroughLink(e.target.value)}
-            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+          <textarea
+            rows={2}
+            placeholder="e.g - UX designer, Interface designer"
+            value={targetRoles}
+            onChange={(e) => setTargetRoles(e.target.value)}
+            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
             style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
           />
         </div>
 
-        {/* ── Notes ── */}
+        {/* ── Q3: Proud project ── */}
+        <div className="flex flex-col gap-2">
+          <p className="text-white text-sm font-semibold lowercase">
+            walk us through one project you're most proud of. what was it? what
+            was your role?
+          </p>
+          <p className="text-white/40 text-xs leading-relaxed">
+            so we can better understand your thought process and give relevant
+            feedback.
+          </p>
+          <textarea
+            rows={3}
+            placeholder="e.g - worked on a e-commerce website as UX researcher."
+            value={proudProject}
+            onChange={(e) => setProudProject(e.target.value)}
+            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
+            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+          />
+        </div>
+
+        {/* ── Q4: Notes (optional) ── */}
         <div className="flex flex-col gap-2">
           <p className="text-white text-sm font-semibold lowercase">
             anything we should know?{" "}
@@ -516,7 +528,7 @@ function MobileForm({
         </button>
 
         <p className="text-white/25 text-xs text-center">
-          we'll be in touch within 48 hours
+          we'll be in touch within 48 working hours
         </p>
       </div>
     </div>
@@ -534,8 +546,10 @@ function DesktopForm({
   setPortfolioLink,
   portfolioFile,
   setPortfolioFile,
-  walkthroughLink,
-  setWalkthroughLink,
+  targetRoles,
+  setTargetRoles,
+  proudProject,
+  setProudProject,
   notes,
   setNotes,
   submitting,
@@ -561,6 +575,7 @@ function DesktopForm({
           style={{ width: "38%" }}
         >
           <div className="flex flex-col gap-8 mt-4">
+            <BackBtn onClick={onBack} />
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-evolve-pink flex-shrink-0" />
               <span className="text-white/50 text-xs font-bold uppercase tracking-widest">
@@ -650,31 +665,13 @@ function DesktopForm({
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
             <span className="text-white/60 text-xs font-semibold lowercase tracking-wide">
-              feedback within&nbsp;&nbsp;48 hours
+              feedback within&nbsp;&nbsp;48 working hours
             </span>
           </div>
         </div>
 
         {/* ─── RIGHT PANEL (form) ─── */}
         <div className="flex-1 flex flex-col px-10 py-10 overflow-y-auto">
-          <div className="flex items-center justify-between mb-8">
-            <BackBtn onClick={onBack} />
-            <button
-              onClick={onBack}
-              className="text-white/40 hover:text-white transition-colors"
-              aria-label="close"
-            >
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path
-                  d="M5 5l12 12M17 5L5 17"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </div>
-
           <div className="flex flex-col gap-7 max-w-lg">
             {/* Step 1 — Portfolio */}
             <div className="flex flex-col gap-3">
@@ -809,7 +806,7 @@ function DesktopForm({
               )}
             </div>
 
-            {/* Step 2 — Walkthrough */}
+            {/* Step 2 — Target roles */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
@@ -819,32 +816,51 @@ function DesktopForm({
                   2
                 </span>
                 <p className="text-white font-semibold lowercase">
-                  your walkthrough recording
+                  what kind of design roles are you targeting?
                 </p>
               </div>
               <p className="text-white/40 text-xs pl-10 leading-relaxed">
-                paste your recording link here. no face cam needed — just walk
-                us through your work.{" "}
-                <a
-                  href="https://loom.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-evolve-yellow underline underline-offset-2"
-                >
-                  record with loom →
-                </a>
+                to give you feedback aligned with your target roles.
               </p>
-              <input
-                type="url"
-                placeholder="https://loom.com/share/..."
-                value={walkthroughLink}
-                onChange={(e) => setWalkthroughLink(e.target.value)}
-                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+              <textarea
+                rows={2}
+                placeholder="e.g - UX designer, Interface designer"
+                value={targetRoles}
+                onChange={(e) => setTargetRoles(e.target.value)}
+                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
                 style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
               />
             </div>
 
-            {/* Step 3 — Notes */}
+            {/* Step 3 — Proud project */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
+                  style={{ backgroundColor: "#FFD007" }}
+                >
+                  3
+                </span>
+                <p className="text-white font-semibold lowercase">
+                  walk us through one project you're most proud of. what was it?
+                  what was your role?
+                </p>
+              </div>
+              <p className="text-white/40 text-xs pl-10 leading-relaxed">
+                so we can better understand your thought process and give
+                relevant feedback.
+              </p>
+              <textarea
+                rows={3}
+                placeholder="e.g - worked on a e-commerce website as UX researcher."
+                value={proudProject}
+                onChange={(e) => setProudProject(e.target.value)}
+                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
+                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              />
+            </div>
+
+            {/* Step 4 — Notes (optional) */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
@@ -854,7 +870,7 @@ function DesktopForm({
                     color: "rgba(255,255,255,0.5)"
                   }}
                 >
-                  3
+                  4
                 </span>
                 <p className="text-white font-semibold lowercase">
                   anything we should know?{" "}
@@ -910,7 +926,8 @@ export default function PortfolioReviewForm() {
   const [portfolioMode, setPortfolioMode] = useState("link");
   const [portfolioLink, setPortfolioLink] = useState("");
   const [portfolioFile, setPortfolioFile] = useState(null);
-  const [walkthroughLink, setWalkthroughLink] = useState("");
+  const [targetRoles, setTargetRoles] = useState("");
+  const [proudProject, setProudProject] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -919,7 +936,6 @@ export default function PortfolioReviewForm() {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const fileInputRef = useRef(null);
-  const [debugMsg, setDebugMsg] = useState("none"); // ← add here alongside other useState
 
   function isValidUrl(str) {
     try {
@@ -1008,8 +1024,6 @@ export default function PortfolioReviewForm() {
   //   setTimeout(() => setFileLoading(false), 600);
   // };
 
-  const [isPickingFile, setIsPickingFile] = useState(false);
-
   const handleFile = (file) => {
     if (!file) {
       setError("file not selected, try again");
@@ -1055,9 +1069,7 @@ export default function PortfolioReviewForm() {
         return;
       }
       if (!isValidUrl(portfolioLink)) {
-        setError(
-          "that doesn't look like a valid URL — try starting with https://"
-        );
+        setError("that doesn't look like a valid URL");
         return;
       }
     }
@@ -1067,25 +1079,15 @@ export default function PortfolioReviewForm() {
       return;
     }
 
-    if (!walkthroughLink.trim()) {
-      setError("please add your walkthrough recording link");
-      return;
-    }
-    if (!isValidUrl(walkthroughLink)) {
-      setError("that walkthrough link doesn't look valid");
+    if (!targetRoles.trim()) {
+      setError("please tell us what design roles you're targeting");
       return;
     }
 
-    if (
-      portfolioMode === "link" &&
-      portfolioLink.trim() &&
-      portfolioLink.trim() === walkthroughLink.trim()
-    ) {
-      setError("your portfolio and walkthrough links can't be the same URL");
+    if (!proudProject.trim()) {
+      setError("please walk us through a project you're proud of");
       return;
     }
-
-    // ... rest of the submit logic unchanged
 
     setSubmitting(true);
     try {
@@ -1114,7 +1116,8 @@ export default function PortfolioReviewForm() {
           portfolio_link:
             portfolioMode === "link" ? portfolioLink.trim() : null,
           portfolio_file_url,
-          walkthrough_link: walkthroughLink.trim(),
+          target_roles: targetRoles.trim(),
+          proud_project: proudProject.trim(),
           notes: notes.trim() || null
         });
 
@@ -1152,9 +1155,11 @@ export default function PortfolioReviewForm() {
     portfolioLink,
     setPortfolioLink,
     portfolioFile,
-    setPortfolioFile, // ← add this
-    walkthroughLink,
-    setWalkthroughLink,
+    setPortfolioFile,
+    targetRoles,
+    setTargetRoles,
+    proudProject,
+    setProudProject,
     notes,
     setNotes,
     submitting,
@@ -1164,10 +1169,8 @@ export default function PortfolioReviewForm() {
     fileInputRef,
     handleFile,
     handleSubmit,
-    debugMsg,
     fileLoading,
     setFileLoading,
-    setIsPickingFile,
     onBack: () => navigate("/community/portfolio-review")
   };
 
