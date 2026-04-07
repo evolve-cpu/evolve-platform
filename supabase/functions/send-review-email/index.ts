@@ -31,9 +31,13 @@ serve(async (req) => {
       );
     }
     const pdfBuffer = await pdfRes.arrayBuffer();
-    const pdfBase64 = btoa(
-      String.fromCharCode(...new Uint8Array(pdfBuffer))
-    );
+    const uint8 = new Uint8Array(pdfBuffer);
+    let binary = "";
+    const chunk = 8192;
+    for (let i = 0; i < uint8.length; i += chunk) {
+      binary += String.fromCharCode(...uint8.subarray(i, i + chunk));
+    }
+    const pdfBase64 = btoa(binary);
 
     // Extract first name for template param
     const firstName = (to_name || "").split(" ")[0] || to_name || "there";
