@@ -1523,7 +1523,7 @@ const AppLayout = () => {
         {shouldShowFooter &&
           !(location.pathname === "/" && isHomeIntroActive) && (
             <Suspense fallback={null}>
-              <Footer />
+              <Footer onContactClick={() => setIsContactModalOpen(true)} />
             </Suspense>
           )}
       </div>

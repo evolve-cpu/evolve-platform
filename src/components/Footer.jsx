@@ -963,7 +963,7 @@ const useIsMobile = (bp = 768) => {
   return isMobile;
 };
 
-const Footer = () => {
+const Footer = ({ onContactClick }) => {
   const isMobile = useIsMobile();
 
   const marqueeRef = useRef(null);
@@ -983,7 +983,8 @@ const Footer = () => {
     { path: "/mentorship", label: "mentorship" },
     // { path: "/evolve-in-person", label: "evolve in-person" },
     { path: "/webinars", label: "webinars" },
-    { label: "contact us", path: "/contact" }
+    // { label: "contact us", path: "/contact" }
+    { path: "/contact", label: "contact us", isModal: true }
     // {
     //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
     //   label: "rate this website",
@@ -1081,7 +1082,7 @@ const Footer = () => {
                   navigation
                 </div>
                 <ul className="space-y-2">
-                  {navigationLinks.map((item) => (
+                  {/* {navigationLinks.map((item) => (
                     <li key={item.label} className={item.sub ? "pl-4" : ""}>
                       <Link
                         to={item.path}
@@ -1093,6 +1094,33 @@ const Footer = () => {
                       >
                         {item.label}
                       </Link>
+                    </li>
+                  ))} */}
+                  {navigationLinks.map((item) => (
+                    <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                      {item.isModal ? (
+                        <button
+                          onClick={() => onContactClick && onContactClick()}
+                          className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                            item.sub
+                              ? "text-[1.5rem] text-black/50"
+                              : "text-[2rem]"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ) : (
+                        <Link
+                          to={item.path}
+                          className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                            item.sub
+                              ? "text-[1.5rem] text-black/50"
+                              : "text-[2rem]"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -1193,7 +1221,7 @@ const Footer = () => {
 
           <div>
             <ul className="space-y-1">
-              {navigationLinks.map((item) => (
+              {/* {navigationLinks.map((item) => (
                 <li key={item.label} className={item.sub ? "pl-4" : ""}>
                   <Link
                     to={item.path}
@@ -1203,6 +1231,29 @@ const Footer = () => {
                   >
                     {item.label}
                   </Link>
+                </li>
+              ))} */}
+              {navigationLinks.map((item) => (
+                <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                  {item.isModal ? (
+                    <button
+                      onClick={() => onContactClick && onContactClick()}
+                      className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                        item.sub ? "text-[1.5rem] text-black/50" : "text-[2rem]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                        item.sub ? "text-[1.5rem] text-black/50" : "text-[2rem]"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
