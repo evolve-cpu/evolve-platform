@@ -49,9 +49,10 @@ export default function WelcomeOverlay() {
   ─────────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!user) return;
-    const flag = sessionStorage.getItem("show_welcome_overlay");
+    const flag = sessionStorage.getItem("show_welcome_overlay") || localStorage.getItem("show_welcome_overlay");
     if (!flag) return;
     sessionStorage.removeItem("show_welcome_overlay");
+    localStorage.removeItem("show_welcome_overlay");
     setSheetUp(false);
     setVisible(true);
     // slight delay so the destination page paints first

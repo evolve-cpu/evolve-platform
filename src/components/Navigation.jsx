@@ -3843,10 +3843,12 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   ref={accountBtnRef}
                   disabled={authLoading}
                   onClick={() => {
-                    if (!user)
+                    if (!user) {
+                      localStorage.setItem("signin_from", location.pathname);
                       return navigate("/signin", {
                         state: { from: location.pathname }
                       });
+                    }
                     if (!accountOpen) openAccountModal();
                     else setAccountOpen(false);
                   }}

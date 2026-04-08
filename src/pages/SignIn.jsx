@@ -69,6 +69,7 @@ function goToFrom(navigate, from) {
   if (!skipOverlay) {
     sessionStorage.setItem("show_welcome_overlay", "1");
   }
+  localStorage.removeItem("signin_from");
   sessionStorage.removeItem("signin_from");
   navigate(from, { replace: true });
 }
@@ -80,7 +81,7 @@ export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = sessionStorage.getItem("signin_from") || location.state?.from || "/";
+  const from = localStorage.getItem("signin_from") || sessionStorage.getItem("signin_from") || location.state?.from || "/";
 
   const { user, authLoading } = useAuth();
 
@@ -100,16 +101,9 @@ export default function SignIn() {
   useEffect(() => {
     if (authLoading || !user) return;
 
-    // Google OAuth return: pending flag → navigate to `from` (overlay shown by App)
-    const pending = sessionStorage.getItem("signin_pending_welcome");
-    if (pending) {
-      sessionStorage.removeItem("signin_pending_welcome");
-      goToFrom(navigate, from);
-      return;
-    }
-
     // Already signed in before reaching /signin → just redirect, no welcome
     if (step === "options" || step === "email-form") {
+      localStorage.removeItem("signin_from");
       sessionStorage.removeItem("signin_from");
       navigate(from, { replace: true });
     }
@@ -177,13 +171,19 @@ export default function SignIn() {
   }
 
   async function handleGoogleSignIn() {
-    sessionStorage.setItem("signin_from", from);
-    sessionStorage.setItem("signin_pending_welcome", "1");
+    // Redirect directly to `from` — avoids double-redirect that breaks OAuth state on mobile
+    const skipOverlay =
+      from.startsWith("/payment") ||
+      from.startsWith("/community/portfolio-review");
+    if (!skipOverlay) {
+      localStorage.setItem("show_welcome_overlay", "1");
+    }
+    localStorage.removeItem("signin_from");
+    sessionStorage.removeItem("signin_from");
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(from);
     } catch (e) {
-      sessionStorage.removeItem("signin_from");
-      sessionStorage.removeItem("signin_pending_welcome");
+      localStorage.removeItem("show_welcome_overlay");
       setError(e.message || "Google sign-in failed.");
     }
   }

@@ -167,12 +167,13 @@ export async function verifyOtp(email, token) {
  *
  * @throws {Error} if OAuth setup fails
  */
-export async function signInWithGoogle() {
+export async function signInWithGoogle(destination = "/") {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      // send user back to the exact page they were on (no hash, no trailing slash issues)
-      redirectTo: `${window.location.origin}${window.location.pathname}`
+      // Redirect directly to the destination — avoids double-redirect which breaks
+      // mobile browsers (iOS Safari ITP clears OAuth state between cross-origin hops)
+      redirectTo: `${window.location.origin}${destination}`
     }
   });
   if (error) throw error;
