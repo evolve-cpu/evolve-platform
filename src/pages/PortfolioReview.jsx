@@ -23,8 +23,8 @@ const STEPS = [
     a: "drop a link or upload your work. behance, figma, notion, your own site. whatever you've got, we'll take it."
   },
   {
-    q: "step 3: record a walkthrough",
-    a: "okay, hear us out.\nwe're asking you to record a short 3–5 minute walkthrough of your portfolio. just you, talking through your work. we know it sounds like a task. but this is actually the best way to present your work. no need to show your face. just hit record, walk us through it, and be yourself.\n→ use loom (free, dead simple) or any screen recording tool you already have."
+    q: "step 3: tell us more",
+    a: "share the kind of design roles you’re leaning towards. \nand one project you’re really proud of - what it was, what you worked on, and how you thought through it. \nwe know putting this into words can feel like a task. \nbut this is honestly the best way for us to understand your work and how you think. No need to over-prepare, just be yourself and keep it real."
   },
   {
     q: "step 4: submit",

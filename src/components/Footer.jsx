@@ -1239,7 +1239,9 @@ const Footer = ({ onContactClick }) => {
                     <button
                       onClick={() => onContactClick && onContactClick()}
                       className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                        item.sub ? "text-[1.5rem] text-black/50" : "text-[2rem]"
+                        item.sub
+                          ? "text-[1.25rem] text-black/50"
+                          : "text-[1.5rem]"
                       }`}
                     >
                       {item.label}
@@ -1248,7 +1250,9 @@ const Footer = ({ onContactClick }) => {
                     <Link
                       to={item.path}
                       className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                        item.sub ? "text-[1.5rem] text-black/50" : "text-[2rem]"
+                        item.sub
+                          ? "text-[1.25rem] text-black/50"
+                          : "text-[1.5rem]"
                       }`}
                     >
                       {item.label}
