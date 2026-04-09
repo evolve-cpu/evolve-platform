@@ -4,6 +4,11 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
 
+/* ─── env ──────────────────────────────────────────────────────────────────── */
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const BREVO_IN_PROGRESS_TEMPLATE_ID = import.meta.env.VITE_BREVO_PORTFOLIO_IN_PROGRESS_TEMPLATE_ID;
+
 /* ─── constants ────────────────────────────────────────────────────────────── */
 const WHAT_WE_LOOK_AT = [
   "what's working in your portfolio",
@@ -1157,6 +1162,24 @@ export default function PortfolioReviewForm() {
         });
 
       if (insertErr) throw new Error(insertErr.message);
+
+      // Fire "review in progress" email — best-effort, don't block on failure
+      if (BREVO_IN_PROGRESS_TEMPLATE_ID) {
+        fetch(`${SUPABASE_URL}/functions/v1/send-review-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "apikey": SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
+            to_email: user.email,
+            to_name: user.name,
+            template_id: BREVO_IN_PROGRESS_TEMPLATE_ID
+          })
+        }).catch(() => {}); // silent — don't fail the submission if email errors
+      }
+
       setDone(true);
     } catch (err) {
       setError(err.message || "something went wrong — please try again");
