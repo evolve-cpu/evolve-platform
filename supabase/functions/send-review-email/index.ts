@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { to_email, to_name, report_url, template_id } = await req.json();
+    const { to_email, to_name, report_url, template_id, remarks } = await req.json();
 
     if (!to_email || !report_url || !template_id) {
       return new Response(
@@ -52,7 +52,7 @@ serve(async (req) => {
       body: JSON.stringify({
         templateId: Number(template_id),
         to: [{ email: to_email, name: to_name || "" }],
-        params: { FIRSTNAME: firstName, REPORT_URL: report_url },
+        params: { FIRSTNAME: firstName, REPORT_URL: report_url, REMARKS: remarks || "" },
         attachment: [
           {
             name: "portfolio-review-report.pdf",

@@ -165,6 +165,7 @@ const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
 function ReviewUploadCell({ review, onDone }) {
   const [state, setState] = useState("idle"); // idle | uploading | sending | done | error
   const [msg, setMsg] = useState("");
+  const [remarks, setRemarks] = useState(review.remarks || "");
   const inputRef = useRef(null);
 
   const handle = async (file) => {
@@ -194,10 +195,10 @@ function ReviewUploadCell({ review, onDone }) {
       .getPublicUrl(path);
     const reportUrl = urlData?.publicUrl;
 
-    // 2. Save URL + mark done in portfolio_reviews row
+    // 2. Save URL + remarks + mark done in portfolio_reviews row
     const { error: dbErr } = await supabaseAdmin
       .from("portfolio_reviews")
-      .update({ review_report_url: reportUrl, review_status: "done" })
+      .update({ review_report_url: reportUrl, review_status: "done", remarks: remarks.trim() })
       .eq("id", review.id);
 
     if (dbErr) {
@@ -220,7 +221,8 @@ function ReviewUploadCell({ review, onDone }) {
         to_email: review.email,
         to_name: review.name,
         report_url: reportUrl,
-        template_id: BREVO_PORTFOLIO_TEMPLATE_ID
+        template_id: BREVO_PORTFOLIO_TEMPLATE_ID,
+        remarks: remarks.trim()
       })
     });
 
@@ -233,7 +235,7 @@ function ReviewUploadCell({ review, onDone }) {
 
     setState("done");
     setMsg("sent ✓");
-    onDone(review.id, reportUrl);
+    onDone(review.id, reportUrl, remarks.trim());
   };
 
   if (state === "done") {
@@ -266,7 +268,16 @@ function ReviewUploadCell({ review, onDone }) {
   const busy = state === "uploading" || state === "sending";
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5" style={{ minWidth: 180 }}>
+      <textarea
+        value={remarks}
+        onChange={(e) => setRemarks(e.target.value)}
+        placeholder="remarks (shown in email)…"
+        rows={2}
+        disabled={busy}
+        className="text-xs rounded-lg px-2 py-1.5 resize-none disabled:opacity-40"
+        style={{ background: "#1a1a1a", border: "1px solid #333", color: "#ccc", width: "100%" }}
+      />
       <button
         disabled={busy}
         onClick={() => inputRef.current?.click()}
@@ -402,11 +413,11 @@ export default function AdminDashboard() {
   }, []);
 
   /* ── optimistic update after report upload ──────────────────────────── */
-  const handleReportDone = (reviewId, reportUrl) => {
+  const handleReportDone = (reviewId, reportUrl, remarks) => {
     setPortfolioReviews((prev) =>
       prev.map((r) =>
         r.id === reviewId
-          ? { ...r, review_report_url: reportUrl, review_status: "done" }
+          ? { ...r, review_report_url: reportUrl, review_status: "done", remarks }
           : r
       )
     );
@@ -1637,7 +1648,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       target_roles: r.target_roles || "",
                       proud_project: r.proud_project || "",
                       notes: r.notes || "",
-                      submitted: fmtDate(r.created_at)
+                      submitted: fmtDate(r.created_at),
+                      remarks: r.remarks || ""
                     }))
                   )
                 }
@@ -1672,6 +1684,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       "proud project",
                       "notes",
                       "submitted",
+                      "remarks",
                       "report"
                     ].map((h) => (
                       <th
@@ -1689,7 +1702,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   {filteredReviews.length === 0 && (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={9}
                         className="px-4 py-8 text-center"
                         style={{ color: "#444" }}
                       >
@@ -1795,6 +1808,21 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         style={{ color: "#666" }}
                       >
                         {fmtDate(r.created_at)}
+                      </td>
+
+                      {/* REMARKS */}
+                      <td
+                        className="px-4 py-3 text-xs"
+                        style={{
+                          color: "#aaa",
+                          maxWidth: 220,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
+                        title={r.remarks}
+                      >
+                        {r.remarks || "—"}
                       </td>
 
                       {/* REPORT — upload + auto-send */}

@@ -52,7 +52,7 @@ const PortfolioReview = () => {
         <div
           className="relative z-10 flex flex-col items-center text-center"
           style={{
-            paddingTop: "clamp(64px, 12vh, 120px)",
+            paddingTop: "clamp(64px, 16vh, 120px)",
             paddingLeft: "clamp(32px, 6vw, 120px)",
             paddingRight: "clamp(32px, 6vw, 120px)"
           }}

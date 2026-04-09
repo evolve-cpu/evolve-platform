@@ -216,14 +216,14 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
       style={{ backgroundColor: "#161618" }}
     >
       <BlackNav onLogoClick={onBack} />
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6 text-center">
+      <div className="flex-1 flex flex-col items-center px-4 py-10 gap-6">
+        <div className="w-full max-w-2xl flex flex-col items-center gap-6 text-center">
           {/* Icon — green if done, yellow if pending */}
           <div
-            className="w-20 h-20 rounded-full border-4 flex items-center justify-center"
+            className="w-16 h-16 rounded-full border-4 flex items-center justify-center"
             style={{ borderColor: reviewDone ? "#4ade80" : "#FFD007" }}
           >
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
               <path
                 d="M8 18l7 7 13-14"
                 stroke={reviewDone ? "#4ade80" : "#FFD007"}
@@ -238,30 +238,29 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
             <h1
               className="text-white font-extrabold"
               style={{
-                fontSize: "clamp(28px,7vw,40px)",
+                fontSize: "clamp(24px,6vw,36px)",
                 letterSpacing: "-0.02em",
                 lineHeight: "1.1"
               }}
             >
               {reviewDone ? "your review is in." : "already submitted."}
             </h1>
-            <p className="text-white/50 text-sm mt-3 max-w-[30ch] mx-auto leading-relaxed">
+            <p className="text-white/50 text-sm mt-3 max-w-[38ch] mx-auto leading-relaxed">
               {reviewDone
-                ? "your personalised feedback report is ready. download it below."
+                ? "your personalised feedback report is ready."
                 : "we already have your portfolio. sit tight — feedback is on its way within 24–48 working hours."}
             </p>
           </div>
 
           {reviewDone && (
-            <a
-              href={reportUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 transition-opacity active:opacity-80"
-              style={{ backgroundColor: "#DF0586", color: "#fff" }}
-            >
-              download the report ↓
-            </a>
+            <div className="w-full rounded-2xl overflow-hidden border border-white/10" style={{ height: "72vh" }}>
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(reportUrl)}&embedded=true`}
+                title="your feedback report"
+                className="w-full h-full"
+                style={{ border: "none", background: "#1a1a1a" }}
+              />
+            </div>
           )}
 
           {!reviewDone && (
