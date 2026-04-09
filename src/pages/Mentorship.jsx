@@ -1966,6 +1966,18 @@ const Mentorship = () => {
             <br />
             to know.
           </h2>
+          <div className="mt-10">
+            <p className="font-semibold lowercase text-black text-base mb-4">have more questions?</p>
+            <a
+              href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 font-extrabold lowercase text-white rounded-xl px-6 py-3 text-base transition-opacity hover:opacity-90 active:opacity-80"
+              style={{ backgroundColor: "#000" }}
+            >
+              connect with us
+            </a>
+          </div>
         </div>
 
         {/* Right 65% — accordion */}
@@ -2134,6 +2146,18 @@ const Mentorship = () => {
               )}
             </div>
           ))}
+        </div>
+        <div className="mt-10 flex flex-col items-start gap-3">
+          <p className="font-semibold lowercase text-black text-base">have more questions?</p>
+          <a
+            href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-extrabold lowercase text-white rounded-xl px-6 py-3 text-base active:opacity-80"
+            style={{ backgroundColor: "#000" }}
+          >
+            connect with us
+          </a>
         </div>
       </section>
 
