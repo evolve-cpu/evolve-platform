@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
+import { evolve_cube } from "../assets/images/Home";
 
 /* ─── env ──────────────────────────────────────────────────────────────────── */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -117,7 +118,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
               your portfolio is with us. we'll review it and get back to you
               with{" "}
               <span className="text-evolve-yellow font-semibold">
-                personalised feedback within 24–48 working hours
+                personalised feedback within 5–7 working days
               </span>{" "}
               — straight to your inbox.
             </p>
@@ -213,6 +214,44 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
 }
 
 /* ─── Already Submitted Screen ────────────────────────────────────────────── */
+function PdfViewer({ url }) {
+  const [loaded, setLoaded] = useState(false);
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    const iv = setInterval(() => setDots(d => (d + 1) % 4), 500);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-white/10" style={{ height: "72vh", position: "relative", background: "#111" }}>
+      {!loaded && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+          <img
+            src={evolve_cube}
+            alt=""
+            style={{
+              width: 64,
+              animation: "pdfCubePulse 2s ease-in-out infinite"
+            }}
+          />
+          <p className="text-evolve-yellow text-sm font-semibold">
+            loading your report{".".repeat(dots)}
+          </p>
+          <style>{`@keyframes pdfCubePulse { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }`}</style>
+        </div>
+      )}
+      <iframe
+        src={`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`}
+        title="your feedback report"
+        className="w-full h-full"
+        style={{ border: "none", opacity: loaded ? 1 : 0, transition: "opacity 0.3s" }}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
 function AlreadySubmittedScreen({ onBack, reportUrl }) {
   const reviewDone = !!reportUrl;
   return (
@@ -253,20 +292,11 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
             <p className="text-white/50 text-sm mt-3 max-w-[38ch] mx-auto leading-relaxed">
               {reviewDone
                 ? "your personalised feedback report is ready."
-                : "we already have your portfolio. sit tight — feedback is on its way within 24–48 working hours."}
+                : "we already have your portfolio. sit tight — feedback is on its way within 5–7 working days."}
             </p>
           </div>
 
-          {reviewDone && (
-            <div className="w-full rounded-2xl overflow-hidden border border-white/10" style={{ height: "72vh" }}>
-              <iframe
-                src={`https://docs.google.com/viewer?url=${encodeURIComponent(reportUrl)}&embedded=true`}
-                title="your feedback report"
-                className="w-full h-full"
-                style={{ border: "none", background: "#1a1a1a" }}
-              />
-            </div>
-          )}
+          {reviewDone && <PdfViewer url={reportUrl} />}
 
           {!reviewDone && (
             <div
@@ -564,7 +594,7 @@ function MobileForm({
         </button>
 
         <p className="text-white/25 text-xs text-center">
-          we'll be in touch within 48 working hours
+          we'll be in touch within 5–7 working days
         </p>
       </div>
     </div>
@@ -701,7 +731,7 @@ function DesktopForm({
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
             <span className="text-white/60 text-xs font-semibold lowercase tracking-wide">
-              feedback within&nbsp;&nbsp;48 working hours
+              feedback within&nbsp;&nbsp;5–7 working days
             </span>
           </div>
         </div>

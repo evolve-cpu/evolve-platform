@@ -163,10 +163,33 @@ const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
   .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
 
 function ReviewUploadCell({ review, onDone }) {
-  const [state, setState] = useState("idle"); // idle | uploading | sending | done | error
+  const [state, setState] = useState("idle"); // idle | preview | uploading | sending | done | error
   const [msg, setMsg] = useState("");
   const [remarks, setRemarks] = useState(review.remarks || "");
+  const [pendingFile, setPendingFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const inputRef = useRef(null);
+
+  const onFileChosen = (file) => {
+    if (!file || file.type !== "application/pdf") {
+      setMsg("PDF only");
+      setState("error");
+      return;
+    }
+    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setState("preview");
+  };
+
+  const cancelPreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(null);
+    setPreviewUrl(null);
+    setState("idle");
+    setMsg("");
+    // reset input so same file can be re-selected
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   const handle = async (file) => {
     if (!file || file.type !== "application/pdf") {
@@ -233,6 +256,7 @@ function ReviewUploadCell({ review, onDone }) {
       return;
     }
 
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setState("done");
     setMsg("sent ✓");
     onDone(review.id, reportUrl, remarks.trim());
@@ -266,6 +290,50 @@ function ReviewUploadCell({ review, onDone }) {
   }
 
   const busy = state === "uploading" || state === "sending";
+
+  // Preview/confirm modal
+  if (state === "preview" && previewUrl) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex flex-col"
+        style={{ background: "rgba(0,0,0,0.92)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div>
+            <p className="text-white font-bold text-sm">{review.name} — {pendingFile?.name}</p>
+            {remarks.trim() && (
+              <p className="text-xs mt-1" style={{ color: "#aaa" }}>
+                remarks: {remarks.trim()}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={cancelPreview}
+              className="text-xs px-4 py-2 rounded-lg font-semibold border border-white/20 text-white hover:bg-white/10"
+            >
+              ✕ cancel
+            </button>
+            <button
+              onClick={() => handle(pendingFile)}
+              className="text-xs px-4 py-2 rounded-lg font-bold"
+              style={{ background: GR, color: "#000" }}
+            >
+              ✓ looks good — send
+            </button>
+          </div>
+        </div>
+        {/* PDF preview */}
+        <iframe
+          src={previewUrl}
+          title="preview report"
+          className="flex-1 w-full"
+          style={{ border: "none" }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1.5" style={{ minWidth: 180 }}>
@@ -303,7 +371,7 @@ function ReviewUploadCell({ review, onDone }) {
         type="file"
         accept="application/pdf"
         className="hidden"
-        onChange={(e) => handle(e.target.files?.[0])}
+        onChange={(e) => onFileChosen(e.target.files?.[0])}
       />
     </div>
   );

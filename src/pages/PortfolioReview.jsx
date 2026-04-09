@@ -341,7 +341,7 @@ const PortfolioReview = () => {
               maxWidth: "60ch"
             }}
           >
-            a personalised review within 24–48 hours. we'll cover what's
+            a personalised review within 5–7 working days. we'll cover what's
             working, what isn't, how you're positioning yourself, and what to
             fix before you send this to a studio or client.
           </p>
@@ -388,7 +388,7 @@ const PortfolioReview = () => {
               maxWidth: "36ch"
             }}
           >
-            a personalised review within 24–48 hours. we'll cover what's
+            a personalised review within 5–7 working days. we'll cover what's
             working, what isn't, how you're positioning yourself, and what to
             fix before you send this to a studio or client.
           </p>
