@@ -1414,6 +1414,27 @@ const AppLayout = () => {
     };
   }, [showNavbar, googleScriptLoaded]);
 
+  // useEffect(() => {
+  //   const isDevEnv = window.location.hostname.includes(
+  //     "dev.evolvedesign.academy"
+  //   );
+  //   const isAllowed = window.location.search.includes("dev=1");
+
+  //   if (isDevEnv && !isAllowed) {
+  //     window.location.href = "https://www.evolvedesign.academy";
+  //   }
+  // }, []);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isDevEnv = hostname === "dev.evolvedesign.academy";
+    const isAllowed = new URLSearchParams(window.location.search).has("dev");
+
+    if (isDevEnv && !isAllowed) {
+      window.location.href = "https://www.evolvedesign.academy";
+    }
+  }, []);
+
   return (
     <>
       {/* Loading Screen */}
