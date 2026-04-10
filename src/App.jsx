@@ -1425,13 +1425,30 @@ const AppLayout = () => {
   //   }
   // }, []);
 
+  // useEffect(() => {
+  //   const hostname = window.location.hostname;
+  //   const isDevEnv = hostname === "dev.evolvedesign.academy";
+  //   const isAllowed = new URLSearchParams(window.location.search).has("dev");
+
+  //   if (isDevEnv && !isAllowed) {
+  //     window.location.href = "https://www.evolvedesign.academy";
+  //   }
+  // }, []);
+
   useEffect(() => {
     const hostname = window.location.hostname;
+    const params = new URLSearchParams(window.location.search);
+
     const isDevEnv = hostname === "dev.evolvedesign.academy";
-    const isAllowed = new URLSearchParams(window.location.search).has("dev");
+    const isAllowed = params.get("dev") === "1";
 
     if (isDevEnv && !isAllowed) {
-      window.location.href = "https://www.evolvedesign.academy";
+      const path =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+
+      window.location.href = `https://www.evolvedesign.academy${path}`;
     }
   }, []);
 
