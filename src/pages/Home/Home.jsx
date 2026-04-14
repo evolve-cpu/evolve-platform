@@ -18,20 +18,6 @@ import SceneNew, {
   SCENE_NEW_STEP_LABELS
 } from "./SceneNew";
 
-// Existing scenes in new order
-import Scene1_1, {
-  useScene1_1Timeline,
-  setCompletedState,
-  SCENE1_1_STEP_LABELS
-} from "./Scene1_1";
-
-import Scene1_2, {
-  useScene1_2Timeline,
-  SCENE1_2_STEP_LABELS
-} from "./Scene1_2";
-
-// Scene1_3 REMOVED
-
 import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 import GrainTexture from "../../components/GrainTexture";
 
@@ -45,24 +31,17 @@ const Home = ({
   onIntroComplete
 }) => {
   const scene1Refs = useRef({});
-  const sceneNewRefs = useRef({}); // NEW SCENE REFS
-  const scene1_1Refs = useRef({});
-  const scene1_2Refs = useRef({});
-  // scene1_3Refs REMOVED
+  const sceneNewRefs = useRef({});
   const scene1_4Refs = useRef({});
   const snapPointsRef = useRef([]);
 
   const scene1EndScrollRef = useRef(null);
   const hasShownNavbarRef = useRef(false);
-  const logoClickedRef = useRef(false); // Track if logo was clicked to prevent auto-hide
+  const logoClickedRef = useRef(false);
 
-  // Intro completion flag
   const [introDone, setIntroDone] = useState(false);
-
-  // CRITICAL: Track if animations should be enabled
   const [animationsReady, setAnimationsReady] = useState(false);
 
-  // Updated logic: treat tablets as desktop
   const [isMobile, setIsMobile] = useState(() => {
     if (forceLayout === "mobile") return true;
     if (forceLayout === "desktop") return false;
@@ -72,36 +51,23 @@ const Home = ({
 
   const masterTimelineRef = useRef(null);
 
-  // DEFER ANIMATIONS: Wait for images to load before enabling heavy animations
   useEffect(() => {
     if (isLoading) return;
-
-    // Small delay after loading completes to ensure DOM is ready
     const timeoutId = setTimeout(() => {
       if ("requestIdleCallback" in window) {
-        requestIdleCallback(
-          () => {
-            setAnimationsReady(true);
-          },
-          { timeout: 500 }
-        );
+        requestIdleCallback(() => { setAnimationsReady(true); }, { timeout: 500 });
       } else {
         setAnimationsReady(true);
       }
     }, 300);
-
     return () => clearTimeout(timeoutId);
   }, [isLoading]);
 
-  // Lock body scroll until intro is done
   useLayoutEffect(() => {
     document.body.style.overflow = introDone ? "auto" : "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    return () => { document.body.style.overflow = "auto"; };
   }, [introDone]);
 
-  // Hide navbar during intro
   useLayoutEffect(() => {
     if (setShowNavbar && !introDone) {
       setShowNavbar(false);
@@ -109,137 +75,67 @@ const Home = ({
     }
   }, [introDone, setShowNavbar]);
 
-  // ========== LOGO CLICK HANDLER - IMPROVED ==========
   const handleLogoClick = React.useCallback(() => {
-    console.log("=== LOGO CLICKED ===");
-    console.log("introDone:", introDone);
-    console.log("animationsReady:", animationsReady);
-    console.log("masterTimelineRef.current:", masterTimelineRef.current);
-    console.log("snapPointsRef.current:", snapPointsRef.current);
-
-    // If intro not done yet, just scroll to top
     if (!introDone || !animationsReady) {
-      console.log("Intro not done or animations not ready - scrolling to top");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
     const scrollTrigger = masterTimelineRef.current?.scrollTrigger;
-
     if (!scrollTrigger) {
-      console.warn("ScrollTrigger not available - scrolling to top");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
     if (!snapPointsRef.current || snapPointsRef.current.length < 2) {
-      console.warn("Snap points not ready - scrolling to top");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
-    // Get the first scene's progress (index 1, since 0 is Scene1 intro)
     const sceneNewFirstStepProgress = snapPointsRef.current[1] || 0.05;
     const targetScroll =
       scrollTrigger.start +
       (scrollTrigger.end - scrollTrigger.start) * sceneNewFirstStepProgress;
 
-    console.log("ScrollTrigger details:", {
-      start: scrollTrigger.start,
-      end: scrollTrigger.end,
-      currentScroll: window.pageYOffset,
-      targetScroll: targetScroll,
-      targetProgress: sceneNewFirstStepProgress,
-      currentProgress: scrollTrigger.progress
-    });
-
-    // Kill any existing scroll animations
     gsap.killTweensOf(window);
-
-    // Use gsap ScrollToPlugin for reliable scrolling
     gsap.to(window, {
       duration: 1.2,
-      scrollTo: {
-        y: targetScroll,
-        autoKill: false
-      },
+      scrollTo: { y: targetScroll, autoKill: false },
       ease: "power2.inOut",
-      onStart: () => {
-        console.log("Scroll animation started");
-        // Mark that logo was clicked - navbar should stay visible
-        logoClickedRef.current = true;
-      },
-      onComplete: () => {
-        console.log("Scroll animation completed");
-      }
+      onStart: () => { logoClickedRef.current = true; }
     });
-
-    // Keep navbar visible when user clicks logo
     if (setShowNavbar) {
       setShowNavbar(true);
       hasShownNavbarRef.current = true;
     }
   }, [setShowNavbar, introDone, animationsReady]);
 
-  // Attach to window with dependencies
   useLayoutEffect(() => {
-    console.log("Attaching handleLogoClick to window");
     window.handleLogoClick = handleLogoClick;
-
-    // Also create a global flag to indicate we're on the home page
     window.isOnHomePage = true;
-
     return () => {
-      console.log("Removing handleLogoClick from window");
       delete window.handleLogoClick;
       delete window.isOnHomePage;
     };
   }, [handleLogoClick]);
 
-  // Update isMobile when deviceType changes
   useLayoutEffect(() => {
     if (forceLayout !== "auto") {
       setIsMobile(forceLayout === "mobile");
       return;
     }
-
     if (deviceType) {
       setIsMobile(deviceType === "mobile");
       return;
     }
-
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [forceLayout, deviceType]);
 
-  // ========== BUILD MASTER TIMELINE (only after intro AND animations are ready) ==========
   useLayoutEffect(() => {
-    // CRITICAL: Don't build timeline until animations are ready
-    if (isLoading || !introDone || !animationsReady) {
-      console.log("Waiting for conditions:", {
-        isLoading,
-        introDone,
-        animationsReady
-      });
-      return;
-    }
+    if (isLoading || !introDone || !animationsReady) return;
 
     if (
       !scene1Refs.current.container ||
-      !sceneNewRefs.current.container || // NEW SCENE CHECK
-      !scene1_1Refs.current.container ||
-      !scene1_2Refs.current.container ||
-      // scene1_3Refs.current.container REMOVED
+      !sceneNewRefs.current.container ||
       !scene1_4Refs.current.container
     ) {
       console.log("Waiting for refs to be ready");
@@ -249,26 +145,11 @@ const Home = ({
     console.log("Building master timeline...");
 
     const id = requestAnimationFrame(() => {
-      // Initialize SceneNew to START state (NEW SCENE - inherits Scene1_1's initial logic)
-      // You can add specific initial states for SceneNew here if needed
       gsap.set(sceneNewRefs.current.container, {
         opacity: 0,
         willChange: "transform, opacity"
       });
 
-      // Initialize Scene1_2 to START state
-      gsap.set(scene1_2Refs.current.container, {
-        y: "-100%",
-        willChange: "transform"
-      });
-
-      // Initialize Scene1_1 to START state (moved to middle position)
-      gsap.set(scene1_1Refs.current.container, {
-        x: "100%", // Slides in from right (like old Scene1_3)
-        willChange: "transform"
-      });
-
-      // Initialize Scene1_4 to START state
       gsap.set(scene1_4Refs.current.container, {
         y: "120%",
         rotation: 15,
@@ -278,20 +159,15 @@ const Home = ({
         willChange: "transform, opacity"
       });
 
-      // Get timelines for each scene
-      const tlNew = useSceneNewTimeline(sceneNewRefs.current, isMobile); // NEW SCENE TIMELINE
-      const tl2 = useScene1_2Timeline(scene1_2Refs.current, isMobile);
-      const tl3 = useScene1_1Timeline(scene1_1Refs.current, isMobile); // Scene1_1 is now 3rd
+      const tlNew = useSceneNewTimeline(sceneNewRefs.current, isMobile);
       const tl4 = useScene1_4Timeline(scene1_4Refs.current, isMobile);
 
       if (masterTimelineRef.current) {
         masterTimelineRef.current.kill();
       }
 
-      const SECTIONS = 5; // Still 5 sections (Scene1, SceneNew, Scene1_2, Scene1_1, Scene1_4)
+      const SECTIONS = 3;
       const SCROLL_PER_SECTION = 8;
-      // Cap viewport height to 1080 to prevent excessive scrolling on large screens like MacBook 16
-      // const vh = Math.max(Math.min(window.innerHeight, 1080), 400);
       const vh = Math.max(window.innerHeight, 400);
       const scrollLength = vh * SECTIONS * SCROLL_PER_SECTION;
 
@@ -321,51 +197,7 @@ const Home = ({
       // Add SceneNew timeline
       if (tlNew) master.add(tlNew);
 
-      // ========== TRANSITION 2: SceneNew → Scene1_2 (VERTICAL SLIDE) ==========
-      master
-        .to(sceneNewRefs.current.container, {
-          y: "100%",
-          duration: 1.2,
-          ease: "power2.inOut",
-          force3D: true
-        })
-        .to(
-          scene1_2Refs.current.container,
-          {
-            y: "0%",
-            duration: 1.2,
-            ease: "power2.inOut",
-            force3D: true
-          },
-          "<"
-        );
-
-      // Add Scene1_2 timeline
-      if (tl2) master.add(tl2);
-
-      // ========== TRANSITION 3: Scene1_2 → Scene1_1 (HORIZONTAL SLIDE - like old Scene1_2 → Scene1_3) ==========
-      master
-        .to(scene1_2Refs.current.container, {
-          x: "-100%",
-          duration: 1.2,
-          ease: "power2.inOut",
-          force3D: true
-        })
-        .to(
-          scene1_1Refs.current.container,
-          {
-            x: "0%",
-            duration: 1.2,
-            ease: "power2.inOut",
-            force3D: true
-          },
-          "<"
-        );
-
-      // Add Scene1_1 timeline
-      if (tl3) master.add(tl3);
-
-      // ========== TRANSITION 4: Scene1_1 → Scene1_4 (ZOOM/FADE - like old Scene1_3 → Scene1_4) ==========
+      // ========== TRANSITION 2: SceneNew → Scene1_4 (ZOOM/FADE) ==========
       master
         .to(scene1_4Refs.current.container, {
           opacity: 1,
@@ -394,7 +226,6 @@ const Home = ({
       const addStepsFromTimeline = (tl, labels) => {
         if (!tl || !labels || !labels.length) return;
         const start = tl.startTime();
-
         labels.forEach((label) => {
           const localTime = tl.labels?.[label];
           if (typeof localTime !== "number") return;
@@ -404,9 +235,7 @@ const Home = ({
       };
 
       stepProgresses.push(0);
-      addStepsFromTimeline(tlNew, SCENE_NEW_STEP_LABELS || []); // NEW SCENE STEPS
-      addStepsFromTimeline(tl2, SCENE1_2_STEP_LABELS || []);
-      addStepsFromTimeline(tl3, SCENE1_1_STEP_LABELS || []);
+      addStepsFromTimeline(tlNew, SCENE_NEW_STEP_LABELS || []);
       addStepsFromTimeline(tl4, []);
       stepProgresses.push(1);
 
@@ -414,7 +243,7 @@ const Home = ({
         (a, b) => a - b
       );
 
-      const SCENE_NEW_FIRST_STEP_PROGRESS = snapPoints[1] || 0.05; // NEW SCENE first checkpoint
+      const SCENE_NEW_FIRST_STEP_PROGRESS = snapPoints[1] || 0.05;
       snapPointsRef.current = snapPoints;
 
       console.log("Snap points created:", snapPoints);
@@ -438,20 +267,16 @@ const Home = ({
           duration: 1.8,
           delay: 0,
           ease: "power2.out",
-          onStart: () => {
-            ScrollTrigger.clearScrollMemory();
-          }
+          onStart: () => { ScrollTrigger.clearScrollMemory(); }
         },
 
         onScrubComplete: () => {
           const currentProgress = st.progress;
-          const closest = snapPoints.reduce((prev, curr) => {
-            return Math.abs(curr - currentProgress) <
-              Math.abs(prev - currentProgress)
+          const closest = snapPoints.reduce((prev, curr) =>
+            Math.abs(curr - currentProgress) < Math.abs(prev - currentProgress)
               ? curr
-              : prev;
-          });
-
+              : prev
+          );
           if (Math.abs(closest - currentProgress) > 0.001) {
             gsap.to(st, {
               progress: closest,
@@ -470,23 +295,18 @@ const Home = ({
           lastScrollTime = now;
 
           if (scrollVelocity < 0.0001 && !self.isActive) {
-            const closest = snapPoints.reduce((prev, curr) => {
-              return Math.abs(curr - self.progress) <
-                Math.abs(prev - self.progress)
+            const closest = snapPoints.reduce((prev, curr) =>
+              Math.abs(curr - self.progress) < Math.abs(prev - self.progress)
                 ? curr
-                : prev;
-            });
-
+                : prev
+            );
             gsap.to(window, {
-              scrollTo: {
-                y: self.start + (self.end - self.start) * closest
-              },
+              scrollTo: { y: self.start + (self.end - self.start) * closest },
               duration: 0.2,
               ease: "power2.out"
             });
           }
 
-          // NAVBAR CONTROL - Now based on NEW SCENE first step
           if (
             setShowNavbar &&
             !hasShownNavbarRef.current &&
@@ -496,18 +316,16 @@ const Home = ({
             hasShownNavbarRef.current = true;
           }
 
-          // Only hide navbar if user scrolled naturally (not via logo click)
           if (
             setShowNavbar &&
             hasShownNavbarRef.current &&
             self.progress <= SCENE_NEW_FIRST_STEP_PROGRESS &&
-            !logoClickedRef.current // Don't hide if logo was clicked
+            !logoClickedRef.current
           ) {
             setShowNavbar(false);
             hasShownNavbarRef.current = false;
           }
 
-          // Reset logoClicked flag when scrolling forward again
           if (
             self.progress > SCENE_NEW_FIRST_STEP_PROGRESS &&
             logoClickedRef.current
@@ -528,25 +346,18 @@ const Home = ({
       masterTimelineRef.current = master;
 
       console.log("Master timeline created successfully");
-      console.log("ScrollTrigger start:", st.start, "end:", st.end);
     });
 
-    // Custom event listener for scrolling to first scene
     const handleScrollToSceneNew = () => {
-      console.log("handleScrollToSceneNew event triggered");
       const scrollTrigger = masterTimelineRef.current?.scrollTrigger;
       if (scrollTrigger && snapPointsRef.current.length > 0) {
         const targetProgress = snapPointsRef.current[1];
         const targetScroll =
           scrollTrigger.start +
           (scrollTrigger.end - scrollTrigger.start) * targetProgress;
-
         gsap.to(window, {
           duration: 1.2,
-          scrollTo: {
-            y: targetScroll,
-            autoKill: false
-          },
+          scrollTo: { y: targetScroll, autoKill: false },
           ease: "power2.inOut"
         });
       }
@@ -556,7 +367,6 @@ const Home = ({
     return () => {
       cancelAnimationFrame(id);
       window.removeEventListener("scrollToSceneNew", handleScrollToSceneNew);
-
       try {
         if (masterTimelineRef.current) {
           const st = masterTimelineRef.current.scrollTrigger;
@@ -564,23 +374,14 @@ const Home = ({
           masterTimelineRef.current.kill();
           masterTimelineRef.current = null;
         }
-
         ScrollTrigger.getAll().forEach((trigger) => {
-          try {
-            trigger.kill();
-          } catch (e) {
-            // ignore
-          }
+          try { trigger.kill(); } catch (e) { /* ignore */ }
         });
-
         gsap.set("#scroll-container", { clearProps: "all" });
       } catch (error) {
         console.warn("Cleanup error:", error);
       }
-
-      if (setShowNavbar) {
-        setShowNavbar(true);
-      }
+      if (setShowNavbar) setShowNavbar(true);
     };
   }, [isMobile, setShowNavbar, isLoading, introDone, animationsReady]);
 
@@ -600,7 +401,7 @@ const Home = ({
           position: "relative"
         }}
       >
-        {/* Grain texture - load last for better perceived performance */}
+        {/* Grain texture */}
         {animationsReady && (
           <div
             style={{
@@ -617,7 +418,7 @@ const Home = ({
           </div>
         )}
 
-        {/* Scene 1 (intro) - Only visible until intro completes */}
+        {/* Scene 1 (intro) */}
         <div
           className="absolute inset-0 w-full h-full"
           style={{
@@ -640,7 +441,7 @@ const Home = ({
           </Suspense>
         </div>
 
-        {/* NEW SCENE - First scrollable scene (takes over Scene1_1's role) */}
+        {/* SceneNew - First scrollable scene */}
         <div
           ref={(el) => {
             if (sceneNewRefs.current) sceneNewRefs.current.container = el;
@@ -655,35 +456,13 @@ const Home = ({
           <SceneNew ref={sceneNewRefs} isMobile={isMobile} />
         </div>
 
-        {/* Scene 1_2 */}
-        <div
-          ref={(el) => {
-            if (scene1_2Refs.current) scene1_2Refs.current.container = el;
-          }}
-          className="absolute inset-0 w-full h-full"
-          style={{ y: "-100%", zIndex: 4 }}
-        >
-          <Scene1_2 ref={scene1_2Refs} isMobile={isMobile} />
-        </div>
-
-        {/* Scene 1_1 - Now in 3rd position, slides in from RIGHT */}
-        <div
-          ref={(el) => {
-            if (scene1_1Refs.current) scene1_1Refs.current.container = el;
-          }}
-          className="absolute inset-0 w-full h-full"
-          style={{ x: "100%", zIndex: 4 }}
-        >
-          <Scene1_1 ref={scene1_1Refs} isMobile={isMobile} />
-        </div>
-
         {/* Scene 1_4 */}
         <div
           ref={(el) => {
             if (scene1_4Refs.current) scene1_4Refs.current.container = el;
           }}
           className="absolute inset-0 w-full h-full"
-          style={{ y: "100%", zIndex: 5 }}
+          style={{ zIndex: 5 }}
         >
           <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
         </div>
