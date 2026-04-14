@@ -24,6 +24,9 @@ import {
   watch_playlist_button
 } from "../assets/images/Webinars";
 
+import { webinars as COPY } from "../content";
+import { renderWithBreaks } from "../utils/renderWithBreaks";
+
 gsap.registerPlugin(ScrollTrigger);
 
 // Reusable Card Component
@@ -293,8 +296,7 @@ const MobilePinnedCards = ({ cards }) => {
           className="text-black font-semibold text-center mx-auto max-w-[85vw]"
           style={{ fontSize: "20px" }}
         >
-          Real talk from working professionals. Practical takeaways you can use
-          immediately. Every session is recorded, so you never miss out.
+          {COPY.pastSection.description}
         </p>
       </div>
 
@@ -346,32 +348,9 @@ const Webinars = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [currentMobileCard, setCurrentMobileCard] = useState(0);
 
-  const cards = [
-    {
-      svg: visual_design,
-      title: "visual<br/>design",
-      playlistUrl:
-        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiBk41nO_f8tpn0UfUFOEZkA"
-    },
-    {
-      svg: interaction_design,
-      title: "interaction<br/>design",
-      playlistUrl:
-        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiDuKT-UgO3rGP0260L-XAxX"
-    },
-    {
-      svg: career_growth,
-      title: "career<br/>growth",
-      playlistUrl:
-        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiCaCGpLy_LIRDFSWTm2gA66"
-    },
-    {
-      svg: hobbies,
-      title: "hobbies",
-      playlistUrl:
-        "https://www.youtube.com/playlist?list=PLRu8x-n5hoiCNf6dl-Cs3RuhrEAFjaIm3"
-    }
-  ];
+  // SVGs are still imported here — content.js only holds the text/URLs
+  const svgMap = [visual_design, interaction_design, career_growth, hobbies];
+  const cards = COPY.cards.map((c, i) => ({ ...c, svg: svgMap[i] }));
 
   const handleCardToggle = (index, expand) => {
     setExpandedCard(expand ? index : null);
@@ -398,8 +377,8 @@ const Webinars = () => {
   return (
     <main className="bg-evolve-yellow">
       <SEO
-        title="Design sessions — webinars, workshops & live events by evolve"
-        description="From live webinars to hands-on workshops and informal design meetups — evolve sessions are where learning gets real. Online and offline, for every stage of your design journey."
+        title={COPY.seo.title}
+        description={COPY.seo.description}
         path="/webinars"
       />
       {/* Desktop/Tablet View */}
@@ -455,7 +434,7 @@ const Webinars = () => {
                         letterSpacing: "-0.03em"
                       }}
                     >
-                      evolve <br /> webinars
+                      {renderWithBreaks(COPY.hero.heading)}
                     </h1>
 
                     {/* <p
@@ -469,9 +448,7 @@ const Webinars = () => {
                       className="mt-4 font-medium lowercase text-black leading-tight"
                       style={{ fontSize: "28px" }}
                     >
-                      Learn from people who've been there,
-                      <br />
-                      done that, and have the work to prove it.
+                      {renderWithBreaks(COPY.hero.subtextDesktop)}
                     </p>
                   </div>
                 </div>
@@ -522,8 +499,7 @@ const Webinars = () => {
               className="text-black font-semibold text-center leading-tight max-w-[80vw]"
               style={{ fontSize: "32px" }}
             >
-              Real talk from working professionals. Practical takeaways you can
-              use immediately. Every session is recorded, so you never miss out.
+              {COPY.pastSection.description}
             </p>
           </div>
 
@@ -599,7 +575,7 @@ const Webinars = () => {
                     letterSpacing: "-0.03em"
                   }}
                 >
-                  evolve <br /> webinars
+                  {COPY.hero.heading}
                 </h1>
 
                 {/* <p
@@ -619,8 +595,7 @@ const Webinars = () => {
       md:text-[clamp(18px,1.8vw,20px)]
     "
                 >
-                  Learn from people who've been there, done that, and have the
-                  work to prove it.
+                  {COPY.hero.subtextMobile}
                 </p>
               </div>
             </div>

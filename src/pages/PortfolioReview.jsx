@@ -1,5 +1,7 @@
 import { useState } from "react";
 import SEO from "../components/SEO";
+import { portfolioReview as COPY } from "../content";
+import { renderWithBreaks } from "../utils/renderWithBreaks";
 import ShareYourWorkButton from "../components/ShareYourWorkButton";
 import {
   right_eye_ribbon,
@@ -10,27 +12,8 @@ import {
   mentorship_vector_mobile
 } from "../assets/images/Mentorship";
 
-/* ─────────────────────────────────────────────
-   How it works steps
-───────────────────────────────────────────── */
-const STEPS = [
-  {
-    q: "step 1: create your account",
-    a: "we need the basics to reach you with your feedback. name, email, that's it. no lengthy forms."
-  },
-  {
-    q: "step 2: share your portfolio",
-    a: "drop a link or upload your work. behance, figma, notion, your own site. whatever you've got, we'll take it."
-  },
-  {
-    q: "step 3: tell us more",
-    a: "share the kind of design roles you’re leaning towards. \nand one project you’re really proud of - what it was, what you worked on, and how you thought through it. \nwe know putting this into words can feel like a task. \nbut this is honestly the best way for us to understand your work and how you think. No need to over-prepare, just be yourself and keep it real."
-  },
-  {
-    q: "step 4: submit",
-    a: "that's it. once you submit, we take it from here."
-  }
-];
+// Steps data lives in src/content.js
+const STEPS = COPY.howItWorks.steps;
 
 /* ─────────────────────────────────────────────
    PortfolioReview
@@ -41,8 +24,8 @@ const PortfolioReview = () => {
   return (
     <div>
       <SEO
-        title="Portfolio review — honest feedback. real growth."
-        description="Share your work and get a personalised, no-sugarcoating review from experienced designers. Understand what works, what doesn't, and how to level up."
+        title={COPY.seo.title}
+        description={COPY.seo.description}
         path="/community/portfolio-review"
       />
 
@@ -66,9 +49,7 @@ const PortfolioReview = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            honest feedback.
-            <br />
-            real growth.
+            {renderWithBreaks(COPY.hero.heading)}
           </h1>
 
           {/* Body text */}
@@ -81,9 +62,7 @@ const PortfolioReview = () => {
               maxWidth: "60vw"
             }}
           >
-            getting a review isn't just about what's on screen. it's about how
-            you think, present, and what you're actually going for. that's what
-            we look at.
+            {COPY.hero.body}
           </p>
 
           {/* CTA Button */}
@@ -121,9 +100,7 @@ const PortfolioReview = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            honest feedback.
-            <br />
-            real growth.
+            {renderWithBreaks(COPY.hero.heading)}
           </h1>
 
           {/* Body text */}
@@ -136,9 +113,7 @@ const PortfolioReview = () => {
               maxWidth: "86vw"
             }}
           >
-            getting a review isn't just about what's on screen. it's about how
-            you think, present, and what you're actually going for. that's what
-            we look at.
+            {COPY.hero.body}
           </p>
 
           {/* CTA Button */}
@@ -180,9 +155,7 @@ const PortfolioReview = () => {
               letterSpacing: "-0.53px"
             }}
           >
-            how it
-            <br />
-            works.
+            {renderWithBreaks(COPY.howItWorks.heading)}
           </h2>
         </div>
 
