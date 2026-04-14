@@ -99,7 +99,7 @@ export const mentorship = {
       a: "support doesn't stop. you'll have ongoing access as you apply. we stay in your corner until you land."
     },
     {
-      q: "do i need prior design experience?",
+      q: "do ii need prior design experience?",
       a: "no. freshers are preferred. if you're serious about a design career and willing to put in the work, that's enough to start."
     },
     {
