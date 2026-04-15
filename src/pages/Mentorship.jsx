@@ -38,6 +38,11 @@ import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
 import { supabase } from "../supabaseClient";
 import { mentorship as COPY } from "../content";
+import {
+  trackCtaClick,
+  trackPlanSelected,
+  trackLoginRequired
+} from "../utils/analytics";
 
 /* ─────────────────────────────────────────────
    Testimonial data (edit text in src/content.js)
@@ -756,6 +761,7 @@ const Mentorship = () => {
       const dest = allBatchesFull
         ? "/payment?waitlist=true"
         : `/payment?plan=${plan}`;
+      trackLoginRequired(plan);
       navigate("/signin", { state: { from: dest } });
       return;
     }
@@ -764,9 +770,11 @@ const Mentorship = () => {
       return;
     }
     if (allBatchesFull) {
+      trackPlanSelected("waitlist");
       navigate("/payment?waitlist=true");
       return;
     }
+    trackPlanSelected(plan);
     navigate(`/payment?plan=${plan}`);
   };
 
@@ -831,7 +839,7 @@ const Mentorship = () => {
                   alt="apply now"
                   onMouseEnter={() => setApplyHover(true)}
                   onMouseLeave={() => setApplyHover(false)}
-                  onClick={() => scrollTo(section5Ref)}
+                  onClick={() => { trackCtaClick("explore_mentorship", "hero"); scrollTo(section5Ref); }}
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 />
@@ -883,7 +891,7 @@ const Mentorship = () => {
               alt="how it works"
               onMouseEnter={() => setHowHover(true)}
               onMouseLeave={() => setHowHover(false)}
-              onClick={() => scrollTo(section6Ref)}
+              onClick={() => { trackCtaClick("how_it_works", "section2"); scrollTo(section6Ref); }}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
             />
