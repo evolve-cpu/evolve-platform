@@ -237,7 +237,7 @@ export const community = {
   },
 
   hero: {
-    heading: "evolve \ncommunityy",
+    heading: "evolve \ncommunity",
     subtext: "an inner circle built for creators.",
     // WhatsApp / join link
     joinUrl: "https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
