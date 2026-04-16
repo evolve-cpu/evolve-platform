@@ -132,7 +132,7 @@ export const mentorship = {
     // The "X stages / Y sessions" heading — spots count is dynamic (from DB), keep the rest here
     stagesLine: "4 stages.",
     sessionsLine: "5 sessions.",
-    sessionTime: "thursday 9.30 – 10.30pm ist",
+    sessionTime: "every thursday 9.30pm IST",
 
     // Desktop version — longer body copy
     stagesDesktop: [
