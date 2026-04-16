@@ -839,7 +839,10 @@ const Mentorship = () => {
                   alt="apply now"
                   onMouseEnter={() => setApplyHover(true)}
                   onMouseLeave={() => setApplyHover(false)}
-                  onClick={() => { trackCtaClick("explore_mentorship", "hero"); scrollTo(section5Ref); }}
+                  onClick={() => {
+                    trackCtaClick("explore_mentorship", "hero");
+                    scrollTo(section5Ref);
+                  }}
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 />
@@ -883,7 +886,7 @@ const Mentorship = () => {
               maxWidth: isMobile ? "90vw" : "75%"
             }}
           >
-            {COPY.cta.body}
+            {renderWithBreaks(COPY.cta.body)}
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
             <img
@@ -891,7 +894,10 @@ const Mentorship = () => {
               alt="how it works"
               onMouseEnter={() => setHowHover(true)}
               onMouseLeave={() => setHowHover(false)}
-              onClick={() => { trackCtaClick("how_it_works", "section2"); scrollTo(section6Ref); }}
+              onClick={() => {
+                trackCtaClick("how_it_works", "section2");
+                scrollTo(section6Ref);
+              }}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
             />
@@ -978,7 +984,7 @@ const Mentorship = () => {
                   letterSpacing: "-0.5px"
                 }}
               >
-                {COPY.mentor.sectionHeading}
+                {renderWithBreaks(COPY.mentor.sectionHeading)}
               </h2>
             </div>
             <div
@@ -993,7 +999,7 @@ const Mentorship = () => {
                   lineHeight: "1"
                 }}
               >
-                {COPY.mentor.name}
+                {renderWithBreaks(COPY.mentor.name)}
               </p>
               <p
                 className="font-semibold text-evolve-yellow mt-3"
@@ -1004,7 +1010,7 @@ const Mentorship = () => {
                   maxWidth: "800px"
                 }}
               >
-                {COPY.mentor.role}
+                {renderWithBreaks(COPY.mentor.role)}
               </p>
               <p
                 className="font-normal text-white mt-5"
@@ -1015,17 +1021,13 @@ const Mentorship = () => {
                   maxWidth: "800px"
                 }}
               >
-                8 years building products, improving UX for SaaS companies, and
-                sitting on the other side of hiring decisions. He knows what
-                gets designers noticed — and what quietly eliminates them.
+                {renderWithBreaks(COPY.mentor.bio1)}
                 <br />
                 <br />
-                He's mentored 100+ designers. His approach: no noise, no fluff.
-                Just clarity on who you are, where you fit, and exactly how to
-                get there.
+                {renderWithBreaks(COPY.mentor.bio2)}
               </p>
               <a
-                href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
+                href={COPY.mentor.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 mt-6 text-white font-normal hover:opacity-70 transition-opacity duration-150 w-fit"
@@ -1044,7 +1046,7 @@ const Mentorship = () => {
                 >
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.327-.025-3.037-1.852-3.037-1.854 0-2.137 1.446-2.137 2.94v5.666H9.351V9h3.414v1.561h.049c.476-.899 1.637-1.849 3.37-1.849 3.602 0 4.268 2.37 4.268 5.455v6.285zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                 </svg>
-                <span>view linkedin</span>
+                <span>{COPY.mentor.linkedinLabel}</span>
               </a>
             </div>
           </div>
@@ -1071,7 +1073,7 @@ const Mentorship = () => {
               letterSpacing: "-0.5px"
             }}
           >
-            who's guiding you.
+            {COPY.mentor.sectionHeading}
           </h2>
           <div className="flex flex-col mt-5 w-full">
             <p
@@ -1082,7 +1084,7 @@ const Mentorship = () => {
                 lineHeight: "1"
               }}
             >
-              Yagnesh ahir
+              {COPY.mentor.name}
             </p>
             <p
               className="font-semibold text-black mt-2"
@@ -1092,23 +1094,19 @@ const Mentorship = () => {
                 lineHeight: "1.4"
               }}
             >
-              {COPY.mentor.role}
+              {renderWithBreaks(COPY.mentor.role)}
             </p>
             <p
               className="font-normal text-black mt-3"
               style={{ fontSize: "16px", lineHeight: "1.55" }}
             >
-              8 years building products, improving UX for SaaS companies, and
-              sitting on the other side of hiring decisions. He knows what gets
-              designers noticed — and what quietly eliminates them.
+              {renderWithBreaks(COPY.mentor.bio1)}
               <br />
               <br />
-              He's mentored 100+ designers. His approach: no noise, no fluff.
-              Just clarity on who you are, where you fit, and exactly how to get
-              there.
+              {renderWithBreaks(COPY.mentor.bio2)}
             </p>
             <a
-              href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
+              href={COPY.mentor.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 mt-4 font-normal hover:opacity-70 transition-opacity duration-150 w-fit"
@@ -1117,7 +1115,7 @@ const Mentorship = () => {
                 color: "var(--color-evolve-pink, #FF3366)"
               }}
             >
-              <span>view linkedin</span>
+              <span>{COPY.mentor.linkedinLabel}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -1171,8 +1169,7 @@ const Mentorship = () => {
                 lineHeight: "1.4"
               }}
             >
-              incredibly friendly from the get-go. he gave really clear and
-              actionable points for me to move ahead in my design career.
+              {renderWithBreaks(TESTIMONIALS[0].quote)}
             </p>
             <div className="flex items-center gap-3 mt-6">
               <img
@@ -1186,7 +1183,7 @@ const Mentorship = () => {
                   className="font-bold text-white"
                   style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
                 >
-                  chinmay zinjal
+                  {TESTIMONIALS[0].name}
                 </p>
                 <p
                   className="font-normal text-white"
@@ -1195,7 +1192,7 @@ const Mentorship = () => {
                     lineHeight: "1.3"
                   }}
                 >
-                  chemical engineering student, IIT Guwahati
+                  {TESTIMONIALS[0].role}
                 </p>
               </div>
             </div>
@@ -1222,9 +1219,7 @@ const Mentorship = () => {
                   lineHeight: "1.4"
                 }}
               >
-                yagnesh gave me wonderful advice on how he approaches UX
-                problems and runs a remote team. i walked away truly feeling
-                inspired and enlightened.
+                {renderWithBreaks(TESTIMONIALS[1].quote)}
               </p>
               <div className="flex items-center gap-3 mt-6">
                 <img
@@ -1238,7 +1233,7 @@ const Mentorship = () => {
                     className="font-bold text-white"
                     style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
                   >
-                    jon hwang
+                    {TESTIMONIALS[1].name}
                   </p>
                   <p
                     className="font-normal text-white"
@@ -1247,7 +1242,7 @@ const Mentorship = () => {
                       lineHeight: "1.3"
                     }}
                   >
-                    communication coach &amp; UX research consultant
+                    {TESTIMONIALS[1].role}
                   </p>
                 </div>
               </div>
@@ -1273,8 +1268,7 @@ const Mentorship = () => {
                   lineHeight: "1.4"
                 }}
               >
-                he helped me a lot in understanding my path. i would 10/10
-                recommend him.
+                {renderWithBreaks(TESTIMONIALS[2].quote)}
               </p>
               <div className="flex items-center gap-3 mt-6">
                 <img
@@ -1288,7 +1282,7 @@ const Mentorship = () => {
                     className="font-bold text-white"
                     style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
                   >
-                    anish kumar
+                    {TESTIMONIALS[2].name}
                   </p>
                   <p
                     className="font-normal text-white"
@@ -1297,7 +1291,7 @@ const Mentorship = () => {
                       lineHeight: "1.3"
                     }}
                   >
-                    lead product designer, smart energy waters
+                    {TESTIMONIALS[2].role}
                   </p>
                 </div>
               </div>
@@ -1324,13 +1318,7 @@ const Mentorship = () => {
                 lineHeight: "1.4"
               }}
             >
-              i'm thankful to yagnesh for his invaluable perspectives. the
-              practical advice he provided on navigating the job search process
-              was truly valuable. his positive outlook on the design industry
-              and his insights on how my background in creative direction can
-              contribute to product design have significantly bolstered my
-              confidence. i eagerly anticipate further sessions with him in the
-              future.
+              {renderWithBreaks(TESTIMONIALS[3].quote)}
             </p>
             <div className="flex items-center gap-3 mt-6">
               <img
@@ -1344,7 +1332,7 @@ const Mentorship = () => {
                   className="font-bold text-white"
                   style={{ fontSize: "clamp(12px, 1.2vw, 20px)" }}
                 >
-                  Pradyumna K S
+                  {TESTIMONIALS[3].name}
                 </p>
                 <p
                   className="font-normal text-white"
@@ -1353,7 +1341,7 @@ const Mentorship = () => {
                     lineHeight: "1.3"
                   }}
                 >
-                  Product Designer, Kraverich
+                  {TESTIMONIALS[3].role}
                 </p>
               </div>
             </div>
@@ -1394,17 +1382,19 @@ const Mentorship = () => {
             }}
           >
             {spotsLeft} spots.
-            <br />4 stages.
-            <br />5 sessions.
+            <br />
+            {COPY.framework.stagesLine}
+            <br />
+            {COPY.framework.sessionsLine}
           </h2>
           <p
-            className="text-black font-bold lowercase mt-6"
+            className="text-black font-bold mt-6"
             style={{
               fontSize: "clamp(18px, 2vw, 40px)",
               letterSpacing: "-2px"
             }}
           >
-            {COPY.framework.sessionTime}
+            {renderWithBreaks(COPY.framework.sessionTime)}
           </p>
         </div>
         <div className="bg-evolve-lavender-indigo flex flex-1 overflow-hidden py-12 px-10">
@@ -1469,14 +1459,16 @@ const Mentorship = () => {
             }}
           >
             5 spots.
-            <br />4 stages.
-            <br />5 sessions.
+            <br />
+            {COPY.framework.stagesLine}
+            <br />
+            {COPY.framework.sessionsLine}
           </h2>
           <p
-            className="text-black font-bold lowercase mt-4"
+            className="text-black font-bold mt-4"
             style={{ fontSize: "24px", letterSpacing: "-1px" }}
           >
-            {COPY.framework.sessionTime}
+            {renderWithBreaks(COPY.framework.sessionTime)}
           </p>
         </div>
         <div className="bg-evolve-lavender-indigo px-5 py-8 flex flex-col gap-8">
@@ -1524,7 +1516,7 @@ const Mentorship = () => {
               letterSpacing: "-0.02em"
             }}
           >
-            what it costs.
+            {COPY.pricing.sectionHeading}
           </h2>
         </div>
 
@@ -1533,9 +1525,9 @@ const Mentorship = () => {
           <div style={{ flex: "0 0 50%" }}>
             <PlanColumn
               tier="starter"
-              cutPrice="₹ 35,000"
-              price="₹ 15,000"
-              tagline="for those who need a direction on where to start"
+              cutPrice={COPY.pricing.starterCutPrice}
+              price={COPY.pricing.starterPrice}
+              tagline={renderWithBreaks(COPY.pricing.starterTaglineDesktop)}
               features={starterFeatures}
               isRight={false}
               onPay={handlePayment}
@@ -1546,9 +1538,9 @@ const Mentorship = () => {
           <div style={{ flex: "0 0 50%" }}>
             <PlanColumn
               tier="accelerator"
-              cutPrice="₹ 50,000"
-              price="₹ 35,000"
-              tagline="for those who have interviews lined up and need to crack it"
+              cutPrice={COPY.pricing.acceleratorCutPrice}
+              price={COPY.pricing.acceleratorPrice}
+              tagline={renderWithBreaks(COPY.pricing.acceleratorTaglineDesktop)}
               features={acceleratorFeatures}
               isRight={true}
               onPay={handlePayment}
@@ -1633,9 +1625,9 @@ const Mentorship = () => {
           {pricingTab === "starter" && (
             <PlanCardMobile
               tier="starter"
-              cutPrice="₹ 35,000"
-              price="₹ 15,000"
-              tagline="for those who need a direction on where to start"
+              cutPrice={COPY.pricing.starterCutPrice}
+              price={COPY.pricing.starterPrice}
+              tagline={COPY.pricing.starterTaglineMobile}
               features={starterFeatures}
               onPay={handlePayment}
               hasPaid={hasPaid}
@@ -1645,9 +1637,9 @@ const Mentorship = () => {
           {pricingTab === "accelerator" && (
             <PlanCardMobile
               tier="accelerator"
-              cutPrice="₹ 50,000"
-              price="₹ 35,000"
-              tagline="for those who have interviews lined up and need to crack it"
+              cutPrice={COPY.pricing.acceleratorCutPrice}
+              price={COPY.pricing.acceleratorPrice}
+              tagline={COPY.pricing.acceleratorTaglineMobile}
               features={acceleratorFeatures}
               onPay={handlePayment}
               hasPaid={hasPaid}
@@ -1683,19 +1675,19 @@ const Mentorship = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-black"
+            className="font-extrabold lowercase text-evolve-pink"
             style={{
               fontSize: "clamp(56px, 7vw, 96px)",
               lineHeight: "1",
               letterSpacing: "-3%"
             }}
           >
-            why we built this
+            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
           </h2>
 
           {/* Sub heading */}
           <p
-            className="font-normal lowercase text-black mt-6"
+            className="font-normal lowercase text-evolve-pink mt-6"
             style={{
               fontSize: "clamp(28px, 3.2vw, 48px)",
               lineHeight: "1.15",
@@ -1703,12 +1695,12 @@ const Mentorship = () => {
               maxWidth: "80vw"
             }}
           >
-            the gap isn't skill. it's direction
+            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
           </p>
 
           {/* Body text */}
           <p
-            className="font-normal text-evolve-pink mt-6"
+            className="font-normal text-black mt-6"
             style={{
               fontSize: "clamp(18px, 2.2vw, 32px)",
               lineHeight: "1.45",
@@ -1716,9 +1708,7 @@ const Mentorship = () => {
               maxWidth: "70vw"
             }}
           >
-            Most designers know how to design. What's harder is knowing which
-            roles fit, how to position yourself, and where to even start. That's
-            what this is for.
+            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
           </p>
 
           {/* Explore plans / session button */}
@@ -1774,31 +1764,31 @@ const Mentorship = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-black"
+            className="font-extrabold lowercase text-evolve-pink"
             style={{
               fontSize: "clamp(36px, 10vw, 52px)",
               lineHeight: "1.05",
               letterSpacing: "-0.03em"
             }}
           >
-            why we built this
+            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
           </h2>
 
           {/* Sub heading */}
           <p
-            className="font-normal lowercase text-black mt-4"
+            className="font-normal lowercase text-evolve-pink mt-4"
             style={{
               fontSize: "clamp(22px, 6vw, 32px)",
               lineHeight: "1.2",
               letterSpacing: "-0.03em"
             }}
           >
-            the gap isn't skill. it's direction
+            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
           </p>
 
           {/* Body text */}
           <p
-            className="font-normal text-evolve-pink mt-4"
+            className="font-normal text-black mt-4"
             style={{
               fontSize: "clamp(16px, 4.5vw, 22px)",
               lineHeight: "1.5",
@@ -1806,9 +1796,7 @@ const Mentorship = () => {
               maxWidth: "86vw"
             }}
           >
-            Most designers know how to design. What's harder is knowing which
-            roles fit, how to position yourself, and where to even start. That's
-            what this is for.
+            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
           </p>
 
           {/* Explore plans / session button */}
@@ -1875,13 +1863,11 @@ const Mentorship = () => {
               letterSpacing: "-0.53px"
             }}
           >
-            good
-            <br />
-            to know.
+            {renderWithBreaks(COPY.faqSection.heading)}
           </h2>
           <div className="mt-10">
             <p className="font-semibold lowercase text-black text-base mb-4">
-              have more questions?
+              {COPY.faqSection.contactPrompt}
             </p>
             <a
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
@@ -1958,7 +1944,7 @@ const Mentorship = () => {
                       paddingBottom: "clamp(20px, 2.5vh, 32px)"
                     }}
                   >
-                    {item.a}
+                    {renderWithBreaks(item.a)}
                   </p>
                 )}
                 {i !== FAQS.length - 1 && (
@@ -1992,9 +1978,7 @@ const Mentorship = () => {
             marginBottom: "clamp(28px, 7vw, 40px)"
           }}
         >
-          good
-          <br />
-          to know.
+          {renderWithBreaks(COPY.faqSection.heading)}
         </h2>
         <div className="w-full">
           {FAQS.map((item, i) => (
@@ -2047,7 +2031,7 @@ const Mentorship = () => {
                     paddingBottom: "20px"
                   }}
                 >
-                  {item.a}
+                  {renderWithBreaks(item.a)}
                 </p>
               )}
               {i !== FAQS.length - 1 && (
@@ -2064,7 +2048,7 @@ const Mentorship = () => {
         </div>
         <div className="mt-10 flex flex-col items-start gap-3">
           <p className="font-semibold lowercase text-black text-base">
-            have more questions?
+            {COPY.faqSection.contactPrompt}
           </p>
           <a
             href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
@@ -2134,9 +2118,7 @@ const Mentorship = () => {
               maxWidth: "60ch"
             }}
           >
-            if you're serious about your design career,
-            <br />
-            this is where to start.
+            {renderWithBreaks(COPY.closingCta.tagline)}
           </p>
 
           {/* CTA button */}
@@ -2219,7 +2201,7 @@ const Mentorship = () => {
               maxWidth: "36ch"
             }}
           >
-            if you're serious about your design career, this is where to start.
+            {renderWithBreaks(COPY.closingCta.tagline)}
           </p>
 
           {/* CTA button */}

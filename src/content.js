@@ -45,7 +45,7 @@ export const mentorship = {
     sectionHeading: "who's guiding you.",
     name: "Yagnesh ahir",
     role: "Founder, Paperclip Design · Founder, evolve · Design Coach, byStadium · Visiting Faculty, NID",
-    bio1: "8 years building products, improving UX for SaaS companies, and sitting on the other side of hiring decisions. He knows what gets designers noticed — and what quietly eliminates them.",
+    bio1: "8 years building products, improving UX for SaaS companies, and sitting on the other side of hiring decisions. He knows what gets designers noticed and what quietly eliminates them.",
     bio2: "He's mentored 100+ designers. His approach: no noise, no fluff. Just clarity on who you are, where you fit, and exactly how to get there.",
     linkedinLabel: "view linkedin",
     linkedinUrl: "https://www.linkedin.com/in/yagnesh-ahir-24676516/"
@@ -109,21 +109,30 @@ export const mentorship = {
   ],
 
   pricing: {
+    sectionHeading: "what it costs.",
+    starterCutPrice: "₹ 35,000",
+    starterPrice: "₹ 15,000",
+    starterTaglineDesktop: "for those who wants to find \na niche and get started",
+    starterTaglineMobile: "for those who need a direction on where to start",
+    acceleratorCutPrice: "₹ 50,000",
+    acceleratorPrice: "₹ 35,000",
+    acceleratorTaglineDesktop: "for those who wants to find a niche and accelerate the career",
+    acceleratorTaglineMobile: "for those who have interviews lined up and need to crack it",
     starterFeatures: [
       "5 group sessions (~60 min each)",
       "personalised resume & portfolio review",
       "targeted company & role shortlist",
-      "ongoing application support",
       "+",
-      "surprise during check out!"
+      "surprise gift on check out!"
     ],
     acceleratorFeatures: [
-      "everything in starter",
+      "everything in basic",
+      "+",
       "mock interviews",
-      "portfolio reviews",
+      "portfolio building",
       "assignment aid",
       "+",
-      "surprise during check out!"
+      "surprise gift on check out!"
     ]
   },
 
@@ -173,6 +182,23 @@ export const mentorship = {
         body: "create a targeted portfolio and resume. prep for interviews with ongoing support."
       }
     ]
+  },
+
+  whyWeBuiltThis: {
+    heading: "why we built this",
+    subheading: "the gap isn't skill. it's direction",
+    body: "Most designers know how to design. What's harder is knowing which roles fit, how to position yourself, and where to even start. That's what this is for."
+  },
+
+  faqSection: {
+    // Use \n for a line break in the heading
+    heading: "good\nto know.",
+    contactPrompt: "have more questions?"
+  },
+
+  closingCta: {
+    // Use \n for line breaks
+    tagline: "if you're serious about your design career,\nthis is where to start."
   }
 };
 
