@@ -839,7 +839,10 @@ const Mentorship = () => {
                   alt="apply now"
                   onMouseEnter={() => setApplyHover(true)}
                   onMouseLeave={() => setApplyHover(false)}
-                  onClick={() => { trackCtaClick("explore_mentorship", "hero"); scrollTo(section5Ref); }}
+                  onClick={() => {
+                    trackCtaClick("explore_mentorship", "hero");
+                    scrollTo(section5Ref);
+                  }}
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 />
@@ -891,7 +894,10 @@ const Mentorship = () => {
               alt="how it works"
               onMouseEnter={() => setHowHover(true)}
               onMouseLeave={() => setHowHover(false)}
-              onClick={() => { trackCtaClick("how_it_works", "section2"); scrollTo(section6Ref); }}
+              onClick={() => {
+                trackCtaClick("how_it_works", "section2");
+                scrollTo(section6Ref);
+              }}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
             />
@@ -1535,7 +1541,8 @@ const Mentorship = () => {
               tier="starter"
               cutPrice="₹ 35,000"
               price="₹ 15,000"
-              tagline="for those who need a direction on where to start"
+              tagline="for those who wants to find 
+a niche and get started"
               features={starterFeatures}
               isRight={false}
               onPay={handlePayment}
@@ -1548,7 +1555,7 @@ const Mentorship = () => {
               tier="accelerator"
               cutPrice="₹ 50,000"
               price="₹ 35,000"
-              tagline="for those who have interviews lined up and need to crack it"
+              tagline="for those who wants to find a niche and accelerate the career"
               features={acceleratorFeatures}
               isRight={true}
               onPay={handlePayment}
