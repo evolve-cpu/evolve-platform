@@ -109,6 +109,15 @@ export const mentorship = {
   ],
 
   pricing: {
+    sectionHeading: "what it costs.",
+    starterCutPrice: "₹ 35,000",
+    starterPrice: "₹ 15,000",
+    starterTaglineDesktop: "for those who wants to find \na niche and get started",
+    starterTaglineMobile: "for those who need a direction on where to start",
+    acceleratorCutPrice: "₹ 50,000",
+    acceleratorPrice: "₹ 35,000",
+    acceleratorTaglineDesktop: "for those who wants to find a niche and accelerate the career",
+    acceleratorTaglineMobile: "for those who have interviews lined up and need to crack it",
     starterFeatures: [
       "5 group sessions (~60 min each)",
       "personalised resume & portfolio review",
@@ -173,6 +182,23 @@ export const mentorship = {
         body: "create a targeted portfolio and resume. prep for interviews with ongoing support."
       }
     ]
+  },
+
+  whyWeBuiltThis: {
+    heading: "why we built this",
+    subheading: "the gap isn't skill. it's direction",
+    body: "Most designers know how to design. What's harder is knowing which roles fit, how to position yourself, and where to even start. That's what this is for."
+  },
+
+  faqSection: {
+    // Use \n for a line break in the heading
+    heading: "good\nto know.",
+    contactPrompt: "have more questions?"
+  },
+
+  closingCta: {
+    // Use \n for line breaks
+    tagline: "if you're serious about your design career,\nthis is where to start."
   }
 };
 
