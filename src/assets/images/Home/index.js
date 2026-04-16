@@ -282,6 +282,8 @@ import vector_1st from "./vector_1st.svg";
 import vector_1st_mobile from "./vector_1st_mobile.svg";
 import vector_2nd from "./vector_2nd.svg";
 import vector_2nd_mobile from "./vector_2nd_mobile.svg";
+import vector1_1 from "./vector1_1.svg";
+import vector1_1_mobile from "./vector1_1_mobile.svg";
 import left_thunder_mobile from "./left_thunder_mobile.svg";
 import right_thunder_mobile from "./right_thunder_mobile.svg";
 
@@ -455,6 +457,8 @@ export {
   right_element_eye_mobile,
   vector_1_scenenew,
   curvey_circle_with_text,
+  vector1_1,
+  vector1_1_mobile,
 
   // Low Priority - Later Scenes
   left_wall,

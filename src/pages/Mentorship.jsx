@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
+import { renderWithBreaks } from "../utils/renderWithBreaks";
 import { useAuth } from "../hooks/useAuth";
 
 import gsap from "gsap";
@@ -36,70 +37,27 @@ import {
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
 import { supabase } from "../supabaseClient";
+import { mentorship as COPY } from "../content";
+import {
+  trackCtaClick,
+  trackPlanSelected,
+  trackLoginRequired
+} from "../utils/analytics";
 
 /* ─────────────────────────────────────────────
-   Testimonial data
+   Testimonial data (edit text in src/content.js)
 ───────────────────────────────────────────── */
 const TESTIMONIALS = [
-  {
-    quote:
-      "incredibly friendly from the get-go. he gave really clear and actionable points for me to move ahead in my design career.",
-    name: "chinmay zinjal",
-    role: "chemical engineering student, IIT Guwahati",
-    image: chinmayImg
-  },
-  {
-    quote:
-      "yagnesh gave me wonderful advice on how he approaches UX problems and runs a remote team. i walked away truly feeling inspired and enlightened.",
-    name: "jon hwang",
-    role: "communication coach & UX research consultant",
-    image: jonImg
-  },
-  {
-    quote:
-      "he helped me a lot in understanding my path. i would 10/10 recommend him.",
-    name: "anish kumar",
-    role: "lead product designer, smart energy waters",
-    image: anishImg
-  },
-  {
-    quote:
-      "i'm thankful to yagnesh for his invaluable perspectives. the practical advice he provided on navigating the job search process was truly valuable. his positive outlook on the design industry and his insights on how my background in creative direction can contribute to product design have significantly bolstered my confidence. i eagerly anticipate further sessions with him in the future.",
-    name: "Pradyumna K S",
-    role: "Product Designer, Kraverich",
-    image: pradyumnaImg
-  }
+  { ...COPY.testimonials.items[0], image: chinmayImg },
+  { ...COPY.testimonials.items[1], image: jonImg },
+  { ...COPY.testimonials.items[2], image: anishImg },
+  { ...COPY.testimonials.items[3], image: pradyumnaImg }
 ];
 
 /* ─────────────────────────────────────────────
-   FAQ data
+   FAQ data (edit text in src/content.js)
 ───────────────────────────────────────────── */
-const FAQS = [
-  {
-    q: "who is this for?",
-    a: "created for anyone starting out in design, transitioning into the field, or building toward more advanced roles."
-  },
-  {
-    q: "how long does the mentorship run?",
-    a: "5 sessions of ~60 minutes each, spread across 2–3 months. the pace is deliberate — space between sessions matters."
-  },
-  {
-    q: "what do i walk away with?",
-    a: "a targeted resume, a structured portfolio, a shortlist of real companies and roles, and interview preparation specific to your goals."
-  },
-  {
-    q: "what happens after the sessions end?",
-    a: "support doesn't stop. you'll have ongoing access as you apply. we stay in your corner until you land."
-  },
-  {
-    q: "do i need prior design experience?",
-    a: "no. freshers are preferred. if you're serious about a design career and willing to put in the work, that's enough to start."
-  },
-  {
-    q: "how many people are in each batch?",
-    a: "maximum 5. this is intentional — small means you actually get attention, not a seat at the back of a room."
-  }
-];
+const FAQS = COPY.faqs;
 
 /* ─────────────────────────────────────────────
    TestimonialsMobile
@@ -150,7 +108,7 @@ const TestimonialsMobile = () => {
         className="text-black font-extrabold lowercase text-center w-full leading-tight mb-10"
         style={{ fontSize: "clamp(32px, 10vw, 46px)", letterSpacing: "-0.5px" }}
       >
-        what mentees said!
+        {COPY.testimonials.sectionHeading}
       </h2>
       <div
         className="relative flex items-center justify-center -mb-2"
@@ -803,6 +761,7 @@ const Mentorship = () => {
       const dest = allBatchesFull
         ? "/payment?waitlist=true"
         : `/payment?plan=${plan}`;
+      trackLoginRequired(plan);
       navigate("/signin", { state: { from: dest } });
       return;
     }
@@ -811,35 +770,22 @@ const Mentorship = () => {
       return;
     }
     if (allBatchesFull) {
+      trackPlanSelected("waitlist");
       navigate("/payment?waitlist=true");
       return;
     }
+    trackPlanSelected(plan);
     navigate(`/payment?plan=${plan}`);
   };
 
-  const starterFeatures = [
-    "5 group sessions (~60 min each)",
-    "personalised resume & portfolio review",
-    "targeted company & role shortlist",
-    "ongoing application support",
-    "+",
-    "surprise during check out!"
-  ];
-
-  const acceleratorFeatures = [
-    "everything in starter",
-    "mock interviews",
-    "portfolio reviews",
-    "assignment aid",
-    "+",
-    "surprise during check out!"
-  ];
+  const starterFeatures = COPY.pricing.starterFeatures;
+  const acceleratorFeatures = COPY.pricing.acceleratorFeatures;
 
   return (
     <div className="bg-evolve-yellow">
       <SEO
-        title="Design mentorship — 1:1 guidance for aspiring designers"
-        description="Get paired with an industry designer for focused, personal guidance. evolve mentorship helps you find your niche, build your portfolio, and take the next step — on your terms."
+        title={COPY.seo.title}
+        description={COPY.seo.description}
         path="/mentorship"
       />
       {/* ================= SECTION 1 — HERO ================= */}
@@ -862,9 +808,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            Stop guessing your
-            <br />
-            design career
+            {renderWithBreaks(COPY.hero.headlineDesktop)}
           </p>
           <p
             className="md:hidden mt-2 font-extrabold lowercase text-evolve-pink max-w-[100vw]"
@@ -874,7 +818,7 @@ const Mentorship = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            Stop guessing your design career
+            {COPY.hero.headline}
           </p>
           <div className="mt-6 flex flex-col items-center gap-2">
             {hasPaid ? (
@@ -895,12 +839,12 @@ const Mentorship = () => {
                   alt="apply now"
                   onMouseEnter={() => setApplyHover(true)}
                   onMouseLeave={() => setApplyHover(false)}
-                  onClick={() => scrollTo(section5Ref)}
+                  onClick={() => { trackCtaClick("explore_mentorship", "hero"); scrollTo(section5Ref); }}
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 />
                 <p className="text-black text-sm font-semibold">
-                  *limited seats
+                  {COPY.limitedSeatsNote}
                 </p>
               </>
             )}
@@ -939,9 +883,7 @@ const Mentorship = () => {
               maxWidth: isMobile ? "90vw" : "75%"
             }}
           >
-            personalised mentorship to define your design career, with a real
-            resume, a shortlist of roles built for you, and someone in your
-            corner until you land.
+            {COPY.cta.body}
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
             <img
@@ -949,7 +891,7 @@ const Mentorship = () => {
               alt="how it works"
               onMouseEnter={() => setHowHover(true)}
               onMouseLeave={() => setHowHover(false)}
-              onClick={() => scrollTo(section6Ref)}
+              onClick={() => { trackCtaClick("how_it_works", "section2"); scrollTo(section6Ref); }}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
             />
@@ -1036,7 +978,7 @@ const Mentorship = () => {
                   letterSpacing: "-0.5px"
                 }}
               >
-                who's guiding you.
+                {COPY.mentor.sectionHeading}
               </h2>
             </div>
             <div
@@ -1051,7 +993,7 @@ const Mentorship = () => {
                   lineHeight: "1"
                 }}
               >
-                Yagnesh ahir
+                {COPY.mentor.name}
               </p>
               <p
                 className="font-semibold text-evolve-yellow mt-3"
@@ -1062,8 +1004,7 @@ const Mentorship = () => {
                   maxWidth: "800px"
                 }}
               >
-                Founder, Paperclip Design · Founder, evolve · Design Coach,
-                byStadium · Visiting Faculty, NID
+                {COPY.mentor.role}
               </p>
               <p
                 className="font-normal text-white mt-5"
@@ -1151,8 +1092,7 @@ const Mentorship = () => {
                 lineHeight: "1.4"
               }}
             >
-              Founder, Paperclip Design · Founder, evolve · Design Coach,
-              byStadium · Visiting Faculty, NID
+              {COPY.mentor.role}
             </p>
             <p
               className="font-normal text-black mt-3"
@@ -1207,7 +1147,7 @@ const Mentorship = () => {
             marginBottom: "3vh"
           }}
         >
-          what mentees said!
+          {COPY.testimonials.sectionHeading}
         </h2>
         <div className="flex gap-2 flex-1 min-h-0">
           <div
@@ -1443,7 +1383,7 @@ const Mentorship = () => {
               letterSpacing: "-2px"
             }}
           >
-            our framework
+            {COPY.framework.sectionLabel}
           </p>
           <h2
             className="text-black font-extrabold lowercase mt-6"
@@ -1464,7 +1404,7 @@ const Mentorship = () => {
               letterSpacing: "-2px"
             }}
           >
-            thursday 9.30 – 10.30pm ist
+            {COPY.framework.sessionTime}
           </p>
         </div>
         <div className="bg-evolve-lavender-indigo flex flex-1 overflow-hidden py-12 px-10">
@@ -1472,12 +1412,7 @@ const Mentorship = () => {
             className="flex flex-col justify-between"
             style={{ width: "38%" }}
           >
-            {[
-              "discover",
-              "analyse",
-              "identify & approach",
-              "build & apply"
-            ].map((label) => (
+            {COPY.framework.stagesDesktop.map(({ label }) => (
               <p
                 key={label}
                 className="font-extrabold lowercase text-evolve-yellow"
@@ -1492,12 +1427,7 @@ const Mentorship = () => {
             ))}
           </div>
           <div className="flex flex-col justify-between flex-1 pl-6">
-            {[
-              "Getting to know you, your interests, motivations, and how you currently approach design. You'll also gain a deeper understanding of yourself through this process.",
-              "Identify your strengths and gaps. Review how you've defined your past experiences and sharpen how you tell your story.",
-              "Shortlist real companies and job roles that match who you are. Build a targeted strategy for how to approach and apply, not just where.",
-              "Create a targeted resume and portfolio for specific job posts. Prepare for interviews. Plus ongoing support as you apply, even after sessions end."
-            ].map((body, i) => (
+            {COPY.framework.stagesDesktop.map(({ body }, i) => (
               <div key={i}>
                 <div
                   className="w-full mb-3"
@@ -1528,7 +1458,7 @@ const Mentorship = () => {
             className="text-black font-normal lowercase"
             style={{ fontSize: "24px", letterSpacing: "-1px" }}
           >
-            our framework
+            {COPY.framework.sectionLabel}
           </p>
           <h2
             className="text-black font-extrabold lowercase mt-4"
@@ -1546,28 +1476,11 @@ const Mentorship = () => {
             className="text-black font-bold lowercase mt-4"
             style={{ fontSize: "24px", letterSpacing: "-1px" }}
           >
-            thursday 9.30 – 10.30pm ist
+            {COPY.framework.sessionTime}
           </p>
         </div>
         <div className="bg-evolve-lavender-indigo px-5 py-8 flex flex-col gap-8">
-          {[
-            {
-              label: "discover",
-              body: "understand your interests, motivations, and design approach. gain clarity on who you are."
-            },
-            {
-              label: "analyse",
-              body: "identify strengths and gaps. refine how you tell your story."
-            },
-            {
-              label: "identify & approach",
-              body: "find roles and companies that fit. build a focused application strategy."
-            },
-            {
-              label: "build & apply",
-              body: "create a targeted portfolio and resume. prep for interviews with ongoing support."
-            }
-          ].map(({ label, body }) => (
+          {COPY.framework.stagesMobile.map(({ label, body }) => (
             <div key={label}>
               <p
                 className="font-extrabold lowercase text-evolve-yellow"
@@ -1967,7 +1880,9 @@ const Mentorship = () => {
             to know.
           </h2>
           <div className="mt-10">
-            <p className="font-semibold lowercase text-black text-base mb-4">have more questions?</p>
+            <p className="font-semibold lowercase text-black text-base mb-4">
+              have more questions?
+            </p>
             <a
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
               target="_blank"
@@ -2148,7 +2063,9 @@ const Mentorship = () => {
           ))}
         </div>
         <div className="mt-10 flex flex-col items-start gap-3">
-          <p className="font-semibold lowercase text-black text-base">have more questions?</p>
+          <p className="font-semibold lowercase text-black text-base">
+            have more questions?
+          </p>
           <a
             href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
             target="_blank"

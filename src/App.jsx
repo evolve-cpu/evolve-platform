@@ -1105,8 +1105,17 @@ const AppLayout = () => {
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
 
-  // ContentSquare/Hotjar: track page views + key business events on route change
+  // GA4 + ContentSquare: track page views + key business events on route change
   useEffect(() => {
+    // GA4 — SPA navigation doesn't auto-fire page_view; we send it manually
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "page_view", {
+        page_path: location.pathname,
+        page_location: window.location.href
+      });
+    }
+
+    // ContentSquare
     window._uxa = window._uxa || [];
     window._uxa.push(["trackPageview", location.pathname]);
 

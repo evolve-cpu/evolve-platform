@@ -448,7 +448,7 @@
 //               letterSpacing: "-0.03em"
 //             }}
 //           >
-//             evolve <br /> community
+//             {COPY.hero.heading}
 //           </h1>
 
 //           {/* Sub text */}
@@ -460,7 +460,7 @@
 //             }}
 //           >
 //             {/* not a forum. not a feed! <br /> */}
-//             an inner circle built for creators.
+//             {COPY.hero.subtext}
 //           </p>
 
 //           {/* Button */}
@@ -841,7 +841,7 @@
 //               letterSpacing: "-0.03em"
 //             }}
 //           >
-//             evolve <br /> community
+//             {COPY.hero.heading}
 //           </h1>
 
 //           <p
@@ -851,7 +851,7 @@
 //               lineHeight: "clamp(28px, 3vw, 36px)"
 //             }}
 //           >
-//             an inner circle built for creators.
+//             {COPY.hero.subtext}
 //           </p>
 
 //           <div
@@ -948,6 +948,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import SEO from "../components/SEO";
 import ShareYourWorkButton from "../components/ShareYourWorkButton";
+import { community as COPY } from "../content";
 
 import {
   rays_community,
@@ -972,57 +973,27 @@ import {
 } from "../assets/images/Community";
 
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+import { renderWithBreaks } from "../utils/renderWithBreaks";
 
-const CARDS = [
+// SVGs live here — only text/URLs come from content.js
+const CARD_ASSETS = [
   {
-    title: "portfolio reviews",
-    subtitle: "honest feedback. real growth.",
-    descriptionMobile:
-      "share work and get direct feedback on what works and what doesn’t.",
-    descriptionDesktop:
-      "share your work and get direct, no-sugarcoating feedback from experienced designers. understand what works, what doesn’t, and how to level up.",
     desktopImages: [{ src: portfolio_reviews, position: "center" }],
-    mobileImage: portfolio_reviews_mobile,
-    ctaLink: "/community/portfolio-review"
+    mobileImage: portfolio_reviews_mobile
   },
   {
-    title: "ama sessions",
-    subtitle: "ask what really matters.",
-    descriptionMobile:
-      "ask anything in open sessions with professionals who’ve done it for real.",
-    descriptionDesktop:
-      "ask anything in open sessions with working professionals. get answers from people who’ve been there and know how it actually works.",
     desktopImages: [{ src: ama_session, position: "center" }],
     mobileImage: ama_session_mobile
   },
-
   {
-    title: "challenges",
-    subtitle: "learn by doing.",
-    descriptionMobile:
-      "take short challenges, ship work, compare approaches, and learn new ways.",
-    descriptionDesktop:
-      "jump into short, time-bound challenges designed to stretch your thinking. ship your work, see how others approached the same brief, and pick up new ways of solving problems.",
     desktopImages: [{ src: challenges, position: "center" }],
     mobileImage: challenges_mobile
   },
   {
-    title: "resource library",
-    subtitle: "the good stuff, curated.",
-    descriptionMobile:
-      "access curated articles, tools, and reads to build strong design fundamentals.",
-    descriptionDesktop:
-      "access hand-picked articles, tools, and reads,  written by evolve and sourced from the best out there. no fluff. just solid resources to build strong fundamentals.",
     desktopImages: [{ src: resources, position: "center" }],
     mobileImage: resources_mobile
   },
   {
-    title: "bookclub",
-    subtitle: "read. learn. finish.",
-    descriptionMobile:
-      "read design classics together in a weekly book club you actually finish.",
-    descriptionDesktop:
-      "join the book club to read design classics and modern must-reads together. we break books into small chunks and meet weekly to talk ideas, opinions, and real takeaways, so you actually finish what you start.",
     desktopImages: [
       { src: card_5th_left, position: "left" },
       { src: card_5th_right, position: "right" }
@@ -1030,6 +1001,7 @@ const CARDS = [
     mobileImage: card_5th_mobile
   }
 ];
+const CARDS = COPY.cards.map((c, i) => ({ ...c, ...CARD_ASSETS[i] }));
 
 const Community = () => {
   const [hover, setHover] = useState(false);
@@ -1218,8 +1190,8 @@ const Community = () => {
   return (
     <div className="bg-evolve-yellow">
       <SEO
-        title="The evolve community — where the ecosystem comes alive"
-        description="A global space for designers at every stage — discussions, challenges, AMAs, book clubs, and more. The community is where everything you learn on evolve gets tested, shared, and built upon."
+        title={COPY.seo.title}
+        description={COPY.seo.description}
         path="/community"
       />
       {/* ================= HERO ================= */}
@@ -1290,7 +1262,7 @@ const Community = () => {
               letterSpacing: "-0.03em"
             }}
           >
-            evolve <br /> community
+            {renderWithBreaks(COPY.hero.heading)}
           </h1>
 
           <p
@@ -1300,7 +1272,7 @@ const Community = () => {
               lineHeight: "clamp(28px, 3vw, 36px)"
             }}
           >
-            an inner circle built for creators.
+            {COPY.hero.subtext}
           </p>
 
           <div
@@ -1309,7 +1281,7 @@ const Community = () => {
             onMouseLeave={() => setHover(false)}
           >
             <a
-              href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+              href={COPY.hero.joinUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block"
@@ -1327,8 +1299,7 @@ const Community = () => {
       {/* ================= INTRO TEXT ================= */}
       <section className="bg-evolve-yellow pt-28 text-center px-4">
         <p className="mt-6 max-w-4xl mx-auto text-[24px] md:text-[36px] font-regular text-black leading-[36px]">
-          it's YOUR space to ask bold questions, trade war stories, learn from
-          real people, and build the kind of skills that stick for life.
+          {COPY.introText}
         </p>
       </section>
 

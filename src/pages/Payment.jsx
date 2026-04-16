@@ -2,6 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
+import {
+  trackBeginCheckout,
+  trackPaymentInitiated,
+  trackPurchase,
+  trackPaymentDismissed,
+  trackPaymentFailed,
+  trackWaitlistJoin
+} from "../utils/analytics";
 import BlackNav from "../components/BlackNav";
 import {
   surprise_box,
@@ -395,6 +403,14 @@ export default function Payment() {
       });
   }, [user]);
 
+  /* ── begin_checkout — fire once when user arrives with a real plan ──────── */
+  useEffect(() => {
+    if (user && !isWaitlist) {
+      trackBeginCheckout(plan);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   /* ── pre-fill phone from profile ────────────────────────────────────────── */
   useEffect(() => {
     if (user?.phone) {
@@ -492,18 +508,24 @@ export default function Payment() {
           contact: cleaned
         },
         theme: { color: "#FFD600" },
-        handler: () => {
-          window._uxa = window._uxa || [];
-          window._uxa.push(["trackEvent", "conversion", "payment_success", plan]);
+        handler: (response) => {
+          trackPurchase(plan, response?.razorpay_payment_id);
           setStep("success");
           setPaying(false);
         },
-        modal: { ondismiss: () => setPaying(false) }
+        modal: {
+          ondismiss: () => {
+            trackPaymentDismissed(plan);
+            setPaying(false);
+          }
+        }
       });
       rzp.on("payment.failed", () => {
+        trackPaymentFailed(plan);
         setStep("failed");
         setPaying(false);
       });
+      trackPaymentInitiated(plan);
       rzp.open();
     } catch (err) {
       console.error("payment error:", err);
@@ -543,6 +565,7 @@ export default function Payment() {
         })
       });
       if (!res.ok) throw new Error("failed");
+      trackWaitlistJoin();
       setStep("waitlist_success");
     } catch {
       setWaitlistError("something went wrong. please try again.");
