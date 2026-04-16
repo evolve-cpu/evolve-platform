@@ -45,7 +45,7 @@ export const mentorship = {
     sectionHeading: "who's guiding you.",
     name: "Yagnesh ahir",
     role: "Founder, Paperclip Design · Founder, evolve · Design Coach, byStadium · Visiting Faculty, NID",
-    bio1: "8 years building products, improving UX for SaaS companies, and sitting on the other side of hiring decisions. He knows what gets designers noticed — and what quietly eliminates them.",
+    bio1: "8 years building products, improving UX for SaaS companies, and sitting on the other side of hiring decisions. He knows what gets designers noticed and what quietly eliminates them.",
     bio2: "He's mentored 100+ designers. His approach: no noise, no fluff. Just clarity on who you are, where you fit, and exactly how to get there.",
     linkedinLabel: "view linkedin",
     linkedinUrl: "https://www.linkedin.com/in/yagnesh-ahir-24676516/"
@@ -113,17 +113,17 @@ export const mentorship = {
       "5 group sessions (~60 min each)",
       "personalised resume & portfolio review",
       "targeted company & role shortlist",
-      "ongoing application support",
       "+",
-      "surprise during check out!"
+      "surprise gift on check out!"
     ],
     acceleratorFeatures: [
-      "everything in starter",
+      "everything in basic",
+      "+",
       "mock interviews",
-      "portfolio reviews",
+      "portfolio building",
       "assignment aid",
       "+",
-      "surprise during check out!"
+      "surprise gift on check out!"
     ]
   },
 
