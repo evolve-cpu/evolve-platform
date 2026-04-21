@@ -781,7 +781,7 @@ const buildScene1Timeline = (refs, isMobile) => {
     // Scale 9 (desktop) / 7 (mobile) zooms deep enough into the door that
     // the visible slice is entirely within the door frame — no edges show.
     // Origin targets the door opening (~60% from top on desktop, ~65% mobile).
-    scale: isMobile ? 8 : isTablet ? 8 : 10,
+    scale: isMobile ? 12 : isTablet ? 12 : 15,
     y: 0,
     // transformOrigin: isMobile
     //   ? "center 65%"
@@ -792,7 +792,7 @@ const buildScene1Timeline = (refs, isMobile) => {
       ? "center 48.5%"
       : isTablet
         ? "center 62%"
-        : "center 40%",
+        : "center 35%",
     ease: "power3.inOut",
     duration: 3.0,
     force3D: true
