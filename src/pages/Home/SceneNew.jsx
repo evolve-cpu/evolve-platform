@@ -131,23 +131,26 @@ const CARD_DATA = {
   community: {
     title: "community",
     desc: "a safe, active space to connect, share, and grow.",
-    logo: community_logo
+    logo: community_logo,
+    imageWidth: "70%"
   },
   mentorship: {
     title: "mentorship",
     desc: "1:1 support. learn from experienced designers.",
-    logo: mentorship_logo
+    logo: mentorship_logo,
+    imageWidth: "72%"
   },
   webinar: {
     title: "webinar",
     desc: "expert-led sessions. learn, engage, and grow.",
-    logo: webinar_logo
+    logo: webinar_logo,
+    imageWidth: "60%"
   }
 };
 
 const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
   const innerRef = useRef(null);
-  const { title, desc, logo } = CARD_DATA[card];
+  const { title, desc, logo, imageWidth } = CARD_DATA[card];
 
   const handleInteraction = (e) => {
     e.stopPropagation();
@@ -210,7 +213,7 @@ const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
           src={logo}
           alt={title}
           style={{
-            width: "70%",
+            width: imageWidth,
             height: "auto",
             flexShrink: 0,
             position: "relative",
@@ -272,40 +275,26 @@ OvalFullCard.displayName = "OvalFullCard";
 const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
   const outerRef = useRef(null);
   const innerRef = useRef(null);
-  const innerLogoRef = useRef(null);
 
   React.useImperativeHandle(ref, () => ({
     outer: outerRef.current,
     inner: innerRef.current,
-    innerLogo: innerLogoRef.current
+    innerLogo: null // kept for API compatibility — logo is part of inner SVG
   }));
 
   return (
     <div className="relative w-full h-full">
-      {/* Outer circle - will rotate */}
+      {/* Outer wavy circle — rotates */}
       <img
         ref={outerRef}
         src={curvey_circle_without_inner_part}
         alt="outer circle"
         className="absolute inset-0 w-full h-full antialiased"
-        style={{
-          transformOrigin: "center center"
-        }}
+        style={{ transformOrigin: "center center" }}
       />
-      {/* Inner LOGO part - visible from start */}
-      <img
-        ref={innerLogoRef}
-        src={curvey_circle_inner_logo_part}
-        alt="inner logo circle"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          width: "25%",
-          height: "25%",
-          transformOrigin: "center center",
-          opacity: 1
-        }}
-      />
-      {/* Inner part - visible from start */}
+      {/* Inner part — contains the text ring, yellow circle, AND the e-logo.
+          curvey_circle_inner_logo_part was removed because the logo is already
+          embedded in curvey_circle_inner_part, causing a double-render overlap. */}
       <img
         ref={innerRef}
         src={curvey_circle_inner_part}
@@ -375,7 +364,7 @@ export const useSceneNewTimeline = (refs, isMobile) => {
   // Orbit text initial states
   tl.set(refs.orbitText3, { opacity: 0, y: 20 });
   tl.set(refs.orbitSubtext1, { opacity: 0, y: 10 });
-  tl.set(refs.orbitSubtext2, { opacity: 0 });
+  tl.set(refs.orbitSubtext2, { opacity: 0, display: "none" });
 
   tl.set(refs.orbitWaitlistButton, {
     opacity: 0,
@@ -1269,13 +1258,10 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     orbitSubtextStart
   );
 
-  // CTA: swap partial → full subtext, button appears
+  // CTA: continuation text fades in after partial subtext (subtext1 stays visible)
   tl.addLabel("scene_new_step15_orbit_cta", ctaStart);
-  tl.to(
-    refs.orbitSubtext1,
-    { opacity: 0, duration: 0.35, ease: "power2.out" },
-    ctaStart
-  );
+  // Switch display:none → inline so span joins the sentence flow before fading in
+  tl.set(refs.orbitSubtext2, { display: "inline" }, ctaStart + 0.25);
   tl.to(
     refs.orbitSubtext2,
     { opacity: 1, duration: 0.7, ease: "power2.out" },
@@ -1624,7 +1610,7 @@ const SceneNew = React.forwardRef((props, ref) => {
         >
           <OvalMiniCard
             ref={ovalMini3Ref}
-            logo={webinar_logo}
+            logo={community_logo}
             style={{
               width: isMobile ? "21vw" : "200px",
               opacity: 0,
@@ -1642,7 +1628,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           />
           <OvalMiniCard
             ref={ovalMini1Ref}
-            logo={community_logo}
+            logo={webinar_logo}
             style={{
               width: isMobile ? "21vw" : "200px",
               opacity: 0,
@@ -1890,7 +1876,7 @@ const SceneNew = React.forwardRef((props, ref) => {
             transform: "translateX(-50%)",
             textAlign: "center",
             zIndex: 20,
-            width: isMobile ? "88vw" : "60%",
+            width: isMobile ? "88vw" : "45%",
             pointerEvents: "none"
           }}
         >
@@ -1911,44 +1897,31 @@ const SceneNew = React.forwardRef((props, ref) => {
             in your pocket.
           </div>
 
-          {/* Partial subtext (step 14b) */}
+          {/* Orbit subtext — one continuous sentence revealed in two parts */}
           <div
-            ref={orbitSubtext1Ref}
             style={{
               marginTop: isMobile ? "0.9rem" : "1.2rem",
               fontWeight: 400,
               fontSize: isMobile ? "1rem" : "1.2rem",
               lineHeight: 1.5,
               color: "black",
-              opacity: 0
+              textAlign: "center"
             }}
           >
-            The Evolve app is coming. a personal space to learn at
-          </div>
-
-          {/* Full subtext (CTA step) — same position, fades in over partial */}
-          <div
-            ref={orbitSubtext2Ref}
-            style={{
-              marginTop: isMobile ? "0.9rem" : "1.2rem",
-              fontWeight: 400,
-              fontSize: isMobile ? "1rem" : "1.2rem",
-              lineHeight: 1.6,
-              color: "black",
-              opacity: 0,
-              position: "absolute",
-              top: isMobile
-                ? "calc(2.2rem * 1.15 * 2 + 0.9rem)"
-                : "calc(3.5rem * 1.15 * 2 + 1.2rem)",
-              left: 0,
-              right: 0,
-              maxWidth: isMobile ? "100%" : "65%", // ← ADD THIS
-              margin: "0 auto"
-            }}
-          >
-            {
-              "The Evolve app is coming. a personal space to learn at your own pace, track how far you've come, and stay curious about design every single day."
-            }
+            <span ref={orbitSubtext1Ref} style={{ opacity: 0 }}>
+              {
+                "The Evolve app is coming. a personal space to learn at your own pace, "
+              }
+            </span>
+            {/* display:none removes it from layout until GSAP sets display:inline before fade-in */}
+            <span
+              ref={orbitSubtext2Ref}
+              style={{ opacity: 0, display: "none" }}
+            >
+              {
+                "track how far you've come, and stay curious about design every single day."
+              }
+            </span>
           </div>
         </div>
 
@@ -1975,7 +1948,7 @@ const SceneNew = React.forwardRef((props, ref) => {
               background: "rgb(20,20,20)",
               color: "#ffffff",
               padding: isMobile ? "13px 26px" : "15px 32px",
-              borderRadius: "999px",
+              borderRadius: "20px",
               fontSize: isMobile ? "1rem" : "1.1rem",
               fontWeight: 700,
               letterSpacing: "-0.01em",
