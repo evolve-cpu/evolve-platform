@@ -131,23 +131,26 @@ const CARD_DATA = {
   community: {
     title: "community",
     desc: "a safe, active space to connect, share, and grow.",
-    logo: community_logo
+    logo: community_logo,
+    imageWidth: "70%"
   },
   mentorship: {
     title: "mentorship",
     desc: "1:1 support. learn from experienced designers.",
-    logo: mentorship_logo
+    logo: mentorship_logo,
+    imageWidth: "72%"
   },
   webinar: {
     title: "webinar",
     desc: "expert-led sessions. learn, engage, and grow.",
-    logo: webinar_logo
+    logo: webinar_logo,
+    imageWidth: "60%"
   }
 };
 
 const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
   const innerRef = useRef(null);
-  const { title, desc, logo } = CARD_DATA[card];
+  const { title, desc, logo, imageWidth } = CARD_DATA[card];
 
   const handleInteraction = (e) => {
     e.stopPropagation();
@@ -210,7 +213,7 @@ const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
           src={logo}
           alt={title}
           style={{
-            width: "70%",
+            width: imageWidth,
             height: "auto",
             flexShrink: 0,
             position: "relative",
@@ -1607,7 +1610,7 @@ const SceneNew = React.forwardRef((props, ref) => {
         >
           <OvalMiniCard
             ref={ovalMini3Ref}
-            logo={webinar_logo}
+            logo={community_logo}
             style={{
               width: isMobile ? "21vw" : "200px",
               opacity: 0,
@@ -1625,7 +1628,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           />
           <OvalMiniCard
             ref={ovalMini1Ref}
-            logo={community_logo}
+            logo={webinar_logo}
             style={{
               width: isMobile ? "21vw" : "200px",
               opacity: 0,
@@ -1873,7 +1876,7 @@ const SceneNew = React.forwardRef((props, ref) => {
             transform: "translateX(-50%)",
             textAlign: "center",
             zIndex: 20,
-            width: isMobile ? "88vw" : "60%",
+            width: isMobile ? "88vw" : "45%",
             pointerEvents: "none"
           }}
         >
@@ -1906,11 +1909,18 @@ const SceneNew = React.forwardRef((props, ref) => {
             }}
           >
             <span ref={orbitSubtext1Ref} style={{ opacity: 0 }}>
-              {"The Evolve app is coming. a personal space to learn at your own pace, "}
+              {
+                "The Evolve app is coming. a personal space to learn at your own pace, "
+              }
             </span>
             {/* display:none removes it from layout until GSAP sets display:inline before fade-in */}
-            <span ref={orbitSubtext2Ref} style={{ opacity: 0, display: "none" }}>
-              {"track how far you've come, and stay curious about design every single day."}
+            <span
+              ref={orbitSubtext2Ref}
+              style={{ opacity: 0, display: "none" }}
+            >
+              {
+                "track how far you've come, and stay curious about design every single day."
+              }
             </span>
           </div>
         </div>
