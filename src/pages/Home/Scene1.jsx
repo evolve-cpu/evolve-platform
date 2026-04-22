@@ -793,7 +793,7 @@ const buildScene1Timeline = (refs, isMobile) => {
       : isTablet
         ? "center 62%"
         : // : "center 40%",
-          "center 38%",
+          "center 40.5%",
     ease: "power3.inOut",
     duration: 3.0,
     force3D: true
