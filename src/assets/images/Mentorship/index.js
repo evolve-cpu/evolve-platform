@@ -26,6 +26,11 @@ import anishImg from "./anishImg.svg";
 import pradyumnaImg from "./pradyumnaImg.svg";
 import rays_payment from "./rays_payment.svg";
 import join_the_waitlist from "./join_the_waitlist.svg";
+import mentorship_session_hero from "./mentorship-session_hero.svg";
+import mentorship_session_hero_mobile from "./mentorship-session_hero_mobile.svg";
+import mentorship_session_hero_mobile1 from "./mentorship-session_hero_mobile1.svg";
+import chesna from "./chesna.png";
+import yash from "./yash.png";
 
 export {
   hero_mentorship,
@@ -55,5 +60,10 @@ export {
   anishImg,
   pradyumnaImg,
   rays_payment,
-  join_the_waitlist
+  join_the_waitlist,
+  mentorship_session_hero,
+  mentorship_session_hero_mobile,
+  mentorship_session_hero_mobile1,
+  chesna,
+  yash
 };

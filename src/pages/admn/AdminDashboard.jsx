@@ -388,6 +388,7 @@ export default function AdminDashboard() {
   const [waitlist, setWaitlist] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [portfolioReviews, setPortfolioReviews] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -428,7 +429,8 @@ export default function AdminDashboard() {
         { data: bData, error: bErr },
         { data: wData, error: wErr },
         { data: prData, error: prErr },
-        { data: reviewData, error: reviewErr } // 👈 ADD THIS
+        { data: reviewData, error: reviewErr },
+        { data: sessData }
       ] = await Promise.all([
         supabase
           .from("mentorship_payments")
@@ -449,11 +451,16 @@ export default function AdminDashboard() {
           .select("*")
           .order("created_at", { ascending: false }),
 
-        // 👇 NEW TABLE
         supabase
           .from("portfolio_reviews")
           .select("*")
-          .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false }),
+
+        supabase
+          .from("mentorship_sessions")
+          .select("*")
+          .order("batch_id")
+          .order("session_number")
       ]);
 
       if (pErr) throw pErr;
@@ -463,6 +470,7 @@ export default function AdminDashboard() {
       if (reviewErr) throw reviewErr;
 
       setPortfolioReviews(reviewData || []);
+      setSessions(sessData || []);
 
       setPayments(pData || []);
       setBatches(bData || []);
@@ -738,7 +746,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "batches", label: `batches (${batches.length})` },
     { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
     { id: "profiles", label: `profiles (${profiles.length})` },
-    { id: "reviews", label: `reviews (${portfolioReviews.length})` }
+    { id: "reviews", label: `reviews (${portfolioReviews.length})` },
+    { id: "sessions", label: "sessions" }
   ];
 
   return (
@@ -2675,7 +2684,329 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </section>
           </div>
         )}
+        {/* ══════════════════════════════════════════════════════════════
+            SESSIONS TAB
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "sessions" && (
+          <SessionsTab
+            batches={batches}
+            sessions={sessions}
+            onSessionsChange={setSessions}
+          />
+        )}
+
       </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SessionsTab — add / edit sessions per batch
+═══════════════════════════════════════════════════════════════════════════ */
+const SESSION_NAMES = ["discover", "analyse", "design", "build", "present"];
+
+function SessionsTab({ batches, sessions, onSessionsChange }) {
+  // editingKey: `${batchId}-${sessionNumber}` or null
+  const [editingKey, setEditingKey] = useState(null);
+  const [form, setForm] = useState({ name: "", description: "", date: "", time: "21:30" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const sessionMap = {};
+  sessions.forEach((s) => {
+    sessionMap[`${s.batch_id}-${s.session_number}`] = s;
+  });
+
+  // Convert IST datetime string to UTC timestamptz for storage
+  function istToUtc(dateStr, timeStr) {
+    // dateStr: "YYYY-MM-DD", timeStr: "HH:MM" (IST)
+    const [h, m] = timeStr.split(":").map(Number);
+    const utcH = h - 5;
+    const utcM = m - 30;
+    const d = new Date(`${dateStr}T00:00:00Z`);
+    d.setUTCHours(utcH, utcM, 0, 0);
+    return d.toISOString();
+  }
+
+  // Convert stored UTC datetime back to IST for display in form
+  function utcToIst(datetimeStr) {
+    if (!datetimeStr) return { date: "", time: "21:30" };
+    const d = new Date(datetimeStr);
+    const istDate = new Date(d.getTime() + 5.5 * 60 * 60 * 1000);
+    const date = istDate.toISOString().slice(0, 10);
+    const hh = String(istDate.getUTCHours()).padStart(2, "0");
+    const mm = String(istDate.getUTCMinutes()).padStart(2, "0");
+    return { date, time: `${hh}:${mm}` };
+  }
+
+  function openEdit(batchId, sessionNumber) {
+    const key = `${batchId}-${sessionNumber}`;
+    const existing = sessionMap[key];
+    const ist = utcToIst(existing?.session_datetime);
+    setForm({
+      name:        existing?.name        || SESSION_NAMES[sessionNumber - 1] || "",
+      description: existing?.description || "",
+      date:        ist.date,
+      time:        ist.time
+    });
+    setEditingKey(key);
+    setSaveError("");
+  }
+
+  async function handleSave(batchId, sessionNumber) {
+    if (!form.name.trim() || !form.date || !form.time) {
+      setSaveError("name, date and time are required");
+      return;
+    }
+    setSaving(true);
+    setSaveError("");
+    try {
+      const session_datetime = istToUtc(form.date, form.time);
+      const payload = {
+        batch_id:        batchId,
+        session_number:  sessionNumber,
+        name:            form.name.trim(),
+        description:     form.description.trim() || null,
+        session_datetime
+      };
+      const key = `${batchId}-${sessionNumber}`;
+      const existing = sessionMap[key];
+
+      let result;
+      if (existing) {
+        result = await supabase
+          .from("mentorship_sessions")
+          .update({ name: payload.name, description: payload.description, session_datetime })
+          .eq("id", existing.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from("mentorship_sessions")
+          .insert(payload)
+          .select()
+          .single();
+      }
+      if (result.error) throw result.error;
+
+      // update local state
+      const updated = result.data;
+      onSessionsChange((prev) => {
+        const filtered = prev.filter(
+          (s) => !(s.batch_id === batchId && s.session_number === sessionNumber)
+        );
+        return [...filtered, updated].sort((a, b) =>
+          a.batch_id === b.batch_id ? a.session_number - b.session_number : 0
+        );
+      });
+      setEditingKey(null);
+    } catch (err) {
+      setSaveError(err.message || "save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(batchId, sessionNumber) {
+    const key = `${batchId}-${sessionNumber}`;
+    const existing = sessionMap[key];
+    if (!existing) return;
+    if (!window.confirm(`Delete session ${sessionNumber} for this batch?`)) return;
+    await supabase.from("mentorship_sessions").delete().eq("id", existing.id);
+    onSessionsChange((prev) =>
+      prev.filter((s) => !(s.batch_id === batchId && s.session_number === sessionNumber))
+    );
+    if (editingKey === key) setEditingKey(null);
+  }
+
+  if (batches.length === 0) {
+    return <p style={{ color: "#444" }}>no batches found — create a batch first</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {batches.map((batch) => (
+        <div
+          key={batch.id}
+          className="rounded-xl border p-5 space-y-4"
+          style={{ background: "#111", borderColor: "#222" }}
+        >
+          {/* batch header */}
+          <div className="flex items-center gap-3">
+            <h3 className="text-base font-black text-white">
+              Batch {batch.batch_number}
+            </h3>
+            <span className="text-xs" style={{ color: "#555" }}>
+              starts {fmtDate(batch.start_date)}
+            </span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-full font-semibold"
+              style={{
+                background: batch.status === "open" ? "rgba(34,197,94,0.15)" : "#1a1a1a",
+                color: batch.status === "open" ? GR : "#555"
+              }}
+            >
+              {batch.status}
+            </span>
+          </div>
+
+          {/* 5 session slots */}
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((num) => {
+              const key = `${batch.id}-${num}`;
+              const sess = sessionMap[key];
+              const isEditing = editingKey === key;
+
+              return (
+                <div
+                  key={num}
+                  className="rounded-lg border"
+                  style={{
+                    background: "#0d0d0d",
+                    borderColor: isEditing ? Y : "#1a1a1a"
+                  }}
+                >
+                  {/* row header */}
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <span
+                      className="text-xs font-black w-20 flex-shrink-0"
+                      style={{ color: Y }}
+                    >
+                      session {num}
+                    </span>
+
+                    {sess ? (
+                      <>
+                        <span className="text-sm font-semibold text-white flex-1">{sess.name}</span>
+                        <span className="text-xs flex-shrink-0" style={{ color: "#555" }}>
+                          {(() => {
+                            const d = new Date(sess.session_datetime);
+                            return d.toLocaleString("en-IN", {
+                              timeZone: "Asia/Kolkata",
+                              day: "numeric", month: "short", year: "numeric",
+                              hour: "numeric", minute: "2-digit", hour12: true
+                            }) + " IST";
+                          })()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs flex-1" style={{ color: "#444" }}>
+                        not added yet
+                      </span>
+                    )}
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => isEditing ? setEditingKey(null) : openEdit(batch.id, num)}
+                        className="text-xs px-3 py-1 rounded-lg font-semibold transition-colors"
+                        style={{
+                          background: isEditing ? "#222" : "rgba(255,208,7,0.12)",
+                          color: isEditing ? "#666" : Y
+                        }}
+                      >
+                        {isEditing ? "cancel" : sess ? "edit" : "+ add"}
+                      </button>
+                      {sess && !isEditing && (
+                        <button
+                          onClick={() => handleDelete(batch.id, num)}
+                          className="text-xs px-2 py-1 rounded-lg font-semibold"
+                          style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}
+                        >
+                          del
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* inline edit form */}
+                  {isEditing && (
+                    <div
+                      className="px-4 pb-4 space-y-3 border-t"
+                      style={{ borderColor: "#1a1a1a" }}
+                    >
+                      <div className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* name */}
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                            session name
+                          </label>
+                          <input
+                            value={form.name}
+                            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                            placeholder="e.g. discover"
+                            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                            style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}
+                          />
+                        </div>
+
+                        {/* date */}
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                            date (IST)
+                          </label>
+                          <input
+                            type="date"
+                            value={form.date}
+                            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                            style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", colorScheme: "dark" }}
+                          />
+                        </div>
+
+                        {/* time */}
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                            time IST (default 9:30 PM = 21:30)
+                          </label>
+                          <input
+                            type="time"
+                            value={form.time}
+                            onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
+                            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                            style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", colorScheme: "dark" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* description */}
+                      <div>
+                        <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                          description
+                        </label>
+                        <textarea
+                          value={form.description}
+                          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                          placeholder="what happens in this session?"
+                          rows={3}
+                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                          style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", fontFamily: "inherit" }}
+                        />
+                      </div>
+
+                      {saveError && (
+                        <p className="text-xs" style={{ color: "#ef4444" }}>{saveError}</p>
+                      )}
+
+                      <button
+                        onClick={() => handleSave(batch.id, num)}
+                        disabled={saving}
+                        className="px-5 py-2 rounded-lg text-sm font-black transition-opacity"
+                        style={{
+                          background: saving ? "#333" : Y,
+                          color: saving ? "#666" : "#000",
+                          opacity: saving ? 0.7 : 1
+                        }}
+                      >
+                        {saving ? "saving…" : "save session"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
