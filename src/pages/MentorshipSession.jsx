@@ -558,28 +558,26 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
    FeedbackPopup — appears over screen 2 after a session has passed
 ═══════════════════════════════════════════════════════════════════════════ */
 function FeedbackPopup({ session, user, onClose }) {
-  const [rating, setRating]         = useState(0);
-  const [comment, setComment]       = useState("");
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone]             = useState(false);
+  const [done, setDone] = useState(false);
 
   const handleSubmit = async () => {
     if (rating === 0 || submitting) return;
     setSubmitting(true);
-    await supabase
-      .from("mentorship_session_feedback")
-      .upsert(
-        {
-          session_id:     session.id,
-          user_id:        user.id,
-          user_name:      user.name || null,
-          session_name:   session.name || null,
-          session_number: session.session_number || null,
-          rating,
-          comment: comment.trim() || null
-        },
-        { onConflict: "session_id,user_id" }
-      );
+    await supabase.from("mentorship_session_feedback").upsert(
+      {
+        session_id: session.id,
+        user_id: user.id,
+        user_name: user.name || null,
+        session_name: session.name || null,
+        session_number: session.session_number || null,
+        rating,
+        comment: comment.trim() || null
+      },
+      { onConflict: "session_id,user_id" }
+    );
     setDone(true);
     setTimeout(onClose, 1200);
   };
@@ -587,7 +585,10 @@ function FeedbackPopup({ session, user, onClose }) {
   return (
     <>
       {/* backdrop */}
-      <div className="fixed inset-0 z-[80]" style={{ background: "rgba(0,0,0,0.7)" }} />
+      <div
+        className="fixed inset-0 z-[80]"
+        style={{ background: "rgba(0,0,0,0.7)" }}
+      />
 
       {/* sheet */}
       <div
@@ -597,13 +598,18 @@ function FeedbackPopup({ session, user, onClose }) {
         {done ? (
           <div className="flex flex-col items-center gap-3 py-8">
             <span className="text-4xl">💛</span>
-            <p className="text-white font-bold text-lg text-center">thanks for your feedback!</p>
+            <p className="text-white font-bold text-lg text-center">
+              thanks for your feedback!
+            </p>
           </div>
         ) : (
           <>
             <h2
               className="text-white font-bold text-center mb-6"
-              style={{ fontSize: "clamp(22px, 5vw, 28px)", letterSpacing: "-0.02em" }}
+              style={{
+                fontSize: "clamp(22px, 5vw, 28px)",
+                letterSpacing: "-0.02em"
+              }}
             >
               how was your session?
             </h2>
@@ -655,9 +661,13 @@ function FeedbackPopup({ session, user, onClose }) {
               {submitting ? "submitting…" : "submit"}
               {!submitting && (
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
                     stroke={rating > 0 ? "#161618" : "rgba(22,22,24,0.4)"}
-                    strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
             </button>
@@ -676,11 +686,12 @@ function OnboardingCompleteScreen({
   batchId,
   portfolioReview,
   onViewSessions,
+  onViewPastSessions,
   onBack
 }) {
-  const [sessions, setSessions]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [feedbackSession, setFeedbackSession] = useState(null); // session to show popup for
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [feedbackSession, setFeedbackSession] = useState(null);
   const firstName = user?.name?.split(" ")[0]?.toLowerCase() || "there";
 
   useEffect(() => {
@@ -699,9 +710,13 @@ function OnboardingCompleteScreen({
       setSessions(loadedSessions);
       setLoading(false);
 
-      // Find the most recently ended session that this user hasn't reviewed yet
+      // Find sessions that ended 45+ min ago (enough time has passed to give feedback)
       const now = new Date();
-      const pastSessions = loadedSessions.filter(s => new Date(s.session_datetime) < now);
+      const pastSessions = loadedSessions.filter(
+        (s) =>
+          new Date(s.session_datetime).getTime() + 45 * 60 * 1000 <
+          now.getTime()
+      );
       if (pastSessions.length === 0) return;
 
       // Check which ones already have feedback from this user
@@ -709,11 +724,16 @@ function OnboardingCompleteScreen({
         .from("mentorship_session_feedback")
         .select("session_id")
         .eq("user_id", user.id)
-        .in("session_id", pastSessions.map(s => s.id));
+        .in(
+          "session_id",
+          pastSessions.map((s) => s.id)
+        );
 
-      const reviewedIds = new Set((feedbackData || []).map(f => f.session_id));
+      const reviewedIds = new Set(
+        (feedbackData || []).map((f) => f.session_id)
+      );
       // Show popup for the most recent past session not yet reviewed
-      const unreviewed = pastSessions.filter(s => !reviewedIds.has(s.id));
+      const unreviewed = pastSessions.filter((s) => !reviewedIds.has(s.id));
       if (unreviewed.length > 0) {
         setFeedbackSession(unreviewed[unreviewed.length - 1]);
       }
@@ -725,6 +745,9 @@ function OnboardingCompleteScreen({
     sessions.find((s) => new Date(s.session_datetime) >= now) ||
     sessions[sessions.length - 1];
   const fmt = formatSessionDate(upcomingSession?.session_datetime);
+  const hasPastRecordings = sessions.some(
+    s => s.recording_path && new Date(s.session_datetime) < now
+  );
 
   return (
     <div
@@ -740,12 +763,12 @@ function OnboardingCompleteScreen({
       )}
       <BackButton onClick={onBack} />
 
-      <div className="flex-1 flex flex-col justify-center px-5 pt-24 pb-16 md:max-w-6xl md:mx-auto md:px-8 md:w-full">
+      <div className="flex-1 flex flex-col justify-center px-5 pt-28 pb-16 md:max-w-6xl md:mx-auto md:px-8 md:w-full">
         <div className="md:grid md:grid-cols-2 md:gap-10">
           {/* ── Left column ── */}
           <div>
             <p
-              className="text-white font-bold mb-5"
+              className="text-white font-bold mb-2"
               style={{
                 fontSize: "clamp(18px, 3.5vw, 26px)",
                 letterSpacing: "-0.01em"
@@ -786,64 +809,158 @@ function OnboardingCompleteScreen({
                 </p>
               </div>
             )}
-            {!loading && upcomingSession && (
-              <button
-                className="w-full text-left rounded-2xl p-5 mb-6"
-                style={{ background: "#FFD007" }}
-                onClick={() =>
-                  onViewSessions(upcomingSession.session_number - 1)
-                }
-              >
-                <p
-                  className="text-xs font-bold mb-2 text-black"
-                  // style={{ color: "rgba(0,0,0,0.5)",
-                  style={{ letterSpacing: "0.05em" }}
-                >
-                  · upcoming session ·
-                </p>
-                <p
-                  className="font-extrabold leading-tight mb-4"
-                  style={{
-                    fontSize: "clamp(22px, 5vw, 30px)",
-                    color: "#DF0586",
-                    letterSpacing: "-0.02em"
-                  }}
-                >
-                  session {upcomingSession.session_number}:{" "}
-                  {upcomingSession.name}
-                </p>
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p
-                      className="text-sm font-medium text-black"
-                      // style={{ color: "rgba(0,0,0,0.65)" }}
-                    >
-                      {fmt.banner}
-                    </p>
-                    <p
-                      className="text-sm font-medium text-black"
-                      // style={{ color: "rgba(0,0,0,0.65)" }}
-                    >
-                      {fmt.bannerTime}
-                    </p>
-                  </div>
+            {!loading &&
+              upcomingSession &&
+              (() => {
+                const sessionTime = new Date(upcomingSession.session_datetime);
+                const joinFromTime = new Date(
+                  sessionTime.getTime() - 30 * 60 * 1000
+                );
+                const sessionEndEst = new Date(
+                  sessionTime.getTime() + 2 * 60 * 60 * 1000
+                );
+                const renderNow = new Date();
+                const canJoin =
+                  renderNow >= joinFromTime &&
+                  renderNow <= sessionEndEst &&
+                  !!upcomingSession.meet_link;
+                return (
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: "#161618" }}
+                    className="w-full rounded-2xl mb-6 overflow-hidden"
+                    style={{ background: "#FFD007" }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                        stroke="#FFD007"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    {/* top: label + date + arrow button */}
+                    <div className="p-5">
+                      {/* pill label */}
+                      <div
+                        className="inline-flex items-center gap-1 rounded-full px-3 py-1 mb-3"
+                        style={{ background: "rgba(0,0,0,0.08)" }}
+                      >
+                        <span className="text-[11px] font-bold text-black">
+                          • upcoming session •
+                        </span>
+                      </div>
+
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="font-extrabold leading-tight mb-2"
+                            style={{
+                              fontSize: "clamp(20px, 5vw, 28px)",
+                              color: "#DF0586",
+                              letterSpacing: "-0.02em"
+                            }}
+                          >
+                            session {upcomingSession.session_number}:{" "}
+                            {upcomingSession.name}
+                          </p>
+                          <p className="text-sm font-medium text-black">
+                            {fmt.banner}
+                          </p>
+                          <p className="text-sm font-medium text-black">
+                            {fmt.bannerTime}
+                          </p>
+                        </div>
+                        {/* arrow → session detail */}
+                        <button
+                          onClick={() =>
+                            onViewSessions(upcomingSession.session_number - 1)
+                          }
+                          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center mt-0.5 active:opacity-70"
+                          style={{ background: "#161618" }}
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 18 18"
+                            fill="none"
+                          >
+                            <path
+                              d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                              stroke="#FFD007"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* divider */}
+                    <div
+                      style={{ height: "1px", background: "rgba(0,0,0,0.12)" }}
+                    />
+
+                    {/* join button */}
+                    <div className="px-5 py-4">
+                      {canJoin ? (
+                        <a
+                          href={upcomingSession.meet_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-3"
+                          style={{
+                            background: "#161618",
+                            color: "#FFD007",
+                            fontSize: "15px",
+                            letterSpacing: "-0.01em"
+                          }}
+                        >
+                          join the session
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 18 18"
+                            fill="none"
+                          >
+                            <path
+                              d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                              stroke="#FFD007"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </a>
+                      ) : (
+                        <div
+                          className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-3 cursor-not-allowed"
+                          style={{
+                            background: "rgba(0,0,0,0.15)",
+                            color: "rgba(0,0,0,0.35)",
+                            fontSize: "15px"
+                          }}
+                        >
+                          join the session
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 18 18"
+                            fill="none"
+                          >
+                            <path
+                              d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                              stroke="rgba(0,0,0,0.3)"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                      <p
+                        className="text-[11px] text-center mt-2"
+                        style={{ color: "rgba(0,0,0,0.45)" }}
+                      >
+                        {canJoin
+                          ? "session is live — good luck!"
+                          : "you'll be able to join 30 minutes before the session starts"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </button>
-            )}
+                );
+              })()}
 
             {/* My documents */}
             <p className="text-white/35 text-sm mb-3">my documents</p>
@@ -952,6 +1069,21 @@ function OnboardingCompleteScreen({
             </div>
           </div>
         </div>
+
+        {/* view past sessions — shown when at least one recorded session exists */}
+        {hasPastRecordings && (
+          <button
+            onClick={onViewPastSessions}
+            className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl mt-8 py-4"
+            style={{ background: "#FFD007", color: "#161618", fontSize: "clamp(15px, 3vw, 17px)", letterSpacing: "-0.01em" }}
+          >
+            view past sessions
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                stroke="#161618" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1242,18 +1374,367 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   CommentBubble — single comment row
+═══════════════════════════════════════════════════════════════════════════ */
+function CommentBubble({ comment, onReply, isReply }) {
+  const avatarSrc =
+    comment.avatar_url ||
+    `https://api.dicebear.com/7.x/thumbs/svg?seed=${comment.user_id}`;
+  const timeStr = new Date(comment.created_at).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short"
+  });
+  return (
+    <div className="flex gap-3">
+      <img src={avatarSrc} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-white text-xs font-semibold">{comment.user_name || "user"}</span>
+          <span className="text-white/30 text-[10px]">{timeStr}</span>
+        </div>
+        <p className="text-white/70 text-sm leading-relaxed">{comment.body}</p>
+        {!isReply && onReply && (
+          <button onClick={onReply} className="text-[11px] text-white/30 mt-1 hover:text-white/60 transition-colors">
+            reply
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CommentsSection
+═══════════════════════════════════════════════════════════════════════════ */
+function CommentsSection({ session, user }) {
+  const [comments, setComments]   = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo]     = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [posting, setPosting]     = useState(false);
+
+  const load = async () => {
+    const { data } = await supabase
+      .from("mentorship_session_comments")
+      .select("*")
+      .eq("session_id", session.id)
+      .order("created_at", { ascending: true });
+    setComments(data || []);
+  };
+
+  useEffect(() => { load(); }, [session.id]);
+
+  const post = async (body, parentId = null, clearFn) => {
+    if (!body.trim() || posting) return;
+    setPosting(true);
+    await supabase.from("mentorship_session_comments").insert({
+      session_id: session.id,
+      user_id:    user.id,
+      user_name:  user.name || "user",
+      avatar_url: user.avatar_url || null,
+      body:       body.trim(),
+      parent_id:  parentId
+    });
+    await load();
+    clearFn?.();
+    setPosting(false);
+  };
+
+  const topLevel = comments.filter(c => !c.parent_id);
+  const repliesFor = id => comments.filter(c => c.parent_id === id);
+
+  return (
+    <div>
+      {/* new comment input */}
+      <div className="flex items-center gap-2 mb-6 rounded-2xl px-4 py-3"
+        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+        <input
+          value={newComment}
+          onChange={e => setNewComment(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              post(newComment, null, () => setNewComment(""));
+            }
+          }}
+          placeholder="share something with the group…"
+          className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+        />
+        <button
+          onClick={() => post(newComment, null, () => setNewComment(""))}
+          disabled={!newComment.trim() || posting}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{ background: newComment.trim() ? "#FFD007" : "rgba(255,255,255,0.08)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 12V2M2 7l5-5 5 5"
+              stroke={newComment.trim() ? "#161618" : "rgba(255,255,255,0.3)"}
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      {/* comment list */}
+      <div className="flex flex-col gap-5">
+        {topLevel.map(comment => (
+          <div key={comment.id}>
+            <CommentBubble comment={comment} onReply={() => { setReplyTo(comment.id); setReplyText(""); }} />
+            {/* replies */}
+            <div className="ml-11 mt-3 flex flex-col gap-3">
+              {repliesFor(comment.id).map(reply => (
+                <CommentBubble key={reply.id} comment={reply} isReply />
+              ))}
+              {replyTo === comment.id && (
+                <div className="flex gap-2">
+                  <input
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    placeholder={`reply to ${comment.user_name}…`}
+                    autoFocus
+                    className="flex-1 rounded-xl px-3 py-2 text-white text-xs outline-none placeholder:text-white/25"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") post(replyText, comment.id, () => { setReplyText(""); setReplyTo(null); });
+                      if (e.key === "Escape") setReplyTo(null);
+                    }}
+                  />
+                  <button
+                    onClick={() => post(replyText, comment.id, () => { setReplyText(""); setReplyTo(null); })}
+                    className="text-xs font-bold px-3 py-2 rounded-xl flex-shrink-0"
+                    style={{ background: "#FFD007", color: "#161618" }}
+                  >
+                    send
+                  </button>
+                  <button onClick={() => setReplyTo(null)} className="text-xs text-white/35 px-1">✕</button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {topLevel.length === 0 && (
+          <p className="text-white/25 text-sm">no comments yet — be the first!</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Screen 4 — Past sessions list
+═══════════════════════════════════════════════════════════════════════════ */
+function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    if (!batchId) { setLoading(false); return; }
+    supabase
+      .from("mentorship_sessions")
+      .select("*")
+      .eq("batch_id", batchId)
+      .not("recording_path", "is", null)
+      .order("session_number", { ascending: true })
+      .then(({ data }) => { setSessions(data || []); setLoading(false); });
+  }, [batchId]);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+      <BackButton onClick={onBack} />
+      <div className="flex-1 flex flex-col justify-center px-5 pt-24 pb-16 md:max-w-5xl md:mx-auto md:px-8 md:w-full">
+        <h1 className="text-white font-bold mb-8"
+          style={{ fontSize: "clamp(24px, 5vw, 36px)", letterSpacing: "-0.02em" }}>
+          past sessions
+        </h1>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[1,2,3].map(i => (
+              <div key={i} className="rounded-2xl animate-pulse" style={{ background: "rgba(255,255,255,0.06)", aspectRatio: "16/9" }} />
+            ))}
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="text-white/30 text-sm">no recordings available yet</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {sessions.map(session => (
+              <button key={session.id} onClick={() => onSelectSession(session)} className="text-left">
+                {/* thumbnail */}
+                <div className="w-full rounded-2xl flex items-center justify-center mb-3"
+                  style={{ aspectRatio: "16/9", background: "rgba(255,255,255,0.07)" }}>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(255,255,255,0.15)" }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-white font-bold text-sm mb-1">
+                  session {session.session_number}: {session.name}
+                </p>
+                {session.description && (
+                  <p className="text-white/40 text-xs leading-relaxed line-clamp-2">{session.description}</p>
+                )}
+                <div className="h-px mt-4" style={{ background: "rgba(255,255,255,0.07)" }} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Screen 5 — Session recording player
+═══════════════════════════════════════════════════════════════════════════ */
+function SessionPlayerScreen({ session, user, onBack }) {
+  const [activeTab, setActiveTab] = useState("summary");
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [urlType, setUrlType]     = useState(null); // "embed" | "video"
+  const [loadingUrl, setLoadingUrl] = useState(!!session.recording_path);
+
+  useEffect(() => {
+    if (!session.recording_path) return;
+    (async () => {
+      setLoadingUrl(true);
+      try {
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const token = authSession?.access_token;
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-recording-url`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ session_id: session.id }),
+          }
+        );
+        const json = await res.json();
+        if (json.url) { setSignedUrl(json.url); setUrlType(json.type); }
+      } finally {
+        setLoadingUrl(false);
+      }
+    })();
+  }, [session.id, session.recording_path]);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+      <BackButton onClick={onBack} />
+      <div className="flex-1 px-5 pt-24 pb-16 md:max-w-5xl md:mx-auto md:px-8 md:w-full">
+        <h1 className="text-white font-bold mb-5"
+          style={{ fontSize: "clamp(20px, 4vw, 30px)", letterSpacing: "-0.02em" }}>
+          session {session.session_number}: {session.name}
+        </h1>
+
+        {/* video */}
+        <div className="w-full rounded-2xl overflow-hidden mb-5"
+          style={{ aspectRatio: "16/9", background: "#222" }}>
+          {loadingUrl ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+            </div>
+          ) : signedUrl ? (
+            urlType === "embed" ? (
+              <iframe
+                src={signedUrl}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ border: "none" }}
+              />
+            ) : (
+              <video
+                src={signedUrl}
+                controls
+                controlsList="nodownload"
+                disablePictureInPicture
+                className="w-full h-full"
+                style={{ objectFit: "contain" }}
+              />
+            )
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.1)" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* tab switcher */}
+        <div className="w-full rounded-2xl flex p-1 mb-6"
+          style={{ background: "rgba(255,255,255,0.05)" }}>
+          {["summary + transcript", "comments"].map(label => {
+            const key = label === "summary + transcript" ? "summary" : "comments";
+            return (
+              <button
+                key={label}
+                onClick={() => setActiveTab(key)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                style={{
+                  background: activeTab === key ? "#FFD007" : "transparent",
+                  color: activeTab === key ? "#161618" : "rgba(255,255,255,0.4)"
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* summary + transcript tab */}
+        {activeTab === "summary" && (
+          <div className="space-y-7">
+            {session.summary && (
+              <div>
+                <h3 className="text-white font-bold text-sm mb-2">summary of the session</h3>
+                <p className="text-white/60 text-sm leading-relaxed">{session.summary}</p>
+              </div>
+            )}
+            {session.next_steps && (
+              <div>
+                <h3 className="text-white font-bold text-sm mb-2">suggested next steps</h3>
+                <p className="text-white/60 text-sm leading-relaxed">{session.next_steps}</p>
+              </div>
+            )}
+            {session.transcript && (
+              <div>
+                <h3 className="text-white font-bold text-sm mb-2">transcript of the session</h3>
+                <p className="text-white/50 text-sm leading-relaxed whitespace-pre-wrap">{session.transcript}</p>
+              </div>
+            )}
+            {!session.summary && !session.next_steps && !session.transcript && (
+              <p className="text-white/25 text-sm">summary and transcript coming soon</p>
+            )}
+          </div>
+        )}
+
+        {/* comments tab */}
+        {activeTab === "comments" && (
+          <CommentsSection session={session} user={user} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MentorshipSession — main shell
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function MentorshipSession() {
   const navigate = useNavigate();
   const { user, authLoading } = useAuth();
 
-  // screen: 0=welcome, 1=profile setup, 2=onboarding complete, 3=session detail
+  // screen: 0=welcome, 1=profile setup, 2=onboarding complete, 3=session detail, 4=past sessions, 5=session player
   const [screen, setScreen] = useState(null); // null = still checking
   const [portfolioReview, setPortfolioReview] = useState(null);
   const [batchId, setBatchId] = useState(null);
-  // which session tab to open by default when navigating to screen 3
   const [defaultSessionIndex, setDefaultSessionIndex] = useState(0);
+  const [selectedRecordingSession, setSelectedRecordingSession] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -1262,34 +1743,8 @@ export default function MentorshipSession() {
       return;
     }
 
-    // Check if user already has a mentorship profile (already submitted goal/linkedin)
-    (async () => {
-      const { data: profile } = await supabase
-        .from("mentorship_profiles")
-        .select("batch_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (profile) {
-        // Already submitted — skip welcome + profile setup, go straight to screen 2
-        const bid = profile.batch_id || null;
-        setBatchId(bid);
-
-        // Also fetch portfolio review so screen 2 can show the report button if applicable
-        const { data: reviewData } = await supabase
-          .from("portfolio_reviews")
-          .select("id, review_status, review_report_url")
-          .eq("user_id", user.id)
-          .eq("review_status", "done")
-          .not("review_report_url", "is", null)
-          .maybeSingle();
-
-        setPortfolioReview(reviewData || null);
-        setScreen(2);
-      } else {
-        setScreen(0);
-      }
-    })();
+    // Always show the landing screen first; handleGetStarted will skip profile setup if already done
+    setScreen(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
@@ -1361,6 +1816,7 @@ export default function MentorshipSession() {
           batchId={batchId}
           portfolioReview={portfolioReview}
           onViewSessions={goToSessions}
+          onViewPastSessions={() => setScreen(4)}
           onBack={() => setScreen(0)}
         />
       )}
@@ -1370,6 +1826,22 @@ export default function MentorshipSession() {
           batchId={batchId}
           defaultSessionIndex={defaultSessionIndex}
           onBack={() => setScreen(2)}
+        />
+      )}
+
+      {screen === 4 && (
+        <PastSessionsScreen
+          batchId={batchId}
+          onSelectSession={(session) => { setSelectedRecordingSession(session); setScreen(5); }}
+          onBack={() => setScreen(2)}
+        />
+      )}
+
+      {screen === 5 && selectedRecordingSession && (
+        <SessionPlayerScreen
+          session={selectedRecordingSession}
+          user={user}
+          onBack={() => setScreen(4)}
         />
       )}
     </div>

@@ -2708,7 +2708,7 @@ const SESSION_NAMES = ["discover", "analyse", "design", "build", "present"];
 function SessionsTab({ batches, sessions, onSessionsChange }) {
   // editingKey: `${batchId}-${sessionNumber}` or null
   const [editingKey, setEditingKey] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "", date: "", time: "21:30" });
+  const [form, setForm] = useState({ name: "", description: "", date: "", time: "21:30", meet_link: "", recording_path: "", summary: "", next_steps: "", transcript: "" });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -2744,10 +2744,15 @@ function SessionsTab({ batches, sessions, onSessionsChange }) {
     const existing = sessionMap[key];
     const ist = utcToIst(existing?.session_datetime);
     setForm({
-      name:        existing?.name        || SESSION_NAMES[sessionNumber - 1] || "",
-      description: existing?.description || "",
-      date:        ist.date,
-      time:        ist.time
+      name:          existing?.name          || SESSION_NAMES[sessionNumber - 1] || "",
+      description:   existing?.description   || "",
+      date:          ist.date,
+      time:          ist.time,
+      meet_link:     existing?.meet_link     || "",
+      recording_path: existing?.recording_path || "",
+      summary:       existing?.summary       || "",
+      next_steps:    existing?.next_steps    || "",
+      transcript:    existing?.transcript    || ""
     });
     setEditingKey(key);
     setSaveError("");
@@ -2766,8 +2771,13 @@ function SessionsTab({ batches, sessions, onSessionsChange }) {
         batch_id:        batchId,
         session_number:  sessionNumber,
         name:            form.name.trim(),
-        description:     form.description.trim() || null,
-        session_datetime
+        description:     form.description.trim()   || null,
+        session_datetime,
+        meet_link:       form.meet_link.trim()      || null,
+        recording_path:   form.recording_path.trim()  || null,
+        summary:         form.summary.trim()        || null,
+        next_steps:      form.next_steps.trim()     || null,
+        transcript:      form.transcript.trim()     || null
       };
       const key = `${batchId}-${sessionNumber}`;
       const existing = sessionMap[key];
@@ -2776,7 +2786,12 @@ function SessionsTab({ batches, sessions, onSessionsChange }) {
       if (existing) {
         result = await supabase
           .from("mentorship_sessions")
-          .update({ name: payload.name, description: payload.description, session_datetime })
+          .update({
+            name: payload.name, description: payload.description,
+            session_datetime, meet_link: payload.meet_link,
+            recording_path: payload.recording_path, summary: payload.summary,
+            next_steps: payload.next_steps, transcript: payload.transcript
+          })
           .eq("id", existing.id)
           .select()
           .single();
@@ -2966,6 +2981,42 @@ function SessionsTab({ batches, sessions, onSessionsChange }) {
                             style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", colorScheme: "dark" }}
                           />
                         </div>
+
+                        {/* google meet link */}
+                        <div className="md:col-span-2">
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                            google meet link
+                          </label>
+                          <input
+                            type="url"
+                            value={form.meet_link}
+                            onChange={(e) => setForm((f) => ({ ...f, meet_link: e.target.value }))}
+                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                            style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}
+                          />
+                          <p className="text-[10px] mt-1" style={{ color: "#444" }}>
+                            activates for users 30 min before the session
+                          </p>
+                        </div>
+
+                        {/* recording URL */}
+                        <div className="md:col-span-2">
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                            recording URL (Bunny.net / Vimeo / YouTube embed)
+                          </label>
+                          <input
+                            type="url"
+                            value={form.recording_path}
+                            onChange={(e) => setForm((f) => ({ ...f, recording_path: e.target.value }))}
+                            placeholder="https://iframe.mediadelivery.net/embed/…"
+                            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                            style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}
+                          />
+                          <p className="text-[10px] mt-1" style={{ color: "#444" }}>
+                            paste the embed URL — appears in "past sessions" for enrolled users
+                          </p>
+                        </div>
                       </div>
 
                       {/* description */}
@@ -2978,6 +3029,51 @@ function SessionsTab({ batches, sessions, onSessionsChange }) {
                           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                           placeholder="what happens in this session?"
                           rows={3}
+                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                          style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", fontFamily: "inherit" }}
+                        />
+                      </div>
+
+                      {/* summary */}
+                      <div>
+                        <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                          session summary
+                        </label>
+                        <textarea
+                          value={form.summary}
+                          onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
+                          placeholder="brief summary of what was covered"
+                          rows={3}
+                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                          style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", fontFamily: "inherit" }}
+                        />
+                      </div>
+
+                      {/* next steps */}
+                      <div>
+                        <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                          suggested next steps
+                        </label>
+                        <textarea
+                          value={form.next_steps}
+                          onChange={(e) => setForm((f) => ({ ...f, next_steps: e.target.value }))}
+                          placeholder="action items for participants"
+                          rows={3}
+                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                          style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", fontFamily: "inherit" }}
+                        />
+                      </div>
+
+                      {/* transcript */}
+                      <div>
+                        <label className="text-xs font-semibold mb-1 block" style={{ color: "#666" }}>
+                          transcript
+                        </label>
+                        <textarea
+                          value={form.transcript}
+                          onChange={(e) => setForm((f) => ({ ...f, transcript: e.target.value }))}
+                          placeholder="full session transcript (optional)"
+                          rows={5}
                           className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
                           style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", fontFamily: "inherit" }}
                         />
