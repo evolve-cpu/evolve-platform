@@ -470,6 +470,8 @@ export default function AdminDashboard() {
   const [profiles, setProfiles] = useState([]);
   const [portfolioReviews, setPortfolioReviews] = useState([]);
   const [mentorshipPortfolios, setMentorshipPortfolios] = useState([]);
+  const [mentorshipProfilesData, setMentorshipProfilesData] = useState([]);
+  const [mentorshipResumes, setMentorshipResumes] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -560,6 +562,20 @@ export default function AdminDashboard() {
         .select("*, profiles:user_id(name, email)")
         .order("created_at", { ascending: false });
       setMentorshipPortfolios(mpData || []);
+
+      // Mentorship profiles (the onboarding form data)
+      const { data: mprofData } = await supabaseAdmin
+        .from("mentorship_profiles")
+        .select("*, batch:batch_id(batch_number, start_date)")
+        .order("created_at", { ascending: false });
+      setMentorshipProfilesData(mprofData || []);
+
+      // Mentorship resume versions
+      const { data: mrData } = await supabaseAdmin
+        .from("mentorship_resume_versions")
+        .select("*")
+        .order("version_number", { ascending: true });
+      setMentorshipResumes(mrData || []);
 
       setPayments(pData || []);
       setBatches(bData || []);
@@ -845,6 +861,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` },
     { id: "m-portfolios", label: `m-portfolios (${mentorshipPortfolios.length})` },
+    { id: "m-profiles", label: `m-profiles (${mentorshipProfilesData.length})` },
     { id: "sessions", label: "sessions" }
   ];
 
@@ -2835,6 +2852,227 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </section>
           </div>
         )}
+        {/* ══════════════════════════════════════════════════════════════
+            MENTORSHIP PROFILES TAB
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "m-profiles" && (() => {
+          // Build lookup maps from user_id → array of submissions
+          const portfoliosByUser = mentorshipPortfolios.reduce((acc, p) => {
+            const uid = p.user_id;
+            if (!acc[uid]) acc[uid] = [];
+            acc[uid].push(p);
+            return acc;
+          }, {});
+          const resumesByUser = mentorshipResumes.reduce((acc, r) => {
+            const uid = r.user_id;
+            if (!acc[uid]) acc[uid] = [];
+            acc[uid].push(r);
+            return acc;
+          }, {});
+
+          const q = search.toLowerCase();
+          const filtered = mentorshipProfilesData.filter(p =>
+            !q ||
+            (p.name || "").toLowerCase().includes(q) ||
+            (p.email || "").toLowerCase().includes(q) ||
+            (p.goal || "").toLowerCase().includes(q)
+          );
+
+          return (
+            <div className="space-y-5">
+              {/* header row */}
+              <div className="flex items-center gap-3">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="search by name, email or goal…"
+                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: "#111", border: "1px solid #222", color: "#fff" }}
+                />
+                <span className="text-xs" style={{ color: "#555" }}>
+                  {filtered.length} profiles
+                </span>
+              </div>
+
+              {filtered.length === 0 && (
+                <div className="py-16 text-center" style={{ color: "#444" }}>
+                  no mentorship profiles yet
+                </div>
+              )}
+
+              <div className="flex flex-col gap-4">
+                {filtered.map((p) => {
+                  const portfolios = (portfoliosByUser[p.user_id] || []).sort((a, b) => a.version_number - b.version_number);
+                  const resumes = (resumesByUser[p.user_id] || []).sort((a, b) => a.version_number - b.version_number);
+                  const initial = (p.name || "?")[0].toUpperCase();
+                  const batchNum = p.batch?.batch_number;
+
+                  return (
+                    <div
+                      key={p.user_id}
+                      className="rounded-2xl border overflow-hidden"
+                      style={{ background: "#0d0d0d", borderColor: "#1e1e1e" }}
+                    >
+                      {/* ── Card header ── */}
+                      <div className="flex items-start gap-4 p-5 border-b" style={{ borderColor: "#1a1a1a" }}>
+                        {/* Avatar */}
+                        <div
+                          className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-base font-black"
+                          style={{ background: "#FFD007", color: "#161618" }}
+                        >
+                          {initial}
+                        </div>
+
+                        {/* Name / email / meta */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span className="text-white font-bold text-base">{p.name || "—"}</span>
+                            {batchNum && (
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: "rgba(255,208,7,0.12)", color: "#FFD007" }}
+                              >
+                                batch {batchNum}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs mb-2" style={{ color: "#666" }}>{p.email || "—"}</p>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-[11px]" style={{ color: "#555" }}>
+                              joined {fmtDate(p.created_at)}
+                            </span>
+                            {p.linkedin_url && (
+                              <a
+                                href={p.linkedin_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[11px] font-semibold flex items-center gap-1"
+                                style={{ color: "#0A66C2" }}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                LinkedIn
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── Goal ── */}
+                      <div className="px-5 py-4 border-b" style={{ borderColor: "#1a1a1a" }}>
+                        <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "#555" }}>goal</p>
+                        <p className="text-sm leading-relaxed" style={{ color: "#ccc" }}>{p.goal || "—"}</p>
+                      </div>
+
+                      {/* ── Submissions ── */}
+                      <div className="grid grid-cols-2 divide-x" style={{ borderColor: "#1a1a1a" }}>
+                        {/* Portfolio versions */}
+                        <div className="p-5">
+                          <p className="text-[10px] uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#555" }}>
+                            portfolio
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#1a1a1a", color: "#666" }}>
+                              {portfolios.length}
+                            </span>
+                          </p>
+                          {portfolios.length === 0 ? (
+                            <p className="text-xs" style={{ color: "#333" }}>no uploads yet</p>
+                          ) : (
+                            <div className="flex flex-col gap-2.5">
+                              {portfolios.map((pf) => (
+                                <div key={pf.id} className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                      style={{ background: "#222", color: "#888" }}
+                                    >
+                                      {pf.version_number}
+                                    </span>
+                                    {pf.portfolio_url && (
+                                      <a href={pf.portfolio_url} target="_blank" rel="noreferrer"
+                                        className="text-[11px] font-semibold"
+                                        style={{ color: "#FFD007" }}>
+                                        portfolio ↗
+                                      </a>
+                                    )}
+                                    {pf.walkthrough_url && (
+                                      <a href={pf.walkthrough_url} target="_blank" rel="noreferrer"
+                                        className="text-[11px] font-semibold"
+                                        style={{ color: "#DF0586" }}>
+                                        walkthrough ↗
+                                      </a>
+                                    )}
+                                  </div>
+                                  {pf.notes && (
+                                    <p className="text-[11px] pl-7 leading-relaxed" style={{ color: "#555" }}>{pf.notes}</p>
+                                  )}
+                                  {pf.review_report_url && (
+                                    <a href={pf.review_report_url} target="_blank" rel="noreferrer"
+                                      className="text-[11px] pl-7 font-semibold flex items-center gap-1"
+                                      style={{ color: GR }}>
+                                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                                        <path d="M8 2v8M4 7l4 4 4-4M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      report uploaded
+                                    </a>
+                                  )}
+                                  {pf.review_remarks && (
+                                    <p className="text-[11px] pl-7 italic" style={{ color: "#555" }}>{pf.review_remarks}</p>
+                                  )}
+                                  <p className="text-[10px] pl-7" style={{ color: "#444" }}>{fmtDate(pf.created_at)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Resume versions */}
+                        <div className="p-5" style={{ borderColor: "#1a1a1a" }}>
+                          <p className="text-[10px] uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#555" }}>
+                            resume
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#1a1a1a", color: "#666" }}>
+                              {resumes.length}
+                            </span>
+                          </p>
+                          {resumes.length === 0 ? (
+                            <p className="text-xs" style={{ color: "#333" }}>no uploads yet</p>
+                          ) : (
+                            <div className="flex flex-col gap-2.5">
+                              {resumes.map((r) => (
+                                <div key={r.id} className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                      style={{ background: "#222", color: "#888" }}
+                                    >
+                                      {r.version_number}
+                                    </span>
+                                    {r.resume_url && (
+                                      <a href={r.resume_url} target="_blank" rel="noreferrer"
+                                        className="text-[11px] font-semibold"
+                                        style={{ color: "#FFD007" }}>
+                                        resume ↗
+                                      </a>
+                                    )}
+                                  </div>
+                                  {r.notes && (
+                                    <p className="text-[11px] pl-7 leading-relaxed" style={{ color: "#555" }}>{r.notes}</p>
+                                  )}
+                                  <p className="text-[10px] pl-7" style={{ color: "#444" }}>{fmtDate(r.created_at)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ══════════════════════════════════════════════════════════════
             SESSIONS TAB
         ══════════════════════════════════════════════════════════════ */}
