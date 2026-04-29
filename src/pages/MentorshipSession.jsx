@@ -1450,9 +1450,9 @@ function OnboardingCompleteScreen({
       )}
       <BackButton onClick={onBack} />
 
-      <div className="flex-1 flex flex-col justify-center px-5 pt-28 pb-16 md:max-w-6xl md:mx-auto md:px-8 md:w-full">
-        <div className="md:grid md:grid-cols-2 md:gap-10">
-          {/* ── Left column ── */}
+      <div className="flex-1 flex flex-col justify-center px-5 pt-28 pb-16 max-w-2xl mx-auto w-full">
+        <div>
+          {/* ── Content ── */}
           <div>
             <p
               className="text-white font-bold mb-2"
@@ -1467,12 +1467,19 @@ function OnboardingCompleteScreen({
             {/* Upcoming session banner */}
             {loading && (
               <div
-                className="w-full rounded-2xl p-5 mb-6 animate-pulse"
-                style={{
-                  background: "rgba(255,208,7,0.15)",
-                  minHeight: "120px"
-                }}
-              />
+                className="w-full rounded-2xl mb-6 overflow-hidden"
+                style={{ background: "#FFD007" }}
+              >
+                <div className="p-5">
+                  <div className="h-6 w-36 rounded-full mb-4 animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
+                  <div className="h-7 w-3/4 rounded-xl mb-2 animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
+                  <div className="h-4 w-1/2 rounded-lg animate-pulse" style={{ background: "rgba(0,0,0,0.08)" }} />
+                </div>
+                <div style={{ height: "1px", background: "rgba(0,0,0,0.1)" }} />
+                <div className="px-5 py-4">
+                  <div className="h-12 w-full rounded-2xl animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
+                </div>
+              </div>
             )}
             {!loading && !upcomingSession && (
               <div
@@ -1982,8 +1989,8 @@ function OnboardingCompleteScreen({
             )}
           </div>
 
-          {/* ── Right column ── */}
-          <div className="mt-10 md:mt-0">
+          {/* ── Resources ── */}
+          <div className="mt-10">
             <p className="text-white/35 text-xs uppercase tracking-widest mb-4">
               while you wait, here are some resources
             </p>
