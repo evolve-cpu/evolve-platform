@@ -1074,6 +1074,7 @@ import CollegeActivationVerify from "./pages/College_Activity_Page/CollegeActiva
 import AdminLogin from "./pages/admn/AdminLogin.jsx";
 import AdminDashboard from "./pages/admn/AdminDashboard.jsx";
 import AdminGuard from "./routes/AdminGuard.jsx";
+import MentorshipGuard from "./routes/MentorshipGuard.jsx";
 import Mentorship from "./pages/Mentorship.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
 const Payment = lazy(() => import("./pages/Payment.jsx"));
@@ -1557,7 +1558,14 @@ const AppLayout = () => {
             />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/payment" element={<Payment />} />
-            <Route path="/mentorship-session" element={<MentorshipSession />} />
+            <Route
+              path="/mentorship-session"
+              element={
+                <MentorshipGuard>
+                  <MentorshipSession />
+                </MentorshipGuard>
+              }
+            />
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />

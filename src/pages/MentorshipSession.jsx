@@ -11,7 +11,8 @@ import {
   mentorship_session_hero_mobile1,
   mentor_yagnesh,
   chesna,
-  yash
+  yash,
+  banner_arrow
 } from "../assets/images/Mentorship";
 
 /* ─── Session date/time helpers ───────────────────────────────────────────── */
@@ -460,7 +461,7 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
         />
 
         {/* connect linkedin */}
-        <div
+        {/* <div
           className="rounded-2xl mb-6 overflow-hidden"
           style={{
             border: "1px solid rgba(255,255,255,0.10)",
@@ -518,7 +519,7 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
               />
             </div>
           )}
-        </div>
+        </div> */}
 
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
@@ -679,6 +680,621 @@ function FeedbackPopup({ session, user, onClose }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   PortfolioModal
+═══════════════════════════════════════════════════════════════════════════ */
+function PortfolioModal({
+  user,
+  batchId,
+  portfolioReview,
+  versions,
+  onClose,
+  onSaved
+}) {
+  const isUser1 = !!portfolioReview;
+  const [reviewPortfolio, setReviewPortfolio] = useState(null);
+  const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
+  const [urlMode, setUrlMode] = useState("link");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [walkthroughUrl, setWalkthroughUrl] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!portfolioReview?.id) return;
+    supabase
+      .from("portfolio_reviews")
+      .select("portfolio_link, portfolio_file_url, created_at")
+      .eq("id", portfolioReview.id)
+      .maybeSingle()
+      .then(({ data }) => setReviewPortfolio(data));
+  }, [portfolioReview?.id]);
+
+  const isValidUrl = (s) => {
+    try {
+      new URL(s);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const allDisplayVersions = [
+    ...(isUser1 && reviewPortfolio
+      ? [
+          {
+            displayVersion: 1,
+            date: reviewPortfolio.created_at,
+            url:
+              reviewPortfolio.portfolio_link ||
+              reviewPortfolio.portfolio_file_url,
+            walkthrough: null,
+            isReview: true
+          }
+        ]
+      : []),
+    ...versions.map((v, i) => ({
+      displayVersion: i + 1 + (isUser1 ? 1 : 0),
+      date: v.created_at,
+      url: v.portfolio_url,
+      walkthrough: v.walkthrough_url,
+      isReview: false
+    }))
+  ];
+
+  const totalDisplay = allDisplayVersions.length;
+  const nextDisplayVersion = totalDisplay + 1;
+  const canUploadMore = versions.length < 3;
+  const latestVersion = allDisplayVersions[totalDisplay - 1];
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!portfolioUrl.trim()) {
+      setError("please add your portfolio link");
+      return;
+    }
+    if (!isValidUrl(portfolioUrl.trim())) {
+      setError("please enter a valid url");
+      return;
+    }
+    if (walkthroughUrl && !isValidUrl(walkthroughUrl.trim())) {
+      setError("please enter a valid walkthrough url");
+      return;
+    }
+    if (walkthroughUrl && portfolioUrl.trim() === walkthroughUrl.trim()) {
+      setError("portfolio and walkthrough links can't be the same");
+      return;
+    }
+    setSubmitting(true);
+    const { error: dbErr } = await supabase
+      .from("mentorship_portfolio_versions")
+      .insert({
+        user_id: user.id,
+        batch_id: batchId,
+        version_number: versions.length + 1,
+        portfolio_url: portfolioUrl.trim(),
+        walkthrough_url: walkthroughUrl.trim() || null,
+        notes: notes.trim() || null
+      });
+    setSubmitting(false);
+    if (dbErr) {
+      setError(dbErr.message);
+      return;
+    }
+    await onSaved();
+    setView("versions");
+  };
+
+  const DocRow = ({ item }) => (
+    <a
+      href={item.url || "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl active:opacity-75"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.08)"
+      }}
+    >
+      <div
+        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+        style={{
+          background:
+            item.displayVersion === totalDisplay
+              ? "#FFD007"
+              : "rgba(255,255,255,0.1)",
+          color:
+            item.displayVersion === totalDisplay
+              ? "#161618"
+              : "rgba(255,255,255,0.6)"
+        }}
+      >
+        {item.displayVersion}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-white text-sm font-medium">
+          version {item.displayVersion}
+        </p>
+        <p className="text-white/35 text-xs">
+          last updated{" "}
+          {new Date(item.date)
+            .toLocaleDateString("en-IN", { day: "numeric", month: "long" })
+            .toLowerCase()}
+          ,{" "}
+          {new Date(item.date).toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          })}
+        </p>
+        {item.walkthrough && (
+          <a
+            href={item.walkthrough}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs underline"
+            style={{ color: "#FFD007" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            your portfolio walkthrough
+          </a>
+        )}
+      </div>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M6 4l4 4-4 4"
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </a>
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end md:items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+    >
+      <div
+        className="w-full md:max-w-md rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <div
+          className="w-10 h-1 rounded-full mx-auto mb-5 md:hidden"
+          style={{ background: "rgba(255,255,255,0.15)" }}
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M2 2l10 10M12 2 2 12"
+              stroke="rgba(255,255,255,0.6)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+
+        {view === "form" ? (
+          <>
+            <h2
+              className="text-white font-extrabold text-xl mb-5"
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              ready to submit your portfolio?
+            </h2>
+            <div
+              className="flex rounded-xl p-1 mb-4"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
+              {[
+                ["paste a link", "link"],
+                ["upload a file", "file"]
+              ].map(([label, mode]) => (
+                <button
+                  key={mode}
+                  onClick={() => setUrlMode(mode)}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  style={{
+                    background: urlMode === mode ? "#FFD007" : "transparent",
+                    color:
+                      urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {urlMode === "link" ? (
+              <input
+                value={portfolioUrl}
+                onChange={(e) => setPortfolioUrl(e.target.value)}
+                placeholder="your site, behance, figma, notion — any link works"
+                className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)"
+                }}
+              />
+            ) : (
+              <div
+                className="w-full px-4 py-6 rounded-xl mb-4 flex flex-col items-center gap-1 cursor-not-allowed"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px dashed rgba(255,255,255,0.15)"
+                }}
+              >
+                <p className="text-white/35 text-sm">file upload coming soon</p>
+                <p className="text-white/20 text-xs">
+                  use the link option for now
+                </p>
+              </div>
+            )}
+            <p className="text-white text-sm font-semibold mb-1">
+              your walkthrough recording
+            </p>
+            <p className="text-white/40 text-xs mb-2">
+              no face cam needed. just walk us through your work. record with{" "}
+              <a
+                href="https://loom.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+                style={{ color: "#FFD007" }}
+              >
+                loom
+              </a>
+            </p>
+            <input
+              value={walkthroughUrl}
+              onChange={(e) => setWalkthroughUrl(e.target.value)}
+              placeholder="https://loom.com/share…"
+              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            />
+            <p className="text-white text-sm font-semibold mb-1">
+              anything we should know?{" "}
+              <span className="text-white/30 font-normal">(optional)</span>
+            </p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="anything we should consider while reviewing?"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-5 outline-none resize-none"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            />
+            {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-3.5 rounded-2xl font-bold text-sm"
+              style={{
+                background: "#FFD007",
+                color: "#161618",
+                opacity: submitting ? 0.6 : 1
+              }}
+            >
+              {submitting ? "uploading…" : "upload portfolio"}
+            </button>
+          </>
+        ) : (
+          <>
+            <h2
+              className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
+              style={{ letterSpacing: "-0.04em" }}
+            >
+              portfolio
+            </h2>
+            {latestVersion && (
+              <p className="text-white/35 text-sm text-center mb-6">
+                version {totalDisplay} · last updated{" "}
+                {new Date(latestVersion.date)
+                  .toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long"
+                  })
+                  .toLowerCase()}
+              </p>
+            )}
+            <div className="flex flex-col gap-2 mb-6">
+              {[...allDisplayVersions].reverse().map((v) => (
+                <DocRow key={v.displayVersion} item={v} />
+              ))}
+            </div>
+            {canUploadMore && (
+              <button
+                onClick={() => {
+                  setPortfolioUrl("");
+                  setWalkthroughUrl("");
+                  setNotes("");
+                  setError("");
+                  setView("form");
+                }}
+                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                style={{
+                  border: "1.5px solid #FFD007",
+                  color: "#FFD007",
+                  background: "transparent"
+                }}
+              >
+                {totalDisplay === 1 ? "update" : "upload"} portfolio version{" "}
+                {nextDisplayVersion}
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="#FFD007"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ResumeModal
+═══════════════════════════════════════════════════════════════════════════ */
+function ResumeModal({ user, batchId, versions, onClose, onSaved }) {
+  const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const isValidUrl = (s) => {
+    try {
+      new URL(s);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const latestVersion = versions[versions.length - 1];
+  const canUploadMore = versions.length < 3;
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!resumeUrl.trim()) {
+      setError("please add your resume link");
+      return;
+    }
+    if (!isValidUrl(resumeUrl.trim())) {
+      setError("please enter a valid url");
+      return;
+    }
+    setSubmitting(true);
+    const { error: dbErr } = await supabase
+      .from("mentorship_resume_versions")
+      .insert({
+        user_id: user.id,
+        batch_id: batchId,
+        version_number: versions.length + 1,
+        resume_url: resumeUrl.trim(),
+        notes: notes.trim() || null
+      });
+    setSubmitting(false);
+    if (dbErr) {
+      setError(dbErr.message);
+      return;
+    }
+    await onSaved();
+    setView("versions");
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end md:items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+    >
+      <div
+        className="w-full md:max-w-md rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <div
+          className="w-10 h-1 rounded-full mx-auto mb-5 md:hidden"
+          style={{ background: "rgba(255,255,255,0.15)" }}
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M2 2l10 10M12 2 2 12"
+              stroke="rgba(255,255,255,0.6)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+
+        {view === "form" ? (
+          <>
+            <h2
+              className="text-white font-extrabold text-xl mb-5"
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              ready to submit your resume?
+            </h2>
+            <p className="text-white text-sm font-semibold mb-1">
+              your resume link
+            </p>
+            <p className="text-white/40 text-xs mb-2">
+              google drive, notion, any public link works
+            </p>
+            <input
+              value={resumeUrl}
+              onChange={(e) => setResumeUrl(e.target.value)}
+              placeholder="https://drive.google.com/…"
+              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            />
+            <p className="text-white text-sm font-semibold mb-1">
+              anything we should know?{" "}
+              <span className="text-white/30 font-normal">(optional)</span>
+            </p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="anything we should consider?"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-5 outline-none resize-none"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            />
+            {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-3.5 rounded-2xl font-bold text-sm"
+              style={{
+                background: "#FFD007",
+                color: "#161618",
+                opacity: submitting ? 0.6 : 1
+              }}
+            >
+              {submitting ? "uploading…" : "upload resume"}
+            </button>
+          </>
+        ) : (
+          <>
+            <h2
+              className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
+              style={{ letterSpacing: "-0.04em" }}
+            >
+              resume
+            </h2>
+            {latestVersion && (
+              <p className="text-white/35 text-sm text-center mb-6">
+                version {versions.length} · last updated{" "}
+                {new Date(latestVersion.created_at)
+                  .toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long"
+                  })
+                  .toLowerCase()}
+              </p>
+            )}
+            <div className="flex flex-col gap-2 mb-6">
+              {[...versions].reverse().map((v) => (
+                <a
+                  key={v.id}
+                  href={v.resume_url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl active:opacity-75"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.08)"
+                  }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{
+                      background:
+                        v.version_number === versions.length
+                          ? "#FFD007"
+                          : "rgba(255,255,255,0.1)",
+                      color:
+                        v.version_number === versions.length
+                          ? "#161618"
+                          : "rgba(255,255,255,0.6)"
+                    }}
+                  >
+                    {v.version_number}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium">
+                      version {v.version_number}
+                    </p>
+                    <p className="text-white/35 text-xs">
+                      last updated{" "}
+                      {new Date(v.created_at)
+                        .toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "long"
+                        })
+                        .toLowerCase()}
+                      ,{" "}
+                      {new Date(v.created_at).toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false
+                      })}
+                    </p>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M6 4l4 4-4 4"
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </a>
+              ))}
+            </div>
+            {canUploadMore && (
+              <button
+                onClick={() => {
+                  setResumeUrl("");
+                  setNotes("");
+                  setError("");
+                  setView("form");
+                }}
+                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                style={{
+                  border: "1.5px solid #FFD007",
+                  color: "#FFD007",
+                  background: "transparent"
+                }}
+              >
+                {versions.length === 1 ? "update" : "upload"} resume version{" "}
+                {versions.length + 1}
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="#FFD007"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Screen 2 — Onboarding complete
 ═══════════════════════════════════════════════════════════════════════════ */
 function OnboardingCompleteScreen({
@@ -692,6 +1308,11 @@ function OnboardingCompleteScreen({
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackSession, setFeedbackSession] = useState(null);
+  const [portfolioVersions, setPortfolioVersions] = useState([]);
+  const [resumeVersions, setResumeVersions] = useState([]);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [googleSheetUrl, setGoogleSheetUrl] = useState(null);
   const firstName = user?.name?.split(" ")[0]?.toLowerCase() || "there";
 
   useEffect(() => {
@@ -709,6 +1330,32 @@ function OnboardingCompleteScreen({
       const loadedSessions = sessionData || [];
       setSessions(loadedSessions);
       setLoading(false);
+
+      // Portfolio / resume versions + batch google sheet URL
+      if (user?.id) {
+        supabase
+          .from("mentorship_portfolio_versions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("version_number", { ascending: true })
+          .then(({ data }) => setPortfolioVersions(data || []));
+        supabase
+          .from("mentorship_resume_versions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("version_number", { ascending: true })
+          .then(({ data }) => setResumeVersions(data || []));
+      }
+      if (batchId) {
+        supabase
+          .from("mentorship_batches")
+          .select("google_sheet_url")
+          .eq("id", batchId)
+          .maybeSingle()
+          .then(({ data }) =>
+            setGoogleSheetUrl(data?.google_sheet_url || null)
+          );
+      }
 
       // Find sessions that ended 45+ min ago (enough time has passed to give feedback)
       const now = new Date();
@@ -746,8 +1393,15 @@ function OnboardingCompleteScreen({
     sessions[sessions.length - 1];
   const fmt = formatSessionDate(upcomingSession?.session_datetime);
   const hasPastRecordings = sessions.some(
-    s => s.recording_path && new Date(s.session_datetime) < now
+    (s) => s.recording_path && new Date(s.session_datetime) < now
   );
+  const hasPastSession = sessions.some(
+    (s) => new Date(s.session_datetime) < now
+  );
+  const mentorshipReportUrl = [...portfolioVersions]
+    .reverse()
+    .find((v) => v.review_report_url)?.review_report_url;
+  const reportUrl = portfolioReview?.review_report_url || mentorshipReportUrl;
 
   return (
     <div
@@ -759,6 +1413,39 @@ function OnboardingCompleteScreen({
           session={feedbackSession}
           user={user}
           onClose={() => setFeedbackSession(null)}
+        />
+      )}
+      {showPortfolioModal && (
+        <PortfolioModal
+          user={user}
+          batchId={batchId}
+          portfolioReview={portfolioReview}
+          versions={portfolioVersions}
+          onClose={() => setShowPortfolioModal(false)}
+          onSaved={async () => {
+            const { data } = await supabase
+              .from("mentorship_portfolio_versions")
+              .select("*")
+              .eq("user_id", user.id)
+              .order("version_number", { ascending: true });
+            setPortfolioVersions(data || []);
+          }}
+        />
+      )}
+      {showResumeModal && (
+        <ResumeModal
+          user={user}
+          batchId={batchId}
+          versions={resumeVersions}
+          onClose={() => setShowResumeModal(false)}
+          onSaved={async () => {
+            const { data } = await supabase
+              .from("mentorship_resume_versions")
+              .select("*")
+              .eq("user_id", user.id)
+              .order("version_number", { ascending: true });
+            setResumeVersions(data || []);
+          }}
         />
       )}
       <BackButton onClick={onBack} />
@@ -802,7 +1489,7 @@ function OnboardingCompleteScreen({
                     letterSpacing: "0.05em"
                   }}
                 >
-                  · upcoming session ·
+                  • upcoming session •
                 </p>
                 <p className="text-white/40 text-sm">
                   session details coming soon
@@ -862,12 +1549,39 @@ function OnboardingCompleteScreen({
                           </p>
                         </div>
                         {/* arrow → session detail */}
-                        <button
+                        {/* <button
                           onClick={() =>
                             onViewSessions(upcomingSession.session_number - 1)
                           }
                           className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center mt-0.5 active:opacity-70"
-                          style={{ background: "#161618" }}
+                          style={{ background: "#FFD007" }}
+                        >
+                          <img
+                            src={banner_arrow}
+                            alt=""
+                            className="w-10 h-10"
+                          />
+                        </button> */}
+                        <button
+                          onClick={() =>
+                            onViewSessions(upcomingSession.session_number - 1)
+                          }
+                          className="
+    flex-shrink-0
+    w-11
+    h-11
+    rounded-2xl
+    flex
+    items-center
+    justify-center
+    active:translate-y-[1px]
+    transition-all
+    bg-evolve-yellow
+  "
+                          style={{
+                            border: "2px solid #000",
+                            boxShadow: "4px 4px 0px #000"
+                          }}
                         >
                           <svg
                             width="18"
@@ -877,8 +1591,8 @@ function OnboardingCompleteScreen({
                           >
                             <path
                               d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                              stroke="#FFD007"
-                              strokeWidth="1.6"
+                              stroke="#000"
+                              strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />
@@ -899,10 +1613,13 @@ function OnboardingCompleteScreen({
                           href={upcomingSession.meet_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-3"
+                          className="w-full flex items-center justify-center gap-2 font-bold py-3.5"
                           style={{
                             background: "#161618",
                             color: "#FFD007",
+                            border: "1.5px solid #FFD007",
+                            borderRadius: "16px",
+                            boxShadow: "4px 4px 0 #806804",
                             fontSize: "15px",
                             letterSpacing: "-0.01em"
                           }}
@@ -925,11 +1642,16 @@ function OnboardingCompleteScreen({
                         </a>
                       ) : (
                         <div
-                          className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-3 cursor-not-allowed"
+                          className="w-full flex items-center justify-center gap-2 font-bold py-3.5 cursor-not-allowed"
                           style={{
-                            background: "rgba(0,0,0,0.15)",
-                            color: "rgba(0,0,0,0.35)",
-                            fontSize: "15px"
+                            background: "#161618",
+                            color: "#FFD007",
+                            border: "1.5px solid #FFD007",
+                            borderRadius: "16px",
+                            boxShadow: "4px 4px 0 #806804",
+                            fontSize: "15px",
+                            letterSpacing: "-0.01em",
+                            opacity: 0.4
                           }}
                         >
                           join the session
@@ -941,7 +1663,7 @@ function OnboardingCompleteScreen({
                           >
                             <path
                               d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                              stroke="rgba(0,0,0,0.3)"
+                              stroke="#FFD007"
                               strokeWidth="1.6"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -962,94 +1684,302 @@ function OnboardingCompleteScreen({
                 );
               })()}
 
-            {/* My documents */}
-            <p className="text-white/35 text-sm mb-3">my documents</p>
-            <div className="flex flex-col gap-2">
-              {/* My submissions — placeholder */}
-              <button
-                className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)"
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <circle
-                      cx="10"
-                      cy="7"
-                      r="3"
-                      stroke="rgba(255,255,255,0.55)"
-                      strokeWidth="1.3"
-                    />
-                    <path
-                      d="M3 17c0-3.866 3.134-7 7-7s7 3.134 7 7"
-                      stroke="rgba(255,255,255,0.55)"
-                      strokeWidth="1.3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="text-white text-sm font-medium">
-                    my submissions
-                  </span>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M6 4l4 4-4 4"
-                    stroke="rgba(255,255,255,0.35)"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+            {/* My tasks — shown once session 1 is over */}
+            {hasPastSession && !loading && (
+              <>
+                <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
+                <div className="flex flex-col gap-2 mb-5">
+                  {/* Google sheet */}
+                  {googleSheetUrl ? (
+                    <a
+                      href={googleSheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.08)"
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                        >
+                          <rect
+                            x="3"
+                            y="2"
+                            width="14"
+                            height="16"
+                            rx="2"
+                            stroke="rgba(255,255,255,0.5)"
+                            strokeWidth="1.3"
+                          />
+                          <path
+                            d="M6 7h8M6 10h8M6 13h5"
+                            stroke="rgba(255,255,255,0.5)"
+                            strokeWidth="1.3"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="text-white text-sm font-medium">
+                          google sheet
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{ background: "#FFD007", color: "#161618" }}
+                        >
+                          new
+                        </span>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                        >
+                          <path
+                            d="M6 4l4 4-4 4"
+                            stroke="rgba(255,255,255,0.35)"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    </a>
+                  ) : (
+                    <div
+                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.06)"
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                        >
+                          <rect
+                            x="3"
+                            y="2"
+                            width="14"
+                            height="16"
+                            rx="2"
+                            stroke="rgba(255,255,255,0.25)"
+                            strokeWidth="1.3"
+                          />
+                          <path
+                            d="M6 7h8M6 10h8M6 13h5"
+                            stroke="rgba(255,255,255,0.25)"
+                            strokeWidth="1.3"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: "rgba(255,255,255,0.3)" }}
+                        >
+                          google sheet
+                        </span>
+                      </div>
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: "#FFD007", color: "#161618" }}
+                      >
+                        new
+                      </span>
+                    </div>
+                  )}
 
-              {/* Portfolio report — only if review is done */}
-              {portfolioReview?.review_report_url && (
-                <a
-                  href={portfolioReview.review_report_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                  style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.08)"
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="3"
-                        y="2"
-                        width="14"
+                  {/* Portfolio */}
+                  <button
+                    onClick={() => setShowPortfolioModal(true)}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <rect
+                          x="3"
+                          y="2"
+                          width="14"
+                          height="16"
+                          rx="2"
+                          stroke="rgba(255,255,255,0.5)"
+                          strokeWidth="1.3"
+                        />
+                        <path
+                          d="M6 7h8M6 10h8M6 13h5"
+                          stroke="rgba(255,255,255,0.5)"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="text-white text-sm font-medium">
+                        portfolio
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {portfolioVersions.length === 0 && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{ background: "#FFD007", color: "#161618" }}
+                        >
+                          new
+                        </span>
+                      )}
+                      <svg
+                        width="16"
                         height="16"
-                        rx="2"
-                        stroke="rgba(255,255,255,0.55)"
-                        strokeWidth="1.3"
-                      />
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="M6 4l4 4-4 4"
+                          stroke="rgba(255,255,255,0.35)"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Resume */}
+                  <button
+                    onClick={() => setShowResumeModal(true)}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <rect
+                          x="3"
+                          y="2"
+                          width="14"
+                          height="16"
+                          rx="2"
+                          stroke="rgba(255,255,255,0.5)"
+                          strokeWidth="1.3"
+                        />
+                        <path
+                          d="M6 7h8M6 10h8M6 13h5"
+                          stroke="rgba(255,255,255,0.5)"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="text-white text-sm font-medium">
+                        resume
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {resumeVersions.length === 0 && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{ background: "#FFD007", color: "#161618" }}
+                        >
+                          new
+                        </span>
+                      )}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="M6 4l4 4-4 4"
+                          stroke="rgba(255,255,255,0.35)"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* My documents — only shown if a report exists */}
+            {reportUrl && (
+              <>
+                <p className="text-white/35 text-sm mb-3">my documents</p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={reportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <rect
+                          x="3"
+                          y="2"
+                          width="14"
+                          height="16"
+                          rx="2"
+                          stroke="rgba(255,255,255,0.55)"
+                          strokeWidth="1.3"
+                        />
+                        <path
+                          d="M6 7h8M6 10h8M6 13h5"
+                          stroke="rgba(255,255,255,0.55)"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="text-white text-sm font-medium">
+                        portfolio report
+                      </span>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
-                        d="M6 7h8M6 10h8M6 13h5"
-                        stroke="rgba(255,255,255,0.55)"
-                        strokeWidth="1.3"
+                        d="M6 4l4 4-4 4"
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth="1.4"
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
-                    <span className="text-white text-sm font-medium">
-                      portfolio report
-                    </span>
-                  </div>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M6 4l4 4-4 4"
-                      stroke="rgba(255,255,255,0.35)"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </a>
-              )}
-            </div>
+                  </a>
+                </div>
+              </>
+            )}
           </div>
 
           {/* ── Right column ── */}
@@ -1057,15 +1987,158 @@ function OnboardingCompleteScreen({
             <p className="text-white/35 text-xs uppercase tracking-widest mb-4">
               while you wait, here are some resources
             </p>
-            <div
-              className="rounded-2xl"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                minHeight: "200px"
-              }}
-            >
-              {/* Resources — to be added */}
+            <div className="flex flex-col gap-2">
+              {[
+                {
+                  bg: "#0F9D58",
+                  label: "skill tracker sheet",
+                  desc: "track your weekly design skills and progress",
+                  url: "#",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <rect
+                        x="2"
+                        y="2"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        fill="white"
+                        opacity="0.92"
+                      />
+                      <path
+                        d="M10 2v18M2 9h18M2 15h18"
+                        stroke="#0F9D58"
+                        strokeWidth="1.2"
+                        opacity="0.45"
+                      />
+                      <rect
+                        x="2"
+                        y="2"
+                        width="8"
+                        height="7"
+                        rx="2"
+                        fill="#0F9D58"
+                        opacity="0.15"
+                      />
+                    </svg>
+                  )
+                },
+                {
+                  bg: "#1a1a1a",
+                  label: "colour theory in movies",
+                  desc: "how filmmakers use colour to tell powerful stories",
+                  url: "#",
+                  icon: (
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 22 22"
+                      fill="white"
+                    >
+                      <circle cx="6" cy="11" r="5" />
+                      <ellipse cx="15" cy="11" rx="3.5" ry="5" />
+                      <ellipse cx="20.5" cy="11" rx="1.5" ry="5" />
+                    </svg>
+                  )
+                },
+                {
+                  bg: "#CC0000",
+                  label: "new york subway system",
+                  desc: "design systems in the real world, simplified",
+                  url: "#",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <rect
+                        x="2"
+                        y="5"
+                        width="18"
+                        height="12"
+                        rx="3"
+                        fill="white"
+                        opacity="0.9"
+                      />
+                      <path d="M9 8.5l6 3-6 3v-6z" fill="#CC0000" />
+                    </svg>
+                  )
+                },
+                {
+                  bg: "#92400E",
+                  label: "creative confidence",
+                  desc: "build the mindset to create without fear",
+                  url: "#",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <path
+                        d="M11 3C8 3 5 5 5 8v1H4a1 1 0 000 2h1v1H4a1 1 0 000 2h1v1a6 6 0 0012 0v-1h1a1 1 0 000-2h-1v-1h1a1 1 0 000-2h-1V8c0-3-3-5-6-5z"
+                        fill="white"
+                        opacity="0.92"
+                      />
+                      <circle cx="8.5" cy="10" r="1.2" fill="#92400E" />
+                      <circle cx="13.5" cy="10" r="1.2" fill="#92400E" />
+                      <path
+                        d="M8.5 14c.8 1 4.2 1 5 0"
+                        stroke="#92400E"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )
+                },
+                {
+                  bg: "#1A56DB",
+                  label: "claude design features",
+                  desc: "designing smarter with AI-powered tools",
+                  url: "#",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <path
+                        d="M14 2H6a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V7l-4-5z"
+                        fill="white"
+                        opacity="0.9"
+                      />
+                      <path
+                        d="M14 2v5h5"
+                        fill="none"
+                        stroke="rgba(26,86,219,0.3)"
+                        strokeWidth="1"
+                      />
+                      <path
+                        d="M7 11h8M7 14h8M7 8h5"
+                        stroke="#1A56DB"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )
+                }
+              ].map((r) => (
+                <a
+                  key={r.label}
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 px-4 py-3.5 rounded-2xl active:opacity-75"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.07)"
+                  }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: r.bg }}
+                  >
+                    {r.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-semibold">
+                      {r.label}
+                    </p>
+                    <p className="text-white/40 text-xs leading-relaxed">
+                      {r.desc}
+                    </p>
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </div>
@@ -1075,12 +2148,22 @@ function OnboardingCompleteScreen({
           <button
             onClick={onViewPastSessions}
             className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl mt-8 py-4"
-            style={{ background: "#FFD007", color: "#161618", fontSize: "clamp(15px, 3vw, 17px)", letterSpacing: "-0.01em" }}
+            style={{
+              background: "#FFD007",
+              color: "#161618",
+              fontSize: "clamp(15px, 3vw, 17px)",
+              letterSpacing: "-0.01em"
+            }}
           >
             view past sessions
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                stroke="#161618" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                stroke="#161618"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         )}
@@ -1092,11 +2175,25 @@ function OnboardingCompleteScreen({
 /* ═══════════════════════════════════════════════════════════════════════════
    Screen 3 — Session detail
 ═══════════════════════════════════════════════════════════════════════════ */
-// Add chesna/yash photos to src/assets/images/Mentorship/ and reference them here
 const EVOLVE_TEAM = [
-  { name: "yagnesh", role: "mentor", photo: mentor_yagnesh },
-  { name: "chesna", role: "support team lead", photo: chesna },
-  { name: "yash", role: "community manager", photo: yash }
+  {
+    name: "yagnesh",
+    role: "mentor",
+    photo: mentor_yagnesh,
+    linkedin: "https://www.linkedin.com/in/yagnesh-mehta-designer/"
+  },
+  {
+    name: "chesna",
+    role: "support team lead",
+    photo: chesna,
+    linkedin: "https://www.linkedin.com/in/chesna"
+  },
+  {
+    name: "yash",
+    role: "community manager",
+    photo: yash,
+    linkedin: "https://www.linkedin.com/in/yash-evolve"
+  }
 ];
 
 const SESSION_FAQS = [
@@ -1276,7 +2373,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
             {EVOLVE_TEAM.map((member) => (
               <div key={member.name} className="flex flex-col">
                 <div
-                  className="w-full rounded-2xl mb-3 overflow-hidden"
+                  className="w-full rounded-2xl mb-2 overflow-hidden"
                   style={{
                     aspectRatio: "3 / 4",
                     background: "rgba(255,255,255,0.06)"
@@ -1303,9 +2400,29 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                     </div>
                   )}
                 </div>
-                <p className="text-white font-semibold text-sm">
-                  {member.name}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-white font-semibold text-sm leading-tight">
+                    {member.name}
+                  </p>
+                  {member.linkedin && (
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      // className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                      // style={{ background: "#0A66C2" }}
+                    >
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="white"
+                      >
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: "rgba(255,255,255,0.4)" }}
@@ -1381,19 +2498,29 @@ function CommentBubble({ comment, onReply, isReply }) {
     comment.avatar_url ||
     `https://api.dicebear.com/7.x/thumbs/svg?seed=${comment.user_id}`;
   const timeStr = new Date(comment.created_at).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short"
+    day: "numeric",
+    month: "short"
   });
   return (
     <div className="flex gap-3">
-      <img src={avatarSrc} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5" />
+      <img
+        src={avatarSrc}
+        alt=""
+        className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-white text-xs font-semibold">{comment.user_name || "user"}</span>
+          <span className="text-white text-xs font-semibold">
+            {comment.user_name || "user"}
+          </span>
           <span className="text-white/30 text-[10px]">{timeStr}</span>
         </div>
         <p className="text-white/70 text-sm leading-relaxed">{comment.body}</p>
         {!isReply && onReply && (
-          <button onClick={onReply} className="text-[11px] text-white/30 mt-1 hover:text-white/60 transition-colors">
+          <button
+            onClick={onReply}
+            className="text-[11px] text-white/30 mt-1 hover:text-white/60 transition-colors"
+          >
             reply
           </button>
         )}
@@ -1406,11 +2533,11 @@ function CommentBubble({ comment, onReply, isReply }) {
    CommentsSection
 ═══════════════════════════════════════════════════════════════════════════ */
 function CommentsSection({ session, user }) {
-  const [comments, setComments]   = useState([]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo]     = useState(null);
+  const [replyTo, setReplyTo] = useState(null);
   const [replyText, setReplyText] = useState("");
-  const [posting, setPosting]     = useState(false);
+  const [posting, setPosting] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -1421,36 +2548,43 @@ function CommentsSection({ session, user }) {
     setComments(data || []);
   };
 
-  useEffect(() => { load(); }, [session.id]);
+  useEffect(() => {
+    load();
+  }, [session.id]);
 
   const post = async (body, parentId = null, clearFn) => {
     if (!body.trim() || posting) return;
     setPosting(true);
     await supabase.from("mentorship_session_comments").insert({
       session_id: session.id,
-      user_id:    user.id,
-      user_name:  user.name || "user",
+      user_id: user.id,
+      user_name: user.name || "user",
       avatar_url: user.avatar_url || null,
-      body:       body.trim(),
-      parent_id:  parentId
+      body: body.trim(),
+      parent_id: parentId
     });
     await load();
     clearFn?.();
     setPosting(false);
   };
 
-  const topLevel = comments.filter(c => !c.parent_id);
-  const repliesFor = id => comments.filter(c => c.parent_id === id);
+  const topLevel = comments.filter((c) => !c.parent_id);
+  const repliesFor = (id) => comments.filter((c) => c.parent_id === id);
 
   return (
     <div>
       {/* new comment input */}
-      <div className="flex items-center gap-2 mb-6 rounded-2xl px-4 py-3"
-        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+      <div
+        className="flex items-center gap-2 mb-6 rounded-2xl px-4 py-3"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)"
+        }}
+      >
         <input
           value={newComment}
-          onChange={e => setNewComment(e.target.value)}
-          onKeyDown={e => {
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               post(newComment, null, () => setNewComment(""));
@@ -1463,55 +2597,86 @@ function CommentsSection({ session, user }) {
           onClick={() => post(newComment, null, () => setNewComment(""))}
           disabled={!newComment.trim() || posting}
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-          style={{ background: newComment.trim() ? "#FFD007" : "rgba(255,255,255,0.08)" }}
+          style={{
+            background: newComment.trim() ? "#FFD007" : "rgba(255,255,255,0.08)"
+          }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 12V2M2 7l5-5 5 5"
+            <path
+              d="M7 12V2M2 7l5-5 5 5"
               stroke={newComment.trim() ? "#161618" : "rgba(255,255,255,0.3)"}
-              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       </div>
 
       {/* comment list */}
       <div className="flex flex-col gap-5">
-        {topLevel.map(comment => (
+        {topLevel.map((comment) => (
           <div key={comment.id}>
-            <CommentBubble comment={comment} onReply={() => { setReplyTo(comment.id); setReplyText(""); }} />
+            <CommentBubble
+              comment={comment}
+              onReply={() => {
+                setReplyTo(comment.id);
+                setReplyText("");
+              }}
+            />
             {/* replies */}
             <div className="ml-11 mt-3 flex flex-col gap-3">
-              {repliesFor(comment.id).map(reply => (
+              {repliesFor(comment.id).map((reply) => (
                 <CommentBubble key={reply.id} comment={reply} isReply />
               ))}
               {replyTo === comment.id && (
                 <div className="flex gap-2">
                   <input
                     value={replyText}
-                    onChange={e => setReplyText(e.target.value)}
+                    onChange={(e) => setReplyText(e.target.value)}
                     placeholder={`reply to ${comment.user_name}…`}
                     autoFocus
                     className="flex-1 rounded-xl px-3 py-2 text-white text-xs outline-none placeholder:text-white/25"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") post(replyText, comment.id, () => { setReplyText(""); setReplyTo(null); });
+                    style={{
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.1)"
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        post(replyText, comment.id, () => {
+                          setReplyText("");
+                          setReplyTo(null);
+                        });
                       if (e.key === "Escape") setReplyTo(null);
                     }}
                   />
                   <button
-                    onClick={() => post(replyText, comment.id, () => { setReplyText(""); setReplyTo(null); })}
+                    onClick={() =>
+                      post(replyText, comment.id, () => {
+                        setReplyText("");
+                        setReplyTo(null);
+                      })
+                    }
                     className="text-xs font-bold px-3 py-2 rounded-xl flex-shrink-0"
                     style={{ background: "#FFD007", color: "#161618" }}
                   >
                     send
                   </button>
-                  <button onClick={() => setReplyTo(null)} className="text-xs text-white/35 px-1">✕</button>
+                  <button
+                    onClick={() => setReplyTo(null)}
+                    className="text-xs text-white/35 px-1"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
             </div>
           </div>
         ))}
         {topLevel.length === 0 && (
-          <p className="text-white/25 text-sm">no comments yet — be the first!</p>
+          <p className="text-white/25 text-sm">
+            no comments yet — be the first!
+          </p>
         )}
       </div>
     </div>
@@ -1523,46 +2688,83 @@ function CommentsSection({ session, user }) {
 ═══════════════════════════════════════════════════════════════════════════ */
 function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
   const [sessions, setSessions] = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!batchId) { setLoading(false); return; }
+    if (!batchId) {
+      setLoading(false);
+      return;
+    }
     supabase
       .from("mentorship_sessions")
       .select("*")
       .eq("batch_id", batchId)
       .not("recording_path", "is", null)
       .order("session_number", { ascending: true })
-      .then(({ data }) => { setSessions(data || []); setLoading(false); });
+      .then(({ data }) => {
+        setSessions(data || []);
+        setLoading(false);
+      });
   }, [batchId]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#161618" }}
+    >
       <BackButton onClick={onBack} />
       <div className="flex-1 flex flex-col justify-center px-5 pt-24 pb-16 md:max-w-5xl md:mx-auto md:px-8 md:w-full">
-        <h1 className="text-white font-bold mb-8"
-          style={{ fontSize: "clamp(24px, 5vw, 36px)", letterSpacing: "-0.02em" }}>
+        <h1
+          className="text-white font-bold mb-8"
+          style={{
+            fontSize: "clamp(24px, 5vw, 36px)",
+            letterSpacing: "-0.02em"
+          }}
+        >
           past sessions
         </h1>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[1,2,3].map(i => (
-              <div key={i} className="rounded-2xl animate-pulse" style={{ background: "rgba(255,255,255,0.06)", aspectRatio: "16/9" }} />
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl animate-pulse"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  aspectRatio: "16/9"
+                }}
+              />
             ))}
           </div>
         ) : sessions.length === 0 ? (
           <p className="text-white/30 text-sm">no recordings available yet</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {sessions.map(session => (
-              <button key={session.id} onClick={() => onSelectSession(session)} className="text-left">
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                onClick={() => onSelectSession(session)}
+                className="text-left"
+              >
                 {/* thumbnail */}
-                <div className="w-full rounded-2xl flex items-center justify-center mb-3"
-                  style={{ aspectRatio: "16/9", background: "rgba(255,255,255,0.07)" }}>
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(255,255,255,0.15)" }}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)">
+                <div
+                  className="w-full rounded-2xl flex items-center justify-center mb-3"
+                  style={{
+                    aspectRatio: "16/9",
+                    background: "rgba(255,255,255,0.07)"
+                  }}
+                >
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(255,255,255,0.15)" }}
+                  >
+                    <svg
+                      width="26"
+                      height="26"
+                      viewBox="0 0 24 24"
+                      fill="rgba(255,255,255,0.8)"
+                    >
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
@@ -1571,9 +2773,14 @@ function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
                   session {session.session_number}: {session.name}
                 </p>
                 {session.description && (
-                  <p className="text-white/40 text-xs leading-relaxed line-clamp-2">{session.description}</p>
+                  <p className="text-white/40 text-xs leading-relaxed line-clamp-2">
+                    {session.description}
+                  </p>
                 )}
-                <div className="h-px mt-4" style={{ background: "rgba(255,255,255,0.07)" }} />
+                <div
+                  className="h-px mt-4"
+                  style={{ background: "rgba(255,255,255,0.07)" }}
+                />
               </button>
             ))}
           </div>
@@ -1589,7 +2796,7 @@ function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
 function SessionPlayerScreen({ session, user, onBack }) {
   const [activeTab, setActiveTab] = useState("summary");
   const [signedUrl, setSignedUrl] = useState(null);
-  const [urlType, setUrlType]     = useState(null); // "embed" | "video"
+  const [urlType, setUrlType] = useState(null); // "embed" | "video"
   const [loadingUrl, setLoadingUrl] = useState(!!session.recording_path);
 
   useEffect(() => {
@@ -1597,7 +2804,9 @@ function SessionPlayerScreen({ session, user, onBack }) {
     (async () => {
       setLoadingUrl(true);
       try {
-        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: authSession }
+        } = await supabase.auth.getSession();
         const token = authSession?.access_token;
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-recording-url`,
@@ -1605,13 +2814,16 @@ function SessionPlayerScreen({ session, user, onBack }) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ session_id: session.id }),
+            body: JSON.stringify({ session_id: session.id })
           }
         );
         const json = await res.json();
-        if (json.url) { setSignedUrl(json.url); setUrlType(json.type); }
+        if (json.url) {
+          setSignedUrl(json.url);
+          setUrlType(json.type);
+        }
       } finally {
         setLoadingUrl(false);
       }
@@ -1619,17 +2831,27 @@ function SessionPlayerScreen({ session, user, onBack }) {
   }, [session.id, session.recording_path]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#161618" }}
+    >
       <BackButton onClick={onBack} />
       <div className="flex-1 px-5 pt-24 pb-16 md:max-w-5xl md:mx-auto md:px-8 md:w-full">
-        <h1 className="text-white font-bold mb-5"
-          style={{ fontSize: "clamp(20px, 4vw, 30px)", letterSpacing: "-0.02em" }}>
+        <h1
+          className="text-white font-bold mb-5"
+          style={{
+            fontSize: "clamp(20px, 4vw, 30px)",
+            letterSpacing: "-0.02em"
+          }}
+        >
           session {session.session_number}: {session.name}
         </h1>
 
         {/* video */}
-        <div className="w-full rounded-2xl overflow-hidden mb-5"
-          style={{ aspectRatio: "16/9", background: "#222" }}>
+        <div
+          className="w-full rounded-2xl overflow-hidden mb-5"
+          style={{ aspectRatio: "16/9", background: "#222" }}
+        >
           {loadingUrl ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
@@ -1655,9 +2877,16 @@ function SessionPlayerScreen({ session, user, onBack }) {
             )
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(255,255,255,0.1)" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.1)" }}
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="rgba(255,255,255,0.35)"
+                >
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -1666,10 +2895,13 @@ function SessionPlayerScreen({ session, user, onBack }) {
         </div>
 
         {/* tab switcher */}
-        <div className="w-full rounded-2xl flex p-1 mb-6"
-          style={{ background: "rgba(255,255,255,0.05)" }}>
-          {["summary + transcript", "comments"].map(label => {
-            const key = label === "summary + transcript" ? "summary" : "comments";
+        <div
+          className="w-full rounded-2xl flex p-1 mb-6"
+          style={{ background: "rgba(255,255,255,0.05)" }}
+        >
+          {["summary + transcript", "comments"].map((label) => {
+            const key =
+              label === "summary + transcript" ? "summary" : "comments";
             return (
               <button
                 key={label}
@@ -1691,24 +2923,38 @@ function SessionPlayerScreen({ session, user, onBack }) {
           <div className="space-y-7">
             {session.summary && (
               <div>
-                <h3 className="text-white font-bold text-sm mb-2">summary of the session</h3>
-                <p className="text-white/60 text-sm leading-relaxed">{session.summary}</p>
+                <h3 className="text-white font-bold text-sm mb-2">
+                  summary of the session
+                </h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  {session.summary}
+                </p>
               </div>
             )}
             {session.next_steps && (
               <div>
-                <h3 className="text-white font-bold text-sm mb-2">suggested next steps</h3>
-                <p className="text-white/60 text-sm leading-relaxed">{session.next_steps}</p>
+                <h3 className="text-white font-bold text-sm mb-2">
+                  suggested next steps
+                </h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  {session.next_steps}
+                </p>
               </div>
             )}
             {session.transcript && (
               <div>
-                <h3 className="text-white font-bold text-sm mb-2">transcript of the session</h3>
-                <p className="text-white/50 text-sm leading-relaxed whitespace-pre-wrap">{session.transcript}</p>
+                <h3 className="text-white font-bold text-sm mb-2">
+                  transcript of the session
+                </h3>
+                <p className="text-white/50 text-sm leading-relaxed whitespace-pre-wrap">
+                  {session.transcript}
+                </p>
               </div>
             )}
             {!session.summary && !session.next_steps && !session.transcript && (
-              <p className="text-white/25 text-sm">summary and transcript coming soon</p>
+              <p className="text-white/25 text-sm">
+                summary and transcript coming soon
+              </p>
             )}
           </div>
         )}
@@ -1734,19 +2980,59 @@ export default function MentorshipSession() {
   const [portfolioReview, setPortfolioReview] = useState(null);
   const [batchId, setBatchId] = useState(null);
   const [defaultSessionIndex, setDefaultSessionIndex] = useState(0);
-  const [selectedRecordingSession, setSelectedRecordingSession] = useState(null);
+  const [selectedRecordingSession, setSelectedRecordingSession] =
+    useState(null);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
+      sessionStorage.removeItem("ms_screen");
+      sessionStorage.removeItem("ms_batch_id");
+      sessionStorage.removeItem("ms_portfolio_review");
       navigate("/signin", { state: { from: "/mentorship-session" } });
       return;
     }
 
-    // Always show the landing screen first; handleGetStarted will skip profile setup if already done
-    setScreen(0);
+    // Restore last screen if user navigated away mid-session
+    const savedScreen = parseInt(
+      sessionStorage.getItem("ms_screen") || "0",
+      10
+    );
+    if (savedScreen >= 2 && savedScreen <= 4) {
+      const savedBatchId = sessionStorage.getItem("ms_batch_id");
+      const savedPR = sessionStorage.getItem("ms_portfolio_review");
+      if (savedBatchId) setBatchId(savedBatchId);
+      if (savedPR) setPortfolioReview(JSON.parse(savedPR));
+      setScreen(savedScreen);
+    } else {
+      setScreen(0);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
+
+  // Persist screen 2-4 to sessionStorage; clear on 0/1
+  useEffect(() => {
+    if (screen === null) return;
+    if (screen >= 2 && screen <= 4) {
+      sessionStorage.setItem("ms_screen", String(screen));
+    } else {
+      sessionStorage.removeItem("ms_screen");
+    }
+  }, [screen]);
+
+  // Persist batchId
+  useEffect(() => {
+    if (batchId) sessionStorage.setItem("ms_batch_id", batchId);
+  }, [batchId]);
+
+  // Persist portfolioReview (null is valid — means no review yet)
+  useEffect(() => {
+    if (portfolioReview !== undefined)
+      sessionStorage.setItem(
+        "ms_portfolio_review",
+        JSON.stringify(portfolioReview)
+      );
+  }, [portfolioReview]);
 
   // Show nothing while auth is loading or we're checking the profile
   if (authLoading || screen === null) return null;
@@ -1832,7 +3118,10 @@ export default function MentorshipSession() {
       {screen === 4 && (
         <PastSessionsScreen
           batchId={batchId}
-          onSelectSession={(session) => { setSelectedRecordingSession(session); setScreen(5); }}
+          onSelectSession={(session) => {
+            setSelectedRecordingSession(session);
+            setScreen(5);
+          }}
           onBack={() => setScreen(2)}
         />
       )}

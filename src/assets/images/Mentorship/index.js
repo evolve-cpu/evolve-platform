@@ -31,6 +31,7 @@ import mentorship_session_hero_mobile from "./mentorship-session_hero_mobile.svg
 import mentorship_session_hero_mobile1 from "./mentorship-session_hero_mobile1.svg";
 import chesna from "./chesna.png";
 import yash from "./yash.png";
+import banner_arrow from "./banner_arrow.svg";
 
 export {
   hero_mentorship,
@@ -65,5 +66,6 @@ export {
   mentorship_session_hero_mobile,
   mentorship_session_hero_mobile1,
   chesna,
-  yash
+  yash,
+  banner_arrow
 };

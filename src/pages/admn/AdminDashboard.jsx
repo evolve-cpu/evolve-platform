@@ -378,6 +378,87 @@ function ReviewUploadCell({ review, onDone }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   MentorshipPortfolioUploadCell — similar to ReviewUploadCell
+   but saves to mentorship_portfolio_versions (no email)
+═══════════════════════════════════════════════════════════════════════════ */
+function MentorshipPortfolioUploadCell({ version, onDone }) {
+  const [state, setState] = useState("idle");
+  const [msg, setMsg] = useState("");
+  const [remarks, setRemarks] = useState(version.review_remarks || "");
+  const [pendingFile, setPendingFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const inputRef = useRef(null);
+
+  const onFileChosen = (file) => {
+    if (!file || file.type !== "application/pdf") { setMsg("PDF only"); setState("error"); return; }
+    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setState("preview");
+  };
+
+  const cancelPreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(null); setPreviewUrl(null); setState("idle"); setMsg("");
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handle = async (file) => {
+    if (!file || file.type !== "application/pdf") { setMsg("PDF only"); setState("error"); return; }
+    setState("uploading"); setMsg("");
+    const path = `mentorship/${version.user_id}/${version.id}.pdf`;
+    const { error: upErr } = await supabaseAdmin.storage.from("review-reports").upload(path, file, { upsert: true, contentType: "application/pdf" });
+    if (upErr) { setState("error"); setMsg(upErr.message); return; }
+    const { data: urlData } = supabaseAdmin.storage.from("review-reports").getPublicUrl(path);
+    const reportUrl = urlData?.publicUrl;
+    const { error: dbErr } = await supabaseAdmin
+      .from("mentorship_portfolio_versions")
+      .update({ review_report_url: reportUrl, review_remarks: remarks.trim() })
+      .eq("id", version.id);
+    if (dbErr) { setState("error"); setMsg(dbErr.message); return; }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setState("done"); setMsg("saved ✓");
+    onDone(version.id, reportUrl, remarks.trim());
+  };
+
+  if (state === "done") return <span className="text-xs font-bold" style={{ color: "#22c55e" }}>saved ✓</span>;
+
+  if (version.review_report_url) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold" style={{ color: "#22c55e" }}>done</span>
+        <a href={version.review_report_url} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: "#888" }}>view</a>
+      </div>
+    );
+  }
+
+  if (state === "preview") {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="remarks (optional)" rows={2}
+          className="text-xs px-2 py-1 rounded outline-none resize-none" style={{ background: "#1a1a1a", border: "1px solid #333", color: "#ddd", width: 180 }} />
+        <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: Y }}>preview pdf</a>
+        <div className="flex gap-2">
+          <button onClick={() => handle(pendingFile)} className="text-xs px-2 py-1 rounded font-semibold" style={{ background: Y, color: "#000" }}>send</button>
+          <button onClick={cancelPreview} className="text-xs px-2 py-1 rounded" style={{ background: "#222", color: "#888" }}>cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="remarks (optional)" rows={2}
+        className="text-xs px-2 py-1 rounded outline-none resize-none" style={{ background: "#1a1a1a", border: "1px solid #333", color: "#ddd", width: 180 }} />
+      {state === "error" && <span className="text-xs" style={{ color: "#f87171" }}>{msg}</span>}
+      <label className="cursor-pointer text-xs px-3 py-1.5 rounded-lg font-semibold inline-block" style={{ background: "#111", border: "1px solid #333", color: Y }}>
+        {state === "uploading" ? "uploading…" : "↑ upload pdf"}
+        <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => onFileChosen(e.target.files?.[0])} />
+      </label>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function AdminDashboard() {
@@ -388,6 +469,7 @@ export default function AdminDashboard() {
   const [waitlist, setWaitlist] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [portfolioReviews, setPortfolioReviews] = useState([]);
+  const [mentorshipPortfolios, setMentorshipPortfolios] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -472,6 +554,13 @@ export default function AdminDashboard() {
       setPortfolioReviews(reviewData || []);
       setSessions(sessData || []);
 
+      // Mentorship portfolio versions (joined with profiles for name/email)
+      const { data: mpData } = await supabaseAdmin
+        .from("mentorship_portfolio_versions")
+        .select("*, profiles:user_id(name, email)")
+        .order("created_at", { ascending: false });
+      setMentorshipPortfolios(mpData || []);
+
       setPayments(pData || []);
       setBatches(bData || []);
       setWaitlist(wData || []);
@@ -495,6 +584,14 @@ export default function AdminDashboard() {
         r.id === reviewId
           ? { ...r, review_report_url: reportUrl, review_status: "done", remarks }
           : r
+      )
+    );
+  };
+
+  const handleMentorshipReportDone = (versionId, reportUrl, remarks) => {
+    setMentorshipPortfolios((prev) =>
+      prev.map((v) =>
+        v.id === versionId ? { ...v, review_report_url: reportUrl, review_remarks: remarks } : v
       )
     );
   };
@@ -747,6 +844,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
     { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` },
+    { id: "m-portfolios", label: `m-portfolios (${mentorshipPortfolios.length})` },
     { id: "sessions", label: "sessions" }
   ];
 
@@ -1911,6 +2009,59 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            MENTORSHIP PORTFOLIOS TAB
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "m-portfolios" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input value={search} onChange={(e) => setSearch(e.target.value)}
+                placeholder="search by name or email…"
+                className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                style={{ background: "#111", border: "1px solid #222", color: "#fff" }} />
+              <span className="text-xs" style={{ color: "#555" }}>{mentorshipPortfolios.length} submissions</span>
+            </div>
+            <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
+                    {["name", "email", "version", "portfolio", "walkthrough", "notes", "submitted", "remarks", "report"].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: "#555" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mentorshipPortfolios.filter(v => {
+                    const q = search.toLowerCase();
+                    return !q || (v.profiles?.name || "").toLowerCase().includes(q) || (v.profiles?.email || "").toLowerCase().includes(q);
+                  }).map((v, i) => (
+                    <tr key={v.id} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
+                      <td className="px-4 py-3 font-semibold text-white">{v.profiles?.name || "—"}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: "#888" }}>{v.profiles?.email || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-white font-bold">v{v.version_number}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {v.portfolio_url ? <a href={v.portfolio_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a> : <span style={{ color: "#444" }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {v.walkthrough_url ? <a href={v.walkthrough_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">walkthrough</a> : <span style={{ color: "#444" }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs" style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={v.notes}>{v.notes || "—"}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: "#666" }}>{fmtDate(v.created_at)}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: "#aaa", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={v.review_remarks}>{v.review_remarks || "—"}</td>
+                      <td className="px-4 py-3">
+                        <MentorshipPortfolioUploadCell version={v} onDone={handleMentorshipReportDone} />
+                      </td>
+                    </tr>
+                  ))}
+                  {mentorshipPortfolios.length === 0 && (
+                    <tr><td colSpan={9} className="px-4 py-8 text-center" style={{ color: "#444" }}>no portfolio submissions yet</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
