@@ -2425,7 +2425,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                       <img
                         src={linkedin_logo}
                         alt="LinkedIn"
-                        className="w-3.5 h-3.5 object-contain"
+                        className="w-4 h-4 object-contain"
                       />
                     </span>
                   )}
