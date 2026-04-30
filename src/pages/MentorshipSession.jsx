@@ -11,8 +11,11 @@ import {
   mentorship_session_hero_mobile1,
   mentor_yagnesh,
   chesna,
+  chesna1,
   yash,
-  banner_arrow
+  banner_arrow,
+  portfolio_report_icon,
+  yash1
 } from "../assets/images/Mentorship";
 
 /* ─── Session date/time helpers ───────────────────────────────────────────── */
@@ -43,9 +46,9 @@ function formatSessionDate(datetimeStr) {
     .replace("am", "am")
     .replace("pm", "pm");
   return {
-    banner: `${day} ${monthSh} ${year} · ${weekday}`,
-    bannerTime: `at ${time} IST`,
-    full: `${day} ${month}, ${weekday} at ${time} IST`
+    banner: `${weekday}, ${day} ${month} ${year}`,
+    bannerTime: `${time} ist`,
+    full: `${weekday}, ${day} ${month} ${year} at ${time} ist`
   };
 }
 
@@ -278,11 +281,14 @@ function WelcomeScreen({ user, onGetStarted, onBack }) {
       <BackButton onClick={onBack} />
 
       {/* text content */}
-      <div className="flex flex-col items-center text-center px-6 pt-[10rem] md:pt-36 z-10">
+      <div
+        className="flex flex-col items-center text-center px-6 z-10"
+        style={{ paddingTop: "clamp(9rem, 20vh, 18rem)" }}
+      >
         <h1
-          className="text-white font-bold mb-3"
+          className="text-white font-bold mb-6"
           style={{
-            fontSize: "clamp(32px, 7vw, 52px)",
+            fontSize: "clamp(36px, 7vw, 52px)",
             letterSpacing: "-0.02em",
             lineHeight: 1.1
           }}
@@ -290,8 +296,13 @@ function WelcomeScreen({ user, onGetStarted, onBack }) {
           hey {firstName}!
         </h1>
         <p
-          className="text-white/55 mb-10"
-          style={{ fontSize: "clamp(15px, 3vw, 20px)", lineHeight: 1.5 }}
+          className="text-white mb-10 font-medium"
+          style={{
+            fontSize: "clamp(28px, 4vw, 42px)",
+            // fontWeight: 400,
+            lineHeight: "clamp(36px, 5vw, 48px)",
+            letterSpacing: "0.16px"
+          }}
         >
           welcome to evolve&apos;s
           <br />
@@ -442,8 +453,15 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
           {/* let&apos;s set your profile */}
           before we begin..
         </h1>
-        <p className="text-white/40 text-sm mb-8 leading-relaxed">
-          {/* what do you aim to achieve through this mentorship? */}
+        <p
+          className="text-white mb-8"
+          style={{
+            fontSize: "clamp(20px, 4vw, 32px)",
+            fontWeight: 400,
+            lineHeight: 1.4,
+            letterSpacing: "0.1px"
+          }}
+        >
           tell us your expectations from this mentorship, this helps us
           personalise your experience.
         </p>
@@ -1453,7 +1471,7 @@ function OnboardingCompleteScreen({
       )}
       <BackButton onClick={onBack} />
 
-      <div className="flex-1 flex flex-col justify-center px-5 pt-28 pb-16 max-w-2xl mx-auto w-full">
+      <div className="flex-1 flex flex-col justify-center px-5 pt-28 pb-16 w-full mx-auto md:max-w-[75vw]">
         <div>
           {/* ── Content ── */}
           <div>
@@ -1943,28 +1961,11 @@ function OnboardingCompleteScreen({
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <rect
-                          x="3"
-                          y="2"
-                          width="14"
-                          height="16"
-                          rx="2"
-                          stroke="rgba(255,255,255,0.55)"
-                          strokeWidth="1.3"
-                        />
-                        <path
-                          d="M6 7h8M6 10h8M6 13h5"
-                          stroke="rgba(255,255,255,0.55)"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                        />
-                      </svg>
+                      <img
+                        src={portfolio_report_icon}
+                        alt=""
+                        className="w-5 h-5"
+                      />
                       <span className="text-white text-sm font-medium">
                         portfolio report
                       </span>
@@ -2182,19 +2183,19 @@ const EVOLVE_TEAM = [
     name: "yagnesh",
     role: "mentor",
     photo: mentor_yagnesh,
-    linkedin: "https://www.linkedin.com/in/yagnesh-mehta-designer/"
+    linkedin: "https://www.linkedin.com/in/yagnesh-ahir-24676516/"
   },
   {
     name: "chesna",
     role: "support team lead",
-    photo: chesna,
-    linkedin: "https://www.linkedin.com/in/chesna"
+    photo: chesna1,
+    linkedin: "https://www.linkedin.com/in/chesna-sorathiya/"
   },
   {
     name: "yash",
     role: "community manager",
-    photo: yash,
-    linkedin: "https://www.linkedin.com/in/yash-evolve"
+    photo: yash1,
+    linkedin: "https://www.linkedin.com/in/yvd-singh/"
   }
 ];
 
@@ -2263,7 +2264,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
       <div className="flex-1 flex flex-col justify-center pt-[7rem] pb-16">
         {/* ── Tab card: tabs row + session content ── */}
         <div
-          className="mx-4 md:w-full md:max-w-3xl md:mx-auto rounded-3xl overflow-hidden mb-10"
+          className="mx-4 md:max-w-[75vw] md:mx-auto md:w-full rounded-3xl overflow-hidden mb-10"
           style={{ background: "#1D1D1F" }}
         >
           {/* Tabs row */}
@@ -2279,7 +2280,9 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                   className="flex-1 min-w-0 py-1.5 rounded-lg text-[11px] font-semibold transition-colors text-center"
                   style={{
                     background: "transparent",
-                    border: isActive ? "1px solid #FFD007" : "1px solid transparent",
+                    border: isActive
+                      ? "1px solid #FFD007"
+                      : "1px solid transparent",
                     color: isActive ? "#FFD007" : "rgba(255,255,255,0.35)"
                   }}
                 >
@@ -2355,7 +2358,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
         </div>
 
         {/* ── Team + FAQs (outside the tab card) ── */}
-        <div className="px-5 md:max-w-3xl md:mx-auto">
+        <div className="px-5 md:max-w-[75vw] md:mx-auto">
           {/* Evolve team */}
           <h2
             className="text-white font-bold mb-5"
@@ -2366,13 +2369,13 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           >
             evolve team
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12">
             {EVOLVE_TEAM.map((member) => (
               <div key={member.name} className="flex flex-col">
                 <div
                   className="w-full rounded-2xl mb-2 overflow-hidden"
                   style={{
-                    aspectRatio: "3 / 4",
+                    aspectRatio: "1 / 1",
                     background: "rgba(255,255,255,0.06)"
                   }}
                 >
@@ -2380,8 +2383,13 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                     <img
                       src={member.photo}
                       alt={member.name}
-                      className="w-full h-full object-cover"
-                      style={{ filter: "grayscale(30%)" }}
+                      className="w-full h-full object-cover object-top"
+                      decoding="async"
+                      style={{
+                        imageRendering: "high-quality",
+                        filter:
+                          "grayscale(100%) contrast(1.05) brightness(0.95)"
+                      }}
                     />
                   ) : (
                     <div
@@ -2450,7 +2458,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                   onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                   className="w-full flex items-start justify-between gap-4 py-4 text-left"
                 >
-                  <span className="text-white font-medium text-sm">
+                  <span className="text-white font-medium text-[1rem]">
                     {faq.q}
                   </span>
                   <span className="text-white/40 text-xl flex-shrink-0 leading-none mt-0.5">
@@ -2458,7 +2466,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                   </span>
                 </button>
                 {openFAQ === i && (
-                  <p className="text-white/50 text-sm pb-4 leading-relaxed">
+                  <p className="text-white font-normal text-sm pb-4 leading-relaxed">
                     {faq.a}
                   </p>
                 )}
@@ -2476,7 +2484,11 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship%20session"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-evolve-yellow font-semibold"
+              className="text-evolve-yellow font-semibold underline underline-offset-2"
+              style={{
+                textDecorationColor: "#FFD007",
+                textDecorationThickness: "1px"
+              }}
             >
               contact us
             </a>
