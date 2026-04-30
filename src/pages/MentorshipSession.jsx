@@ -15,7 +15,8 @@ import {
   yash,
   banner_arrow,
   portfolio_report_icon,
-  yash1
+  yash1,
+  linkedin_logo
 } from "../assets/images/Mentorship";
 
 /* ─── Session date/time helpers ───────────────────────────────────────────── */
@@ -42,13 +43,14 @@ function formatSessionDate(datetimeStr) {
       hour12: true
     })
     .toLowerCase()
+    .replace(/\s*ist\s*/g, "")
     .replace(/ /g, "")
     .replace("am", "am")
     .replace("pm", "pm");
   return {
     banner: `${weekday}, ${day} ${month} ${year}`,
-    bannerTime: `${time} ist`,
-    full: `${weekday}, ${day} ${month} ${year} at ${time} ist`
+    bannerTime: `${time} IST`,
+    full: `${weekday}, ${day} ${month} ${year} at ${time} IST`
   };
 }
 
@@ -296,11 +298,11 @@ function WelcomeScreen({ user, onGetStarted, onBack }) {
           hey {firstName}!
         </h1>
         <p
-          className="text-white mb-10 font-medium"
+          className="text-white mb-10 font-regular"
           style={{
-            fontSize: "clamp(28px, 4vw, 42px)",
+            fontSize: "clamp(20px, 3.8vw, 32px)",
             // fontWeight: 400,
-            lineHeight: "clamp(36px, 5vw, 48px)",
+            lineHeight: "clamp(24px, 5vw, 38px)",
             letterSpacing: "0.16px"
           }}
         >
@@ -1483,7 +1485,7 @@ function OnboardingCompleteScreen({
               }}
             >
               {/* you&apos;re all set {firstName}! */}
-              hi {firstName}, explore your mentorship programme...
+              hi {firstName}, explore your mentorship program...
             </p>
 
             {/* Upcoming session banner */}
@@ -1510,11 +1512,11 @@ function OnboardingCompleteScreen({
                 </div>
                 <div className="mt-3">
                   <div
-                    className="h-3 w-48 rounded mb-2 animate-pulse"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    className="h-12 w-full rounded-2xl animate-pulse mb-2"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
                   />
                   <div
-                    className="h-12 w-full rounded-2xl animate-pulse"
+                    className="h-3 w-48 rounded animate-pulse"
                     style={{ background: "rgba(255,255,255,0.06)" }}
                   />
                 </div>
@@ -1575,7 +1577,7 @@ function OnboardingCompleteScreen({
                           </span>
                         </div>
 
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-end justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <p
                               className="font-extrabold leading-tight mb-2"
@@ -1628,20 +1630,12 @@ function OnboardingCompleteScreen({
 
                     {/* ── Join button — outside the card ── */}
                     <div className="mt-3">
-                      <p
-                        className="text-[11px] mb-2"
-                        style={{ color: "rgba(255,255,255,0.35)" }}
-                      >
-                        {canJoin
-                          ? "session is live — good luck!"
-                          : "button enables 15 mins before the session starts"}
-                      </p>
                       {canJoin ? (
                         <a
                           href={upcomingSession.meet_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 font-bold py-3.5"
+                          className="w-full md:w-[30%] flex items-center justify-center gap-2 font-bold py-3.5"
                           style={{
                             background: "#161618",
                             color: "#FFD007",
@@ -1670,7 +1664,7 @@ function OnboardingCompleteScreen({
                         </a>
                       ) : (
                         <div
-                          className="w-full flex items-center justify-center gap-2 font-bold py-3.5 cursor-not-allowed"
+                          className="w-full md:w-[30%] flex items-center justify-center gap-2 font-bold py-3.5 cursor-not-allowed"
                           style={{
                             background: "#161618",
                             color: "#FFD007",
@@ -1699,6 +1693,14 @@ function OnboardingCompleteScreen({
                           </svg>
                         </div>
                       )}
+                      <p
+                        className="text-[11px] mt-2"
+                        style={{ color: "rgba(255,255,255,0.35)" }}
+                      >
+                        {canJoin
+                          ? "session is live — good luck!"
+                          : "button enables 15 mins before the session starts"}
+                      </p>
                     </div>
                   </div>
                 );
@@ -2298,13 +2300,9 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           />
 
           {/* Session content */}
-          <div className="px-5 py-6 md:min-h-[280px]">
+          <div className="px-5 py-6 md:min-h-[230px]">
             {loading ? (
               <div className="flex flex-col gap-3 animate-pulse">
-                <div
-                  className="h-4 w-24 rounded-full"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                />
                 <div
                   className="h-10 w-3/4 rounded-xl"
                   style={{ background: "rgba(255,255,255,0.08)" }}
@@ -2317,9 +2315,9 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
             ) : session ? (
               <>
                 {/* Session label + name */}
-                <p className="text-white/40 text-sm mb-1">
+                {/* <p className="text-white/40 text-sm mb-1">
                   session {session.session_number}
-                </p>
+                </p> */}
                 <h1
                   className="font-extrabold mb-4"
                   style={{
@@ -2371,7 +2369,17 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           </h2>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12">
             {EVOLVE_TEAM.map((member) => (
-              <div key={member.name} className="flex flex-col">
+              <a
+                key={member.name}
+                href={member.linkedin || undefined}
+                target={member.linkedin ? "_blank" : undefined}
+                rel={member.linkedin ? "noopener noreferrer" : undefined}
+                className="flex flex-col active:opacity-75 transition-opacity"
+                style={{
+                  cursor: member.linkedin ? "pointer" : "default",
+                  textDecoration: "none"
+                }}
+              >
                 <div
                   className="w-full rounded-2xl mb-2 overflow-hidden"
                   style={{
@@ -2410,22 +2418,16 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                     {member.name}
                   </p>
                   {member.linkedin && (
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      // className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                    <span
+                      className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
                       // style={{ background: "#0A66C2" }}
                     >
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="white"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </a>
+                      <img
+                        src={linkedin_logo}
+                        alt="LinkedIn"
+                        className="w-3.5 h-3.5 object-contain"
+                      />
+                    </span>
                   )}
                 </div>
                 <p
@@ -2434,7 +2436,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                 >
                   {member.role}
                 </p>
-              </div>
+              </a>
             ))}
           </div>
 

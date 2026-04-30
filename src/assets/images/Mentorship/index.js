@@ -35,6 +35,7 @@ import yash from "./yash.png";
 import yash1 from "./yash1.svg";
 import banner_arrow from "./banner_arrow.svg";
 import portfolio_report_icon from "./portfolio_report_icon.svg";
+import linkedin_logo from "./linkedin_logo.svg";
 
 export {
   hero_mentorship,
@@ -73,5 +74,6 @@ export {
   yash,
   yash1,
   banner_arrow,
-  portfolio_report_icon
+  portfolio_report_icon,
+  linkedin_logo
 };
