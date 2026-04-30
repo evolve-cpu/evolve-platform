@@ -439,10 +439,13 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
             lineHeight: 1.1
           }}
         >
-          let&apos;s set your profile
+          {/* let&apos;s set your profile */}
+          before we begin..
         </h1>
         <p className="text-white/40 text-sm mb-8 leading-relaxed">
-          what do you aim to achieve through this mentorship?
+          {/* what do you aim to achieve through this mentorship? */}
+          tell us your expectations from this mentorship, this helps us
+          personalise your experience.
         </p>
 
         {/* goal textarea */}
@@ -1455,29 +1458,47 @@ function OnboardingCompleteScreen({
           {/* ── Content ── */}
           <div>
             <p
-              className="text-white font-bold mb-2"
+              className="text-white font-medium mb-2"
               style={{
-                fontSize: "clamp(18px, 3.5vw, 26px)",
+                fontSize: "clamp(14px, 2.4vw, 20px)",
                 letterSpacing: "-0.01em"
               }}
             >
-              you&apos;re all set {firstName}!
+              {/* you&apos;re all set {firstName}! */}
+              hi {firstName}, explore your mentorship programme...
             </p>
 
             {/* Upcoming session banner */}
             {loading && (
-              <div
-                className="w-full rounded-2xl mb-6 overflow-hidden"
-                style={{ background: "#FFD007" }}
-              >
-                <div className="p-5">
-                  <div className="h-6 w-36 rounded-full mb-4 animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
-                  <div className="h-7 w-3/4 rounded-xl mb-2 animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
-                  <div className="h-4 w-1/2 rounded-lg animate-pulse" style={{ background: "rgba(0,0,0,0.08)" }} />
+              <div className="mb-6">
+                <div
+                  className="w-full rounded-2xl overflow-hidden"
+                  style={{ background: "#FFD007" }}
+                >
+                  <div className="p-5">
+                    <div
+                      className="h-6 w-36 rounded-full mb-4 animate-pulse"
+                      style={{ background: "rgba(0,0,0,0.1)" }}
+                    />
+                    <div
+                      className="h-7 w-3/4 rounded-xl mb-2 animate-pulse"
+                      style={{ background: "rgba(0,0,0,0.1)" }}
+                    />
+                    <div
+                      className="h-4 w-1/2 rounded-lg animate-pulse"
+                      style={{ background: "rgba(0,0,0,0.08)" }}
+                    />
+                  </div>
                 </div>
-                <div style={{ height: "1px", background: "rgba(0,0,0,0.1)" }} />
-                <div className="px-5 py-4">
-                  <div className="h-12 w-full rounded-2xl animate-pulse" style={{ background: "rgba(0,0,0,0.1)" }} />
+                <div className="mt-3">
+                  <div
+                    className="h-3 w-48 rounded mb-2 animate-pulse"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  />
+                  <div
+                    className="h-12 w-full rounded-2xl animate-pulse"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                  />
                 </div>
               </div>
             )}
@@ -1508,7 +1529,7 @@ function OnboardingCompleteScreen({
               (() => {
                 const sessionTime = new Date(upcomingSession.session_datetime);
                 const joinFromTime = new Date(
-                  sessionTime.getTime() - 30 * 60 * 1000
+                  sessionTime.getTime() - 15 * 60 * 1000
                 );
                 const sessionEndEst = new Date(
                   sessionTime.getTime() + 2 * 60 * 60 * 1000
@@ -1519,102 +1540,84 @@ function OnboardingCompleteScreen({
                   renderNow <= sessionEndEst &&
                   !!upcomingSession.meet_link;
                 return (
-                  <div
-                    className="w-full rounded-2xl mb-6 overflow-hidden"
-                    style={{ background: "#FFD007" }}
-                  >
-                    {/* top: label + date + arrow button */}
-                    <div className="p-5">
-                      {/* pill label */}
-                      <div
-                        className="inline-flex items-center gap-1 rounded-full px-3 py-1 mb-3"
-                        style={{ background: "rgba(0,0,0,0.08)" }}
-                      >
-                        <span className="text-[11px] font-bold text-black">
-                          • upcoming session •
-                        </span>
-                      </div>
+                  <div className="mb-6">
+                    {/* ── Yellow banner card ── */}
+                    <div
+                      className="w-full rounded-2xl overflow-hidden"
+                      style={{ background: "#FFD007" }}
+                    >
+                      <div className="p-5">
+                        {/* pill label */}
+                        <div
+                          className="inline-flex items-center gap-1 rounded-full px-3 py-1 mb-3"
+                          style={{ background: "rgba(0,0,0,0.08)" }}
+                        >
+                          <span className="text-[11px] font-bold text-black">
+                            • upcoming session •
+                          </span>
+                        </div>
 
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="font-extrabold leading-tight mb-2"
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-extrabold leading-tight mb-2"
+                              style={{
+                                fontSize: "clamp(20px, 5vw, 28px)",
+                                color: "#DF0586",
+                                letterSpacing: "-0.02em"
+                              }}
+                            >
+                              session {upcomingSession.session_number}:{" "}
+                              {upcomingSession.name}
+                            </p>
+                            <p className="text-sm font-medium text-black">
+                              {fmt.banner}
+                            </p>
+                            <p className="text-sm font-medium text-black">
+                              {fmt.bannerTime}
+                            </p>
+                          </div>
+                          {/* arrow → session detail */}
+                          <button
+                            onClick={() =>
+                              onViewSessions(upcomingSession.session_number - 1)
+                            }
+                            className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center active:translate-y-[1px] transition-all"
                             style={{
-                              fontSize: "clamp(20px, 5vw, 28px)",
-                              color: "#DF0586",
-                              letterSpacing: "-0.02em"
+                              background: "#FFD007",
+                              border: "2px solid #000",
+                              boxShadow: "4px 4px 0px #000"
                             }}
                           >
-                            session {upcomingSession.session_number}:{" "}
-                            {upcomingSession.name}
-                          </p>
-                          <p className="text-sm font-medium text-black">
-                            {fmt.banner}
-                          </p>
-                          <p className="text-sm font-medium text-black">
-                            {fmt.bannerTime}
-                          </p>
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 18 18"
+                              fill="none"
+                            >
+                              <path
+                                d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                                stroke="#000"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
                         </div>
-                        {/* arrow → session detail */}
-                        {/* <button
-                          onClick={() =>
-                            onViewSessions(upcomingSession.session_number - 1)
-                          }
-                          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center mt-0.5 active:opacity-70"
-                          style={{ background: "#FFD007" }}
-                        >
-                          <img
-                            src={banner_arrow}
-                            alt=""
-                            className="w-10 h-10"
-                          />
-                        </button> */}
-                        <button
-                          onClick={() =>
-                            onViewSessions(upcomingSession.session_number - 1)
-                          }
-                          className="
-    flex-shrink-0
-    w-11
-    h-11
-    rounded-2xl
-    flex
-    items-center
-    justify-center
-    active:translate-y-[1px]
-    transition-all
-    bg-evolve-yellow
-  "
-                          style={{
-                            border: "2px solid #000",
-                            boxShadow: "4px 4px 0px #000"
-                          }}
-                        >
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 18 18"
-                            fill="none"
-                          >
-                            <path
-                              d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                              stroke="#000"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
                       </div>
                     </div>
 
-                    {/* divider */}
-                    <div
-                      style={{ height: "1px", background: "rgba(0,0,0,0.12)" }}
-                    />
-
-                    {/* join button */}
-                    <div className="px-5 py-4">
+                    {/* ── Join button — outside the card ── */}
+                    <div className="mt-3">
+                      <p
+                        className="text-[11px] mb-2"
+                        style={{ color: "rgba(255,255,255,0.35)" }}
+                      >
+                        {canJoin
+                          ? "session is live — good luck!"
+                          : "button enables 15 mins before the session starts"}
+                      </p>
                       {canJoin ? (
                         <a
                           href={upcomingSession.meet_link}
@@ -1631,7 +1634,7 @@ function OnboardingCompleteScreen({
                             letterSpacing: "-0.01em"
                           }}
                         >
-                          join the session
+                          join session
                           <svg
                             width="18"
                             height="18"
@@ -1661,7 +1664,7 @@ function OnboardingCompleteScreen({
                             opacity: 0.4
                           }}
                         >
-                          join the session
+                          join session
                           <svg
                             width="18"
                             height="18"
@@ -1678,14 +1681,6 @@ function OnboardingCompleteScreen({
                           </svg>
                         </div>
                       )}
-                      <p
-                        className="text-[11px] text-center mt-2"
-                        style={{ color: "rgba(0,0,0,0.45)" }}
-                      >
-                        {canJoin
-                          ? "session is live — good luck!"
-                          : "you'll be able to join 30 minutes before the session starts"}
-                      </p>
                     </div>
                   </div>
                 );
@@ -1991,7 +1986,7 @@ function OnboardingCompleteScreen({
 
           {/* ── Resources ── */}
           <div className="mt-10">
-            <p className="text-white/35 text-xs uppercase tracking-widest mb-4">
+            <p className="text-white/35 text-sm mb-4">
               while you wait, here are some resources
             </p>
             <div className="flex flex-col gap-2">
@@ -2273,7 +2268,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
         >
           {/* Tabs row */}
           {/* <div className="flex gap-1.5 p-3"> */}
-          <div className="flex gap-1.5 p-3 w-full">
+          <div className="flex gap-1 px-3 pt-3 pb-2 w-full">
             {Array.from({ length: tabCount }, (_, i) => {
               const s = sessions[i];
               const isActive = activeTab === i;
@@ -2281,10 +2276,11 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                 <button
                   key={i}
                   onClick={() => setActiveTab(i)}
-                  className="flex-1 min-w-0 py-2 rounded-xl text-[11px] font-semibold transition-colors text-center"
+                  className="flex-1 min-w-0 py-1.5 rounded-lg text-[11px] font-semibold transition-colors text-center"
                   style={{
-                    background: isActive ? "#FFD007" : "rgba(255,255,255,0.07)",
-                    color: isActive ? "#161618" : "rgba(255,255,255,0.45)"
+                    background: "transparent",
+                    border: isActive ? "1px solid #FFD007" : "1px solid transparent",
+                    color: isActive ? "#FFD007" : "rgba(255,255,255,0.35)"
                   }}
                 >
                   session {s?.session_number ?? i + 1}
@@ -2340,14 +2336,8 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                 )}
 
                 {/* Happening on */}
-                <div
-                  className="rounded-2xl p-5"
-                  style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.08)"
-                  }}
-                >
-                  <p className="text-white/35 text-xs mb-2">happening on</p>
+                <div>
+                  <p className="text-white/35 text-xs mb-1.5">happening on</p>
                   <p
                     className="font-semibold text-base"
                     style={{
@@ -2482,14 +2472,14 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           {/* Contact */}
           <p className="text-white/40 text-sm">
             have more questions?{" "}
-            <button
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent("openContactModal"))
-              }
+            <a
+              href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship%20session"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-evolve-yellow font-semibold"
             >
               contact us
-            </button>
+            </a>
           </p>
         </div>
       </div>
