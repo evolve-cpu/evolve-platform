@@ -16,7 +16,10 @@ import {
   banner_arrow,
   portfolio_report_icon,
   yash1,
-  linkedin_logo
+  linkedin_logo,
+  upload_sheet,
+  upload_portfolio,
+  upload_resume
 } from "../assets/images/Mentorship";
 
 /* ─── Session date/time helpers ───────────────────────────────────────────── */
@@ -1782,28 +1785,7 @@ function OnboardingCompleteScreen({
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                        >
-                          <rect
-                            x="3"
-                            y="2"
-                            width="14"
-                            height="16"
-                            rx="2"
-                            stroke="rgba(255,255,255,0.25)"
-                            strokeWidth="1.3"
-                          />
-                          <path
-                            d="M6 7h8M6 10h8M6 13h5"
-                            stroke="rgba(255,255,255,0.25)"
-                            strokeWidth="1.3"
-                            strokeLinecap="round"
-                          />
-                        </svg>
+                        <img src={upload_sheet} alt="" className="w-5 h-5" />
                         <span
                           className="text-sm font-medium"
                           style={{ color: "rgba(255,255,255,0.3)" }}
@@ -1811,12 +1793,26 @@ function OnboardingCompleteScreen({
                           google sheet
                         </span>
                       </div>
-                      <span
+                      {/* <span
                         className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                         style={{ background: "#FFD007", color: "#161618" }}
                       >
                         new
-                      </span>
+                      </span> */}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="M6 4l4 4-4 4"
+                          stroke="rgba(255,255,255,0.35)"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </div>
                   )}
 
@@ -1830,30 +1826,9 @@ function OnboardingCompleteScreen({
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <rect
-                          x="3"
-                          y="2"
-                          width="14"
-                          height="16"
-                          rx="2"
-                          stroke="rgba(255,255,255,0.5)"
-                          strokeWidth="1.3"
-                        />
-                        <path
-                          d="M6 7h8M6 10h8M6 13h5"
-                          stroke="rgba(255,255,255,0.5)"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                        />
-                      </svg>
+                      <img src={upload_portfolio} alt="" className="w-5 h-5" />
                       <span className="text-white text-sm font-medium">
-                        portfolio
+                        upload portfolio
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1892,30 +1867,9 @@ function OnboardingCompleteScreen({
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <rect
-                          x="3"
-                          y="2"
-                          width="14"
-                          height="16"
-                          rx="2"
-                          stroke="rgba(255,255,255,0.5)"
-                          strokeWidth="1.3"
-                        />
-                        <path
-                          d="M6 7h8M6 10h8M6 13h5"
-                          stroke="rgba(255,255,255,0.5)"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                        />
-                      </svg>
+                      <img src={upload_resume} alt="" className="w-5 h-5" />
                       <span className="text-white text-sm font-medium">
-                        resume
+                        upload resume
                       </span>
                     </div>
                     <div className="flex items-center gap-2">

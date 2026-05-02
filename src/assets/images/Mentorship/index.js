@@ -35,6 +35,9 @@ import yash from "./yash.png";
 import yash1 from "./yash1.svg";
 import banner_arrow from "./banner_arrow.svg";
 import portfolio_report_icon from "./portfolio_report_icon.svg";
+import upload_portfolio from "./upload_portfolio.svg";
+import upload_resume from "./upload_resume.svg";
+import upload_sheet from "./upload_sheet.svg";
 import linkedin_logo from "./linkedin_logo.svg";
 
 export {
@@ -75,5 +78,8 @@ export {
   yash1,
   banner_arrow,
   portfolio_report_icon,
+  upload_portfolio,
+  upload_resume,
+  upload_sheet,
   linkedin_logo
 };
