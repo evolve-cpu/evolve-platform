@@ -713,6 +713,7 @@ function PortfolioModal({
   batchId,
   portfolioReview,
   versions,
+  sessions,
   onClose,
   onSaved
 }) {
@@ -770,7 +771,14 @@ function PortfolioModal({
 
   const totalDisplay = allDisplayVersions.length;
   const nextDisplayVersion = totalDisplay + 1;
-  const canUploadMore = versions.length < 3;
+  const _now = new Date();
+  const _pastSessions = (sessions || []).filter(
+    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 < _now.getTime()
+  );
+  const canUploadMore = versions.length < _pastSessions.length;
+  const nextUploadSession = (sessions || []).find(
+    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >= _now.getTime()
+  );
   const latestVersion = allDisplayVersions[totalDisplay - 1];
 
   const handleSubmit = async () => {
@@ -961,31 +969,35 @@ function PortfolioModal({
                 </p>
               </div>
             )}
-            <p className="text-white text-sm font-semibold mb-1">
-              your walkthrough recording
-            </p>
-            <p className="text-white/40 text-xs mb-2">
-              no face cam needed. just walk us through your work. record with{" "}
-              <a
-                href="https://loom.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-                style={{ color: "#FFD007" }}
-              >
-                loom
-              </a>
-            </p>
-            <input
-              value={walkthroughUrl}
-              onChange={(e) => setWalkthroughUrl(e.target.value)}
-              placeholder="https://loom.com/share…"
-              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
-            />
+            {versions.length === 0 && (
+              <>
+                <p className="text-white text-sm font-semibold mb-1">
+                  your walkthrough recording
+                </p>
+                <p className="text-white/40 text-xs mb-2">
+                  no face cam needed. just walk us through your work. record with{" "}
+                  <a
+                    href="https://loom.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: "#FFD007" }}
+                  >
+                    loom
+                  </a>
+                </p>
+                <input
+                  value={walkthroughUrl}
+                  onChange={(e) => setWalkthroughUrl(e.target.value)}
+                  placeholder="https://loom.com/share…"
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)"
+                  }}
+                />
+              </>
+            )}
             <p className="text-white text-sm font-semibold mb-1">
               anything we should know?{" "}
               <span className="text-white/30 font-normal">(optional)</span>
@@ -1039,7 +1051,7 @@ function PortfolioModal({
                 <DocRow key={v.displayVersion} item={v} />
               ))}
             </div>
-            {canUploadMore && (
+            {canUploadMore ? (
               <button
                 onClick={() => {
                   setPortfolioUrl("");
@@ -1067,7 +1079,11 @@ function PortfolioModal({
                   />
                 </svg>
               </button>
-            )}
+            ) : nextUploadSession ? (
+              <p className="text-white/30 text-xs text-center mt-2">
+                next upload window opens after session {nextUploadSession.session_number}
+              </p>
+            ) : null}
           </>
         )}
       </div>
@@ -1078,7 +1094,7 @@ function PortfolioModal({
 /* ═══════════════════════════════════════════════════════════════════════════
    ResumeModal
 ═══════════════════════════════════════════════════════════════════════════ */
-function ResumeModal({ user, batchId, versions, onClose, onSaved }) {
+function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
   const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
   const [resumeUrl, setResumeUrl] = useState("");
   const [notes, setNotes] = useState("");
@@ -1094,7 +1110,14 @@ function ResumeModal({ user, batchId, versions, onClose, onSaved }) {
     }
   };
   const latestVersion = versions[versions.length - 1];
-  const canUploadMore = versions.length < 3;
+  const _rNow = new Date();
+  const _rPastSessions = (sessions || []).filter(
+    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 < _rNow.getTime()
+  );
+  const canUploadMore = versions.length < _rPastSessions.length;
+  const nextUploadSession = (sessions || []).find(
+    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >= _rNow.getTime()
+  );
 
   const handleSubmit = async () => {
     setError("");
@@ -1285,7 +1308,7 @@ function ResumeModal({ user, batchId, versions, onClose, onSaved }) {
                 </a>
               ))}
             </div>
-            {canUploadMore && (
+            {canUploadMore ? (
               <button
                 onClick={() => {
                   setResumeUrl("");
@@ -1312,7 +1335,11 @@ function ResumeModal({ user, batchId, versions, onClose, onSaved }) {
                   />
                 </svg>
               </button>
-            )}
+            ) : nextUploadSession ? (
+              <p className="text-white/30 text-xs text-center mt-2">
+                next upload window opens after session {nextUploadSession.session_number}
+              </p>
+            ) : null}
           </>
         )}
       </div>
@@ -1447,6 +1474,7 @@ function OnboardingCompleteScreen({
           batchId={batchId}
           portfolioReview={portfolioReview}
           versions={portfolioVersions}
+          sessions={sessions}
           onClose={() => setShowPortfolioModal(false)}
           onSaved={async () => {
             const { data } = await supabase
@@ -1463,6 +1491,7 @@ function OnboardingCompleteScreen({
           user={user}
           batchId={batchId}
           versions={resumeVersions}
+          sessions={sessions}
           onClose={() => setShowResumeModal(false)}
           onSaved={async () => {
             const { data } = await supabase
@@ -2953,7 +2982,6 @@ export default function MentorshipSession() {
     if (!user) {
       sessionStorage.removeItem("ms_screen");
       sessionStorage.removeItem("ms_batch_id");
-      sessionStorage.removeItem("ms_portfolio_review");
       navigate("/signin", { state: { from: "/mentorship-session" } });
       return;
     }
@@ -2965,9 +2993,16 @@ export default function MentorshipSession() {
     );
     if (savedScreen >= 2 && savedScreen <= 4) {
       const savedBatchId = sessionStorage.getItem("ms_batch_id");
-      const savedPR = sessionStorage.getItem("ms_portfolio_review");
       if (savedBatchId) setBatchId(savedBatchId);
-      if (savedPR) setPortfolioReview(JSON.parse(savedPR));
+      // Always fetch portfolioReview fresh — cached value may be stale if admin updated it
+      supabase
+        .from("portfolio_reviews")
+        .select("id, review_status, review_report_url")
+        .eq("user_id", user.id)
+        .eq("review_status", "done")
+        .not("review_report_url", "is", null)
+        .maybeSingle()
+        .then(({ data }) => setPortfolioReview(data || null));
       setScreen(savedScreen);
     } else {
       setScreen(0);
@@ -2990,14 +3025,6 @@ export default function MentorshipSession() {
     if (batchId) sessionStorage.setItem("ms_batch_id", batchId);
   }, [batchId]);
 
-  // Persist portfolioReview (null is valid — means no review yet)
-  useEffect(() => {
-    if (portfolioReview !== undefined)
-      sessionStorage.setItem(
-        "ms_portfolio_review",
-        JSON.stringify(portfolioReview)
-      );
-  }, [portfolioReview]);
 
   // Show nothing while auth is loading or we're checking the profile
   if (authLoading || screen === null) return null;
