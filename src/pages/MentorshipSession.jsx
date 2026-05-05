@@ -619,7 +619,7 @@ function FeedbackPopup({ session, user, onClose }) {
 
       {/* sheet */}
       <div
-        className="fixed left-0 right-0 bottom-0 z-[90] rounded-t-3xl md:rounded-3xl md:left-1/2 md:top-1/2 md:bottom-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[420px]"
+        className="fixed left-0 right-0 bottom-0 z-[90] rounded-t-3xl md:rounded-3xl md:left-1/2 md:top-1/2 md:bottom-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[600px]"
         style={{ background: "#1D1D1F", padding: "32px 24px 40px" }}
       >
         {done ? (
@@ -726,6 +726,39 @@ function PortfolioModal({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null); // { name, url }
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = async (file) => {
+    if (!file) return;
+    const allowed = ["application/pdf", "application/zip", "image/png", "image/jpeg", "image/jpg"];
+    const maxSize = 25 * 1024 * 1024;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!allowed.includes(file.type) && !["pdf","zip","png","jpg","jpeg"].includes(ext)) {
+      setFileError("only pdf, zip, png, jpg files are accepted");
+      return;
+    }
+    if (file.size > maxSize) {
+      setFileError("file must be under 25mb");
+      return;
+    }
+    setFileError("");
+    setUploadingFile(true);
+    const path = `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+    const { data: uploadData, error: uploadErr } = await supabase.storage
+      .from("mentorship-portfolios")
+      .upload(path, file, { upsert: true });
+    setUploadingFile(false);
+    if (uploadErr) { setFileError(uploadErr.message); return; }
+    const { data: urlData } = supabase.storage
+      .from("mentorship-portfolios")
+      .getPublicUrl(uploadData.path);
+    setUploadedFile({ name: file.name, url: urlData.publicUrl });
+    setPortfolioUrl(urlData.publicUrl);
+  };
 
   useEffect(() => {
     if (!portfolioReview?.id) return;
@@ -892,7 +925,7 @@ function PortfolioModal({
       style={{ background: "rgba(0,0,0,0.75)" }}
     >
       <div
-        className="w-full md:max-w-md rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        className="w-full md:max-w-2xl rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
         style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
       >
         <div
@@ -932,18 +965,32 @@ function PortfolioModal({
               ].map(([label, mode]) => (
                 <button
                   key={mode}
-                  onClick={() => setUrlMode(mode)}
+                  onClick={() => {
+                    setUrlMode(mode);
+                    if (mode === "link") { setUploadedFile(null); }
+                    else { setPortfolioUrl(""); }
+                    setFileError("");
+                  }}
                   className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
                   style={{
                     background: urlMode === mode ? "#FFD007" : "transparent",
-                    color:
-                      urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
+                    color: urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
                   }}
                 >
                   {label}
                 </button>
               ))}
             </div>
+
+            {/* hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.zip,.png,.jpg,.jpeg"
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files?.[0])}
+            />
+
             {urlMode === "link" ? (
               <input
                 value={portfolioUrl}
@@ -955,20 +1002,76 @@ function PortfolioModal({
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
               />
-            ) : (
+            ) : uploadedFile ? (
+              /* File selected — show name + controls */
               <div
-                className="w-full px-4 py-6 rounded-xl mb-4 flex flex-col items-center gap-1 cursor-not-allowed"
+                className="w-full px-4 py-3.5 rounded-xl mb-4 flex items-center gap-3"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px dashed rgba(255,255,255,0.15)"
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)"
                 }}
               >
-                <p className="text-white/35 text-sm">file upload coming soon</p>
-                <p className="text-white/20 text-xs">
-                  use the link option for now
-                </p>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+                  <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
+                  <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                <span className="text-white text-sm flex-1 truncate">{uploadedFile.name}</span>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  title="replace file"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => { setUploadedFile(null); setPortfolioUrl(""); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  title="remove file"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              /* Drop zone */
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files?.[0]); }}
+                onClick={() => !uploadingFile && fileInputRef.current?.click()}
+                className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
+                style={{
+                  background: dragOver ? "rgba(255,208,7,0.06)" : "rgba(255,255,255,0.04)",
+                  border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
+                  cursor: uploadingFile ? "default" : "pointer",
+                  transition: "border-color 0.15s, background 0.15s"
+                }}
+              >
+                {uploadingFile ? (
+                  <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+                ) : (
+                  <>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 16V8M12 8l-3 3M12 8l3 3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                      drop your file here or{" "}
+                      <span style={{ color: "#FFD007" }}>browse</span>
+                    </p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      pdf · zip · png · jpg &nbsp; max 25mb
+                    </p>
+                  </>
+                )}
               </div>
             )}
+            {fileError && <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>}
             {versions.length === 0 && (
               <>
                 <p className="text-white text-sm font-semibold mb-1">
@@ -1058,6 +1161,9 @@ function PortfolioModal({
                   setWalkthroughUrl("");
                   setNotes("");
                   setError("");
+                  setUploadedFile(null);
+                  setFileError("");
+                  setUrlMode("link");
                   setView("form");
                 }}
                 className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
@@ -1096,10 +1202,44 @@ function PortfolioModal({
 ═══════════════════════════════════════════════════════════════════════════ */
 function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
   const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
+  const [urlMode, setUrlMode] = useState("link");
   const [resumeUrl, setResumeUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null); // { name, url }
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = async (file) => {
+    if (!file) return;
+    const allowed = ["application/pdf", "application/zip", "image/png", "image/jpeg", "image/jpg"];
+    const maxSize = 25 * 1024 * 1024;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!allowed.includes(file.type) && !["pdf","zip","png","jpg","jpeg"].includes(ext)) {
+      setFileError("only pdf, zip, png, jpg files are accepted");
+      return;
+    }
+    if (file.size > maxSize) {
+      setFileError("file must be under 25mb");
+      return;
+    }
+    setFileError("");
+    setUploadingFile(true);
+    const path = `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+    const { data: uploadData, error: uploadErr } = await supabase.storage
+      .from("mentorship-portfolios")
+      .upload(path, file, { upsert: true });
+    setUploadingFile(false);
+    if (uploadErr) { setFileError(uploadErr.message); return; }
+    const { data: urlData } = supabase.storage
+      .from("mentorship-portfolios")
+      .getPublicUrl(uploadData.path);
+    setUploadedFile({ name: file.name, url: urlData.publicUrl });
+    setResumeUrl(urlData.publicUrl);
+  };
 
   const isValidUrl = (s) => {
     try {
@@ -1122,7 +1262,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
   const handleSubmit = async () => {
     setError("");
     if (!resumeUrl.trim()) {
-      setError("please add your resume link");
+      setError(urlMode === "file" ? "please upload a file first" : "please add your resume link");
       return;
     }
     if (!isValidUrl(resumeUrl.trim())) {
@@ -1154,7 +1294,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       style={{ background: "rgba(0,0,0,0.75)" }}
     >
       <div
-        className="w-full md:max-w-md rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        className="w-full md:max-w-2xl rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
         style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
       >
         <div
@@ -1184,22 +1324,127 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
             >
               ready to submit your resume?
             </h2>
-            <p className="text-white text-sm font-semibold mb-1">
-              your resume link
-            </p>
-            <p className="text-white/40 text-xs mb-2">
-              google drive, notion, any public link works
-            </p>
+
+            {/* Mode toggle */}
+            <div
+              className="flex rounded-xl p-1 mb-4"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
+              {[["paste a link", "link"], ["upload a file", "file"]].map(([label, mode]) => (
+                <button
+                  key={mode}
+                  onClick={() => {
+                    setUrlMode(mode);
+                    if (mode === "link") { setUploadedFile(null); }
+                    else { setResumeUrl(""); }
+                    setFileError("");
+                  }}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  style={{
+                    background: urlMode === mode ? "#FFD007" : "transparent",
+                    color: urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* hidden file input */}
             <input
-              value={resumeUrl}
-              onChange={(e) => setResumeUrl(e.target.value)}
-              placeholder="https://drive.google.com/…"
-              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.zip,.png,.jpg,.jpeg"
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files?.[0])}
             />
+
+            {urlMode === "link" ? (
+              <>
+                <p className="text-white/40 text-xs mb-2">
+                  google drive, notion, any public link works
+                </p>
+                <input
+                  value={resumeUrl}
+                  onChange={(e) => setResumeUrl(e.target.value)}
+                  placeholder="https://drive.google.com/…"
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)"
+                  }}
+                />
+              </>
+            ) : uploadedFile ? (
+              /* File selected */
+              <div
+                className="w-full px-4 py-3.5 rounded-xl mb-4 flex items-center gap-3"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)"
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+                  <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
+                  <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                <span className="text-white text-sm flex-1 truncate">{uploadedFile.name}</span>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  title="replace file"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => { setUploadedFile(null); setResumeUrl(""); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  title="remove file"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              /* Drop zone */
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files?.[0]); }}
+                onClick={() => !uploadingFile && fileInputRef.current?.click()}
+                className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
+                style={{
+                  background: dragOver ? "rgba(255,208,7,0.06)" : "rgba(255,255,255,0.04)",
+                  border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
+                  cursor: uploadingFile ? "default" : "pointer",
+                  transition: "border-color 0.15s, background 0.15s"
+                }}
+              >
+                {uploadingFile ? (
+                  <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+                ) : (
+                  <>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 16V8M12 8l-3 3M12 8l3 3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                      drop your file here or{" "}
+                      <span style={{ color: "#FFD007" }}>browse</span>
+                    </p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      pdf · zip · png · jpg &nbsp; max 25mb
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+            {fileError && <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>}
             <p className="text-white text-sm font-semibold mb-1">
               anything we should know?{" "}
               <span className="text-white/30 font-normal">(optional)</span>
@@ -1314,6 +1559,9 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                   setResumeUrl("");
                   setNotes("");
                   setError("");
+                  setUploadedFile(null);
+                  setFileError("");
+                  setUrlMode("link");
                   setView("form");
                 }}
                 className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
@@ -1860,30 +2108,15 @@ function OnboardingCompleteScreen({
                         upload portfolio
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {portfolioVersions.length === 0 && (
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: "#FFD007", color: "#161618" }}
-                        >
-                          new
-                        </span>
-                      )}
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                      >
-                        <path
-                          d="M6 4l4 4-4 4"
-                          stroke="rgba(255,255,255,0.35)"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M6 4l4 4-4 4"
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
 
                   {/* Resume */}
@@ -1901,30 +2134,15 @@ function OnboardingCompleteScreen({
                         upload resume
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {resumeVersions.length === 0 && (
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: "#FFD007", color: "#161618" }}
-                        >
-                          new
-                        </span>
-                      )}
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                      >
-                        <path
-                          d="M6 4l4 4-4 4"
-                          stroke="rgba(255,255,255,0.35)"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M6 4l4 4-4 4"
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                 </div>
               </>
