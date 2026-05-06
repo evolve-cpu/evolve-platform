@@ -79,6 +79,47 @@ function ordinalDate(dateStr) {
     .replace(/^/, `${day}${suffix} `);
 }
 
+/* ─── Version label helper ────────────────────────────────────────────────── */
+function getVersionLabel(url) {
+  if (!url) return "—";
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] || "";
+    // Supabase storage file: extract original filename, strip timestamp prefix
+    if (u.hostname.includes("supabase") && u.pathname.includes("/object/public/")) {
+      const filename = decodeURIComponent(last)
+        .replace(/^\d+_/, "")
+        .replace(/_/g, " ");
+      return filename.length > 24 ? filename.substring(0, 22) + "…" : filename;
+    }
+    // Regular link: domain + first path segment
+    const domain = u.hostname.replace(/^www\./, "");
+    const pathStart = parts.length > 0 ? "/" + parts[0] : "";
+    const combined = domain + pathStart;
+    return combined.length > 24 ? combined.substring(0, 22) + "…" : combined;
+  } catch {
+    return url.length > 24 ? url.substring(0, 22) + "…" : url;
+  }
+}
+
+/* ─── Video thumbnail helper (YouTube + Cloudinary) ──────────────────────── */
+function getVideoThumbnail(url) {
+  if (!url) return null;
+  // YouTube
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+  // Cloudinary — swap extension to .jpg with so_auto (best frame)
+  if (url.includes("res.cloudinary.com")) {
+    return url
+      .replace(/\/upload\//, "/upload/so_auto/")
+      .replace(/\.[a-z0-9]+(\?.*)?$/i, ".jpg");
+  }
+  return null;
+}
+
 /* ─── ProfileSheet ────────────────────────────────────────────────────────── */
 function ProfileSheet({ user, onClose }) {
   const avatarSrc =
@@ -619,18 +660,18 @@ function FeedbackPopup({ session, user, onClose }) {
 
       {/* sheet */}
       <div
-        className="fixed left-0 right-0 bottom-0 z-[90] rounded-t-3xl md:rounded-3xl md:left-1/2 md:top-1/2 md:bottom-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[600px]"
+        className="fixed left-0 right-0 bottom-0 z-[90] rounded-t-3xl md:rounded-3xl md:left-1/2 md:top-1/2 md:bottom-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[680px] md:min-h-[520px] md:flex md:flex-col md:border-2 md:border-black md:[box-shadow:8px_8px_0_0_#000000]"
         style={{ background: "#1D1D1F", padding: "32px 24px 40px" }}
       >
         {done ? (
-          <div className="flex flex-col items-center gap-3 py-8">
+          <div className="flex flex-col items-center justify-center gap-3 py-8 md:flex-1">
             <span className="text-4xl">💛</span>
             <p className="text-white font-bold text-lg text-center">
               thanks for your feedback!
             </p>
           </div>
         ) : (
-          <>
+          <div className="md:flex-1 md:flex md:flex-col">
             <h2
               className="text-white font-bold text-center mb-6"
               style={{
@@ -698,7 +739,7 @@ function FeedbackPopup({ session, user, onClose }) {
                 </svg>
               )}
             </button>
-          </>
+          </div>
         )}
       </div>
     </>
@@ -734,10 +775,19 @@ function PortfolioModal({
 
   const handleFileSelect = async (file) => {
     if (!file) return;
-    const allowed = ["application/pdf", "application/zip", "image/png", "image/jpeg", "image/jpg"];
+    const allowed = [
+      "application/pdf",
+      "application/zip",
+      "image/png",
+      "image/jpeg",
+      "image/jpg"
+    ];
     const maxSize = 25 * 1024 * 1024;
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!allowed.includes(file.type) && !["pdf","zip","png","jpg","jpeg"].includes(ext)) {
+    if (
+      !allowed.includes(file.type) &&
+      !["pdf", "zip", "png", "jpg", "jpeg"].includes(ext)
+    ) {
       setFileError("only pdf, zip, png, jpg files are accepted");
       return;
     }
@@ -752,7 +802,10 @@ function PortfolioModal({
       .from("mentorship-portfolios")
       .upload(path, file, { upsert: true });
     setUploadingFile(false);
-    if (uploadErr) { setFileError(uploadErr.message); return; }
+    if (uploadErr) {
+      setFileError(uploadErr.message);
+      return;
+    }
     const { data: urlData } = supabase.storage
       .from("mentorship-portfolios")
       .getPublicUrl(uploadData.path);
@@ -806,11 +859,15 @@ function PortfolioModal({
   const nextDisplayVersion = totalDisplay + 1;
   const _now = new Date();
   const _pastSessions = (sessions || []).filter(
-    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 < _now.getTime()
+    (s) =>
+      new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 <
+      _now.getTime()
   );
   const canUploadMore = versions.length < _pastSessions.length;
   const nextUploadSession = (sessions || []).find(
-    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >= _now.getTime()
+    (s) =>
+      new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
+      _now.getTime()
   );
   const latestVersion = allDisplayVersions[totalDisplay - 1];
 
@@ -879,8 +936,8 @@ function PortfolioModal({
         {item.displayVersion}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium">
-          version {item.displayVersion}
+        <p className="text-white text-sm font-medium truncate">
+          {getVersionLabel(item.url)}
         </p>
         <p className="text-white/35 text-xs">
           last updated{" "}
@@ -925,7 +982,7 @@ function PortfolioModal({
       style={{ background: "rgba(0,0,0,0.75)" }}
     >
       <div
-        className="w-full md:max-w-2xl rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        className="w-full md:w-[680px] rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative md:flex md:flex-col md:min-h-[520px] md:border-2 md:border-black md:[box-shadow:8px_8px_0_0_#000000]"
         style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
       >
         <div
@@ -967,14 +1024,18 @@ function PortfolioModal({
                   key={mode}
                   onClick={() => {
                     setUrlMode(mode);
-                    if (mode === "link") { setUploadedFile(null); }
-                    else { setPortfolioUrl(""); }
+                    if (mode === "link") {
+                      setUploadedFile(null);
+                    } else {
+                      setPortfolioUrl("");
+                    }
                     setFileError("");
                   }}
                   className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
                   style={{
                     background: urlMode === mode ? "#FFD007" : "transparent",
-                    color: urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
+                    color:
+                      urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
                   }}
                 >
                   {label}
@@ -1011,11 +1072,32 @@ function PortfolioModal({
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
-                  <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
-                  <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="flex-shrink-0"
+                >
+                  <rect
+                    x="3"
+                    y="2"
+                    width="14"
+                    height="16"
+                    rx="2"
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="1.3"
+                  />
+                  <path
+                    d="M6 7h8M6 10h8M6 13h5"
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                  />
                 </svg>
-                <span className="text-white text-sm flex-1 truncate">{uploadedFile.name}</span>
+                <span className="text-white text-sm flex-1 truncate">
+                  {uploadedFile.name}
+                </span>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
@@ -1023,30 +1105,54 @@ function PortfolioModal({
                   title="replace file"
                 >
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
+                      stroke="rgba(255,255,255,0.7)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
                 <button
-                  onClick={() => { setUploadedFile(null); setPortfolioUrl(""); }}
+                  onClick={() => {
+                    setUploadedFile(null);
+                    setPortfolioUrl("");
+                  }}
                   className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
                   style={{ background: "rgba(255,255,255,0.08)" }}
                   title="remove file"
                 >
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
+                      stroke="rgba(255,255,255,0.7)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
             ) : (
               /* Drop zone */
               <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files?.[0]); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  handleFileSelect(e.dataTransfer.files?.[0]);
+                }}
                 onClick={() => !uploadingFile && fileInputRef.current?.click()}
                 className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
                 style={{
-                  background: dragOver ? "rgba(255,208,7,0.06)" : "rgba(255,255,255,0.04)",
+                  background: dragOver
+                    ? "rgba(255,208,7,0.06)"
+                    : "rgba(255,255,255,0.04)",
                   border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
                   cursor: uploadingFile ? "default" : "pointer",
                   transition: "border-color 0.15s, background 0.15s"
@@ -1057,28 +1163,48 @@ function PortfolioModal({
                 ) : (
                   <>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 16V8M12 8l-3 3M12 8l3 3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6" strokeLinecap="round"/>
+                      <path
+                        d="M12 16V8M12 8l-3 3M12 8l3 3"
+                        stroke="rgba(255,255,255,0.5)"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9"
+                        stroke="rgba(255,255,255,0.3)"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
                     </svg>
-                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "rgba(255,255,255,0.55)" }}
+                    >
                       drop your file here or{" "}
                       <span style={{ color: "#FFD007" }}>browse</span>
                     </p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p
+                      className="text-xs"
+                      style={{ color: "rgba(255,255,255,0.25)" }}
+                    >
                       pdf · zip · png · jpg &nbsp; max 25mb
                     </p>
                   </>
                 )}
               </div>
             )}
-            {fileError && <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>}
+            {fileError && (
+              <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
+            )}
             {versions.length === 0 && (
               <>
                 <p className="text-white text-sm font-semibold mb-1">
                   your walkthrough recording
                 </p>
                 <p className="text-white/40 text-xs mb-2">
-                  no face cam needed. just walk us through your work. record with{" "}
+                  no face cam needed. just walk us through your work. record
+                  with{" "}
                   <a
                     href="https://loom.com"
                     target="_blank"
@@ -1120,18 +1246,34 @@ function PortfolioModal({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full py-3.5 rounded-2xl font-bold text-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
               style={{
-                background: "#FFD007",
-                color: "#161618",
+                background: "#161618",
+                color: "#FFD007",
+                border: "1.5px solid #FFD007",
+                borderRadius: "16px",
+                boxShadow: "4px 4px 0 #806804",
+                fontSize: "15px",
+                letterSpacing: "-0.01em",
                 opacity: submitting ? 0.6 : 1
               }}
             >
               {submitting ? "uploading…" : "upload portfolio"}
+              {!submitting && (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="#FFD007"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </button>
           </>
         ) : (
-          <>
+          <div className="md:flex-1 md:flex md:flex-col">
             <h2
               className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
               style={{ letterSpacing: "-0.04em" }}
@@ -1187,10 +1329,11 @@ function PortfolioModal({
               </button>
             ) : nextUploadSession ? (
               <p className="text-white/30 text-xs text-center mt-2">
-                next upload window opens after session {nextUploadSession.session_number}
+                next upload window opens after session{" "}
+                {nextUploadSession.session_number}
               </p>
             ) : null}
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -1215,10 +1358,19 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
 
   const handleFileSelect = async (file) => {
     if (!file) return;
-    const allowed = ["application/pdf", "application/zip", "image/png", "image/jpeg", "image/jpg"];
+    const allowed = [
+      "application/pdf",
+      "application/zip",
+      "image/png",
+      "image/jpeg",
+      "image/jpg"
+    ];
     const maxSize = 25 * 1024 * 1024;
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!allowed.includes(file.type) && !["pdf","zip","png","jpg","jpeg"].includes(ext)) {
+    if (
+      !allowed.includes(file.type) &&
+      !["pdf", "zip", "png", "jpg", "jpeg"].includes(ext)
+    ) {
       setFileError("only pdf, zip, png, jpg files are accepted");
       return;
     }
@@ -1233,7 +1385,10 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       .from("mentorship-portfolios")
       .upload(path, file, { upsert: true });
     setUploadingFile(false);
-    if (uploadErr) { setFileError(uploadErr.message); return; }
+    if (uploadErr) {
+      setFileError(uploadErr.message);
+      return;
+    }
     const { data: urlData } = supabase.storage
       .from("mentorship-portfolios")
       .getPublicUrl(uploadData.path);
@@ -1252,17 +1407,25 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
   const latestVersion = versions[versions.length - 1];
   const _rNow = new Date();
   const _rPastSessions = (sessions || []).filter(
-    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 < _rNow.getTime()
+    (s) =>
+      new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 <
+      _rNow.getTime()
   );
   const canUploadMore = versions.length < _rPastSessions.length;
   const nextUploadSession = (sessions || []).find(
-    (s) => new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >= _rNow.getTime()
+    (s) =>
+      new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
+      _rNow.getTime()
   );
 
   const handleSubmit = async () => {
     setError("");
     if (!resumeUrl.trim()) {
-      setError(urlMode === "file" ? "please upload a file first" : "please add your resume link");
+      setError(
+        urlMode === "file"
+          ? "please upload a file first"
+          : "please add your resume link"
+      );
       return;
     }
     if (!isValidUrl(resumeUrl.trim())) {
@@ -1294,7 +1457,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       style={{ background: "rgba(0,0,0,0.75)" }}
     >
       <div
-        className="w-full md:max-w-2xl rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative"
+        className="w-full md:w-[680px] rounded-t-3xl md:rounded-3xl px-6 pt-6 pb-10 relative md:flex md:flex-col md:min-h-[520px] md:border-2 md:border-black md:[box-shadow:8px_8px_0_0_#000000]"
         style={{ background: "#1D1D1F", maxHeight: "90vh", overflowY: "auto" }}
       >
         <div
@@ -1330,19 +1493,26 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               className="flex rounded-xl p-1 mb-4"
               style={{ background: "rgba(255,255,255,0.06)" }}
             >
-              {[["paste a link", "link"], ["upload a file", "file"]].map(([label, mode]) => (
+              {[
+                ["paste a link", "link"],
+                ["upload a file", "file"]
+              ].map(([label, mode]) => (
                 <button
                   key={mode}
                   onClick={() => {
                     setUrlMode(mode);
-                    if (mode === "link") { setUploadedFile(null); }
-                    else { setResumeUrl(""); }
+                    if (mode === "link") {
+                      setUploadedFile(null);
+                    } else {
+                      setResumeUrl("");
+                    }
                     setFileError("");
                   }}
                   className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
                   style={{
                     background: urlMode === mode ? "#FFD007" : "transparent",
-                    color: urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
+                    color:
+                      urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
                   }}
                 >
                   {label}
@@ -1384,11 +1554,32 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
-                  <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
-                  <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="flex-shrink-0"
+                >
+                  <rect
+                    x="3"
+                    y="2"
+                    width="14"
+                    height="16"
+                    rx="2"
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="1.3"
+                  />
+                  <path
+                    d="M6 7h8M6 10h8M6 13h5"
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                  />
                 </svg>
-                <span className="text-white text-sm flex-1 truncate">{uploadedFile.name}</span>
+                <span className="text-white text-sm flex-1 truncate">
+                  {uploadedFile.name}
+                </span>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
@@ -1396,30 +1587,54 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                   title="replace file"
                 >
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
+                      stroke="rgba(255,255,255,0.7)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
                 <button
-                  onClick={() => { setUploadedFile(null); setResumeUrl(""); }}
+                  onClick={() => {
+                    setUploadedFile(null);
+                    setResumeUrl("");
+                  }}
                   className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
                   style={{ background: "rgba(255,255,255,0.08)" }}
                   title="remove file"
                 >
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
+                      stroke="rgba(255,255,255,0.7)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
             ) : (
               /* Drop zone */
               <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files?.[0]); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  handleFileSelect(e.dataTransfer.files?.[0]);
+                }}
                 onClick={() => !uploadingFile && fileInputRef.current?.click()}
                 className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
                 style={{
-                  background: dragOver ? "rgba(255,208,7,0.06)" : "rgba(255,255,255,0.04)",
+                  background: dragOver
+                    ? "rgba(255,208,7,0.06)"
+                    : "rgba(255,255,255,0.04)",
                   border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
                   cursor: uploadingFile ? "default" : "pointer",
                   transition: "border-color 0.15s, background 0.15s"
@@ -1430,21 +1645,40 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                 ) : (
                   <>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 16V8M12 8l-3 3M12 8l3 3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6" strokeLinecap="round"/>
+                      <path
+                        d="M12 16V8M12 8l-3 3M12 8l3 3"
+                        stroke="rgba(255,255,255,0.5)"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9"
+                        stroke="rgba(255,255,255,0.3)"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
                     </svg>
-                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "rgba(255,255,255,0.55)" }}
+                    >
                       drop your file here or{" "}
                       <span style={{ color: "#FFD007" }}>browse</span>
                     </p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p
+                      className="text-xs"
+                      style={{ color: "rgba(255,255,255,0.25)" }}
+                    >
                       pdf · zip · png · jpg &nbsp; max 25mb
                     </p>
                   </>
                 )}
               </div>
             )}
-            {fileError && <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>}
+            {fileError && (
+              <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
+            )}
             <p className="text-white text-sm font-semibold mb-1">
               anything we should know?{" "}
               <span className="text-white/30 font-normal">(optional)</span>
@@ -1464,18 +1698,34 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full py-3.5 rounded-2xl font-bold text-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
               style={{
-                background: "#FFD007",
-                color: "#161618",
+                background: "#161618",
+                color: "#FFD007",
+                border: "1.5px solid #FFD007",
+                borderRadius: "16px",
+                boxShadow: "4px 4px 0 #806804",
+                fontSize: "15px",
+                letterSpacing: "-0.01em",
                 opacity: submitting ? 0.6 : 1
               }}
             >
               {submitting ? "uploading…" : "upload resume"}
+              {!submitting && (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="#FFD007"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </button>
           </>
         ) : (
-          <>
+          <div className="md:flex-1 md:flex md:flex-col">
             <h2
               className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
               style={{ letterSpacing: "-0.04em" }}
@@ -1522,8 +1772,8 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                     {v.version_number}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium">
-                      version {v.version_number}
+                    <p className="text-white text-sm font-medium truncate">
+                      {getVersionLabel(v.resume_url)}
                     </p>
                     <p className="text-white/35 text-xs">
                       last updated{" "}
@@ -1585,10 +1835,11 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               </button>
             ) : nextUploadSession ? (
               <p className="text-white/30 text-xs text-center mt-2">
-                next upload window opens after session {nextUploadSession.session_number}
+                next upload window opens after session{" "}
+                {nextUploadSession.session_number}
               </p>
             ) : null}
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -1986,206 +2237,144 @@ function OnboardingCompleteScreen({
                 );
               })()}
 
-            {/* My tasks — shown once session 1 is over */}
-            {hasPastSession && !loading && (
-              <>
-                <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
-                <div className="flex flex-col gap-2 mb-5">
-                  {/* Google sheet */}
-                  {googleSheetUrl ? (
-                    <a
-                      href={googleSheetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.08)"
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                        >
-                          <rect
-                            x="3"
-                            y="2"
-                            width="14"
-                            height="16"
-                            rx="2"
-                            stroke="rgba(255,255,255,0.5)"
-                            strokeWidth="1.3"
-                          />
-                          <path
-                            d="M6 7h8M6 10h8M6 13h5"
-                            stroke="rgba(255,255,255,0.5)"
-                            strokeWidth="1.3"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <span className="text-white text-sm font-medium">
-                          google sheet
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: "#FFD007", color: "#161618" }}
-                        >
-                          new
-                        </span>
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                        >
-                          <path
-                            d="M6 4l4 4-4 4"
-                            stroke="rgba(255,255,255,0.35)"
-                            strokeWidth="1.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </a>
-                  ) : (
-                    <div
-                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.06)"
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <img src={upload_sheet} alt="" className="w-5 h-5" />
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: "rgba(255,255,255,0.3)" }}
-                        >
-                          google sheet
-                        </span>
-                      </div>
-                      {/* <span
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: "#FFD007", color: "#161618" }}
-                      >
-                        new
-                      </span> */}
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                      >
-                        <path
-                          d="M6 4l4 4-4 4"
-                          stroke="rgba(255,255,255,0.35)"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+            {/* Tasks + documents — layout varies by upcoming session number */}
+            {hasPastSession && !loading && (() => {
+              const upNum = upcomingSession?.session_number ?? 999;
+              const chevron = (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              );
+              const sheetRow = (label, showNew) => googleSheetUrl ? (
+                <a key="sheet" href={googleSheetUrl} target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="flex items-center gap-3">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
+                      <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
+                    </svg>
+                    <span className="text-white text-sm font-medium">{label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {showNew && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFD007", color: "#161618" }}>new</span>}
+                    {chevron}
+                  </div>
+                </a>
+              ) : (
+                <div key="sheet" className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="flex items-center gap-3">
+                    <img src={upload_sheet} alt="" className="w-5 h-5" />
+                    <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</span>
+                  </div>
+                  {chevron}
+                </div>
+              );
+              const portfolioRow = (label) => (
+                <button key="portfolio" onClick={() => setShowPortfolioModal(true)}
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="flex items-center gap-3">
+                    <img src={upload_portfolio} alt="" className="w-5 h-5" />
+                    <span className="text-white text-sm font-medium">{label}</span>
+                  </div>
+                  {chevron}
+                </button>
+              );
+              const resumeRow = (label) => (
+                <button key="resume" onClick={() => setShowResumeModal(true)}
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="flex items-center gap-3">
+                    <img src={upload_resume} alt="" className="w-5 h-5" />
+                    <span className="text-white text-sm font-medium">{label}</span>
+                  </div>
+                  {chevron}
+                </button>
+              );
+              const reviewRow = reportUrl ? (
+                <a key="review" href={reportUrl} target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="flex items-center gap-3">
+                    <img src={portfolio_report_icon} alt="" className="w-5 h-5" />
+                    <span className="text-white text-sm font-medium">portfolio review</span>
+                  </div>
+                  {chevron}
+                </a>
+              ) : null;
+
+              if (upNum >= 5) {
+                // Session 5+: no tasks, everything in my documents
+                return (
+                  <>
+                    <p className="text-white/35 text-sm mb-3 mt-1">my documents</p>
+                    <div className="flex flex-col gap-2 mb-5">
+                      {portfolioRow("portfolio")}
+                      {reviewRow}
+                      {resumeRow("resume")}
+                      {sheetRow("google sheet", false)}
                     </div>
+                  </>
+                );
+              }
+              if (upNum === 4) {
+                // Session 4: update portfolio, update resume, google sheet
+                return (
+                  <>
+                    <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
+                    <div className="flex flex-col gap-2 mb-5">
+                      {portfolioRow("update portfolio")}
+                      {resumeRow("update resume")}
+                      {sheetRow("google sheet", false)}
+                    </div>
+                    {reportUrl && (
+                      <>
+                        <p className="text-white/35 text-sm mb-3">my documents</p>
+                        <div className="flex flex-col gap-2">{reviewRow}</div>
+                      </>
+                    )}
+                  </>
+                );
+              }
+              if (upNum === 3) {
+                // Session 3: google sheet–your niche (first), update portfolio, update resume
+                return (
+                  <>
+                    <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
+                    <div className="flex flex-col gap-2 mb-5">
+                      {sheetRow("update google sheet – your niche", true)}
+                      {portfolioRow("update portfolio")}
+                      {resumeRow("update resume")}
+                    </div>
+                    {reportUrl && (
+                      <>
+                        <p className="text-white/35 text-sm mb-3">my documents</p>
+                        <div className="flex flex-col gap-2">{reviewRow}</div>
+                      </>
+                    )}
+                  </>
+                );
+              }
+              // Default (session 2 upcoming)
+              return (
+                <>
+                  <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
+                  <div className="flex flex-col gap-2 mb-5">
+                    {sheetRow("google sheet", false)}
+                    {portfolioRow("upload portfolio")}
+                    {resumeRow("upload resume")}
+                  </div>
+                  {reportUrl && (
+                    <>
+                      <p className="text-white/35 text-sm mb-3">my documents</p>
+                      <div className="flex flex-col gap-2">{reviewRow}</div>
+                    </>
                   )}
-
-                  {/* Portfolio */}
-                  <button
-                    onClick={() => setShowPortfolioModal(true)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)"
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src={upload_portfolio} alt="" className="w-5 h-5" />
-                      <span className="text-white text-sm font-medium">
-                        upload portfolio
-                      </span>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M6 4l4 4-4 4"
-                        stroke="rgba(255,255,255,0.35)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-
-                  {/* Resume */}
-                  <button
-                    onClick={() => setShowResumeModal(true)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)"
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src={upload_resume} alt="" className="w-5 h-5" />
-                      <span className="text-white text-sm font-medium">
-                        upload resume
-                      </span>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M6 4l4 4-4 4"
-                        stroke="rgba(255,255,255,0.35)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* My documents — only shown if a report exists */}
-            {reportUrl && (
-              <>
-                <p className="text-white/35 text-sm mb-3">my documents</p>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href={reportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)"
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={portfolio_report_icon}
-                        alt=""
-                        className="w-5 h-5"
-                      />
-                      <span className="text-white text-sm font-medium">
-                        portfolio report
-                      </span>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M6 4l4 4-4 4"
-                        stroke="rgba(255,255,255,0.35)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </a>
-                </div>
-              </>
-            )}
+                </>
+              );
+            })()}
           </div>
 
           {/* ── Resources ── */}
@@ -2960,27 +3149,55 @@ function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
                 className="text-left"
               >
                 {/* thumbnail */}
-                <div
-                  className="w-full rounded-2xl flex items-center justify-center mb-3"
-                  style={{
-                    aspectRatio: "16/9",
-                    background: "rgba(255,255,255,0.07)"
-                  }}
-                >
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(255,255,255,0.15)" }}
-                  >
-                    <svg
-                      width="26"
-                      height="26"
-                      viewBox="0 0 24 24"
-                      fill="rgba(255,255,255,0.8)"
+                {(() => {
+                  const thumb = getVideoThumbnail(session.recording_path);
+                  return (
+                    <div
+                      className="w-full rounded-2xl flex items-center justify-center mb-3 overflow-hidden relative"
+                      style={{
+                        aspectRatio: "16/9",
+                        background: "rgba(255,255,255,0.07)"
+                      }}
                     >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
+                      {thumb ? (
+                        <>
+                          <img
+                            src={thumb}
+                            alt={`session ${session.session_number} thumbnail`}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <div
+                            className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ background: "rgba(0,0,0,0.5)" }}
+                          >
+                            <svg
+                              width="22"
+                              height="22"
+                              viewBox="0 0 24 24"
+                              fill="white"
+                            >
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </>
+                      ) : (
+                        <div
+                          className="w-14 h-14 rounded-full flex items-center justify-center"
+                          style={{ background: "rgba(255,255,255,0.15)" }}
+                        >
+                          <svg
+                            width="26"
+                            height="26"
+                            viewBox="0 0 24 24"
+                            fill="rgba(255,255,255,0.8)"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 <p className="text-white font-bold text-sm mb-1">
                   session {session.session_number}: {session.name}
                 </p>
@@ -3200,19 +3417,21 @@ export default function MentorshipSession() {
     if (!user) {
       sessionStorage.removeItem("ms_screen");
       sessionStorage.removeItem("ms_batch_id");
+      sessionStorage.removeItem("ms_session_id");
       navigate("/signin", { state: { from: "/mentorship-session" } });
       return;
     }
 
-    // Restore last screen if user navigated away mid-session
     const savedScreen = parseInt(
       sessionStorage.getItem("ms_screen") || "0",
       10
     );
-    if (savedScreen >= 2 && savedScreen <= 4) {
+
+    if (savedScreen >= 2 && savedScreen <= 5) {
       const savedBatchId = sessionStorage.getItem("ms_batch_id");
       if (savedBatchId) setBatchId(savedBatchId);
-      // Always fetch portfolioReview fresh — cached value may be stale if admin updated it
+
+      // Always fetch portfolioReview fresh — cached value may be stale
       supabase
         .from("portfolio_reviews")
         .select("id, review_status, review_report_url")
@@ -3221,20 +3440,46 @@ export default function MentorshipSession() {
         .not("review_report_url", "is", null)
         .maybeSingle()
         .then(({ data }) => setPortfolioReview(data || null));
-      setScreen(savedScreen);
+
+      if (savedScreen === 5) {
+        // Restore the session player — re-fetch session from DB to ensure it still exists
+        const savedSessionId = sessionStorage.getItem("ms_session_id");
+        if (savedSessionId) {
+          supabase
+            .from("mentorship_sessions")
+            .select("*")
+            .eq("id", savedSessionId)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                setSelectedRecordingSession(data);
+                setScreen(5);
+              } else {
+                // Session no longer accessible — fall back to listing
+                setScreen(4);
+              }
+            });
+          // Screen will be set async above; keep null until then
+        } else {
+          setScreen(4); // No session id saved, go to listing
+        }
+      } else {
+        setScreen(savedScreen);
+      }
     } else {
       setScreen(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
-  // Persist screen 2-4 to sessionStorage; clear on 0/1
+  // Persist screens 2-5 to sessionStorage; clear on 0/1
   useEffect(() => {
     if (screen === null) return;
-    if (screen >= 2 && screen <= 4) {
+    if (screen >= 2 && screen <= 5) {
       sessionStorage.setItem("ms_screen", String(screen));
     } else {
       sessionStorage.removeItem("ms_screen");
+      sessionStorage.removeItem("ms_session_id");
     }
   }, [screen]);
 
@@ -3242,7 +3487,6 @@ export default function MentorshipSession() {
   useEffect(() => {
     if (batchId) sessionStorage.setItem("ms_batch_id", batchId);
   }, [batchId]);
-
 
   // Show nothing while auth is loading or we're checking the profile
   if (authLoading || screen === null) return null;
@@ -3330,6 +3574,7 @@ export default function MentorshipSession() {
           batchId={batchId}
           onSelectSession={(session) => {
             setSelectedRecordingSession(session);
+            sessionStorage.setItem("ms_session_id", session.id);
             setScreen(5);
           }}
           onBack={() => setScreen(2)}
