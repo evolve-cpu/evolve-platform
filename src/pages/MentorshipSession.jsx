@@ -869,6 +869,8 @@ function PortfolioModal({
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
       _now.getTime()
   );
+  // Session 5+ means all upload windows are closed — uploading is done
+  const _uploadsLocked = (nextUploadSession?.session_number ?? 999) >= 5;
   const latestVersion = allDisplayVersions[totalDisplay - 1];
 
   const handleSubmit = async () => {
@@ -1296,7 +1298,7 @@ function PortfolioModal({
                 <DocRow key={v.displayVersion} item={v} />
               ))}
             </div>
-            {canUploadMore ? (
+            {!_uploadsLocked && canUploadMore ? (
               <button
                 onClick={() => {
                   setPortfolioUrl("");
@@ -1327,11 +1329,6 @@ function PortfolioModal({
                   />
                 </svg>
               </button>
-            ) : nextUploadSession ? (
-              <p className="text-white/30 text-xs text-center mt-2">
-                next upload window opens after session{" "}
-                {nextUploadSession.session_number}
-              </p>
             ) : null}
           </div>
         )}
@@ -1417,6 +1414,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
       _rNow.getTime()
   );
+  const _rUploadsLocked = (nextUploadSession?.session_number ?? 999) >= 5;
 
   const handleSubmit = async () => {
     setError("");
@@ -1803,7 +1801,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                 </a>
               ))}
             </div>
-            {canUploadMore ? (
+            {!_rUploadsLocked && canUploadMore ? (
               <button
                 onClick={() => {
                   setResumeUrl("");
@@ -1833,11 +1831,6 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                   />
                 </svg>
               </button>
-            ) : nextUploadSession ? (
-              <p className="text-white/30 text-xs text-center mt-2">
-                next upload window opens after session{" "}
-                {nextUploadSession.session_number}
-              </p>
             ) : null}
           </div>
         )}
