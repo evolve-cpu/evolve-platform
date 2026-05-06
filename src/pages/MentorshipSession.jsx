@@ -1865,7 +1865,14 @@ function OnboardingCompleteScreen({
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [googleSheetUrl, setGoogleSheetUrl] = useState(null);
+  const [now, setNow] = useState(new Date());
   const firstName = user?.name?.split(" ")[0]?.toLowerCase() || "there";
+
+  // Tick every 30 s so canJoin auto-enables at the 15-min mark without a refresh
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!batchId) {
@@ -1939,7 +1946,6 @@ function OnboardingCompleteScreen({
     })();
   }, [batchId]);
 
-  const now = new Date();
   const upcomingSession =
     sessions.find((s) => new Date(s.session_datetime) >= now) ||
     sessions[sessions.length - 1];
@@ -2085,10 +2091,9 @@ function OnboardingCompleteScreen({
                 const sessionEndEst = new Date(
                   sessionTime.getTime() + 2 * 60 * 60 * 1000
                 );
-                const renderNow = new Date();
                 const canJoin =
-                  renderNow >= joinFromTime &&
-                  renderNow <= sessionEndEst &&
+                  now >= joinFromTime &&
+                  now <= sessionEndEst &&
                   !!upcomingSession.meet_link;
                 return (
                   <div className="mb-6">
