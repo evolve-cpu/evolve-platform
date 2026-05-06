@@ -2237,6 +2237,33 @@ function OnboardingCompleteScreen({
                 );
               })()}
 
+            {/* Portfolio review — shown any time a report is ready, even before session 1 */}
+            {!loading && reportUrl && !hasPastSession && (
+              <>
+                <p className="text-white/35 text-sm mb-3 mt-1">my documents</p>
+                <div className="flex flex-col gap-2 mb-5">
+                  <a
+                    href={reportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={portfolio_report_icon} alt="" className="w-5 h-5" />
+                      <span className="text-white text-sm font-medium">portfolio review</span>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </a>
+                </div>
+              </>
+            )}
+
             {/* Tasks + documents — layout varies by upcoming session number */}
             {hasPastSession && !loading && (() => {
               const upNum = upcomingSession?.session_number ?? 999;
@@ -2265,7 +2292,7 @@ function OnboardingCompleteScreen({
                 <div key="sheet" className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
                   style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <div className="flex items-center gap-3">
-                    <img src={upload_sheet} alt="" className="w-5 h-5" />
+                    <img src={upload_sheet} alt="" className="w-5 h-5 opacity-30" />
                     <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</span>
                   </div>
                   {chevron}
