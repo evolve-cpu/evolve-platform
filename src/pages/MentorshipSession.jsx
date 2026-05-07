@@ -87,7 +87,10 @@ function getVersionLabel(url) {
     const parts = u.pathname.split("/").filter(Boolean);
     const last = parts[parts.length - 1] || "";
     // Supabase storage file: extract original filename, strip timestamp prefix
-    if (u.hostname.includes("supabase") && u.pathname.includes("/object/public/")) {
+    if (
+      u.hostname.includes("supabase") &&
+      u.pathname.includes("/object/public/")
+    ) {
       const filename = decodeURIComponent(last)
         .replace(/^\d+_/, "")
         .replace(/_/g, " ");
@@ -324,7 +327,7 @@ function WelcomeScreen({ user, onGetStarted, onBack }) {
       className="fixed inset-0 flex flex-col overflow-hidden"
       style={{ backgroundColor: "#161618" }}
     >
-      <BackButton onClick={onBack} />
+      {/* <BackButton onClick={onBack} /> */}
 
       {/* text content */}
       <div
@@ -698,7 +701,8 @@ function FeedbackPopup({ session, user, onClose }) {
 
             {/* Comment */}
             <p className="text-white/40 text-xs mb-2">
-              how was your experience with session {session.session_number}?
+              tell us more about your session {session.session_number}{" "}
+              experience...
             </p>
             <textarea
               value={comment}
@@ -2251,11 +2255,23 @@ function OnboardingCompleteScreen({
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <img src={portfolio_report_icon} alt="" className="w-5 h-5" />
-                      <span className="text-white text-sm font-medium">portfolio review</span>
+                      <img
+                        src={portfolio_report_icon}
+                        alt=""
+                        className="w-5 h-5"
+                      />
+                      <span className="text-white text-sm font-medium">
+                        portfolio review report
+                      </span>
                     </div>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M6 4l4 4-4 4"
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </a>
                 </div>
@@ -2263,143 +2279,244 @@ function OnboardingCompleteScreen({
             )}
 
             {/* Tasks + documents — layout varies by upcoming session number */}
-            {hasPastSession && !loading && (() => {
-              const upNum = upcomingSession?.session_number ?? 999;
-              const chevron = (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              );
-              const sheetRow = (label, showNew) => googleSheetUrl ? (
-                <a key="sheet" href={googleSheetUrl} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-center gap-3">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <rect x="3" y="2" width="14" height="16" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" />
-                      <path d="M6 7h8M6 10h8M6 13h5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                    <span className="text-white text-sm font-medium">{label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {showNew && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFD007", color: "#161618" }}>new</span>}
+            {hasPastSession &&
+              !loading &&
+              (() => {
+                const upNum = upcomingSession?.session_number ?? 999;
+                const chevron = (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M6 4l4 4-4 4"
+                      stroke="rgba(255,255,255,0.35)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                );
+                const sheetRow = (label, showNew) =>
+                  googleSheetUrl ? (
+                    <a
+                      key="sheet"
+                      href={googleSheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.08)"
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                        >
+                          <rect
+                            x="3"
+                            y="2"
+                            width="14"
+                            height="16"
+                            rx="2"
+                            stroke="rgba(255,255,255,0.5)"
+                            strokeWidth="1.3"
+                          />
+                          <path
+                            d="M6 7h8M6 10h8M6 13h5"
+                            stroke="rgba(255,255,255,0.5)"
+                            strokeWidth="1.3"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="text-white text-sm font-medium">
+                          {label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {showNew && (
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: "#FFD007", color: "#161618" }}
+                          >
+                            new
+                          </span>
+                        )}
+                        {chevron}
+                      </div>
+                    </a>
+                  ) : (
+                    <div
+                      key="sheet"
+                      className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.06)"
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={upload_sheet}
+                          alt=""
+                          className="w-5 h-5 opacity-30"
+                        />
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: "rgba(255,255,255,0.3)" }}
+                        >
+                          {label}
+                        </span>
+                      </div>
+                      {chevron}
+                    </div>
+                  );
+                const portfolioRow = (label) => (
+                  <button
+                    key="portfolio"
+                    onClick={() => setShowPortfolioModal(true)}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={upload_portfolio} alt="" className="w-5 h-5" />
+                      <span className="text-white text-sm font-medium">
+                        {label}
+                      </span>
+                    </div>
                     {chevron}
-                  </div>
-                </a>
-              ) : (
-                <div key="sheet" className="w-full flex items-center justify-between px-5 py-4 rounded-2xl"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className="flex items-center gap-3">
-                    <img src={upload_sheet} alt="" className="w-5 h-5 opacity-30" />
-                    <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</span>
-                  </div>
-                  {chevron}
-                </div>
-              );
-              const portfolioRow = (label) => (
-                <button key="portfolio" onClick={() => setShowPortfolioModal(true)}
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-center gap-3">
-                    <img src={upload_portfolio} alt="" className="w-5 h-5" />
-                    <span className="text-white text-sm font-medium">{label}</span>
-                  </div>
-                  {chevron}
-                </button>
-              );
-              const resumeRow = (label) => (
-                <button key="resume" onClick={() => setShowResumeModal(true)}
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-center gap-3">
-                    <img src={upload_resume} alt="" className="w-5 h-5" />
-                    <span className="text-white text-sm font-medium">{label}</span>
-                  </div>
-                  {chevron}
-                </button>
-              );
-              const reviewRow = reportUrl ? (
-                <a key="review" href={reportUrl} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-center gap-3">
-                    <img src={portfolio_report_icon} alt="" className="w-5 h-5" />
-                    <span className="text-white text-sm font-medium">portfolio review</span>
-                  </div>
-                  {chevron}
-                </a>
-              ) : null;
+                  </button>
+                );
+                const resumeRow = (label) => (
+                  <button
+                    key="resume"
+                    onClick={() => setShowResumeModal(true)}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={upload_resume} alt="" className="w-5 h-5" />
+                      <span className="text-white text-sm font-medium">
+                        {label}
+                      </span>
+                    </div>
+                    {chevron}
+                  </button>
+                );
+                const reviewRow = reportUrl ? (
+                  <a
+                    key="review"
+                    href={reportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={portfolio_report_icon}
+                        alt=""
+                        className="w-5 h-5"
+                      />
+                      <span className="text-white text-sm font-medium">
+                        portfolio review report
+                      </span>
+                    </div>
+                    {chevron}
+                  </a>
+                ) : null;
 
-              if (upNum >= 5) {
-                // Session 5+: no tasks, everything in my documents
-                return (
-                  <>
-                    <p className="text-white/35 text-sm mb-3 mt-1">my documents</p>
-                    <div className="flex flex-col gap-2 mb-5">
-                      {portfolioRow("portfolio")}
-                      {reviewRow}
-                      {resumeRow("resume")}
-                      {sheetRow("google sheet", false)}
-                    </div>
-                  </>
-                );
-              }
-              if (upNum === 4) {
-                // Session 4: update portfolio, update resume, google sheet
-                return (
-                  <>
-                    <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
-                    <div className="flex flex-col gap-2 mb-5">
-                      {portfolioRow("update portfolio")}
-                      {resumeRow("update resume")}
-                      {sheetRow("google sheet", false)}
-                    </div>
-                    {reportUrl && (
-                      <>
-                        <p className="text-white/35 text-sm mb-3">my documents</p>
-                        <div className="flex flex-col gap-2">{reviewRow}</div>
-                      </>
-                    )}
-                  </>
-                );
-              }
-              if (upNum === 3) {
-                // Session 3: google sheet–your niche (first), update portfolio, update resume
-                return (
-                  <>
-                    <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
-                    <div className="flex flex-col gap-2 mb-5">
-                      {sheetRow("update google sheet – your niche", true)}
-                      {portfolioRow("update portfolio")}
-                      {resumeRow("update resume")}
-                    </div>
-                    {reportUrl && (
-                      <>
-                        <p className="text-white/35 text-sm mb-3">my documents</p>
-                        <div className="flex flex-col gap-2">{reviewRow}</div>
-                      </>
-                    )}
-                  </>
-                );
-              }
-              // Default (session 2 upcoming)
-              return (
-                <>
-                  <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
-                  <div className="flex flex-col gap-2 mb-5">
-                    {sheetRow("google sheet", false)}
-                    {portfolioRow("upload portfolio")}
-                    {resumeRow("upload resume")}
-                  </div>
-                  {reportUrl && (
+                if (upNum >= 5) {
+                  // Session 5+: no tasks, everything in my documents
+                  return (
                     <>
-                      <p className="text-white/35 text-sm mb-3">my documents</p>
-                      <div className="flex flex-col gap-2">{reviewRow}</div>
+                      <p className="text-white/35 text-sm mb-3 mt-1">
+                        my documents
+                      </p>
+                      <div className="flex flex-col gap-2 mb-5">
+                        {portfolioRow("portfolio")}
+                        {reviewRow}
+                        {resumeRow("resume")}
+                        {sheetRow("google sheet", false)}
+                      </div>
                     </>
-                  )}
-                </>
-              );
-            })()}
+                  );
+                }
+                if (upNum === 4) {
+                  // Session 4: update portfolio, update resume, google sheet
+                  return (
+                    <>
+                      <p className="text-white/35 text-sm mb-3 mt-1">
+                        my tasks
+                      </p>
+                      <div className="flex flex-col gap-2 mb-5">
+                        {portfolioRow("update portfolio")}
+                        {resumeRow("update resume")}
+                        {sheetRow("google sheet", false)}
+                      </div>
+                      {reportUrl && (
+                        <>
+                          <p className="text-white/35 text-sm mb-3">
+                            my documents
+                          </p>
+                          <div className="flex flex-col gap-2">{reviewRow}</div>
+                        </>
+                      )}
+                    </>
+                  );
+                }
+                if (upNum === 3) {
+                  // Session 3: google sheet–your niche (first), update portfolio, update resume
+                  return (
+                    <>
+                      <p className="text-white/35 text-sm mb-3 mt-1">
+                        my tasks
+                      </p>
+                      <div className="flex flex-col gap-2 mb-5">
+                        {sheetRow("update google sheet – your niche", true)}
+                        {portfolioRow("update portfolio")}
+                        {resumeRow("update resume")}
+                      </div>
+                      {reportUrl && (
+                        <>
+                          <p className="text-white/35 text-sm mb-3">
+                            my documents
+                          </p>
+                          <div className="flex flex-col gap-2">{reviewRow}</div>
+                        </>
+                      )}
+                    </>
+                  );
+                }
+                // Default (session 2 upcoming)
+                return (
+                  <>
+                    <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
+                    <div className="flex flex-col gap-2 mb-5">
+                      {sheetRow("google sheet", false)}
+                      {portfolioRow("update portfolio")}
+                      {resumeRow("update resume")}
+                    </div>
+                    {reportUrl && (
+                      <>
+                        <p className="text-white/35 text-sm mb-3">
+                          my documents
+                        </p>
+                        <div className="flex flex-col gap-2">{reviewRow}</div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
           </div>
 
           {/* ── Resources ── */}
