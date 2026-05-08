@@ -634,8 +634,20 @@ function FeedbackPopup({ session, user, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
+  const canSubmit = comment.trim().length > 0 && !submitting;
+
+  const markLocalDone = () => {
+    try {
+      const key = `fb_ok_${user.id}`;
+      const list = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!list.includes(session.id)) {
+        localStorage.setItem(key, JSON.stringify([...list, session.id]));
+      }
+    } catch {}
+  };
+
   const handleSubmit = async () => {
-    if (rating === 0 || submitting) return;
+    if (!canSubmit) return;
     setSubmitting(true);
     await supabase.from("mentorship_session_feedback").upsert(
       {
@@ -649,8 +661,37 @@ function FeedbackPopup({ session, user, onClose }) {
       },
       { onConflict: "session_id,user_id" }
     );
+    markLocalDone();
     setDone(true);
     setTimeout(onClose, 1200);
+  };
+
+  const handleDidNotAttend = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    markLocalDone();
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const uid = authData?.user?.id || user?.id;
+      const { error: dbErr } = await supabase
+        .from("mentorship_session_feedback")
+        .upsert(
+          {
+            session_id: session.id,
+            user_id: uid,
+            user_name: user?.name || null,
+            session_name: session?.name || null,
+            session_number: session?.session_number || null,
+            rating: 0,
+            comment: null
+          },
+          { onConflict: "session_id,user_id" }
+        );
+      if (dbErr) console.error("did_not_attend save failed:", dbErr);
+    } catch (e) {
+      console.error("did_not_attend unexpected error:", e);
+    }
+    onClose();
   };
 
   return (
@@ -674,75 +715,88 @@ function FeedbackPopup({ session, user, onClose }) {
             </p>
           </div>
         ) : (
-          <div className="md:flex-1 md:flex md:flex-col">
-            <h2
-              className="text-white font-bold text-center mb-6"
-              style={{
-                fontSize: "clamp(22px, 5vw, 28px)",
-                letterSpacing: "-0.02em"
-              }}
-            >
-              how was your session?
-            </h2>
+          <div className="flex flex-col md:flex-1">
+            {/* Center content */}
+            <div className="flex-1 flex flex-col justify-center">
+              <h2
+                className="text-white font-bold text-center mb-6"
+                style={{
+                  fontSize: "clamp(22px, 5vw, 28px)",
+                  letterSpacing: "-0.02em"
+                }}
+              >
+                how was your session?
+              </h2>
 
-            {/* Heart rating */}
-            <div className="flex justify-center gap-3 mb-6">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setRating(n)}
-                  className="transition-transform active:scale-90"
-                  style={{ fontSize: "clamp(28px, 8vw, 36px)", lineHeight: 1 }}
-                >
-                  {n <= rating ? "💛" : "🩶"}
-                </button>
-              ))}
+              {/* Heart rating */}
+              <div className="flex justify-center gap-3 mb-6">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setRating(n)}
+                    className="transition-transform active:scale-90"
+                    style={{ fontSize: "clamp(28px, 8vw, 36px)", lineHeight: 1 }}
+                  >
+                    {n <= rating ? "💛" : "🩶"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Comment */}
+              <p className="text-white/40 text-xs mb-2">
+                tell us more about your experience...
+              </p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="your answer here..."
+                rows={4}
+                className="w-full rounded-2xl text-white text-sm leading-relaxed resize-none outline-none placeholder:text-white/20"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  padding: "14px 16px",
+                  fontFamily: "inherit"
+                }}
+              />
             </div>
 
-            {/* Comment */}
-            <p className="text-white/40 text-xs mb-2">
-              tell us more about your session {session.session_number}{" "}
-              experience...
-            </p>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="your answer"
-              rows={4}
-              className="w-full rounded-2xl text-white text-sm leading-relaxed resize-none outline-none placeholder:text-white/20 mb-5"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                padding: "14px 16px",
-                fontFamily: "inherit"
-              }}
-            />
-
-            <button
-              onClick={handleSubmit}
-              disabled={rating === 0 || submitting}
-              className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl transition-opacity"
-              style={{
-                background: rating > 0 ? "#FFD007" : "rgba(255,208,7,0.25)",
-                color: rating > 0 ? "#161618" : "rgba(22,22,24,0.4)",
-                fontSize: "clamp(15px, 3vw, 17px)",
-                padding: "14px 0",
-                cursor: rating > 0 ? "pointer" : "not-allowed"
-              }}
-            >
-              {submitting ? "submitting…" : "submit"}
-              {!submitting && (
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                    stroke={rating > 0 ? "#161618" : "rgba(22,22,24,0.4)"}
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
+            {/* Buttons pinned to bottom */}
+            <div className="mt-5">
+              <button
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl transition-opacity mb-4"
+                style={{
+                  background: canSubmit ? "#FFD007" : "rgba(255,208,7,0.25)",
+                  color: canSubmit ? "#161618" : "rgba(22,22,24,0.4)",
+                  fontSize: "clamp(15px, 3vw, 17px)",
+                  padding: "14px 0",
+                  cursor: canSubmit ? "pointer" : "not-allowed"
+                }}
+              >
+                {submitting ? "submitting…" : "submit"}
+                {!submitting && (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                      stroke={canSubmit ? "#161618" : "rgba(22,22,24,0.4)"}
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handleDidNotAttend}
+                disabled={submitting}
+                className="w-full text-center text-sm font-medium underline underline-offset-2"
+                style={{ color: "#FFD007" }}
+              >
+                I did not attend the session
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -764,58 +818,14 @@ function PortfolioModal({
 }) {
   const isUser1 = !!portfolioReview;
   const [reviewPortfolio, setReviewPortfolio] = useState(null);
-  const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
-  const [urlMode, setUrlMode] = useState("link");
+  const [view, setView] = useState(
+    versions.length > 0 || !!portfolioReview ? "versions" : "form"
+  );
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [walkthroughUrl, setWalkthroughUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null); // { name, url }
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [fileError, setFileError] = useState("");
-  const [dragOver, setDragOver] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const handleFileSelect = async (file) => {
-    if (!file) return;
-    const allowed = [
-      "application/pdf",
-      "application/zip",
-      "image/png",
-      "image/jpeg",
-      "image/jpg"
-    ];
-    const maxSize = 25 * 1024 * 1024;
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (
-      !allowed.includes(file.type) &&
-      !["pdf", "zip", "png", "jpg", "jpeg"].includes(ext)
-    ) {
-      setFileError("only pdf, zip, png, jpg files are accepted");
-      return;
-    }
-    if (file.size > maxSize) {
-      setFileError("file must be under 25mb");
-      return;
-    }
-    setFileError("");
-    setUploadingFile(true);
-    const path = `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-    const { data: uploadData, error: uploadErr } = await supabase.storage
-      .from("mentorship-portfolios")
-      .upload(path, file, { upsert: true });
-    setUploadingFile(false);
-    if (uploadErr) {
-      setFileError(uploadErr.message);
-      return;
-    }
-    const { data: urlData } = supabase.storage
-      .from("mentorship-portfolios")
-      .getPublicUrl(uploadData.path);
-    setUploadedFile({ name: file.name, url: urlData.publicUrl });
-    setPortfolioUrl(urlData.publicUrl);
-  };
 
   useEffect(() => {
     if (!portfolioReview?.id) return;
@@ -860,22 +870,41 @@ function PortfolioModal({
   ];
 
   const totalDisplay = allDisplayVersions.length;
-  const nextDisplayVersion = totalDisplay + 1;
   const _now = new Date();
   const _pastSessions = (sessions || []).filter(
     (s) =>
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 <
       _now.getTime()
   );
-  const canUploadMore = versions.length < _pastSessions.length;
-  const nextUploadSession = (sessions || []).find(
+  const _nextSession = (sessions || []).find(
     (s) =>
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
       _now.getTime()
   );
-  // Session 5+ means all upload windows are closed — uploading is done
-  const _uploadsLocked = (nextUploadSession?.session_number ?? 999) >= 5;
+  // Session 5+ means all upload windows are closed
+  const _uploadsLocked = (_nextSession?.session_number ?? 999) >= 5;
   const latestVersion = allDisplayVersions[totalDisplay - 1];
+  const _lastPastSession = _pastSessions[_pastSessions.length - 1];
+  // 4-day window that opens when a session ends (session_datetime + 2h + 4 days)
+  const _uploadWindowEnd =
+    !_uploadsLocked && _lastPastSession
+      ? new Date(
+          new Date(_lastPastSession.session_datetime).getTime() +
+            98 * 60 * 60 * 1000
+        )
+      : null;
+  const canUploadMore =
+    !!_uploadWindowEnd && _now.getTime() < _uploadWindowEnd.getTime();
+  const daysLeft =
+    canUploadMore && _uploadWindowEnd
+      ? Math.max(
+          0,
+          Math.ceil(
+            (_uploadWindowEnd.getTime() - _now.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        )
+      : null;
 
   const handleSubmit = async () => {
     setError("");
@@ -1011,54 +1040,27 @@ function PortfolioModal({
         </button>
 
         {view === "form" ? (
-          <>
-            <h2
-              className="text-white font-extrabold text-xl mb-5"
-              style={{ letterSpacing: "-0.02em" }}
-            >
-              ready to submit your portfolio?
-            </h2>
-            <div
-              className="flex rounded-xl p-1 mb-4"
-              style={{ background: "rgba(255,255,255,0.06)" }}
-            >
-              {[
-                ["paste a link", "link"],
-                ["upload a file", "file"]
-              ].map(([label, mode]) => (
-                <button
-                  key={mode}
-                  onClick={() => {
-                    setUrlMode(mode);
-                    if (mode === "link") {
-                      setUploadedFile(null);
-                    } else {
-                      setPortfolioUrl("");
-                    }
-                    setFileError("");
-                  }}
-                  className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
-                  style={{
-                    background: urlMode === mode ? "#FFD007" : "transparent",
-                    color:
-                      urlMode === mode ? "#161618" : "rgba(255,255,255,0.4)"
-                  }}
+          <div className="flex flex-col md:flex-1">
+            {/* Growing content area */}
+            <div className="flex-1">
+              <h2
+                className="text-white font-extrabold text-xl mb-1"
+                style={{ letterSpacing: "-0.02em" }}
+              >
+                {totalDisplay === 0
+                  ? "ready to submit your portfolio?"
+                  : "ready to submit your next version?"}
+              </h2>
+              {daysLeft !== null ? (
+                <p
+                  className="text-xs mb-4"
+                  style={{ color: "rgba(255,208,7,0.7)" }}
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.zip,.png,.jpg,.jpeg"
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0])}
-            />
-
-            {urlMode === "link" ? (
+                  ⏱ {daysLeft} day{daysLeft !== 1 ? "s" : ""} left to submit
+                </p>
+              ) : (
+                <div className="mb-4" />
+              )}
               <input
                 value={portfolioUrl}
                 onChange={(e) => setPortfolioUrl(e.target.value)}
@@ -1069,260 +1071,166 @@ function PortfolioModal({
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
               />
-            ) : uploadedFile ? (
-              /* File selected — show name + controls */
-              <div
-                className="w-full px-4 py-3.5 rounded-xl mb-4 flex items-center gap-3"
+              {totalDisplay === 0 && (
+                <>
+                  <p className="text-white text-sm font-semibold mb-1">
+                    your walkthrough recording
+                  </p>
+                  <p className="text-white/40 text-xs mb-2">
+                    no face cam needed. just walk us through your work. record
+                    with{" "}
+                    <a
+                      href="https://loom.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                      style={{ color: "#FFD007" }}
+                    >
+                      loom
+                    </a>
+                  </p>
+                  <input
+                    value={walkthroughUrl}
+                    onChange={(e) => setWalkthroughUrl(e.target.value)}
+                    placeholder="https://loom.com/share…"
+                    className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)"
+                    }}
+                  />
+                </>
+              )}
+              <p className="text-white text-sm font-semibold mb-1">
+                {totalDisplay === 0 ? (
+                  <>
+                    anything we should know?{" "}
+                    <span className="text-white/30 font-normal">(optional)</span>
+                  </>
+                ) : (
+                  "what did you update in this version?"
+                )}
+              </p>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={
+                  totalDisplay === 0
+                    ? "anything we should consider while reviewing?"
+                    : "describe what changed or improved in this version…"
+                }
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none resize-none"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="flex-shrink-0"
-                >
-                  <rect
-                    x="3"
-                    y="2"
-                    width="14"
-                    height="16"
-                    rx="2"
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth="1.3"
-                  />
-                  <path
-                    d="M6 7h8M6 10h8M6 13h5"
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth="1.3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="text-white text-sm flex-1 truncate">
-                  {uploadedFile.name}
-                </span>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                  title="replace file"
-                >
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
-                      stroke="rgba(255,255,255,0.7)"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => {
-                    setUploadedFile(null);
-                    setPortfolioUrl("");
-                  }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                  title="remove file"
-                >
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
-                      stroke="rgba(255,255,255,0.7)"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              /* Drop zone */
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  handleFileSelect(e.dataTransfer.files?.[0]);
-                }}
-                onClick={() => !uploadingFile && fileInputRef.current?.click()}
-                className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
-                style={{
-                  background: dragOver
-                    ? "rgba(255,208,7,0.06)"
-                    : "rgba(255,255,255,0.04)",
-                  border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
-                  cursor: uploadingFile ? "default" : "pointer",
-                  transition: "border-color 0.15s, background 0.15s"
-                }}
-              >
-                {uploadingFile ? (
-                  <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
-                ) : (
-                  <>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 16V8M12 8l-3 3M12 8l3 3"
-                        stroke="rgba(255,255,255,0.5)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9"
-                        stroke="rgba(255,255,255,0.3)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <p
-                      className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.55)" }}
-                    >
-                      drop your file here or{" "}
-                      <span style={{ color: "#FFD007" }}>browse</span>
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.25)" }}
-                    >
-                      pdf · zip · png · jpg &nbsp; max 25mb
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-            {fileError && (
-              <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
-            )}
-            {versions.length === 0 && (
-              <>
-                <p className="text-white text-sm font-semibold mb-1">
-                  your walkthrough recording
-                </p>
-                <p className="text-white/40 text-xs mb-2">
-                  no face cam needed. just walk us through your work. record
-                  with{" "}
-                  <a
-                    href="https://loom.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                    style={{ color: "#FFD007" }}
+              />
+            </div>
+
+            {/* Error + button pinned to bottom */}
+            <div className="mt-4">
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+              {(() => {
+                const pCanSubmit =
+                  portfolioUrl.trim().length > 0 &&
+                  (totalDisplay === 0 || notes.trim().length > 0) &&
+                  !submitting;
+                return (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!pCanSubmit}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
+                    style={{
+                      background: "#161618",
+                      color: pCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)",
+                      border: `1.5px solid ${pCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)"}`,
+                      borderRadius: "16px",
+                      boxShadow: pCanSubmit ? "4px 4px 0 #806804" : "none",
+                      fontSize: "15px",
+                      letterSpacing: "-0.01em",
+                      cursor: pCanSubmit ? "pointer" : "not-allowed"
+                    }}
                   >
-                    loom
-                  </a>
-                </p>
-                <input
-                  value={walkthroughUrl}
-                  onChange={(e) => setWalkthroughUrl(e.target.value)}
-                  placeholder="https://loom.com/share…"
-                  className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)"
-                  }}
-                />
-              </>
-            )}
-            <p className="text-white text-sm font-semibold mb-1">
-              anything we should know?{" "}
-              <span className="text-white/30 font-normal">(optional)</span>
-            </p>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="anything we should consider while reviewing?"
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-5 outline-none resize-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
-            />
-            {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
-              style={{
-                background: "#161618",
-                color: "#FFD007",
-                border: "1.5px solid #FFD007",
-                borderRadius: "16px",
-                boxShadow: "4px 4px 0 #806804",
-                fontSize: "15px",
-                letterSpacing: "-0.01em",
-                opacity: submitting ? 0.6 : 1
-              }}
-            >
-              {submitting ? "uploading…" : "upload portfolio"}
-              {!submitting && (
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                    stroke="#FFD007"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-          </>
+                    {submitting
+                      ? "saving…"
+                      : totalDisplay === 0
+                      ? "upload portfolio"
+                      : "save"}
+                    {!submitting && (
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                          stroke={
+                            pCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)"
+                          }
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
         ) : (
-          <div className="md:flex-1 md:flex md:flex-col">
+          <div className="flex flex-col md:flex-1">
+            {/* Header */}
             <h2
-              className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
+              className="text-white font-extrabold text-4xl text-center mt-4 mb-1"
               style={{ letterSpacing: "-0.04em" }}
             >
               portfolio
             </h2>
             {latestVersion && (
-              <p className="text-white/35 text-sm text-center mb-6">
-                version {totalDisplay} · last updated{" "}
-                {new Date(latestVersion.date)
-                  .toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "long"
-                  })
-                  .toLowerCase()}
-              </p>
+              <div className="text-center mb-4">
+                <p className="text-white/35 text-sm">
+                  version {totalDisplay} · last updated{" "}
+                  {new Date(latestVersion.date)
+                    .toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "long"
+                    })
+                    .toLowerCase()}
+                </p>
+                {canUploadMore && daysLeft !== null && (
+                  <p
+                    className="text-[11px] mt-1"
+                    style={{ color: "rgba(255,208,7,0.75)" }}
+                  >
+                    ⏱ {daysLeft} day{daysLeft !== 1 ? "s" : ""} left to update
+                  </p>
+                )}
+              </div>
             )}
-            <div className="flex flex-col gap-2 mb-6">
+
+            {/* Version rows — grow to fill space, centered vertically on desktop */}
+            <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
               {[...allDisplayVersions].reverse().map((v) => (
                 <DocRow key={v.displayVersion} item={v} />
               ))}
             </div>
+
+            {/* Button pinned to bottom */}
             {!_uploadsLocked && canUploadMore ? (
               <button
                 onClick={() => {
-                  setPortfolioUrl("");
+                  setPortfolioUrl(latestVersion?.url ?? "");
                   setWalkthroughUrl("");
                   setNotes("");
                   setError("");
-                  setUploadedFile(null);
-                  setFileError("");
-                  setUrlMode("link");
                   setView("form");
                 }}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
                 style={{
                   border: "1.5px solid #FFD007",
                   color: "#FFD007",
                   background: "transparent"
                 }}
               >
-                {totalDisplay === 1 ? "update" : "upload"} portfolio version{" "}
-                {nextDisplayVersion}
+                update portfolio
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path
                     d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
@@ -1412,22 +1320,37 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 <
       _rNow.getTime()
   );
-  const canUploadMore = versions.length < _rPastSessions.length;
-  const nextUploadSession = (sessions || []).find(
+  const _rNextSession = (sessions || []).find(
     (s) =>
       new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 >=
       _rNow.getTime()
   );
-  const _rUploadsLocked = (nextUploadSession?.session_number ?? 999) >= 5;
+  const _rUploadsLocked = (_rNextSession?.session_number ?? 999) >= 5;
+  const _rLastPastSession = _rPastSessions[_rPastSessions.length - 1];
+  const _rUploadWindowEnd =
+    !_rUploadsLocked && _rLastPastSession
+      ? new Date(
+          new Date(_rLastPastSession.session_datetime).getTime() +
+            98 * 60 * 60 * 1000
+        )
+      : null;
+  const canUploadMore =
+    !!_rUploadWindowEnd && _rNow.getTime() < _rUploadWindowEnd.getTime();
+  const rDaysLeft =
+    canUploadMore && _rUploadWindowEnd
+      ? Math.max(
+          0,
+          Math.ceil(
+            (_rUploadWindowEnd.getTime() - _rNow.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        )
+      : null;
 
   const handleSubmit = async () => {
     setError("");
     if (!resumeUrl.trim()) {
-      setError(
-        urlMode === "file"
-          ? "please upload a file first"
-          : "please add your resume link"
-      );
+      setError("please add your resume link");
       return;
     }
     if (!isValidUrl(resumeUrl.trim())) {
@@ -1482,13 +1405,25 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
         </button>
 
         {view === "form" ? (
-          <>
+          <div className="flex flex-col md:flex-1">
             <h2
-              className="text-white font-extrabold text-xl mb-5"
+              className="text-white font-extrabold text-xl mb-1"
               style={{ letterSpacing: "-0.02em" }}
             >
-              ready to submit your resume?
+              {versions.length === 0
+                ? "ready to submit your resume?"
+                : "ready to update your resume?"}
             </h2>
+            {rDaysLeft !== null ? (
+              <p
+                className="text-xs mb-4"
+                style={{ color: "rgba(255,208,7,0.7)" }}
+              >
+                ⏱ {rDaysLeft} day{rDaysLeft !== 1 ? "s" : ""} left to submit
+              </p>
+            ) : (
+              <div className="mb-4" />
+            )}
 
             {/* Mode toggle */}
             <div
@@ -1531,221 +1466,265 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               onChange={(e) => handleFileSelect(e.target.files?.[0])}
             />
 
-            {urlMode === "link" ? (
-              <>
-                <p className="text-white/40 text-xs mb-2">
-                  google drive, notion, any public link works
-                </p>
-                <input
-                  value={resumeUrl}
-                  onChange={(e) => setResumeUrl(e.target.value)}
-                  placeholder="https://drive.google.com/…"
-                  className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
+            {/* Fixed-height input area — prevents layout shift when switching tabs */}
+            <div style={{ minHeight: "120px" }} className="mb-4">
+              {urlMode === "link" ? (
+                <>
+                  <p className="text-white/40 text-xs mb-2">
+                    google drive, notion, any public link works
+                  </p>
+                  <input
+                    value={resumeUrl}
+                    onChange={(e) => setResumeUrl(e.target.value)}
+                    placeholder="https://drive.google.com/…"
+                    className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)"
+                    }}
+                  />
+                </>
+              ) : uploadedFile ? (
+                <div
+                  className="w-full px-4 py-3.5 rounded-xl flex items-center gap-3"
                   style={{
                     background: "rgba(255,255,255,0.06)",
                     border: "1px solid rgba(255,255,255,0.1)"
                   }}
-                />
-              </>
-            ) : uploadedFile ? (
-              /* File selected */
-              <div
-                className="w-full px-4 py-3.5 rounded-xl mb-4 flex items-center gap-3"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="flex-shrink-0"
+                  >
+                    <rect
+                      x="3"
+                      y="2"
+                      width="14"
+                      height="16"
+                      rx="2"
+                      stroke="rgba(255,255,255,0.5)"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M6 7h8M6 10h8M6 13h5"
+                      stroke="rgba(255,255,255,0.5)"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="text-white text-sm flex-1 truncate">
+                    {uploadedFile.name}
+                  </span>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    title="replace file"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
+                        stroke="rgba(255,255,255,0.7)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setUploadedFile(null);
+                      setResumeUrl("");
+                    }}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    title="remove file"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
+                        stroke="rgba(255,255,255,0.7)"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    handleFileSelect(e.dataTransfer.files?.[0]);
+                  }}
+                  onClick={() =>
+                    !uploadingFile && fileInputRef.current?.click()
+                  }
+                  className="w-full h-full px-4 py-5 rounded-xl flex flex-col items-center justify-center gap-2"
+                  style={{
+                    background: dragOver
+                      ? "rgba(255,208,7,0.06)"
+                      : "rgba(255,255,255,0.04)",
+                    border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
+                    cursor: uploadingFile ? "default" : "pointer",
+                    transition: "border-color 0.15s, background 0.15s",
+                    minHeight: "120px"
+                  }}
+                >
+                  {uploadingFile ? (
+                    <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+                  ) : (
+                    <>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 16V8M12 8l-3 3M12 8l3 3"
+                          stroke="rgba(255,255,255,0.5)"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9"
+                          stroke="rgba(255,255,255,0.3)"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <p
+                        className="text-sm"
+                        style={{ color: "rgba(255,255,255,0.55)" }}
+                      >
+                        drop your file here or{" "}
+                        <span style={{ color: "#FFD007" }}>browse</span>
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: "rgba(255,255,255,0.25)" }}
+                      >
+                        pdf · zip · png · jpg &nbsp; max 25mb
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            {fileError && (
+              <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
+            )}
+
+            {/* Notes — grows to fill space */}
+            <div className="flex-1 flex flex-col">
+              <p className="text-white text-sm font-semibold mb-1">
+                anything we should know?{" "}
+                <span className="text-white/30 font-normal">(optional)</span>
+              </p>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="anything we should consider?"
+                rows={2}
+                className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none resize-none"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)"
                 }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="flex-shrink-0"
-                >
-                  <rect
-                    x="3"
-                    y="2"
-                    width="14"
-                    height="16"
-                    rx="2"
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth="1.3"
-                  />
-                  <path
-                    d="M6 7h8M6 10h8M6 13h5"
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth="1.3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="text-white text-sm flex-1 truncate">
-                  {uploadedFile.name}
-                </span>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                  title="replace file"
-                >
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
-                      stroke="rgba(255,255,255,0.7)"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => {
-                    setUploadedFile(null);
-                    setResumeUrl("");
-                  }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                  title="remove file"
-                >
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
-                      stroke="rgba(255,255,255,0.7)"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              /* Drop zone */
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  handleFileSelect(e.dataTransfer.files?.[0]);
-                }}
-                onClick={() => !uploadingFile && fileInputRef.current?.click()}
-                className="w-full px-4 py-8 rounded-xl mb-4 flex flex-col items-center gap-2"
-                style={{
-                  background: dragOver
-                    ? "rgba(255,208,7,0.06)"
-                    : "rgba(255,255,255,0.04)",
-                  border: `1px dashed ${dragOver ? "#FFD007" : "rgba(255,255,255,0.15)"}`,
-                  cursor: uploadingFile ? "default" : "pointer",
-                  transition: "border-color 0.15s, background 0.15s"
-                }}
-              >
-                {uploadingFile ? (
-                  <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
-                ) : (
-                  <>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 16V8M12 8l-3 3M12 8l3 3"
-                        stroke="rgba(255,255,255,0.5)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M20 16.5A4 4 0 0 0 18 9h-.8A7 7 0 1 0 5 15.9"
-                        stroke="rgba(255,255,255,0.3)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <p
-                      className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.55)" }}
-                    >
-                      drop your file here or{" "}
-                      <span style={{ color: "#FFD007" }}>browse</span>
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.25)" }}
-                    >
-                      pdf · zip · png · jpg &nbsp; max 25mb
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-            {fileError && (
-              <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
-            )}
-            <p className="text-white text-sm font-semibold mb-1">
-              anything we should know?{" "}
-              <span className="text-white/30 font-normal">(optional)</span>
-            </p>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="anything we should consider?"
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl text-sm text-white mb-5 outline-none resize-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
-            />
-            {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
-              style={{
-                background: "#161618",
-                color: "#FFD007",
-                border: "1.5px solid #FFD007",
-                borderRadius: "16px",
-                boxShadow: "4px 4px 0 #806804",
-                fontSize: "15px",
-                letterSpacing: "-0.01em",
-                opacity: submitting ? 0.6 : 1
-              }}
-            >
-              {submitting ? "uploading…" : "upload resume"}
-              {!submitting && (
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
-                    stroke="#FFD007"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-          </>
+              />
+            </div>
+
+            {/* Button pinned to bottom */}
+            <div className="mt-5">
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+              {(() => {
+                const rCanSubmit =
+                  (urlMode === "link"
+                    ? resumeUrl.trim().length > 0
+                    : !!uploadedFile) && !submitting;
+                return (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!rCanSubmit}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
+                    style={{
+                      background: "#161618",
+                      color: rCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)",
+                      border: `1.5px solid ${rCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)"}`,
+                      borderRadius: "16px",
+                      boxShadow: rCanSubmit ? "4px 4px 0 #806804" : "none",
+                      fontSize: "15px",
+                      letterSpacing: "-0.01em",
+                      cursor: rCanSubmit ? "pointer" : "not-allowed"
+                    }}
+                  >
+                    {submitting
+                      ? "saving…"
+                      : versions.length === 0
+                      ? "upload resume"
+                      : "save"}
+                    {!submitting && (
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                      >
+                        <path
+                          d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                          stroke={
+                            rCanSubmit ? "#FFD007" : "rgba(255,208,7,0.35)"
+                          }
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
         ) : (
-          <div className="md:flex-1 md:flex md:flex-col">
+          <div className="flex flex-col md:flex-1">
+            {/* Header */}
             <h2
-              className="text-white font-extrabold text-4xl mb-1 text-center mt-4"
+              className="text-white font-extrabold text-4xl text-center mt-4 mb-1"
               style={{ letterSpacing: "-0.04em" }}
             >
               resume
             </h2>
             {latestVersion && (
-              <p className="text-white/35 text-sm text-center mb-6">
-                version {versions.length} · last updated{" "}
-                {new Date(latestVersion.created_at)
-                  .toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "long"
-                  })
-                  .toLowerCase()}
-              </p>
+              <div className="text-center mb-4">
+                <p className="text-white/35 text-sm">
+                  version {versions.length} · last updated{" "}
+                  {new Date(latestVersion.created_at)
+                    .toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "long"
+                    })
+                    .toLowerCase()}
+                </p>
+                {canUploadMore && rDaysLeft !== null && (
+                  <p
+                    className="text-[11px] mt-1"
+                    style={{ color: "rgba(255,208,7,0.75)" }}
+                  >
+                    ⏱ {rDaysLeft} day{rDaysLeft !== 1 ? "s" : ""} left to update
+                  </p>
+                )}
+              </div>
             )}
-            <div className="flex flex-col gap-2 mb-6">
+
+            {/* Version rows — centered vertically on desktop */}
+            <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
               {[...versions].reverse().map((v) => (
                 <a
                   key={v.id}
@@ -1808,23 +1787,20 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
             {!_rUploadsLocked && canUploadMore ? (
               <button
                 onClick={() => {
-                  setResumeUrl("");
+                  setResumeUrl(latestVersion?.resume_url ?? "");
                   setNotes("");
                   setError("");
-                  setUploadedFile(null);
-                  setFileError("");
                   setUrlMode("link");
                   setView("form");
                 }}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
                 style={{
                   border: "1.5px solid #FFD007",
                   color: "#FFD007",
                   background: "transparent"
                 }}
               >
-                {versions.length === 1 ? "update" : "upload"} resume version{" "}
-                {versions.length + 1}
+                update resume
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path
                     d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
@@ -1935,8 +1911,17 @@ function OnboardingCompleteScreen({
       const reviewedIds = new Set(
         (feedbackData || []).map((f) => f.session_id)
       );
+      // Also check localStorage for sessions dismissed locally (handles DB save failures)
+      let localDismissed = [];
+      try {
+        localDismissed = JSON.parse(
+          localStorage.getItem(`fb_ok_${user.id}`) || "[]"
+        );
+      } catch {}
       // Show popup for the most recent past session not yet reviewed
-      const unreviewed = pastSessions.filter((s) => !reviewedIds.has(s.id));
+      const unreviewed = pastSessions.filter(
+        (s) => !reviewedIds.has(s.id) && !localDismissed.includes(s.id)
+      );
       if (unreviewed.length > 0) {
         setFeedbackSession(unreviewed[unreviewed.length - 1]);
       }
@@ -2283,6 +2268,9 @@ function OnboardingCompleteScreen({
               !loading &&
               (() => {
                 const upNum = upcomingSession?.session_number ?? 999;
+                const hasPortfolioUploads =
+                  portfolioVersions.length > 0 || !!portfolioReview;
+                const hasResumeUploads = resumeVersions.length > 0;
                 const chevron = (
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -2452,15 +2440,20 @@ function OnboardingCompleteScreen({
                   );
                 }
                 if (upNum === 4) {
-                  // Session 4: update portfolio, update resume, google sheet
                   return (
                     <>
                       <p className="text-white/35 text-sm mb-3 mt-1">
                         my tasks
                       </p>
                       <div className="flex flex-col gap-2 mb-5">
-                        {portfolioRow("update portfolio")}
-                        {resumeRow("update resume")}
+                        {portfolioRow(
+                          hasPortfolioUploads
+                            ? "update portfolio"
+                            : "upload portfolio"
+                        )}
+                        {resumeRow(
+                          hasResumeUploads ? "update resume" : "upload resume"
+                        )}
                         {sheetRow("google sheet", false)}
                       </div>
                       {reportUrl && (
@@ -2475,7 +2468,6 @@ function OnboardingCompleteScreen({
                   );
                 }
                 if (upNum === 3) {
-                  // Session 3: google sheet–your niche (first), update portfolio, update resume
                   return (
                     <>
                       <p className="text-white/35 text-sm mb-3 mt-1">
@@ -2483,8 +2475,14 @@ function OnboardingCompleteScreen({
                       </p>
                       <div className="flex flex-col gap-2 mb-5">
                         {sheetRow("update google sheet – your niche", true)}
-                        {portfolioRow("update portfolio")}
-                        {resumeRow("update resume")}
+                        {portfolioRow(
+                          hasPortfolioUploads
+                            ? "update portfolio"
+                            : "upload portfolio"
+                        )}
+                        {resumeRow(
+                          hasResumeUploads ? "update resume" : "upload resume"
+                        )}
                       </div>
                       {reportUrl && (
                         <>
@@ -2503,8 +2501,14 @@ function OnboardingCompleteScreen({
                     <p className="text-white/35 text-sm mb-3 mt-1">my tasks</p>
                     <div className="flex flex-col gap-2 mb-5">
                       {sheetRow("google sheet", false)}
-                      {portfolioRow("update portfolio")}
-                      {resumeRow("update resume")}
+                      {portfolioRow(
+                        hasPortfolioUploads
+                          ? "update portfolio"
+                          : "upload portfolio"
+                      )}
+                      {resumeRow(
+                        hasResumeUploads ? "update resume" : "upload resume"
+                      )}
                     </div>
                     {reportUrl && (
                       <>
