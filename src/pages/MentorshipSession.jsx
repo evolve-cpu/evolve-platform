@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorkerSrc from "pdfjs-dist/build/pdf.worker.mjs?url";
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerSrc;
 import BlackNav from "../components/BlackNav";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -735,7 +738,10 @@ function FeedbackPopup({ session, user, onClose }) {
                     key={n}
                     onClick={() => setRating(n)}
                     className="transition-transform active:scale-90"
-                    style={{ fontSize: "clamp(28px, 8vw, 36px)", lineHeight: 1 }}
+                    style={{
+                      fontSize: "clamp(28px, 8vw, 36px)",
+                      lineHeight: 1
+                    }}
                   >
                     {n <= rating ? "💛" : "🩶"}
                   </button>
@@ -826,6 +832,8 @@ function PortfolioModal({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [urlLocked, setUrlLocked] = useState(false);
+  const urlInputRef = useRef(null);
 
   useEffect(() => {
     if (!portfolioReview?.id) return;
@@ -895,16 +903,28 @@ function PortfolioModal({
       : null;
   const canUploadMore =
     !!_uploadWindowEnd && _now.getTime() < _uploadWindowEnd.getTime();
-  const daysLeft =
+  const _msLeft =
     canUploadMore && _uploadWindowEnd
-      ? Math.max(
-          0,
-          Math.ceil(
-            (_uploadWindowEnd.getTime() - _now.getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
-        )
+      ? Math.max(0, _uploadWindowEnd.getTime() - _now.getTime())
+      : 0;
+  const daysLeft = canUploadMore
+    ? Math.max(0, Math.ceil(_msLeft / (1000 * 60 * 60 * 24)))
+    : null;
+  const hoursLeft =
+    canUploadMore && _msLeft > 0 && _msLeft < 24 * 60 * 60 * 1000
+      ? Math.max(1, Math.ceil(_msLeft / (1000 * 60 * 60)))
       : null;
+  const timerColor =
+    hoursLeft !== null
+      ? "#FF4500"
+      : daysLeft !== null && daysLeft <= 1
+        ? "#FF8C00"
+        : "rgba(255,208,7,0.7)";
+  const timerLabel = canUploadMore
+    ? hoursLeft !== null
+      ? `⏱ ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""} left`
+      : `⏱ ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
+    : null;
 
   const handleSubmit = async () => {
     setError("");
@@ -1051,26 +1071,50 @@ function PortfolioModal({
                   ? "ready to submit your portfolio?"
                   : "ready to submit your next version?"}
               </h2>
-              {daysLeft !== null ? (
-                <p
-                  className="text-xs mb-4"
-                  style={{ color: "rgba(255,208,7,0.7)" }}
-                >
-                  ⏱ {daysLeft} day{daysLeft !== 1 ? "s" : ""} left to submit
+              {timerLabel ? (
+                <p className="text-[14px] mb-4" style={{ color: timerColor }}>
+                  {timerLabel} to submit
                 </p>
               ) : (
                 <div className="mb-4" />
               )}
-              <input
-                value={portfolioUrl}
-                onChange={(e) => setPortfolioUrl(e.target.value)}
-                placeholder="your site, behance, figma, notion — any link works"
-                className="w-full px-4 py-3 rounded-xl text-sm text-white mb-4 outline-none"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)"
-                }}
-              />
+              <div className="relative mb-4">
+                <input
+                  ref={urlInputRef}
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  readOnly={urlLocked}
+                  placeholder="your site, behance, figma, notion — any link works"
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: `1px solid ${urlLocked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)"}`,
+                    color: urlLocked ? "rgba(255,255,255,0.45)" : "white",
+                    paddingRight: urlLocked ? "44px" : "16px"
+                  }}
+                />
+                {urlLocked && (
+                  <button
+                    onClick={() => {
+                      setUrlLocked(false);
+                      setTimeout(() => urlInputRef.current?.focus(), 50);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg"
+                    style={{ background: "rgba(255,255,255,0.1)" }}
+                    title="edit link"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path
+                        d="M9 1.5l2.5 2.5M1.5 11.5l.6-2.8L9 1.5l2.5 2.5-6.9 6.7-2.8.6-.3-.7z"
+                        stroke="rgba(255,255,255,0.7)"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
               {totalDisplay === 0 && (
                 <>
                   <p className="text-white text-sm font-semibold mb-1">
@@ -1105,7 +1149,9 @@ function PortfolioModal({
                 {totalDisplay === 0 ? (
                   <>
                     anything we should know?{" "}
-                    <span className="text-white/30 font-normal">(optional)</span>
+                    <span className="text-white/30 font-normal">
+                      (optional)
+                    </span>
                   </>
                 ) : (
                   "what did you update in this version?"
@@ -1155,10 +1201,15 @@ function PortfolioModal({
                     {submitting
                       ? "saving…"
                       : totalDisplay === 0
-                      ? "upload portfolio"
-                      : "save"}
+                        ? "upload portfolio"
+                        : "save"}
                     {!submitting && (
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                      >
                         <path
                           d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
                           stroke={
@@ -1195,23 +1246,38 @@ function PortfolioModal({
                     })
                     .toLowerCase()}
                 </p>
-                {canUploadMore && daysLeft !== null && (
-                  <p
-                    className="text-[11px] mt-1"
-                    style={{ color: "rgba(255,208,7,0.75)" }}
-                  >
-                    ⏱ {daysLeft} day{daysLeft !== 1 ? "s" : ""} left to update
+                {canUploadMore && timerLabel && (
+                  <p className="text-[14px] mt-1" style={{ color: timerColor }}>
+                    {timerLabel} to update
                   </p>
                 )}
               </div>
             )}
 
             {/* Version rows — grow to fill space, centered vertically on desktop */}
-            <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
-              {[...allDisplayVersions].reverse().map((v) => (
-                <DocRow key={v.displayVersion} item={v} />
-              ))}
-            </div>
+            {(() => {
+              const reversed = [...allDisplayVersions].reverse();
+              const current = reversed[0];
+              const past = reversed.slice(1);
+              return (
+                <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
+                  {current && <DocRow item={current} />}
+                  {past.length > 0 && (
+                    <>
+                      <p
+                        className="text-sm font-semibold mt-3 mb-1"
+                        style={{ color: "rgba(255,255,255,0.45)" }}
+                      >
+                        past uploads
+                      </p>
+                      {past.map((v) => (
+                        <DocRow key={v.displayVersion} item={v} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Button pinned to bottom */}
             {!_uploadsLocked && canUploadMore ? (
@@ -1221,6 +1287,7 @@ function PortfolioModal({
                   setWalkthroughUrl("");
                   setNotes("");
                   setError("");
+                  setUrlLocked(!!latestVersion?.url);
                   setView("form");
                 }}
                 className="w-full mt-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
@@ -1254,16 +1321,48 @@ function PortfolioModal({
 ═══════════════════════════════════════════════════════════════════════════ */
 function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
   const [view, setView] = useState(versions.length === 0 ? "form" : "versions");
-  const [urlMode, setUrlMode] = useState("link");
+  const [urlMode, setUrlMode] = useState("file");
   const [resumeUrl, setResumeUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null); // { name, url }
+  const [uploadedFile, setUploadedFile] = useState(null); // { name, url, size, type, previewUrl }
   const [uploadingFile, setUploadingFile] = useState(false);
   const [fileError, setFileError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInputRef = useRef(null);
+
+  const generatePreview = async (file, ext) => {
+    // Images — FileReader gives a base64 data URL, works everywhere
+    if (file.type.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result ?? null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+    // PDFs — render page 1 to canvas via PDF.js
+    if (file.type === "application/pdf" || ext === "pdf") {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 1 });
+        const scale = 56 / Math.min(viewport.width, viewport.height);
+        const scaled = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = scaled.width;
+        canvas.height = scaled.height;
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaled }).promise;
+        return canvas.toDataURL("image/jpeg", 0.8);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
 
   const handleFileSelect = async (file) => {
     if (!file) return;
@@ -1275,7 +1374,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       "image/jpg"
     ];
     const maxSize = 25 * 1024 * 1024;
-    const ext = file.name.split(".").pop()?.toLowerCase();
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
     if (
       !allowed.includes(file.type) &&
       !["pdf", "zip", "png", "jpg", "jpeg"].includes(ext)
@@ -1289,19 +1388,29 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
     }
     setFileError("");
     setUploadingFile(true);
-    const path = `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-    const { data: uploadData, error: uploadErr } = await supabase.storage
-      .from("mentorship-portfolios")
-      .upload(path, file, { upsert: true });
+    // Generate preview in parallel with upload
+    const [previewUrl, uploadResult] = await Promise.all([
+      generatePreview(file, ext),
+      supabase.storage
+        .from("mentorship-portfolios")
+        .upload(`${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`, file, { upsert: true })
+    ]);
     setUploadingFile(false);
-    if (uploadErr) {
-      setFileError(uploadErr.message);
+    if (uploadResult.error) {
+      setFileError(uploadResult.error.message);
       return;
     }
     const { data: urlData } = supabase.storage
       .from("mentorship-portfolios")
-      .getPublicUrl(uploadData.path);
-    setUploadedFile({ name: file.name, url: urlData.publicUrl });
+      .getPublicUrl(uploadResult.data.path);
+    setUploadedFile({
+      name: file.name,
+      url: urlData.publicUrl,
+      size: file.size,
+      type: file.type,
+      ext,
+      previewUrl
+    });
     setResumeUrl(urlData.publicUrl);
   };
 
@@ -1336,16 +1445,28 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       : null;
   const canUploadMore =
     !!_rUploadWindowEnd && _rNow.getTime() < _rUploadWindowEnd.getTime();
-  const rDaysLeft =
+  const _rMsLeft =
     canUploadMore && _rUploadWindowEnd
-      ? Math.max(
-          0,
-          Math.ceil(
-            (_rUploadWindowEnd.getTime() - _rNow.getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
-        )
+      ? Math.max(0, _rUploadWindowEnd.getTime() - _rNow.getTime())
+      : 0;
+  const rDaysLeft = canUploadMore
+    ? Math.max(0, Math.ceil(_rMsLeft / (1000 * 60 * 60 * 24)))
+    : null;
+  const rHoursLeft =
+    canUploadMore && _rMsLeft > 0 && _rMsLeft < 24 * 60 * 60 * 1000
+      ? Math.max(1, Math.ceil(_rMsLeft / (1000 * 60 * 60)))
       : null;
+  const rTimerColor =
+    rHoursLeft !== null
+      ? "#FF4500"
+      : rDaysLeft !== null && rDaysLeft <= 1
+        ? "#FF8C00"
+        : "rgba(255,208,7,0.7)";
+  const rTimerLabel = canUploadMore
+    ? rHoursLeft !== null
+      ? `⏱ ${rHoursLeft} hour${rHoursLeft !== 1 ? "s" : ""} left`
+      : `⏱ ${rDaysLeft} day${rDaysLeft !== 1 ? "s" : ""} left`
+    : null;
 
   const handleSubmit = async () => {
     setError("");
@@ -1414,12 +1535,9 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                 ? "ready to submit your resume?"
                 : "ready to update your resume?"}
             </h2>
-            {rDaysLeft !== null ? (
-              <p
-                className="text-xs mb-4"
-                style={{ color: "rgba(255,208,7,0.7)" }}
-              >
-                ⏱ {rDaysLeft} day{rDaysLeft !== 1 ? "s" : ""} left to submit
+            {rTimerLabel ? (
+              <p className="text-[14px] mb-4" style={{ color: rTimerColor }}>
+                {rTimerLabel} to submit
               </p>
             ) : (
               <div className="mb-4" />
@@ -1431,8 +1549,8 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               style={{ background: "rgba(255,255,255,0.06)" }}
             >
               {[
-                ["paste a link", "link"],
-                ["upload a file", "file"]
+                ["upload a file", "file"],
+                ["paste a link", "link"]
               ].map(([label, mode]) => (
                 <button
                   key={mode}
@@ -1467,7 +1585,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
             />
 
             {/* Fixed-height input area — prevents layout shift when switching tabs */}
-            <div style={{ minHeight: "120px" }} className="mb-4">
+            <div style={{ minHeight: "128px" }} className="mb-4">
               {urlMode === "link" ? (
                 <>
                   <p className="text-white/40 text-xs mb-2">
@@ -1486,73 +1604,140 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                 </>
               ) : uploadedFile ? (
                 <div
-                  className="w-full px-4 py-3.5 rounded-xl flex items-center gap-3"
+                  className="w-full rounded-2xl overflow-hidden"
                   style={{
                     background: "rgba(255,255,255,0.06)",
                     border: "1px solid rgba(255,255,255,0.1)"
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="flex-shrink-0"
-                  >
-                    <rect
-                      x="3"
-                      y="2"
-                      width="14"
-                      height="16"
-                      rx="2"
-                      stroke="rgba(255,255,255,0.5)"
-                      strokeWidth="1.3"
-                    />
-                    <path
-                      d="M6 7h8M6 10h8M6 13h5"
-                      stroke="rgba(255,255,255,0.5)"
-                      strokeWidth="1.3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="text-white text-sm flex-1 truncate">
-                    {uploadedFile.name}
-                  </span>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
-                    title="replace file"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M12 2l-1.5 1.5M2 12l1-3L10.5 1.5A2 2 0 0 1 13 4L5 12l-3 1Z"
-                        stroke="rgba(255,255,255,0.7)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setResumeUrl("");
-                    }}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 active:opacity-60"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
-                    title="remove file"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
-                        stroke="rgba(255,255,255,0.7)"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                  {confirmDelete ? (
+                    <div className="flex flex-col items-center justify-center gap-3 px-4 py-5">
+                      <p className="text-white text-sm font-semibold text-center">
+                        remove this file?
+                      </p>
+                      <div className="flex gap-3 w-full">
+                        <button
+                          onClick={() => setConfirmDelete(false)}
+                          className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                          style={{
+                            background: "rgba(255,255,255,0.08)",
+                            color: "rgba(255,255,255,0.7)"
+                          }}
+                        >
+                          keep it
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUploadedFile(null);
+                            setResumeUrl("");
+                            setConfirmDelete(false);
+                          }}
+                          className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                          style={{ background: "#FF4444", color: "white" }}
+                        >
+                          yes, remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      {/* Thumbnail */}
+                      <div
+                        className="w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden flex-shrink-0"
+                        style={
+                          uploadedFile.previewUrl
+                            ? {
+                                backgroundImage: `url(${uploadedFile.previewUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center"
+                              }
+                            : { background: "rgba(255,255,255,0.08)" }
+                        }
+                      >
+                        {!uploadedFile.previewUrl && (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+                              <rect x="1" y="1" width="15" height="20" rx="2.5"
+                                fill="rgba(255,255,255,0.07)"
+                                stroke="rgba(255,255,255,0.2)"
+                                strokeWidth="1.2"
+                              />
+                              <path d="M4 7h8M4 10.5h8M4 14h5"
+                                stroke="rgba(255,255,255,0.35)"
+                                strokeWidth="1.2"
+                                strokeLinecap="round"
+                              />
+                              <rect x="8" y="13" width="13" height="12" rx="2"
+                                fill="#2A2A2C"
+                                stroke="rgba(255,208,7,0.6)"
+                                strokeWidth="1"
+                              />
+                              <text
+                                x="14.5" y="21.5"
+                                textAnchor="middle"
+                                fill="#FFD007"
+                                fontSize="5.5"
+                                fontWeight="800"
+                                fontFamily="system-ui,sans-serif"
+                                style={{ textTransform: "uppercase", letterSpacing: "0.02em" }}
+                              >
+                                {(uploadedFile.ext || "file").toUpperCase()}
+                              </text>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate leading-tight">
+                          {uploadedFile.name}
+                        </p>
+                        <p
+                          className="text-xs mt-0.5"
+                          style={{ color: "rgba(255,255,255,0.35)" }}
+                        >
+                          {uploadedFile.ext} ·{" "}
+                          {uploadedFile.size >= 1024 * 1024
+                            ? `${(uploadedFile.size / (1024 * 1024)).toFixed(1)}mb`
+                            : `${Math.round(uploadedFile.size / 1024)}kb`}{" "}
+                          · just now
+                        </p>
+                      </div>
+                      {/* Actions */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 active:opacity-60"
+                        style={{ background: "rgba(255,255,255,0.08)" }}
+                        title="replace file"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M9 1.5l2.5 2.5M1.5 11.5l.6-2.8L9 1.5l2.5 2.5-6.9 6.7-2.8.6-.3-.7z"
+                            stroke="rgba(255,255,255,0.65)"
+                            strokeWidth="1.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 active:opacity-60"
+                        style={{ background: "rgba(255,255,255,0.08)" }}
+                        title="remove file"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
+                            stroke="rgba(255,255,255,0.65)"
+                            strokeWidth="1.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div
@@ -1584,7 +1769,12 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                     <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
                   ) : (
                     <>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
                         <path
                           d="M12 16V8M12 8l-3 3M12 8l3 3"
                           stroke="rgba(255,255,255,0.5)"
@@ -1667,8 +1857,8 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                     {submitting
                       ? "saving…"
                       : versions.length === 0
-                      ? "upload resume"
-                      : "save"}
+                        ? "upload resume"
+                        : "save"}
                     {!submitting && (
                       <svg
                         width="18"
@@ -1703,7 +1893,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
             </h2>
             {latestVersion && (
               <div className="text-center mb-4">
-                <p className="text-white/35 text-sm">
+                <p className="text-white/35 text-[18px]">
                   version {versions.length} · last updated{" "}
                   {new Date(latestVersion.created_at)
                     .toLocaleDateString("en-IN", {
@@ -1712,20 +1902,23 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                     })
                     .toLowerCase()}
                 </p>
-                {canUploadMore && rDaysLeft !== null && (
+                {canUploadMore && rTimerLabel && (
                   <p
-                    className="text-[11px] mt-1"
-                    style={{ color: "rgba(255,208,7,0.75)" }}
+                    className="text-[14px] mt-1"
+                    style={{ color: rTimerColor }}
                   >
-                    ⏱ {rDaysLeft} day{rDaysLeft !== 1 ? "s" : ""} left to update
+                    {rTimerLabel} to update
                   </p>
                 )}
               </div>
             )}
 
             {/* Version rows — centered vertically on desktop */}
-            <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
-              {[...versions].reverse().map((v) => (
+            {(() => {
+              const reversed = [...versions].reverse();
+              const current = reversed[0];
+              const past = reversed.slice(1);
+              const ResumeRow = ({ v }) => (
                 <a
                   key={v.id}
                   href={v.resume_url || "#"}
@@ -1782,15 +1975,34 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                     />
                   </svg>
                 </a>
-              ))}
-            </div>
+              );
+              return (
+                <div className="flex flex-col gap-2 py-2 md:flex-1 md:justify-center">
+                  {current && <ResumeRow v={current} />}
+                  {past.length > 0 && (
+                    <>
+                      <p
+                        className="text-sm font-semibold mt-3 mb-1"
+                        style={{ color: "rgba(255,255,255,0.45)" }}
+                      >
+                        past uploads
+                      </p>
+                      {past.map((v) => (
+                        <ResumeRow key={v.id} v={v} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
             {!_rUploadsLocked && canUploadMore ? (
               <button
                 onClick={() => {
-                  setResumeUrl(latestVersion?.resume_url ?? "");
+                  setResumeUrl("");
                   setNotes("");
                   setError("");
-                  setUrlMode("link");
+                  setUploadedFile(null);
+                  setUrlMode("file");
                   setView("form");
                 }}
                 className="w-full mt-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
@@ -2112,7 +2324,10 @@ function OnboardingCompleteScreen({
                               {fmt.banner}
                             </p>
                             <p className="text-sm font-medium text-black">
-                              {fmt.bannerTime}
+                              {fmt.bannerTime.replace(" IST", "")}{" "}
+                              <span style={{ textTransform: "uppercase" }}>
+                                IST
+                              </span>
                             </p>
                           </div>
                           {/* arrow → session detail */}
@@ -2881,7 +3096,8 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
                       color: past ? "rgba(255,255,255,0.65)" : "#FFD007"
                     }}
                   >
-                    {fmt.full}
+                    {fmt.full.replace(" IST", "")}{" "}
+                    <span style={{ textTransform: "uppercase" }}>IST</span>
                   </p>
                 </div>
               </>
