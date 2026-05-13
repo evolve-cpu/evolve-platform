@@ -928,6 +928,10 @@ function PortfolioModal({
 
   const handleSubmit = async () => {
     setError("");
+    if (!canUploadMore) {
+      setError("the upload window for this session has closed");
+      return;
+    }
     if (!portfolioUrl.trim()) {
       setError("please add your portfolio link");
       return;
@@ -1181,6 +1185,7 @@ function PortfolioModal({
                 const pCanSubmit =
                   portfolioUrl.trim().length > 0 &&
                   (totalDisplay === 0 || notes.trim().length > 0) &&
+                  canUploadMore &&
                   !submitting;
                 return (
                   <button
@@ -1470,6 +1475,10 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
 
   const handleSubmit = async () => {
     setError("");
+    if (!canUploadMore) {
+      setError("the upload window for this session has closed");
+      return;
+    }
     if (!resumeUrl.trim()) {
       setError("please add your resume link");
       return;
@@ -1837,7 +1846,9 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                 const rCanSubmit =
                   (urlMode === "link"
                     ? resumeUrl.trim().length > 0
-                    : !!uploadedFile) && !submitting;
+                    : !!uploadedFile) &&
+                  canUploadMore &&
+                  !submitting;
                 return (
                   <button
                     onClick={handleSubmit}
@@ -3465,8 +3476,13 @@ function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
       .not("recording_path", "is", null)
       .order("session_number", { ascending: true })
       .then(({ data }) => {
-        setSessions(data || []);
+        const rows = data || [];
+        setSessions(rows);
         setLoading(false);
+        // Only one recording — skip the listing and go straight to the player
+        if (rows.length === 1) {
+          onSelectSession(rows[0], true);
+        }
       });
   }, [batchId]);
 
@@ -3773,6 +3789,7 @@ export default function MentorshipSession() {
   const [defaultSessionIndex, setDefaultSessionIndex] = useState(0);
   const [selectedRecordingSession, setSelectedRecordingSession] =
     useState(null);
+  const [listingAutoSkipped, setListingAutoSkipped] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -3934,8 +3951,9 @@ export default function MentorshipSession() {
       {screen === 4 && (
         <PastSessionsScreen
           batchId={batchId}
-          onSelectSession={(session) => {
+          onSelectSession={(session, autoSkip = false) => {
             setSelectedRecordingSession(session);
+            setListingAutoSkipped(autoSkip);
             sessionStorage.setItem("ms_session_id", session.id);
             setScreen(5);
           }}
@@ -3947,7 +3965,14 @@ export default function MentorshipSession() {
         <SessionPlayerScreen
           session={selectedRecordingSession}
           user={user}
-          onBack={() => setScreen(4)}
+          onBack={() => {
+            if (listingAutoSkipped) {
+              setListingAutoSkipped(false);
+              setScreen(2);
+            } else {
+              setScreen(4);
+            }
+          }}
         />
       )}
     </div>
