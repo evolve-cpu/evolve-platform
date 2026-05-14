@@ -672,29 +672,26 @@ function FeedbackPopup({ session, user, onClose }) {
   const handleDidNotAttend = async () => {
     if (submitting) return;
     setSubmitting(true);
+    // Mark locally first so the popup never re-shows even if the DB call
+    // fails (e.g. connectivity issue).
     markLocalDone();
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const uid = authData?.user?.id || user?.id;
-      const { error: dbErr } = await supabase
-        .from("mentorship_session_feedback")
-        .upsert(
-          {
-            session_id: session.id,
-            user_id: uid,
-            user_name: user?.name || null,
-            session_name: session?.name || null,
-            session_number: session?.session_number || null,
-            rating: 0,
-            comment: null
-          },
-          { onConflict: "session_id,user_id" }
-        );
-      if (dbErr) console.error("did_not_attend save failed:", dbErr);
-    } catch (e) {
-      console.error("did_not_attend unexpected error:", e);
-    }
-    onClose();
+    const { error: dbErr } = await supabase
+      .from("mentorship_session_feedback")
+      .upsert(
+        {
+          session_id: session.id,
+          user_id: user.id,
+          user_name: user?.name || null,
+          session_name: session?.name || null,
+          session_number: session?.session_number || null,
+          rating: 0,
+          comment: null
+        },
+        { onConflict: "session_id,user_id" }
+      );
+    if (dbErr) console.error("did_not_attend save failed:", dbErr);
+    setDone(true);
+    setTimeout(onClose, 1200);
   };
 
   return (
@@ -2051,7 +2048,10 @@ function OnboardingCompleteScreen({
   portfolioReview,
   onViewSessions,
   onViewPastSessions,
-  onBack
+  onBack,
+  userPlan,
+  acceleratorBonus,
+  acceleratorCalls = []
 }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2165,6 +2165,564 @@ function OnboardingCompleteScreen({
     .reverse()
     .find((v) => v.review_report_url)?.review_report_url;
   const reportUrl = portfolioReview?.review_report_url || mentorshipReportUrl;
+
+  // ── Accelerator bonus detection ──────────────────────────────────────────
+  const allSessionsDone =
+    !loading &&
+    sessions.length >= 5 &&
+    sessions.every(
+      (s) =>
+        new Date(s.session_datetime).getTime() + 2 * 60 * 60 * 1000 <
+        now.getTime()
+    );
+  const showAcceleratorUI = userPlan === "accelerator" && allSessionsDone;
+
+  if (showAcceleratorUI) {
+    const totalCalls = acceleratorBonus?.total_calls ?? 4;
+    const activeCalls = acceleratorCalls.filter((c) => c.status !== "cancelled");
+    const callsUsed = activeCalls.length;
+    const callsRemaining = totalCalls - callsUsed;
+    const allCallsUsed = callsRemaining <= 0;
+
+    const upcomingCall =
+      activeCalls.find(
+        (c) =>
+          c.status === "scheduled" &&
+          new Date(c.call_datetime).getTime() > now.getTime()
+      ) || null;
+
+    const canJoinCall =
+      upcomingCall &&
+      now.getTime() >=
+        new Date(upcomingCall.call_datetime).getTime() - 15 * 60 * 1000;
+
+    // Format call datetime: "tue, 24 jun · 7:00 pm IST"
+    const fmtCall = upcomingCall
+      ? (() => {
+          const d = new Date(upcomingCall.call_datetime);
+          const o = { timeZone: "Asia/Kolkata" };
+          const wd = d
+            .toLocaleString("en-IN", { ...o, weekday: "short" })
+            .toLowerCase();
+          const day = d.toLocaleString("en-IN", { ...o, day: "numeric" });
+          const mon = d
+            .toLocaleString("en-IN", { ...o, month: "short" })
+            .toLowerCase();
+          const t = d
+            .toLocaleString("en-IN", {
+              ...o,
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true
+            })
+            .toLowerCase()
+            .replace(/\s*ist\s*/gi, "")
+            .replace(/ /g, "");
+          return { date: `${wd}, ${day} ${mon}`, time: t };
+        })()
+      : null;
+
+    // Format valid_until: "sat, 30 nov"
+    const validUntilStr = acceleratorBonus?.valid_until
+      ? (() => {
+          const d = new Date(acceleratorBonus.valid_until);
+          const o = { timeZone: "Asia/Kolkata" };
+          const wd = d
+            .toLocaleString("en-IN", { ...o, weekday: "short" })
+            .toLowerCase();
+          const day = d.toLocaleString("en-IN", { ...o, day: "numeric" });
+          const mon = d
+            .toLocaleString("en-IN", { ...o, month: "short" })
+            .toLowerCase();
+          return `${wd}, ${day} ${mon}`;
+        })()
+      : null;
+
+    const firstName = user?.name?.split(" ")[0]?.toLowerCase() || "there";
+
+    // Shared document rows
+    const accelDocRow = (icon, label, onClick, active = true) => (
+      <button
+        key={label}
+        onClick={onClick}
+        disabled={!active}
+        className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
+        style={{
+          background: active
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(255,255,255,0.03)",
+          border: `1px solid ${active ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)"}`,
+          cursor: active ? "pointer" : "default"
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <img
+            src={icon}
+            alt=""
+            className="w-5 h-5"
+            style={{ opacity: active ? 1 : 0.3 }}
+          />
+          <span
+            className="text-sm font-medium"
+            style={{ color: active ? "white" : "rgba(255,255,255,0.3)" }}
+          >
+            {label}
+          </span>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 4l4 4-4 4"
+            stroke={active ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.15)"}
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    );
+
+    const arrowSvg = (color = "#161618") => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path
+          d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+          stroke={color}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+
+    // ── State 3: all calls used ────────────────────────────────
+    if (allCallsUsed) {
+      return (
+        <div
+          className="min-h-screen flex flex-col"
+          style={{ backgroundColor: "#161618" }}
+        >
+          {showPortfolioModal && (
+            <PortfolioModal
+              user={user}
+              batchId={batchId}
+              portfolioReview={portfolioReview}
+              versions={portfolioVersions}
+              sessions={sessions}
+              onClose={() => setShowPortfolioModal(false)}
+              onSaved={async () => {
+                const { data } = await supabase
+                  .from("mentorship_portfolio_versions")
+                  .select("*")
+                  .eq("user_id", user.id)
+                  .order("version_number", { ascending: true });
+                setPortfolioVersions(data || []);
+              }}
+            />
+          )}
+          {showResumeModal && (
+            <ResumeModal
+              user={user}
+              batchId={batchId}
+              versions={resumeVersions}
+              sessions={sessions}
+              onClose={() => setShowResumeModal(false)}
+              onSaved={async () => {
+                const { data } = await supabase
+                  .from("mentorship_resume_versions")
+                  .select("*")
+                  .eq("user_id", user.id)
+                  .order("version_number", { ascending: true });
+                setResumeVersions(data || []);
+              }}
+            />
+          )}
+          <BackButton onClick={onBack} />
+          <div className="flex-1 flex flex-col px-5 pt-28 pb-16 w-full mx-auto md:max-w-[75vw]">
+            <h1
+              className="text-white font-extrabold mb-8"
+              style={{
+                fontSize: "clamp(34px, 8vw, 52px)",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1
+              }}
+            >
+              all sessions
+              <br />
+              completed.
+            </h1>
+
+            <p className="text-white/35 text-sm mb-3">my documents</p>
+            <div className="flex flex-col gap-2 mb-10">
+              {accelDocRow(
+                upload_portfolio,
+                "portfolio",
+                () => setShowPortfolioModal(true)
+              )}
+              {reportUrl &&
+                accelDocRow(portfolio_report_icon, "portfolio review", () =>
+                  window.open(reportUrl, "_blank")
+                )}
+              {accelDocRow(
+                upload_resume,
+                "resume",
+                () => setShowResumeModal(true)
+              )}
+              {googleSheetUrl
+                ? accelDocRow(upload_sheet, "google sheet", () =>
+                    window.open(googleSheetUrl, "_blank")
+                  )
+                : accelDocRow(upload_sheet, "google sheet", null, false)}
+            </div>
+
+            <button
+              onClick={onViewPastSessions}
+              className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-4"
+              style={{
+                background: "#FFD007",
+                color: "#161618",
+                fontSize: "clamp(15px, 3vw, 17px)",
+                letterSpacing: "-0.01em"
+              }}
+            >
+              view past sessions & recordings
+              {arrowSvg()}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── State 1 / 2: bonus calls available ────────────────────
+    return (
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ backgroundColor: "#161618" }}
+      >
+        {showPortfolioModal && (
+          <PortfolioModal
+            user={user}
+            batchId={batchId}
+            portfolioReview={portfolioReview}
+            versions={portfolioVersions}
+            sessions={sessions}
+            onClose={() => setShowPortfolioModal(false)}
+            onSaved={async () => {
+              const { data } = await supabase
+                .from("mentorship_portfolio_versions")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("version_number", { ascending: true });
+              setPortfolioVersions(data || []);
+            }}
+          />
+        )}
+        {showResumeModal && (
+          <ResumeModal
+            user={user}
+            batchId={batchId}
+            versions={resumeVersions}
+            sessions={sessions}
+            onClose={() => setShowResumeModal(false)}
+            onSaved={async () => {
+              const { data } = await supabase
+                .from("mentorship_resume_versions")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("version_number", { ascending: true });
+              setResumeVersions(data || []);
+            }}
+          />
+        )}
+        <BackButton onClick={onBack} />
+
+        <div className="flex-1 flex flex-col px-5 pt-28 pb-16 w-full mx-auto md:max-w-[75vw]">
+          {/* Plan badge */}
+          <span
+            className="inline-flex items-center self-start mb-5 rounded-full px-3 py-1.5 text-xs font-bold"
+            style={{ background: "rgba(255,208,7,0.15)", color: "#FFD007", letterSpacing: "0.02em" }}
+          >
+            · accelerator plan ·
+          </span>
+
+          {/* Heading */}
+          <h1
+            className="text-white font-extrabold mb-2"
+            style={{
+              fontSize: "clamp(34px, 8vw, 52px)",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1
+            }}
+          >
+            you've made it,
+            <br />
+            {firstName}.
+          </h1>
+          <p
+            className="mb-7"
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              fontSize: "clamp(14px, 2.5vw, 17px)",
+              letterSpacing: "-0.01em"
+            }}
+          >
+            all 5 sessions wrapped up. but before you leave, here's something
+            special for you..
+          </p>
+
+          {/* Yellow bonus card */}
+          <div className="rounded-3xl p-6 mb-8" style={{ background: "#FFD007" }}>
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold mb-5"
+              style={{ background: "rgba(255,255,255,0.45)", color: "#161618" }}
+            >
+              · your accelerator bonus ·
+            </span>
+
+            <h2
+              className="font-black mb-2"
+              style={{
+                color: "#C2185B",
+                fontSize: "clamp(26px, 6vw, 34px)",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1
+              }}
+            >
+              4 more 1:1 calls
+              <br />
+              with mentor
+            </h2>
+            <p
+              className="text-sm mb-5 leading-relaxed"
+              style={{ color: "rgba(0,0,0,0.6)" }}
+            >
+              book whenever something needs a second pair of eyes – interviews,
+              projects, decisions.
+            </p>
+
+            {/* Progress tracker */}
+            <div
+              className="rounded-xl px-4 py-3 mb-5"
+              style={{ background: "rgba(0,0,0,0.1)" }}
+            >
+              <div
+                className="flex justify-between items-center text-sm font-semibold mb-2.5"
+                style={{ color: "rgba(0,0,0,0.6)" }}
+              >
+                <span>calls remaining</span>
+                <span>
+                  {callsRemaining} of {totalCalls}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {Array.from({ length: totalCalls }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 h-1.5 rounded-full"
+                    style={{
+                      background:
+                        i < callsUsed
+                          ? "rgba(0,0,0,0.45)"
+                          : "rgba(0,0,0,0.15)"
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Book button */}
+            <a
+              href={acceleratorBonus?.booking_link || "#"}
+              target={acceleratorBonus?.booking_link ? "_blank" : undefined}
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold mb-3"
+              style={{
+                background: "#161618",
+                color: "#FFD007",
+                fontSize: "clamp(15px, 3vw, 17px)",
+                letterSpacing: "-0.01em",
+                textDecoration: "none"
+              }}
+            >
+              book a call
+              {arrowSvg("#FFD007")}
+            </a>
+
+            {/* Validity */}
+            {validUntilStr && (
+              <p
+                className="text-xs text-center"
+                style={{ color: "rgba(0,0,0,0.45)" }}
+              >
+                valid for the next 6 months · expires {validUntilStr}
+              </p>
+            )}
+          </div>
+
+          {/* Scheduled calls */}
+          <h2
+            className="text-white font-bold mb-4"
+            style={{
+              fontSize: "clamp(18px, 4vw, 22px)",
+              letterSpacing: "-0.02em"
+            }}
+          >
+            scheduled calls
+          </h2>
+
+          {upcomingCall && fmtCall ? (
+            <div
+              className="rounded-2xl p-5 mb-8"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            >
+              <span
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold mb-4"
+                style={{
+                  background: "rgba(101,78,0,0.55)",
+                  color: "#FFD007",
+                  letterSpacing: "0.02em"
+                }}
+              >
+                · upcoming ·
+              </span>
+              <p
+                className="text-white font-extrabold mb-1 leading-tight"
+                style={{
+                  fontSize: "clamp(20px, 5vw, 28px)",
+                  letterSpacing: "-0.025em"
+                }}
+              >
+                {fmtCall.date} · {fmtCall.time}{" "}
+                <span style={{ textTransform: "uppercase" }}>IST</span>
+              </p>
+              <p
+                className="text-sm mb-5"
+                style={{ color: "rgba(255,255,255,0.4)" }}
+              >
+                1:1 with {upcomingCall.mentor_name || "mentor"} ·{" "}
+                {upcomingCall.duration_minutes || 30} mins ·{" "}
+                {upcomingCall.platform || "google meet"}
+              </p>
+              <a
+                href={canJoinCall ? upcomingCall.meeting_link || "#" : "#"}
+                onClick={!canJoinCall ? (e) => e.preventDefault() : undefined}
+                target={canJoinCall && upcomingCall.meeting_link ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold"
+                style={{
+                  background: canJoinCall
+                    ? "rgba(255,208,7,0.9)"
+                    : "rgba(255,208,7,0.2)",
+                  color: canJoinCall ? "#161618" : "rgba(255,208,7,0.45)",
+                  fontSize: "clamp(15px, 3vw, 17px)",
+                  letterSpacing: "-0.01em",
+                  cursor: canJoinCall ? "pointer" : "not-allowed",
+                  textDecoration: "none"
+                }}
+              >
+                join the call
+                {arrowSvg(
+                  canJoinCall ? "#161618" : "rgba(255,208,7,0.45)"
+                )}
+              </a>
+              <p
+                className="text-center text-xs mt-2.5"
+                style={{ color: "rgba(255,255,255,0.2)" }}
+              >
+                button enables 15 mins before the session starts
+              </p>
+            </div>
+          ) : (
+            <div
+              className="flex flex-col items-center justify-center py-10 rounded-2xl mb-8"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)"
+              }}
+            >
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                className="mb-3"
+              >
+                <rect
+                  x="4"
+                  y="6"
+                  width="24"
+                  height="22"
+                  rx="3"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M4 13h24M11 3v6M21 3v6"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <p
+                className="text-sm font-medium"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+              >
+                nothing booked yet
+              </p>
+              <p
+                className="text-xs mt-1"
+                style={{ color: "rgba(255,255,255,0.2)" }}
+              >
+                your first call will show up here once scheduled
+              </p>
+            </div>
+          )}
+
+          {/* Documents */}
+          <p className="text-white/35 text-sm mb-3">my documents</p>
+          <div className="flex flex-col gap-2 mb-8">
+            {accelDocRow(
+              upload_portfolio,
+              "portfolio",
+              () => setShowPortfolioModal(true)
+            )}
+            {reportUrl &&
+              accelDocRow(portfolio_report_icon, "portfolio review", () =>
+                window.open(reportUrl, "_blank")
+              )}
+            {accelDocRow(
+              upload_resume,
+              "resume",
+              () => setShowResumeModal(true)
+            )}
+            {googleSheetUrl
+              ? accelDocRow(upload_sheet, "google sheet", () =>
+                  window.open(googleSheetUrl, "_blank")
+                )
+              : accelDocRow(upload_sheet, "google sheet", null, false)}
+          </div>
+
+          {/* View past sessions */}
+          <button
+            onClick={onViewPastSessions}
+            className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-4"
+            style={{
+              background: "#FFD007",
+              color: "#161618",
+              fontSize: "clamp(15px, 3vw, 17px)",
+              letterSpacing: "-0.01em"
+            }}
+          >
+            {hasPastRecordings
+              ? "view past sessions & recordings"
+              : "view past sessions"}
+            {arrowSvg()}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -3790,6 +4348,9 @@ export default function MentorshipSession() {
   const [selectedRecordingSession, setSelectedRecordingSession] =
     useState(null);
   const [listingAutoSkipped, setListingAutoSkipped] = useState(false);
+  const [userPlan, setUserPlan] = useState(null);
+  const [acceleratorBonus, setAcceleratorBonus] = useState(null);
+  const [acceleratorCalls, setAcceleratorCalls] = useState([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -3867,6 +4428,42 @@ export default function MentorshipSession() {
     if (batchId) sessionStorage.setItem("ms_batch_id", batchId);
   }, [batchId]);
 
+  // Fetch user plan once user is known
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("mentorship_payments")
+      .select("plan")
+      .eq("user_id", user.id)
+      .eq("status", "success")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setUserPlan(data?.plan || null));
+  }, [user?.id]);
+
+  // Fetch accelerator bonus + calls once batch + plan are known
+  useEffect(() => {
+    if (!user?.id || !batchId || userPlan !== "accelerator") return;
+    supabase
+      .from("mentorship_accelerator_bonus")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("batch_id", batchId)
+      .maybeSingle()
+      .then(({ data: bonus }) => {
+        setAcceleratorBonus(bonus || null);
+        if (bonus?.id) {
+          supabase
+            .from("mentorship_1on1_calls")
+            .select("*")
+            .eq("bonus_id", bonus.id)
+            .order("call_datetime", { ascending: true })
+            .then(({ data: calls }) => setAcceleratorCalls(calls || []));
+        }
+      });
+  }, [user?.id, batchId, userPlan]);
+
   // Show nothing while auth is loading or we're checking the profile
   if (authLoading || screen === null) return null;
 
@@ -3937,6 +4534,18 @@ export default function MentorshipSession() {
           onViewSessions={goToSessions}
           onViewPastSessions={() => setScreen(4)}
           onBack={() => setScreen(0)}
+          userPlan={userPlan}
+          acceleratorBonus={acceleratorBonus}
+          acceleratorCalls={acceleratorCalls}
+          onRefreshAcceleratorCalls={async (bonusId) => {
+            if (!bonusId) return;
+            const { data } = await supabase
+              .from("mentorship_1on1_calls")
+              .select("*")
+              .eq("bonus_id", bonusId)
+              .order("call_datetime", { ascending: true });
+            setAcceleratorCalls(data || []);
+          }}
         />
       )}
 
