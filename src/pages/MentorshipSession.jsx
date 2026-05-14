@@ -1337,7 +1337,10 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
 
   const generatePreview = async (file, ext) => {
     // Images — FileReader gives a base64 data URL, works everywhere
-    if (file.type.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
+    if (
+      file.type.startsWith("image/") ||
+      ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)
+    ) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target?.result ?? null);
@@ -1357,7 +1360,10 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
         const canvas = document.createElement("canvas");
         canvas.width = scaled.width;
         canvas.height = scaled.height;
-        await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaled }).promise;
+        await page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport: scaled
+        }).promise;
         return canvas.toDataURL("image/jpeg", 0.8);
       } catch {
         return null;
@@ -1395,7 +1401,11 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
       generatePreview(file, ext),
       supabase.storage
         .from("mentorship-portfolios")
-        .upload(`${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`, file, { upsert: true })
+        .upload(
+          `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
+          file,
+          { upsert: true }
+        )
     ]);
     setUploadingFile(false);
     if (uploadResult.error) {
@@ -1662,30 +1672,50 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                       >
                         {!uploadedFile.previewUrl && (
                           <div className="w-full h-full flex flex-col items-center justify-center">
-                            <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
-                              <rect x="1" y="1" width="15" height="20" rx="2.5"
+                            <svg
+                              width="22"
+                              height="26"
+                              viewBox="0 0 22 26"
+                              fill="none"
+                            >
+                              <rect
+                                x="1"
+                                y="1"
+                                width="15"
+                                height="20"
+                                rx="2.5"
                                 fill="rgba(255,255,255,0.07)"
                                 stroke="rgba(255,255,255,0.2)"
                                 strokeWidth="1.2"
                               />
-                              <path d="M4 7h8M4 10.5h8M4 14h5"
+                              <path
+                                d="M4 7h8M4 10.5h8M4 14h5"
                                 stroke="rgba(255,255,255,0.35)"
                                 strokeWidth="1.2"
                                 strokeLinecap="round"
                               />
-                              <rect x="8" y="13" width="13" height="12" rx="2"
+                              <rect
+                                x="8"
+                                y="13"
+                                width="13"
+                                height="12"
+                                rx="2"
                                 fill="#2A2A2C"
                                 stroke="rgba(255,208,7,0.6)"
                                 strokeWidth="1"
                               />
                               <text
-                                x="14.5" y="21.5"
+                                x="14.5"
+                                y="21.5"
                                 textAnchor="middle"
                                 fill="#FFD007"
                                 fontSize="5.5"
                                 fontWeight="800"
                                 fontFamily="system-ui,sans-serif"
-                                style={{ textTransform: "uppercase", letterSpacing: "0.02em" }}
+                                style={{
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.02em"
+                                }}
                               >
                                 {(uploadedFile.ext || "file").toUpperCase()}
                               </text>
@@ -1716,7 +1746,12 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                         style={{ background: "rgba(255,255,255,0.08)" }}
                         title="replace file"
                       >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                        >
                           <path
                             d="M9 1.5l2.5 2.5M1.5 11.5l.6-2.8L9 1.5l2.5 2.5-6.9 6.7-2.8.6-.3-.7z"
                             stroke="rgba(255,255,255,0.65)"
@@ -1732,7 +1767,12 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                         style={{ background: "rgba(255,255,255,0.08)" }}
                         title="remove file"
                       >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                        >
                           <path
                             d="M2 3.5h10M5.5 3.5V2.5h3v1M3 3.5l.7 8h6.6l.7-8"
                             stroke="rgba(255,255,255,0.65)"
@@ -1817,27 +1857,8 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               <p className="text-red-400 text-xs mb-3 -mt-2">{fileError}</p>
             )}
 
-            {/* Notes — grows to fill space */}
-            <div className="flex-1 flex flex-col">
-              <p className="text-white text-sm font-semibold mb-1">
-                anything we should know?{" "}
-                <span className="text-white/30 font-normal">(optional)</span>
-              </p>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="anything we should consider?"
-                rows={2}
-                className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none resize-none"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)"
-                }}
-              />
-            </div>
-
             {/* Button pinned to bottom */}
-            <div className="mt-5">
+            <div className="mt-auto pt-5">
               {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
               {(() => {
                 const rCanSubmit =
@@ -2179,7 +2200,9 @@ function OnboardingCompleteScreen({
 
   if (showAcceleratorUI) {
     const totalCalls = acceleratorBonus?.total_calls ?? 4;
-    const activeCalls = acceleratorCalls.filter((c) => c.status !== "cancelled");
+    const activeCalls = acceleratorCalls.filter(
+      (c) => c.status !== "cancelled"
+    );
     const callsUsed = activeCalls.length;
     const callsRemaining = totalCalls - callsUsed;
     const allCallsUsed = callsRemaining <= 0;
@@ -2352,19 +2375,15 @@ function OnboardingCompleteScreen({
 
             <p className="text-white/35 text-sm mb-3">my documents</p>
             <div className="flex flex-col gap-2 mb-10">
-              {accelDocRow(
-                upload_portfolio,
-                "portfolio",
-                () => setShowPortfolioModal(true)
+              {accelDocRow(upload_portfolio, "portfolio", () =>
+                setShowPortfolioModal(true)
               )}
               {reportUrl &&
                 accelDocRow(portfolio_report_icon, "portfolio review", () =>
                   window.open(reportUrl, "_blank")
                 )}
-              {accelDocRow(
-                upload_resume,
-                "resume",
-                () => setShowResumeModal(true)
+              {accelDocRow(upload_resume, "resume", () =>
+                setShowResumeModal(true)
               )}
               {googleSheetUrl
                 ? accelDocRow(upload_sheet, "google sheet", () =>
@@ -2438,7 +2457,11 @@ function OnboardingCompleteScreen({
           {/* Plan badge */}
           <span
             className="inline-flex items-center self-start mb-5 rounded-full px-3 py-1.5 text-xs font-bold"
-            style={{ background: "rgba(255,208,7,0.15)", color: "#FFD007", letterSpacing: "0.02em" }}
+            style={{
+              background: "rgba(255,208,7,0.15)",
+              color: "#FFD007",
+              letterSpacing: "0.02em"
+            }}
           >
             · accelerator plan ·
           </span>
@@ -2469,7 +2492,10 @@ function OnboardingCompleteScreen({
           </p>
 
           {/* Yellow bonus card */}
-          <div className="rounded-3xl p-6 mb-8" style={{ background: "#FFD007" }}>
+          <div
+            className="rounded-3xl p-6 mb-8"
+            style={{ background: "#FFD007" }}
+          >
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold mb-5"
               style={{ background: "rgba(255,255,255,0.45)", color: "#161618" }}
@@ -2519,9 +2545,7 @@ function OnboardingCompleteScreen({
                     className="flex-1 h-1.5 rounded-full"
                     style={{
                       background:
-                        i < callsUsed
-                          ? "rgba(0,0,0,0.45)"
-                          : "rgba(0,0,0,0.15)"
+                        i < callsUsed ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.15)"
                     }}
                   />
                 ))}
@@ -2607,7 +2631,11 @@ function OnboardingCompleteScreen({
               <a
                 href={canJoinCall ? upcomingCall.meeting_link || "#" : "#"}
                 onClick={!canJoinCall ? (e) => e.preventDefault() : undefined}
-                target={canJoinCall && upcomingCall.meeting_link ? "_blank" : undefined}
+                target={
+                  canJoinCall && upcomingCall.meeting_link
+                    ? "_blank"
+                    : undefined
+                }
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold"
                 style={{
@@ -2622,9 +2650,7 @@ function OnboardingCompleteScreen({
                 }}
               >
                 join the call
-                {arrowSvg(
-                  canJoinCall ? "#161618" : "rgba(255,208,7,0.45)"
-                )}
+                {arrowSvg(canJoinCall ? "#161618" : "rgba(255,208,7,0.45)")}
               </a>
               <p
                 className="text-center text-xs mt-2.5"
@@ -2682,19 +2708,15 @@ function OnboardingCompleteScreen({
           {/* Documents */}
           <p className="text-white/35 text-sm mb-3">my documents</p>
           <div className="flex flex-col gap-2 mb-8">
-            {accelDocRow(
-              upload_portfolio,
-              "portfolio",
-              () => setShowPortfolioModal(true)
+            {accelDocRow(upload_portfolio, "portfolio", () =>
+              setShowPortfolioModal(true)
             )}
             {reportUrl &&
               accelDocRow(portfolio_report_icon, "portfolio review", () =>
                 window.open(reportUrl, "_blank")
               )}
-            {accelDocRow(
-              upload_resume,
-              "resume",
-              () => setShowResumeModal(true)
+            {accelDocRow(upload_resume, "resume", () =>
+              setShowResumeModal(true)
             )}
             {googleSheetUrl
               ? accelDocRow(upload_sheet, "google sheet", () =>

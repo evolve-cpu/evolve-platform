@@ -2094,7 +2094,7 @@ const Mentorship = () => {
           </p>
 
           {/* Applications close */}
-          {!allBatchesFull && (
+          {/* {!allBatchesFull && (
             <p
               className="font-extrabold lowercase text-white"
               style={{
@@ -2106,7 +2106,7 @@ const Mentorship = () => {
             >
               {`applications close on ${closeLabel}`}
             </p>
-          )}
+          )} */}
 
           {/* Tagline */}
           <p
@@ -2125,7 +2125,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl mt-6"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
