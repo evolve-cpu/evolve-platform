@@ -685,9 +685,7 @@ import {
   purple_rainbow,
   scroll,
   door_closeup,
-  door_closeup_mobile,
-  dive_in,
-  dive_in_hover
+  door_closeup_mobile
 } from "../../assets/images/Home";
 import LottiePlayer from "../../components/LottiePlayer";
 
@@ -781,7 +779,7 @@ const buildScene1Timeline = (refs, isMobile) => {
     // Scale 9 (desktop) / 7 (mobile) zooms deep enough into the door that
     // the visible slice is entirely within the door frame — no edges show.
     // Origin targets the door opening (~60% from top on desktop, ~65% mobile).
-    scale: isMobile ? 12 : isTablet ? 12 : 16,
+    scale: isMobile ? 12 : isTablet ? 12 : 18,
     y: 0,
     // transformOrigin: isMobile
     //   ? "center 65%"
@@ -793,7 +791,7 @@ const buildScene1Timeline = (refs, isMobile) => {
       : isTablet
         ? "center 62%"
         : // : "center 40%",
-          "center 40.5%",
+          "center 41%",
     ease: "power3.inOut",
     duration: 3.0,
     force3D: true
@@ -1124,18 +1122,50 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
 
         {/* scroll button (only before intro starts) */}
         {showScrollButton && (
-          <img
-            src={dive_in}
-            alt="scroll button"
-            onClick={handleScrollClick}
-            onMouseEnter={(e) => (e.currentTarget.src = dive_in_hover)}
-            onMouseLeave={(e) => (e.currentTarget.src = dive_in)}
+          <div
             className={
               isMobile
-                ? "absolute bottom-[10%] left-1/2 -translate-x-1/2 w-[20vw] z-[50] cursor-pointer"
-                : "absolute bottom-[7%] left-1/2 -translate-x-1/2 w-[8vw] z-[50] cursor-pointer"
+                ? "absolute bottom-[10%] left-1/2 -translate-x-1/2 z-[50]"
+                : "absolute bottom-[7%] left-1/2 -translate-x-1/2 z-[50]"
             }
-          />
+          >
+            <button
+              onClick={handleScrollClick}
+              className="rounded-full font-black text-[#161616] cursor-pointer select-none"
+              style={{
+                background: "#FFD007",
+                border: "1.5px solid #161616",
+                boxShadow: "4px 5px 0 0 #161616",
+                padding: isMobile
+                  ? "clamp(7px,2vw,11px) clamp(14px,4.5vw,22px)"
+                  : "clamp(9px,0.9vw,14px) clamp(18px,2.2vw,32px)",
+                fontSize: isMobile
+                  ? "clamp(10px,2.8vw,14px)"
+                  : "clamp(11px,1.05vw,16px)",
+                letterSpacing: "-0.02em",
+                transition:
+                  "transform 0.08s, box-shadow 0.08s, background 0.08s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#FFDC47";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#FFD007";
+                e.currentTarget.style.transform = "";
+                e.currentTarget.style.boxShadow = "4px 5px 0 0 #161616";
+              }}
+              // onMouseDown={(e) => {
+              //   // e.currentTarget.style.transform = "translate(4px, 5px)";
+              //   e.currentTarget.style.boxShadow = "0 0 0 0 #161616";
+              // }}
+              // onMouseUp={(e) => {
+              //   e.currentTarget.style.transform = "";
+              //   e.currentTarget.style.boxShadow = "4px 5px 0 0 #161616";
+              // }}
+            >
+              dive in
+            </button>
+          </div>
         )}
       </div>
 
