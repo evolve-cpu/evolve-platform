@@ -1035,12 +1035,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
-// ContentSquare custom event helper
-const csEvent = (category, action, label = "") => {
-  window._uxa = window._uxa || [];
-  window._uxa.push(["trackEvent", category, action, label]);
-};
-
 // Eager load only Home page (critical)
 import Home from "./pages/Home/Home";
 import Navigation from "./components/Navigation";
@@ -1106,30 +1100,13 @@ const AppLayout = () => {
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
 
-  // GA4 + ContentSquare: track page views + key business events on route change
+  // GA4: track page views on route change (SPA navigation doesn't auto-fire page_view)
   useEffect(() => {
-    // GA4 — SPA navigation doesn't auto-fire page_view; we send it manually
     if (typeof window.gtag === "function") {
       window.gtag("event", "page_view", {
         page_path: location.pathname,
         page_location: window.location.href
       });
-    }
-
-    // ContentSquare
-    window._uxa = window._uxa || [];
-    window._uxa.push(["trackPageview", location.pathname]);
-
-    const pageEvents = {
-      "/mentorship": ["navigation", "page_view", "mentorship"],
-      "/payment": ["conversion", "page_view", "payment"],
-      "/signin": ["navigation", "page_view", "signin"],
-      "/community": ["navigation", "page_view", "community"],
-      "/webinars": ["navigation", "page_view", "sessions"]
-    };
-    const args = pageEvents[location.pathname];
-    if (args) {
-      window._uxa.push(["trackEvent", ...args]);
     }
   }, [location.pathname]);
 
