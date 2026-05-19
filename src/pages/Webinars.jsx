@@ -611,6 +611,29 @@ const Webinars = () => {
 
           {/* ---------- PAGE 1 : UPCOMING ---------- */}
           {/* <section className="relative z-40 pt-32 pb-20 text-center"> */}
+          <div className="relative z-40 pt-32 pb-20 text-center">
+            {/* <h2
+              className="font-extrabold lowercase text-black"
+              style={{
+                fontSize: "32px",
+                lineHeight: "32px",
+                letterSpacing: "-0.03em"
+              }}
+            >
+              upcoming
+              <br /> webinar
+            </h2>
+
+            <img
+              src={hands_with_webinars_card_full_mobile}
+              className="w-[95%] mx-auto mt-10"
+              alt=""
+            /> */}
+            {/* </section> */}
+
+            {/* ---------- PAGE 2 : PAST WEBINARS ---------- */}
+            <MobilePinnedCards cards={cards} />
+          </div>
         </section>
       </div>
     </main>
