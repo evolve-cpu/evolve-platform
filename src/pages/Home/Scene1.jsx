@@ -1125,7 +1125,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
           <div
             className={
               isMobile
-                ? "absolute bottom-[10%] left-1/2 -translate-x-1/2 z-[50]"
+                ? "absolute bottom-[18%] left-1/2 -translate-x-1/2 z-[50]"
                 : "absolute bottom-[7%] left-1/2 -translate-x-1/2 z-[50]"
             }
           >
@@ -1137,10 +1137,10 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
                 border: "1.5px solid #161616",
                 boxShadow: "4px 5px 0 0 #161616",
                 padding: isMobile
-                  ? "clamp(7px,2vw,11px) clamp(14px,4.5vw,22px)"
+                  ? "clamp(8px,3vw,12px) clamp(16px,5vw,24px)"
                   : "clamp(9px,0.9vw,14px) clamp(18px,2.2vw,32px)",
                 fontSize: isMobile
-                  ? "clamp(10px,2.8vw,14px)"
+                  ? "clamp(12px,4vw,16px)"
                   : "clamp(11px,1.05vw,16px)",
                 letterSpacing: "-0.02em",
                 transition:

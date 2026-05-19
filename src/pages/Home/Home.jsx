@@ -15,7 +15,7 @@ const Scene1 = lazy(() => import("./Scene1"));
 // NEW SCENE - First scrollable scene
 import SceneNew, {
   useSceneNewTimeline,
-  SCENE_NEW_STEP_LABELS
+  getSceneNewStepLabels
 } from "./SceneNew";
 
 import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
@@ -55,7 +55,12 @@ const Home = ({
     if (isLoading) return;
     const timeoutId = setTimeout(() => {
       if ("requestIdleCallback" in window) {
-        requestIdleCallback(() => { setAnimationsReady(true); }, { timeout: 500 });
+        requestIdleCallback(
+          () => {
+            setAnimationsReady(true);
+          },
+          { timeout: 500 }
+        );
       } else {
         setAnimationsReady(true);
       }
@@ -65,7 +70,9 @@ const Home = ({
 
   useLayoutEffect(() => {
     document.body.style.overflow = introDone ? "auto" : "hidden";
-    return () => { document.body.style.overflow = "auto"; };
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [introDone]);
 
   useLayoutEffect(() => {
@@ -99,7 +106,9 @@ const Home = ({
       duration: 1.2,
       scrollTo: { y: targetScroll, autoKill: false },
       ease: "power2.inOut",
-      onStart: () => { logoClickedRef.current = true; }
+      onStart: () => {
+        logoClickedRef.current = true;
+      }
     });
     if (setShowNavbar) {
       setShowNavbar(true);
@@ -235,7 +244,7 @@ const Home = ({
       };
 
       stepProgresses.push(0);
-      addStepsFromTimeline(tlNew, SCENE_NEW_STEP_LABELS || []);
+      addStepsFromTimeline(tlNew, getSceneNewStepLabels(isMobile));
       addStepsFromTimeline(tl4, []);
       stepProgresses.push(1);
 
@@ -244,6 +253,8 @@ const Home = ({
       );
 
       const SCENE_NEW_FIRST_STEP_PROGRESS = snapPoints[1] || 0.05;
+      // Navbar shows as soon as SceneNew starts crossfading in (first scroll action)
+      const SCENE_NEW_ENTRY_PROGRESS = 0.005;
       snapPointsRef.current = snapPoints;
 
       console.log("Snap points created:", snapPoints);
@@ -264,10 +275,12 @@ const Home = ({
         scrub: 0.6,
         snap: {
           snapTo: snapPoints,
-          duration: 1.8,
+          duration: { min: 0.1, max: 3.0 },
           delay: 0,
           ease: "power2.out",
-          onStart: () => { ScrollTrigger.clearScrollMemory(); }
+          onStart: () => {
+            ScrollTrigger.clearScrollMemory();
+          }
         },
 
         onScrubComplete: () => {
@@ -310,7 +323,7 @@ const Home = ({
           if (
             setShowNavbar &&
             !hasShownNavbarRef.current &&
-            self.progress > SCENE_NEW_FIRST_STEP_PROGRESS
+            self.progress > SCENE_NEW_ENTRY_PROGRESS
           ) {
             setShowNavbar(true);
             hasShownNavbarRef.current = true;
@@ -319,7 +332,7 @@ const Home = ({
           if (
             setShowNavbar &&
             hasShownNavbarRef.current &&
-            self.progress <= SCENE_NEW_FIRST_STEP_PROGRESS &&
+            self.progress <= SCENE_NEW_ENTRY_PROGRESS &&
             !logoClickedRef.current
           ) {
             setShowNavbar(false);
@@ -327,7 +340,7 @@ const Home = ({
           }
 
           if (
-            self.progress > SCENE_NEW_FIRST_STEP_PROGRESS &&
+            self.progress > SCENE_NEW_ENTRY_PROGRESS &&
             logoClickedRef.current
           ) {
             logoClickedRef.current = false;
@@ -335,7 +348,7 @@ const Home = ({
 
           if (
             !scene1EndScrollRef.current &&
-            self.progress > SCENE_NEW_FIRST_STEP_PROGRESS
+            self.progress > SCENE_NEW_ENTRY_PROGRESS
           ) {
             scene1EndScrollRef.current = self.scroll();
           }
@@ -356,7 +369,7 @@ const Home = ({
           scrollTrigger.start +
           (scrollTrigger.end - scrollTrigger.start) * targetProgress;
         gsap.to(window, {
-          duration: 1.2,
+          duration: 0.1,
           scrollTo: { y: targetScroll, autoKill: false },
           ease: "power2.inOut"
         });
@@ -375,7 +388,11 @@ const Home = ({
           masterTimelineRef.current = null;
         }
         ScrollTrigger.getAll().forEach((trigger) => {
-          try { trigger.kill(); } catch (e) { /* ignore */ }
+          try {
+            trigger.kill();
+          } catch (e) {
+            /* ignore */
+          }
         });
         gsap.set("#scroll-container", { clearProps: "all" });
       } catch (error) {

@@ -26,25 +26,29 @@ import {
 } from "../../assets/images/Home";
 import { rays_webinars } from "../../assets/images/Webinars";
 
-// Step labels for this scene
-export const SCENE_NEW_STEP_LABELS = [
-  "scene_new_step0_intro",
-  "scene_new_step1_text_appears",
-  "scene_new_step2_circle_appears",
-  "scene_new_step5_outer_rotating",
-  "scene_new_step6_elements_exit",
-  "scene_new_step7_toolkit_cards_appear",
-  "scene_new_step8_card1_center",
-  "scene_new_step9_card2_center",
-  "scene_new_step10_card3_center",
-  "scene_new_step11_cards_interactive",
-  "scene_new_step12_orbit_peek",
-  "scene_new_step13_orbit_comes_in",
-  "scene_new_step14_orbit_with_text",
-  "scene_new_step14b_orbit_subtext",
-  "scene_new_step15_orbit_cta",
-  "scene_new_step16_cta_hold"
+// Step labels for this scene — 3 scroll snaps for desktop + tablet landscape:
+// Desktop / tablet-landscape: 3 scrolls
+const SCENE_NEW_STEP_LABELS_DESKTOP = [
+  "scene_new_snap1_text", // scroll 1: text "where designers find their…"
+  "scene_new_snap2_cards", // scroll 2: full cards appear
+  "scene_new_snap3_cta" // scroll 3: orbit CTA
 ];
+
+// Mobile: mini cards + each full card gets its own scroll step
+const SCENE_NEW_STEP_LABELS_MOBILE = [
+  "scene_new_snap1_text", // scroll 1: text visible
+  "scene_new_snap_mobile_mini_cards", // scroll 2: mini cards all visible
+  "scene_new_snap_mobile_card1", // scroll 3: card 1 full at center
+  "scene_new_snap_mobile_card2", // scroll 4: card 2 rises from bottom
+  "scene_new_snap_mobile_card3", // scroll 5: card 3 rises from bottom
+  "scene_new_snap3_cta" // scroll 6: orbit CTA
+];
+
+export const getSceneNewStepLabels = (isMobile) =>
+  isMobile ? SCENE_NEW_STEP_LABELS_MOBILE : SCENE_NEW_STEP_LABELS_DESKTOP;
+
+// Kept for any legacy references
+export const SCENE_NEW_STEP_LABELS = SCENE_NEW_STEP_LABELS_DESKTOP;
 
 // Screen multipliers for orbit/stairs scaling (same logic as Scene1_1)
 const getOrbitScreenMultipliers = () => {
@@ -302,6 +306,18 @@ const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
     innerLogo: null // kept for API compatibility — logo is part of inner SVG
   }));
 
+  // Auto-rotate outer circle independently of scroll
+  React.useEffect(() => {
+    if (!outerRef.current) return;
+    const tween = gsap.to(outerRef.current, {
+      rotation: -360,
+      duration: 5,
+      ease: "none",
+      repeat: -1
+    });
+    return () => tween.kill();
+  }, []);
+
   return (
     <div className="relative w-full h-full">
       {/* Outer wavy circle — rotates */}
@@ -450,20 +466,23 @@ export const useSceneNewTimeline = (refs, isMobile) => {
   // tl.to({}, { duration: 1.0 });
 
   // ========== STEP 1: (no text here â€" text comes at step2 after circle lands) ==========
-  tl.addLabel("scene_new_step1_text_appears", 0.5);
+  // tl.addLabel("scene_new_step1_text_appears", 0.5);
+  // tl.addLabel("scene_new_step1_text_appears", 0);
 
   // Pause before circle falls
   // tl.to({}, { duration: 2.7 });
 
   // ========== STEP 2: Circle falls, vector1_1 â†' vector_1st â†' vector_2nd ==========
-  tl.addLabel("scene_new_step2_circle_appears", 1);
+  // tl.addLabel("scene_new_step2_circle_appears", 1);
+  // tl.addLabel("scene_new_step2_circle_appears", 0);
 
   // Thunders move down
   tl.to(
     [refs.leftThunder, refs.rightThunder],
     {
       y: isMobile ? "20vh" : "10vh",
-      duration: 1.5,
+      // duration: 1.5,
+      duration: 0.8,
       ease: "power2.inOut"
     },
     3.7
@@ -474,7 +493,8 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     refs.combinedCircleContainer,
     {
       y: 0,
-      duration: 1.1,
+      // duration: 1.1,
+      duration: 0.8,
       ease: "power3.in"
     },
     3
@@ -485,7 +505,8 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     refs.vector1_1,
     {
       opacity: 0,
-      duration: 0.7,
+      // duration: 0.7,
+      duration: 0.1,
       ease: "power2.in"
     },
     3
@@ -517,7 +538,8 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     refs.vector2nd,
     {
       opacity: 1,
-      duration: 0.8,
+      // duration: 0.8,
+      duration: 0.2,
       ease: "power2.inOut"
     },
     3
@@ -535,24 +557,9 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     4
   );
 
-  // ========== STEP 5: Outer Circle Rotates â€" starts from t=0 since circle is visible immediately ==========
-  tl.addLabel("scene_new_step5_outer_rotating", 0);
-
-  if (refs.combinedCircle?.outer) {
-    tl.to(
-      refs.combinedCircle.outer,
-      {
-        rotation: -360,
-        duration: 12.0,
-        ease: "none",
-        repeat: 0
-      },
-      0
-    );
-  }
-
-  // Pause before transition
-  // tl.to({}, { duration: 2.0 });
+  // Outer circle rotation is handled automatically in CombinedCircle via useEffect (not scroll-scrubbed)
+  // Snap 1: text is fully visible — user lands here after scroll 1
+  tl.addLabel("scene_new_snap1_text", 5.0);
 
   // ========== STEP 6: PANEL SLIDE â€" step2 slides up, toolkit slides up from below ==========
   const exitStart = tl.duration();
@@ -641,119 +648,68 @@ export const useSceneNewTimeline = (refs, isMobile) => {
   const transformStart = toolkitStart + 1.2;
 
   if (isMobile) {
-    // ========== MOBILE: REPLICATED FROM SCENE1_1 ==========
+    // ========== MOBILE CARD SEQUENCE ==========
+    // Snap: all mini cards visible — user rests here before expanding to full card
+    tl.addLabel("scene_new_snap_mobile_mini_cards", toolkitStart + 0.9);
 
-    // Step 10: oval_mini_1 expands and transforms into oval_1
+    // Step 10: ovalMini1 expands → oval1 (card 1) appears at center
     const step10Start = transformStart + 1.5;
 
-    // First hide other mini ovals
+    // tl.to(
+    //   [refs.ovalMini2, refs.ovalMini3],
+    //   { opacity: 0, duration: 0.4, ease: "power2.out" },
+    //   step10Start
+    // );
     tl.to(
-      [refs.ovalMini2, refs.ovalMini3],
-      {
-        opacity: 0,
-        duration: 0.4,
-        ease: "power2.out"
-      },
+      [refs.ovalMini2, refs.ovalMini1],
+      { opacity: 0, duration: 0.4, ease: "power2.out" },
       step10Start
     );
 
-    // Mini oval moves UP to vertical center AND scales up simultaneously
+    // tl.to(
+    //   refs.ovalMini1,
+    //   { y: "-15vh", scale: 1.5, duration: 0.8, ease: "power2.out" },
+    //   step10Start + 0.2
+    // );
     tl.to(
-      refs.ovalMini1,
-      {
-        y: "-15vh",
-        scale: 1.5,
-        duration: 0.8,
-        ease: "power2.out"
-      },
+      refs.ovalMini3,
+      { y: "15vh", scale: 1.5, duration: 0.8, ease: "power2.out" },
       step10Start + 0.2
     );
 
-    // Set initial position for oval_1 (same position as scaled mini)
     tl.set(
       refs.oval1,
-      {
-        opacity: 0,
-        scale: 0.5,
-        y: "0vh",
-        willChange: "transform, opacity"
-      },
+      { opacity: 0, scale: 0.5, y: "0vh", willChange: "transform, opacity" },
       step10Start + 0.8
     );
 
-    tl.addLabel("scene_new_step8_card1_center", step10Start + 2.1);
-
-    // Direct crossfade: mini oval fades out as full oval fades in
-    tl.to(
-      refs.ovalMini1,
-      {
-        opacity: 0,
-        duration: 0,
-        ease: "power2.inOut"
-      },
-      step10Start + 1.0
-    );
-
-    tl.to(
-      refs.oval1,
-      {
-        opacity: 1,
-        duration: 0,
-        ease: "power2.inOut"
-      },
-      step10Start + 1.0
-    );
-
-    // Enable pointer events on mobile container as soon as first card appears
+    // Crossfade mini → full card
+    tl.to(refs.ovalMini3, { opacity: 0, duration: 0 }, step10Start + 1.0);
+    tl.to(refs.oval1, { opacity: 1, duration: 0 }, step10Start + 1.0);
     tl.set(
       refs.mobileOvalsContainer,
       { pointerEvents: "auto" },
       step10Start + 1.0
     );
 
-    // Full oval scales up to final size at center
+    // Scale card 1 to full size
     tl.to(
       refs.oval1,
-      {
-        scale: 1,
-        duration: 1,
-        ease: "power2.out"
-      },
+      { scale: 1, duration: 1, ease: "power2.out" },
       step10Start + 1.5
     );
 
-    // Step 11: Vertical scroll transition - cards stack behavior
-    const step11Start = step10Start + 4.0;
+    // Snap: card 1 fully visible — user can tap it, then scroll to continue
+    tl.addLabel("scene_new_snap_mobile_card1", step10Start + 2.5);
 
-    const scrollContainerHeight = 85;
+    // Step 11: card 1 exits UP, card 2 rises from BOTTOM
+    const step11Start = step10Start + 2.5;
 
-    // Set oval_1 to the same starting position as oval_2 and oval_3
-    tl.set(
-      refs.oval1,
-      {
-        opacity: 1,
-        top: "15vh",
-        scale: 1
-      },
-      step11Start
-    );
-
-    // Set oval_2 ABOVE the visible area
-    tl.set(
-      refs.oval2,
-      {
-        opacity: 1,
-        top: `-100vh`,
-        scale: 0.9
-      },
-      step11Start
-    );
-
-    // oval_1 scrolls DOWN - moves down and fades
+    tl.set(refs.oval2, { opacity: 1, y: "70vh", scale: 0.9 }, step11Start);
     tl.to(
       refs.oval1,
       {
-        top: `${scrollContainerHeight * 0.6}vh`,
+        y: "-80vh",
         scale: 0.9,
         opacity: 0,
         duration: 2.8,
@@ -761,40 +717,23 @@ export const useSceneNewTimeline = (refs, isMobile) => {
       },
       step11Start
     );
-
-    // oval_2 scrolls DOWN from top to center
     tl.to(
       refs.oval2,
-      {
-        top: "2vh",
-        scale: 1,
-        duration: 2.8,
-        ease: "power3.inOut"
-      },
+      { y: "0vh", scale: 1, duration: 2.8, ease: "power3.inOut" },
       step11Start
     );
 
-    tl.addLabel("scene_new_step9_card2_center", step11Start + 2.8);
+    // Snap: card 2 fully visible — user can tap it, then scroll to continue
+    tl.addLabel("scene_new_snap_mobile_card2", step11Start + 2.8);
 
-    // Step 12: Continue vertical scroll
-    const step12Start = step11Start + 4.0;
+    // Step 12: card 2 exits UP, card 3 rises from BOTTOM
+    const step12Start = step11Start + 2.8;
 
-    // Set oval_3 ABOVE the visible area
-    tl.set(
-      refs.oval3,
-      {
-        opacity: 1,
-        top: `-100vh`,
-        scale: 0.9
-      },
-      step12Start
-    );
-
-    // oval_2 scrolls DOWN and fades
+    tl.set(refs.oval3, { opacity: 1, y: "70vh", scale: 0.9 }, step12Start);
     tl.to(
       refs.oval2,
       {
-        top: `${scrollContainerHeight * 0.6}vh`,
+        y: "-80vh",
         scale: 0.9,
         opacity: 0,
         duration: 2.8,
@@ -802,35 +741,20 @@ export const useSceneNewTimeline = (refs, isMobile) => {
       },
       step12Start
     );
-
-    // oval_3 scrolls DOWN from top to center
     tl.to(
       refs.oval3,
-      {
-        top: "2vh",
-        scale: 1,
-        duration: 2.8,
-        ease: "power3.inOut"
-      },
+      { y: "0vh", scale: 1, duration: 2.8, ease: "power3.inOut" },
       step12Start
     );
 
-    tl.addLabel("scene_new_step10_card3_center", step12Start + 2.8);
+    // Snap: card 3 fully visible — user can tap it, then scroll to orbit
+    tl.addLabel("scene_new_snap_mobile_card3", step12Start + 2.8);
 
-    // Step 13: Final card stays with subtle animation
     tl.to(
       refs.oval3,
-      {
-        scale: 1.03,
-        duration: 0.5,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: 1
-      },
+      { scale: 1.03, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 },
       step12Start + 2.5
     );
-
-    // pointer events already enabled in oval1's onStart above
   } else {
     // ========== DESKTOP: ORIGINAL ANIMATION ==========
 
@@ -912,6 +836,8 @@ export const useSceneNewTimeline = (refs, isMobile) => {
   // ========== FINAL STEP: CARDS BECOME INTERACTIVE ==========
   const interactiveStart = tl.duration();
   tl.addLabel("scene_new_step11_cards_interactive", interactiveStart);
+  // Snap 2: full cards visible — user lands here after scroll 2
+  tl.addLabel("scene_new_snap2_cards", interactiveStart);
 
   // ENABLE POINTER EVENTS for desktop cards
   if (!isMobile) {
@@ -1256,7 +1182,7 @@ export const useSceneNewTimeline = (refs, isMobile) => {
     if (mobileEndTargets.length > 0) {
       tl.to(
         mobileEndTargets,
-        { y: "-=10vh", duration: 1.2, ease: "power2.out" },
+        { y: "-=0vh", duration: 1.2, ease: "power2.out" },
         mobileEndStart
       );
     }
@@ -1308,6 +1234,8 @@ export const useSceneNewTimeline = (refs, isMobile) => {
 
   // Hold step — CTA fully visible, user rests here before moving to next section
   tl.addLabel("scene_new_step16_cta_hold", ctaStart + 2.5);
+  // Snap 3: CTA "be the first to know" fully visible — user lands here after scroll 3
+  tl.addLabel("scene_new_snap3_cta", ctaStart + 2.5);
 
   // Continuous rotation for pink orbit inner
   if (refs.pinkOrbitInner) {
