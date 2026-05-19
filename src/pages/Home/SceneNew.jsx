@@ -150,18 +150,38 @@ const CARD_DATA = {
 
 const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
   const innerRef = useRef(null);
+  const touchStart = useRef({ x: 0, y: 0 });
   const { title, desc, logo, imageWidth } = CARD_DATA[card];
 
-  const handleInteraction = (e) => {
+  const handleClick = (e) => {
     e.stopPropagation();
     if (onClick) onClick(e);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStart.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  };
+
+  const handleTouchEnd = (e) => {
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
+    // Only treat as a tap if the finger barely moved — ignore scroll lifts
+    if (dx < 10 && dy < 10) {
+      e.stopPropagation();
+      e.preventDefault(); // prevent the follow-on synthetic click from double-firing
+      if (onClick) onClick(e);
+    }
   };
 
   return (
     <div
       ref={ref}
-      onClick={handleInteraction}
-      onTouchEnd={handleInteraction}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       onMouseEnter={() => {
         if (innerRef.current)
           innerRef.current.style.background = "rgba(223,5,134,1)";
