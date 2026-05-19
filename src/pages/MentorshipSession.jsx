@@ -2071,8 +2071,8 @@ function OnboardingCompleteScreen({
   onViewPastSessions,
   onBack,
   userPlan,
-  acceleratorBonus,
-  acceleratorCalls = []
+  acceleratorBonus: _acceleratorBonusProp,
+  acceleratorCalls: _acceleratorCallsProp = []
 }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2083,6 +2083,13 @@ function OnboardingCompleteScreen({
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [googleSheetUrl, setGoogleSheetUrl] = useState(null);
   const [now, setNow] = useState(new Date());
+
+  // Local accelerator state — fetched fresh on mount so stale parent state
+  // (e.g. bonus created by admin after page load) doesn't prevent the
+  // booking link from working.
+  const [localBonus, setLocalBonus] = useState(_acceleratorBonusProp);
+  const [localCalls, setLocalCalls] = useState(_acceleratorCallsProp);
+
   const firstName = user?.name?.split(" ")[0]?.toLowerCase() || "there";
 
   // Tick every 30 s so canJoin auto-enables at the 15-min mark without a refresh
@@ -2090,6 +2097,33 @@ function OnboardingCompleteScreen({
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  // Sync if parent prop changes (e.g. parent re-fetched after page reload)
+  useEffect(() => { setLocalBonus(_acceleratorBonusProp); }, [_acceleratorBonusProp]);
+  useEffect(() => { setLocalCalls(_acceleratorCallsProp); }, [_acceleratorCallsProp]);
+
+  // Always fetch bonus + calls directly — parent prop may be stale if bonus
+  // was created after the initial page load.
+  useEffect(() => {
+    if (!user?.id || !batchId || userPlan !== "accelerator") return;
+    supabase
+      .from("mentorship_accelerator_bonus")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("batch_id", batchId)
+      .maybeSingle()
+      .then(({ data: bonus }) => {
+        setLocalBonus(bonus || null);
+        if (bonus?.id) {
+          supabase
+            .from("mentorship_1on1_calls")
+            .select("*")
+            .eq("bonus_id", bonus.id)
+            .order("call_datetime", { ascending: true })
+            .then(({ data: calls }) => setLocalCalls(calls || []));
+        }
+      });
+  }, [user?.id, batchId, userPlan]);
 
   useEffect(() => {
     if (!batchId) {
@@ -2199,8 +2233,8 @@ function OnboardingCompleteScreen({
   const showAcceleratorUI = userPlan === "accelerator" && allSessionsDone;
 
   if (showAcceleratorUI) {
-    const totalCalls = acceleratorBonus?.total_calls ?? 4;
-    const activeCalls = acceleratorCalls.filter(
+    const totalCalls = localBonus?.total_calls ?? 4;
+    const activeCalls = localCalls.filter(
       (c) => c.status !== "cancelled"
     );
     const callsUsed = activeCalls.length;
@@ -2246,9 +2280,9 @@ function OnboardingCompleteScreen({
       : null;
 
     // Format valid_until: "sat, 30 nov"
-    const validUntilStr = acceleratorBonus?.valid_until
+    const validUntilStr = localBonus?.valid_until
       ? (() => {
-          const d = new Date(acceleratorBonus.valid_until);
+          const d = new Date(localBonus.valid_until);
           const o = { timeZone: "Asia/Kolkata" };
           const wd = d
             .toLocaleString("en-IN", { ...o, weekday: "short" })
@@ -2554,8 +2588,8 @@ function OnboardingCompleteScreen({
 
             {/* Book button */}
             <a
-              href={acceleratorBonus?.booking_link || "#"}
-              target={acceleratorBonus?.booking_link ? "_blank" : undefined}
+              href={localBonus?.booking_link || "#"}
+              target={localBonus?.booking_link ? "_blank" : undefined}
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold mb-3"
               style={{
