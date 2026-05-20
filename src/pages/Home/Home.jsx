@@ -247,7 +247,8 @@ const Home = ({
         gsap.to(master, {
           progress: targetProg,
           // duration: 0.8,
-          duration: 1.3,
+          // duration: 1.3,
+          duration: isMobile ? 2.8 : 1.3,
           ease: "power3.out",
           overwrite: true,
           onComplete: () => {
@@ -315,8 +316,10 @@ const Home = ({
       // ── Keyboard: arrow keys / space / page keys navigate sections ──────────
       const handleKeyDown = (e) => {
         if (window.scrollY >= (stRef.current?.end ?? 0)) return;
-        const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
-        const back    = ["ArrowUp",   "ArrowLeft",  "PageUp"       ].includes(e.key);
+        const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(
+          e.key
+        );
+        const back = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
         if (!forward && !back) return;
         e.preventDefault();
         if (isAnimating) return;
