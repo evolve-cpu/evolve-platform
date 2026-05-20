@@ -34,14 +34,13 @@ const SCENE_NEW_STEP_LABELS_DESKTOP = [
   "scene_new_snap3_cta" // scroll 3: orbit CTA
 ];
 
-// Mobile: mini cards + each full card gets its own scroll step
+// Mobile: each full card gets its own scroll step (mini cards not a stop)
 const SCENE_NEW_STEP_LABELS_MOBILE = [
   "scene_new_snap1_text", // scroll 1: text visible
-  "scene_new_snap_mobile_mini_cards", // scroll 2: mini cards all visible
-  "scene_new_snap_mobile_card1", // scroll 3: card 1 full at center
-  "scene_new_snap_mobile_card2", // scroll 4: card 2 rises from bottom
-  "scene_new_snap_mobile_card3", // scroll 5: card 3 rises from bottom
-  "scene_new_snap3_cta" // scroll 6: orbit CTA
+  "scene_new_snap_mobile_card1", // scroll 2: card 1 full at center
+  "scene_new_snap_mobile_card2", // scroll 3: card 2 rises from bottom
+  "scene_new_snap_mobile_card3", // scroll 4: card 3 rises from bottom
+  "scene_new_snap3_cta" // scroll 5: orbit CTA
 ];
 
 export const getSceneNewStepLabels = (isMobile) =>
@@ -1416,7 +1415,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           ref={leftThunderRef}
           src={isMobile ? left_thunder_mobile : left_thunder}
           alt="left thunder"
-          className="absolute z-[4]"
+          className="absolute z-[4] overflow-hidden"
           style={{
             bottom: isMobile ? "-5%" : "-3%",
             left: isMobile ? "-45%" : "-20%",
@@ -1430,7 +1429,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           ref={rightThunderRef}
           src={isMobile ? right_thunder_mobile : right_thunder}
           alt="right thunder"
-          className="absolute z-[4]"
+          className="absolute z-[4] overflow-hidden"
           style={{
             bottom: isMobile ? "-5%" : "-3%",
             right: isMobile ? "-45%" : "-20%",
