@@ -272,7 +272,8 @@ const Home = ({
         fastScrollEnd: true,
         invalidateOnRefresh: true,
         animation: master,
-        scrub: 0.6,
+        // scrub: 0.15,
+        scrub: 0.01,
         snap: {
           snapTo: snapPoints,
           duration: { min: 0.1, max: 3.0 },
