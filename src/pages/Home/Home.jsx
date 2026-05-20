@@ -247,7 +247,7 @@ const Home = ({
         gsap.to(master, {
           progress: targetProg,
           // duration: 0.8,
-          duration: 1.0,
+          duration: 1.3,
           ease: "power3.out",
           overwrite: true,
           onComplete: () => {
@@ -312,6 +312,19 @@ const Home = ({
       });
       window.addEventListener("touchend", handleTouchEnd, { passive: true });
 
+      // ── Keyboard: arrow keys / space / page keys navigate sections ──────────
+      const handleKeyDown = (e) => {
+        if (window.scrollY >= (stRef.current?.end ?? 0)) return;
+        const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
+        const back    = ["ArrowUp",   "ArrowLeft",  "PageUp"       ].includes(e.key);
+        if (!forward && !back) return;
+        e.preventDefault();
+        if (isAnimating) return;
+        if (forward && currentSection >= totalSections) return;
+        goToSection(currentSection + (forward ? 1 : -1));
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
       // ── External trigger ──────────────────────────────────────────────────
       const handleScrollToSceneNew = () => goToSection(1);
       window.addEventListener("scrollToSceneNew", handleScrollToSceneNew);
@@ -321,6 +334,7 @@ const Home = ({
         window.removeEventListener("wheel", handleWheel);
         window.removeEventListener("touchstart", handleTouchStart);
         window.removeEventListener("touchend", handleTouchEnd);
+        window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("scrollToSceneNew", handleScrollToSceneNew);
       };
     });
