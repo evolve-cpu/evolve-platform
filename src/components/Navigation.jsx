@@ -3470,6 +3470,10 @@ function ordinalDate(dateStr) {
 const MIXED_BL = 16;
 const MIXED_BR = 16;
 
+// ── Feature flag: set false to disable hide-on-scroll-down behaviour ─────────
+const NAVBAR_SCROLL_HIDE = true;
+// ─────────────────────────────────────────────────────────────────────────────
+
 const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -3494,6 +3498,31 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const marqueeTLRef = useRef(null);
 
   const navHeightRef = useRef(0);
+
+  // ── Scroll-direction detection (controlled by NAVBAR_SCROLL_HIDE flag) ──────
+  const [navHiddenByScroll, setNavHiddenByScroll] = useState(false);
+  const lastScrollYRef = useRef(0);
+  const scrollTickingRef = useRef(false);
+
+  useEffect(() => {
+    if (!NAVBAR_SCROLL_HIDE) return;
+    const handleScroll = () => {
+      if (scrollTickingRef.current) return;
+      scrollTickingRef.current = true;
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollYRef.current;
+        if (Math.abs(delta) > 5) {
+          setNavHiddenByScroll(delta > 0 && currentY > 80);
+        }
+        lastScrollYRef.current = currentY;
+        scrollTickingRef.current = false;
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  // ── End scroll-direction detection ─────────────────────────────────────────
 
   const { user, setUser, authLoading, setAuthLoading } = useAuth();
   const avatarSrc =
@@ -3641,15 +3670,16 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   useEffect(() => {
     if (!outerRef.current) return;
     const el = outerRef.current;
+    const visible = showNavbar && !(NAVBAR_SCROLL_HIDE && navHiddenByScroll);
 
     if (!hasAnimatedRef.current) {
-      gsap.set(el, { y: showNavbar ? 0 : -100 });
-      el.style.pointerEvents = showNavbar ? "auto" : "none";
+      gsap.set(el, { y: visible ? 0 : -100 });
+      el.style.pointerEvents = visible ? "auto" : "none";
       hasAnimatedRef.current = true;
       return;
     }
 
-    if (showNavbar) {
+    if (visible) {
       gsap.to(el, {
         y: 0,
         duration: 0.6,
@@ -3668,7 +3698,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         }
       });
     }
-  }, [showNavbar]);
+  }, [showNavbar, navHiddenByScroll]);
 
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
@@ -3782,7 +3812,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50">
+      <nav className="fixed top-0 left-0 right-0 z-[10000]">
         <div
           ref={outerRef}
           className="w-full border-2 border-black bg-transparent"
@@ -3884,11 +3914,11 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
         ReactDOM.createPortal(
           <>
             <div
-              className="hidden md:block fixed inset-0 z-[9998]"
+              className="hidden md:block fixed inset-0 z-[10008]"
               onClick={() => setAccountOpen(false)}
             />
             <div
-              className="hidden md:block fixed z-[9999] w-[340px] max-h-[90vh] overflow-y-auto rounded-[20px] border-[2px] border-black bg-evolve-yellow shadow-[8px_8px_0px_rgba(0,0,0,0.25)] pl-6 pr-6 pt-0 pb-6"
+              className="hidden md:block fixed z-[10009] w-[340px] max-h-[90vh] overflow-y-auto rounded-[20px] border-[2px] border-black bg-evolve-yellow shadow-[8px_8px_0px_rgba(0,0,0,0.25)] pl-6 pr-6 pt-0 pb-6"
               style={{ top: accountPos.top, left: accountPos.left }}
             >
               <div className="flex justify-end">
@@ -3965,7 +3995,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
       {/* MOBILE ACCOUNT MODAL */}
       {accountOpen && user && (
-        <div className="md:hidden fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="md:hidden fixed inset-0 z-[10009] flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setAccountOpen(false)}
@@ -4037,7 +4067,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       {/* MENU UNDERLAY */}
       <div
         ref={menuUnderlayRef}
-        className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-40 hidden"
+        className="fixed top-0 left-0 w-full h-[80vh] md:h-screen z-[9990] hidden"
         style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
       >
         <div className="relative h-full w-full flex">

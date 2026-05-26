@@ -1003,9 +1003,8 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
   }, [showScrollArrows]);
 
   const handleScrollClick = () => {
-    if (!introTlRef.current) return;
     setHasStartedIntro(true);
-    introTlRef.current.restart();
+    if (onIntroComplete) onIntroComplete();
   };
 
   const showScrollButton = !hasStartedIntro && !showScrollArrows;

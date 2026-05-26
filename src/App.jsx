@@ -1081,8 +1081,13 @@ const queryClient = new QueryClient();
 /* ------------------------------ Device Detection Helper ------------------------------ */
 const getDeviceType = () => {
   const width = window.innerWidth;
+  const height = window.innerHeight;
   if (width <= 768) return "mobile";
-  if (width > 768 && width <= 1024) return "tablet";
+  if (width <= 1024) {
+    // tablet portrait → mobile layout; tablet landscape → desktop-like layout
+    if (height > width) return "mobile";
+    return "tablet";
+  }
   return "desktop";
 };
 

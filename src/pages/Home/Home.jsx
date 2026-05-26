@@ -3,23 +3,25 @@ import React, {
   useRef,
   useState,
   useEffect,
+  useMemo,
   lazy,
-  Suspense
+  Suspense,
+  useCallback
 } from "react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useNavigationType, useLocation } from "react-router-dom";
 import SEO from "../../components/SEO";
+import GrainTexture from "../../components/GrainTexture";
+import Scene2_refined from "./Scene2_refined";
+import Scene3_refined from "./Scene3_refined";
+import Scene4_refined from "./Scene4_refined";
+import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
+
 const Scene1 = lazy(() => import("./Scene1"));
 
-import SceneNew, {
-  useSceneNewTimeline,
-  getSceneNewStepLabels
-} from "./SceneNew";
-
-import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
-import GrainTexture from "../../components/GrainTexture";
-
-gsap.registerPlugin(ScrollTrigger);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Sections after intro: 0=Scene2, 1=Scene3, 2=Scene4, 3=Scene1_4
+const TOTAL_SECTIONS = 3;
 
 const Home = ({
   forceLayout = "auto",
@@ -28,28 +30,73 @@ const Home = ({
   deviceType,
   onIntroComplete
 }) => {
-  const scene1Refs = useRef({});
-  const sceneNewRefs = useRef({});
-  const scene1_4Refs = useRef({});
   const containerRef = useRef(null);
 
-  const snapPointsRef = useRef([]);
-  const masterRef = useRef(null);
-  const stRef = useRef(null);
-  const hasShownNavbarRef = useRef(false);
-  const logoClickedRef = useRef(false);
+  // Scene container refs
+  const scene1ContainerRef = useRef(null);
+  const scene2Ref = useRef(null);
+  const scene3Ref = useRef(null);
+  const scene4Ref = useRef(null);
+  const scene1_4Refs = useRef({});
 
-  const [introDone, setIntroDone] = useState(false);
+  // ── Session restoration ────────────────────────────────────────────────────
+  const navigationType = useNavigationType();
+  const location = useLocation();
+
+  // Computed once on mount: which section to restore (–1 = play intro normally)
+  const restoredSection = useMemo(() => {
+    // Login redirect: navigate("/", { state: { homeSection: n } })
+    if (location.state?.homeSection !== undefined) {
+      const s = parseInt(location.state.homeSection, 10);
+      if (!isNaN(s) && s >= 0 && s <= 3) return s;
+    }
+    // Back / forward button — read from sessionStorage (same tab, same session)
+    const stored = parseInt(sessionStorage.getItem("evolve_home_section"), 10);
+    if (isNaN(stored) || stored < 0 || stored > 3) return -1;
+    const isReload = performance.getEntriesByType("navigation")[0]?.type === "reload";
+    if (isReload) return -1;
+    return navigationType === "POP" ? stored : -1;
+  }, []); // eslint-disable-line — intentionally computed once on mount
+
+  // True when we're skipping the intro and jumping straight to a saved section
+  const introSkippedRef = useRef(restoredSection >= 0);
+
+  // State
+  const [introDone, setIntroDone] = useState(restoredSection >= 0);
   const [animationsReady, setAnimationsReady] = useState(false);
+  const [activeSection, setActiveSection] = useState(restoredSection >= 0 ? restoredSection : -1);
+  const [scrollProgress, setScrollProgress] = useState(restoredSection >= 0 ? restoredSection / 4 : 0);
+  const scene1_4StartedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(() => {
     if (forceLayout === "mobile") return true;
     if (forceLayout === "desktop") return false;
     if (deviceType) return deviceType === "mobile";
-    return window.innerWidth <= 768;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    return w <= 768 || (w <= 1024 && h > w);
   });
 
-  // Delay animations-ready slightly so refs are settled
+  // ── Responsive ──────────────────────────────────────────────────────────────
+  useLayoutEffect(() => {
+    if (forceLayout !== "auto") {
+      setIsMobile(forceLayout === "mobile");
+      return;
+    }
+    if (deviceType) {
+      setIsMobile(deviceType === "mobile");
+      return;
+    }
+    const onResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setIsMobile(w <= 768 || (w <= 1024 && h > w));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [forceLayout, deviceType]);
+
+  // ── Delay animation ready ───────────────────────────────────────────────────
   useEffect(() => {
     if (isLoading) return;
     const id = setTimeout(() => {
@@ -62,42 +109,40 @@ const Home = ({
     return () => clearTimeout(id);
   }, [isLoading]);
 
-  // Lock scroll + hide scrollbar only during Scene1; release after introDone
+  // ── Hide scrollbar for entire home page lifetime ────────────────────────────
+  useLayoutEffect(() => {
+    if (!document.getElementById("home-no-scrollbar")) {
+      const styleEl = document.createElement("style");
+      styleEl.id = "home-no-scrollbar";
+      styleEl.textContent =
+        "html { scrollbar-width: none !important; } " +
+        "html::-webkit-scrollbar { width: 0 !important; display: none !important; }";
+      document.head.appendChild(styleEl);
+    }
+    return () => {
+      document.getElementById("home-no-scrollbar")?.remove();
+    };
+  }, []);
+
+  // ── Scroll lock during intro ────────────────────────────────────────────────
   useLayoutEffect(() => {
     if (introDone) {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
-      document.getElementById("home-no-scrollbar")?.remove();
     } else {
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
-      if (!document.getElementById("home-no-scrollbar")) {
-        const styleEl = document.createElement("style");
-        styleEl.id = "home-no-scrollbar";
-        styleEl.textContent =
-          "html { scrollbar-width: none !important; } " +
-          "html::-webkit-scrollbar { width: 0 !important; display: none !important; }";
-        document.head.appendChild(styleEl);
-      }
     }
     return () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
-      document.getElementById("home-no-scrollbar")?.remove();
     };
   }, [introDone]);
 
-  useLayoutEffect(() => {
-    if (setShowNavbar && !introDone) {
-      setShowNavbar(false);
-      hasShownNavbarRef.current = false;
-    }
-  }, [introDone, setShowNavbar]);
-
-  const handleLogoClick = React.useCallback(() => {
+  // ── Logo click handler ──────────────────────────────────────────────────────
+  const handleLogoClick = useCallback(() => {
     if (!introDone) return;
-    logoClickedRef.current = true;
-    if (stRef._goToSection) stRef._goToSection(1);
+    window.__homeGoToSection?.(0);
   }, [introDone]);
 
   useLayoutEffect(() => {
@@ -109,265 +154,252 @@ const Home = ({
     };
   }, [handleLogoClick]);
 
-  useLayoutEffect(() => {
-    if (forceLayout !== "auto") {
-      setIsMobile(forceLayout === "mobile");
-      return;
+  // ── Sync scrollbar progress with section + footer scroll ───────────────────
+  useEffect(() => {
+    if (activeSection >= 0) setScrollProgress(activeSection / 4);
+  }, [activeSection]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 10) setScrollProgress(1);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Persist section for back-button and login-redirect restoration ──────────
+  useEffect(() => {
+    if (introDone && activeSection >= 0) {
+      sessionStorage.setItem("evolve_home_section", String(activeSection));
     }
-    if (deviceType) {
-      setIsMobile(deviceType === "mobile");
-      return;
-    }
-    const onResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [forceLayout, deviceType]);
+  }, [activeSection, introDone]);
 
-  // ─── Main animation setup ────────────────────────────────────────────────
+  // ── Restore scene positions on mount when skipping the intro ───────────────
   useLayoutEffect(() => {
-    if (isLoading || !introDone || !animationsReady) return;
-    if (
-      !scene1Refs.current.container ||
-      !sceneNewRefs.current.container ||
-      !scene1_4Refs.current.container ||
-      !containerRef.current
-    )
-      return;
+    if (!introSkippedRef.current) return;
 
-    let scrollEventCleanup = () => {};
+    // Push Scene1 (intro) off-screen so it doesn't flash over the restored scene
+    if (scene1ContainerRef.current) {
+      gsap.set(scene1ContainerRef.current, { y: "-100vh" });
+    }
 
-    const rafId = requestAnimationFrame(() => {
-      // ── Initial states ──────────────────────────────────────────────────
-      gsap.set(sceneNewRefs.current.container, { opacity: 0 });
-      gsap.set(scene1_4Refs.current.container, {
-        y: "120%",
-        rotation: 15,
-        transformOrigin: "center center",
-        opacity: 0,
-        scale: 0.9
-      });
+    const s2 = scene2Ref.current;
+    const s3 = scene3Ref.current;
+    const s4 = scene4Ref.current;
+    const s14 = scene1_4Refs.current?.container;
 
-      const tlNew = useSceneNewTimeline(sceneNewRefs.current, isMobile);
-      const tl4 = useScene1_4Timeline(scene1_4Refs.current, isMobile);
-
-      const master = gsap.timeline({ paused: true });
-      masterRef.current = master;
-
-      // ── Transition 1: Scene1 → SceneNew ─────────────────────────────────
-      master
-        .to(sceneNewRefs.current.container, {
-          opacity: 1,
-          duration: 0.1,
-          ease: "power2.in"
-        })
-        .to(
-          scene1Refs.current.container,
-          { scale: 1.5, opacity: 0, duration: 0.1, ease: "power2.inOut" },
-          "<"
-        );
-
-      if (tlNew) master.add(tlNew);
-
-      // ── Transition 2: SceneNew → Scene1_4 ───────────────────────────────
-      master
-        .to(scene1_4Refs.current.container, {
-          opacity: 1,
-          duration: 0.3,
-          ease: "none"
-        })
-        .to(
-          scene1_4Refs.current.container,
-          {
-            y: "0%",
-            rotation: 0,
-            scale: 1,
-            duration: 1.8,
-            ease: "power2.inOut"
-          },
-          "<0.1"
-        );
-
-      if (tl4) master.add(tl4);
-
-      // ── Build snap points (for non-linear scroll→animation mapping) ─────
-      const masterDur = master.duration();
-      const progresses = [0];
-
-      const addSteps = (tl, labels) => {
-        if (!tl || !labels?.length) return;
-        const start = tl.startTime();
-        labels.forEach((label) => {
-          const t = tl.labels?.[label];
-          if (typeof t === "number") progresses.push((start + t) / masterDur);
-        });
-      };
-
-      addSteps(tlNew, getSceneNewStepLabels(isMobile));
-      // scene1_4SnapAbsTime intentionally omitted — it duplicates snap3_cta
-      progresses.push(1);
-
-      const snapPoints = Array.from(new Set(progresses)).sort((a, b) => a - b);
-      snapPointsRef.current = snapPoints;
-
-      const N = snapPoints.length;
-      const totalSections = N - 1;
-
-      // ── ScrollTrigger: pin only — scroll position tracks section for footer ─
-      const st = ScrollTrigger.create({
-        trigger: containerRef.current,
-        start: "top top",
-        end: `+=${totalSections * window.innerHeight}`,
-        pin: true,
-        anticipatePin: 1
-      });
-
-      stRef.current = st;
-
-      // ── Direct master.progress() navigation — zero lag, zero chain ────────
-      // We tween master.progress() directly with GSAP. Animation starts on
-      // frame 1. window.scrollTo() is called once, instantly, just to keep
-      // the ScrollTrigger pin/footer state in sync (not to drive animation).
-
-      let currentSection = 0;
-      let isAnimating = false;
-
-      const goToSection = (idx) => {
-        const section = Math.max(0, Math.min(totalSections, idx));
-        const targetProg = snapPoints[section] ?? (section === 0 ? 0 : 1);
-        const targetScrollY =
-          st.start + (section / totalSections) * (st.end - st.start);
-
-        currentSection = section;
-        isAnimating = true;
-
-        // Sync scroll position instantly so pin / footer behave correctly
-        window.scrollTo(0, targetScrollY);
-
-        // Animate master directly — no scroll middleman, instant start
-        gsap.to(master, {
-          progress: targetProg,
-          // duration: 0.8,
-          // duration: 1.3,
-          duration: isMobile ? 2.8 : 1.3,
-          ease: "power3.out",
-          overwrite: true,
-          onComplete: () => {
-            // absorb trackpad inertia tail before accepting next gesture
-            setTimeout(() => {
-              isAnimating = false;
-            }, 200);
-          }
-        });
-
-        // Navbar
-        if (setShowNavbar) {
-          if (section > 0 && !hasShownNavbarRef.current) {
-            setShowNavbar(true);
-            hasShownNavbarRef.current = true;
-          } else if (
-            section === 0 &&
-            hasShownNavbarRef.current &&
-            !logoClickedRef.current
-          ) {
-            setShowNavbar(false);
-            hasShownNavbarRef.current = false;
-          }
-          if (section > 0) logoClickedRef.current = false;
-        }
-      };
-
-      // Expose so handleLogoClick (defined outside) can use it
-      stRef._goToSection = goToSection;
-
-      // Wheel: one gesture = one section
-      const handleWheel = (e) => {
-        const activeSt = stRef.current;
-        if (!activeSt) return;
-        // Past pin end — native scroll to footer
-        if (window.scrollY >= activeSt.end) return;
-        // At last section scrolling down — release to footer
-        if (currentSection >= totalSections && e.deltaY > 0) return;
-        // Block native scroll inside pin zone
-        e.preventDefault();
-        if (isAnimating) return;
-        if (Math.abs(e.deltaY) < 10) return; // ignore inertia residue
-        goToSection(currentSection + (e.deltaY > 0 ? 1 : -1));
-      };
-
-      // Touch: swipe = one section
-      let touchStartY = 0;
-      const handleTouchStart = (e) => {
-        touchStartY = e.touches[0].clientY;
-      };
-      const handleTouchEnd = (e) => {
-        if (isAnimating || window.scrollY >= (stRef.current?.end ?? 0)) return;
-        const dy = touchStartY - e.changedTouches[0].clientY;
-        if (Math.abs(dy) < 40) return;
-        if (currentSection >= totalSections && dy > 0) return;
-        goToSection(currentSection + (dy > 0 ? 1 : -1));
-      };
-
-      window.addEventListener("wheel", handleWheel, { passive: false });
-      window.addEventListener("touchstart", handleTouchStart, {
-        passive: true
-      });
-      window.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-      // ── Keyboard: arrow keys / space / page keys navigate sections ──────────
-      const handleKeyDown = (e) => {
-        if (window.scrollY >= (stRef.current?.end ?? 0)) return;
-        const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(
-          e.key
-        );
-        const back = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
-        if (!forward && !back) return;
-        e.preventDefault();
-        if (isAnimating) return;
-        if (forward && currentSection >= totalSections) return;
-        goToSection(currentSection + (forward ? 1 : -1));
-      };
-      window.addEventListener("keydown", handleKeyDown);
-
-      // ── External trigger ──────────────────────────────────────────────────
-      const handleScrollToSceneNew = () => goToSection(1);
-      window.addEventListener("scrollToSceneNew", handleScrollToSceneNew);
-
-      scrollEventCleanup = () => {
-        gsap.killTweensOf(master);
-        window.removeEventListener("wheel", handleWheel);
-        window.removeEventListener("touchstart", handleTouchStart);
-        window.removeEventListener("touchend", handleTouchEnd);
-        window.removeEventListener("keydown", handleKeyDown);
-        window.removeEventListener("scrollToSceneNew", handleScrollToSceneNew);
-      };
+    // Position s2, s3, s4 relative to restored section
+    [s2, s3, s4].forEach((el, i) => {
+      if (!el) return;
+      if (i === restoredSection) gsap.set(el, { y: 0 });
+      else if (i < restoredSection) gsap.set(el, { y: "-100vh" });
+      else gsap.set(el, { y: "100vh" });
     });
 
-    return () => {
-      cancelAnimationFrame(rafId);
-      scrollEventCleanup();
-      try {
-        if (masterRef.current) {
-          gsap.killTweensOf(masterRef.current);
-          masterRef.current.kill();
-          masterRef.current = null;
-        }
-        if (stRef.current) {
-          stRef.current.kill();
-          stRef.current = null;
-        }
-        ScrollTrigger.getAll().forEach((t) => {
-          try {
-            t.kill();
-          } catch (_) {}
-        });
-      } catch (err) {
-        console.warn("Home cleanup error:", err);
+    // Scene1_4 (index 3)
+    if (s14) {
+      if (restoredSection === 3) {
+        gsap.set(s14, { y: "0%", rotation: 0, scale: 1, opacity: 1, transformOrigin: "center center" });
+        // s4 stays at y:0 as the layer underneath Scene1_4
+        if (s4) gsap.set(s4, { y: 0 });
+      } else {
+        gsap.set(s14, { y: "120%", rotation: 15, scale: 0.9, opacity: 0, transformOrigin: "center center" });
       }
+    }
+
+    if (setShowNavbar) setShowNavbar(true);
+  }, []); // eslint-disable-line — runs once on mount, refs are ready by then
+
+  // ── Main scroll/navigation setup ────────────────────────────────────────────
+  useLayoutEffect(() => {
+    if (!introDone || !animationsReady) return;
+
+    const s2 = scene2Ref.current;
+    const s3 = scene3Ref.current;
+    const s4 = scene4Ref.current;
+    const s14 = scene1_4Refs.current?.container;
+
+    if (!s2 || !s3 || !s4 || !s14) return;
+
+    if (!introSkippedRef.current) {
+      // Fresh load — scenes 3/4/s14 haven't been touched by the intro transition yet
+      gsap.set(s3, { y: "100vh" });
+      gsap.set(s4, { y: "100vh" });
+      gsap.set(s14, { y: "120%", rotation: 15, transformOrigin: "center center", opacity: 0, scale: 0.9 });
+    }
+    // When restoring, the restore useLayoutEffect has already set correct positions
+
+    let currentSection = introSkippedRef.current ? restoredSection : 0;
+    // Block briefly on fresh load (intro slide takes ~1.1s); immediate on restore
+    let isAnimating = !introSkippedRef.current;
+    const unblockId = isAnimating ? setTimeout(() => { isAnimating = false; }, 1200) : null;
+
+    // If restoring to Scene1_4, kick off its internal timeline
+    if (introSkippedRef.current && restoredSection === 3 && !scene1_4StartedRef.current) {
+      scene1_4StartedRef.current = true;
+      useScene1_4Timeline(scene1_4Refs.current, isMobile);
+    }
+
+    const scenes = [s2, s3, s4, s14];
+
+    const goToSection = (idx) => {
+      const to = Math.max(0, Math.min(TOTAL_SECTIONS, idx));
+      if (to === currentSection || isAnimating) return;
+
+      isAnimating = true;
+      const prev = currentSection;
+      currentSection = to;
+      setActiveSection(to);
+      const direction = to > prev ? 1 : -1;
+
+      const outScene = scenes[prev];
+      const inScene = scenes[to];
+
+      if (prev === 3 && direction < 0) {
+        // Scene1_4 exits mirroring its entry (rotation + scale + y)
+        gsap.to(outScene, {
+          y: "120%",
+          rotation: 15,
+          scale: 0.9,
+          opacity: 0,
+          duration: 1.2,
+          ease: "power2.inOut",
+          overwrite: true,
+          onComplete: () => {
+            scene1_4StartedRef.current = false;
+            isAnimating = false;
+          }
+        });
+        // Scene4_refined is already at y:0 underneath — no in animation needed
+      } else if (to === 3 && direction > 0) {
+        // Scene1_4 slides IN over Scene4_refined — do NOT move Scene4_refined out
+        gsap.to(inScene, {
+          y: "0%",
+          rotation: 0,
+          scale: 1,
+          opacity: 1,
+          duration: 1.8,
+          ease: "power2.inOut",
+          overwrite: true,
+          onComplete: () => {
+            isAnimating = false;
+            if (!scene1_4StartedRef.current && scene1_4Refs.current) {
+              scene1_4StartedRef.current = true;
+              useScene1_4Timeline(scene1_4Refs.current, isMobile);
+            }
+          }
+        });
+      } else {
+        // Normal slide transitions between all other scenes
+        if (outScene) {
+          gsap.to(outScene, {
+            y: direction > 0 ? "-100vh" : "100vh",
+            duration: 0.8,
+            ease: "power2.inOut",
+            overwrite: true
+          });
+        }
+        if (inScene) {
+          gsap.set(inScene, {
+            y: direction > 0 ? "100vh" : "-100vh",
+            overwrite: true
+          });
+          gsap.to(inScene, {
+            y: 0,
+            duration: 0.8,
+            ease: "power2.inOut",
+            overwrite: true,
+            onComplete: () => {
+              isAnimating = false;
+            }
+          });
+        }
+      }
+
       if (setShowNavbar) setShowNavbar(true);
     };
-  }, [isMobile, setShowNavbar, isLoading, introDone, animationsReady]);
 
-  // ─── Render ──────────────────────────────────────────────────────────────
+    // Expose for logo click
+    window.__homeGoToSection = goToSection;
+
+    // ── Wheel handler ───────────────────────────────────────────────────────
+    const handleWheel = (e) => {
+      // If footer is partially visible, let native scroll handle
+      if (window.scrollY > 10) return;
+      // At last section scrolling down → release to footer (only when not mid-animation)
+      if (currentSection >= TOTAL_SECTIONS && e.deltaY > 0 && !isAnimating) return;
+      e.preventDefault();
+      if (isAnimating) return;
+      if (Math.abs(e.deltaY) < 10) return;
+      goToSection(currentSection + (e.deltaY > 0 ? 1 : -1));
+    };
+
+    // ── Touch handlers ──────────────────────────────────────────────────────
+    let touchStartY = 0;
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e) => {
+      if (window.scrollY < 10) e.preventDefault();
+    };
+    const handleTouchEnd = (e) => {
+      if (isAnimating || window.scrollY > 10) return;
+      const dy = touchStartY - e.changedTouches[0].clientY;
+      if (Math.abs(dy) < 20) return;
+      if (currentSection >= TOTAL_SECTIONS && dy > 0 && !isAnimating) return;
+      goToSection(currentSection + (dy > 0 ? 1 : -1));
+    };
+
+    // ── Keyboard handler ────────────────────────────────────────────────────
+    const handleKeyDown = (e) => {
+      if (window.scrollY > 10) return;
+      const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
+      const back = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
+      if (!forward && !back) return;
+      e.preventDefault();
+      if (isAnimating) return;
+      if (forward && currentSection >= TOTAL_SECTIONS) return;
+      goToSection(currentSection + (forward ? 1 : -1));
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      if (unblockId) clearTimeout(unblockId);
+      delete window.__homeGoToSection;
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("keydown", handleKeyDown);
+      if (setShowNavbar) setShowNavbar(true);
+    };
+  }, [introDone, animationsReady, isMobile, setShowNavbar]);
+
+  // ── Intro complete → transition Scene1 out, Scene2 in (skipped when restoring) ──
+  useLayoutEffect(() => {
+    if (!introDone || introSkippedRef.current) return;
+
+    const s1 = scene1ContainerRef.current;
+    const s2 = scene2Ref.current;
+    if (!s1 || !s2) return;
+
+    // Show navbar immediately after intro
+    if (setShowNavbar) setShowNavbar(true);
+
+    // Position scene2 below viewport, then slide both simultaneously
+    gsap.set(s2, { y: "100vh" });
+    gsap.to(s1, { y: "-100vh", duration: 0.8, delay: 0.3, ease: "power2.inOut" });
+    gsap.to(s2, { y: 0, duration: 0.8, delay: 0.3, ease: "power2.inOut" });
+
+    setActiveSection(0);
+  }, [introDone, setShowNavbar]);
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
       <SEO
@@ -375,13 +407,15 @@ const Home = ({
         description="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design."
         path="/"
       />
+
+      {/* Outer scroll container — h-screen so footer appears naturally below */}
       <div
         ref={containerRef}
         id="scroll-container"
         className="w-full h-screen bg-black lowercase"
-        style={{ overflow: "hidden", position: "relative", zIndex: 49 }}
+        style={{ overflow: "hidden", position: "relative", zIndex: 2 }}
       >
-        {/* Grain texture */}
+        {/* Grain texture overlay */}
         {animationsReady && (
           <div
             style={{
@@ -398,19 +432,20 @@ const Home = ({
           </div>
         )}
 
-        {/* Scene 1 — intro */}
+        {/* ── Scene1 (intro) wrapper ── */}
         <div
-          className="absolute inset-0 w-full h-full"
+          ref={scene1ContainerRef}
           style={{
-            willChange: "transform, opacity",
-            pointerEvents: introDone ? "none" : "auto",
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
             zIndex: introDone ? 1 : 10,
-            opacity: 1
+            pointerEvents: introDone ? "none" : "auto"
           }}
         >
           <Suspense fallback={null}>
             <Scene1
-              ref={scene1Refs}
               isMobile={isMobile}
               onIntroComplete={() => {
                 setIntroDone(true);
@@ -420,32 +455,97 @@ const Home = ({
           </Suspense>
         </div>
 
-        {/* SceneNew */}
+        {/* ── Scene2_refined — "where designers find their…" ── */}
         <div
-          ref={(el) => {
-            if (sceneNewRefs.current) sceneNewRefs.current.container = el;
-          }}
-          className="absolute inset-0 w-full h-full"
+          ref={scene2Ref}
           style={{
-            opacity: 0,
-            pointerEvents: introDone ? "auto" : "none",
-            zIndex: 3
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 5,
+            transform: "translateY(100vh)"
           }}
         >
-          <SceneNew ref={sceneNewRefs} isMobile={isMobile} />
+          <Scene2_refined isMobile={isMobile} />
         </div>
 
-        {/* Scene1_4 */}
+        {/* ── Scene3_refined — ecosystem cards ── */}
+        <div
+          ref={scene3Ref}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 5,
+            transform: "translateY(100vh)"
+          }}
+        >
+          <Scene3_refined isMobile={isMobile} isActive={activeSection === 1} />
+        </div>
+
+        {/* ── Scene4_refined — orbit CTA ── */}
+        <div
+          ref={scene4Ref}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 5,
+            transform: "translateY(100vh)"
+          }}
+        >
+          <Scene4_refined isMobile={isMobile} isActive={activeSection === 2} />
+        </div>
+
+        {/* ── Scene1_4 — overlays Scene4_refined with higher z-index ── */}
         <div
           ref={(el) => {
             if (scene1_4Refs.current) scene1_4Refs.current.container = el;
           }}
-          className="absolute inset-0 w-full h-full"
-          style={{ zIndex: 5 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 7,
+            opacity: 0,
+            transform: "translateY(120%) rotate(15deg) scale(0.9)"
+          }}
         >
           <Scene1_4 ref={scene1_4Refs} isMobile={isMobile} />
         </div>
       </div>
+      {/* Custom scrollbar — full-height track on right edge */}
+      {introDone && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            width: "8px",
+            height: "100vh",
+            zIndex: 9998,
+            pointerEvents: "none",
+            background: "rgba(0,0,0,0.08)"
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              right: 0,
+              top: `${scrollProgress * 80}%`,
+              width: "100%",
+              height: "20%",
+              background: "rgba(0,0,0,0.5)",
+              borderRadius: "4px",
+              transition: "top 0.35s ease"
+            }}
+          />
+        </div>
+      )}
     </>
   );
 };
