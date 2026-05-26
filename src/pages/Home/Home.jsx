@@ -352,9 +352,12 @@ const Home = ({
       touchStartY = e.touches[0].clientY;
     };
     const handleTouchMove = (e) => {
-      // At last section with no active animation → release to let footer appear
-      if (currentSection >= TOTAL_SECTIONS && !isAnimating) return;
-      if (window.scrollY < 10) e.preventDefault();
+      if (window.scrollY > 10) return; // already in footer zone, native scroll handles it
+      const fingerMovingDown = e.touches[0].clientY > touchStartY; // down = backward through sections
+      // At last section AND finger moving up (toward footer) → release to native scroll
+      if (currentSection >= TOTAL_SECTIONS && !isAnimating && !fingerMovingDown) return;
+      // All other cases (including swiping down at last section) → block pull-to-refresh
+      e.preventDefault();
     };
     const handleTouchEnd = (e) => {
       if (isAnimating || window.scrollY > 10) return;
