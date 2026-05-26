@@ -23,6 +23,10 @@ const Scene1 = lazy(() => import("./Scene1"));
 // Sections after intro: 0=Scene2, 1=Scene3, 2=Scene4, 3=Scene1_4
 const TOTAL_SECTIONS = 3;
 
+// Generated fresh on every page load / reload (module re-executes).
+// Used to distinguish "back-button within same session" from "reload".
+const SESSION_ID = Math.random().toString(36).slice(2);
+
 const Home = ({
   forceLayout = "auto",
   setShowNavbar,
@@ -50,11 +54,13 @@ const Home = ({
       const s = parseInt(location.state.homeSection, 10);
       if (!isNaN(s) && s >= 0 && s <= 3) return s;
     }
-    // Back / forward button — read from sessionStorage (same tab, same session)
+    // Back / forward button — session ID must match (rules out page reloads)
+    // SESSION_ID is a module-level constant that regenerates on every page reload.
+    // If the stored ID matches, we're in the same JS session → safe to restore.
+    const storedSessionId = sessionStorage.getItem("evolve_home_session_id");
+    if (storedSessionId !== SESSION_ID) return -1; // reload or first visit
     const stored = parseInt(sessionStorage.getItem("evolve_home_section"), 10);
     if (isNaN(stored) || stored < 0 || stored > 3) return -1;
-    const isReload = performance.getEntriesByType("navigation")[0]?.type === "reload";
-    if (isReload) return -1;
     return navigationType === "POP" ? stored : -1;
   }, []); // eslint-disable-line — intentionally computed once on mount
 
@@ -170,7 +176,11 @@ const Home = ({
   // ── Persist section for back-button and login-redirect restoration ──────────
   useEffect(() => {
     if (introDone && activeSection >= 0) {
+      // Store both the section and the session ID together.
+      // The session ID is a module-level constant — it changes on every page
+      // reload, so a mismatch on the next mount means "don't restore".
       sessionStorage.setItem("evolve_home_section", String(activeSection));
+      sessionStorage.setItem("evolve_home_session_id", SESSION_ID);
     }
   }, [activeSection, introDone]);
 
@@ -208,6 +218,8 @@ const Home = ({
     }
 
     if (setShowNavbar) setShowNavbar(true);
+    // Notify App that intro was skipped so footer can render
+    if (onIntroComplete) onIntroComplete();
   }, []); // eslint-disable-line — runs once on mount, refs are ready by then
 
   // ── Main scroll/navigation setup ────────────────────────────────────────────
@@ -340,6 +352,8 @@ const Home = ({
       touchStartY = e.touches[0].clientY;
     };
     const handleTouchMove = (e) => {
+      // At last section with no active animation → release to let footer appear
+      if (currentSection >= TOTAL_SECTIONS && !isAnimating) return;
       if (window.scrollY < 10) e.preventDefault();
     };
     const handleTouchEnd = (e) => {
@@ -356,9 +370,10 @@ const Home = ({
       const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
       const back = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
       if (!forward && !back) return;
+      // At last section going forward and not animating → release to footer (no preventDefault)
+      if (forward && currentSection >= TOTAL_SECTIONS && !isAnimating) return;
       e.preventDefault();
       if (isAnimating) return;
-      if (forward && currentSection >= TOTAL_SECTIONS) return;
       goToSection(currentSection + (forward ? 1 : -1));
     };
 
