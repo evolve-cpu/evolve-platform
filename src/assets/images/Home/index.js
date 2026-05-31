@@ -335,6 +335,7 @@ import curvey_circle_inner_part from "./curvey_circle_inner_part.svg";
 import curvey_circle_inner_logo_part from "./curvey_circle_inner_logo_part.svg";
 import curvey_circle_with_inner_part from "./curvey_circle_with_inner_part.svg";
 import curvey_circle_without_inner_part from "./curvey_circle_without_inner_part.svg";
+import curvey_circle_without_inner_part_1 from "./curvey_circle_without_inner_part_1.svg";
 import stairs_left from "./stairs_left.svg";
 import stairs_left_1 from "./stairs_left_1.svg";
 import stairs_left_2 from "./stairs_left_2.svg";
@@ -488,6 +489,7 @@ export {
   curvey_circle_inner_logo_part,
   curvey_circle_with_inner_part,
   curvey_circle_without_inner_part,
+  curvey_circle_without_inner_part_1,
   stairs_left,
   stairs_left_1,
   stairs_left_2,

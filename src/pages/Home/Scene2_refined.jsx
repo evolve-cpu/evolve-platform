@@ -7,6 +7,7 @@ import {
   left_thunder_mobile,
   right_thunder_mobile,
   curvey_circle_without_inner_part,
+  curvey_circle_without_inner_part_1,
   curvey_circle_inner_part,
   vector_2nd_mobile,
   vector_2nd
@@ -36,18 +37,30 @@ const CombinedCircle = React.forwardRef(({ isMobile }, ref) => {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <img
-        ref={outerRef}
-        src={curvey_circle_without_inner_part}
-        alt=""
+      <div
         style={{
           position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          transformOrigin: "center center"
+          top: "18%",
+          left: "18%",
+          width: "65%",
+          height: "65%",
+          // filter: "drop-shadow(8px 10px 0px #873265)"
+          filter: isMobile
+            ? "drop-shadow(4px 6px 0px #873265)"
+            : "drop-shadow(8px 10px 0px #873265)"
         }}
-      />
+      >
+        <img
+          ref={outerRef}
+          src={curvey_circle_without_inner_part_1}
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            transformOrigin: "center center"
+          }}
+        />
+      </div>
       <img
         ref={innerRef}
         src={curvey_circle_inner_part}
