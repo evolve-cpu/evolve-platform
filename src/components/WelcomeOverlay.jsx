@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 /* ─── Sunburst SVG (inside the card) ─────────────────────────────────────── */
@@ -37,6 +37,7 @@ function Sunburst() {
 export default function WelcomeOverlay() {
   const { user, isNewUser } = useAuth();
   const location            = useLocation();
+  const navigate            = useNavigate();
 
   const [visible, setVisible] = useState(false);
   const [sheetUp, setSheetUp] = useState(false);
@@ -51,6 +52,20 @@ export default function WelcomeOverlay() {
     if (!user) return;
     const flag = sessionStorage.getItem("show_welcome_overlay") || localStorage.getItem("show_welcome_overlay");
     if (!flag) return;
+
+    // OAuth fallback: if Supabase redirected to the wrong page (e.g. site root instead
+    // of the original page), redirect there now before showing the overlay.
+    const signinFrom = localStorage.getItem("signin_from") || sessionStorage.getItem("signin_from");
+    if (signinFrom) {
+      localStorage.removeItem("signin_from");
+      sessionStorage.removeItem("signin_from");
+      if (signinFrom !== location.pathname) {
+        // Navigate to the correct page; effect re-fires on location change and shows overlay
+        navigate(signinFrom, { replace: true });
+        return;
+      }
+    }
+
     sessionStorage.removeItem("show_welcome_overlay");
     localStorage.removeItem("show_welcome_overlay");
     setSheetUp(false);

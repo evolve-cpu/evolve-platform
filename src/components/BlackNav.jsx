@@ -36,6 +36,7 @@ export default function BlackNav({ onLogoClick, right }) {
   const location  = useLocation();
 
   const outerRef         = useRef(null);
+  const bodyScrollRef    = useRef(0);
   const menuUnderlayRef  = useRef(null);
   const menuPanelRef     = useRef(null);
   const menuContentRef   = useRef(null);
@@ -65,8 +66,26 @@ export default function BlackNav({ onLogoClick, right }) {
     const panel    = menuPanelRef.current;
     if (!underlay || !panel) return;
 
-    if (menuOpen) {
+    const lockScroll = () => {
+      bodyScrollRef.current = window.scrollY;
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${bodyScrollRef.current}px`;
+      document.body.style.width = "100%";
+      document.documentElement.style.overflow = "hidden";
+    };
+
+    const unlockScroll = () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.documentElement.style.overflow = "";
+      window.scrollTo(0, bodyScrollRef.current);
+    };
+
+    if (menuOpen) {
+      lockScroll();
       if (isDesktop()) {
         gsap.set(underlay, { display: "block", opacity: 0 });
         gsap.set(panel,    { xPercent: -100 });
@@ -77,7 +96,7 @@ export default function BlackNav({ onLogoClick, right }) {
         gsap.to(underlay,  { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
-      document.body.style.overflow = "";
+      unlockScroll();
       if (isDesktop()) {
         gsap.to(panel,    { xPercent: -100, duration: 0.45, ease: "power2.in" });
         gsap.to(underlay, {
@@ -91,6 +110,8 @@ export default function BlackNav({ onLogoClick, right }) {
         });
       }
     }
+
+    return () => { unlockScroll(); };
   }, [menuOpen]);
 
   /* ── close on route change ──────────────────────────────────────────────── */

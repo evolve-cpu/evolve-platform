@@ -177,7 +177,8 @@ export default function SignIn() {
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
     }
-    localStorage.removeItem("signin_from");
+    // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
+    // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
     sessionStorage.removeItem("signin_from");
     try {
       await signInWithLinkedIn(from);
@@ -195,7 +196,8 @@ export default function SignIn() {
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
     }
-    localStorage.removeItem("signin_from");
+    // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
+    // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
     sessionStorage.removeItem("signin_from");
     try {
       await signInWithGoogle(from);
