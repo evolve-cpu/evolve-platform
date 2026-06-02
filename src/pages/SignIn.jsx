@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { sendOtp, verifyOtp, signInWithGoogle } from "../auth/signInLogic";
+import { sendOtp, verifyOtp, signInWithGoogle, signInWithLinkedIn } from "../auth/signInLogic";
 import { useAuth } from "../hooks/useAuth";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
@@ -170,6 +170,23 @@ export default function SignIn() {
     }
   }
 
+  async function handleLinkedInSignIn() {
+    const skipOverlay =
+      from.startsWith("/payment") ||
+      from.startsWith("/community/portfolio-review");
+    if (!skipOverlay) {
+      localStorage.setItem("show_welcome_overlay", "1");
+    }
+    localStorage.removeItem("signin_from");
+    sessionStorage.removeItem("signin_from");
+    try {
+      await signInWithLinkedIn(from);
+    } catch (e) {
+      localStorage.removeItem("show_welcome_overlay");
+      setError(e.message || "LinkedIn sign-in failed.");
+    }
+  }
+
   async function handleGoogleSignIn() {
     // Redirect directly to `from` — avoids double-redirect that breaks OAuth state on mobile
     const skipOverlay =
@@ -259,7 +276,10 @@ export default function SignIn() {
                 {GOOGLE_ICON}
                 continue with google
               </button>
-              <button disabled className="w-full flex items-center justify-center gap-3 bg-white/10 text-white/35 font-semibold text-base rounded-2xl py-4 cursor-not-allowed">
+              <button
+                onClick={handleLinkedInSignIn}
+                className="w-full flex items-center justify-center gap-3 bg-[#0A66C2] text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
+              >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M16.667 1.667H3.333A1.667 1.667 0 0 0 1.667 3.333v13.334A1.667 1.667 0 0 0 3.333 18.333h13.334A1.667 1.667 0 0 0 18.333 16.667V3.333A1.667 1.667 0 0 0 16.667 1.667ZM6.667 15H4.167V7.917h2.5V15ZM5.417 6.875a1.458 1.458 0 1 1 0-2.917 1.458 1.458 0 0 1 0 2.917ZM15.833 15h-2.5v-3.542c0-.833-.015-1.916-1.166-1.916-1.167 0-1.334.908-1.334 1.85V15H8.333V7.917h2.4v.983h.034c.333-.633 1.15-1.3 2.366-1.3 2.534 0 3 1.667 3 3.834V15Z"/>
                 </svg>

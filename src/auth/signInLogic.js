@@ -178,3 +178,13 @@ export async function signInWithGoogle(destination = "/") {
   });
   if (error) throw error;
 }
+
+export async function signInWithLinkedIn(destination = "/") {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "linkedin_oidc",
+    options: {
+      redirectTo: `${window.location.origin}${destination}`
+    }
+  });
+  if (error) throw error;
+}
