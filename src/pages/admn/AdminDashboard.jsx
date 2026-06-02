@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
@@ -293,45 +294,47 @@ function ReviewUploadCell({ review, onDone }) {
 
   // Preview/confirm modal
   if (state === "preview" && previewUrl) {
-    return (
-      <div
-        className="fixed inset-0 z-50 flex flex-col"
-        style={{ background: "rgba(0,0,0,0.92)" }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+    return createPortal(
+      <>
+        {/* iframe fills the whole screen — pointer-events none so it never swallows clicks */}
+        <div className="fixed inset-0" style={{ zIndex: 9990 }}>
+          <iframe
+            src={previewUrl}
+            title="preview report"
+            style={{ width: "100%", height: "100%", border: "none", display: "block", pointerEvents: "none" }}
+          />
+        </div>
+
+        {/* Action bar pinned to the bottom — completely separate DOM element so the PDF viewer can never block it */}
+        <div
+          className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4"
+          style={{ zIndex: 9999, background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.15)" }}
+        >
           <div>
             <p className="text-white font-bold text-sm">{review.name} — {pendingFile?.name}</p>
             {remarks.trim() && (
-              <p className="text-xs mt-1" style={{ color: "#aaa" }}>
-                remarks: {remarks.trim()}
-              </p>
+              <p className="text-xs mt-1" style={{ color: "#aaa" }}>remarks: {remarks.trim()}</p>
             )}
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={cancelPreview}
-              className="text-xs px-4 py-2 rounded-lg font-semibold border border-white/20 text-white hover:bg-white/10"
+              className="text-xs px-5 py-2.5 rounded-lg font-semibold"
+              style={{ background: "#222", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", cursor: "pointer" }}
             >
               ✕ cancel
             </button>
             <button
               onClick={() => handle(pendingFile)}
-              className="text-xs px-4 py-2 rounded-lg font-bold"
-              style={{ background: GR, color: "#000" }}
+              className="text-xs px-5 py-2.5 rounded-lg font-bold"
+              style={{ background: GR, color: "#000", cursor: "pointer" }}
             >
               ✓ looks good — send
             </button>
           </div>
         </div>
-        {/* PDF preview */}
-        <iframe
-          src={previewUrl}
-          title="preview report"
-          className="flex-1 w-full"
-          style={{ border: "none" }}
-        />
-      </div>
+      </>,
+      document.body
     );
   }
 

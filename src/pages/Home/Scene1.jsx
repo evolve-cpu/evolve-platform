@@ -844,6 +844,8 @@ const buildScene1Timeline = (refs, isMobile) => {
 };
 
 const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
+  const isTabletPortrait = isMobile && window.innerWidth >= 600;
+
   const containerRef = useRef(null);
   const innerRef = useRef(null);
   const cubeRef = useRef(null);
@@ -872,6 +874,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
 
   const calculateDoorPosition = (width, height) => {
     if (width <= 768) {
+      if (width >= 600) return height * 0.04;  // tablet portrait (iPad, iPad Mini)
       if (width <= 360) return height * 0.28;
       else if (width <= 375) return height * 0.29;
       else if (width <= 393) return height * 0.3;
@@ -1037,7 +1040,9 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             src={purple_rainbow}
             alt="rainbow"
             className={
-              isMobile
+              isTabletPortrait
+                ? "absolute left-[49.2%] -translate-x-1/2 bottom-[10%] w-[32vw] -z-10"
+                : isMobile
                 ? "absolute left-[49%] -translate-x-1/2 bottom-[10%] w-[45vw] -z-10"
                 : "absolute left-[49.2%] -translate-x-1/2 bottom-[10%] w-[22vw] -z-10"
             }
@@ -1052,7 +1057,9 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
           {/* door wrapper */}
           <div
             className={
-              isMobile
+              isTabletPortrait
+                ? "relative w-[32vw] min-w-[220px] max-w-[300px]"
+                : isMobile
                 ? "relative w-[65vw] min-w-[200px] max-w-[260px]"
                 : "relative w-[24vw] min-w-[280px] max-w-[400px]"
             }
@@ -1098,7 +1105,9 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
             src={evolve_cube}
             alt="cube"
             className={
-              isMobile
+              isTabletPortrait
+                ? "absolute bottom-[50%] left-1/2 -translate-x-1/2 w-[5vw]"
+                : isMobile
                 ? "absolute bottom-[50%] left-1/2 -translate-x-1/2 w-[8vw]"
                 : "absolute bottom-[50%] left-1/2 -translate-x-1/2 w-[3vw]"
             }
@@ -1114,7 +1123,7 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
         {/* floor */}
         <img
           ref={floorRef}
-          src={isMobile ? floor_with_walls_mobile : floor_with_walls}
+          src={isMobile && !isTabletPortrait ? floor_with_walls_mobile : floor_with_walls}
           alt="floor"
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full z-[3]"
         />
@@ -1123,7 +1132,9 @@ const Scene1Inner = ({ isMobile, onIntroComplete }, ref) => {
         {showScrollButton && (
           <div
             className={
-              isMobile
+              isTabletPortrait
+                ? "absolute bottom-[4%] left-1/2 -translate-x-1/2 z-[50]"
+                : isMobile
                 ? "absolute bottom-[18%] left-1/2 -translate-x-1/2 z-[50]"
                 : "absolute bottom-[7%] left-1/2 -translate-x-1/2 z-[50]"
             }
