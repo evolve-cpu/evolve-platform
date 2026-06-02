@@ -301,7 +301,7 @@ function ReviewUploadCell({ review, onDone }) {
           <iframe
             src={previewUrl}
             title="preview report"
-            style={{ width: "100%", height: "100%", border: "none", display: "block", pointerEvents: "none" }}
+            style={{ width: "100%", height: "100%", border: "none", display: "block" }}
           />
         </div>
 
