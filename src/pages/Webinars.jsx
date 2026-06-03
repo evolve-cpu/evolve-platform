@@ -26,6 +26,7 @@ import {
 
 import { webinars as COPY } from "../content";
 import { renderWithBreaks } from "../utils/renderWithBreaks";
+import { trackWebinarPlaylist } from "../utils/analytics";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -186,7 +187,7 @@ ${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
         {/* Button */}
         <a
           // href={playlistUrl}
-          onClick={() => window.open(playlistUrl, "_blank")}
+          onClick={() => { trackWebinarPlaylist(title); window.open(playlistUrl, "_blank"); }}
           target="_blank"
           rel="noopener noreferrer"
           className={`
@@ -332,7 +333,7 @@ const MobilePinnedCards = ({ cards }) => {
               />
               <img
                 src={watch_playlist_button}
-                onClick={() => window.open(card.playlistUrl, "_blank")}
+                onClick={() => { trackWebinarPlaylist(card.title); window.open(card.playlistUrl, "_blank"); }}
                 className="mt-6 h-12"
                 alt=""
               />

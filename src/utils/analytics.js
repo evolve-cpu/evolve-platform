@@ -18,6 +18,12 @@ function ga4(eventName, params = {}) {
   }
 }
 
+function clarityEvent(eventName) {
+  if (typeof window !== "undefined" && typeof window.clarity === "function") {
+    window.clarity("event", eventName);
+  }
+}
+
 function planItem(plan) {
   return {
     item_id: `mentorship_${plan}`,
@@ -44,6 +50,23 @@ export function trackPageView(pathname) {
 ══════════════════════════════════════════════════════════════════════════ */
 export function trackCtaClick(ctaName, location = "") {
   ga4("cta_click", { cta_name: ctaName, cta_location: location });
+  clarityEvent(`cta_${ctaName}`);
+}
+
+export function trackCommunityJoin() {
+  ga4("cta_click", { cta_name: "join_community", cta_location: "community_hero" });
+  clarityEvent("community_join");
+}
+
+export function trackPortfolioReviewCta(location = "") {
+  ga4("cta_click", { cta_name: "portfolio_review_submit", cta_location: location });
+  clarityEvent(`portfolio_review_cta_${location}`);
+}
+
+export function trackWebinarPlaylist(rawTitle = "") {
+  const category = rawTitle.replace(/<[^>]*>/g, " ").trim().replace(/\s+/g, "_").toLowerCase();
+  ga4("cta_click", { cta_name: "watch_playlist", cta_location: category });
+  clarityEvent(`webinar_playlist_${category}`);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -55,10 +78,12 @@ export function trackPlanSelected(plan) {
     item_list_name: "Mentorship Plans",
     items: [planItem(plan)]
   });
+  clarityEvent(`mentorship_plan_selected_${plan}`);
 }
 
 export function trackLoginRequired(plan) {
   ga4("login_required", { redirect_from: "mentorship_apply", plan });
+  clarityEvent(`mentorship_login_required_${plan}`);
 }
 
 export function trackBeginCheckout(plan) {

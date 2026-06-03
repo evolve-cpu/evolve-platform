@@ -4,11 +4,8 @@ const ShareYourWorkButton = ({ to, onClick }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else if (to) {
-      navigate(to);
-    }
+    if (onClick) onClick();
+    if (to) navigate(to);
   };
 
   return (

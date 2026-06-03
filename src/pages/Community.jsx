@@ -949,6 +949,7 @@ import React, { useEffect, useRef, useState } from "react";
 import SEO from "../components/SEO";
 import ShareYourWorkButton from "../components/ShareYourWorkButton";
 import { community as COPY } from "../content";
+import { trackCommunityJoin, trackPortfolioReviewCta } from "../utils/analytics";
 
 import {
   rays_community,
@@ -1285,6 +1286,7 @@ const Community = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block"
+              onClick={trackCommunityJoin}
             >
               <img
                 src={hover ? join_us_button_hover : join_us_button}
@@ -1383,7 +1385,10 @@ const Community = () => {
               {/* CTA Button — only for cards that have one */}
               {card.ctaLink && (
                 <div className="mt-5">
-                  <ShareYourWorkButton to={card.ctaLink} />
+                  <ShareYourWorkButton
+                    to={card.ctaLink}
+                    onClick={() => trackPortfolioReviewCta("community_card")}
+                  />
                 </div>
               )}
             </div>

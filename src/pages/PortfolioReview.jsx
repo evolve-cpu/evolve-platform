@@ -3,6 +3,7 @@ import SEO from "../components/SEO";
 import { portfolioReview as COPY } from "../content";
 import { renderWithBreaks } from "../utils/renderWithBreaks";
 import ShareYourWorkButton from "../components/ShareYourWorkButton";
+import { trackPortfolioReviewCta } from "../utils/analytics";
 import {
   right_eye_ribbon,
   left_eye_ribbon,
@@ -67,7 +68,10 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <ShareYourWorkButton to="/community/portfolio-review/form" />
+            <ShareYourWorkButton
+              to="/community/portfolio-review/form"
+              onClick={() => trackPortfolioReviewCta("hero_desktop")}
+            />
           </div>
         </div>
 
@@ -118,7 +122,10 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <ShareYourWorkButton to="/community/portfolio-review/form" />
+            <ShareYourWorkButton
+              to="/community/portfolio-review/form"
+              onClick={() => trackPortfolioReviewCta("hero_mobile")}
+            />
           </div>
         </div>
 
@@ -321,7 +328,10 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <ShareYourWorkButton to="/community/portfolio-review/form" />
+            <ShareYourWorkButton
+              to="/community/portfolio-review/form"
+              onClick={() => trackPortfolioReviewCta("benefits_desktop")}
+            />
           </div>
         </div>
 
@@ -368,7 +378,10 @@ const PortfolioReview = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <ShareYourWorkButton to="/community/portfolio-review/form" />
+            <ShareYourWorkButton
+              to="/community/portfolio-review/form"
+              onClick={() => trackPortfolioReviewCta("benefits_mobile")}
+            />
           </div>
         </div>
 
