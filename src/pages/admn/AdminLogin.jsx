@@ -7,7 +7,8 @@ export default function AdminLogin() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
 
-  const correctPin = import.meta.env.VITE_ADMIN_PIN;
+  const evolvePin = import.meta.env.VITE_ADMIN_PIN;
+  const anantPin  = import.meta.env.VITE_ANANT_ADMIN_PIN;
 
   const canSubmit = useMemo(() => pin.trim().length === 4, [pin]);
 
@@ -15,21 +16,23 @@ export default function AdminLogin() {
     e.preventDefault();
     setError("");
 
-    if (!correctPin) {
-      setError("Admin PIN not configured in .env");
+    const entered = pin.trim();
+
+    if (evolvePin && entered === String(evolvePin)) {
+      sessionStorage.setItem("admin_access", "true");
+      sessionStorage.setItem("admin_tenant", "evolve");
+      navigate("/admin/dashboard");
       return;
     }
 
-    if (pin.trim() !== String(correctPin)) {
-      setError("Wrong PIN. Try again.");
+    if (anantPin && entered === String(anantPin)) {
+      sessionStorage.setItem("admin_access", "true");
+      sessionStorage.setItem("admin_tenant", "anant");
+      navigate("/admin/dashboard");
       return;
     }
 
-    // ✅ save session
-    sessionStorage.setItem("admin_access", "true");
-
-    // ✅ go dashboard
-    navigate("/admin/dashboard");
+    setError("Wrong PIN. Try again.");
   };
 
   return (

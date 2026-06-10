@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
+import { tenant } from "../tenants";
 
 /* ─── env ──────────────────────────────────────────────────────────────────── */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -64,6 +65,7 @@ function AvatarSlot({ user }) {
 
 /* ─── Success Screen ──────────────────────────────────────────────────────── */
 function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
+  const copy = tenant.portfolio;
   return (
     <div
       className="font-bricolage min-h-screen flex flex-col"
@@ -84,7 +86,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
               strokeLinejoin="round"
             />
           </svg>
-          back to community
+          {copy.backLabel}
         </button>
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
@@ -112,15 +114,10 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
                 lineHeight: "1"
               }}
             >
-              you're in.
+              {copy.successHeading}
             </h1>
             <p className="text-white/60 text-sm mt-3 leading-relaxed max-w-[32ch] mx-auto">
-              your portfolio is with us. we'll review it and get back to you
-              with{" "}
-              <span className="text-evolve-yellow font-semibold">
-                personalised feedback within 5–7 working days
-              </span>{" "}
-              — straight to your inbox.
+              {copy.successBody}
             </p>
           </div>
 
@@ -254,6 +251,7 @@ function PdfViewer({ url }) {
 
 function AlreadySubmittedScreen({ onBack, reportUrl }) {
   const reviewDone = !!reportUrl;
+  const copy = tenant.portfolio;
   return (
     <div
       className="font-bricolage min-h-screen flex flex-col"
@@ -287,12 +285,10 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
                 lineHeight: "1.1"
               }}
             >
-              {reviewDone ? "your review is in." : "already submitted."}
+              {reviewDone ? copy.doneHeading : copy.pendingHeading}
             </h1>
             <p className="text-white/50 text-sm mt-3 max-w-[38ch] mx-auto leading-relaxed">
-              {reviewDone
-                ? "your personalised feedback report is ready."
-                : "we already have your portfolio. sit tight — feedback is on its way within 5–7 working days."}
+              {reviewDone ? copy.doneBody : copy.pendingBody}
             </p>
           </div>
 
@@ -348,6 +344,10 @@ function MobileForm({
   setProudProject,
   notes,
   setNotes,
+  course,
+  setCourse,
+  batch,
+  setBatch,
   submitting,
   error,
   handleFile,
@@ -523,6 +523,38 @@ function MobileForm({
           )}
         </div>
 
+        {/* ── Course + Batch (Anant only) ── */}
+        {tenant.formFields.showCourse && (
+          <div className="flex flex-col gap-2">
+            <p className="text-white text-sm font-semibold lowercase">
+              your course / program
+            </p>
+            <input
+              type="text"
+              placeholder="e.g. B.Des Product Design"
+              value={course}
+              onChange={(e) => setCourse(e.target.value)}
+              className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            />
+          </div>
+        )}
+        {tenant.formFields.showBatch && (
+          <div className="flex flex-col gap-2">
+            <p className="text-white text-sm font-semibold lowercase">
+              batch / year
+            </p>
+            <input
+              type="text"
+              placeholder="e.g. 2022–2026 or Batch 5"
+              value={batch}
+              onChange={(e) => setBatch(e.target.value)}
+              className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            />
+          </div>
+        )}
+
         {/* ── Q2: Target roles ── */}
         <div className="flex flex-col gap-2">
           <p className="text-white text-sm font-semibold lowercase">
@@ -618,6 +650,10 @@ function DesktopForm({
   setProudProject,
   notes,
   setNotes,
+  course,
+  setCourse,
+  batch,
+  setBatch,
   submitting,
   error,
   dragOver,
@@ -872,6 +908,54 @@ function DesktopForm({
               )}
             </div>
 
+            {/* Course + Batch (Anant only) */}
+            {tenant.formFields.showCourse && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
+                    style={{ backgroundColor: "#A35BFB" }}
+                  >
+                    +
+                  </span>
+                  <p className="text-white font-semibold lowercase">
+                    your course / program
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. B.Des Product Design"
+                  value={course}
+                  onChange={(e) => setCourse(e.target.value)}
+                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                />
+              </div>
+            )}
+            {tenant.formFields.showBatch && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
+                    style={{ backgroundColor: "#A35BFB" }}
+                  >
+                    +
+                  </span>
+                  <p className="text-white font-semibold lowercase">
+                    batch / year
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. 2022–2026 or Batch 5"
+                  value={batch}
+                  onChange={(e) => setBatch(e.target.value)}
+                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                />
+              </div>
+            )}
+
             {/* Step 2 — Target roles */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
@@ -995,6 +1079,8 @@ export default function PortfolioReviewForm() {
   const [targetRoles, setTargetRoles] = useState("");
   const [proudProject, setProudProject] = useState("");
   const [notes, setNotes] = useState("");
+  const [course, setCourse] = useState("");
+  const [batch, setBatch] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -1159,6 +1245,16 @@ export default function PortfolioReviewForm() {
       return;
     }
 
+    if (tenant.formFields.showCourse && !course.trim()) {
+      setError("please enter your course / program");
+      return;
+    }
+
+    if (tenant.formFields.showBatch && !batch.trim()) {
+      setError("please enter your batch / year");
+      return;
+    }
+
     setSubmitting(true);
     try {
       let portfolio_file_url = null;
@@ -1188,13 +1284,17 @@ export default function PortfolioReviewForm() {
           portfolio_file_url,
           target_roles: targetRoles.trim(),
           proud_project: proudProject.trim(),
-          notes: notes.trim() || null
+          notes: notes.trim() || null,
+          tenant_id: tenant.id,
+          course: course.trim() || null,
+          batch: batch.trim() || null
         });
 
       if (insertErr) throw new Error(insertErr.message);
 
       // Fire "review in progress" email — best-effort, don't block on failure
-      if (BREVO_IN_PROGRESS_TEMPLATE_ID) {
+      const inProgressTplId = tenant.brevoInProgressTemplateId || BREVO_IN_PROGRESS_TEMPLATE_ID;
+      if (inProgressTplId) {
         fetch(`${SUPABASE_URL}/functions/v1/send-review-email`, {
           method: "POST",
           headers: {
@@ -1205,7 +1305,7 @@ export default function PortfolioReviewForm() {
           body: JSON.stringify({
             to_email: user.email,
             to_name: user.name,
-            template_id: BREVO_IN_PROGRESS_TEMPLATE_ID
+            template_id: inProgressTplId
           })
         }).catch(() => {}); // silent — don't fail the submission if email errors
       }
@@ -1222,17 +1322,19 @@ export default function PortfolioReviewForm() {
   if (authLoading || checkingSubmission) return null;
   if (!user) return null;
 
+  const backPath = tenant.portfolio.backPath;
+
   if (done) {
     return (
       <SuccessScreen
-        onBackToCommunity={() => navigate("/community")}
+        onBackToCommunity={() => navigate(backPath)}
         onApplyMentorship={() => navigate("/mentorship")}
       />
     );
   }
 
   if (alreadySubmitted) {
-    return <AlreadySubmittedScreen onBack={() => navigate("/community")} reportUrl={reportUrl} />;
+    return <AlreadySubmittedScreen onBack={() => navigate(backPath)} reportUrl={reportUrl} />;
   }
 
   /* ── shared props ───────────────────────────────────────────────────────── */
@@ -1250,6 +1352,10 @@ export default function PortfolioReviewForm() {
     setProudProject,
     notes,
     setNotes,
+    course,
+    setCourse,
+    batch,
+    setBatch,
     submitting,
     error,
     dragOver,
@@ -1259,7 +1365,7 @@ export default function PortfolioReviewForm() {
     handleSubmit,
     fileLoading,
     setFileLoading,
-    onBack: () => navigate("/community/portfolio-review")
+    onBack: () => navigate(tenant.id === "anant" ? "/" : "/community/portfolio-review")
   };
 
   const mobileFormProps = {

@@ -1070,6 +1070,8 @@ import AdminDashboard from "./pages/admn/AdminDashboard.jsx";
 import AdminGuard from "./routes/AdminGuard.jsx";
 import MentorshipGuard from "./routes/MentorshipGuard.jsx";
 import Mentorship from "./pages/Mentorship.jsx";
+import AnantHome from "./pages/anant/AnantHome.jsx";
+import { isAnant } from "./tenants/index.js";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
 const Payment = lazy(() => import("./pages/Payment.jsx"));
 const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
@@ -1570,18 +1572,43 @@ const AppLayout = () => {
   );
 };
 
+/* ------------------------------- Anant App Layout ------------------------------- */
+const AnantAppLayout = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  }, [location.pathname]);
+
+  return (
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/" element={<AnantHome />} />
+        <Route path="/community/portfolio-review/form" element={<PortfolioReviewForm />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminGuard>
+              <AdminDashboard />
+            </AdminGuard>
+          }
+        />
+        <Route path="*" element={<AnantHome />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
 /* ------------------------------- Main App ------------------------------- */
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* <TooltipProvider> */}
-      {/* <Toaster /> */}
-      {/* <Sonner /> */}
       <BrowserRouter>
-        <AppLayout />
+        {isAnant ? <AnantAppLayout /> : <AppLayout />}
       </BrowserRouter>
       {navigator.userAgent !== "ReactSnap" && <Analytics />}
-      {/* </TooltipProvider> */}
     </QueryClientProvider>
   );
 };

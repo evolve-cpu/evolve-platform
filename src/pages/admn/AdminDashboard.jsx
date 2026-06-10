@@ -467,6 +467,10 @@ function MentorshipPortfolioUploadCell({ version, onDone }) {
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
+  // Determine which tenant this admin session belongs to
+  const adminTenant = sessionStorage.getItem("admin_tenant") ?? "evolve";
+  const isAnantAdmin = adminTenant === "anant";
+
   const [payments, setPayments] = useState([]);
   const [batches, setBatches] = useState([]);
   const [waitlist, setWaitlist] = useState([]);
@@ -480,7 +484,8 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const [activeTab, setActiveTab] = useState("overview");
+  // Anant faculty land directly on reviews tab
+  const [activeTab, setActiveTab] = useState(isAnantAdmin ? "reviews" : "overview");
   const [search, setSearch] = useState("");
   const [payFilter, setPayFilter] = useState("all");
 
@@ -538,10 +543,11 @@ export default function AdminDashboard() {
           .select("*")
           .order("created_at", { ascending: false }),
 
-        supabase
-          .from("portfolio_reviews")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        (() => {
+          let q = supabase.from("portfolio_reviews").select("*");
+          if (isAnantAdmin) q = q.eq("tenant_id", "anant");
+          return q.order("created_at", { ascending: false });
+        })(),
 
         supabase
           .from("mentorship_sessions")
@@ -855,7 +861,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     );
   }
 
-  const TABS = [
+  const ALL_TABS = [
     { id: "overview", label: "overview" },
     { id: "tables", label: "all tables" },
     { id: "payments", label: `payments (${payments.length})` },
@@ -868,6 +874,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "sessions", label: "sessions" },
     { id: "accelerator", label: "accelerator 1:1" }
   ];
+
+  // Anant faculty can only see portfolio reviews for their institution
+  const TABS = isAnantAdmin
+    ? ALL_TABS.filter((t) => t.id === "reviews")
+    : ALL_TABS;
 
   return (
     <div
@@ -889,8 +900,16 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           </span>
           <span style={{ color: "#333" }}>/</span>
           <span className="text-sm font-semibold" style={{ color: "#888" }}>
-            mentorship analytics
+            {isAnantAdmin ? "anant university · portfolio reviews" : "mentorship analytics"}
           </span>
+          {isAnantAdmin && (
+            <span
+              className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+              style={{ background: "rgba(163,91,251,0.15)", color: "#A35BFB" }}
+            >
+              anant faculty
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {error && <span className="text-xs text-red-400">{error}</span>}
@@ -1832,6 +1851,14 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               <span className="text-xs" style={{ color: "#555" }}>
                 {filteredReviews.length} reviews
               </span>
+              {isAnantAdmin && (
+                <span
+                  className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                  style={{ background: "rgba(163,91,251,0.15)", color: "#A35BFB" }}
+                >
+                  anant university only
+                </span>
+              )}
               <button
                 onClick={() =>
                   downloadCSV(
@@ -1876,6 +1903,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       "name",
                       "email",
                       "portfolio",
+                      ...(isAnantAdmin ? ["course", "batch"] : ["tenant"]),
                       "target roles",
                       "proud project",
                       "notes",
@@ -1952,6 +1980,30 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           <span style={{ color: "#444" }}>—</span>
                         )}
                       </td>
+
+                      {/* COURSE + BATCH (anant) or TENANT (evolve) */}
+                      {isAnantAdmin ? (
+                        <>
+                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa" }}>
+                            {r.course || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa" }}>
+                            {r.batch || "—"}
+                          </td>
+                        </>
+                      ) : (
+                        <td className="px-4 py-3 text-xs">
+                          <span
+                            className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{
+                              background: r.tenant_id === "anant" ? "rgba(163,91,251,0.15)" : "rgba(255,208,7,0.1)",
+                              color: r.tenant_id === "anant" ? "#A35BFB" : "#FFD007"
+                            }}
+                          >
+                            {r.tenant_id || "evolve"}
+                          </span>
+                        </td>
+                      )}
 
                       {/* TARGET ROLES */}
                       <td
