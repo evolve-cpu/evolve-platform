@@ -5,7 +5,7 @@ import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
 import { tenant, isAnant } from "../tenants";
-import { anant_logo } from "../assets/images/community";
+import { anant_logo } from "../assets/images/Community";
 import { useAnantTheme } from "../context/AnantThemeContext";
 
 /* ─── Anant brand theme ────────────────────────────────────────────────────── */

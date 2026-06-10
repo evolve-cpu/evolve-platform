@@ -17,7 +17,7 @@ import {
   Line,
   CartesianGrid
 } from "recharts";
-import { anant_logo } from "../../assets/images/community";
+import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 
 /* ─── brand ──────────────────────────────────────────────────────────────── */
