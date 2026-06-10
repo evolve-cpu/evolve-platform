@@ -34,6 +34,30 @@ export default function AnantHome() {
   const pillBord = dark ? "#1e3a8a"  : "#bfdbfe";
   const pillText = dark ? "#93c5fd"  : "#1e40af";
   const footerText = dark ? "#334155" : "#6b7280";
+  const cardText = dark ? "rgba(255,255,255,0.78)" : "#334155";
+  const softAccent = dark ? "#60a5fa" : "#1d4ed8";
+
+  const reviewFocus = [
+    {
+      title: "clarity",
+      body: "is your portfolio easy to scan, follow, and understand in the first few minutes?"
+    },
+    {
+      title: "story",
+      body: "does each project show your role, process, decisions, and design judgement?"
+    },
+    {
+      title: "readiness",
+      body: "what should be improved before you share it with studios, recruiters, or mentors?"
+    }
+  ];
+
+  const usefulFor = [
+    "internship applications",
+    "studio and placement prep",
+    "capstone or graduation portfolio polish",
+    "figuring out what to keep, cut, or explain better"
+  ];
 
   return (
     <>
@@ -145,6 +169,47 @@ export default function AnantHome() {
         </main>
 
         {/* ── What we look at ── */}
+        <section className="px-6 py-16 border-t" style={{ borderColor: border, backgroundColor: bg }}>
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 items-start">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: textMut }}>
+                  made for Anant students
+                </p>
+                <h2
+                  className="font-extrabold leading-tight"
+                  style={{ fontSize: "clamp(30px, 5vw, 56px)", letterSpacing: "-0.02em", color: text }}
+                >
+                  a sharper second pair of eyes before you send your work out.
+                </h2>
+                <p className="mt-5 text-sm md:text-base leading-relaxed" style={{ color: textSub }}>
+                  You submit your current portfolio, tell us what roles you are
+                  aiming for, and get focused notes on how to make the work read
+                  stronger. No generic checklist, just practical feedback for
+                  your next version.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {reviewFocus.map(({ title, body }) => (
+                  <div
+                    key={title}
+                    className="border rounded-lg p-5"
+                    style={{ borderColor: cardBord, backgroundColor: cardBg }}
+                  >
+                    <p className="text-sm font-extrabold uppercase tracking-[0.12em]" style={{ color: softAccent }}>
+                      {title}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed" style={{ color: cardText }}>
+                      {body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="px-6 py-16 border-t" style={{ borderColor: border, backgroundColor: bg2 }}>
           <div className="max-w-3xl mx-auto">
             <p className="text-xs font-bold uppercase tracking-[0.15em] mb-8 text-center" style={{ color: textMut }}>
@@ -173,6 +238,36 @@ export default function AnantHome() {
         </section>
 
         {/* ── How it works ── */}
+        <section className="px-6 py-16 border-t" style={{ borderColor: border, backgroundColor: bg }}>
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-[0.8fr_1.2fr] gap-8 items-start">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] mb-3" style={{ color: textMut }}>
+                useful when you are preparing for
+              </p>
+              <h2
+                className="font-extrabold leading-tight"
+                style={{ fontSize: "clamp(28px, 4vw, 44px)", color: text }}
+              >
+                the moments where your portfolio has to speak clearly.
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {usefulFor.map((item) => (
+                <div
+                  key={item}
+                  className="border rounded-lg px-4 py-4 flex items-start gap-3"
+                  style={{ borderColor: cardBord, backgroundColor: cardBg }}
+                >
+                  <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
+                  <span className="text-sm font-semibold leading-snug" style={{ color: cardText }}>
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="px-6 py-16" style={{ backgroundColor: bg }}>
           <div className="max-w-3xl mx-auto">
             <p className="text-xs font-bold uppercase tracking-[0.15em] mb-8 text-center" style={{ color: textMut }}>
@@ -190,6 +285,23 @@ export default function AnantHome() {
                   <span className="text-sm leading-snug" style={{ color: textSub }}>{label}</span>
                 </div>
               ))}
+            </div>
+            <div
+              className="mt-10 border rounded-lg px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+              style={{ borderColor: cardBord, backgroundColor: cardBg }}
+            >
+              <p className="text-sm leading-relaxed" style={{ color: cardText }}>
+                Keep your link or file ready, and add a short note about what
+                you want feedback on. The more context you give, the sharper the
+                review can be.
+              </p>
+              <button
+                onClick={handleCTA}
+                className="font-bold px-5 py-3 rounded-lg transition-opacity hover:opacity-90 md:flex-shrink-0"
+                style={{ backgroundColor: accent, color: "#fff" }}
+              >
+                start review
+              </button>
             </div>
           </div>
         </section>

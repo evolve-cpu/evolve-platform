@@ -9,7 +9,7 @@ import { anant_logo } from "../assets/images/community";
 import { useAnantTheme } from "../context/AnantThemeContext";
 
 /* ─── Anant brand theme ────────────────────────────────────────────────────── */
-const T = isAnant ? {
+const ANANT_LIGHT_THEME = {
   pageBg: "#ffffff",
   panelBg: "#f8fafc",
   border: "#e2e8f0",
@@ -27,7 +27,29 @@ const T = isAnant ? {
   dots: ["#2563eb", "#3b82f6", "#1d4ed8", "#60a5fa"],
   fileActiveBorder: "rgba(37,99,235,0.4)",
   fileActiveBg: "rgba(37,99,235,0.05)",
-} : {
+};
+
+const ANANT_DARK_THEME = {
+  pageBg: "#060c17",
+  panelBg: "#040810",
+  border: "#0d1f3c",
+  inputBg: "rgba(37,99,235,0.08)",
+  inputText: "#ffffff",
+  sub: "rgba(255,255,255,0.68)",
+  muted: "rgba(255,255,255,0.42)",
+  accent: "#3b82f6",
+  accentText: "#ffffff",
+  h2: "#60a5fa",
+  h3: "#93c5fd",
+  cardBg: "rgba(37,99,235,0.06)",
+  badgeBg: "rgba(37,99,235,0.16)",
+  badgeText: "#93c5fd",
+  dots: ["#3b82f6", "#60a5fa", "#2563eb", "#93c5fd"],
+  fileActiveBorder: "rgba(96,165,250,0.45)",
+  fileActiveBg: "rgba(37,99,235,0.12)",
+};
+
+const EVOLVE_THEME = {
   pageBg: "#161618",
   panelBg: "#161618",
   border: "rgba(255,255,255,0.1)",
@@ -46,6 +68,12 @@ const T = isAnant ? {
   fileActiveBorder: "rgba(255,208,7,0.4)",
   fileActiveBg: "rgba(255,208,7,0.06)",
 };
+
+function usePortfolioTheme() {
+  const { dark } = useAnantTheme();
+  if (!isAnant) return EVOLVE_THEME;
+  return dark ? ANANT_DARK_THEME : ANANT_LIGHT_THEME;
+}
 
 /* ─── Anant portfolio nav — always dark, 64px, logo only ─────────────────── */
 function AnantPortfolioNav({ onLogoClick, right }) {
@@ -108,6 +136,7 @@ const MAX_FILE_MB = 10;
 
 /* ─── Back button ─────────────────────────────────────────────────────────── */
 function BackBtn({ onClick }) {
+  const T = usePortfolioTheme();
   return (
     <button
       onClick={onClick}
@@ -130,6 +159,7 @@ function BackBtn({ onClick }) {
 
 /* ─── Avatar slot ─────────────────────────────────────────────────────────── */
 function AvatarSlot({ user }) {
+  const T = usePortfolioTheme();
   const avatarSrc =
     user?.avatar_url ||
     `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "u"}`;
@@ -151,6 +181,7 @@ function AvatarSlot({ user }) {
 
 /* ─── Success Screen ──────────────────────────────────────────────────────── */
 function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
+  const T = usePortfolioTheme();
   const copy = tenant.portfolio;
   return (
     <div
@@ -306,6 +337,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
 
 /* ─── Already Submitted Screen ────────────────────────────────────────────── */
 function PdfViewer({ url }) {
+  const T = usePortfolioTheme();
   const [loaded, setLoaded] = useState(false);
   const [dots, setDots] = useState(0);
 
@@ -345,6 +377,7 @@ function PdfViewer({ url }) {
 }
 
 function AlreadySubmittedScreen({ onBack, reportUrl }) {
+  const T = usePortfolioTheme();
   const reviewDone = !!reportUrl;
   const copy = tenant.portfolio;
   return (
@@ -458,6 +491,7 @@ function MobileForm({
   fileLoading,
   setFileLoading
 }) {
+  const T = usePortfolioTheme();
   return (
     <div
       className="font-bricolage flex md:hidden min-h-screen flex-col"
@@ -767,6 +801,7 @@ function DesktopForm({
   handleSubmit,
   onBack
 }) {
+  const T = usePortfolioTheme();
   return (
     <div
       className="font-bricolage hidden md:flex min-h-screen flex-col"
@@ -780,8 +815,7 @@ function DesktopForm({
         {/* ─── LEFT PANEL ─── */}
         <div
           className="flex-shrink-0 flex flex-col justify-between px-10 py-10 border-r"
-          style={{ borderColor: T.border }}
-          style={{ width: "38%" }}
+          style={{ width: "38%", borderColor: T.border }}
         >
           <div className="flex flex-col gap-8 mt-4">
             <BackBtn onClick={onBack} />
