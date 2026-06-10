@@ -72,7 +72,19 @@ function goToFrom(navigate, from) {
   }
   localStorage.removeItem("signin_from");
   sessionStorage.removeItem("signin_from");
+  sessionStorage.removeItem("post_signin_redirect");
   navigate(from, { replace: true });
+}
+
+function getSignInFrom(location) {
+  const stored =
+    localStorage.getItem("signin_from") ||
+    sessionStorage.getItem("signin_from") ||
+    sessionStorage.getItem("post_signin_redirect") ||
+    location.state?.from ||
+    "/";
+
+  return stored.startsWith("/") ? stored : "/";
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -82,7 +94,7 @@ export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = localStorage.getItem("signin_from") || sessionStorage.getItem("signin_from") || location.state?.from || "/";
+  const from = getSignInFrom(location);
 
   const { user, authLoading } = useAuth();
 
@@ -106,6 +118,7 @@ export default function SignIn() {
     if (step === "options" || step === "email-form") {
       localStorage.removeItem("signin_from");
       sessionStorage.removeItem("signin_from");
+      sessionStorage.removeItem("post_signin_redirect");
       navigate(from, { replace: true });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,7 +194,9 @@ export default function SignIn() {
     }
     // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
     // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
+    localStorage.setItem("signin_from", from);
     sessionStorage.removeItem("signin_from");
+    sessionStorage.removeItem("post_signin_redirect");
     try {
       await signInWithLinkedIn(from);
     } catch (e) {
@@ -201,7 +216,9 @@ export default function SignIn() {
     }
     // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
     // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
+    localStorage.setItem("signin_from", from);
     sessionStorage.removeItem("signin_from");
+    sessionStorage.removeItem("post_signin_redirect");
     try {
       await signInWithGoogle(from);
     } catch (e) {

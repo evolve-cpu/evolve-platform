@@ -15,6 +15,8 @@ export default function AnantHome() {
     if (user) {
       navigate(FORM_PATH);
     } else {
+      localStorage.setItem("signin_from", FORM_PATH);
+      sessionStorage.setItem("signin_from", FORM_PATH);
       sessionStorage.setItem("post_signin_redirect", FORM_PATH);
       navigate("/signin");
     }
