@@ -55,6 +55,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 
+    <!-- Anant tenant: override title & meta before React loads -->
+    <script>
+      if (window.location.hostname === 'anu.evolvedesign.academy') {
+        document.title = 'Anant National University × evolve — Portfolio Review';
+        var d = document.querySelector('meta[name="description"]');
+        if (d) d.setAttribute('content', 'Submit your design portfolio for a personalised, expert review — a collaboration between Anant National University and evolve. Feedback within 5–7 working days.');
+        var og = document.querySelector('meta[property="og:title"]');
+        if (og) og.setAttribute('content', 'Anant National University × evolve — Portfolio Review');
+        var can = document.querySelector('link[rel="canonical"]');
+        if (can) can.setAttribute('href', 'https://anu.evolvedesign.academy');
+      }
+    </script>
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSYRSW4MEH"></script>
     <script>

@@ -1072,6 +1072,7 @@ import MentorshipGuard from "./routes/MentorshipGuard.jsx";
 import Mentorship from "./pages/Mentorship.jsx";
 import AnantHome from "./pages/anant/AnantHome.jsx";
 import { isAnant } from "./tenants/index.js";
+import { AnantThemeProvider } from "./context/AnantThemeContext.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
 const Payment = lazy(() => import("./pages/Payment.jsx"));
 const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
@@ -1128,7 +1129,8 @@ const AppLayout = () => {
     "/mentorship-session",
     "/admin",
     "/admin/dashboard",
-    "/community/portfolio-review/form"
+    "/community/portfolio-review/form",
+    "/portfolio-review/form"
   ];
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
@@ -1584,7 +1586,7 @@ const AnantAppLayout = () => {
     <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<AnantHome />} />
-        <Route path="/community/portfolio-review/form" element={<PortfolioReviewForm />} />
+        <Route path="/portfolio-review/form" element={<PortfolioReviewForm />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route
@@ -1606,7 +1608,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {isAnant ? <AnantAppLayout /> : <AppLayout />}
+        {isAnant ? <AnantThemeProvider><AnantAppLayout /></AnantThemeProvider> : <AppLayout />}
       </BrowserRouter>
       {navigator.userAgent !== "ReactSnap" && <Analytics />}
     </QueryClientProvider>

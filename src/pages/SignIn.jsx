@@ -65,7 +65,8 @@ function goToFrom(navigate, from) {
   // Portfolio review form handles its own post-signin flow — skip the overlay
   const skipOverlay =
     from.startsWith("/payment") ||
-    from.startsWith("/community/portfolio-review");
+    from.startsWith("/community/portfolio-review") ||
+    from.startsWith("/portfolio-review");
   if (!skipOverlay) {
     sessionStorage.setItem("show_welcome_overlay", "1");
   }
@@ -173,7 +174,8 @@ export default function SignIn() {
   async function handleLinkedInSignIn() {
     const skipOverlay =
       from.startsWith("/payment") ||
-      from.startsWith("/community/portfolio-review");
+      from.startsWith("/community/portfolio-review") ||
+      from.startsWith("/portfolio-review");
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
     }
@@ -192,7 +194,8 @@ export default function SignIn() {
     // Redirect directly to `from` — avoids double-redirect that breaks OAuth state on mobile
     const skipOverlay =
       from.startsWith("/payment") ||
-      from.startsWith("/community/portfolio-review");
+      from.startsWith("/community/portfolio-review") ||
+      from.startsWith("/portfolio-review");
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
     }

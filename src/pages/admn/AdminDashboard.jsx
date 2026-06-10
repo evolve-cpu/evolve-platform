@@ -17,12 +17,15 @@ import {
   Line,
   CartesianGrid
 } from "recharts";
+import { anant_logo } from "../../assets/images/community";
+import { useAnantTheme } from "../../context/AnantThemeContext";
 
 /* ─── brand ──────────────────────────────────────────────────────────────── */
 const Y = "#FFD007";
 const P = "#DF0586";
 const GR = "#22c55e";
 const PLAN_COLORS = { starter: Y, accelerator: P };
+const ANANT_BLUE = "#2563eb";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
@@ -471,6 +474,8 @@ export default function AdminDashboard() {
   const adminTenant = sessionStorage.getItem("admin_tenant") ?? "evolve";
   const isAnantAdmin = adminTenant === "anant";
 
+  const { dark, toggleDark } = useAnantTheme();
+
   const [payments, setPayments] = useState([]);
   const [batches, setBatches] = useState([]);
   const [waitlist, setWaitlist] = useState([]);
@@ -844,18 +849,27 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
   /* ─────────────────────────────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────────────────────────────── */
+  const loadBg   = isAnantAdmin ? (dark ? "#060c17" : "#f8fafc") : "#0a0a0a";
+  const loadText = isAnantAdmin ? (dark ? "rgba(255,255,255,0.5)" : "#64748b") : "#555";
+
   if (loading) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0a" }}
+        style={{ background: loadBg }}
       >
         <div className="text-center">
-          <div
-            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-            style={{ borderColor: Y, borderTopColor: "transparent" }}
-          />
-          <p style={{ color: "#555" }}>loading mentorship data…</p>
+          {isAnantAdmin ? (
+            <img src={anant_logo} alt="" className="w-14 h-14 object-contain mx-auto mb-4 opacity-70" />
+          ) : (
+            <div
+              className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+              style={{ borderColor: Y, borderTopColor: "transparent" }}
+            />
+          )}
+          <p style={{ color: loadText }}>
+            {isAnantAdmin ? "loading reviews…" : "loading mentorship data…"}
+          </p>
         </div>
       </div>
     );
@@ -880,51 +894,102 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     ? ALL_TABS.filter((t) => t.id === "reviews")
     : ALL_TABS;
 
+  /* ── anant admin theme helpers ── */
+  const aBg      = dark ? "#060c17" : "#f8fafc";
+  const aColor   = dark ? "#ffffff" : "#0f172a";
+  const aHdrBg   = dark ? "#060c17" : "#ffffff";
+  const aHdrBord = dark ? "#0d1f3c" : "#e2e8f0";
+  const aSub     = dark ? "rgba(255,255,255,0.45)" : "#64748b";
+  const aDiv     = dark ? "rgba(255,255,255,0.15)" : "#cbd5e1";
+  const aBtnBord = dark ? "#1e3a8a" : "#e2e8f0";
+  const aBtnClr  = dark ? "rgba(255,255,255,0.5)" : "#64748b";
+  const aTabBord = dark ? "#0d1f3c" : "#e2e8f0";
+
   return (
     <div
       className="min-h-screen"
       style={{
-        background: "#0a0a0a",
-        color: "#fff",
+        background: isAnantAdmin ? aBg : "#0a0a0a",
+        color: isAnantAdmin ? aColor : "#fff",
         fontFamily: "system-ui, sans-serif"
       }}
     >
-      {/* ── header ── */}
+      {/* ── header — always dark for anant, 64px ── */}
       <div
-        className="sticky top-0 z-30 border-b px-6 py-4 flex items-center justify-between"
-        style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}
+        className="sticky top-0 z-30 border-b px-6 flex items-center justify-between"
+        style={{
+          height: "64px",
+          background: isAnantAdmin ? aHdrBg : "#0a0a0a",
+          borderColor: isAnantAdmin ? aHdrBord : "#1a1a1a"
+        }}
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl font-black" style={{ color: Y }}>
-            evolve
-          </span>
-          <span style={{ color: "#333" }}>/</span>
-          <span className="text-sm font-semibold" style={{ color: "#888" }}>
-            {isAnantAdmin ? "anant university · portfolio reviews" : "mentorship analytics"}
-          </span>
-          {isAnantAdmin && (
-            <span
-              className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-              style={{ background: "rgba(163,91,251,0.15)", color: "#A35BFB" }}
-            >
-              anant faculty
-            </span>
+          {isAnantAdmin ? (
+            <>
+              <img src={anant_logo} alt="Anant" className="h-10 w-auto object-contain" />
+              <span style={{ color: aDiv }}>/</span>
+              <span className="text-sm font-semibold" style={{ color: aSub }}>
+                portfolio reviews
+              </span>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                style={{ background: "rgba(37,99,235,0.15)", color: dark ? "#60a5fa" : ANANT_BLUE }}
+              >
+                faculty
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-xl font-black" style={{ color: Y }}>
+                evolve
+              </span>
+              <span style={{ color: "#333" }}>/</span>
+              <span className="text-sm font-semibold" style={{ color: "#888" }}>
+                mentorship analytics
+              </span>
+            </>
           )}
         </div>
         <div className="flex items-center gap-3">
           {error && <span className="text-xs text-red-400">{error}</span>}
+          {/* theme toggle — anant only */}
+          {isAnantAdmin && (
+            <button
+              onClick={toggleDark}
+              className="w-7 h-7 rounded-full flex items-center justify-center border transition-colors"
+              style={{ borderColor: aHdrBord, backgroundColor: dark ? "#0a1628" : "#f1f5f9" }}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {dark ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="4" stroke="#93c5fd" strokeWidth="1.8"/>
+                  <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="#475569" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          )}
           <button
             onClick={() => fetchAll(true)}
             disabled={refreshing}
             className="text-xs px-3 py-1.5 rounded-lg border font-semibold transition-opacity disabled:opacity-40"
-            style={{ borderColor: "#333", color: "#888" }}
+            style={{
+              borderColor: isAnantAdmin ? aBtnBord : "#333",
+              color: isAnantAdmin ? aBtnClr : "#888"
+            }}
           >
             {refreshing ? "refreshing…" : "↻ refresh"}
           </button>
           <button
             onClick={handleLogout}
             className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-            style={{ background: "#1a1a1a", color: "#888" }}
+            style={{
+              background: isAnantAdmin ? (dark ? "rgba(220,38,38,0.15)" : "#fee2e2") : "#1a1a1a",
+              color: isAnantAdmin ? (dark ? "#f87171" : "#dc2626") : "#888"
+            }}
           >
             logout
           </button>
@@ -934,7 +999,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
       {/* ── tabs ── */}
       <div
         className="px-6 pt-4 flex gap-1 flex-wrap border-b"
-        style={{ borderColor: "#1a1a1a" }}
+        style={{ borderColor: isAnantAdmin ? aTabBord : "#1a1a1a" }}
       >
         {TABS.map((t) => (
           <button
@@ -945,10 +1010,15 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             }}
             className="px-4 py-2 text-sm font-semibold rounded-t-lg transition-all"
             style={{
-              background: activeTab === t.id ? "#111" : "transparent",
-              color: activeTab === t.id ? Y : "#555",
-              borderBottom:
-                activeTab === t.id ? `2px solid ${Y}` : "2px solid transparent"
+              background: activeTab === t.id
+                ? (isAnantAdmin ? (dark ? "rgba(37,99,235,0.15)" : "#f0f4ff") : "#111")
+                : "transparent",
+              color: activeTab === t.id
+                ? (isAnantAdmin ? (dark ? "#60a5fa" : ANANT_BLUE) : Y)
+                : (isAnantAdmin ? (dark ? "rgba(255,255,255,0.35)" : "#94a3b8") : "#555"),
+              borderBottom: activeTab === t.id
+                ? `2px solid ${isAnantAdmin ? (dark ? "#60a5fa" : ANANT_BLUE) : Y}`
+                : "2px solid transparent"
             }}
           >
             {t.label}

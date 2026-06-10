@@ -26,6 +26,7 @@ import portfolio_reviews from "./portfolio_reviews.svg";
 import portfolio_reviews_mobile from "./portfolio_reviews_mobile.svg";
 import resources from "./resources.svg";
 import resources_mobile from "./resources_mobile.svg";
+import anant_logo from "./anant_logo.png";
 
 export {
   doors_community,
@@ -55,5 +56,6 @@ export {
   portfolio_reviews,
   portfolio_reviews_mobile,
   resources,
-  resources_mobile
+  resources_mobile,
+  anant_logo
 };

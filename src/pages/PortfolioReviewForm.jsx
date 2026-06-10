@@ -4,7 +4,91 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
-import { tenant } from "../tenants";
+import { tenant, isAnant } from "../tenants";
+import { anant_logo } from "../assets/images/community";
+import { useAnantTheme } from "../context/AnantThemeContext";
+
+/* ─── Anant brand theme ────────────────────────────────────────────────────── */
+const T = isAnant ? {
+  pageBg: "#ffffff",
+  panelBg: "#f8fafc",
+  border: "#e2e8f0",
+  inputBg: "#f1f5f9",
+  inputText: "#0f172a",
+  sub: "#374151",
+  muted: "#4b5563",
+  accent: "#2563eb",
+  accentText: "#ffffff",
+  h2: "#2563eb",
+  h3: "#1d4ed8",
+  cardBg: "#f1f5f9",
+  badgeBg: "rgba(37,99,235,0.1)",
+  badgeText: "#1e40af",
+  dots: ["#2563eb", "#3b82f6", "#1d4ed8", "#60a5fa"],
+  fileActiveBorder: "rgba(37,99,235,0.4)",
+  fileActiveBg: "rgba(37,99,235,0.05)",
+} : {
+  pageBg: "#161618",
+  panelBg: "#161618",
+  border: "rgba(255,255,255,0.1)",
+  inputBg: "rgba(255,255,255,0.06)",
+  inputText: "#ffffff",
+  sub: "rgba(255,255,255,0.5)",
+  muted: "rgba(255,255,255,0.3)",
+  accent: "#FFD007",
+  accentText: "#161616",
+  h2: "#DF0586",
+  h3: "#FFD007",
+  cardBg: "rgba(255,255,255,0.05)",
+  badgeBg: "rgba(163,91,251,0.2)",
+  badgeText: "#A35BFB",
+  dots: ["#DF0586", "#A35BFB", "#FFD007", "#4ade80"],
+  fileActiveBorder: "rgba(255,208,7,0.4)",
+  fileActiveBg: "rgba(255,208,7,0.06)",
+};
+
+/* ─── Anant portfolio nav — always dark, 64px, logo only ─────────────────── */
+function AnantPortfolioNav({ onLogoClick, right }) {
+  const navigate = useNavigate();
+  const { dark, toggleDark } = useAnantTheme();
+  return (
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 border-b flex items-center justify-between px-5 md:px-8"
+      style={{ height: "64px", background: "#060c17", borderColor: "#0d1f3c" }}
+    >
+      <button
+        onClick={onLogoClick ?? (() => navigate("/"))}
+        className="flex items-center gap-3 focus:outline-none"
+      >
+        <img src={anant_logo} alt="Anant National University" className="h-10 w-auto object-contain" />
+      </button>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-medium hidden md:block" style={{ color: "rgba(255,255,255,0.3)" }}>
+          powered by evolve
+        </span>
+        {/* theme toggle */}
+        <button
+          onClick={toggleDark}
+          className="w-7 h-7 rounded-full flex items-center justify-center border transition-colors"
+          style={{ borderColor: "#0d1f3c", backgroundColor: "#0a1628" }}
+          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {dark ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="4" stroke="#93c5fd" strokeWidth="1.8"/>
+              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+        {right ?? null}
+      </div>
+    </nav>
+  );
+}
 
 /* ─── env ──────────────────────────────────────────────────────────────────── */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -27,12 +111,13 @@ function BackBtn({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 text-evolve-yellow w-fit"
+      className="flex items-center gap-1.5 w-fit"
+      style={{ color: T.accent }}
     >
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
         <path
           d="M12.5 15L7.5 10L12.5 5"
-          stroke="#FFD007"
+          stroke={T.accent}
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -51,7 +136,8 @@ function AvatarSlot({ user }) {
   if (!user) return null;
   return (
     <div className="flex items-center gap-2">
-      <span className="hidden md:block text-white text-sm font-semibold">
+      <span className="hidden md:block text-sm font-semibold"
+        style={{ color: isAnant ? "rgba(255,255,255,0.7)" : T.inputText }}>
         {user.name}
       </span>
       <img
@@ -69,13 +155,16 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
   return (
     <div
       className="font-bricolage min-h-screen flex flex-col"
-      style={{ backgroundColor: "#161618" }}
+      style={{ backgroundColor: T.pageBg }}
     >
-      <BlackNav onLogoClick={onBackToCommunity} />
+      {isAnant
+        ? <AnantPortfolioNav onLogoClick={onBackToCommunity} />
+        : <BlackNav onLogoClick={onBackToCommunity} />}
       <div className="absolute top-20 left-6 z-50">
         <button
           onClick={onBackToCommunity}
-          className="text-evolve-yellow text-xs hover:opacity-80 transition-colors flex items-center gap-1 font-semibold"
+          className="text-xs hover:opacity-80 transition-colors flex items-center gap-1 font-semibold"
+          style={{ color: isAnant ? "#3b82f6" : "#FFD007" }}
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
             <path
@@ -107,79 +196,84 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
           {/* Heading */}
           <div>
             <h1
-              className="text-white font-extrabold"
+              className="font-extrabold"
               style={{
                 fontSize: "clamp(36px,9vw,48px)",
                 letterSpacing: "-0.02em",
-                lineHeight: "1"
+                lineHeight: "1",
+                color: T.inputText
               }}
             >
               {copy.successHeading}
             </h1>
-            <p className="text-white/60 text-sm mt-3 leading-relaxed max-w-[32ch] mx-auto">
+            <p className="text-sm mt-3 leading-relaxed max-w-[32ch] mx-auto" style={{ color: T.sub }}>
               {copy.successBody}
             </p>
           </div>
 
           {/* Progress pill */}
           <div
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/15"
-            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border"
+            style={{ backgroundColor: T.inputBg, borderColor: T.border }}
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-            <span className="text-white/70 text-xs font-semibold lowercase tracking-wide">
+            <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
               review in progress · 24–48 working hrs
             </span>
           </div>
 
-          <div className="h-px w-full bg-white/10" />
+          {!isAnant && (
+            <>
+              <div className="h-px w-full bg-white/10" />
 
-          {/* While you wait */}
-          <div className="w-full text-left">
-            <p className="text-evolve-yellow text-sm font-bold mb-3">
-              while you wait —
-            </p>
-            <p className="text-white/60 text-sm leading-relaxed mb-4">
-              the review is just the start. if you're serious about your design
-              career — knowing which roles fit, how to position yourself, and
-              where to even begin — our{" "}
-              <span className="text-white font-semibold">
-                mentorship program
-              </span>{" "}
-              is where that happens.
-            </p>
+              {/* While you wait */}
+              <div className="w-full text-left">
+                <p className="text-evolve-yellow text-sm font-bold mb-3">
+                  while you wait —
+                </p>
+                <p className="text-white/60 text-sm leading-relaxed mb-4">
+                  the review is just the start. if you're serious about your design
+                  career — knowing which roles fit, how to position yourself, and
+                  where to even begin — our{" "}
+                  <span className="text-white font-semibold">
+                    mentorship program
+                  </span>{" "}
+                  is where that happens.
+                </p>
 
-            {/* Mentorship CTA card */}
-            <button
-              onClick={onApplyMentorship}
-              className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-yellow-300 hover:border-evolve-yellow transition-colors"
-              style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-            >
-              <div className="text-left">
-                <p className="text-white font-bold text-sm">
-                  apply for mentorship
-                </p>
-                <p className="text-white/40 text-xs mt-0.5">
-                  limited spots · designed for you
-                </p>
+                {/* Mentorship CTA card */}
+                <button
+                  onClick={onApplyMentorship}
+                  className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-yellow-300 hover:border-evolve-yellow transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                >
+                  <div className="text-left">
+                    <p className="text-white font-bold text-sm">
+                      apply for mentorship
+                    </p>
+                    <p className="text-white/40 text-xs mt-0.5">
+                      limited spots · designed for you
+                    </p>
+                  </div>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="flex-shrink-0 ml-3 text-evolve-yellow"
+                  >
+                    <path
+                      d="M4.5 10h11M10.5 5l5 5-5 5"
+                      stroke="#FFD007"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
               </div>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="flex-shrink-0 ml-3 text-evolve-yellow"
-              >
-                <path
-                  d="M4.5 10h11M10.5 5l5 5-5 5"
-                  stroke="#FFD007"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
+            </>
+          )}
 
           {/* <div className="h-px w-full bg-white/10" /> */}
 
@@ -225,14 +319,15 @@ function PdfViewer({ url }) {
       {!loaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
           <img
-            src={evolve_cube}
+            src={isAnant ? anant_logo : evolve_cube}
             alt=""
             style={{
-              width: 64,
-              animation: "pdfCubePulse 2s ease-in-out infinite"
+              width: isAnant ? 80 : 64,
+              animation: "pdfCubePulse 2s ease-in-out infinite",
+              objectFit: "contain"
             }}
           />
-          <p className="text-evolve-yellow text-sm font-semibold">
+          <p className="text-sm font-semibold" style={{ color: T.accent }}>
             loading your report{".".repeat(dots)}
           </p>
           <style>{`@keyframes pdfCubePulse { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }`}</style>
@@ -255,20 +350,22 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
   return (
     <div
       className="font-bricolage min-h-screen flex flex-col"
-      style={{ backgroundColor: "#161618" }}
+      style={{ backgroundColor: T.pageBg }}
     >
-      <BlackNav onLogoClick={onBack} />
+      {isAnant
+        ? <AnantPortfolioNav onLogoClick={onBack} />
+        : <BlackNav onLogoClick={onBack} />}
       <div className="flex-1 flex flex-col items-center px-4 py-10 gap-6">
         <div className="w-full max-w-2xl flex flex-col items-center gap-6 text-center">
           {/* Icon — green if done, yellow if pending */}
           <div
             className="w-16 h-16 rounded-full border-4 flex items-center justify-center"
-            style={{ borderColor: reviewDone ? "#4ade80" : "#FFD007" }}
+            style={{ borderColor: reviewDone ? "#4ade80" : (isAnant ? "#3b82f6" : "#FFD007") }}
           >
             <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
               <path
                 d="M8 18l7 7 13-14"
-                stroke={reviewDone ? "#4ade80" : "#FFD007"}
+                stroke={reviewDone ? "#4ade80" : (isAnant ? "#3b82f6" : "#FFD007")}
                 strokeWidth="3.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -278,16 +375,17 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
 
           <div>
             <h1
-              className="text-white font-extrabold"
+              className="font-extrabold"
               style={{
                 fontSize: "clamp(24px,6vw,36px)",
                 letterSpacing: "-0.02em",
-                lineHeight: "1.1"
+                lineHeight: "1.1",
+                color: T.inputText
               }}
             >
               {reviewDone ? copy.doneHeading : copy.pendingHeading}
             </h1>
-            <p className="text-white/50 text-sm mt-3 max-w-[38ch] mx-auto leading-relaxed">
+            <p className="text-sm mt-3 max-w-[38ch] mx-auto leading-relaxed" style={{ color: T.sub }}>
               {reviewDone ? copy.doneBody : copy.pendingBody}
             </p>
           </div>
@@ -296,11 +394,14 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
 
           {!reviewDone && (
             <div
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/15"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border"
+              style={{ backgroundColor: T.inputBg, borderColor: T.border }}
             >
-              <span className="w-2 h-2 rounded-full bg-evolve-yellow flex-shrink-0" />
-              <span className="text-white/70 text-xs font-semibold lowercase tracking-wide">
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: isAnant ? "#3b82f6" : "#FFD007" }}
+              />
+              <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
                 review in progress · 24–48 working hrs
               </span>
             </div>
@@ -308,18 +409,19 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
 
           <button
             onClick={onBack}
-            className="text-evolve-yellow text-sm font-semibold flex items-center gap-1.5"
+            className="text-sm font-semibold flex items-center gap-1.5"
+            style={{ color: isAnant ? "#3b82f6" : "#FFD007" }}
           >
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
               <path
                 d="M12.5 15L7.5 10L12.5 5"
-                stroke="#FFD007"
+                stroke={isAnant ? "#3b82f6" : "#FFD007"}
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-            back to community
+            {copy.backLabel}
           </button>
         </div>
       </div>
@@ -359,9 +461,11 @@ function MobileForm({
   return (
     <div
       className="font-bricolage flex md:hidden min-h-screen flex-col"
-      style={{ backgroundColor: "#161618" }}
+      style={{ backgroundColor: T.pageBg }}
     >
-      <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
+      {isAnant
+        ? <AnantPortfolioNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
+        : <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />}
 
       <div className="flex-1 flex flex-col px-5 pt-20 pb-10 gap-6">
         {/* Back */}
@@ -370,39 +474,38 @@ function MobileForm({
         {/* Greeting */}
         <div>
           <h1
-            className="text-white font-extrabold lowercase"
+            className="font-extrabold lowercase"
             style={{
               fontSize: "clamp(26px,7vw,36px)",
-              letterSpacing: "-0.02em"
+              letterSpacing: "-0.02em",
+              color: T.inputText
             }}
           >
             hi!{" "}
-            <span className="text-evolve-yellow">
+            <span style={{ color: T.accent }}>
               {user?.name?.split(" ")[0] || user?.name}
             </span>
           </h1>
-          <p className="text-white/50 text-sm mt-1">
+          <p className="text-sm mt-1" style={{ color: T.sub }}>
             ready to submit your portfolio?
           </p>
         </div>
 
         {/* ── Portfolio ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-white text-sm font-semibold lowercase">
+          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
             your portfolio
           </p>
           {/* Tabs */}
-          <div className="flex rounded-xl overflow-hidden border border-white/10">
+          <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: T.border }}>
             <button
               onClick={() => setPortfolioMode("link")}
               className="flex-1 py-3 text-sm font-bold lowercase transition-colors"
               style={{
                 backgroundColor:
-                  portfolioMode === "link"
-                    ? "#FFD007"
-                    : "rgba(255,255,255,0.06)",
+                  portfolioMode === "link" ? T.accent : T.inputBg,
                 color:
-                  portfolioMode === "link" ? "#161616" : "rgba(255,255,255,0.5)"
+                  portfolioMode === "link" ? T.accentText : T.sub
               }}
             >
               paste a link
@@ -414,10 +517,10 @@ function MobileForm({
               style={{
                 backgroundColor:
                   portfolioMode === "file"
-                    ? "rgba(223,5,134,1)"
-                    : "rgba(255,255,255,0.06)",
+                    ? (isAnant ? "#4f46e5" : "rgba(223,5,134,1)")
+                    : T.inputBg,
                 color:
-                  portfolioMode === "file" ? "#fff" : "rgba(255,255,255,0.5)"
+                  portfolioMode === "file" ? "#fff" : T.sub
               }}
             >
               upload a file
@@ -429,8 +532,8 @@ function MobileForm({
               placeholder="your site, behance, figma, notion – any link works"
               value={portfolioLink}
               onChange={(e) => setPortfolioLink(e.target.value)}
-              className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+              style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
             />
           )}
           {portfolioMode === "file" && (
@@ -455,23 +558,23 @@ function MobileForm({
                         cx="14"
                         cy="14"
                         r="11"
-                        stroke="rgba(255,208,7,0.2)"
+                        stroke={isAnant ? "rgba(37,99,235,0.2)" : "rgba(255,208,7,0.2)"}
                         strokeWidth="2.5"
                       />
                       <path
                         d="M14 3 a11 11 0 0 1 11 11"
-                        stroke="#FFD007"
+                        stroke={T.accent}
                         strokeWidth="2.5"
                         strokeLinecap="round"
                       />
                     </svg>
-                    <p className="text-evolve-yellow text-xs font-semibold">
+                    <p className="text-xs font-semibold" style={{ color: T.accent }}>
                       loading file…
                     </p>
                   </>
                 ) : portfolioFile ? (
                   <>
-                    <p className="text-evolve-yellow text-sm font-semibold text-center">
+                    <p className="text-sm font-semibold text-center" style={{ color: T.accent }}>
                       {portfolioFile.name}
                     </p>
                     <button
@@ -487,10 +590,10 @@ function MobileForm({
                   </>
                 ) : (
                   <>
-                    <p className="text-white/40 text-sm text-center">
+                    <p className="text-sm text-center" style={{ color: T.sub }}>
                       tap to upload
                     </p>
-                    <p className="text-white/25 text-xs text-center">
+                    <p className="text-xs text-center" style={{ color: T.muted }}>
                       pdf, pptx or zip. max 10mb
                     </p>
                   </>
@@ -526,7 +629,7 @@ function MobileForm({
         {/* ── Course + Batch (Anant only) ── */}
         {tenant.formFields.showCourse && (
           <div className="flex flex-col gap-2">
-            <p className="text-white text-sm font-semibold lowercase">
+            <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
               your course / program
             </p>
             <input
@@ -534,14 +637,14 @@ function MobileForm({
               placeholder="e.g. B.Des Product Design"
               value={course}
               onChange={(e) => setCourse(e.target.value)}
-              className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+              style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
             />
           </div>
         )}
         {tenant.formFields.showBatch && (
           <div className="flex flex-col gap-2">
-            <p className="text-white text-sm font-semibold lowercase">
+            <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
               batch / year
             </p>
             <input
@@ -549,18 +652,18 @@ function MobileForm({
               placeholder="e.g. 2022–2026 or Batch 5"
               value={batch}
               onChange={(e) => setBatch(e.target.value)}
-              className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+              style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
             />
           </div>
         )}
 
         {/* ── Q2: Target roles ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-white text-sm font-semibold lowercase">
+          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
             what kind of design roles are you targeting?
           </p>
-          <p className="text-white/40 text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed" style={{ color: T.muted }}>
             to give you feedback aligned with your target roles.
           </p>
           <textarea
@@ -568,18 +671,18 @@ function MobileForm({
             placeholder="e.g - UX designer, Interface designer"
             value={targetRoles}
             onChange={(e) => setTargetRoles(e.target.value)}
-            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+            style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
           />
         </div>
 
         {/* ── Q3: Proud project ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-white text-sm font-semibold lowercase">
+          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
             walk us through one project you're most proud of. what was it? what
             was your role?
           </p>
-          <p className="text-white/40 text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed" style={{ color: T.muted }}>
             so we can better understand your thought process and give relevant
             feedback.
           </p>
@@ -588,24 +691,24 @@ function MobileForm({
             placeholder="e.g - worked on a e-commerce website as UX researcher."
             value={proudProject}
             onChange={(e) => setProudProject(e.target.value)}
-            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+            style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
           />
         </div>
 
         {/* ── Q4: Notes (optional) ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-white text-sm font-semibold lowercase">
+          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
             anything we should know?{" "}
-            <span className="text-white/30 font-normal">(optional)</span>
+            <span className="font-normal" style={{ color: T.muted }}>(optional)</span>
           </p>
           <textarea
             rows={3}
             placeholder="anything we should consider while reviewing?"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            className="w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+            style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
           />
         </div>
 
@@ -614,7 +717,8 @@ function MobileForm({
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+          style={{ backgroundColor: T.accent, color: T.accentText }}
         >
           {submitting ? (
             "submitting…"
@@ -625,7 +729,7 @@ function MobileForm({
           )}
         </button>
 
-        <p className="text-white/25 text-xs text-center">
+        <p className="text-xs text-center" style={{ color: T.muted }}>
           we'll be in touch within 5–7 working days
         </p>
       </div>
@@ -666,21 +770,24 @@ function DesktopForm({
   return (
     <div
       className="font-bricolage hidden md:flex min-h-screen flex-col"
-      style={{ backgroundColor: "#161618" }}
+      style={{ backgroundColor: T.pageBg }}
     >
-      <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
+      {isAnant
+        ? <AnantPortfolioNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />
+        : <BlackNav onLogoClick={onBack} right={<AvatarSlot user={user} />} />}
 
-      <div className="flex flex-1 pt-14">
+      <div className="flex flex-1 pt-16">
         {/* ─── LEFT PANEL ─── */}
         <div
-          className="flex-shrink-0 flex flex-col justify-between px-10 py-10 border-r border-white/10"
+          className="flex-shrink-0 flex flex-col justify-between px-10 py-10 border-r"
+          style={{ borderColor: T.border }}
           style={{ width: "38%" }}
         >
           <div className="flex flex-col gap-8 mt-4">
             <BackBtn onClick={onBack} />
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-evolve-pink flex-shrink-0" />
-              <span className="text-white/50 text-xs font-bold uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: T.h2 }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.sub }}>
                 portfolio review
               </span>
             </div>
@@ -694,20 +801,20 @@ function DesktopForm({
                   lineHeight: "1"
                 }}
               >
-                <span className="text-white">honest </span>
-                <span className="text-evolve-pink">feedback.</span>
+                <span style={{ color: T.inputText }}>honest </span>
+                <span style={{ color: T.h2 }}>feedback.</span>
                 <br />
-                <span className="text-evolve-yellow">real growth.</span>
+                <span style={{ color: T.h3 }}>real growth.</span>
               </h1>
-              <p className="text-white/50 text-sm mt-4 leading-relaxed max-w-[38ch]">
+              <p className="text-sm mt-4 leading-relaxed max-w-[38ch]" style={{ color: T.sub }}>
                 getting a review isn't just about what's on screen. it's about
                 how you think, present, and what you're actually going for.
               </p>
             </div>
 
             <div
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/10"
-              style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl border"
+              style={{ borderColor: T.border, backgroundColor: T.cardBg }}
             >
               <img
                 src={
@@ -718,24 +825,21 @@ function DesktopForm({
                 className="w-10 h-10 rounded-full object-cover flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm truncate">
+                <p className="font-semibold text-sm truncate" style={{ color: T.inputText }}>
                   {user?.name}
                 </p>
-                <p className="text-white/40 text-xs truncate">{user?.email}</p>
+                <p className="text-xs truncate" style={{ color: T.sub }}>{user?.email}</p>
               </div>
               <span
                 className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: "rgba(163,91,251,0.2)",
-                  color: "#A35BFB"
-                }}
+                style={{ backgroundColor: T.badgeBg, color: T.badgeText }}
               >
                 signed in
               </span>
             </div>
 
             <div>
-              <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: T.muted }}>
                 what we look at
               </p>
               <ul className="flex flex-col gap-2.5">
@@ -744,15 +848,10 @@ function DesktopForm({
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
                       style={{
-                        backgroundColor: [
-                          "#DF0586",
-                          "#A35BFB",
-                          "#FFD007",
-                          "#4ade80"
-                        ][i % 4]
+                        backgroundColor: T.dots[i % 4]
                       }}
                     />
-                    <span className="text-white/60 text-sm leading-snug">
+                    <span className="text-sm leading-snug" style={{ color: T.sub }}>
                       {item}
                     </span>
                   </li>
@@ -762,11 +861,11 @@ function DesktopForm({
           </div>
 
           <div
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/10 w-fit"
-            style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full border w-fit"
+            style={{ borderColor: T.border, backgroundColor: T.inputBg }}
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-            <span className="text-white/60 text-xs font-semibold lowercase tracking-wide">
+            <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
               feedback within&nbsp;&nbsp;5–7 working days
             </span>
           </div>
@@ -779,16 +878,16 @@ function DesktopForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: "#FFD007" }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ backgroundColor: T.accent, color: T.accentText }}
                 >
                   1
                 </span>
-                <p className="text-white font-semibold lowercase">
+                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                   your portfolio
                 </p>
               </div>
-              <p className="text-white/40 text-xs pl-10 leading-relaxed">
+              <p className="text-xs pl-10 leading-relaxed" style={{ color: T.muted }}>
                 behance, figma, notion, your own site — any link works. or
                 upload your file directly.
               </p>
@@ -798,18 +897,9 @@ function DesktopForm({
                   onClick={() => setPortfolioMode("link")}
                   className="px-4 py-2 rounded-xl text-sm font-bold lowercase border transition-all"
                   style={{
-                    backgroundColor:
-                      portfolioMode === "link"
-                        ? "#FFD007"
-                        : "rgba(255,255,255,0.06)",
-                    borderColor:
-                      portfolioMode === "link"
-                        ? "#FFD007"
-                        : "rgba(255,255,255,0.12)",
-                    color:
-                      portfolioMode === "link"
-                        ? "#161616"
-                        : "rgba(255,255,255,0.5)"
+                    backgroundColor: portfolioMode === "link" ? T.accent : T.inputBg,
+                    borderColor: portfolioMode === "link" ? T.accent : T.border,
+                    color: portfolioMode === "link" ? T.accentText : T.sub
                   }}
                 >
                   paste a link
@@ -818,18 +908,13 @@ function DesktopForm({
                   onClick={() => setPortfolioMode("file")}
                   className="px-4 py-2 rounded-xl text-sm font-bold lowercase border transition-all"
                   style={{
-                    backgroundColor:
-                      portfolioMode === "file"
-                        ? "rgba(223,5,134,1)"
-                        : "rgba(255,255,255,0.06)",
-                    borderColor:
-                      portfolioMode === "file"
-                        ? "rgba(223,5,134,1)"
-                        : "rgba(255,255,255,0.12)",
-                    color:
-                      portfolioMode === "file"
-                        ? "#fff"
-                        : "rgba(255,255,255,0.5)"
+                    backgroundColor: portfolioMode === "file"
+                      ? (isAnant ? "#4f46e5" : "rgba(223,5,134,1)")
+                      : T.inputBg,
+                    borderColor: portfolioMode === "file"
+                      ? (isAnant ? "#4f46e5" : "rgba(223,5,134,1)")
+                      : T.border,
+                    color: portfolioMode === "file" ? "#fff" : T.sub
                   }}
                 >
                   upload a file
@@ -842,8 +927,8 @@ function DesktopForm({
                   placeholder="https://your-portfolio.com"
                   value={portfolioLink}
                   onChange={(e) => setPortfolioLink(e.target.value)}
-                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+                  style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
                 />
               )}
 
@@ -862,17 +947,13 @@ function DesktopForm({
                   }}
                   className="ml-10 rounded-2xl px-4 py-10 flex flex-col items-center justify-center gap-2 cursor-pointer border transition-colors"
                   style={{
-                    backgroundColor: dragOver
-                      ? "rgba(255,208,7,0.06)"
-                      : "rgba(255,255,255,0.04)",
-                    borderColor: dragOver
-                      ? "rgba(255,208,7,0.4)"
-                      : "rgba(255,255,255,0.12)"
+                    backgroundColor: dragOver ? T.fileActiveBg : T.inputBg,
+                    borderColor: dragOver ? T.fileActiveBorder : T.border
                   }}
                 >
                   {portfolioFile ? (
                     <div className="flex flex-col items-center gap-2">
-                      <p className="text-evolve-yellow text-sm font-semibold text-center">
+                      <p className="text-sm font-semibold text-center" style={{ color: T.accent }}>
                         {portfolioFile.name}
                       </p>
                       <button
@@ -889,10 +970,10 @@ function DesktopForm({
                     </div>
                   ) : (
                     <>
-                      <p className="text-white/40 text-sm text-center">
+                      <p className="text-sm text-center" style={{ color: T.sub }}>
                         drag & drop or click to upload
                       </p>
-                      <p className="text-white/25 text-xs text-center">
+                      <p className="text-xs text-center" style={{ color: T.muted }}>
                         pdf, pptx or zip. max size 10mb
                       </p>
                     </>
@@ -913,12 +994,12 @@ function DesktopForm({
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
-                    style={{ backgroundColor: "#A35BFB" }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    style={{ backgroundColor: T.h2, color: "#fff" }}
                   >
                     +
                   </span>
-                  <p className="text-white font-semibold lowercase">
+                  <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                     your course / program
                   </p>
                 </div>
@@ -927,8 +1008,8 @@ function DesktopForm({
                   placeholder="e.g. B.Des Product Design"
                   value={course}
                   onChange={(e) => setCourse(e.target.value)}
-                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+                  style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
                 />
               </div>
             )}
@@ -936,12 +1017,12 @@ function DesktopForm({
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
-                    style={{ backgroundColor: "#A35BFB" }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    style={{ backgroundColor: T.h2, color: "#fff" }}
                   >
                     +
                   </span>
-                  <p className="text-white font-semibold lowercase">
+                  <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                     batch / year
                   </p>
                 </div>
@@ -950,8 +1031,8 @@ function DesktopForm({
                   placeholder="e.g. 2022–2026 or Batch 5"
                   value={batch}
                   onChange={(e) => setBatch(e.target.value)}
-                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
-                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                  className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors"
+                  style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
                 />
               </div>
             )}
@@ -960,16 +1041,16 @@ function DesktopForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: "#FFD007" }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ backgroundColor: T.accent, color: T.accentText }}
                 >
                   2
                 </span>
-                <p className="text-white font-semibold lowercase">
+                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                   what kind of design roles are you targeting?
                 </p>
               </div>
-              <p className="text-white/40 text-xs pl-10 leading-relaxed">
+              <p className="text-xs pl-10 leading-relaxed" style={{ color: T.muted }}>
                 to give you feedback aligned with your target roles.
               </p>
               <textarea
@@ -977,8 +1058,8 @@ function DesktopForm({
                 placeholder="e.g - UX designer, Interface designer"
                 value={targetRoles}
                 onChange={(e) => setTargetRoles(e.target.value)}
-                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+                style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
               />
             </div>
 
@@ -986,17 +1067,17 @@ function DesktopForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-black font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: "#FFD007" }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ backgroundColor: T.accent, color: T.accentText }}
                 >
                   3
                 </span>
-                <p className="text-white font-semibold lowercase">
+                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                   walk us through one project you're most proud of. what was it?
                   what was your role?
                 </p>
               </div>
-              <p className="text-white/40 text-xs pl-10 leading-relaxed">
+              <p className="text-xs pl-10 leading-relaxed" style={{ color: T.muted }}>
                 so we can better understand your thought process and give
                 relevant feedback.
               </p>
@@ -1005,8 +1086,8 @@ function DesktopForm({
                 placeholder="e.g - worked on a e-commerce website as UX researcher."
                 value={proudProject}
                 onChange={(e) => setProudProject(e.target.value)}
-                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+                style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
               />
             </div>
 
@@ -1014,22 +1095,19 @@ function DesktopForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 border border-white/15"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.06)",
-                    color: "rgba(255,255,255,0.5)"
-                  }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 border"
+                  style={{ borderColor: T.border, backgroundColor: T.inputBg, color: T.sub }}
                 >
                   4
                 </span>
-                <p className="text-white font-semibold lowercase">
+                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
                   anything we should know?{" "}
-                  <span className="text-white/30 font-normal text-xs">
+                  <span className="font-normal text-xs" style={{ color: T.muted }}>
                     (optional)
                   </span>
                 </p>
               </div>
-              <p className="text-white/40 text-xs pl-10 leading-relaxed">
+              <p className="text-xs pl-10 leading-relaxed" style={{ color: T.muted }}>
                 helps us give you more relevant feedback — where you're at, what
                 you're going for.
               </p>
@@ -1038,8 +1116,8 @@ function DesktopForm({
                 placeholder="e.g. applying to studios, switching from graphic design…"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-white placeholder-white/30 text-sm outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors resize-none"
-                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                className="ml-10 w-full rounded-2xl px-4 py-3.5 text-sm outline-none border transition-colors resize-none"
+                style={{ backgroundColor: T.inputBg, color: T.inputText, borderColor: T.border }}
               />
             </div>
 
@@ -1048,7 +1126,8 @@ function DesktopForm({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="ml-10 w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+              className="ml-10 w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+              style={{ backgroundColor: T.accent, color: T.accentText }}
             >
               {submitting ? (
                 "submitting…"
@@ -1102,7 +1181,7 @@ export default function PortfolioReviewForm() {
   /* ── auth guard ─────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!authLoading && !user) {
-      sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
+      sessionStorage.setItem("signin_from", isAnant ? "/portfolio-review/form" : "/community/portfolio-review/form");
       navigate("/signin", { replace: true });
     }
   }, [user, authLoading, navigate]);
