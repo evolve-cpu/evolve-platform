@@ -1,26 +1,64 @@
 import { Helmet } from "react-helmet-async";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../supabaseClient";
+import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 
 export default function AnantHome() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { dark, toggleDark } = useAnantTheme();
+  const [authUser,    setAuthUser]    = useState(null);
+  const [studentData, setStudentData] = useState(null);
+  const [showMenu,    setShowMenu]    = useState(false);
+  const menuRef = useRef(null);
 
   const FORM_PATH = "/portfolio-review/form";
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Load auth state + student name from DB
+  useEffect(() => {
+    async function load(session) {
+      const u = session?.user;
+      setAuthUser(u || null);
+      if (!u) { setStudentData(null); return; }
+      const { data } = await supabaseAdmin
+        .from("anu_students")
+        .select("first_name, last_name, program, stream, year, anu_email")
+        .eq("anu_email", u.email.toLowerCase())
+        .maybeSingle();
+      setStudentData(data || null);
+    }
+    supabase.auth.getSession().then(({ data: { session } }) => load(session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => load(session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setAuthUser(null); setStudentData(null); setShowMenu(false);
+  }
+
   const handleCTA = () => {
-    if (user) {
+    if (authUser) {
       navigate(FORM_PATH);
     } else {
-      localStorage.setItem("signin_from", FORM_PATH);
-      sessionStorage.setItem("signin_from", FORM_PATH);
-      sessionStorage.setItem("post_signin_redirect", FORM_PATH);
       navigate("/signin");
     }
   };
+
+  const displayName = studentData
+    ? `${studentData.first_name} ${studentData.last_name}`
+    : authUser?.email?.split("@")[0] || "";
 
   /* ── page theme ── */
   const bg       = dark ? "#060c17"  : "#ffffff";
@@ -105,19 +143,77 @@ export default function AnantHome() {
               )}
             </button>
 
-            {user ? (
-              <>
-                <span className="text-sm hidden md:block" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  {user.name || user.email}
-                </span>
+            {authUser ? (
+              <div className="relative" ref={menuRef}>
+                {/* avatar button */}
                 <button
-                  onClick={() => navigate(FORM_PATH)}
-                  className="text-sm font-bold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: accent, color: "#fff" }}
+                  onClick={() => setShowMenu(v => !v)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors"
+                  style={{ borderColor: "#1e3a8a", background: showMenu ? "rgba(37,99,235,0.15)" : "transparent" }}
                 >
-                  my review
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: "#1e3a8a", color: "#93c5fd" }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-semibold hidden md:block" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    {displayName}
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={`transition-transform ${showMenu ? "rotate-180" : ""}`}>
+                    <path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
-              </>
+
+                {/* dropdown */}
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl overflow-hidden z-50"
+                    style={{ background: "#071022", borderColor: "#0d1f3c" }}>
+                    {/* identity header */}
+                    <div className="px-4 py-3 border-b" style={{ borderColor: "#0d1f3c" }}>
+                      <p className="text-sm font-bold text-white">{displayName}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{authUser.email}</p>
+                    </div>
+                    {/* student details if available */}
+                    {studentData && (
+                      <div className="px-4 py-3 border-b" style={{ borderColor: "#0d1f3c" }}>
+                        {[
+                          { label: "program", value: studentData.program },
+                          { label: "stream",  value: studentData.stream  },
+                          { label: "year",    value: studentData.year ? `Year ${studentData.year}` : null }
+                        ].filter(r => r.value).map(({ label, value }) => (
+                          <div key={label} className="flex justify-between items-center py-0.5">
+                            <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
+                            <span className="text-xs font-semibold text-white">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* actions */}
+                    <div className="p-2 flex flex-col gap-0.5">
+                      <button
+                        onClick={() => { navigate("/profile"); setShowMenu(false); }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-colors hover:bg-white/5"
+                        style={{ color: "#93c5fd" }}
+                      >
+                        my profile
+                      </button>
+                      <button
+                        onClick={() => { navigate(FORM_PATH); setShowMenu(false); }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-colors hover:bg-white/5"
+                        style={{ color: "rgba(255,255,255,0.7)" }}
+                      >
+                        portfolio review
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-colors hover:bg-red-500/10"
+                        style={{ color: "#f87171" }}
+                      >
+                        sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => navigate("/signin")}

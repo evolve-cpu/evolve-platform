@@ -6,64 +6,54 @@ import { supabaseAdmin } from "../supabaseAdminClient";
 /**
  * Guard for ANU admin/faculty routes.
  *
- * Allows access if:
+ * Access is granted if:
  *   1. PIN-based: sessionStorage admin_access = "true"  (evolve super admin)
- *   2. Supabase session: user email is in anu_faculty OR anu_admins
+ *   2. Supabase session: user email found in anu_faculty OR anu_admins
  *
- * On Supabase-based access, writes anu_role / anu_stream into sessionStorage
- * so AdminDashboard can filter accordingly.
+ * Uses onAuthStateChange to catch magic link sessions from URL hash,
+ * so faculty/admin clicking an invite link land here automatically.
  */
 export default function AnantAdminGuard({ children }) {
   const [status, setStatus] = useState("checking");
 
   useEffect(() => {
-    verify();
-  }, []);
+    let resolved = false;
+    let timeoutId;
+    let unsubFn = null;
 
-  async function verify() {
-    // 1. PIN access (evolve super admin — fastest check)
-    if (sessionStorage.getItem("admin_access") === "true") {
-      setStatus("ok");
-      return;
-    }
+    async function verifyRole(user) {
+      if (resolved) return;
 
-    // 2. Supabase session check
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) { setStatus("denied"); return; }
+      const email = user.email?.toLowerCase();
+      if (!email) { resolved = true; setStatus("denied"); return; }
 
-      const email = user.email.toLowerCase();
-
-      // check faculty
-      const { data: faculty } = await supabaseAdmin
-        .from("anu_faculty")
-        .select("id, stream, program, auth_user_id, invite_accepted_at")
-        .eq("anu_email", email)
-        .maybeSingle();
+      const [{ data: faculty }, { data: admin }] = await Promise.all([
+        supabaseAdmin
+          .from("anu_faculty")
+          .select("id, stream, program, auth_user_id")
+          .eq("anu_email", email)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("anu_admins")
+          .select("id, auth_user_id")
+          .eq("anu_email", email)
+          .maybeSingle()
+      ]);
 
       if (faculty) {
-        // stamp accepted if first time
         if (!faculty.auth_user_id) {
           await supabaseAdmin.from("anu_faculty").update({
             auth_user_id: user.id,
             invite_accepted_at: new Date().toISOString()
           }).eq("id", faculty.id);
         }
-        sessionStorage.setItem("admin_access",  "true");
-        sessionStorage.setItem("admin_tenant",  "anant");
-        sessionStorage.setItem("anu_role",      "faculty");
-        sessionStorage.setItem("anu_stream",    faculty.stream   || "");
-        sessionStorage.setItem("anu_program",   faculty.program  || "");
-        setStatus("ok");
-        return;
+        sessionStorage.setItem("admin_access", "true");
+        sessionStorage.setItem("admin_tenant", "anant");
+        sessionStorage.setItem("anu_role",     "faculty");
+        sessionStorage.setItem("anu_stream",   faculty.stream  || "");
+        sessionStorage.setItem("anu_program",  faculty.program || "");
+        resolved = true; setStatus("ok"); return;
       }
-
-      // check university admin
-      const { data: admin } = await supabaseAdmin
-        .from("anu_admins")
-        .select("id, auth_user_id, invite_accepted_at")
-        .eq("anu_email", email)
-        .maybeSingle();
 
       if (admin) {
         if (!admin.auth_user_id) {
@@ -77,15 +67,49 @@ export default function AnantAdminGuard({ children }) {
         sessionStorage.setItem("anu_role",     "uni_admin");
         sessionStorage.removeItem("anu_stream");
         sessionStorage.removeItem("anu_program");
-        setStatus("ok");
+        resolved = true; setStatus("ok"); return;
+      }
+
+      resolved = true; setStatus("denied");
+    }
+
+    async function init() {
+      // Fast path: PIN already in session
+      if (sessionStorage.getItem("admin_access") === "true") {
+        setStatus("ok"); return;
+      }
+
+      // getSession processes the URL hash (magic link tokens) if present
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await verifyRole(session.user);
         return;
       }
 
-      setStatus("denied");
-    } catch {
-      setStatus("denied");
+      // No session yet — wait for onAuthStateChange (magic link URL hash processing)
+      // This fires within milliseconds on the same page load
+      timeoutId = setTimeout(() => {
+        if (!resolved) { resolved = true; setStatus("denied"); }
+      }, 6000);
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, sess) => {
+          if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && sess?.user) {
+            clearTimeout(timeoutId);
+            await verifyRole(sess.user);
+            subscription.unsubscribe();
+          }
+        }
+      );
+      unsubFn = () => subscription.unsubscribe();
     }
-  }
+
+    init();
+    return () => {
+      clearTimeout(timeoutId);
+      unsubFn?.();
+    };
+  }, []);
 
   if (status === "checking") {
     return (

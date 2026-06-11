@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
@@ -7,32 +7,34 @@ import { anant_logo } from "../../assets/images/Community";
 const NAV_BG   = "#060c17";
 const NAV_BORD = "#0d1f3c";
 const ACCENT   = "#2563eb";
+const REDIRECT = `${window.location.origin}/admin/dashboard`;
 
 export default function AnantAdminLogin() {
   const navigate = useNavigate();
 
-  // mode: "email" (faculty/uni-admin) or "pin" (evolve super-admin)
-  const [mode,      setMode]      = useState("email");
-  const [step,      setStep]      = useState("input"); // input | otp | sending | verifying
-  const [email,     setEmail]     = useState("");
-  const [digits,    setDigits]    = useState(["","","","","",""]);
-  const [pin,       setPin]       = useState("");
-  const [error,     setError]     = useState("");
+  // mode: "email" (faculty/uni-admin OTP) or "pin" (evolve super-admin)
+  const [mode,    setMode]    = useState("email");
+  const [step,    setStep]    = useState("input"); // input | sending | sent
+  const [email,   setEmail]   = useState("");
+  const [pin,     setPin]     = useState("");
+  const [error,   setError]   = useState("");
   const [countdown, setCountdown] = useState(0);
 
-  const refs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
-  const evolvePin  = import.meta.env.VITE_ADMIN_PIN;
-  const anantPin   = import.meta.env.VITE_ANANT_ADMIN_PIN;
+  const evolvePin = import.meta.env.VITE_ADMIN_PIN;
+  const anantPin  = import.meta.env.VITE_ANANT_ADMIN_PIN;
 
-  // If PIN session already valid, go straight to dashboard
+  // If PIN session or Supabase session already valid, skip login
   useEffect(() => {
     if (sessionStorage.getItem("admin_access") === "true") {
-      navigate("/admin/dashboard", { replace: true });
+      navigate("/admin/dashboard", { replace: true }); return;
     }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) navigate("/admin/dashboard", { replace: true });
+    });
   }, [navigate]);
 
-  /* ── email mode ── */
-  async function handleSendOtp() {
+  /* ── email mode — sends a magic link ── */
+  async function handleSend() {
     const addr = email.trim().toLowerCase();
     if (!addr) return;
     setError(""); setStep("sending");
@@ -48,41 +50,22 @@ export default function AnantAdminLogin() {
       setStep("input"); return;
     }
 
-    const redirectTo = `${window.location.origin}/admin/dashboard`;
     const { error: otpErr } = await supabase.auth.signInWithOtp({
       email: addr,
-      options: { shouldCreateUser: true, emailRedirectTo: redirectTo }
+      options: { shouldCreateUser: true, emailRedirectTo: REDIRECT }
     });
 
     if (otpErr) { setError(otpErr.message); setStep("input"); return; }
-    setStep("otp");
+    setStep("sent");
     startCountdown();
-    setTimeout(() => refs[0].current?.focus(), 100);
-  }
-
-  async function handleVerifyOtp() {
-    const token = digits.join("");
-    if (token.length < 6) return;
-    setError(""); setStep("verifying");
-    const { error: vErr } = await supabase.auth.verifyOtp({
-      email: email.trim().toLowerCase(), token, type: "email"
-    });
-    if (vErr) { setError(vErr.message || "Invalid code."); setStep("otp"); return; }
-    // AnantAdminGuard will verify role on /admin/dashboard
-    navigate("/admin/dashboard", { replace: true });
   }
 
   /* ── PIN mode ── */
   function handlePinSubmit(e) {
     e.preventDefault();
     const entered = pin.trim();
-    if (evolvePin && entered === String(evolvePin)) {
-      sessionStorage.setItem("admin_access", "true");
-      sessionStorage.setItem("admin_tenant", "anant");
-      sessionStorage.removeItem("anu_role");
-      navigate("/admin/dashboard"); return;
-    }
-    if (anantPin && entered === String(anantPin)) {
+    if ((evolvePin && entered === String(evolvePin)) ||
+        (anantPin  && entered === String(anantPin))) {
       sessionStorage.setItem("admin_access", "true");
       sessionStorage.setItem("admin_tenant", "anant");
       sessionStorage.removeItem("anu_role");
@@ -91,30 +74,11 @@ export default function AnantAdminLogin() {
     setError("Wrong PIN.");
   }
 
-  /* ── helpers ── */
   function startCountdown() {
-    setCountdown(30);
-    const iv = setInterval(() => setCountdown(c => { if (c <= 1) { clearInterval(iv); return 0; } return c - 1; }), 1000);
+    setCountdown(60);
+    const iv = setInterval(() =>
+      setCountdown(c => { if (c <= 1) { clearInterval(iv); return 0; } return c - 1; }), 1000);
   }
-  function handleDigit(i, val) {
-    const d = val.replace(/\D/g, "").slice(-1);
-    const next = [...digits]; next[i] = d; setDigits(next);
-    if (d && i < 5) refs[i + 1].current?.focus();
-  }
-  function handleKey(i, e) {
-    if (e.key === "Backspace" && !digits[i] && i > 0) refs[i - 1].current?.focus();
-    if (e.key === "Enter") handleVerifyOtp();
-  }
-  function handlePaste(e) {
-    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!text) return; e.preventDefault();
-    const next = [...digits];
-    text.split("").forEach((d, i) => { next[i] = d; });
-    setDigits(next);
-    refs[Math.min(text.length, 5)].current?.focus();
-  }
-
-  const loading = step === "sending" || step === "verifying";
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#060c17" }}>
@@ -131,20 +95,6 @@ export default function AnantAdminLogin() {
           {/* ══ EMAIL MODE ══ */}
           {mode === "email" && (
             <>
-              {/* back button for OTP step */}
-              {(step === "otp" || step === "verifying") && (
-                <button
-                  onClick={() => { setStep("input"); setDigits(["","","","","",""]); setError(""); }}
-                  className="flex items-center gap-1.5 text-sm font-semibold w-fit"
-                  style={{ color: "#60a5fa" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <path d="M12.5 15L7.5 10L12.5 5" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  back
-                </button>
-              )}
-
               {/* input step */}
               {(step === "input" || step === "sending") && (
                 <>
@@ -153,7 +103,7 @@ export default function AnantAdminLogin() {
                       faculty access
                     </h1>
                     <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                      enter your ANU email to receive a sign-in link.
+                      enter your ANU email — we'll send you a sign-in link.
                     </p>
                   </div>
                   <input
@@ -161,63 +111,60 @@ export default function AnantAdminLogin() {
                     placeholder="yourname@anu.edu.in"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && email.trim() && !loading && handleSendOtp()}
+                    onKeyDown={e => e.key === "Enter" && email.trim() && step === "input" && handleSend()}
                     className="w-full rounded-2xl px-5 py-4 text-white text-base outline-none border"
                     style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)" }}
                     autoFocus
                   />
                   {error && <p className="text-red-400 text-sm">{error}</p>}
                   <button
-                    onClick={handleSendOtp}
-                    disabled={!email.trim() || loading}
+                    onClick={handleSend}
+                    disabled={!email.trim() || step === "sending"}
                     className="w-full font-bold text-base rounded-2xl py-4 transition-opacity disabled:opacity-40"
                     style={{ background: ACCENT, color: "#fff" }}
                   >
-                    {loading ? "checking…" : "send code"}
+                    {step === "sending" ? "checking…" : "send sign-in link"}
                   </button>
                 </>
               )}
 
-              {/* otp step */}
-              {(step === "otp" || step === "verifying") && (
+              {/* sent step */}
+              {step === "sent" && (
                 <>
-                  <h1 className="font-extrabold text-white" style={{ fontSize: 32, letterSpacing: "-0.04em" }}>
-                    check your email.
-                  </h1>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    code sent to <span className="text-white">{email}</span>
-                  </p>
-                  <div className="flex gap-2 justify-between" onPaste={handlePaste}>
-                    {digits.map((d, i) => (
-                      <input
-                        key={i} ref={refs[i]}
-                        type="text" inputMode="numeric" maxLength={1} value={d}
-                        onChange={e => handleDigit(i, e.target.value)}
-                        onKeyDown={e => handleKey(i, e)}
-                        className="flex-1 aspect-square text-center text-white text-2xl font-bold rounded-xl border outline-none"
-                        style={{
-                          background: "rgba(255,255,255,0.06)",
-                          borderColor: d ? "rgba(37,99,235,0.8)" : "rgba(255,255,255,0.15)",
-                          maxWidth: 52
-                        }}
-                      />
-                    ))}
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                      style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)" }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <rect x="2" y="5" width="20" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.8"/>
+                        <path d="M2 7l10 7 10-7" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    </div>
                   </div>
-                  {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <button
-                    onClick={handleVerifyOtp}
-                    disabled={digits.join("").length < 6 || step === "verifying"}
-                    className="w-full font-bold text-base rounded-2xl py-4 transition-opacity disabled:opacity-40"
-                    style={{ background: ACCENT, color: "#fff" }}
-                  >
-                    {step === "verifying" ? "verifying…" : "confirm"}
-                  </button>
+                  <div className="text-center">
+                    <h1 className="font-extrabold text-white" style={{ fontSize: 26, letterSpacing: "-0.03em" }}>
+                      check your email
+                    </h1>
+                    <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      sign-in link sent to
+                    </p>
+                    <p className="text-sm font-semibold mt-0.5 text-white">{email}</p>
+                    <p className="text-sm mt-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      click the link in the email — you'll land directly on the dashboard.
+                    </p>
+                  </div>
                   <p className="text-center text-sm">
                     {countdown > 0
-                      ? <span style={{ color: "rgba(255,255,255,0.3)" }}>resend in {countdown}s</span>
-                      : <button onClick={handleSendOtp} style={{ color: "#60a5fa" }} className="underline underline-offset-2">resend code</button>
+                      ? <span style={{ color: "rgba(255,255,255,0.25)" }}>resend in {countdown}s</span>
+                      : <button onClick={handleSend} style={{ color: "#60a5fa" }} className="underline underline-offset-2">resend link</button>
                     }
                   </p>
+                  <button
+                    onClick={() => { setStep("input"); setError(""); }}
+                    className="text-xs text-center w-full"
+                    style={{ color: "rgba(255,255,255,0.2)" }}
+                  >
+                    use a different email →
+                  </button>
                 </>
               )}
 

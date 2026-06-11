@@ -160,21 +160,84 @@ function BackBtn({ onClick }) {
 /* ─── Avatar slot ─────────────────────────────────────────────────────────── */
 function AvatarSlot({ user }) {
   const T = usePortfolioTheme();
-  const avatarSrc =
-    user?.avatar_url ||
-    `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "u"}`;
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
+  const [anantAuthUser, setAnantAuthUser] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  // For anant: ANU students aren't in the profiles table, use Supabase auth directly
+  useEffect(() => {
+    if (!isAnant) return;
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (u) setAnantAuthUser(u);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAnantAuthUser(session?.user || null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!isAnant) return;
+    function handler(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  if (isAnant) {
+    const displayUser = anantAuthUser;
+    if (!displayUser) return null;
+    const initial = (displayUser.email || "?").charAt(0).toUpperCase();
+    const label   = displayUser.email?.split("@")[0] || "";
+    return (
+      <div className="relative" ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(v => !v)}
+          className="flex items-center gap-2"
+          aria-label="profile"
+        >
+          <span className="hidden md:block text-sm font-semibold" style={{ color: "rgba(255,255,255,0.65)" }}>
+            {label}
+          </span>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+            style={{ background: "#1e3a8a", color: "#93c5fd" }}>
+            {initial}
+          </div>
+        </button>
+        {showMenu && (
+          <div className="absolute right-0 mt-2 w-44 rounded-xl border shadow-2xl overflow-hidden z-50"
+            style={{ background: "#071022", borderColor: "#0d1f3c" }}>
+            <button
+              onClick={() => { navigate("/profile"); setShowMenu(false); }}
+              className="w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-white/5"
+              style={{ color: "#93c5fd" }}
+            >
+              my profile
+            </button>
+            <button
+              onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+              className="w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-red-500/10"
+              style={{ color: "#f87171" }}
+            >
+              sign out
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original evolve avatar
+  const avatarSrc = user?.avatar_url || `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?.id || "u"}`;
   if (!user) return null;
   return (
     <div className="flex items-center gap-2">
-      <span className="hidden md:block text-sm font-semibold"
-        style={{ color: isAnant ? "rgba(255,255,255,0.7)" : T.inputText }}>
+      <span className="hidden md:block text-sm font-semibold" style={{ color: T.inputText }}>
         {user.name}
       </span>
-      <img
-        src={avatarSrc}
-        alt="avatar"
-        className="w-9 h-9 rounded-full object-cover"
-      />
+      <img src={avatarSrc} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
     </div>
   );
 }
@@ -1201,6 +1264,7 @@ export default function PortfolioReviewForm() {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [reportUrl, setReportUrl] = useState(null);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
+  const [anantSession, setAnantSession] = useState(undefined); // undefined = loading
   const fileInputRef = useRef(null);
 
   function isValidUrl(str) {
@@ -1212,13 +1276,33 @@ export default function PortfolioReviewForm() {
     }
   }
 
+  /* ── anant: load session from Supabase auth directly ── */
+  useEffect(() => {
+    if (!isAnant) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAnantSession(session || null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAnantSession(session || null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   /* ── auth guard ─────────────────────────────────────────────────────────── */
   useEffect(() => {
+    if (isAnant) {
+      // For anant: use Supabase session directly (students not in profiles table)
+      if (anantSession === null) {
+        sessionStorage.setItem("signin_from", "/portfolio-review/form");
+        navigate("/signin", { replace: true });
+      }
+      return;
+    }
     if (!authLoading && !user) {
-      sessionStorage.setItem("signin_from", isAnant ? "/portfolio-review/form" : "/community/portfolio-review/form");
+      sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
       navigate("/signin", { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, anantSession, navigate]);
 
   // useEffect(() => {
   //   if (!authLoading && user === null) {
@@ -1234,6 +1318,24 @@ export default function PortfolioReviewForm() {
 
   /* ── check if already submitted ─────────────────────────────────────────── */
   useEffect(() => {
+    if (isAnant) {
+      if (!anantSession?.user) return;
+      const email = anantSession.user.email?.toLowerCase();
+      supabase
+        .from("portfolio_reviews")
+        .select("id, review_report_url")
+        .eq("email", email)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setAlreadySubmitted(true);
+            if (data.review_report_url) setReportUrl(data.review_report_url);
+          }
+          setCheckingSubmission(false);
+        });
+      return;
+    }
     if (!user) return;
     supabase
       .from("portfolio_reviews")
@@ -1248,7 +1350,7 @@ export default function PortfolioReviewForm() {
         }
         setCheckingSubmission(false);
       });
-  }, [user]);
+  }, [user, anantSession]);
 
   /* ── file helper ─────────────────────────────────────────────────────────── */
   // const handleFile = (file) => {
@@ -1332,6 +1434,17 @@ export default function PortfolioReviewForm() {
   const handleSubmit = async () => {
     setError("");
 
+    // For anant, resolve the acting user from Supabase session (not profiles table)
+    const actingUser = isAnant
+      ? (anantSession?.user ? {
+          id:    anantSession.user.id,
+          email: anantSession.user.email,
+          name:  anantSession.user.email?.split("@")[0] || ""
+        } : null)
+      : user;
+
+    if (!actingUser) return;
+
     if (portfolioMode === "link") {
       if (!portfolioLink.trim()) {
         setError("please paste your portfolio link");
@@ -1374,7 +1487,7 @@ export default function PortfolioReviewForm() {
 
       if (portfolioMode === "file" && portfolioFile) {
         const ext = portfolioFile.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
+        const path = `${actingUser.id}/${Date.now()}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("portfolio-files")
           .upload(path, portfolioFile, { upsert: true });
@@ -1389,9 +1502,9 @@ export default function PortfolioReviewForm() {
       const { error: insertErr } = await supabase
         .from("portfolio_reviews")
         .insert({
-          user_id: user.id,
-          name: user.name,
-          email: user.email,
+          user_id: actingUser.id,
+          name: actingUser.name,
+          email: actingUser.email,
           portfolio_link:
             portfolioMode === "link" ? portfolioLink.trim() : null,
           portfolio_file_url,
@@ -1416,8 +1529,8 @@ export default function PortfolioReviewForm() {
             "apikey": SUPABASE_ANON_KEY
           },
           body: JSON.stringify({
-            to_email: user.email,
-            to_name: user.name,
+            to_email: actingUser.email,
+            to_name: actingUser.name,
             template_id: inProgressTplId
           })
         }).catch(() => {}); // silent — don't fail the submission if email errors
@@ -1432,8 +1545,13 @@ export default function PortfolioReviewForm() {
   };
 
   /* ── render guards ──────────────────────────────────────────────────────── */
-  if (authLoading || checkingSubmission) return null;
-  if (!user) return null;
+  // For anant: wait until anantSession is resolved (undefined = still loading)
+  if (isAnant) {
+    if (anantSession === undefined || checkingSubmission) return null;
+  } else {
+    if (authLoading || checkingSubmission) return null;
+    if (!user) return null;
+  }
 
   const backPath = tenant.portfolio.backPath;
 
