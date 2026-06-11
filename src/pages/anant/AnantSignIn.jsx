@@ -64,9 +64,10 @@ export default function AnantSignIn() {
       setStep("email"); return;
     }
 
-    const { error: otpErr } = await supabase.auth.signInWithOtp({
+    const { error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
       email: addr,
-      options: { shouldCreateUser: true, emailRedirectTo: REDIRECT }
+      options: { redirectTo: REDIRECT }
     });
 
     if (otpErr) { setError(otpErr.message); setStep("email"); return; }
