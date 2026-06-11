@@ -4,10 +4,39 @@ import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 
-const NAV_BG   = "#060c17";
-const NAV_BORD = "#0d1f3c";
-const ACCENT   = "#2563eb";
-const REDIRECT = `${window.location.origin}/admin/dashboard`;
+const NAV_BG    = "#060c17";
+const NAV_BORD  = "#0d1f3c";
+const ACCENT    = "#2563eb";
+const ANU_ORIGIN = "https://anu.evolvedesign.academy";
+const REDIRECT  = `${ANU_ORIGIN}/admin/dashboard`;
+const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
+const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
+
+async function sendSignInEmail(toEmail, magicLink, role) {
+  const isAdmin = role === "uni_admin";
+  const htmlContent = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060c17;color:#fff;border-radius:16px">
+      <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:8px">Anant National University × evolve</p>
+      <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin:0 0 12px">sign in to ${isAdmin ? "admin" : "faculty"} dashboard</h1>
+      <p style="font-size:15px;line-height:1.6;color:rgba(255,255,255,0.75);margin-bottom:28px">
+        Click the button below to sign in to the ${isAdmin ? "university admin" : "faculty"} dashboard. This link expires in 1 hour.
+      </p>
+      <a href="${magicLink}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none">
+        access dashboard
+      </a>
+      <p style="margin-top:28px;font-size:12px;color:rgba(255,255,255,0.3)">This link is for ${toEmail}. If this wasn't you, ignore this email.</p>
+    </div>`;
+  await fetch(BREVO_URL, {
+    method: "POST",
+    headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { name: "Anant × evolve", email: "noreply@evolvedesign.academy" },
+      to: [{ email: toEmail }],
+      subject: `Your sign-in link — Anant × evolve ${isAdmin ? "admin" : "faculty"} portal`,
+      htmlContent
+    })
+  });
+}
 
 export default function AnantAdminLogin() {
   const navigate = useNavigate();
@@ -50,13 +79,26 @@ export default function AnantAdminLogin() {
       setStep("input"); return;
     }
 
-    const { error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
+    const role = admin ? "uni_admin" : "faculty";
+    const { data: linkData, error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email: addr,
       options: { redirectTo: REDIRECT }
     });
 
-    if (otpErr) { setError(otpErr.message); setStep("input"); return; }
+    if (otpErr) {
+      console.error("generateLink error:", otpErr);
+      setError(otpErr.message);
+      setStep("input"); return;
+    }
+
+    const magicLink = linkData?.properties?.action_link;
+    if (!magicLink) {
+      setError("Could not generate sign-in link. Please try again.");
+      setStep("input"); return;
+    }
+
+    await sendSignInEmail(addr, magicLink, role);
     setStep("sent");
     startCountdown();
   }
