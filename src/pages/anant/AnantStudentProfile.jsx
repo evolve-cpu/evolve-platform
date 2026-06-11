@@ -28,22 +28,26 @@ export default function AnantStudentProfile() {
   const accent   = "#2563eb";
 
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    let done = false;
+
+    async function loadProfile(user) {
+      if (done) return;
       if (!user) { navigate("/signin", { replace: true }); return; }
+      done = true;
       setAuthUser(user);
 
       const email = user.email?.toLowerCase();
-      const { data: stu } = await supabaseAdmin
+      const { data: stu, error: stuErr } = await supabaseAdmin
         .from("anu_students")
         .select("*")
-        .or(`auth_user_id.eq.${user.id},anu_email.eq.${email}`)
+        .eq("anu_email", email)
         .maybeSingle();
+
+      if (stuErr) console.error("anu_students fetch error:", stuErr);
 
       if (!stu) { setNotFound(true); setLoading(false); return; }
       setStudent(stu);
 
-      // fetch their portfolio review if any
       const { data: rev } = await supabaseAdmin
         .from("portfolio_reviews")
         .select("id, created_at, review_status, review_report_url, portfolio_link, portfolio_file_url")
@@ -53,7 +57,18 @@ export default function AnantStudentProfile() {
         .maybeSingle();
       setReview(rev || null);
       setLoading(false);
-    })();
+    }
+
+    // onAuthStateChange fires AFTER magic link hash is processed — reliable source of truth
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        loadProfile(session?.user ?? null);
+      } else if (event === "SIGNED_OUT") {
+        navigate("/signin", { replace: true });
+      }
+    });
+
+    return () => { done = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
 
   async function handleSignOut() {

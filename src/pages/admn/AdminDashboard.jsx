@@ -626,6 +626,17 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
+  // Auto-refresh portfolio reviews every 15 seconds
+  useEffect(() => {
+    const iv = setInterval(async () => {
+      let q = supabase.from("portfolio_reviews").select("*");
+      if (isAnantAdmin) q = q.eq("tenant_id", "anant");
+      const { data } = await q.order("created_at", { ascending: false });
+      if (data) setPortfolioReviews(data);
+    }, 15000);
+    return () => clearInterval(iv);
+  }, [isAnantAdmin]);
+
   /* ── optimistic update after report upload ──────────────────────────── */
   const handleReportDone = (reviewId, reportUrl, remarks) => {
     setPortfolioReviews((prev) =>

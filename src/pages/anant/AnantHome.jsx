@@ -31,15 +31,21 @@ export default function AnantHome() {
       const u = session?.user;
       setAuthUser(u || null);
       if (!u) { setStudentData(null); return; }
-      const { data } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from("anu_students")
         .select("first_name, last_name, program, stream, year, anu_email")
         .eq("anu_email", u.email.toLowerCase())
         .maybeSingle();
+      if (error) console.error("home student fetch:", error);
       setStudentData(data || null);
     }
-    supabase.auth.getSession().then(({ data: { session } }) => load(session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => load(session));
+
+    // INITIAL_SESSION fires after magic-link hash is processed — use this as primary source
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (["INITIAL_SESSION", "SIGNED_IN", "SIGNED_OUT", "TOKEN_REFRESHED"].includes(event)) {
+        load(session);
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
