@@ -31,7 +31,7 @@ export default function AnantStudentProfile() {
     let cancelled = false;
 
     async function fetchStudent(email) {
-      // 1. sessionStorage cache (populated at sign-in time)
+      // sessionStorage cache — populated by sign-in page or portfolio form
       try {
         const cached = sessionStorage.getItem("anu_student_cache");
         if (cached) {
@@ -40,18 +40,11 @@ export default function AnantStudentProfile() {
         }
       } catch {}
 
-      // 2. DB query
+      // DB query — service role key bypasses RLS (null storage prevents JWT bleed-through)
       const { data } = await supabaseAdmin
         .from("anu_students").select("*").eq("anu_email", email).maybeSingle();
-      if (data) { sessionStorage.setItem("anu_student_cache", JSON.stringify(data)); return data; }
-
-      // 3. Retry once after 900ms (handles first-load timing after magic link)
-      await new Promise(r => setTimeout(r, 900));
-      const { data: data2 } = await supabaseAdmin
-        .from("anu_students").select("*").eq("anu_email", email).maybeSingle();
-      if (data2) { sessionStorage.setItem("anu_student_cache", JSON.stringify(data2)); return data2; }
-
-      return null;
+      if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+      return data || null;
     }
 
     async function init() {
@@ -83,15 +76,9 @@ export default function AnantStudentProfile() {
       if (cancelled) return;
 
       if (!stu) { setNotFound(true); setLoading(false); return; }
+      setStudent(stu);
 
-      // Cache has basic fields; fetch * for full profile
-      const full = (Object.keys(stu).length < 10)
-        ? await supabaseAdmin.from("anu_students").select("*").eq("anu_email", email).maybeSingle().then(r => r.data || stu)
-        : stu;
-      if (full) { setStudent(full); sessionStorage.setItem("anu_student_cache", JSON.stringify(full)); }
-      else { setStudent(stu); }
-
-      const { data: rev } = await supabaseAdmin
+      const { data: rev } = await supabase
         .from("portfolio_reviews")
         .select("id, created_at, review_status, review_report_url, portfolio_link, portfolio_file_url")
         .eq("email", email)
