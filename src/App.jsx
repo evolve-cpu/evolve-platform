@@ -1071,6 +1071,10 @@ import AdminGuard from "./routes/AdminGuard.jsx";
 import MentorshipGuard from "./routes/MentorshipGuard.jsx";
 import Mentorship from "./pages/Mentorship.jsx";
 import AnantHome from "./pages/anant/AnantHome.jsx";
+import AnantSignIn from "./pages/anant/AnantSignIn.jsx";
+import AnantAdminLogin from "./pages/anant/AnantAdminLogin.jsx";
+import AnantAdminGuard from "./routes/AnantAdminGuard.jsx";
+import AnantStudentProfile from "./pages/anant/AnantStudentProfile.jsx";
 import { isAnant } from "./tenants/index.js";
 import { AnantThemeProvider } from "./context/AnantThemeContext.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
@@ -1587,14 +1591,15 @@ const AnantAppLayout = () => {
       <Routes>
         <Route path="/" element={<AnantHome />} />
         <Route path="/portfolio-review/form" element={<PortfolioReviewForm />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/signin" element={<AnantSignIn />} />
+        <Route path="/profile" element={<AnantStudentProfile />} />
+        <Route path="/admin" element={<AnantAdminLogin />} />
         <Route
           path="/admin/dashboard"
           element={
-            <AdminGuard>
+            <AnantAdminGuard>
               <AdminDashboard />
-            </AdminGuard>
+            </AnantAdminGuard>
           }
         />
         <Route path="*" element={<AnantHome />} />

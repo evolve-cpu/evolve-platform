@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
+import AnantPeopleManager from "../anant/AnantPeopleManager.jsx";
 
 /* ─── brand ──────────────────────────────────────────────────────────────── */
 const Y = "#FFD007";
@@ -473,6 +474,9 @@ export default function AdminDashboard() {
   // Determine which tenant this admin session belongs to
   const adminTenant = sessionStorage.getItem("admin_tenant") ?? "evolve";
   const isAnantAdmin = adminTenant === "anant";
+  const anuRole  = sessionStorage.getItem("anu_role");   // "faculty" | "uni_admin" | null
+  const anuStream = sessionStorage.getItem("anu_stream") || "";
+  const isFaculty = anuRole === "faculty";
 
   const { dark, toggleDark } = useAnantTheme();
 
@@ -485,6 +489,7 @@ export default function AdminDashboard() {
   const [mentorshipProfilesData, setMentorshipProfilesData] = useState([]);
   const [mentorshipResumes, setMentorshipResumes] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [streamEmails, setStreamEmails] = useState(null); // null = not yet fetched, Set when loaded
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -509,8 +514,13 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.removeItem("admin_access");
+    sessionStorage.removeItem("admin_tenant");
+    sessionStorage.removeItem("anu_role");
+    sessionStorage.removeItem("anu_stream");
+    sessionStorage.removeItem("anu_program");
+    if (isAnantAdmin) await supabase.auth.signOut();
     navigate("/admin");
   };
 
@@ -595,6 +605,15 @@ export default function AdminDashboard() {
       setBatches(bData || []);
       setWaitlist(wData || []);
       setProfiles(prData || []);
+
+      // Faculty stream filtering: load emails for faculty's assigned stream
+      if (isFaculty && anuStream) {
+        const { data: sData } = await supabaseAdmin
+          .from("anu_students")
+          .select("anu_email")
+          .eq("stream", anuStream);
+        setStreamEmails(new Set((sData || []).map(s => s.anu_email.toLowerCase())));
+      }
     } catch (err) {
       setError(err.message || "Failed to load data");
     } finally {
@@ -767,14 +786,19 @@ export default function AdminDashboard() {
   }, [profiles, search]);
 
   const filteredReviews = useMemo(() => {
-    if (!search.trim()) return portfolioReviews;
+    let list = portfolioReviews;
+    // Faculty: only see their stream's students
+    if (isFaculty && streamEmails) {
+      list = list.filter(r => streamEmails.has((r.email || "").toLowerCase()));
+    }
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return portfolioReviews.filter(
+    return list.filter(
       (r) =>
         (r.name || "").toLowerCase().includes(q) ||
         (r.email || "").toLowerCase().includes(q)
     );
-  }, [portfolioReviews, search]);
+  }, [portfolioReviews, search, isFaculty, streamEmails]);
 
   /* set of enrolled user_ids for quick lookup */
   const enrolledIds = useMemo(
@@ -889,10 +913,14 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "accelerator", label: "accelerator 1:1" }
   ];
 
-  // Anant faculty can only see portfolio reviews for their institution
-  const TABS = isAnantAdmin
-    ? ALL_TABS.filter((t) => t.id === "reviews")
-    : ALL_TABS;
+  // Anant tabs: faculty → reviews only; uni_admin / evolve super admin → reviews + people
+  const ANANT_TABS = isFaculty
+    ? ALL_TABS.filter(t => t.id === "reviews")
+    : [
+        ...ALL_TABS.filter(t => t.id === "reviews"),
+        { id: "people", label: "people" }
+      ];
+  const TABS = isAnantAdmin ? ANANT_TABS : ALL_TABS;
 
   /* ── anant admin theme helpers ── */
   const aBg      = dark ? "#060c17" : "#f8fafc";
@@ -929,13 +957,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               <img src={anant_logo} alt="Anant" className="h-10 w-auto object-contain" />
               <span style={{ color: aDiv }}>/</span>
               <span className="text-sm font-semibold" style={{ color: aSub }}>
-                portfolio reviews
+                {anuRole === "faculty" ? "portfolio reviews" : "admin"}
               </span>
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
                 style={{ background: "rgba(37,99,235,0.15)", color: dark ? "#60a5fa" : ANANT_BLUE }}
               >
-                faculty
+                {anuRole === "faculty" ? "faculty" : anuRole === "uni_admin" ? "uni admin" : "evolve admin"}
               </span>
             </>
           ) : (
@@ -2156,6 +2184,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               </table>
             </div>
           </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            PEOPLE TAB (anant — non-faculty only)
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "people" && isAnantAdmin && (
+          <AnantPeopleManager dark={dark} />
         )}
 
         {/* ══════════════════════════════════════════════════════════════
