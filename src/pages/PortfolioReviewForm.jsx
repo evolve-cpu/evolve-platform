@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
+import { supabaseAdmin } from "../supabaseAdminClient";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
 import { tenant, isAnant } from "../tenants";
@@ -1279,12 +1280,31 @@ export default function PortfolioReviewForm() {
   /* ── anant: load session from Supabase auth directly ── */
   useEffect(() => {
     if (!isAnant) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    async function handleSession(session) {
       setAnantSession(session || null);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setAnantSession(session || null);
-    });
+      // Populate sessionStorage cache so home/profile pages load instantly
+      if (session?.user) {
+        const email = session.user.email?.toLowerCase();
+        try {
+          const existing = sessionStorage.getItem("anu_student_cache");
+          if (existing) {
+            const p = JSON.parse(existing);
+            if (p.anu_email === email) return; // already cached
+          }
+        } catch {}
+        // Fetch and cache student data
+        const { data } = await supabaseAdmin
+          .from("anu_students")
+          .select("first_name, last_name, program, stream, year, anu_email")
+          .eq("anu_email", email)
+          .maybeSingle();
+        if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+      }
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => handleSession(session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => handleSession(session));
     return () => sub.subscription.unsubscribe();
   }, []);
 

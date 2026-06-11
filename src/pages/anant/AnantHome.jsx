@@ -34,34 +34,28 @@ export default function AnantHome() {
 
       const email = u.email?.toLowerCase();
 
-      // 1. Try sessionStorage cache first (populated at sign-in, instant — no DB round-trip)
+      // sessionStorage cache — populated at sign-in time, instant no DB round-trip
       try {
         const cached = sessionStorage.getItem("anu_student_cache");
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed.anu_email === email) {
-            setStudentData(parsed);
-            return;
-          }
+          const p = JSON.parse(cached);
+          if (p.anu_email === email) { setStudentData(p); return; }
         }
       } catch {}
 
-      // 2. Fall back to DB query (for returning users with valid session but no cache)
-      const { data, error } = await supabaseAdmin
+      // DB fallback
+      const { data } = await supabaseAdmin
         .from("anu_students")
         .select("first_name, last_name, program, stream, year, anu_email")
         .eq("anu_email", email)
         .maybeSingle();
-      if (error) console.error("home student fetch:", error);
       if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
       setStudentData(data || null);
     }
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (["INITIAL_SESSION", "SIGNED_IN", "SIGNED_OUT", "TOKEN_REFRESHED"].includes(event)) {
-        load(session);
-      }
-    });
+    // Restore original pattern: both getSession (fast) and onAuthStateChange (reliable)
+    supabase.auth.getSession().then(({ data: { session } }) => load(session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => load(session));
     return () => sub.subscription.unsubscribe();
   }, []);
 

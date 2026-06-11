@@ -28,44 +28,68 @@ export default function AnantStudentProfile() {
   const accent   = "#2563eb";
 
   useEffect(() => {
-    let done = false;
+    let cancelled = false;
 
-    async function loadProfile(user) {
-      if (done) return;
-      if (!user) { navigate("/signin", { replace: true }); return; }
-      done = true;
-      setAuthUser(user);
-
-      const email = user.email?.toLowerCase();
-
-      // Check sessionStorage cache first (populated at sign-in time)
-      let stu = null;
+    async function fetchStudent(email) {
+      // 1. sessionStorage cache (populated at sign-in time)
       try {
         const cached = sessionStorage.getItem("anu_student_cache");
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed.anu_email === email) stu = parsed;
+          const p = JSON.parse(cached);
+          if (p.anu_email === email) return p;
         }
       } catch {}
 
-      // If not in cache, query DB
-      if (!stu) {
-        const { data, error: stuErr } = await supabaseAdmin
-          .from("anu_students")
-          .select("*")
-          .eq("anu_email", email)
-          .maybeSingle();
-        if (stuErr) console.error("anu_students fetch error:", stuErr);
-        if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
-        stu = data || null;
-      } else {
-        // Cache has basic fields — fetch full record in background to get all fields
-        supabaseAdmin.from("anu_students").select("*").eq("anu_email", email).maybeSingle()
-          .then(({ data }) => { if (data) { setStudent(data); sessionStorage.setItem("anu_student_cache", JSON.stringify(data)); } });
+      // 2. DB query
+      const { data } = await supabaseAdmin
+        .from("anu_students").select("*").eq("anu_email", email).maybeSingle();
+      if (data) { sessionStorage.setItem("anu_student_cache", JSON.stringify(data)); return data; }
+
+      // 3. Retry once after 900ms (handles first-load timing after magic link)
+      await new Promise(r => setTimeout(r, 900));
+      const { data: data2 } = await supabaseAdmin
+        .from("anu_students").select("*").eq("anu_email", email).maybeSingle();
+      if (data2) { sessionStorage.setItem("anu_student_cache", JSON.stringify(data2)); return data2; }
+
+      return null;
+    }
+
+    async function init() {
+      // Step 1: try localStorage session immediately (fast path)
+      let { data: { session } } = await supabase.auth.getSession();
+
+      // Step 2: if no session yet, wait up to 4s for magic link hash to resolve
+      if (!session?.user) {
+        session = await new Promise((resolve) => {
+          const tid = setTimeout(() => resolve(null), 4000);
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+            if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && s?.user) {
+              clearTimeout(tid);
+              subscription.unsubscribe();
+              resolve(s);
+            }
+          });
+        });
       }
 
+      if (cancelled) return;
+      if (!session?.user) { navigate("/signin", { replace: true }); return; }
+
+      const u = session.user;
+      setAuthUser(u);
+      const email = u.email?.toLowerCase();
+
+      const stu = await fetchStudent(email);
+      if (cancelled) return;
+
       if (!stu) { setNotFound(true); setLoading(false); return; }
-      setStudent(stu);
+
+      // Cache has basic fields; fetch * for full profile
+      const full = (Object.keys(stu).length < 10)
+        ? await supabaseAdmin.from("anu_students").select("*").eq("anu_email", email).maybeSingle().then(r => r.data || stu)
+        : stu;
+      if (full) { setStudent(full); sessionStorage.setItem("anu_student_cache", JSON.stringify(full)); }
+      else { setStudent(stu); }
 
       const { data: rev } = await supabaseAdmin
         .from("portfolio_reviews")
@@ -74,20 +98,16 @@ export default function AnantStudentProfile() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      setReview(rev || null);
-      setLoading(false);
+      if (!cancelled) { setReview(rev || null); setLoading(false); }
     }
 
-    // onAuthStateChange fires AFTER magic link hash is processed — reliable source of truth
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-        loadProfile(session?.user ?? null);
-      } else if (event === "SIGNED_OUT") {
-        navigate("/signin", { replace: true });
-      }
+    // Handle sign-out while on this page
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") { cancelled = true; navigate("/signin", { replace: true }); }
     });
 
-    return () => { done = true; sub.subscription.unsubscribe(); };
+    init();
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
 
   async function handleSignOut() {
@@ -108,14 +128,19 @@ export default function AnantStudentProfile() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 text-center" style={{ background: "#060c17" }}>
         <img src={anant_logo} alt="" className="h-10 opacity-60" />
-        <h1 className="text-white font-extrabold text-2xl">profile not found</h1>
+        <h1 className="text-white font-extrabold text-2xl">couldn't load your profile</h1>
         <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-          your email ({authUser?.email}) is not linked to an ANU student record.
+          your session is active but your profile data didn't load in time.
         </p>
+        <button onClick={() => window.location.reload()}
+          className="px-6 py-3 rounded-xl text-sm font-bold"
+          style={{ background: "#2563eb", color: "#fff" }}>
+          refresh page
+        </button>
         <button onClick={handleSignOut}
-          className="px-6 py-3 rounded-xl text-sm font-bold border"
-          style={{ borderColor: "#1e3a8a", color: "#60a5fa" }}>
-          sign out
+          className="text-xs"
+          style={{ color: "rgba(255,255,255,0.3)" }}>
+          sign out instead
         </button>
       </div>
     );
