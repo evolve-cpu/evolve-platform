@@ -80,10 +80,10 @@ export default function AnantSignIn() {
     if (!addr) return;
     setError(""); setStep("sending");
 
-    // Whitelist check
+    // Whitelist check — select all fields we'll need for the session cache
     const { data: student, error: dbErr } = await supabaseAdmin
       .from("anu_students")
-      .select("id")
+      .select("id, first_name, last_name, program, stream, year, anu_email")
       .eq("anu_email", addr)
       .maybeSingle();
 
@@ -97,6 +97,16 @@ export default function AnantSignIn() {
       setError("This email is not registered. Please use your ANU email address.");
       setStep("email"); return;
     }
+
+    // Cache student data so home/profile pages don't need an extra DB round-trip
+    sessionStorage.setItem("anu_student_cache", JSON.stringify({
+      first_name: student.first_name,
+      last_name:  student.last_name,
+      program:    student.program,
+      stream:     student.stream,
+      year:       student.year,
+      anu_email:  student.anu_email
+    }));
 
     const { data: linkData, error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",

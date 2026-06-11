@@ -37,13 +37,32 @@ export default function AnantStudentProfile() {
       setAuthUser(user);
 
       const email = user.email?.toLowerCase();
-      const { data: stu, error: stuErr } = await supabaseAdmin
-        .from("anu_students")
-        .select("*")
-        .eq("anu_email", email)
-        .maybeSingle();
 
-      if (stuErr) console.error("anu_students fetch error:", stuErr);
+      // Check sessionStorage cache first (populated at sign-in time)
+      let stu = null;
+      try {
+        const cached = sessionStorage.getItem("anu_student_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.anu_email === email) stu = parsed;
+        }
+      } catch {}
+
+      // If not in cache, query DB
+      if (!stu) {
+        const { data, error: stuErr } = await supabaseAdmin
+          .from("anu_students")
+          .select("*")
+          .eq("anu_email", email)
+          .maybeSingle();
+        if (stuErr) console.error("anu_students fetch error:", stuErr);
+        if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+        stu = data || null;
+      } else {
+        // Cache has basic fields — fetch full record in background to get all fields
+        supabaseAdmin.from("anu_students").select("*").eq("anu_email", email).maybeSingle()
+          .then(({ data }) => { if (data) { setStudent(data); sessionStorage.setItem("anu_student_cache", JSON.stringify(data)); } });
+      }
 
       if (!stu) { setNotFound(true); setLoading(false); return; }
       setStudent(stu);
@@ -72,6 +91,7 @@ export default function AnantStudentProfile() {
   }, [navigate]);
 
   async function handleSignOut() {
+    sessionStorage.removeItem("anu_student_cache");
     await supabase.auth.signOut();
     navigate("/", { replace: true });
   }
