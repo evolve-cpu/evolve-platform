@@ -53,11 +53,17 @@ export default function AnantSignIn() {
     setError(""); setStep("sending");
 
     // Whitelist check
-    const { data: student } = await supabaseAdmin
+    const { data: student, error: dbErr } = await supabaseAdmin
       .from("anu_students")
       .select("id")
       .eq("anu_email", addr)
       .maybeSingle();
+
+    if (dbErr) {
+      console.error("anu_students query error:", dbErr);
+      setError(`DB error: ${dbErr.message}`);
+      setStep("email"); return;
+    }
 
     if (!student) {
       setError("This email is not registered. Please use your ANU email address.");
@@ -70,7 +76,11 @@ export default function AnantSignIn() {
       options: { redirectTo: REDIRECT }
     });
 
-    if (otpErr) { setError(otpErr.message); setStep("email"); return; }
+    if (otpErr) {
+      console.error("generateLink error:", otpErr);
+      setError(otpErr.message);
+      setStep("email"); return;
+    }
     setStep("sent");
     startCountdown();
   }
