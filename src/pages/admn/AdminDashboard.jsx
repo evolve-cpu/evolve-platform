@@ -476,7 +476,8 @@ export default function AdminDashboard() {
   const isAnantAdmin = adminTenant === "anant";
   const anuRole  = sessionStorage.getItem("anu_role");   // "faculty" | "uni_admin" | null
   const anuStream = sessionStorage.getItem("anu_stream") || "";
-  const isFaculty = anuRole === "faculty";
+  const isFaculty    = anuRole === "faculty";
+  const isEvolveAdmin = !isAnantAdmin || anuRole === null; // PIN-based super admin
 
   const { dark, toggleDark } = useAnantTheme();
 
@@ -2182,12 +2183,19 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         {r.remarks || "—"}
                       </td>
 
-                      {/* REPORT — upload + auto-send */}
+                      {/* REPORT — upload only for evolve super admin; others get read-only status */}
                       <td className="px-4 py-3">
-                        <ReviewUploadCell
-                          review={r}
-                          onDone={handleReportDone}
-                        />
+                        {isEvolveAdmin ? (
+                          <ReviewUploadCell review={r} onDone={handleReportDone} />
+                        ) : r.review_report_url ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold" style={{ color: GR }}>done</span>
+                            <a href={r.review_report_url} target="_blank" rel="noreferrer"
+                              className="text-xs underline" style={{ color: "#888" }}>view pdf</a>
+                          </div>
+                        ) : (
+                          <span className="text-xs" style={{ color: "#555" }}>pending</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -2201,7 +2209,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             PEOPLE TAB (anant — non-faculty only)
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "people" && isAnantAdmin && (
-          <AnantPeopleManager dark={dark} />
+          <AnantPeopleManager dark={dark} readOnly={anuRole === "uni_admin"} />
         )}
 
         {/* ══════════════════════════════════════════════════════════════

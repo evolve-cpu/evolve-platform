@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
@@ -107,7 +107,7 @@ function LoadingDot() {
    MAIN COMPONENT
    ═══════════════════════════════════════════════ */
 
-export default function AnantPeopleManager({ dark = true }) {
+export default function AnantPeopleManager({ dark = true, readOnly = false }) {
   const [tab, setTab]           = useState("students");
   const [people, setPeople]     = useState({ students: null, faculty: null, admins: null });
   const [loading, setLoading]   = useState({ students: false, faculty: false, admins: false });
@@ -131,6 +131,9 @@ export default function AnantPeopleManager({ dark = true }) {
   const inputBord= dark ? "rgba(255,255,255,0.12)" : "#e2e8f0";
   const accent   = "#2563eb";
   const rowBord  = dark ? "#0d1f3c"   : "#f1f5f9";
+
+  // Auto-load the first tab on mount
+  useEffect(() => { loadTab("students"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function showToast(msg, type = "ok") {
     setToast({ msg, type });
@@ -291,7 +294,7 @@ export default function AnantPeopleManager({ dark = true }) {
         <td className="py-3 px-4 text-sm" style={{ color: sub }}>{p.year}</td>
         <td className="py-3 px-4">{statusBadge(p)}</td>
         <td className="py-3 px-4 text-right">
-          {!p.invite_accepted_at && (
+          {!readOnly && !p.invite_accepted_at && (
             <button onClick={() => sendOneInvite(p)} disabled={isSending}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border disabled:opacity-40 transition-opacity"
               style={{ borderColor: accent, color: "#60a5fa" }}>
@@ -310,7 +313,7 @@ export default function AnantPeopleManager({ dark = true }) {
         <td className="py-3 px-4 text-sm" style={{ color: sub }}>{p.stream}</td>
         <td className="py-3 px-4">{statusBadge(p)}</td>
         <td className="py-3 px-4 text-right">
-          {!p.invite_accepted_at && (
+          {!readOnly && !p.invite_accepted_at && (
             <button onClick={() => sendOneInvite(p)} disabled={isSending}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border disabled:opacity-40 transition-opacity"
               style={{ borderColor: accent, color: "#60a5fa" }}>
@@ -328,7 +331,7 @@ export default function AnantPeopleManager({ dark = true }) {
         <td className="py-3 px-4 text-sm" style={{ color: sub }}>{p.designation}</td>
         <td className="py-3 px-4">{statusBadge(p)}</td>
         <td className="py-3 px-4 text-right">
-          {!p.invite_accepted_at && (
+          {!readOnly && !p.invite_accepted_at && (
             <button onClick={() => sendOneInvite(p)} disabled={isSending}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border disabled:opacity-40 transition-opacity"
               style={{ borderColor: accent, color: "#60a5fa" }}>
@@ -375,45 +378,47 @@ export default function AnantPeopleManager({ dark = true }) {
         </div>
       </div>
 
-      {/* actions row */}
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => fileRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-opacity hover:opacity-90"
-          style={{ borderColor: border, color: text, background: cardBg }}>
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-            <path d="M10 3v10M6 7l4-4 4 4M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          upload CSV
-        </button>
-        <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
-
-        <button
-          onClick={() => { setShowForm(v => !v); setFormData({}); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-opacity hover:opacity-90"
-          style={{ borderColor: border, color: text, background: cardBg }}>
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-            <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          add one
-        </button>
-
-        <button
-          onClick={sendBulkInvites}
-          disabled={bulkSending || !list?.length}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40 hover:opacity-90"
-          style={{ background: accent, color: "#fff" }}>
-          {bulkSending ? <LoadingDot /> : (
+      {/* actions row — only evolve admin can add/import/invite */}
+      {!readOnly && (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ borderColor: border, color: text, background: cardBg }}>
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-              <path d="M2 3l16 7-16 7V12l11-2-11-2V3z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+              <path d="M10 3v10M6 7l4-4 4 4M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          )}
-          {bulkSending ? "sending…" : "send invites to all pending"}
-        </button>
-      </div>
+            upload CSV
+          </button>
+          <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
 
-      {/* CSV preview */}
-      {csvRows.length > 0 && (
+          <button
+            onClick={() => { setShowForm(v => !v); setFormData({}); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ borderColor: border, color: text, background: cardBg }}>
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+              <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            add one
+          </button>
+
+          <button
+            onClick={sendBulkInvites}
+            disabled={bulkSending || !list?.length}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40 hover:opacity-90"
+            style={{ background: accent, color: "#fff" }}>
+            {bulkSending ? <LoadingDot /> : (
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                <path d="M2 3l16 7-16 7V12l11-2-11-2V3z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+              </svg>
+            )}
+            {bulkSending ? "sending…" : "send invites to all pending"}
+          </button>
+        </div>
+      )}
+
+      {/* CSV preview — only shown to evolve admin */}
+      {!readOnly && csvRows.length > 0 && (
         <div className="rounded-2xl border p-5 flex flex-col gap-4" style={{ borderColor: border, background: cardBg }}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold" style={{ color: text }}>{csvRows.length} rows ready to import</p>
@@ -456,15 +461,15 @@ export default function AnantPeopleManager({ dark = true }) {
         </div>
       )}
 
-      {/* CSV field guide */}
-      {!csvRows.length && (
+      {/* CSV field guide — only shown to evolve admin */}
+      {!readOnly && !csvRows.length && (
         <p className="text-xs" style={{ color: sub }}>
           CSV columns for <strong>{tab}</strong>: <span style={{ color: dark ? "rgba(255,255,255,0.6)" : "#475569" }}>{CSV_FIELDS[tab].join(", ")}</span>
         </p>
       )}
 
       {/* manual add form */}
-      {showForm && (
+      {!readOnly && showForm && (
         <form onSubmit={handleManualAdd}
           className="rounded-2xl border p-5 grid grid-cols-1 sm:grid-cols-2 gap-4"
           style={{ borderColor: border, background: cardBg }}>
@@ -495,11 +500,11 @@ export default function AnantPeopleManager({ dark = true }) {
 
       {/* people table */}
       <div className="rounded-2xl border overflow-hidden" style={{ borderColor: border, background: cardBg }}>
-        {loading[tab] ? (
+        {(loading[tab] || list === null) ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : !list || list.length === 0 ? (
+        ) : list.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-sm" style={{ color: sub }}>no {tab} added yet</p>
           </div>
