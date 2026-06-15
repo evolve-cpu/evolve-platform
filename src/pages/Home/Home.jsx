@@ -607,113 +607,217 @@ const Home = ({
 
       {/* Announcement ticker — slides in with the nav after intro */}
       {introDone && (
-        <div
-          style={{
-            position: "fixed",
-            top: "45px",
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            backgroundColor: "#C2FD5C",
-            overflow: "hidden",
-            animation: "ticker-fadein 0.4s ease-out"
-          }}
+        // <div
+        //   style={{
+        //     position: "fixed",
+        //     top: "45px",
+        //     left: 0,
+        //     right: 0,
+        //     zIndex: 9999,
+        //     backgroundColor: "#C2FD5C",
+        //     overflow: "hidden",
+        //     animation: "ticker-fadein 0.4s ease-out"
+        //   }}
+        // >
+        //   {/* Desktop — static layout */}
+        //   <div
+        //     className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
+        //     style={{ transform: "translateY(3px)" }}
+        //   >
+        //     <span className="text-black font-bold text-[28px] whitespace-nowrap">
+        //       {TICKER.label}
+        //     </span>
+
+        //     <div className="flex-1 border-t border-black" />
+
+        //     <span className="text-evolve-pink font-extrabold text-[32px] whitespace-nowrap">
+        //       {TICKER.title}
+        //     </span>
+
+        //     <span className="text-black text-sm select-none">|</span>
+
+        //     <span className="text-black text-[28px] font-bold whitespace-nowrap">
+        //       {TICKER.by}
+        //     </span>
+
+        //     <span className="text-black text-sm select-none">|</span>
+
+        //     <span className="text-black text-[18px] font-bold whitespace-nowrap">
+        //       {TICKER.date}
+        //     </span>
+
+        //     <a
+        //       href={TICKER.webinarUrl}
+        //       target="_blank"
+        //       rel="noopener noreferrer"
+        //       className="ml-2 flex-shrink-0 w-[4rem] h-[2rem] rounded-md border border-black flex items-center justify-center text-black text-xl transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
+        //     >
+        //       →
+        //     </a>
+        //   </div>
+
+        //   {/* Mobile — scrolling marquee */}
+        //   <div
+        //     className="flex md:hidden items-center h-[5rem] overflow-hidden"
+        //     style={{ transform: "translateY(4px)" }}
+        //   >
+        //     <div
+        //       className="flex whitespace-nowrap"
+        //       style={{
+        //         animation: "ticker-scroll 20s linear infinite"
+        //       }}
+        //     >
+        //       {[0, 1].map((i) => (
+        //         <span
+        //           key={i}
+        //           className="inline-flex items-center gap-3 px-8 lowercase"
+        //         >
+        //           {/* Label */}
+        //           <span className="text-black font-bold text-[18px] whitespace-nowrap">
+        //             {TICKER.label}
+        //           </span>
+
+        //           <span className="text-black font-bold">|</span>
+
+        //           {/* Title */}
+        //           <span className="text-evolve-pink font-extrabold text-[22px] whitespace-nowrap">
+        //             {TICKER.title}
+        //           </span>
+
+        //           <span className="text-black font-bold">|</span>
+
+        //           {/* Author */}
+        //           <span className="text-black font-bold text-[18px] whitespace-nowrap">
+        //             {TICKER.by}
+        //           </span>
+
+        //           <span className="text-black font-bold">|</span>
+
+        //           {/* Date */}
+        //           <span className="text-black font-bold text-[18px] whitespace-nowrap">
+        //             {TICKER.date}
+        //           </span>
+
+        //           {/* CTA */}
+        //           <a
+        //             href={TICKER.webinarUrl}
+        //             target="_blank"
+        //             rel="noopener noreferrer"
+        //             className="flex-shrink-0 w-7 h-7 rounded border border-black flex items-center justify-center text-black text-sm transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
+        //           >
+        //             →
+        //           </a>
+
+        //           <span className="text-black mx-2 font-bold">•</span>
+        //         </span>
+        //       ))}
+        //     </div>
+        //   </div>
+        // </div>
+        <a
+          href={TICKER.webinarUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block cursor-pointer "
         >
-          {/* Desktop — static layout */}
           <div
-            className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
-            style={{ transform: "translateY(3px)" }}
+            style={{
+              position: "fixed",
+              top: "45px",
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              backgroundColor: "#C2FD5C",
+              overflow: "hidden",
+              animation: "ticker-fadein 0.4s ease-out"
+            }}
           >
-            <span className="text-black font-bold text-[28px] whitespace-nowrap">
-              {TICKER.label}
-            </span>
-
-            <div className="flex-1 border-t border-black" />
-
-            <span className="text-evolve-pink font-extrabold text-[32px] whitespace-nowrap">
-              {TICKER.title}
-            </span>
-
-            <span className="text-black text-sm select-none">|</span>
-
-            <span className="text-black text-[28px] font-bold whitespace-nowrap">
-              {TICKER.by}
-            </span>
-
-            <span className="text-black text-sm select-none">|</span>
-
-            <span className="text-black text-[18px] font-bold whitespace-nowrap">
-              {TICKER.date}
-            </span>
-
-            <a
-              href={TICKER.webinarUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-2 flex-shrink-0 w-[4rem] h-[2rem] rounded-md border border-black flex items-center justify-center text-black text-xl transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
-            >
-              →
-            </a>
-          </div>
-
-          {/* Mobile — scrolling marquee */}
-          <div
-            className="flex md:hidden items-center h-[5rem] overflow-hidden"
-            style={{ transform: "translateY(4px)" }}
-          >
+            {/* Desktop — static layout */}
             <div
-              className="flex whitespace-nowrap"
-              style={{
-                animation: "ticker-scroll 20s linear infinite"
-              }}
+              className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
+              style={{ transform: "translateY(5px)" }}
             >
-              {[0, 1].map((i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-3 px-8 lowercase"
-                >
-                  {/* Label */}
-                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
-                    {TICKER.label}
-                  </span>
+              <span className="text-black font-bold text-[28px] whitespace-nowrap">
+                {TICKER.label}
+              </span>
 
-                  <span className="text-black font-bold">|</span>
+              <div className="flex-1 border-t border-black" />
 
-                  {/* Title */}
-                  <span className="text-evolve-pink font-extrabold text-[22px] whitespace-nowrap">
-                    {TICKER.title}
-                  </span>
+              <span className="text-evolve-pink font-extrabold text-[32px] whitespace-nowrap">
+                {TICKER.title}
+              </span>
 
-                  <span className="text-black font-bold">|</span>
+              <span className="text-black text-sm select-none">|</span>
 
-                  {/* Author */}
-                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
-                    {TICKER.by}
-                  </span>
+              <span className="text-black text-[28px] font-bold whitespace-nowrap">
+                {TICKER.by}
+              </span>
 
-                  <span className="text-black font-bold">|</span>
+              <span className="text-black text-sm select-none">|</span>
 
-                  {/* Date */}
-                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
-                    {TICKER.date}
-                  </span>
+              <span className="text-black text-[18px] font-bold whitespace-nowrap">
+                {TICKER.date}
+              </span>
 
-                  {/* CTA */}
-                  <a
-                    href={TICKER.webinarUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-shrink-0 w-7 h-7 rounded border border-black flex items-center justify-center text-black text-sm transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
+              <span className="ml-2 flex-shrink-0 w-[4rem] h-[2rem] rounded-md border border-black flex items-center justify-center text-black text-xl transition-colors duration-200">
+                →
+              </span>
+            </div>
+
+            {/* Mobile — scrolling marquee */}
+            <div
+              className="flex md:hidden items-center h-[5rem] overflow-hidden"
+              style={{ transform: "translateY(4px)" }}
+            >
+              <div
+                className="flex whitespace-nowrap"
+                style={{
+                  animation: "ticker-scroll 20s linear infinite"
+                }}
+              >
+                {[0, 1].map((i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-3 px-8 lowercase"
                   >
-                    →
-                  </a>
+                    {/* Label */}
+                    <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                      {TICKER.label}
+                    </span>
 
-                  <span className="text-black mx-2 font-bold">•</span>
-                </span>
-              ))}
+                    <span className="text-black font-bold">|</span>
+
+                    {/* Title */}
+                    <span className="text-evolve-pink font-extrabold text-[22px] whitespace-nowrap">
+                      {TICKER.title}
+                    </span>
+
+                    <span className="text-black font-bold">|</span>
+
+                    {/* Author */}
+                    <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                      {TICKER.by}
+                    </span>
+
+                    <span className="text-black font-bold">|</span>
+
+                    {/* Date */}
+                    <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                      {TICKER.date}
+                    </span>
+
+                    {/* CTA Arrow */}
+                    <span className="flex-shrink-0 w-7 h-7 rounded border border-black flex items-center justify-center text-black text-md">
+                      →
+                    </span>
+
+                    <span className="text-black mx-2 font-bold">•</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </a>
       )}
     </>
   );
