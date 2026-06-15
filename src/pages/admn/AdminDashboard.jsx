@@ -560,7 +560,8 @@ export default function AdminDashboard() {
           .order("created_at", { ascending: false }),
 
         (() => {
-          let q = supabase.from("portfolio_reviews").select("*");
+          // Use supabaseAdmin so RLS doesn't block faculty/uni_admin (user_id is null on ANU rows)
+          let q = supabaseAdmin.from("portfolio_reviews").select("*");
           if (isAnantAdmin) q = q.eq("tenant_id", "anant");
           return q.order("created_at", { ascending: false });
         })(),
@@ -630,7 +631,7 @@ export default function AdminDashboard() {
   // Auto-refresh portfolio reviews every 15 seconds
   useEffect(() => {
     const iv = setInterval(async () => {
-      let q = supabase.from("portfolio_reviews").select("*");
+      let q = supabaseAdmin.from("portfolio_reviews").select("*");
       if (isAnantAdmin) q = q.eq("tenant_id", "anant");
       const { data } = await q.order("created_at", { ascending: false });
       if (data) setPortfolioReviews(data);
@@ -937,13 +938,28 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
   /* ── anant admin theme helpers ── */
   const aBg      = dark ? "#060c17" : "#f8fafc";
   const aColor   = dark ? "#ffffff" : "#0f172a";
-  const aHdrBg   = dark ? "#060c17" : "#ffffff";
-  const aHdrBord = dark ? "#0d1f3c" : "#e2e8f0";
+  const aHdrBg   = "#060c17";         // always dark — matches all Anant pages
+  const aHdrBord = "#0d1f3c";         // always dark border
   const aSub     = dark ? "rgba(255,255,255,0.45)" : "#64748b";
   const aDiv     = dark ? "rgba(255,255,255,0.15)" : "#cbd5e1";
-  const aBtnBord = dark ? "#1e3a8a" : "#e2e8f0";
-  const aBtnClr  = dark ? "rgba(255,255,255,0.5)" : "#64748b";
+  const aBtnBord = dark ? "#1e3a8a" : "#1e3a8a";
+  const aBtnClr  = dark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.6)";
   const aTabBord = dark ? "#0d1f3c" : "#e2e8f0";
+  /* ── anant reviews table theme ── */
+  const aTblBorder = dark ? "#0d1f3c" : "#e2e8f0";
+  const aTblHdrBg  = dark ? "#071022" : "#f1f5f9";
+  const aTblHdrTxt = dark ? "#475569" : "#94a3b8";
+  const aTblRowEven= dark ? "#060c17" : "#ffffff";
+  const aTblRowOdd = dark ? "#04080f" : "#f8fafc";
+  const aTblRowBrd = dark ? "#0d1f3c" : "#e2e8f0";
+  const aTblText   = dark ? "#ffffff" : "#0f172a";
+  const aTblMuted  = dark ? "#94a3b8" : "#475569";
+  const aTblDim    = dark ? "#475569" : "#94a3b8";
+  const aInpBg     = dark ? "#071022" : "#f1f5f9";
+  const aInpBord   = dark ? "#1e3a5f" : "#cbd5e1";
+  const aInpText   = dark ? "#ffffff" : "#0f172a";
+  const aCsvBg     = dark ? "#111827" : "#0f172a";
+  const aCsvText   = Y;
 
   return (
     <div
@@ -967,13 +983,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           {isAnantAdmin ? (
             <>
               <img src={anant_logo} alt="Anant" className="h-10 w-auto object-contain" />
-              <span style={{ color: aDiv }}>/</span>
-              <span className="text-sm font-semibold" style={{ color: aSub }}>
+              <span style={{ color: "rgba(255,255,255,0.2)" }}>/</span>
+              <span className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
                 {anuRole === "faculty" ? "portfolio reviews" : "admin"}
               </span>
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-                style={{ background: "rgba(37,99,235,0.15)", color: dark ? "#60a5fa" : ANANT_BLUE }}
+                style={{ background: "rgba(37,99,235,0.25)", color: "#93c5fd" }}
               >
                 {anuRole === "faculty" ? "faculty" : anuRole === "uni_admin" ? "uni admin" : "evolve admin"}
               </span>
@@ -997,7 +1013,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             <button
               onClick={toggleDark}
               className="w-7 h-7 rounded-full flex items-center justify-center border transition-colors"
-              style={{ borderColor: aHdrBord, backgroundColor: dark ? "#0a1628" : "#f1f5f9" }}
+              style={{ borderColor: "#1e3a5f", backgroundColor: "#0a1628" }}
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? (
@@ -1007,7 +1023,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 </svg>
               ) : (
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="#475569" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </button>
@@ -1027,8 +1043,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             onClick={handleLogout}
             className="text-xs px-3 py-1.5 rounded-lg font-semibold"
             style={{
-              background: isAnantAdmin ? (dark ? "rgba(220,38,38,0.15)" : "#fee2e2") : "#1a1a1a",
-              color: isAnantAdmin ? (dark ? "#f87171" : "#dc2626") : "#888"
+              background: isAnantAdmin ? "rgba(220,38,38,0.15)" : "#1a1a1a",
+              color: isAnantAdmin ? "#f87171" : "#888"
             }}
           >
             logout
@@ -1944,21 +1960,31 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           </div>
         )}
 
-        {activeTab === "reviews" && (
+        {activeTab === "reviews" && (() => {
+          // For ANU: parse notes into Q1 + Q4 cleanly
+          const parseNotes = (notes) => {
+            const parts = (notes || "").split("\n\n---q4---\n");
+            return { q1: parts[0] || "", q4: parts[1] || "" };
+          };
+          // ANU column headers reflect the actual questions asked
+          const reviewHeaders = isAnantAdmin
+            ? ["name", "email", "portfolio", "course", "batch", "hoping to land", "review focus", "hardest part (Q1)", "also difficult (Q4)", "submitted", "report"]
+            : ["name", "email", "portfolio", "tenant", "target roles", "proud project", "notes", "submitted", "remarks", "report"];
+          return (
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="search by name or email…"
                 className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
                 style={{
-                  background: "#111",
-                  border: "1px solid #222",
-                  color: "#fff"
+                  background: isAnantAdmin ? aInpBg : "#111",
+                  border: `1px solid ${isAnantAdmin ? aInpBord : "#222"}`,
+                  color: isAnantAdmin ? aInpText : "#fff"
                 }}
               />
-              <span className="text-xs" style={{ color: "#555" }}>
+              <span className="text-xs" style={{ color: isAnantAdmin ? aTblDim : "#555" }}>
                 {filteredReviews.length} reviews
               </span>
               {isAnantAdmin && (
@@ -1970,27 +1996,33 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 </span>
               )}
               <button
-                onClick={() =>
-                  downloadCSV(
-                    "portfolio_reviews.csv",
-                    filteredReviews.map((r) => ({
-                      name: r.name || "",
-                      email: r.email || "",
-                      portfolio_link: r.portfolio_link || "",
-                      portfolio_file: r.portfolio_file_url || "",
-                      target_roles: r.target_roles || "",
-                      proud_project: r.proud_project || "",
-                      notes: r.notes || "",
-                      submitted: fmtDate(r.created_at),
-                      remarks: r.remarks || ""
-                    }))
-                  )
-                }
+                onClick={() => {
+                  const rows = filteredReviews.map((r) => {
+                    if (isAnantAdmin) {
+                      const { q1, q4 } = parseNotes(r.notes);
+                      return {
+                        name: r.name || "", email: r.email || "",
+                        portfolio_link: r.portfolio_link || "", portfolio_file: r.portfolio_file_url || "",
+                        course: r.course || "", batch: r.batch || "",
+                        hoping_to_land: r.target_roles || "", review_focus: r.proud_project || "",
+                        hardest_part: q1, also_difficult: q4,
+                        submitted: fmtDate(r.created_at), status: r.review_status || ""
+                      };
+                    }
+                    return {
+                      name: r.name || "", email: r.email || "",
+                      portfolio_link: r.portfolio_link || "", portfolio_file: r.portfolio_file_url || "",
+                      target_roles: r.target_roles || "", proud_project: r.proud_project || "",
+                      notes: r.notes || "", submitted: fmtDate(r.created_at), remarks: r.remarks || ""
+                    };
+                  });
+                  downloadCSV("portfolio_reviews.csv", rows);
+                }}
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold"
                 style={{
-                  background: "#111",
-                  border: "1px solid #333",
-                  color: Y
+                  background: isAnantAdmin ? aCsvBg : "#111",
+                  border: isAnantAdmin ? "none" : "1px solid #333",
+                  color: aCsvText
                 }}
               >
                 ↓ csv
@@ -1999,33 +2031,17 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
             <div
               className="rounded-xl border overflow-x-auto"
-              style={{ borderColor: "#222" }}
+              style={{ borderColor: isAnantAdmin ? aTblBorder : "#222" }}
             >
               <table className="w-full text-sm">
                 <thead>
-                  <tr
-                    style={{
-                      background: "#111",
-                      borderBottom: "1px solid #222"
-                    }}
-                  >
-                    {[
-                      "name",
-                      "email",
-                      "portfolio",
-                      ...(isAnantAdmin ? ["course", "batch"] : ["tenant"]),
-                      "target roles",
-                      "proud project",
-                      "notes",
-                      "submitted",
-                      "remarks",
-                      "report"
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left font-semibold"
-                        style={{ color: "#555" }}
-                      >
+                  <tr style={{
+                    background: isAnantAdmin ? aTblHdrBg : "#111",
+                    borderBottom: `1px solid ${isAnantAdmin ? aTblBorder : "#222"}`
+                  }}>
+                    {reviewHeaders.map((h) => (
+                      <th key={h} className="px-4 py-3 text-left font-semibold"
+                        style={{ color: isAnantAdmin ? aTblHdrTxt : "#555", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
                     ))}
@@ -2035,175 +2051,120 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 <tbody>
                   {filteredReviews.length === 0 && (
                     <tr>
-                      <td
-                        colSpan={9}
-                        className="px-4 py-8 text-center"
-                        style={{ color: "#444" }}
-                      >
+                      <td colSpan={reviewHeaders.length} className="px-4 py-8 text-center"
+                        style={{ color: isAnantAdmin ? aTblDim : "#444" }}>
                         no portfolio reviews
                       </td>
                     </tr>
                   )}
 
-                  {filteredReviews.map((r, i) => (
-                    <tr
-                      key={r.id || i}
-                      style={{
-                        borderBottom: "1px solid #1a1a1a",
-                        background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a"
-                      }}
-                    >
-                      {/* NAME */}
-                      <td className="px-4 py-3 font-semibold text-white">
-                        {r.name || "—"}
-                      </td>
+                  {filteredReviews.map((r, i) => {
+                    const { q1, q4 } = parseNotes(r.notes);
+                    const rowBg = i % 2 === 0
+                      ? (isAnantAdmin ? aTblRowEven : "#0d0d0d")
+                      : (isAnantAdmin ? aTblRowOdd : "#0a0a0a");
+                    const rowBord = isAnantAdmin ? aTblRowBrd : "#1a1a1a";
+                    return (
+                      <tr key={r.id || i} style={{ borderBottom: `1px solid ${rowBord}`, background: rowBg }}>
 
-                      {/* EMAIL */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{ color: "#888" }}
-                      >
-                        {r.email || "—"}
-                      </td>
-
-                      {/* PORTFOLIO */}
-                      <td className="px-4 py-3 text-xs">
-                        {r.portfolio_link ? (
-                          <a
-                            href={r.portfolio_link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-yellow-400 underline"
-                          >
-                            open link
-                          </a>
-                        ) : r.portfolio_file_url ? (
-                          <a
-                            href={r.portfolio_file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-yellow-400 underline"
-                          >
-                            view file
-                          </a>
-                        ) : (
-                          <span style={{ color: "#444" }}>—</span>
-                        )}
-                      </td>
-
-                      {/* COURSE + BATCH (anant) or TENANT (evolve) */}
-                      {isAnantAdmin ? (
-                        <>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa" }}>
-                            {r.course || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa" }}>
-                            {r.batch || "—"}
-                          </td>
-                        </>
-                      ) : (
-                        <td className="px-4 py-3 text-xs">
-                          <span
-                            className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            style={{
-                              background: r.tenant_id === "anant" ? "rgba(163,91,251,0.15)" : "rgba(255,208,7,0.1)",
-                              color: r.tenant_id === "anant" ? "#A35BFB" : "#FFD007"
-                            }}
-                          >
-                            {r.tenant_id || "evolve"}
-                          </span>
+                        {/* NAME */}
+                        <td className="px-4 py-3 font-semibold" style={{ color: isAnantAdmin ? aTblText : "#fff" }}>
+                          {r.name || "—"}
                         </td>
-                      )}
 
-                      {/* TARGET ROLES */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{
-                          color: "#aaa",
-                          maxWidth: 200,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis"
-                        }}
-                        title={r.target_roles}
-                      >
-                        {r.target_roles || "—"}
-                      </td>
+                        {/* EMAIL */}
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>
+                          {r.email || "—"}
+                        </td>
 
-                      {/* PROUD PROJECT */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{
-                          color: "#aaa",
-                          maxWidth: 250,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis"
-                        }}
-                        title={r.proud_project}
-                      >
-                        {r.proud_project || "—"}
-                      </td>
+                        {/* PORTFOLIO */}
+                        <td className="px-4 py-3 text-xs">
+                          {r.portfolio_link ? (
+                            <a href={r.portfolio_link} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a>
+                          ) : r.portfolio_file_url ? (
+                            <a href={r.portfolio_file_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">view file</a>
+                          ) : (
+                            <span style={{ color: aTblDim }}>—</span>
+                          )}
+                        </td>
 
-                      {/* NOTES */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{
-                          color: "#aaa",
-                          maxWidth: 200,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis"
-                        }}
-                        title={r.notes}
-                      >
-                        {r.notes || "—"}
-                      </td>
-
-                      {/* DATE */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{ color: "#666" }}
-                      >
-                        {fmtDate(r.created_at)}
-                      </td>
-
-                      {/* REMARKS */}
-                      <td
-                        className="px-4 py-3 text-xs"
-                        style={{
-                          color: "#aaa",
-                          maxWidth: 220,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis"
-                        }}
-                        title={r.remarks}
-                      >
-                        {r.remarks || "—"}
-                      </td>
-
-                      {/* REPORT — upload only for evolve super admin; others get read-only status */}
-                      <td className="px-4 py-3">
-                        {isEvolveAdmin ? (
-                          <ReviewUploadCell review={r} onDone={handleReportDone} />
-                        ) : r.review_report_url ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold" style={{ color: GR }}>done</span>
-                            <a href={r.review_report_url} target="_blank" rel="noreferrer"
-                              className="text-xs underline" style={{ color: "#888" }}>view pdf</a>
-                          </div>
+                        {/* COURSE + BATCH (anant) or TENANT (evolve) */}
+                        {isAnantAdmin ? (
+                          <>
+                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{r.course || "—"}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{r.batch || "—"}</td>
+                          </>
                         ) : (
-                          <span className="text-xs" style={{ color: "#555" }}>pending</span>
+                          <td className="px-4 py-3 text-xs">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                              style={{ background: r.tenant_id === "anant" ? "rgba(163,91,251,0.15)" : "rgba(255,208,7,0.1)", color: r.tenant_id === "anant" ? "#A35BFB" : "#FFD007" }}>
+                              {r.tenant_id || "evolve"}
+                            </span>
+                          </td>
                         )}
-                      </td>
-                    </tr>
-                  ))}
+
+                        {/* Q2 / TARGET ROLES */}
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          title={r.target_roles}>
+                          {r.target_roles || "—"}
+                        </td>
+
+                        {/* Q3 / PROUD PROJECT */}
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          title={r.proud_project}>
+                          {r.proud_project || "—"}
+                        </td>
+
+                        {/* Q1 / NOTES (parsed — no raw delimiter) */}
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                          title={isAnantAdmin ? q1 : r.notes}>
+                          {isAnantAdmin ? (q1 || "—") : (r.notes || "—")}
+                        </td>
+
+                        {/* Q4 — anant only */}
+                        {isAnantAdmin && (
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={q4}>
+                            {q4 || "—"}
+                          </td>
+                        )}
+
+                        {/* SUBMITTED */}
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
+                          {fmtDate(r.created_at)}
+                        </td>
+
+                        {/* REMARKS — evolve only */}
+                        {!isAnantAdmin && (
+                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa", maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={r.remarks}>
+                            {r.remarks || "—"}
+                          </td>
+                        )}
+
+                        {/* REPORT */}
+                        <td className="px-4 py-3">
+                          {isEvolveAdmin ? (
+                            <ReviewUploadCell review={r} onDone={handleReportDone} />
+                          ) : r.review_report_url ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold" style={{ color: GR }}>done</span>
+                              <a href={r.review_report_url} target="_blank" rel="noreferrer"
+                                className="text-xs underline" style={{ color: isAnantAdmin ? aTblDim : "#888" }}>view pdf</a>
+                            </div>
+                          ) : (
+                            <span className="text-xs" style={{ color: isAnantAdmin ? aTblDim : "#555" }}>pending</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* ══════════════════════════════════════════════════════════════
             PEOPLE TAB (anant — non-faculty only)
