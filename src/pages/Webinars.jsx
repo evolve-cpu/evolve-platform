@@ -21,7 +21,9 @@ import {
   interaction_design,
   career_growth,
   hobbies,
-  watch_playlist_button
+  watch_playlist_button,
+  learn_to_learn,
+  learn_to_learn_mobile
 } from "../assets/images/Webinars";
 
 import { webinars as COPY } from "../content";
@@ -187,7 +189,10 @@ ${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
         {/* Button */}
         <a
           // href={playlistUrl}
-          onClick={() => { trackWebinarPlaylist(title); window.open(playlistUrl, "_blank"); }}
+          onClick={() => {
+            trackWebinarPlaylist(title);
+            window.open(playlistUrl, "_blank");
+          }}
           target="_blank"
           rel="noopener noreferrer"
           className={`
@@ -293,6 +298,16 @@ const MobilePinnedCards = ({ cards }) => {
     <section ref={sectionRef} className="relative bg-evolve-yellow px-6 pb-32">
       {/* STICKY TEXT (NO GSAP PIN) */}
       <div className="sticky top-0 bg-evolve-yellow pt-16 pb-8 z-10">
+        <h2
+          className="text-black font-extrabold lowercase text-center mb-3"
+          style={{
+            fontSize: "48px",
+            lineHeight: "1",
+            letterSpacing: "-0.03em"
+          }}
+        >
+          {COPY.pastSection.heading}
+        </h2>
         <p
           className="text-black font-semibold text-center mx-auto max-w-[85vw]"
           style={{ fontSize: "20px" }}
@@ -333,7 +348,10 @@ const MobilePinnedCards = ({ cards }) => {
               />
               <img
                 src={watch_playlist_button}
-                onClick={() => { trackWebinarPlaylist(card.title); window.open(card.playlistUrl, "_blank"); }}
+                onClick={() => {
+                  trackWebinarPlaylist(card.title);
+                  window.open(card.playlistUrl, "_blank");
+                }}
                 className="mt-6 h-12"
                 alt=""
               />
@@ -394,23 +412,19 @@ const Webinars = () => {
           />
 
           {/* Left element - starts at 10vh, stretches to bottom of grid */}
-          {/* <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]"> */}
-          <div className="absolute left-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]">
+          <div className="absolute -left-1 top-0 bottom-0 z-50 pointer-events-none pt-[10vh]">
             <img
               src={left_elem}
               alt="left element"
-              // className="h-full w-auto object-cover object-top"
               className="w-auto object-cover object-top"
             />
           </div>
 
           {/* Right element - starts at 10vh, stretches to bottom of grid */}
-          {/* <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh] h-[90%]"> */}
-          <div className="absolute right-0 top-0 bottom-0 z-20 pointer-events-none pt-[10vh]">
+          <div className="absolute right-0 top-0 bottom-0 z-50 pointer-events-none pt-[10vh]">
             <img
               src={right_elem}
               alt="right element"
-              // className="h-full w-auto object-cover object-top"
               className="w-auto object-cover object-top"
             />
           </div>
@@ -418,20 +432,19 @@ const Webinars = () => {
           {/* Content sections */}
           <section className="relative">
             {/* First viewport content */}
-            <div className="relative min-h-screen">
-              {/* Barfi - z-20, centered and moved down */}
-              <div className="absolute inset-0 flex items-center justify-center z-20 pt-20">
+            <div className="relative min-h-[140vh]">
+              {/* Barfi - z-20, anchored to top */}
+              <div className="absolute inset-0 flex items-center justify-center z-20 -pt-36 ">
                 <div className="relative flex flex-col items-center text-center">
                   <img src={barfi} alt="barfi" className="relative w-[85%]" />
 
                   {/* Text inside Barfi - z-30 */}
-                  {/* <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16"> */}
-                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-28%]">
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-60%]">
                     <h1
                       className="text-evolve-pink font-extrabold lowercase"
                       style={{
                         fontSize: "clamp(64px, 8vw, 128px)",
-                        lineHeight: "clamp(48px, 7vw, 110px)",
+                        lineHeight: "clamp(48px, 6vw, 110px)",
                         letterSpacing: "-0.03em"
                       }}
                     >
@@ -455,11 +468,25 @@ const Webinars = () => {
                 </div>
               </div>
 
-              {/* Hands with stairs - z-40, bottom of screen */}
+              {/* Upcoming webinar poster - above hands */}
+              <a
+                href={COPY.upcomingWebinar.registrationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-[-8%] inset-x-0 z-50 flex justify-center"
+              >
+                <img
+                  src={learn_to_learn}
+                  alt="upcoming webinar"
+                  className="w-full object-contain"
+                />
+              </a>
+
+              {/* Hands with stairs - z-30, bottom of screen */}
               <img
                 src={hands_with_stairs_chat_full}
                 alt="hands with stairs chat"
-                className="absolute -bottom-0 inset-x-0 mx-auto z-30 pointer-events-none w-[100%]"
+                className="absolute -bottom-8 inset-x-0 mx-auto z-30 pointer-events-none w-[100%]"
               />
             </div>
 
@@ -494,6 +521,19 @@ const Webinars = () => {
 
         {/* Past Webinars Section - Desktop */}
         <section className="relative bg-evolve-yellow px-16 py-20">
+          {/* Past webinars heading */}
+          <div className="flex justify-center mb-6">
+            <h2
+              className="text-black font-extrabold lowercase"
+              style={{
+                fontSize: "72px",
+                lineHeight: "1",
+                letterSpacing: "-0.03em"
+              }}
+            >
+              {COPY.pastSection.heading}
+            </h2>
+          </div>
           {/* Description text with max-width */}
           <div className="flex justify-center mb-12">
             <p
@@ -565,7 +605,7 @@ const Webinars = () => {
             />
 
             {/* Texts inside barfi */}
-            <div className="absolute top-[10vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
+            <div className="absolute top-[4vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
               <div className="w-[80%] text-center pt-16 px-6">
                 <h1
                   className="
@@ -601,6 +641,20 @@ const Webinars = () => {
               </div>
             </div>
 
+            {/* Upcoming webinar poster - anchored from top so portrait image extends down, not up */}
+            <a
+              href={COPY.upcomingWebinar.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-[25%] inset-x-0 z-40 flex justify-center"
+            >
+              <img
+                src={learn_to_learn_mobile}
+                alt="upcoming webinar"
+                className="w-[95%] object-contain"
+              />
+            </a>
+
             {/* Hands chat (top layer) */}
             <img
               src={hands_with_stairs_chat_full_mobile}
@@ -610,29 +664,8 @@ const Webinars = () => {
           </div>
           {/* </section> */}
 
-          {/* ---------- PAGE 1 : UPCOMING ---------- */}
-          {/* <section className="relative z-40 pt-32 pb-20 text-center"> */}
-          <div className="relative z-40 pt-32 pb-20 text-center">
-            {/* <h2
-              className="font-extrabold lowercase text-black"
-              style={{
-                fontSize: "32px",
-                lineHeight: "32px",
-                letterSpacing: "-0.03em"
-              }}
-            >
-              upcoming
-              <br /> webinar
-            </h2>
-
-            <img
-              src={hands_with_webinars_card_full_mobile}
-              className="w-[95%] mx-auto mt-10"
-              alt=""
-            /> */}
-            {/* </section> */}
-
-            {/* ---------- PAGE 2 : PAST WEBINARS ---------- */}
+          {/* ---------- PAST WEBINARS ---------- */}
+          <div className="relative z-40 pt-32">
             <MobilePinnedCards cards={cards} />
           </div>
         </section>

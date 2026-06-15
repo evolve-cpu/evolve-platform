@@ -20,6 +20,10 @@ import interaction_design from "./interaction_design.svg";
 import career_growth from "./career_growth.svg";
 import hobbies from "./hobbies.svg";
 import watch_playlist_button from "./watch_playlist_button.svg";
+// import learn_to_learn from "./learn_to_learn.webp";
+import learn_to_learn from "./learn_to_learn.svg";
+// import learn_to_learn_mobile from "./learn_to_learn_mobile.webp";
+import learn_to_learn_mobile from "./learn_to_learn_mobile.svg";
 export {
   left_elem,
   left_elem_mobile,
@@ -42,5 +46,7 @@ export {
   interaction_design,
   career_growth,
   hobbies,
-  watch_playlist_button
+  watch_playlist_button,
+  learn_to_learn,
+  learn_to_learn_mobile
 };

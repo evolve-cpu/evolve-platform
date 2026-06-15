@@ -20,6 +20,15 @@
   font-display: swap;
 }
 
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes ticker-fadein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* disable text + image selection everywhere */
 html, body {
   -webkit-user-select: none;  /* safari */

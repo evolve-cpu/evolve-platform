@@ -112,12 +112,15 @@ export const mentorship = {
     sectionHeading: "what it costs.",
     starterCutPrice: "₹ 35,000",
     starterPrice: "₹ 15,000",
-    starterTaglineDesktop: "for those who wants to find \na niche and get started",
+    starterTaglineDesktop:
+      "for those who wants to find \na niche and get started",
     starterTaglineMobile: "for those who need a direction on where to start",
     acceleratorCutPrice: "₹ 50,000",
     acceleratorPrice: "₹ 35,000",
-    acceleratorTaglineDesktop: "for those who wants to find a niche and accelerate the career",
-    acceleratorTaglineMobile: "for those who have interviews lined up and need to crack it",
+    acceleratorTaglineDesktop:
+      "for those who wants to find a niche and accelerate the career",
+    acceleratorTaglineMobile:
+      "for those who have interviews lined up and need to crack it",
     starterFeatures: [
       "5 group sessions (~60 min each)",
       "personalised resume & portfolio review",
@@ -198,7 +201,8 @@ export const mentorship = {
 
   closingCta: {
     // Use \n for line breaks
-    tagline: "if you're serious about your design career,\nthis is where to start."
+    tagline:
+      "if you're serious about your design career,\nthis is where to start."
   }
 };
 
@@ -213,16 +217,22 @@ export const webinars = {
   },
 
   hero: {
-    heading: "evolve\nwebinars",
+    heading: "evolve\nwebinars"
     // Desktop subtext (two lines)
-    subtextDesktop:
-      "Learn from people who've been there,\ndone that, and have the work to prove it.",
+    // subtextDesktop:
+    //   "Learn from people who've been there,\ndone that, and have the work to prove it."
     // Mobile subtext (single line)
-    subtextMobile:
-      "Learn from people who've been there, done that, and have the work to prove it."
+    // subtextMobile:
+    //   "Learn from people who've been there, done that, and have the work to prove it."
+  },
+
+  upcomingWebinar: {
+    // Replace "#" with the registration link when ready
+    registrationUrl: "#"
   },
 
   pastSection: {
+    heading: "past webinars",
     description:
       "Real talk from working professionals. Practical takeaways you can use immediately. Every session is recorded, so you never miss out."
   },
@@ -355,4 +365,16 @@ export const portfolioReview = {
       }
     ]
   }
+};
+
+// ─────────────────────────────────────────────
+//  Home page announcement ticker
+// ─────────────────────────────────────────────
+export const homeTicker = {
+  label: "upcoming webinar",
+  title: "learn to 'learn'",
+  by: "by kishan parasu",
+  date: "25th june 2026 | 9:00 pm IST",
+  // Replace "#" with the webinar registration link when ready
+  webinarUrl: "#"
 };

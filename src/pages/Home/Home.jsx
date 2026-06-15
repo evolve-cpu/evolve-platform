@@ -11,6 +11,7 @@ import React, {
 import { gsap } from "gsap";
 import { useNavigationType, useLocation } from "react-router-dom";
 import SEO from "../../components/SEO";
+import { homeTicker as TICKER } from "../../content";
 import GrainTexture from "../../components/GrainTexture";
 import Scene2_refined from "./Scene2_refined";
 import Scene3_refined from "./Scene3_refined";
@@ -70,8 +71,12 @@ const Home = ({
   // State
   const [introDone, setIntroDone] = useState(restoredSection >= 0);
   const [animationsReady, setAnimationsReady] = useState(false);
-  const [activeSection, setActiveSection] = useState(restoredSection >= 0 ? restoredSection : -1);
-  const [scrollProgress, setScrollProgress] = useState(restoredSection >= 0 ? restoredSection / 4 : 0);
+  const [activeSection, setActiveSection] = useState(
+    restoredSection >= 0 ? restoredSection : -1
+  );
+  const [scrollProgress, setScrollProgress] = useState(
+    restoredSection >= 0 ? restoredSection / 4 : 0
+  );
   const scene1_4StartedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(() => {
@@ -209,11 +214,23 @@ const Home = ({
     // Scene1_4 (index 3)
     if (s14) {
       if (restoredSection === 3) {
-        gsap.set(s14, { y: "0%", rotation: 0, scale: 1, opacity: 1, transformOrigin: "center center" });
+        gsap.set(s14, {
+          y: "0%",
+          rotation: 0,
+          scale: 1,
+          opacity: 1,
+          transformOrigin: "center center"
+        });
         // s4 stays at y:0 as the layer underneath Scene1_4
         if (s4) gsap.set(s4, { y: 0 });
       } else {
-        gsap.set(s14, { y: "120%", rotation: 15, scale: 0.9, opacity: 0, transformOrigin: "center center" });
+        gsap.set(s14, {
+          y: "120%",
+          rotation: 15,
+          scale: 0.9,
+          opacity: 0,
+          transformOrigin: "center center"
+        });
       }
     }
 
@@ -237,17 +254,31 @@ const Home = ({
       // Fresh load — scenes 3/4/s14 haven't been touched by the intro transition yet
       gsap.set(s3, { y: "100vh" });
       gsap.set(s4, { y: "100vh" });
-      gsap.set(s14, { y: "120%", rotation: 15, transformOrigin: "center center", opacity: 0, scale: 0.9 });
+      gsap.set(s14, {
+        y: "120%",
+        rotation: 15,
+        transformOrigin: "center center",
+        opacity: 0,
+        scale: 0.9
+      });
     }
     // When restoring, the restore useLayoutEffect has already set correct positions
 
     let currentSection = introSkippedRef.current ? restoredSection : 0;
     // Block briefly on fresh load (intro slide takes ~1.1s); immediate on restore
     let isAnimating = !introSkippedRef.current;
-    const unblockId = isAnimating ? setTimeout(() => { isAnimating = false; }, 1200) : null;
+    const unblockId = isAnimating
+      ? setTimeout(() => {
+          isAnimating = false;
+        }, 1200)
+      : null;
 
     // If restoring to Scene1_4, kick off its internal timeline
-    if (introSkippedRef.current && restoredSection === 3 && !scene1_4StartedRef.current) {
+    if (
+      introSkippedRef.current &&
+      restoredSection === 3 &&
+      !scene1_4StartedRef.current
+    ) {
       scene1_4StartedRef.current = true;
       useScene1_4Timeline(scene1_4Refs.current, isMobile);
     }
@@ -339,7 +370,8 @@ const Home = ({
       // If footer is partially visible, let native scroll handle
       if (window.scrollY > 10) return;
       // At last section scrolling down → release to footer (only when not mid-animation)
-      if (currentSection >= TOTAL_SECTIONS && e.deltaY > 0 && !isAnimating) return;
+      if (currentSection >= TOTAL_SECTIONS && e.deltaY > 0 && !isAnimating)
+        return;
       e.preventDefault();
       if (isAnimating) return;
       if (Math.abs(e.deltaY) < 10) return;
@@ -355,7 +387,8 @@ const Home = ({
       if (window.scrollY > 10) return; // already in footer zone, native scroll handles it
       const fingerMovingDown = e.touches[0].clientY > touchStartY; // down = backward through sections
       // At last section AND finger moving up (toward footer) → release to native scroll
-      if (currentSection >= TOTAL_SECTIONS && !isAnimating && !fingerMovingDown) return;
+      if (currentSection >= TOTAL_SECTIONS && !isAnimating && !fingerMovingDown)
+        return;
       // All other cases (including swiping down at last section) → block pull-to-refresh
       e.preventDefault();
     };
@@ -370,7 +403,9 @@ const Home = ({
     // ── Keyboard handler ────────────────────────────────────────────────────
     const handleKeyDown = (e) => {
       if (window.scrollY > 10) return;
-      const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
+      const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(
+        e.key
+      );
       const back = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
       if (!forward && !back) return;
       // At last section going forward and not animating → release to footer (no preventDefault)
@@ -411,7 +446,12 @@ const Home = ({
 
     // Position scene2 below viewport, then slide both simultaneously
     gsap.set(s2, { y: "100vh" });
-    gsap.to(s1, { y: "-100vh", duration: 0.8, delay: 0.3, ease: "power2.inOut" });
+    gsap.to(s1, {
+      y: "-100vh",
+      duration: 0.8,
+      delay: 0.3,
+      ease: "power2.inOut"
+    });
     gsap.to(s2, { y: 0, duration: 0.8, delay: 0.3, ease: "power2.inOut" });
 
     setActiveSection(0);
@@ -562,6 +602,117 @@ const Home = ({
               transition: "top 0.35s ease"
             }}
           />
+        </div>
+      )}
+
+      {/* Announcement ticker — slides in with the nav after intro */}
+      {introDone && (
+        <div
+          style={{
+            position: "fixed",
+            top: "45px",
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            backgroundColor: "#C2FD5C",
+            overflow: "hidden",
+            animation: "ticker-fadein 0.4s ease-out"
+          }}
+        >
+          {/* Desktop — static layout */}
+          <div
+            className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
+            style={{ transform: "translateY(3px)" }}
+          >
+            <span className="text-black font-bold text-[28px] whitespace-nowrap">
+              {TICKER.label}
+            </span>
+
+            <div className="flex-1 border-t border-black" />
+
+            <span className="text-evolve-pink font-extrabold text-[32px] whitespace-nowrap">
+              {TICKER.title}
+            </span>
+
+            <span className="text-black text-sm select-none">|</span>
+
+            <span className="text-black text-[28px] font-bold whitespace-nowrap">
+              {TICKER.by}
+            </span>
+
+            <span className="text-black text-sm select-none">|</span>
+
+            <span className="text-black text-[18px] font-bold whitespace-nowrap">
+              {TICKER.date}
+            </span>
+
+            <a
+              href={TICKER.webinarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 flex-shrink-0 w-[4rem] h-[2rem] rounded-md border border-black flex items-center justify-center text-black text-xl transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
+            >
+              →
+            </a>
+          </div>
+
+          {/* Mobile — scrolling marquee */}
+          <div
+            className="flex md:hidden items-center h-[5rem] overflow-hidden"
+            style={{ transform: "translateY(4px)" }}
+          >
+            <div
+              className="flex whitespace-nowrap"
+              style={{
+                animation: "ticker-scroll 20s linear infinite"
+              }}
+            >
+              {[0, 1].map((i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-3 px-8 lowercase"
+                >
+                  {/* Label */}
+                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                    {TICKER.label}
+                  </span>
+
+                  <span className="text-black font-bold">|</span>
+
+                  {/* Title */}
+                  <span className="text-evolve-pink font-extrabold text-[22px] whitespace-nowrap">
+                    {TICKER.title}
+                  </span>
+
+                  <span className="text-black font-bold">|</span>
+
+                  {/* Author */}
+                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                    {TICKER.by}
+                  </span>
+
+                  <span className="text-black font-bold">|</span>
+
+                  {/* Date */}
+                  <span className="text-black font-bold text-[18px] whitespace-nowrap">
+                    {TICKER.date}
+                  </span>
+
+                  {/* CTA */}
+                  <a
+                    href={TICKER.webinarUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 w-7 h-7 rounded border border-black flex items-center justify-center text-black text-sm transition-colors duration-200 hover:bg-black hover:text-[#C2FD5C]"
+                  >
+                    →
+                  </a>
+
+                  <span className="text-black mx-2 font-bold">•</span>
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>
