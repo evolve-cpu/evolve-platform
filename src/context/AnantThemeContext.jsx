@@ -6,7 +6,7 @@ export function AnantThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     try {
       const stored = localStorage.getItem("anant_theme");
-      return stored ? stored === "dark" : true;
+      return stored ? stored === "dark" : false;
     } catch {
       return true;
     }
