@@ -8,6 +8,7 @@ import { evolve_cube } from "../assets/images/Home";
 import { tenant, isAnant } from "../tenants";
 import { anant_logo } from "../assets/images/Community";
 import { useAnantTheme } from "../context/AnantThemeContext";
+import AnantPortfolioReview from "./anant/AnantPortfolioReview";
 
 /* ─── Anant brand theme ────────────────────────────────────────────────────── */
 const ANANT_LIGHT_THEME = {
@@ -1571,6 +1572,16 @@ export default function PortfolioReviewForm() {
   } else {
     if (authLoading || checkingSubmission) return null;
     if (!user) return null;
+  }
+
+  // ANU uses its own redesigned form — hand off here
+  if (isAnant && anantSession?.user) {
+    let cachedStudent = null;
+    try {
+      const c = sessionStorage.getItem("anu_student_cache");
+      if (c) cachedStudent = JSON.parse(c);
+    } catch {}
+    return <AnantPortfolioReview session={anantSession} studentData={cachedStudent} />;
   }
 
   const backPath = tenant.portfolio.backPath;
