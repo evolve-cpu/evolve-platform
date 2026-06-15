@@ -1073,6 +1073,7 @@ import Mentorship from "./pages/Mentorship.jsx";
 import AnantHome from "./pages/anant/AnantHome.jsx";
 import AnantSignIn from "./pages/anant/AnantSignIn.jsx";
 import AnantAdminLogin from "./pages/anant/AnantAdminLogin.jsx";
+import AnantAdminLanding from "./pages/anant/AnantAdminLanding.jsx";
 import AnantAdminGuard from "./routes/AnantAdminGuard.jsx";
 import AnantStudentProfile from "./pages/anant/AnantStudentProfile.jsx";
 import { isAnant } from "./tenants/index.js";
@@ -1132,6 +1133,7 @@ const AppLayout = () => {
     "/payment",
     "/mentorship-session",
     "/admin",
+    "/admin/signin",
     "/admin/dashboard",
     "/community/portfolio-review/form",
     "/portfolio-review/form"
@@ -1187,6 +1189,7 @@ const AppLayout = () => {
       location.pathname === "/payment" ||
       location.pathname === "/mentorship-session" ||
       location.pathname === "/admin" ||
+      location.pathname === "/admin/signin" ||
       location.pathname === "/admin/dashboard"
     ) {
       setShowNavbar(false);
@@ -1593,7 +1596,8 @@ const AnantAppLayout = () => {
         <Route path="/portfolio-review/form" element={<PortfolioReviewForm />} />
         <Route path="/signin" element={<AnantSignIn />} />
         <Route path="/profile" element={<AnantStudentProfile />} />
-        <Route path="/admin" element={<AnantAdminLogin />} />
+        <Route path="/admin" element={<AnantAdminLanding />} />
+        <Route path="/admin/signin" element={<AnantAdminLogin />} />
         <Route
           path="/admin/dashboard"
           element={

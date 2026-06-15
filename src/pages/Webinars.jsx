@@ -473,7 +473,7 @@ const Webinars = () => {
                 href={COPY.upcomingWebinar.registrationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-[-8%] inset-x-0 z-50 flex justify-center"
+                className="absolute bottom-[-6%]  inset-x-0 z-50 flex justify-center"
               >
                 <img
                   src={learn_to_learn}
