@@ -37,24 +37,31 @@ async function sendBrevoEmail({ to, subject, htmlContent }) {
 async function sendInviteEmail({ email, magicLink, role }) {
   const isStudent = role === "student";
   const subject = isStudent
-    ? "Your portfolio review portal is ready — Anant × evolve"
-    : "You've been invited to Anant × evolve admin portal";
-  const cta    = isStudent ? "Open my portfolio review portal" : "Access admin dashboard";
-  const target = isStudent ? `${ANU_ORIGIN}/portfolio-review/form` : `${ANU_ORIGIN}/admin/dashboard`;
-  const desc   = isStudent
-    ? "Your portfolio review portal at Anant National University is ready. Click below to sign in and submit your portfolio for expert feedback."
-    : "You've been invited to the Anant × evolve admin panel. Click below to access the dashboard.";
+    ? "Your portfolio review portal is ready, Anant National University x Evolve"
+    : "Your admin portal access, Anant National University x Evolve";
 
+  const headline = isStudent
+    ? "Your portfolio review portal is ready"
+    : `Your ${role === "uni_admin" ? "admin" : "faculty"} portal is ready`;
+
+  const body = isStudent
+    ? "Your portfolio review portal at Anant National University is ready. Click below to sign in and submit your portfolio for expert feedback. No password needed."
+    : "You've been invited to the Anant National University x evolve admin panel. Click below to access your dashboard. No password needed.";
+
+  const cta = isStudent ? "Open my portfolio review portal" : "Access my dashboard";
   const link = magicLink || (isStudent ? `${ANU_ORIGIN}/signin` : `${ANU_ORIGIN}/admin`);
+
   const htmlContent = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060c17;color:#fff;border-radius:16px">
-      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="ANU" style="height:36px;margin-bottom:24px" />
-      <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:8px">Anant National University × evolve</p>
-      <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin:0 0 12px">${subject}</h1>
-      <p style="font-size:15px;line-height:1.6;color:rgba(255,255,255,0.75);margin-bottom:28px">${desc}</p>
-      <a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none">${cta}</a>
-      <p style="margin-top:28px;font-size:12px;color:rgba(255,255,255,0.3)">This link is for ${email}. If this wasn't you, ignore this email.</p>
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
+      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin-bottom:32px;display:block" />
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
+      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">${headline}</h1>
+      <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">${body}</p>
+      <a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">${cta}</a>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
+      <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${email}. If this wasn't you, ignore this email.</p>
     </div>`;
+
   return sendBrevoEmail({ to: email, subject, htmlContent });
 }
 

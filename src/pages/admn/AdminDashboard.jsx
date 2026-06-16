@@ -238,6 +238,17 @@ function ReviewUploadCell({ review, onDone }) {
     // 3. Call edge function to send Brevo email with PDF attachment
     setState("sending");
     const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
+    const isAnuReview = review.tenant_id === "anant";
+    const anuReportHtml = isAnuReview ? `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
+        <img src="https://anu.evolvedesign.academy/images/anant-logo.png" alt="Anant National University" style="height:40px;margin-bottom:32px;display:block" />
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
+        <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portfolio review report is ready</h1>
+        <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">Great news, your personalised portfolio review report is ready to view.</p>
+        <a href="${reportUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">View your report</a>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
+        <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">We'd love to hear what you thought of the experience. There's a quick feedback form on the report page.</p>
+      </div>` : null;
     const res = await fetch(fnUrl, {
       method: "POST",
       headers: {
@@ -245,7 +256,13 @@ function ReviewUploadCell({ review, onDone }) {
         "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         "apikey": SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({
+      body: JSON.stringify(isAnuReview ? {
+        to_email: review.email,
+        to_name: review.name,
+        report_url: reportUrl,
+        html_content: anuReportHtml,
+        email_subject: "Your portfolio review report is ready"
+      } : {
         to_email: review.email,
         to_name: review.name,
         report_url: reportUrl,

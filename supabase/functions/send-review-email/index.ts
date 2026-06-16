@@ -13,11 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const { to_email, to_name, report_url, template_id, remarks } = await req.json();
+    const { to_email, to_name, report_url, template_id, remarks, html_content, email_subject } = await req.json();
 
-    if (!to_email || !template_id) {
+    if (!to_email || (!template_id && !html_content)) {
       return new Response(
-        JSON.stringify({ error: "to_email and template_id are required" }),
+        JSON.stringify({ error: "to_email and either template_id or html_content are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -25,12 +25,19 @@ serve(async (req) => {
     // Extract first name for template param
     const firstName = (to_name || "").split(" ")[0] || to_name || "there";
 
-    // Build Brevo payload — attach PDF only if report_url is provided
-    const brevoPayload: Record<string, unknown> = {
-      templateId: Number(template_id),
-      to: [{ email: to_email, name: to_name || "" }],
-      params: { FIRSTNAME: firstName, REPORT_URL: report_url || "", REMARKS: remarks || "" },
-    };
+    // Build Brevo payload — use raw html_content if provided, otherwise use template
+    const brevoPayload: Record<string, unknown> = html_content
+      ? {
+          sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
+          to: [{ email: to_email, name: to_name || "" }],
+          subject: email_subject || "Your portfolio review report is ready",
+          htmlContent: html_content,
+        }
+      : {
+          templateId: Number(template_id),
+          to: [{ email: to_email, name: to_name || "" }],
+          params: { FIRSTNAME: firstName, REPORT_URL: report_url || "", REMARKS: remarks || "" },
+        };
 
     if (report_url) {
       // Fetch the PDF from Supabase Storage public URL
