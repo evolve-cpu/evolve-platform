@@ -1,9 +1,56 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
+import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { anu_admin_hero_img_1 } from "../../assets/anant";
 
 export default function AnantAdminLanding() {
   const navigate = useNavigate();
+  const [signedIn, setSignedIn] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [adminInitial, setAdminInitial] = useState("A");
+
+  useEffect(() => {
+    // PIN-based evolve admin session
+    if (sessionStorage.getItem("admin_access") === "true") {
+      setSignedIn(true);
+      setAdminName("Admin");
+      setAdminInitial("A");
+      return;
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const email = session.user.email || "";
+      setSignedIn(true);
+      setAdminInitial(email[0]?.toUpperCase() || "A");
+
+      const [{ data: fac }, { data: adm }] = await Promise.all([
+        supabaseAdmin.from("anu_faculty").select("first_name, last_name").eq("anu_email", email).maybeSingle(),
+        supabaseAdmin.from("anu_admins").select("first_name, last_name").eq("anu_email", email).maybeSingle()
+      ]);
+      const person = fac || adm;
+      if (person) {
+        const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
+        setAdminName(name || email);
+        if (name) setAdminInitial(name[0].toUpperCase());
+      } else {
+        setAdminName(email);
+      }
+    }
+    checkSession();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
+      if (!session?.user) {
+        setSignedIn(false);
+        setAdminName("");
+        setAdminInitial("A");
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   return (
     <div
@@ -32,21 +79,46 @@ export default function AnantAdminLanding() {
             Admin Portal
           </span>
         </div>
-        <div className="flex items-center gap-4">
-          {/* <button
-            onClick={() => navigate("/")}
-            className="text-sm hidden md:block"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-          >
-            Student portal
-          </button> */}
+
+        <div className="flex items-center gap-3">
+          {/* Home icon */}
           <button
-            onClick={() => navigate("/admin/signin")}
-            className="text-sm font-semibold px-4 py-2 rounded-lg border"
-            style={{ borderColor: "#1e3a8a", color: "#93c5fd" }}
+            onClick={() => navigate("/")}
+            className="w-8 h-8 rounded-lg flex items-center justify-center border"
+            style={{ borderColor: "#1e3a8a", color: "rgba(255,255,255,0.4)" }}
+            aria-label="Student portal home"
           >
-            Sign in
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12L12 3L21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 10V20H9.5V15H14.5V20H19V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
+
+          {signedIn ? (
+            <button
+              onClick={() => navigate("/admin/dashboard")}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors"
+              style={{ borderColor: "#1e3a8a" }}
+            >
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                style={{ background: "rgba(37,99,235,0.3)", color: "#93c5fd" }}
+              >
+                {adminInitial}
+              </div>
+              <span className="text-sm font-semibold hidden sm:block" style={{ color: "#93c5fd" }}>
+                {adminName}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/admin/signin")}
+              className="text-sm font-semibold px-4 py-2 rounded-lg border"
+              style={{ borderColor: "#1e3a8a", color: "#93c5fd" }}
+            >
+              Sign in
+            </button>
+          )}
         </div>
       </header>
 
@@ -83,23 +155,21 @@ export default function AnantAdminLanding() {
               private reviewer remarks.
             </p>
             <button
-              onClick={() => navigate("/admin/signin")}
+              onClick={() => navigate(signedIn ? "/admin/dashboard" : "/admin/signin")}
               className="font-bold px-7 py-3.5 rounded-xl text-white"
               style={{ background: "#0f172a", fontSize: 15 }}
             >
-              Sign in to dashboard
+              {signedIn ? "Go to dashboard" : "Sign in to dashboard"}
             </button>
           </div>
 
-          {/* Right — placeholder */}
-          <div className="  flex items-center justify-center">
-            <span className="text-sm" style={{ color: "#94a3b8" }}>
-              <img
-                src={anu_admin_hero_img_1}
-                alt="Anant Admin Hero Image"
-                className="w-full h-full object-contain"
-              />
-            </span>
+          {/* Right image */}
+          <div className="flex items-center justify-center">
+            <img
+              src={anu_admin_hero_img_1}
+              alt="Anant Admin Hero Image"
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </section>
@@ -146,16 +216,10 @@ export default function AnantAdminLanding() {
                 >
                   {n}
                 </div>
-                <p
-                  className="font-bold text-base mb-2"
-                  style={{ color: "#0f172a" }}
-                >
+                <p className="font-bold text-base mb-2" style={{ color: "#0f172a" }}>
                   {title}
                 </p>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "#64748b" }}
-                >
+                <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
                   {body}
                 </p>
               </div>
@@ -170,7 +234,6 @@ export default function AnantAdminLanding() {
         style={{ borderColor: "#e2e8f0", color: "#94a3b8" }}
       >
         <span>Evolve Team</span>
-        {/* <span>support@evolvedesign.academy</span> */}
         <span>Anant National University, Ahmedabad</span>
       </footer>
     </div>

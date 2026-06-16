@@ -21,6 +21,7 @@ import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 import AnantPeopleManager from "../anant/AnantPeopleManager.jsx";
 
+
 /* ─── brand ──────────────────────────────────────────────────────────────── */
 const Y = "#FFD007";
 const P = "#DF0586";
@@ -503,6 +504,9 @@ export default function AdminDashboard() {
   const [waitlist, setWaitlist] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [portfolioReviews, setPortfolioReviews] = useState([]);
+  const [anuStudents, setAnuStudents] = useState([]);
+  const [anuFacultyData, setAnuFacultyData] = useState(null);
+  const [anuAdminsData, setAnuAdminsData] = useState(null);
   const [mentorshipPortfolios, setMentorshipPortfolios] = useState([]);
   const [mentorshipProfilesData, setMentorshipProfilesData] = useState([]);
   const [mentorshipResumes, setMentorshipResumes] = useState([]);
@@ -512,10 +516,11 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  // Anant faculty land directly on reviews tab
-  const [activeTab, setActiveTab] = useState(isAnantAdmin ? "reviews" : "overview");
+  // Anant admins land on students tab
+  const [activeTab, setActiveTab] = useState(isAnantAdmin ? "students" : "overview");
   const [search, setSearch] = useState("");
   const [payFilter, setPayFilter] = useState("all");
+  const [studentFilter, setStudentFilter] = useState("all");
 
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState("");
@@ -633,6 +638,15 @@ export default function AdminDashboard() {
           .eq("stream", anuStream);
         setStreamEmails(new Set((sData || []).map(s => s.anu_email.toLowerCase())));
       }
+
+      // Load all students for the uni_admin / evolve admin students tab
+      if (isAnantAdmin && !isFaculty) {
+        const { data: stuData } = await supabaseAdmin
+          .from("anu_students")
+          .select("*")
+          .order("created_at", { ascending: false });
+        setAnuStudents(stuData || []);
+      }
     } catch (err) {
       setError(err.message || "Failed to load data");
     } finally {
@@ -644,6 +658,20 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // Lazy-load faculty / college-admin data when those tabs are opened
+  useEffect(() => {
+    if (!isAnantAdmin) return;
+    if (activeTab === "faculty" && anuFacultyData === null) {
+      supabaseAdmin.from("anu_faculty").select("*").order("created_at", { ascending: false })
+        .then(({ data }) => setAnuFacultyData(data || []));
+    }
+    if (activeTab === "college admin" && anuAdminsData === null) {
+      supabaseAdmin.from("anu_admins").select("*").order("created_at", { ascending: false })
+        .then(({ data }) => setAnuAdminsData(data || []));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Auto-refresh portfolio reviews every 15 seconds
   useEffect(() => {
@@ -943,12 +971,20 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "accelerator", label: "accelerator 1:1" }
   ];
 
-  // Anant tabs: faculty → reviews only; uni_admin / evolve super admin → reviews + people
+  // Anant tabs: faculty → students; uni_admin → students + faculty + college admin; evolve admin → + manage
   const ANANT_TABS = isFaculty
-    ? ALL_TABS.filter(t => t.id === "reviews")
+    ? [{ id: "students", label: "students" }]
+    : isEvolveAdmin
+    ? [
+        { id: "students", label: "students" },
+        { id: "faculty", label: "faculty" },
+        { id: "college admin", label: "college admin" },
+        { id: "manage", label: "manage" }
+      ]
     : [
-        ...ALL_TABS.filter(t => t.id === "reviews"),
-        { id: "people", label: "people" }
+        { id: "students", label: "students" },
+        { id: "faculty", label: "faculty" },
+        { id: "college admin", label: "college admin" }
       ];
   const TABS = isAnantAdmin ? ANANT_TABS : ALL_TABS;
 
@@ -1977,7 +2013,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           </div>
         )}
 
-        {activeTab === "reviews" && (() => {
+        {/* Students tab — all Anant admins see full review answers; non-faculty also get "not submitted" filter */}
+        {(activeTab === "reviews" || (activeTab === "students" && isAnantAdmin)) && (() => {
           // For ANU: parse notes into Q1 + Q4 cleanly
           const parseNotes = (notes) => {
             const parts = (notes || "").split("\n\n---q4---\n");
@@ -1987,6 +2024,24 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           const reviewHeaders = isAnantAdmin
             ? ["name", "email", "portfolio", "course", "batch", "hoping to land", "review focus", "hardest part (Q1)", "also difficult (Q4)", "submitted", "report"]
             : ["name", "email", "portfolio", "tenant", "target roles", "proud project", "notes", "submitted", "remarks", "report"];
+
+          // Not-submitted view: students who joined but haven't submitted (or left a draft)
+          const showNotSubmitted = isAnantAdmin && !isFaculty && studentFilter === "not submitted";
+          const notSubmittedStudents = showNotSubmitted
+            ? anuStudents.filter(s => {
+                const joinedNotSubmitted = !!s.auth_user_id &&
+                  !portfolioReviews.some(r =>
+                    (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() &&
+                    r.review_status !== "draft"
+                  );
+                if (!joinedNotSubmitted) return false;
+                if (!search.trim()) return true;
+                const q = search.toLowerCase();
+                return `${s.first_name || ""} ${s.last_name || ""}`.toLowerCase().includes(q) ||
+                  (s.anu_email || "").toLowerCase().includes(q);
+              })
+            : [];
+
           return (
           <div className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
@@ -2001,10 +2056,22 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   color: isAnantAdmin ? aInpText : "#fff"
                 }}
               />
+              {/* Filter for non-faculty only */}
+              {isAnantAdmin && !isFaculty && (
+                <select
+                  value={studentFilter}
+                  onChange={e => setStudentFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                >
+                  <option value="all">all submitted</option>
+                  <option value="not submitted">joined, not submitted</option>
+                </select>
+              )}
               <span className="text-xs" style={{ color: isAnantAdmin ? aTblDim : "#555" }}>
-                {filteredReviews.length} reviews
+                {showNotSubmitted ? `${notSubmittedStudents.length} students` : `${filteredReviews.length} reviews`}
               </span>
-              {isAnantAdmin && (
+              {isAnantAdmin && !showNotSubmitted && (
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
                   style={{ background: "rgba(163,91,251,0.15)", color: "#A35BFB" }}
@@ -2046,7 +2113,47 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               </button>
             </div>
 
-            <div
+            {/* Not-submitted students table */}
+            {showNotSubmitted && (
+              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                      {["name", "email", "program", "stream", "year", "joined"].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notSubmittedStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
+                          no students in this category
+                        </td>
+                      </tr>
+                    )}
+                    {notSubmittedStudents.map((s, i) => (
+                      <tr key={s.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
+                        <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
+                          {[s.first_name, s.last_name].filter(Boolean).join(" ") || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.stream || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
+                          {s.invite_accepted_at ? fmtDate(s.invite_accepted_at) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Full reviews table (default view) */}
+            {!showNotSubmitted && <div
               className="rounded-xl border overflow-x-auto"
               style={{ borderColor: isAnantAdmin ? aTblBorder : "#222" }}
             >
@@ -2178,16 +2285,148 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   })}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </div>
           );
         })()}
 
+
         {/* ══════════════════════════════════════════════════════════════
-            PEOPLE TAB (anant — non-faculty only)
+            FACULTY TAB (anant — uni_admin / evolve admin)
         ══════════════════════════════════════════════════════════════ */}
-        {activeTab === "people" && isAnantAdmin && (
-          <AnantPeopleManager dark={dark} readOnly={anuRole === "uni_admin"} />
+        {activeTab === "faculty" && isAnantAdmin && (() => {
+          if (anuFacultyData === null) {
+            return (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 rounded-full animate-spin"
+                  style={{ border: `2px solid ${dark ? "#818cf8" : "#334155"}`, borderTopColor: "transparent" }} />
+              </div>
+            );
+          }
+          const srch = search.toLowerCase();
+          const filtered = anuFacultyData.filter(f => {
+            if (!srch) return true;
+            return `${f.first_name || ""} ${f.last_name || ""}`.toLowerCase().includes(srch) ||
+              (f.anu_email || "").toLowerCase().includes(srch);
+          });
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="search faculty…"
+                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }} />
+                <span className="text-xs" style={{ color: aTblDim }}>{filtered.length} faculty</span>
+              </div>
+              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                      {["name", "email", "designation", "program", "stream", "invited"].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no faculty found</td>
+                      </tr>
+                    )}
+                    {filtered.map((f, i) => (
+                      <tr key={f.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
+                        <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
+                          {[f.first_name, f.last_name].filter(Boolean).join(" ") || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.anu_email || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.designation || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.program || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.stream || "—"}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {f.invite_sent_at
+                            ? <span style={{ color: "#34d399" }}>yes</span>
+                            : <span style={{ color: aTblDim }}>—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ══════════════════════════════════════════════════════════════
+            COLLEGE ADMIN TAB (anant — uni_admin / evolve admin)
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "college admin" && isAnantAdmin && (() => {
+          if (anuAdminsData === null) {
+            return (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 rounded-full animate-spin"
+                  style={{ border: `2px solid ${dark ? "#818cf8" : "#334155"}`, borderTopColor: "transparent" }} />
+              </div>
+            );
+          }
+          const srch = search.toLowerCase();
+          const filtered = anuAdminsData.filter(a => {
+            if (!srch) return true;
+            return `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase().includes(srch) ||
+              (a.anu_email || "").toLowerCase().includes(srch);
+          });
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="search admins…"
+                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }} />
+                <span className="text-xs" style={{ color: aTblDim }}>{filtered.length} admins</span>
+              </div>
+              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                      {["name", "email", "designation", "invited"].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no admins found</td>
+                      </tr>
+                    )}
+                    {filtered.map((a, i) => (
+                      <tr key={a.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
+                        <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
+                          {[a.first_name, a.last_name].filter(Boolean).join(" ") || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{a.anu_email || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{a.designation || "—"}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {a.invite_sent_at
+                            ? <span style={{ color: "#34d399" }}>yes</span>
+                            : <span style={{ color: aTblDim }}>—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ══════════════════════════════════════════════════════════════
+            MANAGE TAB (anant — evolve admin only)
+            Full people management: add students / faculty / admins via CSV or form
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "manage" && isAnantAdmin && isEvolveAdmin && (
+          <AnantPeopleManager dark={dark} readOnly={false} />
         )}
 
         {/* ══════════════════════════════════════════════════════════════
