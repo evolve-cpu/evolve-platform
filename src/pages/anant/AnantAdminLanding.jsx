@@ -33,13 +33,13 @@ export default function AnantAdminLanding() {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <button
+          {/* <button
             onClick={() => navigate("/")}
             className="text-sm hidden md:block"
             style={{ color: "rgba(255,255,255,0.5)" }}
           >
             Student portal
-          </button>
+          </button> */}
           <button
             onClick={() => navigate("/admin/signin")}
             className="text-sm font-semibold px-4 py-2 rounded-lg border"

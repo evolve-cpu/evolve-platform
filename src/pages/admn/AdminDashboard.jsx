@@ -241,7 +241,7 @@ function ReviewUploadCell({ review, onDone }) {
     const isAnuReview = review.tenant_id === "anant";
     const anuReportHtml = isAnuReview ? `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
-        <img src="https://anu.evolvedesign.academy/images/anant-logo.png" alt="Anant National University" style="height:40px;margin-bottom:32px;display:block" />
+        <img src="https://anu.evolvedesign.academy/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
         <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
         <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portfolio review report is ready</h1>
         <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">Great news, your personalised portfolio review report is ready to view.</p>

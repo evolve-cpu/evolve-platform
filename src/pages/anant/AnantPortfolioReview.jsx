@@ -17,7 +17,7 @@ async function sendSubmissionConfirmation(toEmail, toName) {
   const firstName = (toName || "").split(" ")[0] || "there";
   const htmlContent = `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
-      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin-bottom:32px;display:block" />
+      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
       <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
       <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">We've received your portfolio</h1>
       <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0">
@@ -182,7 +182,9 @@ function FeedbackModal({ dark, reviewId, onClose }) {
 }
 
 /* ── Sidebar progress with animated segmented connecting line ───────────────── */
-function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) {
+function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, onSelectQuestion }) {
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+
   const activeBg   = dark ? "#818cf8" : "#334155";
   const doneBg     = dark ? "rgba(255,255,255,0.35)" : "#94a3b8";
   const emptyBdr   = dark ? "rgba(255,255,255,0.18)" : "#cbd5e1";
@@ -194,7 +196,8 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) 
     ...QUESTIONS.map((q, i) => ({
       type: "item", label: q.short,
       active: phase === "questions" && i === currentQ,
-      done: i < qDone
+      done: i < qDone,
+      questionIndex: i
     })),
     { type: "section", label: "share", active: phase === "share", done: shareDone },
     { type: "item", label: "upload your resume and portfolio with us", active: phase === "share", done: shareDone },
@@ -210,10 +213,17 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) 
       {nodes.map((node, i) => {
         const isLast = i === nodes.length - 1;
         const nextNode = nodes[i + 1];
-        // segment below this node fills when the next node has been reached
         const segFilled = !isLast && (nextNode.done || nextNode.active);
         const gap = isLast ? 0 : nextNode.type === "section" ? 14 : 7;
         const dotSize = node.type === "section" ? 12 : 8;
+
+        // Question items that have been answered are navigable
+        const isNavigable = phase === "questions"
+          && node.type === "item"
+          && node.questionIndex !== undefined
+          && node.done
+          && !node.active;
+        const isHovered = hoveredIdx === i;
 
         const dotStyle = (node.active || node.done)
           ? { background: node.active ? activeBg : doneBg, borderColor: node.active ? activeBg : doneBg }
@@ -222,13 +232,29 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) 
         const textColor = node.active
           ? dark ? node.type === "section" ? "#e2e8ff" : "#c7d2fe" : "#0f172a"
           : node.done
-          ? dark ? "rgba(255,255,255,0.42)" : "#64748b"
+          ? dark
+            ? isHovered && isNavigable ? "#c7d2fe" : "rgba(255,255,255,0.55)"
+            : isHovered && isNavigable ? "#0f172a"  : "#64748b"
           : dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
 
         return (
           <Fragment key={i}>
             {/* Node row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                cursor: isNavigable ? "pointer" : "default",
+                borderRadius: 6,
+                padding: "1px 4px 1px 0",
+                background: isNavigable && isHovered
+                  ? dark ? "rgba(129,140,248,0.08)" : "rgba(51,65,85,0.06)"
+                  : "transparent",
+                transition: "background 0.15s"
+              }}
+              onClick={() => isNavigable && onSelectQuestion?.(node.questionIndex)}
+              onMouseEnter={() => isNavigable && setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
               <div style={{ width: 14, display: "flex", justifyContent: "center", flexShrink: 0 }}>
                 <div style={{
                   width: dotSize, height: dotSize, borderRadius: "50%",
@@ -238,7 +264,7 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) 
               <span style={{
                 fontSize: node.type === "section" ? 12.5 : 12,
                 fontWeight: node.type === "section" ? node.active ? 700 : 500 : 400,
-                lineHeight: 1.45, color: textColor
+                lineHeight: 1.45, color: textColor, transition: "color 0.15s"
               }}>
                 {node.label}
               </span>
@@ -480,6 +506,22 @@ export default function AnantPortfolioReview({ session, studentData }) {
           setPhase("done");
         } else if (data.review_status === "pending") {
           setPhase("booking");
+        } else if (data.review_status === "draft") {
+          // Restore to the first unanswered question, or share if all answered
+          const loaded = {
+            q1: parts[0] || "",
+            q2: data.target_roles || "",
+            q3: data.proud_project || "",
+            q4: parts[1] || ""
+          };
+          const allAnswered = QUESTIONS.every((q) => loaded[q.key].trim());
+          if (allAnswered) {
+            setPhase("share");
+          } else {
+            const firstEmpty = QUESTIONS.findIndex((q) => !loaded[q.key].trim());
+            setCurrentQ(firstEmpty >= 0 ? firstEmpty : 0);
+            setPhase("questions");
+          }
         } else {
           setPhase("share");
         }
@@ -565,16 +607,23 @@ export default function AnantPortfolioReview({ session, studentData }) {
   }
 
   async function nextQ() {
-    if (currentQ < QUESTIONS.length - 1) { setCurrentQ((q) => q + 1); return; }
     setSaving(true);
     const err = await persist("draft");
     setSaving(false);
     if (err) { setError(err.message); return; }
-    setPhase("share");
+    if (currentQ < QUESTIONS.length - 1) {
+      setCurrentQ((q) => q + 1);
+    } else {
+      setPhase("share");
+    }
   }
 
   function prevQ() {
     if (currentQ > 0) setCurrentQ((q) => q - 1);
+  }
+
+  function advanceQ() {
+    if (currentQ < QUESTIONS.length - 1) setCurrentQ((q) => q + 1);
   }
 
   async function handleResumeFile(file) {
@@ -620,9 +669,11 @@ export default function AnantPortfolioReview({ session, studentData }) {
   }
 
   // ── Sidebar / progress state ─────────────────────────────────────────────────
-  const qDone    = phase !== "questions" ? QUESTIONS.length : currentQ;
-  const shareDone = ["booking", "done", "report"].includes(phase);
-  const bookDone  = ["done", "report"].includes(phase);
+  // Highest question index the user has answered (derived from answers, works across back/forward nav)
+  const maxReachedQ = QUESTIONS.reduce((max, q, i) => (answers[q.key]?.trim() ? i : max), -1);
+  const qDone      = phase !== "questions" ? QUESTIONS.length : maxReachedQ + 1;
+  const shareDone  = ["booking", "done", "report"].includes(phase);
+  const bookDone   = ["done", "report"].includes(phase);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (phase === "init") {
@@ -763,6 +814,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
             shareDone={shareDone}
             bookDone={bookDone}
             dark={dark}
+            onSelectQuestion={setCurrentQ}
           />
         </aside>
 
@@ -777,20 +829,20 @@ export default function AnantPortfolioReview({ session, studentData }) {
             const q = QUESTIONS[currentQ];
             return (
               <div className="w-full max-w-xl">
-                {/* YOUR PORTFOLIO REVIEW header */}
+                {/* YOUR PORTFOLIO REVIEW header — uses question heading style */}
                 <div className="mb-6">
-                  <p
+                  <h1
                     style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
+                      fontSize: "clamp(20px, 3.2vw, 26px)",
+                      fontWeight: 800,
                       color: textCol,
-                      marginBottom: 6
+                      lineHeight: 1.3,
+                      letterSpacing: "-0.02em",
+                      marginBottom: 8
                     }}
                   >
-                    your portfolio review
-                  </p>
+                    Your portfolio review
+                  </h1>
                   <p className="text-sm leading-relaxed" style={{ color: mutedCol }}>
                     Follow the steps to complete your review, from sharing a bit about yourself through to getting your final report.
                   </p>
@@ -812,9 +864,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   <span>({currentQ + 1}/4)</span>
                 </p>
 
-                {/* Back arrow + Question heading */}
+                {/* Back / Forward arrows + Question heading */}
                 <div className="flex items-start gap-3 mb-6">
-                  {currentQ > 0 && (
+                  {/* Back arrow — shown when not on first question */}
+                  {currentQ > 0 ? (
                     <button
                       onClick={prevQ}
                       className="flex items-center justify-center shrink-0 w-7 h-7 rounded-full border mt-0.5"
@@ -822,22 +875,35 @@ export default function AnantPortfolioReview({ session, studentData }) {
                       aria-label="Previous question"
                     >
                       <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                        <path
-                          d="M8.5 2L3.5 6.5L8.5 11"
-                          stroke={textCol}
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        <path d="M8.5 2L3.5 6.5L8.5 11" stroke={textCol} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
+                  ) : (
+                    <div className="shrink-0 w-7" />
                   )}
+
                   <h2
-                    className="font-bold"
+                    className="font-bold flex-1"
                     style={{ fontSize: "clamp(20px, 3.2vw, 26px)", color: textCol, lineHeight: 1.3 }}
                   >
                     {q.question}
                   </h2>
+
+                  {/* Forward arrow — shown when next question is already answered */}
+                  {currentQ < maxReachedQ ? (
+                    <button
+                      onClick={advanceQ}
+                      className="flex items-center justify-center shrink-0 w-7 h-7 rounded-full border mt-0.5"
+                      style={{ borderColor: inputBorder, background: inputBg }}
+                      aria-label="Next question"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M4.5 2L9.5 6.5L4.5 11" stroke={textCol} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <div className="shrink-0 w-7" />
+                  )}
                 </div>
 
                 <div className="relative">

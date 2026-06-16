@@ -55,7 +55,7 @@ const FAQS = [
   },
   {
     q: "Is this review free for Anant National University students?",
-    a: "Yes — this programme is offered to Anant National University students as part of the university's partnership with Evolve."
+    a: "Yes. This programme is offered to Anant National University students as part of the university's partnership with evolve."
   },
   {
     q: "What do I get at the end?",
@@ -172,7 +172,8 @@ export default function AnantHome() {
   const ctaLabel = (() => {
     if (!authUser) return "Start your review";
     if (reviewStatus === "report") return "View your report";
-    if (["pending", "in_review", "done", "share"].includes(reviewStatus)) return "Continue your review";
+    if (["pending", "in_review", "done", "share", "draft"].includes(reviewStatus))
+      return "Continue your review";
     return "Start your review";
   })();
   const displayName = studentData
@@ -535,13 +536,13 @@ export default function AnantHome() {
           <span>evolve team</span>
           {/* <span>support@evolvedesign.academy</span> */}
           <span>Anant National University, Ahmedabad</span>
-          <button
+          {/* <button
             onClick={() => navigate("/admin")}
             className="underline underline-offset-2"
             style={{ color: muted }}
           >
             Faculty &amp; Career Cell login →
-          </button>
+          </button> */}
         </footer>
       </div>
     </>
