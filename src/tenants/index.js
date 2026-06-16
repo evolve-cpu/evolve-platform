@@ -6,8 +6,8 @@ const TENANT_MAP = {
   "www.evolvedesign.academy": evolve,
   "dev.evolvedesign.academy": evolve,
   "anu.evolvedesign.academy": anant,
-  localhost: anant,
-  // localhost: evolve,
+  // localhost: anant,
+  localhost: evolve,
   "127.0.0.1": evolve
 };
 

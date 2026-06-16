@@ -21,28 +21,28 @@ import {
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 
 const NAV_ITEMS = [
-  { path: "/",           label: "home" },
-  { path: "/community",  label: "community" },
+  { path: "/", label: "home" },
+  { path: "/community", label: "community" },
   { path: "/mentorship", label: "mentorship" },
-  { path: "/webinars",   label: "webinars" },
-  { path: "/contact",    label: "contact us", isModal: true }
+  { path: "/webinars", label: "webinars" },
+  { path: "/contact", label: "contact us", isModal: true }
 ];
 
 const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
 export default function BlackNav({ onLogoClick, right }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const outerRef         = useRef(null);
-  const bodyScrollRef    = useRef(0);
-  const menuUnderlayRef  = useRef(null);
-  const menuPanelRef     = useRef(null);
-  const menuContentRef   = useRef(null);
-  const marqueeTrackRef  = useRef(null);
-  const marqueeGroupRef  = useRef(null);
-  const marqueeTLRef     = useRef(null);
+  const outerRef = useRef(null);
+  const bodyScrollRef = useRef(0);
+  const menuUnderlayRef = useRef(null);
+  const menuPanelRef = useRef(null);
+  const menuContentRef = useRef(null);
+  const marqueeTrackRef = useRef(null);
+  const marqueeGroupRef = useRef(null);
+  const marqueeTLRef = useRef(null);
 
   /* ── measure navbar height → pad menu content below it ─────────────────── */
   useEffect(() => {
@@ -57,13 +57,16 @@ export default function BlackNav({ onLogoClick, right }) {
     const ro = new ResizeObserver(measure);
     if (outerRef.current) ro.observe(outerRef.current);
     window.addEventListener("resize", measure);
-    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   /* ── GSAP open / close ──────────────────────────────────────────────────── */
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
-    const panel    = menuPanelRef.current;
+    const panel = menuPanelRef.current;
     if (!underlay || !panel) return;
 
     const lockScroll = () => {
@@ -88,38 +91,48 @@ export default function BlackNav({ onLogoClick, right }) {
       lockScroll();
       if (isDesktop()) {
         gsap.set(underlay, { display: "block", opacity: 0 });
-        gsap.set(panel,    { xPercent: -100 });
-        gsap.to(underlay,  { opacity: 1,   duration: 0.55, ease: "power3.out" });
-        gsap.to(panel,     { xPercent: 0,  duration: 0.55, ease: "power3.out" });
+        gsap.set(panel, { xPercent: -100 });
+        gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
+        gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
       } else {
         gsap.set(underlay, { display: "block", yPercent: -100 });
-        gsap.to(underlay,  { yPercent: 0, duration: 0.55, ease: "power3.out" });
+        gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
       unlockScroll();
       if (isDesktop()) {
-        gsap.to(panel,    { xPercent: -100, duration: 0.45, ease: "power2.in" });
+        gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
         gsap.to(underlay, {
-          opacity: 0, duration: 0.45, ease: "power2.in",
+          opacity: 0,
+          duration: 0.45,
+          ease: "power2.in",
           onComplete: () => gsap.set(underlay, { display: "none" })
         });
       } else {
         gsap.to(underlay, {
-          yPercent: -100, duration: 0.45, ease: "power2.in",
+          yPercent: -100,
+          duration: 0.45,
+          ease: "power2.in",
           onComplete: () => gsap.set(underlay, { display: "none" })
         });
       }
     }
 
-    return () => { unlockScroll(); };
+    return () => {
+      unlockScroll();
+    };
   }, [menuOpen]);
 
   /* ── close on route change ──────────────────────────────────────────────── */
-  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   /* ── Escape key ─────────────────────────────────────────────────────────── */
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
+    const onKey = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -144,7 +157,10 @@ export default function BlackNav({ onLogoClick, right }) {
     const tl = gsap.timeline({ repeat: -1 });
     tl.to(track, { x: -groupWidth, duration: 14, ease: "linear" });
     marqueeTLRef.current = tl;
-    return () => { marqueeTLRef.current?.kill(); marqueeTLRef.current = null; };
+    return () => {
+      marqueeTLRef.current?.kill();
+      marqueeTLRef.current = null;
+    };
   }, [menuOpen]);
 
   /* ── render ─────────────────────────────────────────────────────────────── */
@@ -155,7 +171,11 @@ export default function BlackNav({ onLogoClick, right }) {
         <div
           ref={outerRef}
           className="w-full"
-          style={{ border: "2px solid #0E0E0E", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}
+          style={{
+            border: "2px solid #0E0E0E",
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: 16
+          }}
         >
           <div
             className="w-full overflow-hidden"
@@ -166,7 +186,8 @@ export default function BlackNav({ onLogoClick, right }) {
               style={{
                 height: "56px",
                 background: "rgba(22,22,22,1)",
-                boxShadow: "inset 6px 6px 0 rgba(14,14,14,0.6), inset -6px 6px 0 rgba(14,14,14,0.6)"
+                boxShadow:
+                  "inset 6px 6px 0 rgba(14,14,14,0.6), inset -6px 6px 0 rgba(14,14,14,0.6)"
               }}
             >
               {/* menu button — left */}
@@ -189,7 +210,11 @@ export default function BlackNav({ onLogoClick, right }) {
                   onClick={onLogoClick ?? (() => navigate("/"))}
                   className="focus:outline-none cursor-pointer"
                 >
-                  <img src={evolve_logo_nav_yellow} alt="evolve" className="h-6 md:h-7 w-auto" />
+                  <img
+                    src={evolve_logo_nav_yellow}
+                    alt="evolve"
+                    className="h-6 md:h-7 w-auto"
+                  />
                 </button>
               </div>
 
@@ -229,7 +254,9 @@ export default function BlackNav({ onLogoClick, right }) {
                           key={item.path}
                           onClick={() => {
                             setMenuOpen(false);
-                            window.dispatchEvent(new CustomEvent("openContactModal"));
+                            window.dispatchEvent(
+                              new CustomEvent("openContactModal")
+                            );
                           }}
                           className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink"
                         >
@@ -238,7 +265,10 @@ export default function BlackNav({ onLogoClick, right }) {
                       ) : (
                         <button
                           key={item.path}
-                          onClick={() => { setMenuOpen(false); navigate(item.path); }}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            navigate(item.path);
+                          }}
                           className={`text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
                             location.pathname === item.path
                               ? "text-evolve-pink"
@@ -256,14 +286,16 @@ export default function BlackNav({ onLogoClick, right }) {
               {/* join us */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
-                  href="https://discord.gg/wKRYG7cSWt"
+                  href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="cursor-pointer"
                 >
                   <img
                     src={join_us_button}
-                    onMouseEnter={(e) => (e.currentTarget.src = join_us_button_hover)}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.src = join_us_button_hover)
+                    }
                     onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
                     alt="join evolve community"
                     className="w-auto h-12 md:h-16"
@@ -282,14 +314,46 @@ export default function BlackNav({ onLogoClick, right }) {
                     ref={marqueeGroupRef}
                     className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14 flex-none"
                   >
-                    <img src={marquee_vector_1}     alt="" className="h-10 md:h-14 w-auto flex-none" />
-                    <img src={evolve_text}          alt="" className="h-8  md:h-10 w-auto flex-none" />
-                    <img src={marquee_vector_2}     alt="" className="h-10 md:h-14 w-auto flex-none" />
-                    <img src={evolve_be_remarkable} alt="" className="h-8  md:h-10 w-auto flex-none" />
-                    <img src={marquee_vector_1}     alt="" className="h-10 md:h-14 w-auto flex-none" />
-                    <img src={evolve_text}          alt="" className="h-8  md:h-10 w-auto flex-none" />
-                    <img src={marquee_vector_2}     alt="" className="h-10 md:h-14 w-auto flex-none" />
-                    <img src={evolve_be_remarkable} alt="" className="h-8  md:h-10 w-auto flex-none" />
+                    <img
+                      src={marquee_vector_1}
+                      alt=""
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt=""
+                      className="h-8  md:h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_2}
+                      alt=""
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_be_remarkable}
+                      alt=""
+                      className="h-8  md:h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_1}
+                      alt=""
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_text}
+                      alt=""
+                      className="h-8  md:h-10 w-auto flex-none"
+                    />
+                    <img
+                      src={marquee_vector_2}
+                      alt=""
+                      className="h-10 md:h-14 w-auto flex-none"
+                    />
+                    <img
+                      src={evolve_be_remarkable}
+                      alt=""
+                      className="h-8  md:h-10 w-auto flex-none"
+                    />
                   </div>
                 </div>
               </div>

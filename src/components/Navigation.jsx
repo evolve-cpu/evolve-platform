@@ -321,7 +321,9 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       }
     }
 
-    return () => { unlockScroll(); };
+    return () => {
+      unlockScroll();
+    };
   }, [menuOpen]);
 
   useEffect(() => {
@@ -735,7 +737,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               {/* JOIN US */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
-                  href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+                  href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

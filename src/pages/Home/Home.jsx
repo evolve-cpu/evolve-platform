@@ -716,8 +716,8 @@ const Home = ({
         // </div>
         <a
           // href={TICKER.webinarUrl}
-          href="https://luma.com/90alzvoc?utm_source=ewebsite"
-          target="_blank"
+          href="/webinars"
+          // target="_blank"
           rel="noopener noreferrer"
           className="block cursor-pointer "
         >

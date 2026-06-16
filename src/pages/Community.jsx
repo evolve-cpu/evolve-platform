@@ -949,7 +949,10 @@ import React, { useEffect, useRef, useState } from "react";
 import SEO from "../components/SEO";
 import ShareYourWorkButton from "../components/ShareYourWorkButton";
 import { community as COPY } from "../content";
-import { trackCommunityJoin, trackPortfolioReviewCta } from "../utils/analytics";
+import {
+  trackCommunityJoin,
+  trackPortfolioReviewCta
+} from "../utils/analytics";
 
 import {
   rays_community,
@@ -1282,7 +1285,7 @@ const Community = () => {
             onMouseLeave={() => setHover(false)}
           >
             <a
-              href={COPY.hero.joinUrl}
+              href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block"
