@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { anant_logo } from "../../assets/images/Community";
+import { anu_admin_hero_img_1 } from "../../assets/anant";
 
 export default function AnantAdminLanding() {
   const navigate = useNavigate();
@@ -58,10 +59,10 @@ export default function AnantAdminLanding() {
           {/* Left copy */}
           <div>
             <span
-              className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded border mb-6"
-              style={{ borderColor: "#cbd5e1", color: "#64748b" }}
+              className="inline-block text-[11px] font-bold tracking-widest px-3 py-1.5 rounded border mb-6"
+              style={{ borderColor: "#e2e8f0", color: "#94a3b8" }}
             >
-              For ANU Faculty &amp; Career Cell
+              Anant National University × evolve
             </span>
             <h1
               className="font-extrabold leading-tight mb-5"
@@ -91,17 +92,13 @@ export default function AnantAdminLanding() {
           </div>
 
           {/* Right — placeholder */}
-          <div
-            className="rounded-2xl border flex items-center justify-center"
-            style={{
-              minHeight: 300,
-              borderColor: "#e2e8f0",
-              background:
-                "repeating-linear-gradient(135deg, #f8fafc 0px, #f8fafc 8px, #f1f5f9 8px, #f1f5f9 16px)"
-            }}
-          >
+          <div className="  flex items-center justify-center">
             <span className="text-sm" style={{ color: "#94a3b8" }}>
-              Dashboard preview / illustration placeholder
+              <img
+                src={anu_admin_hero_img_1}
+                alt="Anant Admin Hero Image"
+                className="w-full h-full object-contain"
+              />
             </span>
           </div>
         </div>
@@ -125,7 +122,7 @@ export default function AnantAdminLanding() {
               {
                 n: "1",
                 title: "Track progress",
-                body: "See where every student stands — from submission pending to report generated — at a glance."
+                body: "See where every student stands, from submission pending to report generated, all in one glance."
               },
               {
                 n: "2",
@@ -173,7 +170,7 @@ export default function AnantAdminLanding() {
         style={{ borderColor: "#e2e8f0", color: "#94a3b8" }}
       >
         <span>Evolve Team</span>
-        <span>support@evolvedesign.academy</span>
+        {/* <span>support@evolvedesign.academy</span> */}
         <span>Anant National University, Ahmedabad</span>
       </footer>
     </div>
