@@ -1568,7 +1568,16 @@ export default function PortfolioReviewForm() {
   /* ── render guards ──────────────────────────────────────────────────────── */
   // For anant: wait until anantSession is resolved (undefined = still loading)
   if (isAnant) {
-    if (anantSession === undefined || checkingSubmission) return null;
+    if (anantSession === undefined || checkingSubmission) {
+      return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: "#060c17" }}>
+          <div
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{ border: "2px solid #818cf8", borderTopColor: "transparent" }}
+          />
+        </div>
+      );
+    }
   } else {
     if (authLoading || checkingSubmission) return null;
     if (!user) return null;

@@ -1590,7 +1590,7 @@ const AnantAppLayout = () => {
   }, [location.pathname]);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#060c17" }} />}>
       <Routes>
         <Route path="/" element={<AnantHome />} />
         <Route path="/portfolio-review/form" element={<PortfolioReviewForm />} />

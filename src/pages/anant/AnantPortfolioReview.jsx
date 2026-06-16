@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
@@ -153,113 +153,84 @@ function FeedbackModal({ dark, reviewId, onClose }) {
   );
 }
 
-/* ── Sidebar progress with vertical connecting line ─────────────────────────── */
+/* ── Sidebar progress with animated segmented connecting line ───────────────── */
 function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) {
-  const lineColor = dark ? "rgba(255,255,255,0.1)" : "#e2e8f0";
-  const activeBg = dark ? "#818cf8" : "#334155";
-  const doneBg = dark ? "rgba(255,255,255,0.38)" : "#94a3b8";
-  const emptyBorder = dark ? "rgba(255,255,255,0.2)" : "#cbd5e1";
+  const activeBg   = dark ? "#818cf8" : "#334155";
+  const doneBg     = dark ? "rgba(255,255,255,0.35)" : "#94a3b8";
+  const emptyBdr   = dark ? "rgba(255,255,255,0.18)" : "#cbd5e1";
+  const lineFilled = dark ? "rgba(129,140,248,0.55)" : "#94a3b8";
+  const lineEmpty  = dark ? "rgba(255,255,255,0.12)" : "#b8c6d1";
 
-  function secBullet(active, done) {
-    if (active || done) return { background: active ? activeBg : doneBg, borderColor: active ? activeBg : doneBg };
-    return { background: "transparent", borderColor: emptyBorder };
-  }
-  function itemDot(active, done) {
-    if (active || done) return { background: active ? activeBg : doneBg, borderColor: active ? activeBg : doneBg };
-    return { background: "transparent", borderColor: emptyBorder };
-  }
-  function secColor(active, done) {
-    if (active) return dark ? "#e2e8ff" : "#0f172a";
-    if (done) return dark ? "rgba(255,255,255,0.5)" : "#64748b";
-    return dark ? "rgba(255,255,255,0.22)" : "#94a3b8";
-  }
-  function itemColor(active, done) {
-    if (active) return dark ? "#c7d2fe" : "#1e293b";
-    if (done) return dark ? "rgba(255,255,255,0.42)" : "#64748b";
-    return dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
-  }
-
-  const sections = [
-    {
-      label: "let's get to know you",
-      active: phase === "questions",
-      done: phase !== "questions",
-      items: QUESTIONS.map((q, i) => ({
-        label: q.short,
-        done: i < qDone,
-        active: phase === "questions" && i === currentQ
-      }))
-    },
-    {
-      label: "share",
-      active: phase === "share",
-      done: shareDone,
-      items: [
-        { label: "upload your resume and portfolio with us", done: shareDone, active: phase === "share" }
-      ]
-    },
-    {
-      label: "meet your reviewer",
-      active: phase === "booking" || phase === "done",
-      done: bookDone,
-      items: [
-        { label: "book a call", done: bookDone, active: phase === "booking" },
-        { label: "meet your reviewer", done: phase === "report", active: phase === "done" }
-      ]
-    },
-    {
-      label: "view report",
-      active: phase === "report",
-      done: false,
-      items: [{ label: "check out your report!", done: false, active: phase === "report" }]
-    }
+  const nodes = [
+    { type: "section", label: "let's get to know you", active: phase === "questions", done: phase !== "questions" },
+    ...QUESTIONS.map((q, i) => ({
+      type: "item", label: q.short,
+      active: phase === "questions" && i === currentQ,
+      done: i < qDone
+    })),
+    { type: "section", label: "share", active: phase === "share", done: shareDone },
+    { type: "item", label: "upload your resume and portfolio with us", active: phase === "share", done: shareDone },
+    { type: "section", label: "meet your reviewer", active: phase === "booking" || phase === "done", done: bookDone },
+    { type: "item", label: "book a call", active: phase === "booking", done: bookDone },
+    { type: "item", label: "meet your reviewer", active: phase === "done", done: phase === "report" },
+    { type: "section", label: "view report", active: phase === "report", done: false },
+    { type: "item", label: "check out your report!", active: phase === "report", done: false }
   ];
 
   return (
-    <div className="relative" style={{ paddingLeft: 20, paddingRight: 20 }}>
-      {/* Vertical connecting line */}
-      <div
-        className="absolute"
-        style={{ left: 26, top: 8, bottom: 8, width: 1, background: lineColor }}
-      />
+    <div style={{ paddingLeft: 20, paddingRight: 20 }}>
+      {nodes.map((node, i) => {
+        const isLast = i === nodes.length - 1;
+        const nextNode = nodes[i + 1];
+        // segment below this node fills when the next node has been reached
+        const segFilled = !isLast && (nextNode.done || nextNode.active);
+        const gap = isLast ? 0 : nextNode.type === "section" ? 14 : 7;
+        const dotSize = node.type === "section" ? 12 : 8;
 
-      {sections.map((sec, si) => (
-        <div key={si} style={{ marginBottom: 20 }}>
-          {/* Section header */}
-          <div className="flex items-center gap-3" style={{ marginBottom: 6 }}>
-            <div
-              className="w-3 h-3 rounded-full border-2 shrink-0 z-10"
-              style={secBullet(sec.active, sec.done)}
-            />
-            <span
-              style={{
-                fontSize: 12.5,
-                color: secColor(sec.active, sec.done),
-                fontWeight: sec.active ? 700 : 500
-              }}
-            >
-              {sec.label}
-            </span>
-          </div>
+        const dotStyle = (node.active || node.done)
+          ? { background: node.active ? activeBg : doneBg, borderColor: node.active ? activeBg : doneBg }
+          : { background: "transparent", borderColor: emptyBdr };
 
-          {/* Sub-items */}
-          {sec.items.map((item, ii) => (
-            <div
-              key={ii}
-              className="flex items-start gap-3"
-              style={{ padding: "3px 0 3px 2px" }}
-            >
-              <div
-                className="w-2 h-2 rounded-full border shrink-0 z-10"
-                style={{ ...itemDot(item.active, item.done), marginTop: 4 }}
-              />
-              <span style={{ fontSize: 12, lineHeight: 1.5, color: itemColor(item.active, item.done) }}>
-                {item.label}
+        const textColor = node.active
+          ? dark ? node.type === "section" ? "#e2e8ff" : "#c7d2fe" : "#0f172a"
+          : node.done
+          ? dark ? "rgba(255,255,255,0.42)" : "#64748b"
+          : dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
+
+        return (
+          <Fragment key={i}>
+            {/* Node row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 14, display: "flex", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{
+                  width: dotSize, height: dotSize, borderRadius: "50%",
+                  border: "2px solid", flexShrink: 0, ...dotStyle
+                }} />
+              </div>
+              <span style={{
+                fontSize: node.type === "section" ? 12.5 : 12,
+                fontWeight: node.type === "section" ? node.active ? 700 : 500 : 400,
+                lineHeight: 1.45, color: textColor
+              }}>
+                {node.label}
               </span>
             </div>
-          ))}
-        </div>
-      ))}
+
+            {/* Animated connector segment to next node */}
+            {!isLast && (
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ width: 14, display: "flex", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{
+                    width: 1, height: gap,
+                    background: segFilled ? lineFilled : lineEmpty,
+                    transition: "background 0.35s ease"
+                  }} />
+                </div>
+              </div>
+            )}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -424,6 +395,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
   const [dragOver, setDragOver] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [calendlyReady, setCalendlyReady] = useState(false);
 
   const fileRef = useRef();
   const calendlyLoaded = useRef(false);
@@ -496,18 +468,30 @@ export default function AnantPortfolioReview({ session, studentData }) {
   // ── Calendly postMessage ─────────────────────────────────────────────────────
   useEffect(() => {
     const onMsg = async (e) => {
-      if (e.data?.event !== "calendly.event_scheduled") return;
-      if (reviewId) {
-        await supabaseAdmin
-          .from("portfolio_reviews")
-          .update({ review_status: "in_review" })
-          .eq("id", reviewId);
+      const evt = e.data?.event;
+      if (evt === "calendly.event_scheduled") {
+        if (reviewId) {
+          await supabaseAdmin
+            .from("portfolio_reviews")
+            .update({ review_status: "in_review" })
+            .eq("id", reviewId);
+        }
+        setPhase("done");
+      } else if (evt === "calendly.profile_page_viewed" || evt === "calendly.event_type_viewed") {
+        setCalendlyReady(true);
       }
-      setPhase("done");
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [reviewId]);
+
+  // ── Reset Calendly ready state when entering booking phase, with 10s fallback
+  useEffect(() => {
+    if (phase !== "booking") return;
+    setCalendlyReady(false);
+    const t = setTimeout(() => setCalendlyReady(true), 10000);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   // ── Load Calendly embed script ───────────────────────────────────────────────
   useEffect(() => {
@@ -1006,11 +990,27 @@ export default function AnantPortfolioReview({ session, studentData }) {
                 Choose a slot that works best for you. Slots open from 3 working days from today.
               </p>
 
-              <div
-                className="calendly-inline-widget rounded-xl border"
-                data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
-                style={{ minWidth: 320, height: 700, borderColor: border }}
-              />
+              <div style={{ position: "relative" }}>
+                {/* Loading overlay — shown until Calendly fires a ready event */}
+                {!calendlyReady && (
+                  <div
+                    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl"
+                    style={{ background: cardBg, border: `1px solid ${border}` }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full animate-spin mb-4"
+                      style={{ border: `2px solid ${dark ? "#818cf8" : "#334155"}`, borderTopColor: "transparent" }}
+                    />
+                    <p className="text-sm" style={{ color: mutedCol }}>Loading available slots…</p>
+                  </div>
+                )}
+                <div
+                  className="calendly-inline-widget rounded-xl border"
+                  data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                  style={{ minWidth: 320, height: 700, borderColor: border }}
+                />
+              </div>
+
               <p className="mt-4 text-sm" style={{ color: mutedCol }}>
                 Booked? If the page doesn't auto-advance:{" "}
                 <button
@@ -1028,15 +1028,15 @@ export default function AnantPortfolioReview({ session, studentData }) {
           {phase === "done" && (
             <div className="w-full max-w-lg text-center">
               <div
-                className="w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center mx-auto mb-6"
-                style={{ borderColor: textCol }}
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                style={{ background: dark ? "rgba(129,140,248,0.12)" : "rgba(51,65,85,0.07)" }}
               >
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: textCol, lineHeight: 1.2 }}>
-                  {new Date().toLocaleString("en", { month: "short" })}
-                </p>
-                <p style={{ fontSize: 20, fontWeight: 900, color: textCol, lineHeight: 1.1 }}>
-                  {new Date().getDate()}
-                </p>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="18" rx="2" stroke={textCol} strokeWidth="1.5" />
+                  <path d="M3 9h18" stroke={textCol} strokeWidth="1.5" />
+                  <path d="M8 2v4M16 2v4" stroke={textCol} strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M8 14l2.5 2.5L16 11" stroke={textCol} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
 
               <h2 className="font-bold mb-2" style={{ fontSize: "clamp(26px, 5vw, 38px)", color: textCol }}>
