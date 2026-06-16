@@ -643,7 +643,8 @@ const Webinars = () => {
 
             {/* Upcoming webinar poster - anchored from top so portrait image extends down, not up */}
             <a
-              href={COPY.upcomingWebinar.registrationUrl}
+              // href={COPY.upcomingWebinar.registrationUrl}
+              href="https://luma.com/90alzvoc?utm_source=ewebsite"
               target="_blank"
               rel="noopener noreferrer"
               className="absolute top-[25%] inset-x-0 z-40 flex justify-center"
