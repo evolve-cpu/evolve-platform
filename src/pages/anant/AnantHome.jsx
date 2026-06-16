@@ -100,6 +100,7 @@ export default function AnantHome() {
   const { dark, toggleDark } = useAnantTheme();
   const [authUser, setAuthUser] = useState(null);
   const [studentData, setStudentData] = useState(null);
+  const [reviewStatus, setReviewStatus] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -118,6 +119,7 @@ export default function AnantHome() {
       setAuthUser(u || null);
       if (!u) {
         setStudentData(null);
+        setReviewStatus(null);
         return;
       }
       const email = u.email?.toLowerCase();
@@ -127,7 +129,6 @@ export default function AnantHome() {
           const p = JSON.parse(cached);
           if (p.anu_email === email) {
             setStudentData(p);
-            return;
           }
         }
       } catch {}
@@ -139,6 +140,17 @@ export default function AnantHome() {
       if (data)
         sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
       setStudentData(data || null);
+
+      // Fetch review status for dynamic CTA
+      const { data: review } = await supabase
+        .from("portfolio_reviews")
+        .select("review_status, review_report_url")
+        .eq("email", email)
+        .eq("tenant_id", "anant")
+        .maybeSingle();
+      if (review?.review_report_url) setReviewStatus("report");
+      else if (review?.review_status) setReviewStatus(review.review_status);
+      else setReviewStatus("none");
     }
     supabase.auth.getSession().then(({ data: { session } }) => load(session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
@@ -156,6 +168,13 @@ export default function AnantHome() {
   }
 
   const handleCTA = () => navigate(authUser ? FORM_PATH : "/signin");
+
+  const ctaLabel = (() => {
+    if (!authUser) return "Start your review";
+    if (reviewStatus === "report") return "View your report";
+    if (["pending", "in_review", "done", "share"].includes(reviewStatus)) return "Continue your review";
+    return "Start your review";
+  })();
   const displayName = studentData
     ? `${studentData.first_name} ${studentData.last_name}`
     : authUser?.email?.split("@")[0] || "";
@@ -370,7 +389,7 @@ export default function AnantHome() {
                 className="font-bold px-7 py-3.5 rounded-xl text-sm"
                 style={{ background: text, color: bg }}
               >
-                Start your review
+                {ctaLabel}
               </button>
             </div>
 

@@ -5,43 +5,39 @@ import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 
-const CALENDLY_URL = import.meta.env.VITE_CALENDLY_URL || "";
+const CALENDLY_URL =
+  import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/sonam-evolvedesign/30min";
 
 const QUESTIONS = [
   {
     key: "q1",
     question: "The hardest part about putting your portfolio together?",
-    placeholder: "ex. deciding which projects to include, writing case studies, structuring it, design and layout.",
+    placeholder:
+      "ex. deciding which projects to include, writing case studies, structuring it, design and layout.",
     short: "The hardest part about putting..."
   },
   {
     key: "q2",
     question: "What kind of work are you hoping to land?",
-    placeholder: "ex. UX design roles at product companies, graphic design internships, architectural projects...",
+    placeholder:
+      "ex. UX design roles at product companies, graphic design internships, architectural projects...",
     short: "What kind of work are you hoping..."
   },
   {
     key: "q3",
     question: "Is there anything specific you'd like us to review closely?",
-    placeholder: "ex. case study structure, visual consistency, overall first impression, a specific project...",
+    placeholder:
+      "ex. case study structure, visual consistency, overall first impression, a specific project...",
     short: "Is there anything specific you'd like us..."
   },
   {
     key: "q4",
     question: "Anything else you're finding difficult that we should know about?",
-    placeholder: "ex. I'm not sure how to present a particular project, or I struggle with writing about my design process...",
+    placeholder:
+      "ex. I'm not sure how to present a particular project, or I struggle with writing about my design process...",
     short: "Anything else you're finding difficult..."
   }
 ];
-
-const PHASES = ["questions", "share", "booking", "done", "report"];
-const PHASE_LABELS = {
-  questions: "Questions",
-  share: "Share",
-  booking: "Book call",
-  done: "All set",
-  report: "Report"
-};
 
 /* ── Feedback Modal ─────────────────────────────────────────────────────────── */
 function FeedbackModal({ dark, reviewId, onClose }) {
@@ -94,7 +90,6 @@ function FeedbackModal({ dark, reviewId, onClose }) {
             <p className="text-sm mb-5" style={{ color: subCol }}>
               Your feedback helps us improve this programme for future students.
             </p>
-
             <div className="flex gap-1.5 mb-5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -103,13 +98,19 @@ function FeedbackModal({ dark, reviewId, onClose }) {
                   onMouseEnter={() => setHovered(star)}
                   onMouseLeave={() => setHovered(0)}
                   className="text-3xl transition-transform hover:scale-110"
-                  style={{ color: star <= (hovered || rating) ? "#f59e0b" : (dark ? "#334155" : "#d1d5db") }}
+                  style={{
+                    color:
+                      star <= (hovered || rating)
+                        ? "#f59e0b"
+                        : dark
+                        ? "#334155"
+                        : "#d1d5db"
+                  }}
                 >
                   ★
                 </button>
               ))}
             </div>
-
             <label
               className="block text-xs font-bold uppercase tracking-wider mb-2"
               style={{ color: subCol }}
@@ -129,13 +130,15 @@ function FeedbackModal({ dark, reviewId, onClose }) {
                 fontFamily: "inherit"
               }}
             />
-
             <div className="flex items-center gap-3">
               <button
                 onClick={submit}
                 disabled={!rating || submitting}
                 className="flex-1 py-2.5 rounded-lg text-sm font-bold disabled:opacity-40"
-                style={{ background: dark ? "#e2e8f0" : "#0f172a", color: dark ? "#0f172a" : "#fff" }}
+                style={{
+                  background: dark ? "#e2e8f0" : "#0f172a",
+                  color: dark ? "#0f172a" : "#fff"
+                }}
               >
                 {submitting ? "submitting…" : "Submit feedback"}
               </button>
@@ -150,45 +153,252 @@ function FeedbackModal({ dark, reviewId, onClose }) {
   );
 }
 
-/* ── Sidebar section + item ─────────────────────────────────────────────────── */
-function SideSection({ label, active, done: sectionDone, children, dark }) {
-  const col = active
-    ? (dark ? "#e2e8ff" : "#0f172a")
-    : sectionDone
-    ? (dark ? "rgba(255,255,255,0.42)" : "#64748b")
-    : (dark ? "rgba(255,255,255,0.22)" : "#94a3b8");
+/* ── Sidebar progress with vertical connecting line ─────────────────────────── */
+function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark }) {
+  const lineColor = dark ? "rgba(255,255,255,0.1)" : "#e2e8f0";
+  const activeBg = dark ? "#818cf8" : "#334155";
+  const doneBg = dark ? "rgba(255,255,255,0.38)" : "#94a3b8";
+  const emptyBorder = dark ? "rgba(255,255,255,0.2)" : "#cbd5e1";
+
+  function secBullet(active, done) {
+    if (active || done) return { background: active ? activeBg : doneBg, borderColor: active ? activeBg : doneBg };
+    return { background: "transparent", borderColor: emptyBorder };
+  }
+  function itemDot(active, done) {
+    if (active || done) return { background: active ? activeBg : doneBg, borderColor: active ? activeBg : doneBg };
+    return { background: "transparent", borderColor: emptyBorder };
+  }
+  function secColor(active, done) {
+    if (active) return dark ? "#e2e8ff" : "#0f172a";
+    if (done) return dark ? "rgba(255,255,255,0.5)" : "#64748b";
+    return dark ? "rgba(255,255,255,0.22)" : "#94a3b8";
+  }
+  function itemColor(active, done) {
+    if (active) return dark ? "#c7d2fe" : "#1e293b";
+    if (done) return dark ? "rgba(255,255,255,0.42)" : "#64748b";
+    return dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
+  }
+
+  const sections = [
+    {
+      label: "let's get to know you",
+      active: phase === "questions",
+      done: phase !== "questions",
+      items: QUESTIONS.map((q, i) => ({
+        label: q.short,
+        done: i < qDone,
+        active: phase === "questions" && i === currentQ
+      }))
+    },
+    {
+      label: "share",
+      active: phase === "share",
+      done: shareDone,
+      items: [
+        { label: "upload your resume and portfolio with us", done: shareDone, active: phase === "share" }
+      ]
+    },
+    {
+      label: "meet your reviewer",
+      active: phase === "booking" || phase === "done",
+      done: bookDone,
+      items: [
+        { label: "book a call", done: bookDone, active: phase === "booking" },
+        { label: "meet your reviewer", done: phase === "report", active: phase === "done" }
+      ]
+    },
+    {
+      label: "view report",
+      active: phase === "report",
+      done: false,
+      items: [{ label: "check out your report!", done: false, active: phase === "report" }]
+    }
+  ];
+
   return (
-    <div className="mb-6">
-      <p className="px-7 mb-2" style={{ fontSize: 12.5, color: col, fontWeight: active ? 700 : 400 }}>
-        {label}
-      </p>
-      {children}
+    <div className="relative" style={{ paddingLeft: 20, paddingRight: 20 }}>
+      {/* Vertical connecting line */}
+      <div
+        className="absolute"
+        style={{ left: 26, top: 8, bottom: 8, width: 1, background: lineColor }}
+      />
+
+      {sections.map((sec, si) => (
+        <div key={si} style={{ marginBottom: 20 }}>
+          {/* Section header */}
+          <div className="flex items-center gap-3" style={{ marginBottom: 6 }}>
+            <div
+              className="w-3 h-3 rounded-full border-2 shrink-0 z-10"
+              style={secBullet(sec.active, sec.done)}
+            />
+            <span
+              style={{
+                fontSize: 12.5,
+                color: secColor(sec.active, sec.done),
+                fontWeight: sec.active ? 700 : 500
+              }}
+            >
+              {sec.label}
+            </span>
+          </div>
+
+          {/* Sub-items */}
+          {sec.items.map((item, ii) => (
+            <div
+              key={ii}
+              className="flex items-start gap-3"
+              style={{ padding: "3px 0 3px 2px" }}
+            >
+              <div
+                className="w-2 h-2 rounded-full border shrink-0 z-10"
+                style={{ ...itemDot(item.active, item.done), marginTop: 4 }}
+              />
+              <span style={{ fontSize: 12, lineHeight: 1.5, color: itemColor(item.active, item.done) }}>
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
 
-function SideItem({ label, done, active, dark }) {
-  const col = active
-    ? (dark ? "#c7d2fe" : "#1e293b")
-    : done
-    ? (dark ? "rgba(255,255,255,0.42)" : "#64748b")
-    : (dark ? "rgba(255,255,255,0.2)" : "#94a3b8");
-  const dotBg = active
-    ? (dark ? "#818cf8" : "#334155")
-    : done
-    ? (dark ? "rgba(255,255,255,0.38)" : "#94a3b8")
-    : "transparent";
+/* ── Mobile step accordion ──────────────────────────────────────────────────── */
+function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark, sidebarBg, sidebarBdr, mutedCol }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const stepMap = {
+    questions: { num: 1, label: "Let's get to know you" },
+    share:     { num: 2, label: "Share" },
+    booking:   { num: 3, label: "Meet your reviewer" },
+    done:      { num: 3, label: "Meet your reviewer" },
+    report:    { num: 4, label: "View report" }
+  };
+  const current = stepMap[phase] || { num: 1, label: "Let's get to know you" };
+
+  const activeBg = dark ? "#818cf8" : "#334155";
+  const doneBg = dark ? "rgba(255,255,255,0.38)" : "#94a3b8";
+  const emptyBorder = dark ? "rgba(255,255,255,0.2)" : "#cbd5e1";
+  const textActive = dark ? "#e2e8ff" : "#0f172a";
+  const textDone = dark ? "rgba(255,255,255,0.5)" : "#64748b";
+  const textInactive = dark ? "rgba(255,255,255,0.22)" : "#94a3b8";
+  const itemActive = dark ? "#c7d2fe" : "#1e293b";
+  const itemDone = dark ? "rgba(255,255,255,0.42)" : "#64748b";
+  const itemInactive = dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
+
+  const sections = [
+    {
+      label: "Let's get to know you",
+      secActive: phase === "questions",
+      secDone: phase !== "questions",
+      items: QUESTIONS.map((q, i) => ({
+        label: q.short,
+        done: i < qDone,
+        active: phase === "questions" && i === currentQ
+      }))
+    },
+    {
+      label: "Share",
+      secActive: phase === "share",
+      secDone: shareDone,
+      items: [{ label: "Upload your resume and portfolio with us", done: shareDone, active: phase === "share" }]
+    },
+    {
+      label: "Meet your reviewer",
+      secActive: phase === "booking" || phase === "done",
+      secDone: bookDone,
+      items: [
+        { label: "Book a call", done: bookDone, active: phase === "booking" },
+        { label: "Meet your reviewer", done: phase === "report", active: phase === "done" }
+      ]
+    },
+    {
+      label: "View report",
+      secActive: phase === "report",
+      secDone: false,
+      items: [{ label: "Check out your report!", done: false, active: phase === "report" }]
+    }
+  ];
+
   return (
-    <div className="flex items-start gap-3 px-7 py-1">
-      {done || active ? (
-        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dotBg, marginTop: 6 }} />
-      ) : (
-        <span
-          className="w-1.5 h-1.5 rounded-full border shrink-0"
-          style={{ borderColor: dark ? "rgba(255,255,255,0.18)" : "#cbd5e1", marginTop: 6 }}
-        />
+    <div className="md:hidden border-b" style={{ borderColor: sidebarBdr, background: sidebarBg }}>
+      <button
+        className="w-full flex items-center justify-between px-5 py-3.5 text-left"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <span className="text-xs font-semibold" style={{ color: mutedCol }}>
+          Step {current.num} of 4 · {current.label}
+        </span>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+          style={{
+            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s",
+            color: mutedCol,
+            flexShrink: 0
+          }}
+        >
+          <path
+            d="M2.5 5L7 9.5L11.5 5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="px-5 pb-5 pt-1">
+          <p
+            className="text-xs font-bold uppercase tracking-widest mb-4"
+            style={{ color: mutedCol }}
+          >
+            Steps for portfolio review
+          </p>
+          {sections.map((sec, si) => (
+            <div key={si} className="mb-4">
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full border-2 shrink-0"
+                  style={{
+                    background: sec.secActive || sec.secDone ? (sec.secActive ? activeBg : doneBg) : "transparent",
+                    borderColor: sec.secActive || sec.secDone ? (sec.secActive ? activeBg : doneBg) : emptyBorder
+                  }}
+                />
+                <span
+                  className="text-[12.5px] font-semibold"
+                  style={{
+                    color: sec.secActive ? textActive : sec.secDone ? textDone : textInactive
+                  }}
+                >
+                  {sec.label}
+                </span>
+              </div>
+              {sec.items.map((item, ii) => (
+                <div key={ii} className="flex items-start gap-2.5 pl-5 py-0.5">
+                  <div
+                    className="w-2 h-2 rounded-full border shrink-0 mt-1"
+                    style={{
+                      background: item.active || item.done ? (item.active ? activeBg : doneBg) : "transparent",
+                      borderColor: item.active || item.done ? (item.active ? activeBg : doneBg) : emptyBorder
+                    }}
+                  />
+                  <span
+                    className="text-[11.5px] leading-relaxed"
+                    style={{
+                      color: item.active ? itemActive : item.done ? itemDone : itemInactive
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       )}
-      <span style={{ fontSize: 12.5, lineHeight: 1.5, color: col }}>{label}</span>
     </div>
   );
 }
@@ -224,6 +434,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
   const studentName = studentData
     ? `${studentData.first_name} ${studentData.last_name}`
     : email?.split("@")[0] || "";
+  const studentInitial = studentName.charAt(0).toUpperCase();
 
   // ── Theme tokens ────────────────────────────────────────────────────────────
   const bg          = dark ? "#060c17" : "#ffffff";
@@ -275,14 +486,14 @@ export default function AnantPortfolioReview({ session, studentData }) {
       });
   }, [email]);
 
-  // ── Auto feedback modal: 90s after entering report phase ────────────────────
+  // ── Auto feedback modal ──────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== "report" || feedbackGiven) return;
     feedbackTimer.current = setTimeout(() => setFeedbackOpen(true), 90000);
     return () => clearTimeout(feedbackTimer.current);
   }, [phase, feedbackGiven]);
 
-  // ── Calendly postMessage — works on ALL plans, no webhook needed ────────────
+  // ── Calendly postMessage ─────────────────────────────────────────────────────
   useEffect(() => {
     const onMsg = async (e) => {
       if (e.data?.event !== "calendly.event_scheduled") return;
@@ -298,9 +509,9 @@ export default function AnantPortfolioReview({ session, studentData }) {
     return () => window.removeEventListener("message", onMsg);
   }, [reviewId]);
 
-  // ── Load Calendly embed script ──────────────────────────────────────────────
+  // ── Load Calendly embed script ───────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "booking" || calendlyLoaded.current || !CALENDLY_URL) return;
+    if (phase !== "booking" || calendlyLoaded.current) return;
     if (!document.getElementById("calendly-script")) {
       const s = document.createElement("script");
       s.id = "calendly-script";
@@ -311,7 +522,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
     calendlyLoaded.current = true;
   }, [phase]);
 
-  // ── DB helpers ──────────────────────────────────────────────────────────────
+  // ── DB helpers ───────────────────────────────────────────────────────────────
   async function persist(status) {
     const notesVal = answers.q4
       ? `${answers.q1}\n\n---q4---\n${answers.q4}`
@@ -348,6 +559,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
     setSaving(false);
     if (err) { setError(err.message); return; }
     setPhase("share");
+  }
+
+  function prevQ() {
+    if (currentQ > 0) setCurrentQ((q) => q - 1);
   }
 
   async function handleResumeFile(file) {
@@ -390,13 +605,12 @@ export default function AnantPortfolioReview({ session, studentData }) {
     setPhase("done");
   }
 
-  // ── Sidebar / progress state ────────────────────────────────────────────────
+  // ── Sidebar / progress state ─────────────────────────────────────────────────
   const qDone    = phase !== "questions" ? QUESTIONS.length : currentQ;
   const shareDone = ["booking", "done", "report"].includes(phase);
   const bookDone  = ["done", "report"].includes(phase);
-  const phaseIdx  = PHASES.indexOf(phase === "init" ? "questions" : phase);
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────────────────────
   if (phase === "init") {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
@@ -419,7 +633,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
         />
       )}
 
-      {/* ── NAV — always dark, matching all Anant pages ── */}
+      {/* ── NAV ── */}
       <header
         className="shrink-0 flex items-center justify-between px-5 md:px-8 border-b"
         style={{ height: 64, background: "#060c17", borderColor: "#0d1f3c" }}
@@ -427,10 +641,13 @@ export default function AnantPortfolioReview({ session, studentData }) {
         <button onClick={() => navigate("/")} className="focus:outline-none">
           <img src={anant_logo} alt="Anant National University" className="h-10 w-auto object-contain" />
         </button>
+
         <div className="flex items-center gap-3">
           <span className="text-xs hidden md:block" style={{ color: "rgba(255,255,255,0.3)" }}>
             powered by evolve
           </span>
+
+          {/* Theme toggle */}
           <button
             onClick={toggleDark}
             className="w-8 h-8 rounded-full flex items-center justify-center border"
@@ -440,92 +657,99 @@ export default function AnantPortfolioReview({ session, studentData }) {
             {dark ? (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="4" stroke="#93c5fd" strokeWidth="1.8" />
-                <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-                  stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" />
+                <path
+                  d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round"
+                />
               </svg>
             ) : (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"
-                  stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"
+                  stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                />
               </svg>
             )}
           </button>
+
+          {/* Home icon */}
           <button
-            onClick={() => navigate("/profile")}
-            className="text-xs px-3 py-1.5 rounded-lg border"
-            style={{ borderColor: "#1e3a8a", color: "#60a5fa" }}
+            onClick={() => navigate("/")}
+            className="w-8 h-8 rounded-full flex items-center justify-center border"
+            style={{ borderColor: "#0d1f3c", backgroundColor: "#0a1628" }}
+            aria-label="Go to home"
           >
-            my profile
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9.5z"
+                stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              />
+              <path
+                d="M9 21V13h6v8"
+                stroke="#93c5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
           </button>
+
+          {/* Avatar + name (name hidden on mobile) */}
+          <div className="flex items-center gap-2">
+            <span
+              className="text-sm font-medium hidden md:block"
+              style={{ color: "rgba(255,255,255,0.7)" }}
+            >
+              {studentName}
+            </span>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+              style={{ background: "#1e3a8a", color: "#93c5fd" }}
+            >
+              {studentInitial}
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* ── MOBILE step progress ── */}
-      <div
-        className="md:hidden border-b px-5 py-3"
-        style={{ borderColor: sidebarBdr, background: sidebarBg }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: mutedCol }}>
-            {PHASE_LABELS[phase] || ""}
-          </span>
-          <span className="text-xs" style={{ color: mutedCol }}>
-            {phaseIdx + 1} / {PHASES.length}
-          </span>
-        </div>
-        <div className="flex gap-1.5">
-          {PHASES.map((p, i) => (
-            <div
-              key={p}
-              className="flex-1 h-1 rounded-full"
-              style={{
-                background: i <= phaseIdx
-                  ? (dark ? "#818cf8" : "#334155")
-                  : (dark ? "#1e3a5f" : "#cbd5e1")
-              }}
-            />
-          ))}
-        </div>
-        {phase === "questions" && (
-          <p className="mt-1.5 text-xs" style={{ color: mutedCol }}>
-            Question {currentQ + 1} of {QUESTIONS.length}
-          </p>
-        )}
-      </div>
+      {/* ── MOBILE step accordion ── */}
+      <MobileStepAccordion
+        phase={phase}
+        currentQ={currentQ}
+        qDone={qDone}
+        shareDone={shareDone}
+        bookDone={bookDone}
+        dark={dark}
+        sidebarBg={sidebarBg}
+        sidebarBdr={sidebarBdr}
+        mutedCol={mutedCol}
+      />
 
       {/* ── BODY ── */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── SIDEBAR desktop only, wider at w-80 ── */}
+        {/* ── SIDEBAR desktop only ── */}
         <aside
           className="hidden md:flex w-80 shrink-0 flex-col border-r overflow-y-auto"
           style={{ borderColor: sidebarBdr, background: sidebarBg, paddingTop: 36, paddingBottom: 36 }}
         >
           <p
             className="px-7 mb-7"
-            style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: mutedCol }}
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: mutedCol
+            }}
           >
             steps for portfolio review
           </p>
-
-          <SideSection label="let's get to know you" active={phase === "questions"} done={phase !== "questions"} dark={dark}>
-            {QUESTIONS.map((q, i) => (
-              <SideItem key={q.key} label={q.short} done={i < qDone} active={phase === "questions" && i === currentQ} dark={dark} />
-            ))}
-          </SideSection>
-
-          <SideSection label="share" active={phase === "share"} done={shareDone} dark={dark}>
-            <SideItem label="upload your resume and portfolio with us" done={shareDone} active={phase === "share"} dark={dark} />
-          </SideSection>
-
-          <SideSection label="meet your reviewer" active={phase === "booking" || phase === "done"} done={bookDone} dark={dark}>
-            <SideItem label="book a call" done={bookDone} active={phase === "booking"} dark={dark} />
-            <SideItem label="meet your reviewer" done={phase === "report"} active={phase === "done"} dark={dark} />
-          </SideSection>
-
-          <SideSection label="view report" active={phase === "report"} done={false} dark={dark}>
-            <SideItem label="check out your report!" done={false} active={phase === "report"} dark={dark} />
-          </SideSection>
+          <ProgressSidebar
+            phase={phase}
+            currentQ={currentQ}
+            qDone={qDone}
+            shareDone={shareDone}
+            bookDone={bookDone}
+            dark={dark}
+          />
         </aside>
 
         {/* ── MAIN CONTENT ── */}
@@ -539,18 +763,69 @@ export default function AnantPortfolioReview({ session, studentData }) {
             const q = QUESTIONS[currentQ];
             return (
               <div className="w-full max-w-xl">
+                {/* YOUR PORTFOLIO REVIEW header */}
+                <div className="mb-6">
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: textCol,
+                      marginBottom: 6
+                    }}
+                  >
+                    your portfolio review
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: mutedCol }}>
+                    Follow the steps to complete your review, from sharing a bit about yourself through to getting your final report.
+                  </p>
+                  <hr className="mt-4" style={{ borderColor: border }} />
+                </div>
+
+                {/* Section label + counter */}
                 <p
-                  className="mb-4 hidden md:block"
-                  style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: mutedCol }}
+                  className="mb-5"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: mutedCol
+                  }}
                 >
-                  let's get to know you
+                  let's get to know you{" "}
+                  <span>({currentQ + 1}/4)</span>
                 </p>
-                <h2
-                  className="font-bold mb-6"
-                  style={{ fontSize: "clamp(22px, 3.5vw, 28px)", color: textCol, lineHeight: 1.3 }}
-                >
-                  {q.question}
-                </h2>
+
+                {/* Back arrow + Question heading */}
+                <div className="flex items-start gap-3 mb-6">
+                  {currentQ > 0 && (
+                    <button
+                      onClick={prevQ}
+                      className="flex items-center justify-center shrink-0 w-7 h-7 rounded-full border mt-0.5"
+                      style={{ borderColor: inputBorder, background: inputBg }}
+                      aria-label="Previous question"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path
+                          d="M8.5 2L3.5 6.5L8.5 11"
+                          stroke={textCol}
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                  <h2
+                    className="font-bold"
+                    style={{ fontSize: "clamp(20px, 3.2vw, 26px)", color: textCol, lineHeight: 1.3 }}
+                  >
+                    {q.question}
+                  </h2>
+                </div>
+
                 <div className="relative">
                   <textarea
                     key={q.key}
@@ -583,12 +858,18 @@ export default function AnantPortfolioReview({ session, studentData }) {
                       />
                     ) : (
                       <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 6H9.5M6.5 3L9.5 6L6.5 9" stroke={dark ? "#93c5fd" : "#374151"}
-                          strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M2.5 6H9.5M6.5 3L9.5 6L6.5 9"
+                          stroke={dark ? "#93c5fd" : "#374151"}
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </button>
                 </div>
+
                 {error && <p className="mt-2 text-sm" style={{ color: "#f87171" }}>{error}</p>}
                 <p className="mt-3 text-xs" style={{ color: mutedCol }}>Press ⌘ + Enter to continue</p>
               </div>
@@ -658,8 +939,13 @@ export default function AnantPortfolioReview({ session, studentData }) {
                     )}
                   </div>
                 )}
-                <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
-                  onChange={(e) => handleResumeFile(e.target.files?.[0])} />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => handleResumeFile(e.target.files?.[0])}
+                />
               </div>
 
               <div className="mb-8">
@@ -672,7 +958,13 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   onChange={(e) => setPortfolioLink(e.target.value)}
                   placeholder="https://your-portfolio-link.com"
                   className="w-full rounded-xl border px-4 py-3.5 outline-none"
-                  style={{ borderColor: inputBorder, color: textCol, background: inputBg, fontFamily: "inherit", fontSize: 15 }}
+                  style={{
+                    borderColor: inputBorder,
+                    color: textCol,
+                    background: inputBg,
+                    fontFamily: "inherit",
+                    fontSize: 15
+                  }}
                 />
               </div>
 
@@ -714,47 +1006,21 @@ export default function AnantPortfolioReview({ session, studentData }) {
                 Choose a slot that works best for you. Slots open from 3 working days from today.
               </p>
 
-              {CALENDLY_URL ? (
-                <>
-                  <div
-                    className="calendly-inline-widget rounded-xl border"
-                    data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
-                    style={{ minWidth: 320, height: 700, borderColor: border }}
-                  />
-                  <p className="mt-4 text-sm" style={{ color: mutedCol }}>
-                    Booked? If the page doesn't auto-advance:{" "}
-                    <button
-                      onClick={handleManualBooked}
-                      className="underline underline-offset-2 font-semibold"
-                      style={{ color: subCol }}
-                    >
-                      confirm my booking →
-                    </button>
-                  </p>
-                  <p className="mt-2 text-xs" style={{ color: mutedCol }}>
-                    The embed detects bookings automatically — no paid Calendly plan or webhook required.
-                  </p>
-                </>
-              ) : (
-                <div
-                  className="rounded-xl border p-10 text-center"
-                  style={{ borderColor: border, background: cardBg }}
+              <div
+                className="calendly-inline-widget rounded-xl border"
+                data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                style={{ minWidth: 320, height: 700, borderColor: border }}
+              />
+              <p className="mt-4 text-sm" style={{ color: mutedCol }}>
+                Booked? If the page doesn't auto-advance:{" "}
+                <button
+                  onClick={handleManualBooked}
+                  className="underline underline-offset-2 font-semibold"
+                  style={{ color: subCol }}
                 >
-                  <p className="font-semibold mb-1" style={{ color: textCol }}>
-                    Calendly booking will appear here
-                  </p>
-                  <p className="text-sm mb-6" style={{ color: mutedCol }}>
-                    Add <code>VITE_CALENDLY_URL</code> to your .env file.
-                  </p>
-                  <button
-                    onClick={handleManualBooked}
-                    className="px-5 py-2.5 rounded-lg border text-sm font-semibold"
-                    style={{ borderColor: border, color: subCol, background: "transparent" }}
-                  >
-                    [Prototype] Simulate: call booked →
-                  </button>
-                </div>
-              )}
+                  confirm my booking →
+                </button>
+              </p>
             </div>
           )}
 
@@ -829,7 +1095,6 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   className="px-4 py-2 rounded-lg border text-sm font-semibold"
                   style={{ borderColor: border, color: subCol, background: cardBg }}
                   onClick={() => {
-                    // Re-arm feedback: 30s after they click download (they're now looking at it)
                     clearTimeout(feedbackTimer.current);
                     if (!feedbackGiven) {
                       feedbackTimer.current = setTimeout(() => setFeedbackOpen(true), 30000);
