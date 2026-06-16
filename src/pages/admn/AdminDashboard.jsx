@@ -522,6 +522,8 @@ export default function AdminDashboard() {
   const [payFilter, setPayFilter] = useState("all");
   const [studentFilter, setStudentFilter] = useState("all");
 
+  const [adminDisplayName, setAdminDisplayName] = useState("");
+
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState("");
   const [aiError, setAiError] = useState("");
@@ -639,8 +641,8 @@ export default function AdminDashboard() {
         setStreamEmails(new Set((sData || []).map(s => s.anu_email.toLowerCase())));
       }
 
-      // Load all students for the uni_admin / evolve admin students tab
-      if (isAnantAdmin && !isFaculty) {
+      // Load all students for the merged students tab (all Anant admins, including faculty)
+      if (isAnantAdmin) {
         const { data: stuData } = await supabaseAdmin
           .from("anu_students")
           .select("*")
@@ -658,6 +660,25 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // Fetch the signed-in admin's display name from DB (faculty or admin table)
+  useEffect(() => {
+    if (!isAnantAdmin || isEvolveAdmin) {
+      setAdminDisplayName(isEvolveAdmin ? "Evolve Admin" : "");
+      return;
+    }
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user?.email) return;
+      const email = session.user.email;
+      const [{ data: fac }, { data: adm }] = await Promise.all([
+        supabaseAdmin.from("anu_faculty").select("first_name, last_name").eq("anu_email", email).maybeSingle(),
+        supabaseAdmin.from("anu_admins").select("first_name, last_name").eq("anu_email", email).maybeSingle()
+      ]);
+      const person = fac || adm;
+      if (person) setAdminDisplayName([person.first_name, person.last_name].filter(Boolean).join(" "));
+      else setAdminDisplayName(email);
+    });
+  }, [isAnantAdmin, isEvolveAdmin]);
 
   // Lazy-load faculty / college-admin data when those tabs are opened
   useEffect(() => {
@@ -1092,16 +1113,52 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           >
             {refreshing ? "refreshing…" : "↻ refresh"}
           </button>
-          <button
-            onClick={handleLogout}
-            className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-            style={{
-              background: isAnantAdmin ? "rgba(220,38,38,0.15)" : "#1a1a1a",
-              color: isAnantAdmin ? "#f87171" : "#888"
-            }}
-          >
-            logout
-          </button>
+
+          {isAnantAdmin ? (
+            <>
+              {/* Home icon → admin landing page */}
+              <button
+                onClick={() => navigate("/admin")}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border"
+                style={{ borderColor: "#1e3a5f", color: "rgba(255,255,255,0.4)" }}
+                aria-label="Admin landing page"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12L12 3L21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 10V20H9.5V15H14.5V20H19V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {/* Profile — replaces logout for Anant admins */}
+              <button
+                onClick={() => navigate("/admin")}
+                className="flex items-center gap-2 px-2 py-1 rounded-lg border"
+                style={{ borderColor: "#1e3a5f" }}
+              >
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                  style={{ background: "rgba(37,99,235,0.3)", color: "#93c5fd" }}
+                >
+                  {(adminDisplayName?.[0] || (anuRole === "faculty" ? "F" : "A")).toUpperCase()}
+                </div>
+                <div className="text-left hidden sm:block">
+                  <div className="text-xs font-semibold text-white leading-tight">
+                    {adminDisplayName || "loading…"}
+                  </div>
+                  <div className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {anuRole === "faculty" ? "faculty" : anuRole === "uni_admin" ? "uni admin" : "evolve admin"}
+                  </div>
+                </div>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+              style={{ background: "#1a1a1a", color: "#888" }}
+            >
+              logout
+            </button>
+          )}
         </div>
       </div>
 
@@ -2013,280 +2070,244 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           </div>
         )}
 
-        {/* Students tab — all Anant admins see full review answers; non-faculty also get "not submitted" filter */}
-        {(activeTab === "reviews" || (activeTab === "students" && isAnantAdmin)) && (() => {
-          // For ANU: parse notes into Q1 + Q4 cleanly
+        {/* ══════════════════════════════════════════════════════════════
+            REVIEWS TAB (evolve non-Anant admin only)
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "reviews" && !isAnantAdmin && (() => {
           const parseNotes = (notes) => {
             const parts = (notes || "").split("\n\n---q4---\n");
             return { q1: parts[0] || "", q4: parts[1] || "" };
           };
-          // ANU column headers reflect the actual questions asked
-          const reviewHeaders = isAnantAdmin
-            ? ["name", "email", "portfolio", "course", "batch", "hoping to land", "review focus", "hardest part (Q1)", "also difficult (Q4)", "submitted", "report"]
-            : ["name", "email", "portfolio", "tenant", "target roles", "proud project", "notes", "submitted", "remarks", "report"];
-
-          // Not-submitted view: students who joined but haven't submitted (or left a draft)
-          const showNotSubmitted = isAnantAdmin && !isFaculty && studentFilter === "not submitted";
-          const notSubmittedStudents = showNotSubmitted
-            ? anuStudents.filter(s => {
-                const joinedNotSubmitted = !!s.auth_user_id &&
-                  !portfolioReviews.some(r =>
-                    (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() &&
-                    r.review_status !== "draft"
-                  );
-                if (!joinedNotSubmitted) return false;
-                if (!search.trim()) return true;
-                const q = search.toLowerCase();
-                return `${s.first_name || ""} ${s.last_name || ""}`.toLowerCase().includes(q) ||
-                  (s.anu_email || "").toLowerCase().includes(q);
-              })
-            : [];
-
+          const reviewHeaders = ["name", "email", "portfolio", "tenant", "target roles", "proud project", "notes", "submitted", "remarks", "report"];
           return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="search by name or email…"
-                className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
-                style={{
-                  background: isAnantAdmin ? aInpBg : "#111",
-                  border: `1px solid ${isAnantAdmin ? aInpBord : "#222"}`,
-                  color: isAnantAdmin ? aInpText : "#fff"
-                }}
-              />
-              {/* Filter for non-faculty only */}
-              {isAnantAdmin && !isFaculty && (
-                <select
-                  value={studentFilter}
-                  onChange={e => setStudentFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
-                >
-                  <option value="all">all submitted</option>
-                  <option value="not submitted">joined, not submitted</option>
-                </select>
-              )}
-              <span className="text-xs" style={{ color: isAnantAdmin ? aTblDim : "#555" }}>
-                {showNotSubmitted ? `${notSubmittedStudents.length} students` : `${filteredReviews.length} reviews`}
-              </span>
-              {isAnantAdmin && !showNotSubmitted && (
-                <span
-                  className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-                  style={{ background: "rgba(163,91,251,0.15)", color: "#A35BFB" }}
-                >
-                  anant university only
-                </span>
-              )}
-              <button
-                onClick={() => {
-                  const rows = filteredReviews.map((r) => {
-                    if (isAnantAdmin) {
-                      const { q1, q4 } = parseNotes(r.notes);
-                      return {
-                        name: r.name || "", email: r.email || "",
-                        portfolio_link: r.portfolio_link || "", portfolio_file: r.portfolio_file_url || "",
-                        course: r.course || "", batch: r.batch || "",
-                        hoping_to_land: r.target_roles || "", review_focus: r.proud_project || "",
-                        hardest_part: q1, also_difficult: q4,
-                        submitted: fmtDate(r.created_at), status: r.review_status || ""
-                      };
-                    }
-                    return {
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="search by name or email…"
+                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: "#111", border: "1px solid #222", color: "#fff" }} />
+                <span className="text-xs" style={{ color: "#555" }}>{filteredReviews.length} reviews</span>
+                <button
+                  onClick={() => {
+                    const rows = filteredReviews.map(r => ({
                       name: r.name || "", email: r.email || "",
                       portfolio_link: r.portfolio_link || "", portfolio_file: r.portfolio_file_url || "",
                       target_roles: r.target_roles || "", proud_project: r.proud_project || "",
                       notes: r.notes || "", submitted: fmtDate(r.created_at), remarks: r.remarks || ""
-                    };
-                  });
-                  downloadCSV("portfolio_reviews.csv", rows);
-                }}
-                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{
-                  background: isAnantAdmin ? aCsvBg : "#111",
-                  border: isAnantAdmin ? "none" : "1px solid #333",
-                  color: aCsvText
-                }}
-              >
-                ↓ csv
-              </button>
-            </div>
-
-            {/* Not-submitted students table */}
-            {showNotSubmitted && (
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                    }));
+                    downloadCSV("portfolio_reviews.csv", rows);
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                  style={{ background: "#111", border: "1px solid #333", color: aCsvText }}
+                >↓ csv</button>
+              </div>
+              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: "#222" }}>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {["name", "email", "program", "stream", "year", "joined"].map(h => (
+                    <tr style={{ background: "#111", borderBottom: "1px solid #222" }}>
+                      {reviewHeaders.map(h => (
                         <th key={h} className="px-4 py-3 text-left font-semibold"
-                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                          style={{ color: "#555", whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {notSubmittedStudents.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
-                          no students in this category
-                        </td>
-                      </tr>
+                    {filteredReviews.length === 0 && (
+                      <tr><td colSpan={reviewHeaders.length} className="px-4 py-8 text-center" style={{ color: "#444" }}>no portfolio reviews</td></tr>
                     )}
-                    {notSubmittedStudents.map((s, i) => (
-                      <tr key={s.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
-                        <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
-                          {[s.first_name, s.last_name].filter(Boolean).join(" ") || "—"}
+                    {filteredReviews.map((r, i) => (
+                      <tr key={r.id || i} style={{ borderBottom: "1px solid #1a1a1a", background: i % 2 === 0 ? "#0d0d0d" : "#0a0a0a" }}>
+                        <td className="px-4 py-3 font-semibold text-white">{r.name || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#888" }}>{r.email || "—"}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {r.portfolio_link ? <a href={r.portfolio_link} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a>
+                          : r.portfolio_file_url ? <a href={r.portfolio_file_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">view file</a>
+                          : <span style={{ color: "#555" }}>—</span>}
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.stream || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
-                          {s.invite_accepted_at ? fmtDate(s.invite_accepted_at) : "—"}
+                        <td className="px-4 py-3 text-xs">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{ background: r.tenant_id === "anant" ? "rgba(163,91,251,0.15)" : "rgba(255,208,7,0.1)", color: r.tenant_id === "anant" ? "#A35BFB" : "#FFD007" }}>
+                            {r.tenant_id || "evolve"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#888", maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={r.target_roles}>{r.target_roles || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#888", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={r.proud_project}>{r.proud_project || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#888", maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={r.notes}>{r.notes || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#555" }}>{fmtDate(r.created_at)}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: "#aaa", maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={r.remarks}>{r.remarks || "—"}</td>
+                        <td className="px-4 py-3">
+                          <ReviewUploadCell review={r} onDone={handleReportDone} />
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
+            </div>
+          );
+        })()}
 
-            {/* Full reviews table (default view) */}
-            {!showNotSubmitted && <div
-              className="rounded-xl border overflow-x-auto"
-              style={{ borderColor: isAnantAdmin ? aTblBorder : "#222" }}
-            >
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{
-                    background: isAnantAdmin ? aTblHdrBg : "#111",
-                    borderBottom: `1px solid ${isAnantAdmin ? aTblBorder : "#222"}`
-                  }}>
-                    {reviewHeaders.map((h) => (
-                      <th key={h} className="px-4 py-3 text-left font-semibold"
-                        style={{ color: isAnantAdmin ? aTblHdrTxt : "#555", whiteSpace: "nowrap" }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+        {/* ══════════════════════════════════════════════════════════════
+            STUDENTS TAB (anant — all roles)
+            Merged view: all students + their submitted review details
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "students" && isAnantAdmin && (() => {
+          const parseNotes = (notes) => {
+            const parts = (notes || "").split("\n\n---q4---\n");
+            return { q1: parts[0] || "", q4: parts[1] || "" };
+          };
 
-                <tbody>
-                  {filteredReviews.length === 0 && (
-                    <tr>
-                      <td colSpan={reviewHeaders.length} className="px-4 py-8 text-center"
-                        style={{ color: isAnantAdmin ? aTblDim : "#444" }}>
-                        no portfolio reviews
-                      </td>
+          const srch = search.toLowerCase();
+
+          // Faculty sees only their stream's students; others see all
+          const studentBase = isFaculty && streamEmails
+            ? anuStudents.filter(s => streamEmails.has((s.anu_email || "").toLowerCase()))
+            : anuStudents;
+
+          // Merge each student with their portfolio review (submitted, non-draft)
+          const mergedRows = studentBase.map(s => {
+            const review = portfolioReviews.find(r =>
+              (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() &&
+              r.review_status !== "draft"
+            ) || null;
+            const { q1, q4 } = parseNotes(review?.notes);
+            return {
+              ...s,
+              fullName: [s.first_name, s.last_name].filter(Boolean).join(" "),
+              review, q1, q4
+            };
+          }).filter(s => {
+            if (srch && !s.fullName.toLowerCase().includes(srch) && !(s.anu_email || "").toLowerCase().includes(srch)) return false;
+            if (studentFilter === "submitted") return !!s.review;
+            if (studentFilter === "not submitted") return !s.review;
+            return true; // "all" — default
+          });
+
+          function statusBadge(s) {
+            if (!s.invite_sent_at) return { label: "not invited", clr: dark ? "rgba(255,255,255,0.07)" : "#f1f5f9", txt: dark ? "#64748b" : "#94a3b8" };
+            if (!s.auth_user_id) return { label: "invited", clr: "rgba(251,191,36,0.1)", txt: "#f59e0b" };
+            if (!s.review) return { label: "not submitted", clr: "rgba(251,191,36,0.1)", txt: "#f59e0b" };
+            const st = s.review.review_status;
+            if (st === "pending") return { label: "pending review", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
+            if (st === "in_review") return { label: "in review", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
+            if (st === "done" || st === "report") return { label: "report ready", clr: "rgba(52,211,153,0.12)", txt: "#34d399" };
+            return { label: st || "—", clr: dark ? "rgba(255,255,255,0.07)" : "#f1f5f9", txt: dark ? "#64748b" : "#94a3b8" };
+          }
+
+          const mergedHeaders = ["name", "email", "program", "year", "status", "portfolio", "hoping to land", "review focus", "hardest part (Q1)", "also difficult (Q4)", "submitted", "report"];
+
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="search by name or email…"
+                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                />
+                <select
+                  value={studentFilter}
+                  onChange={e => setStudentFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                >
+                  <option value="all">all students</option>
+                  <option value="submitted">submitted only</option>
+                  <option value="not submitted">not submitted</option>
+                </select>
+                <span className="text-xs" style={{ color: aTblDim }}>
+                  {mergedRows.length} {mergedRows.length === 1 ? "student" : "students"}
+                </span>
+                <button
+                  onClick={() => {
+                    const rows = mergedRows.map(s => ({
+                      name: s.fullName || "", email: s.anu_email || "",
+                      program: s.program || "", year: s.year || "",
+                      status: statusBadge(s).label,
+                      portfolio_link: s.review?.portfolio_link || "", portfolio_file: s.review?.portfolio_file_url || "",
+                      hoping_to_land: s.review?.target_roles || "", review_focus: s.review?.proud_project || "",
+                      hardest_part: s.q1 || "", also_difficult: s.q4 || "",
+                      submitted: s.review ? fmtDate(s.review.created_at) : ""
+                    }));
+                    downloadCSV("anu_students.csv", rows);
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                  style={{ background: aCsvBg, color: aCsvText }}
+                >↓ csv</button>
+              </div>
+
+              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                      {mergedHeaders.map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
                     </tr>
-                  )}
-
-                  {filteredReviews.map((r, i) => {
-                    const { q1, q4 } = parseNotes(r.notes);
-                    const rowBg = i % 2 === 0
-                      ? (isAnantAdmin ? aTblRowEven : "#0d0d0d")
-                      : (isAnantAdmin ? aTblRowOdd : "#0a0a0a");
-                    const rowBord = isAnantAdmin ? aTblRowBrd : "#1a1a1a";
-                    return (
-                      <tr key={r.id || i} style={{ borderBottom: `1px solid ${rowBord}`, background: rowBg }}>
-
-                        {/* NAME */}
-                        <td className="px-4 py-3 font-semibold" style={{ color: isAnantAdmin ? aTblText : "#fff" }}>
-                          {r.name || "—"}
-                        </td>
-
-                        {/* EMAIL */}
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>
-                          {r.email || "—"}
-                        </td>
-
-                        {/* PORTFOLIO */}
-                        <td className="px-4 py-3 text-xs">
-                          {r.portfolio_link ? (
-                            <a href={r.portfolio_link} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a>
-                          ) : r.portfolio_file_url ? (
-                            <a href={r.portfolio_file_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">view file</a>
-                          ) : (
-                            <span style={{ color: aTblDim }}>—</span>
-                          )}
-                        </td>
-
-                        {/* COURSE + BATCH (anant) or TENANT (evolve) */}
-                        {isAnantAdmin ? (
-                          <>
-                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{r.course || "—"}</td>
-                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{r.batch || "—"}</td>
-                          </>
-                        ) : (
-                          <td className="px-4 py-3 text-xs">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                              style={{ background: r.tenant_id === "anant" ? "rgba(163,91,251,0.15)" : "rgba(255,208,7,0.1)", color: r.tenant_id === "anant" ? "#A35BFB" : "#FFD007" }}>
-                              {r.tenant_id || "evolve"}
-                            </span>
-                          </td>
-                        )}
-
-                        {/* Q2 / TARGET ROLES */}
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                          title={r.target_roles}>
-                          {r.target_roles || "—"}
-                        </td>
-
-                        {/* Q3 / PROUD PROJECT */}
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                          title={r.proud_project}>
-                          {r.proud_project || "—"}
-                        </td>
-
-                        {/* Q1 / NOTES (parsed — no raw delimiter) */}
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                          title={isAnantAdmin ? q1 : r.notes}>
-                          {isAnantAdmin ? (q1 || "—") : (r.notes || "—")}
-                        </td>
-
-                        {/* Q4 — anant only */}
-                        {isAnantAdmin && (
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={q4}>
-                            {q4 || "—"}
-                          </td>
-                        )}
-
-                        {/* SUBMITTED */}
-                        <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
-                          {fmtDate(r.created_at)}
-                        </td>
-
-                        {/* REMARKS — evolve only */}
-                        {!isAnantAdmin && (
-                          <td className="px-4 py-3 text-xs" style={{ color: "#aaa", maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={r.remarks}>
-                            {r.remarks || "—"}
-                          </td>
-                        )}
-
-                        {/* REPORT */}
-                        <td className="px-4 py-3">
-                          {isEvolveAdmin ? (
-                            <ReviewUploadCell review={r} onDone={handleReportDone} />
-                          ) : r.review_report_url ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold" style={{ color: GR }}>done</span>
-                              <a href={r.review_report_url} target="_blank" rel="noreferrer"
-                                className="text-xs underline" style={{ color: isAnantAdmin ? aTblDim : "#888" }}>view pdf</a>
-                            </div>
-                          ) : (
-                            <span className="text-xs" style={{ color: isAnantAdmin ? aTblDim : "#555" }}>pending</span>
-                          )}
+                  </thead>
+                  <tbody>
+                    {mergedRows.length === 0 && (
+                      <tr>
+                        <td colSpan={mergedHeaders.length} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
+                          no students found
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>}
-          </div>
+                    )}
+                    {mergedRows.map((s, i) => {
+                      const { label, clr, txt } = statusBadge(s);
+                      const rowBg = i % 2 === 0 ? aTblRowEven : aTblRowOdd;
+                      return (
+                        <tr key={s.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: rowBg }}>
+                          <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>{s.fullName || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap"
+                              style={{ background: clr, color: txt }}>{label}</span>
+                          </td>
+                          <td className="px-4 py-3 text-xs">
+                            {s.review?.portfolio_link ? (
+                              <a href={s.review.portfolio_link} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a>
+                            ) : s.review?.portfolio_file_url ? (
+                              <a href={s.review.portfolio_file_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">view file</a>
+                            ) : <span style={{ color: aTblDim }}>—</span>}
+                          </td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={s.review?.target_roles}>{s.review?.target_roles || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={s.review?.proud_project}>{s.review?.proud_project || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={s.q1}>{s.q1 || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={s.q4}>{s.q4 || "—"}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
+                            {s.review ? fmtDate(s.review.created_at) : "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {s.review ? (
+                              isEvolveAdmin ? (
+                                <ReviewUploadCell review={s.review} onDone={handleReportDone} />
+                              ) : s.review.review_report_url ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold" style={{ color: GR }}>done</span>
+                                  <a href={s.review.review_report_url} target="_blank" rel="noreferrer"
+                                    className="text-xs underline" style={{ color: aTblDim }}>view pdf</a>
+                                </div>
+                              ) : (
+                                <span className="text-xs" style={{ color: aTblDim }}>pending</span>
+                              )
+                            ) : <span style={{ color: aTblDim }}>—</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           );
         })()}
 

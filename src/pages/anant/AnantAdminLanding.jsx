@@ -10,6 +10,7 @@ export default function AnantAdminLanding() {
   const [signedIn, setSignedIn] = useState(false);
   const [adminName, setAdminName] = useState("");
   const [adminInitial, setAdminInitial] = useState("A");
+  const [adminRole, setAdminRole] = useState("");
 
   useEffect(() => {
     // PIN-based evolve admin session
@@ -17,6 +18,7 @@ export default function AnantAdminLanding() {
       setSignedIn(true);
       setAdminName("Admin");
       setAdminInitial("A");
+      setAdminRole("evolve admin");
       return;
     }
 
@@ -36,8 +38,10 @@ export default function AnantAdminLanding() {
         const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
         setAdminName(name || email);
         if (name) setAdminInitial(name[0].toUpperCase());
+        setAdminRole(fac ? "faculty" : "college admin");
       } else {
         setAdminName(email);
+        setAdminRole("");
       }
     }
     checkSession();
@@ -106,9 +110,16 @@ export default function AnantAdminLanding() {
               >
                 {adminInitial}
               </div>
-              <span className="text-sm font-semibold hidden sm:block" style={{ color: "#93c5fd" }}>
-                {adminName}
-              </span>
+              <div className="text-left hidden sm:block">
+                <div className="text-sm font-semibold leading-tight" style={{ color: "#93c5fd" }}>
+                  {adminName}
+                </div>
+                {adminRole && (
+                  <div className="text-[10px] leading-tight" style={{ color: "rgba(147,197,253,0.55)" }}>
+                    {adminRole}
+                  </div>
+                )}
+              </div>
             </button>
           ) : (
             <button
