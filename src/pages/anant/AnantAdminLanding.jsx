@@ -85,41 +85,13 @@ export default function AnantAdminLanding() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Home icon */}
-          <button
-            onClick={() => navigate("/")}
-            className="w-8 h-8 rounded-lg flex items-center justify-center border"
-            style={{ borderColor: "#1e3a8a", color: "rgba(255,255,255,0.4)" }}
-            aria-label="Student portal home"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M3 12L12 3L21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5 10V20H9.5V15H14.5V20H19V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
           {signedIn ? (
             <button
               onClick={() => navigate("/admin/dashboard")}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors"
-              style={{ borderColor: "#1e3a8a" }}
+              className="text-sm font-semibold px-4 py-2 rounded-lg border"
+              style={{ borderColor: "#1e3a8a", color: "#93c5fd" }}
             >
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                style={{ background: "rgba(37,99,235,0.3)", color: "#93c5fd" }}
-              >
-                {adminInitial}
-              </div>
-              <div className="text-left hidden sm:block">
-                <div className="text-sm font-semibold leading-tight" style={{ color: "#93c5fd" }}>
-                  {adminName}
-                </div>
-                {adminRole && (
-                  <div className="text-[10px] leading-tight" style={{ color: "rgba(147,197,253,0.55)" }}>
-                    {adminRole}
-                  </div>
-                )}
-              </div>
+              View dashboard
             </button>
           ) : (
             <button

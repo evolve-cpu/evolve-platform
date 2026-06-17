@@ -1128,7 +1128,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   <path d="M5 10V20H9.5V15H14.5V20H19V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              {/* Profile — replaces logout for Anant admins */}
+              {/* Profile card */}
               <button
                 onClick={() => navigate("/admin")}
                 className="flex items-center gap-2 px-2 py-1 rounded-lg border"
@@ -1149,6 +1149,16 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   </div>
                 </div>
               </button>
+              {/* Logout — faculty and college admin only, not evolve admin */}
+              {!isEvolveAdmin && (
+                <button
+                  onClick={handleLogout}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #1e3a5f", color: "rgba(255,255,255,0.35)" }}
+                >
+                  logout
+                </button>
+              )}
             </>
           ) : (
             <button
