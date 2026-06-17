@@ -68,7 +68,8 @@ export default function AnantSignIn() {
       .select("id, auth_user_id")
       .eq("anu_email", addr)
       .maybeSingle();
-    if (data && !data.auth_user_id) {
+    if (!data) return; // not a student — don't redirect to student form
+    if (!data.auth_user_id) {
       await supabaseAdmin.from("anu_students").update({
         auth_user_id: authUser.id,
         invite_accepted_at: new Date().toISOString()

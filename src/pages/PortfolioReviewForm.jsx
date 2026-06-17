@@ -1286,17 +1286,6 @@ export default function PortfolioReviewForm() {
       setAnantSession(session || null);
       if (session?.user) {
         const email = session.user.email?.toLowerCase();
-
-        // Faculty/admin should not access the student form — redirect to admin portal
-        const [{ data: fac }, { data: adm }] = await Promise.all([
-          supabaseAdmin.from("anu_faculty").select("id").eq("anu_email", email).maybeSingle(),
-          supabaseAdmin.from("anu_admins").select("id").eq("anu_email", email).maybeSingle()
-        ]);
-        if (fac || adm) {
-          navigate("/admin/dashboard", { replace: true });
-          return;
-        }
-
         // Populate sessionStorage cache so home/profile pages load instantly
         try {
           const existing = sessionStorage.getItem("anu_student_cache");
@@ -1311,6 +1300,10 @@ export default function PortfolioReviewForm() {
           .eq("anu_email", email)
           .maybeSingle();
         if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+        // If not a student, redirect to sign-in (handles admin sessions bleeding in)
+        if (!data) {
+          navigate("/signin", { replace: true });
+        }
       }
     }
 

@@ -101,7 +101,6 @@ export default function AnantHome() {
   const [authUser, setAuthUser] = useState(null);
   const [studentData, setStudentData] = useState(null);
   const [reviewStatus, setReviewStatus] = useState(null);
-  const [isAdminUser, setIsAdminUser] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -117,31 +116,13 @@ export default function AnantHome() {
   useEffect(() => {
     async function load(session) {
       const u = session?.user;
+      setAuthUser(u || null);
       if (!u) {
-        setAuthUser(null);
         setStudentData(null);
         setReviewStatus(null);
-        setIsAdminUser(false);
         return;
       }
       const email = u.email?.toLowerCase();
-
-      // Block faculty/admin from the student portal experience
-      const [{ data: fac }, { data: adm }] = await Promise.all([
-        supabaseAdmin.from("anu_faculty").select("id").eq("anu_email", email).maybeSingle(),
-        supabaseAdmin.from("anu_admins").select("id").eq("anu_email", email).maybeSingle()
-      ]);
-      if (fac || adm) {
-        setIsAdminUser(true);
-        setAuthUser(u);
-        setStudentData(null);
-        setReviewStatus(null);
-        return;
-      }
-
-      setIsAdminUser(false);
-      setAuthUser(u);
-
       try {
         const cached = sessionStorage.getItem("anu_student_cache");
         if (cached) {
@@ -151,6 +132,7 @@ export default function AnantHome() {
           }
         }
       } catch {}
+      // Only students (in anu_students) get a student profile here
       const { data } = await supabaseAdmin
         .from("anu_students")
         .select("first_name, last_name, program, stream, year, anu_email")
@@ -159,6 +141,11 @@ export default function AnantHome() {
       if (data)
         sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
       setStudentData(data || null);
+
+      if (!data) {
+        setReviewStatus(null);
+        return;
+      }
 
       // Fetch review status for dynamic CTA
       const { data: review } = await supabase
@@ -183,11 +170,10 @@ export default function AnantHome() {
     await supabase.auth.signOut();
     setAuthUser(null);
     setStudentData(null);
-    setIsAdminUser(false);
     setShowMenu(false);
   }
 
-  const handleCTA = () => navigate(authUser ? FORM_PATH : "/signin");
+  const handleCTA = () => navigate(authUser && studentData ? FORM_PATH : "/signin");
 
   const ctaLabel = (() => {
     if (!authUser) return "Start your review";
@@ -300,7 +286,7 @@ export default function AnantHome() {
               )}
             </button>
 
-            {authUser && !isAdminUser ? (
+            {authUser && studentData ? (
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu((v) => !v)}
@@ -362,14 +348,6 @@ export default function AnantHome() {
                   </div>
                 )}
               </div>
-            ) : isAdminUser ? (
-              <button
-                onClick={() => navigate("/admin/dashboard")}
-                className="text-sm font-semibold px-4 py-2 rounded-xl border"
-                style={{ borderColor: "#1e3a8a", color: "#93c5fd" }}
-              >
-                admin portal →
-              </button>
             ) : (
               <button
                 onClick={handleCTA}
