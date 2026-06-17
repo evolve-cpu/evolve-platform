@@ -165,8 +165,8 @@ function AiBlock({ text }) {
 /* ─── Review upload + send cell ──────────────────────────────────────────── */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
-  .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
+const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env.VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
+const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY;
 
 function ReviewUploadCell({ review, onDone }) {
   const [state, setState] = useState("idle"); // idle | preview | uploading | sending | done | error
@@ -236,47 +236,62 @@ function ReviewUploadCell({ review, onDone }) {
       return;
     }
 
-    // 3. Call edge function to send Brevo email with PDF attachment
+    // 3. Send report-ready email
     setState("sending");
-    const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
     const isAnuReview = review.tenant_id === "anant";
-    const anuReportHtml = isAnuReview ? `
-      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
-        <img src="https://anu.evolvedesign.academy/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
-        <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
-        <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portfolio review report is ready</h1>
-        <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">Great news, your personalised portfolio review report is ready to view.</p>
-        <a href="${reportUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">View your report</a>
-        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
-        <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">We'd love to hear what you thought of the experience. There's a quick feedback form on the report page.</p>
-      </div>` : null;
-    const res = await fetch(fnUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "apikey": SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify(isAnuReview ? {
-        to_email: review.email,
-        to_name: review.name,
-        report_url: reportUrl,
-        html_content: anuReportHtml,
-        email_subject: "Your portfolio review report is ready"
-      } : {
-        to_email: review.email,
-        to_name: review.name,
-        report_url: reportUrl,
-        template_id: BREVO_PORTFOLIO_TEMPLATE_ID,
-        remarks: remarks.trim()
-      })
-    });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setState("error");
-      setMsg(err.error || err.message || `email failed (${res.status})`);
-      return;
+    if (isAnuReview) {
+      // Anant reviews: send directly via Brevo (same pattern as all other Anant emails)
+      const htmlContent = `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
+          <img src="https://anu.evolvedesign.academy/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
+          <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
+          <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portfolio review report is ready</h1>
+          <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">Great news, your personalised portfolio review report is ready to view.</p>
+          <a href="${reportUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">View your report</a>
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
+          <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">We'd love to hear what you thought of the experience. There's a quick feedback form on the report page.</p>
+        </div>`;
+      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
+          to: [{ email: review.email, name: review.name || "" }],
+          subject: "Your portfolio review report is ready",
+          htmlContent
+        })
+      });
+      if (!brevoRes.ok) {
+        const err = await brevoRes.json().catch(() => ({}));
+        setState("error");
+        setMsg(err.message || `email failed (${brevoRes.status})`);
+        return;
+      }
+    } else {
+      // Non-Anant reviews: use edge function with Brevo template + PDF attachment
+      const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          to_email: review.email,
+          to_name: review.name,
+          report_url: reportUrl,
+          template_id: BREVO_PORTFOLIO_TEMPLATE_ID,
+          remarks: remarks.trim()
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setState("error");
+        setMsg(err.error || err.message || `email failed (${res.status})`);
+        return;
+      }
     }
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);
