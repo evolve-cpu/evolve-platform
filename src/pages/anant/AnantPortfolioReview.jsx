@@ -185,11 +185,12 @@ function FeedbackModal({ dark, reviewId, onClose }) {
 function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, onSelectQuestion }) {
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
-  const activeBg   = dark ? "#818cf8" : "#334155";
-  const doneBg     = dark ? "rgba(255,255,255,0.35)" : "#94a3b8";
-  const emptyBdr   = dark ? "rgba(255,255,255,0.18)" : "#cbd5e1";
-  const lineFilled = dark ? "rgba(129,140,248,0.55)" : "#94a3b8";
-  const lineEmpty  = dark ? "rgba(255,255,255,0.12)" : "#b8c6d1";
+  // sidebar is always dark (#060c17) regardless of theme
+  const activeBg   = "#2563eb";
+  const doneBg     = "rgba(255,255,255,0.28)";
+  const emptyBdr   = "rgba(255,255,255,0.1)";
+  const lineFilled = "rgba(37,99,235,0.6)";
+  const lineEmpty  = "rgba(255,255,255,0.07)";
 
   const nodes = [
     { type: "section", label: "let's get to know you", active: phase === "questions", done: phase !== "questions" },
@@ -230,12 +231,10 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, on
           : { background: "transparent", borderColor: emptyBdr };
 
         const textColor = node.active
-          ? dark ? node.type === "section" ? "#e2e8ff" : "#c7d2fe" : "#0f172a"
+          ? node.type === "section" ? "#e2e8ff" : "#93c5fd"
           : node.done
-          ? dark
-            ? isHovered && isNavigable ? "#c7d2fe" : "rgba(255,255,255,0.55)"
-            : isHovered && isNavigable ? "#0f172a"  : "#64748b"
-          : dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
+          ? isHovered && isNavigable ? "#c7d2fe" : "rgba(255,255,255,0.5)"
+          : "rgba(255,255,255,0.18)";
 
         return (
           <Fragment key={i}>
@@ -244,10 +243,10 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, on
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 cursor: isNavigable ? "pointer" : "default",
-                borderRadius: 6,
-                padding: "1px 4px 1px 0",
+                borderRadius: 7,
+                padding: "3px 8px 3px 4px",
                 background: isNavigable && isHovered
-                  ? dark ? "rgba(129,140,248,0.08)" : "rgba(51,65,85,0.06)"
+                  ? "rgba(37,99,235,0.2)"
                   : "transparent",
                 transition: "background 0.15s"
               }}
@@ -302,15 +301,16 @@ function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark
   };
   const current = stepMap[phase] || { num: 1, label: "Let's get to know you" };
 
-  const activeBg = dark ? "#818cf8" : "#334155";
-  const doneBg = dark ? "rgba(255,255,255,0.38)" : "#94a3b8";
-  const emptyBorder = dark ? "rgba(255,255,255,0.2)" : "#cbd5e1";
-  const textActive = dark ? "#e2e8ff" : "#0f172a";
-  const textDone = dark ? "rgba(255,255,255,0.5)" : "#64748b";
-  const textInactive = dark ? "rgba(255,255,255,0.22)" : "#94a3b8";
-  const itemActive = dark ? "#c7d2fe" : "#1e293b";
-  const itemDone = dark ? "rgba(255,255,255,0.42)" : "#64748b";
-  const itemInactive = dark ? "rgba(255,255,255,0.18)" : "#94a3b8";
+  // sidebar is always dark (#060c17)
+  const activeBg = "#2563eb";
+  const doneBg = "rgba(255,255,255,0.28)";
+  const emptyBorder = "rgba(255,255,255,0.1)";
+  const textActive = "#e2e8ff";
+  const textDone = "rgba(255,255,255,0.5)";
+  const textInactive = "rgba(255,255,255,0.2)";
+  const itemActive = "#93c5fd";
+  const itemDone = "rgba(255,255,255,0.42)";
+  const itemInactive = "rgba(255,255,255,0.15)";
 
   const sections = [
     {
@@ -464,8 +464,8 @@ export default function AnantPortfolioReview({ session, studentData }) {
 
   // ── Theme tokens ────────────────────────────────────────────────────────────
   const bg          = dark ? "#060c17" : "#ffffff";
-  const sidebarBg   = dark ? "#040d1a" : "#dde3ea";
-  const sidebarBdr  = dark ? "#0d1f3c" : "#b8c4d0";
+  const sidebarBg   = "#060c17";
+  const sidebarBdr  = "#0d1f3c";
   const border      = dark ? "#0d1f3c" : "#cbd5e1";
   const textCol     = dark ? "#f0f4ff" : "#0f172a";
   const subCol      = dark ? "rgba(255,255,255,0.65)" : "#1e293b";
@@ -784,7 +784,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
         dark={dark}
         sidebarBg={sidebarBg}
         sidebarBdr={sidebarBdr}
-        mutedCol={mutedCol}
+        mutedCol="rgba(255,255,255,0.32)"
       />
 
       {/* ── BODY ── */}
@@ -802,7 +802,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
               fontWeight: 700,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              color: mutedCol
+              color: "rgba(255,255,255,0.28)"
             }}
           >
             steps for portfolio review
