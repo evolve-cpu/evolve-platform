@@ -26,23 +26,19 @@ export default function AnantAdminLanding() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       const email = session.user.email || "";
-      setSignedIn(true);
-      setAdminInitial(email[0]?.toUpperCase() || "A");
 
       const [{ data: fac }, { data: adm }] = await Promise.all([
         supabaseAdmin.from("anu_faculty").select("first_name, last_name").eq("anu_email", email).maybeSingle(),
         supabaseAdmin.from("anu_admins").select("first_name, last_name").eq("anu_email", email).maybeSingle()
       ]);
       const person = fac || adm;
-      if (person) {
-        const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
-        setAdminName(name || email);
-        if (name) setAdminInitial(name[0].toUpperCase());
-        setAdminRole(fac ? "faculty" : "college admin");
-      } else {
-        setAdminName(email);
-        setAdminRole("");
-      }
+      if (!person) return; // student or unrecognised session — show "Sign in"
+
+      const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
+      setSignedIn(true);
+      setAdminName(name || email);
+      setAdminInitial((name[0] || email[0] || "A").toUpperCase());
+      setAdminRole(fac ? "faculty" : "college admin");
     }
     checkSession();
 
