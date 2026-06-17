@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { evolve_cube } from "../assets/images/Home"; // ✅ evolve_cube svg
+import { evolve_cube } from "../assets/images/Home";
+import { isAnant } from "../tenants";
+import { anant_logo } from "../assets/images/Community";
 
 const ANIMATION_CONFIG = {
   exit: { opacity: 0, duration: 0.5 },
@@ -55,13 +57,21 @@ const LoadingScreen = ({ progress = 0 }) => {
       aria-live="polite"
       aria-label={`Loading ${roundedProgress} percent complete`}
     >
-      {/* evolve cube logo with pulse */}
-      <motion.img
-        src={evolve_cube}
-        alt="Evolve cube"
-        className="w-32 h-auto mb-8 mx-auto"
-        animate={ANIMATION_CONFIG.pulse}
-      />
+      {isAnant ? (
+        <motion.img
+          src={anant_logo}
+          alt="Anant National University"
+          className="h-12 w-auto mb-8 mx-auto"
+          animate={ANIMATION_CONFIG.pulse}
+        />
+      ) : (
+        <motion.img
+          src={evolve_cube}
+          alt="Evolve cube"
+          className="w-32 h-auto mb-8 mx-auto"
+          animate={ANIMATION_CONFIG.pulse}
+        />
+      )}
 
       {/* Progress Bar */}
       <div
@@ -69,7 +79,8 @@ const LoadingScreen = ({ progress = 0 }) => {
         aria-hidden="true"
       >
         <motion.div
-          className="h-full bg-evolve-yellow will-change-transform"
+          className={`h-full will-change-transform ${isAnant ? "" : "bg-evolve-yellow"}`}
+          style={isAnant ? { background: "#2563eb" } : {}}
           style={{ transform: "translateZ(0)" }}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
@@ -79,7 +90,8 @@ const LoadingScreen = ({ progress = 0 }) => {
 
       {/* Progress Percentage */}
       <motion.p
-        className="text-evolve-yellow mt-4 text-sm font-medium text-center"
+        className={`mt-4 text-sm font-medium text-center ${isAnant ? "" : "text-evolve-yellow"}`}
+        style={isAnant ? { color: "#93c5fd" } : {}}
         key={roundedProgress}
         initial={{ opacity: 0.7 }}
         animate={{ opacity: 1 }}

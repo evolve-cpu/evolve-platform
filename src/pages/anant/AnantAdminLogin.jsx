@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
@@ -43,9 +43,10 @@ async function sendSignInEmail(toEmail, magicLink, role) {
 
 export default function AnantAdminLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // mode: "email" (faculty/uni-admin OTP) or "pin" (evolve super-admin)
-  const [mode,    setMode]    = useState("email");
+  // mode: "email" (faculty/uni-admin OTP) or "pin" (evolve super-admin via ?ea=1)
+  const [mode,    setMode]    = useState(searchParams.get("ea") === "1" ? "pin" : "email");
   const [step,    setStep]    = useState("input"); // input | sending | sent
   const [email,   setEmail]   = useState("");
   const [pin,     setPin]     = useState("");
@@ -214,16 +215,6 @@ export default function AnantAdminLogin() {
                 </>
               )}
 
-              {/* switch to PIN */}
-              <div className="pt-2 border-t" style={{ borderColor: "#0d1f3c" }}>
-                <button
-                  onClick={() => { setMode("pin"); setError(""); }}
-                  className="text-xs w-full text-center"
-                  style={{ color: "rgba(255,255,255,0.2)" }}
-                >
-                  evolve admin access →
-                </button>
-              </div>
             </>
           )}
 

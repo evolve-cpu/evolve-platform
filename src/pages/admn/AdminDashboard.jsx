@@ -538,6 +538,9 @@ export default function AdminDashboard() {
   const [studentFilter, setStudentFilter] = useState("all");
 
   const [adminDisplayName, setAdminDisplayName] = useState("");
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState("");
@@ -553,6 +556,18 @@ export default function AdminDashboard() {
       document.body.style.userSelect = prev || "";
     };
   }, []);
+
+  /* close profile dropdown on outside click */
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    function handleClick(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showProfileMenu]);
 
   const handleLogout = async () => {
     sessionStorage.removeItem("admin_access");
@@ -986,7 +1001,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             />
           )}
           <p style={{ color: loadText }}>
-            {isAnantAdmin ? "loading reviews…" : "loading mentorship data…"}
+            {isAnantAdmin ? "loading…" : "loading mentorship data…"}
           </p>
         </div>
       </div>
@@ -1143,37 +1158,51 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   <path d="M5 10V20H9.5V15H14.5V20H19V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              {/* Profile card */}
-              <button
-                onClick={() => navigate("/admin")}
-                className="flex items-center gap-2 px-2 py-1 rounded-lg border"
-                style={{ borderColor: "#1e3a5f" }}
-              >
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                  style={{ background: "rgba(37,99,235,0.3)", color: "#93c5fd" }}
-                >
-                  {(adminDisplayName?.[0] || (anuRole === "faculty" ? "F" : "A")).toUpperCase()}
-                </div>
-                <div className="text-left hidden sm:block">
-                  <div className="text-xs font-semibold text-white leading-tight">
-                    {adminDisplayName || "loading…"}
-                  </div>
-                  <div className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {anuRole === "faculty" ? "faculty" : anuRole === "uni_admin" ? "uni admin" : "evolve admin"}
-                  </div>
-                </div>
-              </button>
-              {/* Logout — faculty and college admin only, not evolve admin */}
-              {!isEvolveAdmin && (
+              {/* Profile card with dropdown */}
+              <div className="relative" ref={profileMenuRef}>
                 <button
-                  onClick={handleLogout}
-                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #1e3a5f", color: "rgba(255,255,255,0.35)" }}
+                  onClick={() => setShowProfileMenu(v => !v)}
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg border"
+                  style={{ borderColor: "#1e3a5f" }}
                 >
-                  logout
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{ background: "rgba(37,99,235,0.3)", color: "#93c5fd" }}
+                  >
+                    {(adminDisplayName?.[0] || (anuRole === "faculty" ? "F" : "A")).toUpperCase()}
+                  </div>
+                  <div className="text-left hidden sm:block">
+                    <div className="text-xs font-semibold text-white leading-tight">
+                      {adminDisplayName || "loading…"}
+                    </div>
+                    <div className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      {anuRole === "faculty" ? "faculty" : anuRole === "uni_admin" ? "uni admin" : "evolve admin"}
+                    </div>
+                  </div>
                 </button>
-              )}
+                {showProfileMenu && (
+                  <div
+                    className="absolute right-0 top-full mt-2 rounded-xl border overflow-hidden z-50"
+                    style={{ background: "#0d1b2e", borderColor: "#1e3a5f", minWidth: 160 }}
+                  >
+                    <button
+                      onClick={() => { setShowProfileMenu(false); navigate("/admin"); }}
+                      className="w-full text-left text-xs px-4 py-3 font-medium transition-colors hover:bg-white/5"
+                      style={{ color: "rgba(255,255,255,0.65)" }}
+                    >
+                      admin home
+                    </button>
+                    <div style={{ height: 1, background: "#1e3a5f" }} />
+                    <button
+                      onClick={() => { setShowProfileMenu(false); handleLogout(); }}
+                      className="w-full text-left text-xs px-4 py-3 font-medium transition-colors hover:bg-white/5"
+                      style={{ color: "rgba(255,255,255,0.45)" }}
+                    >
+                      sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <button
@@ -2184,12 +2213,10 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
           const srch = search.toLowerCase();
 
-          // Faculty sees only their stream's students; others see all
           const studentBase = isFaculty && streamEmails
             ? anuStudents.filter(s => streamEmails.has((s.anu_email || "").toLowerCase()))
             : anuStudents;
 
-          // Merge each student with their portfolio review (submitted, non-draft)
           const mergedRows = studentBase.map(s => {
             const review = portfolioReviews.find(r =>
               (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() &&
@@ -2205,133 +2232,194 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             if (srch && !s.fullName.toLowerCase().includes(srch) && !(s.anu_email || "").toLowerCase().includes(srch)) return false;
             if (studentFilter === "submitted") return !!s.review;
             if (studentFilter === "not submitted") return !s.review;
-            return true; // "all" — default
+            return true;
           });
 
-          function statusBadge(s) {
-            if (!s.invite_sent_at) return { label: "not invited", clr: dark ? "rgba(255,255,255,0.07)" : "#f1f5f9", txt: dark ? "#64748b" : "#94a3b8" };
-            if (!s.auth_user_id) return { label: "invited", clr: "rgba(251,191,36,0.1)", txt: "#f59e0b" };
-            if (!s.review) return { label: "not submitted", clr: "rgba(251,191,36,0.1)", txt: "#f59e0b" };
-            const st = s.review.review_status;
-            if (st === "pending") return { label: "pending review", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
-            if (st === "in_review") return { label: "in review", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
-            if (st === "done" || st === "report") return { label: "report ready", clr: "rgba(52,211,153,0.12)", txt: "#34d399" };
-            return { label: st || "—", clr: dark ? "rgba(255,255,255,0.07)" : "#f1f5f9", txt: dark ? "#64748b" : "#94a3b8" };
-          }
+          const QA_QUESTIONS = [
+            { key: "q1",           label: "The hardest part about putting your portfolio together?" },
+            { key: "target_roles", label: "What kind of work are you hoping to land?" },
+            { key: "proud_project",label: "Is there anything specific you'd like us to review closely?" },
+            { key: "q4",           label: "Anything else you're finding difficult? (optional)" },
+          ];
 
-          const mergedHeaders = ["name", "email", "program", "year", "status", "portfolio", "hoping to land", "review focus", "hardest part (Q1)", "also difficult (Q4)", "submitted", "report"];
+          const sel = selectedStudent;
 
           return (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 flex-wrap">
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="search by name or email…"
-                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
-                />
-                <select
-                  value={studentFilter}
-                  onChange={e => setStudentFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
-                >
-                  <option value="all">all students</option>
-                  <option value="submitted">submitted only</option>
-                  <option value="not submitted">not submitted</option>
-                </select>
-                <span className="text-xs" style={{ color: aTblDim }}>
-                  {mergedRows.length} {mergedRows.length === 1 ? "student" : "students"}
-                </span>
-                <button
-                  onClick={() => {
-                    const rows = mergedRows.map(s => ({
-                      name: s.fullName || "", email: s.anu_email || "",
-                      program: s.program || "", year: s.year || "",
-                      status: statusBadge(s).label,
-                      portfolio_link: s.review?.portfolio_link || "", portfolio_file: s.review?.portfolio_file_url || "",
-                      hoping_to_land: s.review?.target_roles || "", review_focus: s.review?.proud_project || "",
-                      hardest_part: s.q1 || "", also_difficult: s.q4 || "",
-                      submitted: s.review ? fmtDate(s.review.created_at) : ""
-                    }));
-                    downloadCSV("anu_students.csv", rows);
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: aCsvBg, color: aCsvText }}
-                >↓ csv</button>
-              </div>
+            <div className="flex flex-col md:flex-row gap-0 min-h-0 flex-1">
+              {/* ── Table column ── */}
+              <div className={`flex flex-col gap-3 ${sel ? "md:w-[52%] md:border-r" : "w-full"} min-w-0`}
+                style={{ borderColor: aTblBorder }}>
+                {/* Controls */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="search by name or email…"
+                    className="flex-1 min-w-0 px-4 py-2 rounded-lg text-sm outline-none"
+                    style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                  />
+                  <select
+                    value={studentFilter}
+                    onChange={e => setStudentFilter(e.target.value)}
+                    className="px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                  >
+                    <option value="all">all students</option>
+                    <option value="submitted">submitted only</option>
+                    <option value="not submitted">not submitted</option>
+                  </select>
+                  <span className="text-xs" style={{ color: aTblDim }}>
+                    {mergedRows.length} {mergedRows.length === 1 ? "student" : "students"}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const rows = mergedRows.map(s => ({
+                        name: s.fullName || "", email: s.anu_email || "",
+                        program: s.program || "", year: s.year || "",
+                        portfolio_link: s.review?.portfolio_link || "",
+                        report: s.review?.review_report_url || ""
+                      }));
+                      downloadCSV("anu_students.csv", rows);
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                    style={{ background: aCsvBg, color: aCsvText }}
+                  >↓ csv</button>
+                </div>
 
-              <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {mergedHeaders.map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold"
-                          style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mergedRows.length === 0 && (
-                      <tr>
-                        <td colSpan={mergedHeaders.length} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
-                          no students found
-                        </td>
+                {/* Table */}
+                <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                        {["name", "email", "program", "year", "report"].map(h => (
+                          <th key={h} className="px-4 py-3 text-left font-semibold"
+                            style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
                       </tr>
-                    )}
-                    {mergedRows.map((s, i) => {
-                      const { label, clr, txt } = statusBadge(s);
-                      const rowBg = i % 2 === 0 ? aTblRowEven : aTblRowOdd;
-                      return (
-                        <tr key={s.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: rowBg }}>
-                          <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>{s.fullName || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap"
-                              style={{ background: clr, color: txt }}>{label}</span>
-                          </td>
-                          <td className="px-4 py-3 text-xs">
-                            {s.review?.portfolio_link ? (
-                              <a href={s.review.portfolio_link} target="_blank" rel="noreferrer" className="text-yellow-400 underline">open link</a>
-                            ) : s.review?.portfolio_file_url ? (
-                              <a href={s.review.portfolio_file_url} target="_blank" rel="noreferrer" className="text-yellow-400 underline">view file</a>
-                            ) : <span style={{ color: aTblDim }}>—</span>}
-                          </td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={s.review?.target_roles}>{s.review?.target_roles || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={s.review?.proud_project}>{s.review?.proud_project || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={s.q1}>{s.q1 || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblMuted, maxWidth: 180, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                            title={s.q4}>{s.q4 || "—"}</td>
-                          <td className="px-4 py-3 text-xs" style={{ color: aTblDim }}>
-                            {s.review ? fmtDate(s.review.created_at) : "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            {s.review ? (
-                              isEvolveAdmin ? (
-                                <ReviewUploadCell review={s.review} onDone={handleReportDone} />
-                              ) : s.review.review_report_url ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-bold" style={{ color: GR }}>done</span>
-                                  <a href={s.review.review_report_url} target="_blank" rel="noreferrer"
-                                    className="text-xs underline" style={{ color: aTblDim }}>view pdf</a>
-                                </div>
-                              ) : (
-                                <span className="text-xs" style={{ color: aTblDim }}>pending</span>
-                              )
-                            ) : <span style={{ color: aTblDim }}>—</span>}
+                    </thead>
+                    <tbody>
+                      {mergedRows.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
+                            no students found
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      )}
+                      {mergedRows.map((s, i) => {
+                        const isSelected = sel?.id === s.id;
+                        const rowBg = isSelected
+                          ? (dark ? "rgba(37,99,235,0.12)" : "#eff6ff")
+                          : (i % 2 === 0 ? aTblRowEven : aTblRowOdd);
+                        return (
+                          <tr
+                            key={s.id}
+                            onClick={() => setSelectedStudent(isSelected ? null : s)}
+                            className="cursor-pointer"
+                            style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: rowBg }}
+                          >
+                            <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>{s.fullName || "—"}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
+                            <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                              {s.review ? (
+                                isEvolveAdmin ? (
+                                  <ReviewUploadCell review={s.review} onDone={handleReportDone} />
+                                ) : s.review.review_report_url ? (
+                                  <a href={s.review.review_report_url} target="_blank" rel="noreferrer"
+                                    className="text-xs underline font-semibold" style={{ color: "#60a5fa" }}>view pdf</a>
+                                ) : (
+                                  <span className="text-xs" style={{ color: aTblDim }}>—</span>
+                                )
+                              ) : <span className="text-xs" style={{ color: aTblDim }}>—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* ── Detail panel ── */}
+              {sel && (
+                <div
+                  className="flex flex-col md:w-[48%] border-t md:border-t-0 overflow-y-auto"
+                  style={{ borderColor: aTblBorder, maxHeight: "calc(100vh - 200px)" }}
+                >
+                  {/* Panel header */}
+                  <div
+                    className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 py-4 border-b"
+                    style={{ background: dark ? "#060c17" : "#fff", borderColor: aTblBorder }}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm" style={{ color: aTblText }}>{sel.fullName || "—"}</div>
+                      <div className="text-xs mt-0.5" style={{ color: aTblMuted }}>{sel.anu_email}</div>
+                      {(sel.program || sel.year) && (
+                        <div className="text-xs mt-1" style={{ color: aTblDim }}>
+                          {[sel.program, sel.year].filter(Boolean).join(" · ")}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setSelectedStudent(null)}
+                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-lg font-light leading-none mt-0.5"
+                      style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+                    >×</button>
+                  </div>
+
+                  {/* Panel body */}
+                  <div className="flex-1 px-5 py-5">
+                    {!sel.review ? (
+                      <div className="flex flex-col items-center justify-center py-12 gap-3">
+                        <div className="text-3xl" style={{ opacity: 0.25 }}>📋</div>
+                        <p className="text-sm text-center" style={{ color: aTblDim }}>Form not submitted yet.</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-6">
+                        {/* Portfolio links */}
+                        {(sel.review.portfolio_link || sel.review.portfolio_file_url) && (
+                          <div className="rounded-xl border px-4 py-3 flex items-center gap-3"
+                            style={{ borderColor: aTblBorder, background: dark ? "rgba(255,255,255,0.03)" : "#f8fafc" }}>
+                            <span className="text-xs font-semibold shrink-0" style={{ color: aTblHdrTxt }}>Portfolio</span>
+                            {sel.review.portfolio_link && (
+                              <a href={sel.review.portfolio_link} target="_blank" rel="noreferrer"
+                                className="text-xs underline" style={{ color: "#60a5fa" }}>open link</a>
+                            )}
+                            {sel.review.portfolio_file_url && (
+                              <a href={sel.review.portfolio_file_url} target="_blank" rel="noreferrer"
+                                className="text-xs underline" style={{ color: "#60a5fa" }}>view file</a>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Q&A */}
+                        {QA_QUESTIONS.map(({ key, label }) => {
+                          const answer = key === "q1" ? sel.q1 :
+                            key === "q4" ? sel.q4 :
+                            sel.review?.[key];
+                          if (!answer) return null;
+                          return (
+                            <div key={key} className="flex flex-col gap-2">
+                              <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: aTblDim }}>
+                                {label}
+                              </p>
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: aTblText }}>
+                                {answer}
+                              </p>
+                            </div>
+                          );
+                        })}
+
+                        {/* Submitted date */}
+                        <p className="text-xs mt-2" style={{ color: aTblDim }}>
+                          Submitted {fmtDate(sel.review.created_at)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
