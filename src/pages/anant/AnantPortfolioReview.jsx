@@ -193,15 +193,14 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, on
   const lineEmpty  = "rgba(255,255,255,0.07)";
 
   const nodes = [
-    { type: "section", label: "let's get to know you", active: phase === "questions", done: phase !== "questions" },
+    { type: "section", label: "let's get to know you", active: phase === "questions" || phase === "share", done: phase !== "questions" && phase !== "share" },
     ...QUESTIONS.map((q, i) => ({
       type: "item", label: q.short,
       active: phase === "questions" && i === currentQ,
       done: i < qDone,
       questionIndex: i
     })),
-    { type: "section", label: "share", active: phase === "share", done: shareDone },
-    { type: "item", label: "upload your resume and portfolio with us", active: phase === "share", done: shareDone },
+    { type: "item", label: "upload resume & portfolio", active: phase === "share", done: shareDone },
     { type: "section", label: "meet your reviewer", active: phase === "booking" || phase === "done", done: bookDone },
     { type: "item", label: "book a call", active: phase === "booking", done: bookDone },
     { type: "item", label: "meet your reviewer", active: phase === "done", done: phase === "report" },
@@ -218,8 +217,8 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, on
         const gap = isLast ? 0 : nextNode.type === "section" ? 14 : 7;
         const dotSize = node.type === "section" ? 12 : 8;
 
-        // Question items that have been answered are navigable
-        const isNavigable = phase === "questions"
+        // Question items that have been answered are navigable (including from share phase)
+        const isNavigable = (phase === "questions" || phase === "share")
           && node.type === "item"
           && node.questionIndex !== undefined
           && node.done
@@ -289,15 +288,15 @@ function ProgressSidebar({ phase, currentQ, qDone, shareDone, bookDone, dark, on
 }
 
 /* ── Mobile step accordion ──────────────────────────────────────────────────── */
-function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark, sidebarBg, sidebarBdr, mutedCol }) {
+function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark, sidebarBg, sidebarBdr, mutedCol, onSelectQuestion }) {
   const [expanded, setExpanded] = useState(false);
 
   const stepMap = {
     questions: { num: 1, label: "Let's get to know you" },
-    share:     { num: 2, label: "Share" },
-    booking:   { num: 3, label: "Meet your reviewer" },
-    done:      { num: 3, label: "Meet your reviewer" },
-    report:    { num: 4, label: "View report" }
+    share:     { num: 1, label: "Let's get to know you" },
+    booking:   { num: 2, label: "Meet your reviewer" },
+    done:      { num: 2, label: "Meet your reviewer" },
+    report:    { num: 3, label: "View report" }
   };
   const current = stepMap[phase] || { num: 1, label: "Let's get to know you" };
 
@@ -315,19 +314,17 @@ function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark
   const sections = [
     {
       label: "Let's get to know you",
-      secActive: phase === "questions",
-      secDone: phase !== "questions",
-      items: QUESTIONS.map((q, i) => ({
-        label: q.short,
-        done: i < qDone,
-        active: phase === "questions" && i === currentQ
-      }))
-    },
-    {
-      label: "Share",
-      secActive: phase === "share",
-      secDone: shareDone,
-      items: [{ label: "Upload your resume and portfolio with us", done: shareDone, active: phase === "share" }]
+      secActive: phase === "questions" || phase === "share",
+      secDone: phase !== "questions" && phase !== "share",
+      items: [
+        ...QUESTIONS.map((q, i) => ({
+          label: q.short,
+          done: i < qDone,
+          active: phase === "questions" && i === currentQ,
+          questionIndex: i
+        })),
+        { label: "Upload resume & portfolio", done: shareDone, active: phase === "share" }
+      ]
     },
     {
       label: "Meet your reviewer",
@@ -353,7 +350,7 @@ function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark
         onClick={() => setExpanded((v) => !v)}
       >
         <span className="text-xs font-semibold" style={{ color: mutedCol }}>
-          Step {current.num} of 4 · {current.label}
+          Step {current.num} of 3 · {current.label}
         </span>
         <svg
           width="14" height="14" viewBox="0 0 14 14" fill="none"
@@ -401,25 +398,43 @@ function MobileStepAccordion({ phase, currentQ, qDone, shareDone, bookDone, dark
                   {sec.label}
                 </span>
               </div>
-              {sec.items.map((item, ii) => (
-                <div key={ii} className="flex items-start gap-2.5 pl-5 py-0.5">
+              {sec.items.map((item, ii) => {
+                const canNav = item.questionIndex !== undefined && item.done && !item.active
+                  && (phase === "questions" || phase === "share");
+                return (
                   <div
-                    className="w-2 h-2 rounded-full border shrink-0 mt-1"
+                    key={ii}
+                    className="flex items-start gap-2.5 pl-5 py-0.5 rounded-md"
                     style={{
-                      background: item.active || item.done ? (item.active ? activeBg : doneBg) : "transparent",
-                      borderColor: item.active || item.done ? (item.active ? activeBg : doneBg) : emptyBorder
+                      cursor: canNav ? "pointer" : "default",
+                      padding: "3px 4px 3px 20px"
                     }}
-                  />
-                  <span
-                    className="text-[11.5px] leading-relaxed"
-                    style={{
-                      color: item.active ? itemActive : item.done ? itemDone : itemInactive
+                    onClick={() => {
+                      if (!canNav) return;
+                      onSelectQuestion?.(item.questionIndex);
+                      setExpanded(false);
                     }}
                   >
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+                    <div
+                      className="w-2 h-2 rounded-full border shrink-0 mt-1"
+                      style={{
+                        background: item.active || item.done ? (item.active ? activeBg : doneBg) : "transparent",
+                        borderColor: item.active || item.done ? (item.active ? activeBg : doneBg) : emptyBorder
+                      }}
+                    />
+                    <span
+                      className="text-[11.5px] leading-relaxed"
+                      style={{
+                        color: item.active ? itemActive : item.done ? itemDone : itemInactive,
+                        textDecoration: canNav ? "underline" : "none",
+                        textDecorationColor: "rgba(147,197,253,0.3)"
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -449,7 +464,6 @@ export default function AnantPortfolioReview({ session, studentData }) {
   const [dragOver, setDragOver] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
-  const [calendlyReady, setCalendlyReady] = useState(false);
 
   const fileRef = useRef();
   const calendlyLoaded = useRef(false);
@@ -538,32 +552,20 @@ export default function AnantPortfolioReview({ session, studentData }) {
   // ── Calendly postMessage ─────────────────────────────────────────────────────
   useEffect(() => {
     const onMsg = async (e) => {
-      const evt = e.data?.event;
-      if (evt === "calendly.event_scheduled") {
-        if (reviewId) {
-          await supabaseAdmin
-            .from("portfolio_reviews")
-            .update({ review_status: "in_review" })
-            .eq("id", reviewId);
-        }
-        setPhase("done");
-      } else if (evt === "calendly.profile_page_viewed" || evt === "calendly.event_type_viewed") {
-        setCalendlyReady(true);
+      if (e.data?.event !== "calendly.event_scheduled") return;
+      if (reviewId) {
+        await supabaseAdmin
+          .from("portfolio_reviews")
+          .update({ review_status: "in_review" })
+          .eq("id", reviewId);
       }
+      setPhase("done");
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [reviewId]);
 
-  // ── Reset Calendly ready state when entering booking phase, with 10s fallback
-  useEffect(() => {
-    if (phase !== "booking") return;
-    setCalendlyReady(false);
-    const t = setTimeout(() => setCalendlyReady(true), 10000);
-    return () => clearTimeout(t);
-  }, [phase]);
-
-  // ── Load Calendly embed script ───────────────────────────────────────────────
+  // ── Load Calendly embed script once ─────────────────────────────────────────
   useEffect(() => {
     if (phase !== "booking" || calendlyLoaded.current) return;
     if (!document.getElementById("calendly-script")) {
@@ -618,12 +620,25 @@ export default function AnantPortfolioReview({ session, studentData }) {
     }
   }
 
-  function prevQ() {
-    if (currentQ > 0) setCurrentQ((q) => q - 1);
+  async function handleBackQ() {
+    if (currentQ === 0) return;
+    setSaving(true);
+    await persist("draft");
+    setSaving(false);
+    setCurrentQ((q) => q - 1);
   }
 
-  function advanceQ() {
-    if (currentQ < QUESTIONS.length - 1) setCurrentQ((q) => q + 1);
+  async function handleSaveEdit() {
+    setSaving(true);
+    await persist("draft");
+    setSaving(false);
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 2000);
+  }
+
+  function goBackToQuestions() {
+    setPhase("questions");
+    setCurrentQ(QUESTIONS.length - 1);
   }
 
   async function handleResumeFile(file) {
@@ -660,13 +675,6 @@ export default function AnantPortfolioReview({ session, studentData }) {
     setPhase("booking");
   }
 
-  async function handleManualBooked() {
-    if (reviewId) {
-      await supabaseAdmin
-        .from("portfolio_reviews").update({ review_status: "in_review" }).eq("id", reviewId);
-    }
-    setPhase("done");
-  }
 
   // ── Sidebar / progress state ─────────────────────────────────────────────────
   // Highest question index the user has answered (derived from answers, works across back/forward nav)
@@ -756,20 +764,23 @@ export default function AnantPortfolioReview({ session, studentData }) {
             </svg>
           </button>
 
-          {/* Avatar + name (name hidden on mobile) */}
-          <div className="flex items-center gap-2">
-            <span
-              className="text-sm font-medium hidden md:block"
-              style={{ color: "rgba(255,255,255,0.7)" }}
-            >
-              {studentName}
-            </span>
+          {/* Avatar + name — matches home page style */}
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border"
+            style={{ borderColor: "#1e3a8a" }}
+          >
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
               style={{ background: "#1e3a8a", color: "#93c5fd" }}
             >
               {studentInitial}
             </div>
+            <span
+              className="text-sm font-semibold hidden md:block"
+              style={{ color: "rgba(255,255,255,0.75)" }}
+            >
+              {studentName}
+            </span>
           </div>
         </div>
       </header>
@@ -785,6 +796,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
         sidebarBg={sidebarBg}
         sidebarBdr={sidebarBdr}
         mutedCol="rgba(255,255,255,0.32)"
+        onSelectQuestion={(idx) => { setCurrentQ(idx); setPhase("questions"); }}
       />
 
       {/* ── BODY ── */}
@@ -814,13 +826,13 @@ export default function AnantPortfolioReview({ session, studentData }) {
             shareDone={shareDone}
             bookDone={bookDone}
             dark={dark}
-            onSelectQuestion={setCurrentQ}
+            onSelectQuestion={(idx) => { setCurrentQ(idx); setPhase("questions"); }}
           />
         </aside>
 
         {/* ── MAIN CONTENT ── */}
         <main
-          className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-5 md:px-14 py-10 md:py-16"
+          className={`flex-1 overflow-y-auto flex flex-col ${phase === "report" ? "" : "items-center justify-center px-5 md:px-14 py-10 md:py-16"}`}
           style={{ background: bg }}
         >
 
@@ -864,94 +876,63 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   <span>({currentQ + 1}/4)</span>
                 </p>
 
-                {/* Back / Forward arrows + Question heading */}
-                <div className="flex items-start gap-3 mb-6">
-                  {/* Back arrow — shown when not on first question */}
-                  {currentQ > 0 ? (
+                <h2
+                  className="font-bold mb-6"
+                  style={{ fontSize: "clamp(20px, 3.2vw, 26px)", color: textCol, lineHeight: 1.3 }}
+                >
+                  {q.question}
+                </h2>
+
+                <textarea
+                  key={q.key}
+                  value={answers[q.key]}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [q.key]: e.target.value }))}
+                  placeholder={q.placeholder}
+                  rows={7}
+                  autoFocus
+                  className="w-full rounded-xl border px-4 py-4 resize-none outline-none"
+                  style={{
+                    borderColor: inputBorder,
+                    color: textCol,
+                    background: inputBg,
+                    lineHeight: 1.7,
+                    fontFamily: "inherit",
+                    fontSize: 15
+                  }}
+                />
+
+                {error && <p className="mt-2 text-sm" style={{ color: "#f87171" }}>{error}</p>}
+
+                <div className="flex items-center gap-3 mt-5">
+                  {currentQ > 0 && (
                     <button
-                      onClick={prevQ}
-                      className="flex items-center justify-center shrink-0 w-7 h-7 rounded-full border mt-0.5"
-                      style={{ borderColor: inputBorder, background: inputBg }}
-                      aria-label="Previous question"
+                      onClick={handleBackQ}
+                      disabled={saving}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold border disabled:opacity-40"
+                      style={{ borderColor: inputBorder, background: inputBg, color: textCol }}
                     >
-                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                        <path d="M8.5 2L3.5 6.5L8.5 11" stroke={textCol} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      ← back
                     </button>
-                  ) : (
-                    <div className="shrink-0 w-7" />
                   )}
-
-                  <h2
-                    className="font-bold flex-1"
-                    style={{ fontSize: "clamp(20px, 3.2vw, 26px)", color: textCol, lineHeight: 1.3 }}
-                  >
-                    {q.question}
-                  </h2>
-
-                  {/* Forward arrow — shown when next question is already answered */}
-                  {currentQ < maxReachedQ ? (
+                  {currentQ < maxReachedQ && (
                     <button
-                      onClick={advanceQ}
-                      className="flex items-center justify-center shrink-0 w-7 h-7 rounded-full border mt-0.5"
-                      style={{ borderColor: inputBorder, background: inputBg }}
-                      aria-label="Next question"
+                      onClick={handleSaveEdit}
+                      disabled={saving}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold border disabled:opacity-40"
+                      style={{ borderColor: inputBorder, background: inputBg, color: mutedCol }}
                     >
-                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                        <path d="M4.5 2L9.5 6.5L4.5 11" stroke={textCol} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      {savedMsg ? "saved ✓" : saving ? "saving…" : "save"}
                     </button>
-                  ) : (
-                    <div className="shrink-0 w-7" />
                   )}
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    key={q.key}
-                    value={answers[q.key]}
-                    onChange={(e) => setAnswers((a) => ({ ...a, [q.key]: e.target.value }))}
-                    placeholder={q.placeholder}
-                    rows={7}
-                    autoFocus
-                    className="w-full rounded-xl border px-4 py-4 resize-none outline-none"
-                    style={{
-                      borderColor: inputBorder,
-                      color: textCol,
-                      background: inputBg,
-                      lineHeight: 1.7,
-                      fontFamily: "inherit",
-                      fontSize: 15
-                    }}
-                    onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) nextQ(); }}
-                  />
                   <button
                     onClick={nextQ}
                     disabled={!answers[q.key].trim() || saving}
-                    className="absolute bottom-3.5 right-3.5 w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30"
-                    style={{ background: dark ? "#1e3a5f" : "#e2e8f0" }}
+                    className="px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-35"
+                    style={{ background: btnBg, color: btnText }}
                   >
-                    {saving ? (
-                      <div
-                        className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin"
-                        style={{ borderColor: dark ? "#93c5fd" : "#374151" }}
-                      />
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M2.5 6H9.5M6.5 3L9.5 6L6.5 9"
-                          stroke={dark ? "#93c5fd" : "#374151"}
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
+                    {saving && currentQ >= maxReachedQ ? "saving…" : currentQ === QUESTIONS.length - 1 ? "next →" : "next →"}
                   </button>
                 </div>
-
-                {error && <p className="mt-2 text-sm" style={{ color: "#f87171" }}>{error}</p>}
-                <p className="mt-3 text-xs" style={{ color: mutedCol }}>Press ⌘ + Enter to continue</p>
               </div>
             );
           })()}
@@ -959,6 +940,13 @@ export default function AnantPortfolioReview({ session, studentData }) {
           {/* ── SHARE ── */}
           {phase === "share" && (
             <div className="w-full max-w-md">
+              <button
+                onClick={goBackToQuestions}
+                className="text-sm font-semibold mb-6 flex items-center gap-1"
+                style={{ color: mutedCol }}
+              >
+                ← back to questions
+              </button>
               <h2
                 className="font-bold mb-2"
                 style={{ fontSize: "clamp(22px, 4vw, 30px)", color: textCol }}
@@ -1086,37 +1074,11 @@ export default function AnantPortfolioReview({ session, studentData }) {
                 Choose a slot that works best for you. Slots open from 3 working days from today.
               </p>
 
-              <div style={{ position: "relative" }}>
-                {/* Loading overlay — shown until Calendly fires a ready event */}
-                {!calendlyReady && (
-                  <div
-                    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl"
-                    style={{ background: cardBg, border: `1px solid ${border}` }}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full animate-spin mb-4"
-                      style={{ border: `2px solid ${dark ? "#818cf8" : "#334155"}`, borderTopColor: "transparent" }}
-                    />
-                    <p className="text-sm" style={{ color: mutedCol }}>Loading available slots…</p>
-                  </div>
-                )}
-                <div
-                  className="calendly-inline-widget rounded-xl border"
-                  data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
-                  style={{ minWidth: 320, height: 700, borderColor: border }}
-                />
-              </div>
-
-              <p className="mt-4 text-sm" style={{ color: mutedCol }}>
-                Booked? If the page doesn't auto-advance:{" "}
-                <button
-                  onClick={handleManualBooked}
-                  className="underline underline-offset-2 font-semibold"
-                  style={{ color: subCol }}
-                >
-                  confirm my booking →
-                </button>
-              </p>
+              <div
+                className="calendly-inline-widget rounded-xl border"
+                data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                style={{ minWidth: 320, height: 700, borderColor: border }}
+              />
             </div>
           )}
 
@@ -1181,45 +1143,12 @@ export default function AnantPortfolioReview({ session, studentData }) {
 
           {/* ── REPORT ── */}
           {phase === "report" && (
-            <div className="w-full flex flex-col" style={{ minHeight: "70vh" }}>
-              <div className="flex justify-end gap-3 mb-4">
-                <a
-                  href={reportUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  download
-                  className="px-4 py-2 rounded-lg border text-sm font-semibold"
-                  style={{ borderColor: border, color: subCol, background: cardBg }}
-                  onClick={() => {
-                    clearTimeout(feedbackTimer.current);
-                    if (!feedbackGiven) {
-                      feedbackTimer.current = setTimeout(() => setFeedbackOpen(true), 30000);
-                    }
-                  }}
-                >
-                  download report
-                </a>
-                {!feedbackGiven ? (
-                  <button
-                    onClick={() => setFeedbackOpen(true)}
-                    className="px-4 py-2 rounded-lg border text-sm font-semibold"
-                    style={{ borderColor: border, color: subCol, background: cardBg }}
-                  >
-                    give feedback
-                  </button>
-                ) : (
-                  <span className="px-4 py-2 text-sm" style={{ color: mutedCol }}>
-                    feedback submitted ✓
-                  </span>
-                )}
-              </div>
-              <iframe
-                src={reportUrl}
-                title="Your portfolio review report"
-                className="w-full flex-1 rounded-xl border"
-                style={{ minHeight: "70vh", borderColor: border }}
-              />
-            </div>
+            <iframe
+              src={reportUrl}
+              title="Your portfolio review report"
+              className="flex-1 w-full"
+              style={{ border: "none", display: "block" }}
+            />
           )}
 
         </main>
