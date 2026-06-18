@@ -19,7 +19,6 @@ import {
 } from "recharts";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
-import AnantPeopleManager from "../anant/AnantPeopleManager.jsx";
 
 
 /* ─── brand ──────────────────────────────────────────────────────────────── */
@@ -28,6 +27,35 @@ const P = "#DF0586";
 const GR = "#22c55e";
 const PLAN_COLORS = { starter: Y, accelerator: P };
 const ANANT_BLUE = "#2563eb";
+
+const ANU_PROGRAMS = ["BDes", "BArch"];
+const ANU_STREAMS = {
+  BDes: ["Communication Design", "Moving Image", "Space Design", "Product Design", "Interaction Design"],
+  BArch: ["Architecture"]
+};
+const ANU_YEARS = ["3", "4"];
+const ANU_ORIGIN_URL = "https://anu.evolvedesign.academy";
+
+async function sendANUPersonInvite(email, role, apiKey) {
+  const redirectTo = role === "student" ? `${ANU_ORIGIN_URL}/portfolio-review/form` : `${ANU_ORIGIN_URL}/admin/dashboard`;
+  let magicLink = null;
+  try {
+    const { data } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
+    if (data?.properties?.action_link) magicLink = data.properties.action_link;
+  } catch {}
+  const isStudent = role === "student";
+  const headline = isStudent ? "Your portfolio review portal is ready" : role === "uni_admin" ? "Your admin portal is ready" : "Your faculty portal is ready";
+  const body = isStudent ? "Click below to sign in and submit your portfolio for expert feedback. No password needed." : "You've been invited to the Anant National University x evolve admin panel. No password needed.";
+  const cta = isStudent ? "Open my portfolio review portal" : "Access my dashboard";
+  const link = magicLink || (isStudent ? `${ANU_ORIGIN_URL}/signin` : `${ANU_ORIGIN_URL}/admin`);
+  const subject = isStudent ? "Your portfolio review portal is ready, Anant National University x Evolve" : "Your admin portal access, Anant National University x Evolve";
+  const htmlContent = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px"><img src="${ANU_ORIGIN_URL}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" /><p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">${headline}</h1><p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">${body}</p><a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">${cta}</a><hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" /><p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${email}. If this wasn't you, ignore this email.</p></div>`;
+  await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ sender: { name: "Anant × evolve", email: "noreply@evolvedesign.academy" }, to: [{ email }], subject, htmlContent })
+  });
+}
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
@@ -542,6 +570,22 @@ export default function AdminDashboard() {
   const profileMenuRef = useRef(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  const [filterProgram, setFilterProgram] = useState("all");
+  const [filterStream, setFilterStream] = useState("all");
+  const [filterYear, setFilterYear] = useState("all");
+  const [sortField, setSortField] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  const [addModal, setAddModal] = useState(null); // "student"|"faculty"|"admin"|null
+  const [addForm, setAddForm] = useState({});
+  const [addLoading, setAddLoading] = useState(false);
+  const [addMsg, setAddMsg] = useState("");
+  const [editEntry, setEditEntry] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [panelRemarks, setPanelRemarks] = useState("");
+  const [panelRemarksSaving, setPanelRemarksSaving] = useState(false);
+  const [meetRecInput, setMeetRecInput] = useState("");
+  const [showMeetRecInput, setShowMeetRecInput] = useState(false);
+
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState("");
   const [aiError, setAiError] = useState("");
@@ -568,6 +612,14 @@ export default function AdminDashboard() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showProfileMenu]);
+
+  useEffect(() => {
+    if (selectedStudent?.review) {
+      setPanelRemarks(selectedStudent.review.remarks || "");
+      setMeetRecInput(selectedStudent.review.meet_recording_url || "");
+    }
+    setShowMeetRecInput(false);
+  }, [selectedStudent?.id]);
 
   const handleLogout = async () => {
     sessionStorage.removeItem("admin_access");
@@ -979,6 +1031,65 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     }
   };
 
+  /* ── ANU add/edit/delete/invite helpers ────────────────────────────── */
+  async function handleAddSubmit() {
+    if (!addModal || !addForm.anu_email) return;
+    setAddLoading(true); setAddMsg("");
+    const table = addModal === "student" ? "anu_students" : addModal === "faculty" ? "anu_faculty" : "anu_admins";
+    const { error } = await supabaseAdmin.from(table).insert({ ...addForm, tenant_id: "anant" });
+    if (error) { setAddMsg(error.message); setAddLoading(false); return; }
+    await fetchAll(true);
+    setAddModal(null); setAddForm({}); setAddLoading(false);
+  }
+
+  async function handleEditSave() {
+    if (!editEntry) return;
+    const { type, id, ...fields } = editEntry;
+    const table = type === "student" ? "anu_students" : type === "faculty" ? "anu_faculty" : "anu_admins";
+    await supabaseAdmin.from(table).update(fields).eq("id", id);
+    if (type === "student") setAnuStudents(prev => prev.map(s => s.id === id ? { ...s, ...fields } : s));
+    else if (type === "faculty") setAnuFacultyData(prev => prev ? prev.map(f => f.id === id ? { ...f, ...fields } : f) : prev);
+    else setAnuAdminsData(prev => prev ? prev.map(a => a.id === id ? { ...a, ...fields } : a) : prev);
+    setEditEntry(null);
+  }
+
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    const { type, entry } = deleteConfirm;
+    const table = type === "student" ? "anu_students" : type === "faculty" ? "anu_faculty" : "anu_admins";
+    await supabaseAdmin.from(table).delete().eq("id", entry.id);
+    if (type === "student") { setAnuStudents(prev => prev.filter(s => s.id !== entry.id)); if (selectedStudent?.id === entry.id) setSelectedStudent(null); }
+    else if (type === "faculty") setAnuFacultyData(prev => prev ? prev.filter(f => f.id !== entry.id) : prev);
+    else setAnuAdminsData(prev => prev ? prev.filter(a => a.id !== entry.id) : prev);
+    setDeleteConfirm(null);
+  }
+
+  async function savePanelRemarks() {
+    if (!selectedStudent?.review) return;
+    setPanelRemarksSaving(true);
+    await supabaseAdmin.from("portfolio_reviews").update({ remarks: panelRemarks }).eq("id", selectedStudent.review.id);
+    setPortfolioReviews(prev => prev.map(r => r.id === selectedStudent.review.id ? { ...r, remarks: panelRemarks } : r));
+    setPanelRemarksSaving(false);
+  }
+
+  async function saveMeetRecording() {
+    if (!selectedStudent?.review) return;
+    await supabaseAdmin.from("portfolio_reviews").update({ meet_recording_url: meetRecInput }).eq("id", selectedStudent.review.id);
+    setPortfolioReviews(prev => prev.map(r => r.id === selectedStudent.review.id ? { ...r, meet_recording_url: meetRecInput } : r));
+    setSelectedStudent(prev => prev ? { ...prev, review: { ...prev.review, meet_recording_url: meetRecInput } } : null);
+    setShowMeetRecInput(false);
+  }
+
+  async function sendSingleInvite(type, entry) {
+    const role = type === "student" ? "student" : type === "faculty" ? "faculty" : "uni_admin";
+    const table = type === "student" ? "anu_students" : type === "faculty" ? "anu_faculty" : "anu_admins";
+    await sendANUPersonInvite(entry.anu_email, role, BREVO_API_KEY);
+    await supabaseAdmin.from(table).update({ invite_sent_at: new Date().toISOString() }).eq("id", entry.id);
+    if (type === "student") setAnuStudents(prev => prev.map(s => s.id === entry.id ? { ...s, invite_sent_at: new Date().toISOString() } : s));
+    else if (type === "faculty") setAnuFacultyData(prev => prev ? prev.map(f => f.id === entry.id ? { ...f, invite_sent_at: new Date().toISOString() } : f) : prev);
+    else setAnuAdminsData(prev => prev ? prev.map(a => a.id === entry.id ? { ...a, invite_sent_at: new Date().toISOString() } : a) : prev);
+  }
+
   /* ─────────────────────────────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────────────────────────────── */
@@ -1022,16 +1133,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "accelerator", label: "accelerator 1:1" }
   ];
 
-  // Anant tabs: faculty → students; uni_admin → students + faculty + college admin; evolve admin → + manage
+  // Anant tabs: faculty → students; uni_admin / evolve admin → students + faculty + college admin
   const ANANT_TABS = isFaculty
     ? [{ id: "students", label: "students" }]
-    : isEvolveAdmin
-    ? [
-        { id: "students", label: "students" },
-        { id: "faculty", label: "faculty" },
-        { id: "college admin", label: "college admin" },
-        { id: "manage", label: "manage" }
-      ]
     : [
         { id: "students", label: "students" },
         { id: "faculty", label: "faculty" },
@@ -2212,214 +2316,392 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
           };
 
           const srch = search.toLowerCase();
-
           const studentBase = isFaculty && streamEmails
             ? anuStudents.filter(s => streamEmails.has((s.anu_email || "").toLowerCase()))
             : anuStudents;
 
-          const mergedRows = studentBase.map(s => {
+          let mergedRows = studentBase.map(s => {
             const review = portfolioReviews.find(r =>
-              (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() &&
-              r.review_status !== "draft"
+              (r.email || "").toLowerCase() === (s.anu_email || "").toLowerCase() && r.review_status !== "draft"
             ) || null;
             const { q1, q4 } = parseNotes(review?.notes);
-            return {
-              ...s,
-              fullName: [s.first_name, s.last_name].filter(Boolean).join(" "),
-              review, q1, q4
-            };
+            return { ...s, fullName: [s.first_name, s.last_name].filter(Boolean).join(" "), review, q1, q4 };
           }).filter(s => {
             if (srch && !s.fullName.toLowerCase().includes(srch) && !(s.anu_email || "").toLowerCase().includes(srch)) return false;
+            if (filterProgram !== "all" && s.program !== filterProgram) return false;
+            if (filterStream !== "all" && s.stream !== filterStream) return false;
+            if (filterYear !== "all" && String(s.year) !== filterYear) return false;
             if (studentFilter === "submitted") return !!s.review;
             if (studentFilter === "not submitted") return !s.review;
             return true;
           });
 
-          const QA_QUESTIONS = [
-            { key: "q1",           label: "The hardest part about putting your portfolio together?" },
-            { key: "target_roles", label: "What kind of work are you hoping to land?" },
-            { key: "proud_project",label: "Is there anything specific you'd like us to review closely?" },
-            { key: "q4",           label: "Anything else you're finding difficult? (optional)" },
-          ];
+          if (sortField === "name") {
+            mergedRows = [...mergedRows].sort((a, b) => sortDir === "asc"
+              ? a.fullName.localeCompare(b.fullName) : b.fullName.localeCompare(a.fullName));
+          } else if (sortField === "year") {
+            mergedRows = [...mergedRows].sort((a, b) => sortDir === "asc"
+              ? (Number(a.year) || 0) - (Number(b.year) || 0) : (Number(b.year) || 0) - (Number(a.year) || 0));
+          }
 
+          function toggleSort(field) {
+            if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+            else { setSortField(field); setSortDir("asc"); }
+          }
+
+          function SortBtn({ field }) {
+            const active = sortField === field;
+            return (
+              <button
+                onClick={e => { e.stopPropagation(); toggleSort(field); }}
+                className="ml-1 text-[10px] leading-none"
+                style={{ color: active ? "#60a5fa" : aTblDim, opacity: active ? 1 : 0.5 }}
+              >
+                {active && sortDir === "desc" ? "↓" : "↑"}
+              </button>
+            );
+          }
+
+          function statusBadge(s) {
+            if (!s.invite_sent_at) return { label: "not invited", clr: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", txt: "#94a3b8" };
+            if (!s.auth_user_id)   return { label: "invited",     clr: "rgba(251,191,36,0.12)", txt: "#f59e0b" };
+            const st = s.review?.review_status;
+            if (!s.review || st === "draft") return { label: "onboarding", clr: "rgba(167,139,250,0.12)", txt: "#a78bfa" };
+            if (st === "pending")            return { label: "portfolio submitted", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
+            if (st === "share")              return { label: "call booked", clr: "rgba(52,211,153,0.1)", txt: "#34d399" };
+            if (st === "in_review" || st === "done") return { label: "review in progress", clr: "rgba(251,146,60,0.12)", txt: "#fb923c" };
+            if (st === "report" || s.review?.review_report_url) return { label: "report ready", clr: "rgba(52,211,153,0.15)", txt: "#34d399" };
+            return { label: st || "—", clr: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", txt: "#94a3b8" };
+          }
+
+          const uninvitedCount = mergedRows.filter(s => !s.invite_sent_at).length;
           const sel = selectedStudent;
 
-          return (
-            <div className="flex flex-col md:flex-row gap-0 min-h-0 flex-1">
-              {/* ── Table column ── */}
-              <div className={`flex flex-col gap-3 ${sel ? "md:w-[52%] md:border-r" : "w-full"} min-w-0`}
-                style={{ borderColor: aTblBorder }}>
-                {/* Controls */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="search by name or email…"
-                    className="flex-1 min-w-0 px-4 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
-                  />
-                  <select
-                    value={studentFilter}
-                    onChange={e => setStudentFilter(e.target.value)}
-                    className="px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
-                  >
-                    <option value="all">all students</option>
-                    <option value="submitted">submitted only</option>
-                    <option value="not submitted">not submitted</option>
-                  </select>
-                  <span className="text-xs" style={{ color: aTblDim }}>
-                    {mergedRows.length} {mergedRows.length === 1 ? "student" : "students"}
-                  </span>
-                  <button
-                    onClick={() => {
-                      const rows = mergedRows.map(s => ({
-                        name: s.fullName || "", email: s.anu_email || "",
-                        program: s.program || "", year: s.year || "",
-                        portfolio_link: s.review?.portfolio_link || "",
-                        report: s.review?.review_report_url || ""
-                      }));
-                      downloadCSV("anu_students.csv", rows);
-                    }}
-                    className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                    style={{ background: aCsvBg, color: aCsvText }}
-                  >↓ csv</button>
-                </div>
+          async function bulkSendInvites() {
+            const uninvited = mergedRows.filter(s => !s.invite_sent_at);
+            for (const s of uninvited) await sendSingleInvite("student", s);
+          }
 
-                {/* Table */}
-                <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                        {["name", "email", "program", "year", "report"].map(h => (
-                          <th key={h} className="px-4 py-3 text-left font-semibold"
-                            style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mergedRows.length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center" style={{ color: aTblDim }}>
-                            no students found
-                          </td>
-                        </tr>
-                      )}
-                      {mergedRows.map((s, i) => {
-                        const isSelected = sel?.id === s.id;
-                        const rowBg = isSelected
-                          ? (dark ? "rgba(37,99,235,0.12)" : "#eff6ff")
-                          : (i % 2 === 0 ? aTblRowEven : aTblRowOdd);
-                        return (
-                          <tr
-                            key={s.id}
-                            onClick={() => setSelectedStudent(isSelected ? null : s)}
-                            className="cursor-pointer"
-                            style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: rowBg }}
-                          >
-                            <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>{s.fullName || "—"}</td>
-                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
-                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
-                            <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
-                            <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                              {s.review ? (
-                                isEvolveAdmin ? (
-                                  <ReviewUploadCell review={s.review} onDone={handleReportDone} />
-                                ) : s.review.review_report_url ? (
-                                  <a href={s.review.review_report_url} target="_blank" rel="noreferrer"
-                                    className="text-xs underline font-semibold" style={{ color: "#60a5fa" }}>view pdf</a>
-                                ) : (
-                                  <span className="text-xs" style={{ color: aTblDim }}>—</span>
-                                )
-                              ) : <span className="text-xs" style={{ color: aTblDim }}>—</span>}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+          function handleCSVUpload(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+              const raw = ev.target.result;
+              const lines = raw.trim().split(/\r?\n/).filter(Boolean);
+              if (!lines.length) return;
+              const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g, "_"));
+              const rows = lines.slice(1).map(line => {
+                const vals = line.split(",").map(v => v.trim());
+                const row = { tenant_id: "anant" };
+                headers.forEach((h, i) => { row[h] = vals[i] ?? ""; });
+                return row;
+              });
+              await supabaseAdmin.from("anu_students").upsert(rows, { onConflict: "anu_email" });
+              await fetchAll(true);
+            };
+            reader.readAsText(file);
+            e.target.value = "";
+          }
+
+          const QA_QUESTIONS = [
+            { key: "q1",            label: "The hardest part about putting your portfolio together?" },
+            { key: "target_roles",  label: "What kind of work are you hoping to land?" },
+            { key: "proud_project", label: "Is there anything specific you'd like us to review closely?" },
+            { key: "q4",            label: "Anything else you're finding difficult? (optional)" },
+          ];
+
+          return (
+            <div className="flex flex-col gap-4">
+              {/* ── Management buttons (evolve + uni admin, not faculty) ── */}
+              {!isFaculty && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}>
+                    <span>↑</span> upload CSV
+                    <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
+                  </label>
+                  <button
+                    onClick={() => { setAddModal("student"); setAddForm({}); setAddMsg(""); }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
+                  >
+                    + add one
+                  </button>
+                  {isEvolveAdmin && uninvitedCount > 0 && (
+                    <button
+                      onClick={bulkSendInvites}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.3)" }}
+                    >
+                      → send invites to all pending ({uninvitedCount})
+                    </button>
+                  )}
                 </div>
+              )}
+
+              {/* ── Filters row ── */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="search by name or email…"
+                  className="flex-1 min-w-[180px] px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}
+                />
+                <select value={filterProgram} onChange={e => { setFilterProgram(e.target.value); setFilterStream("all"); }}
+                  className="px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}>
+                  <option value="all">all programs</option>
+                  {ANU_PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                {filterProgram !== "all" && (
+                  <select value={filterStream} onChange={e => setFilterStream(e.target.value)}
+                    className="px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}>
+                    <option value="all">all streams</option>
+                    {(ANU_STREAMS[filterProgram] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                )}
+                <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }}>
+                  <option value="all">all years</option>
+                  {ANU_YEARS.map(y => <option key={y} value={y}>year {y}</option>)}
+                </select>
+                <span className="text-xs" style={{ color: aTblDim }}>{mergedRows.length} students</span>
+                <button
+                  onClick={() => downloadCSV("anu_students.csv", mergedRows.map(s => ({
+                    name: s.fullName, email: s.anu_email, program: s.program, year: s.year,
+                    status: statusBadge(s).label, report: s.review?.review_report_url || ""
+                  })))}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                  style={{ background: aCsvBg, color: aCsvText }}
+                >↓ csv</button>
               </div>
 
-              {/* ── Detail panel ── */}
-              {sel && (
-                <div
-                  className="flex flex-col md:w-[48%] border-t md:border-t-0 overflow-y-auto"
-                  style={{ borderColor: aTblBorder, maxHeight: "calc(100vh - 200px)" }}
-                >
-                  {/* Panel header */}
-                  <div
-                    className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 py-4 border-b"
-                    style={{ background: dark ? "#060c17" : "#fff", borderColor: aTblBorder }}
-                  >
-                    <div className="min-w-0">
-                      <div className="font-bold text-sm" style={{ color: aTblText }}>{sel.fullName || "—"}</div>
-                      <div className="text-xs mt-0.5" style={{ color: aTblMuted }}>{sel.anu_email}</div>
-                      {(sel.program || sel.year) && (
-                        <div className="text-xs mt-1" style={{ color: aTblDim }}>
-                          {[sel.program, sel.year].filter(Boolean).join(" · ")}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setSelectedStudent(null)}
-                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-lg font-light leading-none mt-0.5"
-                      style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
-                    >×</button>
+              {/* ── Table + split panel ── */}
+              <div className="flex flex-col md:flex-row gap-3 min-h-0">
+                {/* Table */}
+                <div className={`flex flex-col min-w-0 ${sel ? "md:w-[52%]" : "w-full"}`}>
+                  <div className="rounded-xl border overflow-x-auto" style={{ borderColor: aTblBorder }}>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
+                          <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>
+                            name <SortBtn field="name" />
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>email</th>
+                          <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>program</th>
+                          <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>
+                            year <SortBtn field="year" />
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>status</th>
+                          {isEvolveAdmin && <th className="px-2 py-3" style={{ color: aTblHdrTxt }}></th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mergedRows.length === 0 && (
+                          <tr><td colSpan={isEvolveAdmin ? 6 : 5} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no students found</td></tr>
+                        )}
+                        {mergedRows.map(s => {
+                          const { label, clr, txt } = statusBadge(s);
+                          const isSelected = sel?.id === s.id;
+                          return (
+                            <tr
+                              key={s.id}
+                              onClick={() => setSelectedStudent(isSelected ? null : s)}
+                              className="cursor-pointer transition-colors"
+                              style={{
+                                borderBottom: `1px solid ${aTblRowBrd}`,
+                                background: isSelected
+                                  ? (dark ? "rgba(37,99,235,0.12)" : "#eff6ff")
+                                  : undefined
+                              }}
+                              onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = dark ? "rgba(255,255,255,0.03)" : "#f8fafc"; }}
+                              onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = ""; }}
+                            >
+                              <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>{s.fullName || "—"}</td>
+                              <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.anu_email || "—"}</td>
+                              <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.program || "—"}</td>
+                              <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{s.year || "—"}</td>
+                              <td className="px-4 py-3">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap"
+                                  style={{ background: clr, color: txt }}>{label}</span>
+                              </td>
+                              {isEvolveAdmin && (
+                                <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
+                                  <div className="flex items-center gap-1.5">
+                                    {!s.invite_sent_at && (
+                                      <button
+                                        onClick={() => sendSingleInvite("student", s)}
+                                        className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
+                                        style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
+                                      >invite</button>
+                                    )}
+                                    <button
+                                      onClick={() => setEditEntry({ type: "student", id: s.id, first_name: s.first_name || "", last_name: s.last_name || "", program: s.program || "", stream: s.stream || "", year: String(s.year || "") })}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                      style={{ color: aTblDim, background: "transparent" }}
+                                      title="edit"
+                                    >✏</button>
+                                    <button
+                                      onClick={() => setDeleteConfirm({ type: "student", entry: s })}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                      style={{ color: "#f87171", background: "transparent" }}
+                                      title="delete"
+                                    >✕</button>
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
 
-                  {/* Panel body */}
-                  <div className="flex-1 px-5 py-5">
-                    {!sel.review ? (
-                      <div className="flex flex-col items-center justify-center py-12 gap-3">
-                        <div className="text-3xl" style={{ opacity: 0.25 }}>📋</div>
-                        <p className="text-sm text-center" style={{ color: aTblDim }}>Form not submitted yet.</p>
+                {/* ── Split panel ── */}
+                {sel && (
+                  <div
+                    className="flex flex-col md:w-[48%] rounded-xl border overflow-hidden"
+                    style={{ borderColor: aTblBorder, background: dark ? "#04080f" : "#fff", maxHeight: "calc(100vh - 220px)" }}
+                  >
+                    {/* Panel header */}
+                    <div
+                      className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 py-4 border-b shrink-0"
+                      style={{ background: dark ? "#060c17" : "#f8fafc", borderColor: aTblBorder }}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm" style={{ color: aTblText }}>{sel.fullName || "—"}</div>
+                        <div className="text-xs mt-0.5" style={{ color: aTblMuted }}>{sel.anu_email}</div>
+                        {(sel.program || sel.year) && (
+                          <div className="text-xs mt-0.5" style={{ color: aTblDim }}>{[sel.program, sel.year].filter(Boolean).join(" · ")}</div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col gap-6">
-                        {/* Portfolio links */}
-                        {(sel.review.portfolio_link || sel.review.portfolio_file_url) && (
-                          <div className="rounded-xl border px-4 py-3 flex items-center gap-3"
-                            style={{ borderColor: aTblBorder, background: dark ? "rgba(255,255,255,0.03)" : "#f8fafc" }}>
-                            <span className="text-xs font-semibold shrink-0" style={{ color: aTblHdrTxt }}>Portfolio</span>
+                      <button
+                        onClick={() => setSelectedStudent(null)}
+                        className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-lg font-light"
+                        style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#e2e8f0" }}
+                      >×</button>
+                    </div>
+
+                    {/* Panel body */}
+                    <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+                      {!sel.review ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-2">
+                          <p className="text-sm" style={{ color: aTblDim }}>Form not submitted yet.</p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Links row */}
+                          <div className="flex items-center gap-3 flex-wrap">
                             {sel.review.portfolio_link && (
                               <a href={sel.review.portfolio_link} target="_blank" rel="noreferrer"
-                                className="text-xs underline" style={{ color: "#60a5fa" }}>open link</a>
+                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>portfolio</a>
                             )}
                             {sel.review.portfolio_file_url && (
                               <a href={sel.review.portfolio_file_url} target="_blank" rel="noreferrer"
-                                className="text-xs underline" style={{ color: "#60a5fa" }}>view file</a>
+                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>resume</a>
                             )}
+                            {sel.review.meet_recording_url ? (
+                              <a href={sel.review.meet_recording_url} target="_blank" rel="noreferrer"
+                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>meet recording</a>
+                            ) : isEvolveAdmin ? (
+                              <button
+                                onClick={() => setShowMeetRecInput(v => !v)}
+                                className="text-xs font-semibold"
+                                style={{ color: aTblDim }}
+                              >+ add recording</button>
+                            ) : null}
                           </div>
-                        )}
 
-                        {/* Q&A */}
-                        {QA_QUESTIONS.map(({ key, label }) => {
-                          const answer = key === "q1" ? sel.q1 :
-                            key === "q4" ? sel.q4 :
-                            sel.review?.[key];
-                          if (!answer) return null;
-                          return (
-                            <div key={key} className="flex flex-col gap-2">
-                              <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: aTblDim }}>
-                                {label}
-                              </p>
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: aTblText }}>
-                                {answer}
-                              </p>
+                          {/* Recording input (evolve admin) */}
+                          {isEvolveAdmin && showMeetRecInput && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={meetRecInput} onChange={e => setMeetRecInput(e.target.value)}
+                                placeholder="paste recording URL…"
+                                className="flex-1 px-3 py-1.5 rounded-lg text-xs outline-none border"
+                                style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}
+                              />
+                              <button onClick={saveMeetRecording}
+                                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                                style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>save</button>
                             </div>
-                          );
-                        })}
+                          )}
 
-                        {/* Submitted date */}
-                        <p className="text-xs mt-2" style={{ color: aTblDim }}>
-                          Submitted {fmtDate(sel.review.created_at)}
-                        </p>
-                      </div>
-                    )}
+                          {/* Q&A */}
+                          {QA_QUESTIONS.map(({ key, label }) => {
+                            const answer = key === "q1" ? sel.q1 : key === "q4" ? sel.q4 : sel.review?.[key];
+                            if (!answer) return null;
+                            return (
+                              <div key={key} className="flex flex-col gap-1.5">
+                                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: aTblDim }}>{label}</p>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: aTblText }}>{answer}</p>
+                              </div>
+                            );
+                          })}
+
+                          {/* Submitted date */}
+                          {sel.review.created_at && (
+                            <p className="text-xs" style={{ color: aTblDim }}>Submitted {fmtDate(sel.review.created_at)}</p>
+                          )}
+
+                          {/* Remarks (evolve admin) */}
+                          {isEvolveAdmin && (
+                            <div className="flex flex-col gap-2">
+                              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: aTblDim }}>remark for faculty</p>
+                              <textarea
+                                value={panelRemarks}
+                                onChange={e => setPanelRemarks(e.target.value)}
+                                placeholder="what would you like to tell the faculty about this student?"
+                                rows={3}
+                                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none border resize-none"
+                                style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}
+                              />
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={savePanelRemarks}
+                                  disabled={panelRemarksSaving}
+                                  className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-opacity disabled:opacity-50"
+                                  style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
+                                >{panelRemarksSaving ? "saving…" : "save remark"}</button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* Report upload (evolve admin) */}
+                      {isEvolveAdmin && sel.review && (
+                        <div className="border-t pt-4 mt-1" style={{ borderColor: aTblBorder }}>
+                          {sel.review.review_report_url ? (
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-bold" style={{ color: "#34d399" }}>report uploaded</span>
+                              <a href={sel.review.review_report_url} target="_blank" rel="noreferrer"
+                                className="text-xs underline" style={{ color: "#60a5fa" }}>view pdf</a>
+                            </div>
+                          ) : (
+                            <ReviewUploadCell review={sel.review} onDone={(id, url, rm) => {
+                              handleReportDone(id, url, rm);
+                              setSelectedStudent(prev => prev ? { ...prev, review: { ...prev.review, review_report_url: url, remarks: rm } } : null);
+                            }} />
+                          )}
+                        </div>
+                      )}
+
+                      {/* View report (non-evolve admin) */}
+                      {!isEvolveAdmin && sel.review?.review_report_url && (
+                        <div className="border-t pt-4 mt-1" style={{ borderColor: aTblBorder }}>
+                          <a href={sel.review.review_report_url} target="_blank" rel="noreferrer"
+                            className="text-xs font-semibold underline" style={{ color: "#60a5fa" }}>view report pdf</a>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           );
         })()}
@@ -2444,11 +2726,20 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               (f.anu_email || "").toLowerCase().includes(srch);
           });
           return (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
+              {!isFaculty && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setAddModal("faculty"); setAddForm({}); setAddMsg(""); }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
+                  >+ add faculty</button>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="search faculty…"
-                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  className="flex-1 max-w-sm px-3 py-2 rounded-lg text-sm outline-none"
                   style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }} />
                 <span className="text-xs" style={{ color: aTblDim }}>{filtered.length} faculty</span>
               </div>
@@ -2456,7 +2747,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {["name", "email", "designation", "program", "stream", "invited"].map(h => (
+                      {["name", "email", "designation", "program", "stream", "invited", ...(isEvolveAdmin ? [""] : [])].map(h => (
                         <th key={h} className="px-4 py-3 text-left font-semibold"
                           style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
@@ -2464,12 +2755,15 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   </thead>
                   <tbody>
                     {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no faculty found</td>
-                      </tr>
+                      <tr><td colSpan={isEvolveAdmin ? 7 : 6} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no faculty found</td></tr>
                     )}
-                    {filtered.map((f, i) => (
-                      <tr key={f.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
+                    {filtered.map((f) => (
+                      <tr key={f.id}
+                        className="transition-colors"
+                        style={{ borderBottom: `1px solid ${aTblRowBrd}` }}
+                        onMouseEnter={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.03)" : "#f8fafc"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = ""; }}
+                      >
                         <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
                           {[f.first_name, f.last_name].filter(Boolean).join(" ") || "—"}
                         </td>
@@ -2478,10 +2772,25 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.program || "—"}</td>
                         <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{f.stream || "—"}</td>
                         <td className="px-4 py-3 text-xs">
-                          {f.invite_sent_at
-                            ? <span style={{ color: "#34d399" }}>yes</span>
-                            : <span style={{ color: aTblDim }}>—</span>}
+                          {f.invite_sent_at ? <span style={{ color: "#34d399" }}>yes</span> : <span style={{ color: aTblDim }}>—</span>}
                         </td>
+                        {isEvolveAdmin && (
+                          <td className="px-2 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {!f.invite_sent_at && (
+                                <button onClick={() => sendSingleInvite("faculty", f)}
+                                  className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
+                                  style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>invite</button>
+                              )}
+                              <button onClick={() => setEditEntry({ type: "faculty", id: f.id, first_name: f.first_name || "", last_name: f.last_name || "", designation: f.designation || "", program: f.program || "", stream: f.stream || "" })}
+                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                style={{ color: aTblDim }}>✏</button>
+                              <button onClick={() => setDeleteConfirm({ type: "faculty", entry: f })}
+                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                style={{ color: "#f87171" }}>✕</button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -2510,11 +2819,20 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               (a.anu_email || "").toLowerCase().includes(srch);
           });
           return (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
+              {!isFaculty && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setAddModal("admin"); setAddForm({}); setAddMsg(""); }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
+                  >+ add university admin</button>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="search admins…"
-                  className="flex-1 max-w-sm px-4 py-2 rounded-lg text-sm outline-none"
+                  className="flex-1 max-w-sm px-3 py-2 rounded-lg text-sm outline-none"
                   style={{ background: aInpBg, border: `1px solid ${aInpBord}`, color: aInpText }} />
                 <span className="text-xs" style={{ color: aTblDim }}>{filtered.length} admins</span>
               </div>
@@ -2522,7 +2840,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {["name", "email", "designation", "invited"].map(h => (
+                      {["name", "email", "designation", "invited", ...(isEvolveAdmin ? [""] : [])].map(h => (
                         <th key={h} className="px-4 py-3 text-left font-semibold"
                           style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
@@ -2530,22 +2848,40 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   </thead>
                   <tbody>
                     {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no admins found</td>
-                      </tr>
+                      <tr><td colSpan={isEvolveAdmin ? 5 : 4} className="px-4 py-8 text-center" style={{ color: aTblDim }}>no admins found</td></tr>
                     )}
-                    {filtered.map((a, i) => (
-                      <tr key={a.id} style={{ borderBottom: `1px solid ${aTblRowBrd}`, background: i % 2 === 0 ? aTblRowEven : aTblRowOdd }}>
+                    {filtered.map((a) => (
+                      <tr key={a.id}
+                        className="transition-colors"
+                        style={{ borderBottom: `1px solid ${aTblRowBrd}` }}
+                        onMouseEnter={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.03)" : "#f8fafc"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = ""; }}
+                      >
                         <td className="px-4 py-3 font-semibold" style={{ color: aTblText }}>
                           {[a.first_name, a.last_name].filter(Boolean).join(" ") || "—"}
                         </td>
                         <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{a.anu_email || "—"}</td>
                         <td className="px-4 py-3 text-xs" style={{ color: aTblMuted }}>{a.designation || "—"}</td>
                         <td className="px-4 py-3 text-xs">
-                          {a.invite_sent_at
-                            ? <span style={{ color: "#34d399" }}>yes</span>
-                            : <span style={{ color: aTblDim }}>—</span>}
+                          {a.invite_sent_at ? <span style={{ color: "#34d399" }}>yes</span> : <span style={{ color: aTblDim }}>—</span>}
                         </td>
+                        {isEvolveAdmin && (
+                          <td className="px-2 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {!a.invite_sent_at && (
+                                <button onClick={() => sendSingleInvite("admin", a)}
+                                  className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
+                                  style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>invite</button>
+                              )}
+                              <button onClick={() => setEditEntry({ type: "admin", id: a.id, first_name: a.first_name || "", last_name: a.last_name || "", designation: a.designation || "" })}
+                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                style={{ color: aTblDim }}>✏</button>
+                              <button onClick={() => setDeleteConfirm({ type: "admin", entry: a })}
+                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
+                                style={{ color: "#f87171" }}>✕</button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -2554,14 +2890,6 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </div>
           );
         })()}
-
-        {/* ══════════════════════════════════════════════════════════════
-            MANAGE TAB (anant — evolve admin only)
-            Full people management: add students / faculty / admins via CSV or form
-        ══════════════════════════════════════════════════════════════ */}
-        {activeTab === "manage" && isAnantAdmin && isEvolveAdmin && (
-          <AnantPeopleManager dark={dark} readOnly={false} />
-        )}
 
         {/* ══════════════════════════════════════════════════════════════
             MENTORSHIP PORTFOLIOS TAB
@@ -3624,6 +3952,126 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         )}
 
       </div>
+
+      {/* ── Add modal ── */}
+      {addModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setAddModal(null)}
+        >
+          <div className="w-full max-w-md rounded-2xl border p-6 flex flex-col gap-4"
+            style={{ background: dark ? "#060c17" : "#fff", borderColor: "#1e3a5f" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>
+                Add {addModal === "student" ? "student" : addModal === "faculty" ? "faculty member" : "university admin"}
+              </h2>
+              <button onClick={() => setAddModal(null)} style={{ color: "#64748b" }}>✕</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {[
+                { key: "first_name", label: "First name" },
+                { key: "last_name",  label: "Last name" },
+                { key: "anu_email",  label: "Email (ANU)", type: "email" },
+                ...(addModal !== "admin" ? [{ key: "designation", label: "Designation" }] : [{ key: "designation", label: "Designation" }]),
+                ...(addModal === "student" || addModal === "faculty" ? [
+                  { key: "program", label: "Program (BDes / BArch)" },
+                  { key: "stream",  label: "Stream" },
+                ] : []),
+                ...(addModal === "student" ? [{ key: "year", label: "Year (3 / 4)" }] : []),
+              ].map(({ key, label, type }) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold" style={{ color: dark ? "rgba(255,255,255,0.5)" : "#64748b" }}>{label}</label>
+                  <input
+                    type={type || "text"}
+                    value={addForm[key] || ""}
+                    onChange={e => setAddForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="px-3 py-2 rounded-lg text-sm outline-none border"
+                    style={{ background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", borderColor: dark ? "#1e3a5f" : "#cbd5e1", color: dark ? "#fff" : "#0f172a" }}
+                  />
+                </div>
+              ))}
+            </div>
+            {addMsg && <p className="text-red-400 text-xs">{addMsg}</p>}
+            <div className="flex justify-end gap-2 mt-1">
+              <button onClick={() => setAddModal(null)}
+                className="text-sm px-4 py-2 rounded-lg" style={{ color: "#64748b" }}>cancel</button>
+              <button onClick={handleAddSubmit} disabled={addLoading || !addForm.anu_email}
+                className="text-sm font-semibold px-4 py-2 rounded-lg transition-opacity disabled:opacity-40"
+                style={{ background: "#2563eb", color: "#fff" }}>
+                {addLoading ? "saving…" : "add & invite"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit modal ── */}
+      {editEntry && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setEditEntry(null)}
+        >
+          <div className="w-full max-w-md rounded-2xl border p-6 flex flex-col gap-4"
+            style={{ background: dark ? "#060c17" : "#fff", borderColor: "#1e3a5f" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>Edit entry</h2>
+              <button onClick={() => setEditEntry(null)} style={{ color: "#64748b" }}>✕</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {Object.entries(editEntry)
+                .filter(([k]) => !["type", "id"].includes(k))
+                .map(([key, val]) => (
+                  <div key={key} className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold" style={{ color: dark ? "rgba(255,255,255,0.5)" : "#64748b" }}>{key.replace(/_/g, " ")}</label>
+                    <input
+                      value={val}
+                      onChange={e => setEditEntry(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="px-3 py-2 rounded-lg text-sm outline-none border"
+                      style={{ background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", borderColor: dark ? "#1e3a5f" : "#cbd5e1", color: dark ? "#fff" : "#0f172a" }}
+                    />
+                  </div>
+                ))
+              }
+            </div>
+            <div className="flex justify-end gap-2 mt-1">
+              <button onClick={() => setEditEntry(null)}
+                className="text-sm px-4 py-2 rounded-lg" style={{ color: "#64748b" }}>cancel</button>
+              <button onClick={handleEditSave}
+                className="text-sm font-semibold px-4 py-2 rounded-lg"
+                style={{ background: "#2563eb", color: "#fff" }}>save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete confirm ── */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div className="w-full max-w-sm rounded-2xl border p-6 flex flex-col gap-4"
+            style={{ background: dark ? "#060c17" : "#fff", borderColor: "#1e3a5f" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>Delete entry?</h2>
+            <p className="text-sm" style={{ color: dark ? "rgba(255,255,255,0.6)" : "#64748b" }}>
+              This will permanently remove <strong>{[deleteConfirm.entry.first_name, deleteConfirm.entry.last_name].filter(Boolean).join(" ") || deleteConfirm.entry.anu_email}</strong> from the database.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="text-sm px-4 py-2 rounded-lg" style={{ color: "#64748b" }}>cancel</button>
+              <button onClick={handleDelete}
+                className="text-sm font-semibold px-4 py-2 rounded-lg"
+                style={{ background: "#ef4444", color: "#fff" }}>delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
