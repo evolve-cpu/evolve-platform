@@ -1036,7 +1036,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     if (!addModal || !addForm.anu_email) return;
     setAddLoading(true); setAddMsg("");
     const table = addModal === "student" ? "anu_students" : addModal === "faculty" ? "anu_faculty" : "anu_admins";
-    const { error } = await supabaseAdmin.from(table).insert({ ...addForm, tenant_id: "anant" });
+    const { error } = await supabaseAdmin.from(table).insert(addForm);
     if (error) { setAddMsg(error.message); setAddLoading(false); return; }
     await fetchAll(true);
     setAddModal(null); setAddForm({}); setAddLoading(false);
@@ -1089,6 +1089,29 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     if (type === "student") setAnuStudents(prev => prev.map(s => s.id === entry.id ? { ...s, invite_sent_at: new Date().toISOString() } : s));
     else if (type === "faculty") setAnuFacultyData(prev => prev ? prev.map(f => f.id === entry.id ? { ...f, invite_sent_at: new Date().toISOString() } : f) : prev);
     else setAnuAdminsData(prev => prev ? prev.map(a => a.id === entry.id ? { ...a, invite_sent_at: new Date().toISOString() } : a) : prev);
+  }
+
+  function handleEntityCSVUpload(e, entityType) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const table = entityType === "faculty" ? "anu_faculty" : entityType === "admin" ? "anu_admins" : "anu_students";
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const raw = ev.target.result;
+      const lines = raw.trim().split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return;
+      const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g, "_"));
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(",").map(v => v.trim());
+        const row = {};
+        headers.forEach((h, i) => { row[h] = vals[i] ?? ""; });
+        return row;
+      });
+      await supabaseAdmin.from(table).upsert(rows, { onConflict: "anu_email" });
+      await fetchAll(true);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   }
 
   /* ─────────────────────────────────────────────────────────────────────
@@ -2384,27 +2407,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             for (const s of uninvited) await sendSingleInvite("student", s);
           }
 
-          function handleCSVUpload(e) {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-              const raw = ev.target.result;
-              const lines = raw.trim().split(/\r?\n/).filter(Boolean);
-              if (!lines.length) return;
-              const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g, "_"));
-              const rows = lines.slice(1).map(line => {
-                const vals = line.split(",").map(v => v.trim());
-                const row = { tenant_id: "anant" };
-                headers.forEach((h, i) => { row[h] = vals[i] ?? ""; });
-                return row;
-              });
-              await supabaseAdmin.from("anu_students").upsert(rows, { onConflict: "anu_email" });
-              await fetchAll(true);
-            };
-            reader.readAsText(file);
-            e.target.value = "";
-          }
+          function handleCSVUpload(e) { handleEntityCSVUpload(e, "student"); }
 
           const QA_QUESTIONS = [
             { key: "q1",            label: "The hardest part about putting your portfolio together?" },
@@ -2496,8 +2499,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         className="px-3 py-2 rounded-lg text-sm outline-none border"
                         style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
                         <option value="">select year</option>
-                        <option value="3">year 3</option>
-                        <option value="4">year 4</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                       </select>
                     </div>
                   </div>
@@ -2672,30 +2675,34 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         </div>
                       ) : (
                         <>
-                          {/* Links row */}
-                          <div className="flex items-center gap-3 flex-wrap">
-                            {sel.review.portfolio_link && (
-                              <a href={sel.review.portfolio_link} target="_blank" rel="noreferrer"
-                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>portfolio</a>
-                            )}
-                            {sel.review.portfolio_file_url && (
-                              <a href={sel.review.portfolio_file_url} target="_blank" rel="noreferrer"
-                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>resume</a>
-                            )}
-                            {sel.review.meet_recording_url ? (
-                              <a href={sel.review.meet_recording_url} target="_blank" rel="noreferrer"
-                                className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>meet recording</a>
-                            ) : isEvolveAdmin ? (
-                              <button
-                                onClick={() => setShowMeetRecInput(v => !v)}
-                                className="text-xs font-semibold"
-                                style={{ color: aTblDim }}
-                              >+ add recording</button>
-                            ) : null}
+                          {/* Links row — left: portfolio/resume/recording · right: view report button */}
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {sel.review.portfolio_link && (
+                                <a href={sel.review.portfolio_link} target="_blank" rel="noreferrer"
+                                  className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>portfolio</a>
+                              )}
+                              {sel.review.portfolio_file_url && (
+                                <a href={sel.review.portfolio_file_url} target="_blank" rel="noreferrer"
+                                  className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>resume</a>
+                              )}
+                              {sel.review.meet_recording_url ? (
+                                <a href={sel.review.meet_recording_url} target="_blank" rel="noreferrer"
+                                  className="text-xs font-semibold underline underline-offset-2" style={{ color: "#60a5fa" }}>meet recording</a>
+                              ) : isEvolveAdmin ? (
+                                <button
+                                  onClick={() => setShowMeetRecInput(v => !v)}
+                                  className="text-xs font-semibold"
+                                  style={{ color: aTblDim }}
+                                >+ add recording</button>
+                              ) : null}
+                            </div>
                             {sel.review.review_report_url && (
                               <a href={sel.review.review_report_url} target="_blank" rel="noreferrer"
-                                className="text-xs font-bold underline underline-offset-2"
-                                style={{ color: "#34d399" }}>view report</a>
+                                className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+                                style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>
+                                view report ↗
+                              </a>
                             )}
                           </div>
 
@@ -2779,13 +2786,6 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         </div>
                       )}
 
-                      {/* View report (non-evolve admin) */}
-                      {!isEvolveAdmin && sel.review?.review_report_url && (
-                        <div className="border-t pt-4 mt-1" style={{ borderColor: aTblBorder }}>
-                          <a href={sel.review.review_report_url} target="_blank" rel="noreferrer"
-                            className="text-xs font-semibold underline" style={{ color: "#60a5fa" }}>view report pdf</a>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -2822,6 +2822,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                     style={{ borderColor: addModal === "faculty" ? "#2563eb" : aTblBorder, color: addModal === "faculty" ? "#60a5fa" : aTblMuted, background: aInpBg }}
                   >{addModal === "faculty" ? "× cancel" : "+ add faculty"}</button>
+                  <label className="cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}>
+                    ↑ upload CSV
+                    <input type="file" accept=".csv" className="hidden" onChange={e => handleEntityCSVUpload(e, "faculty")} />
+                  </label>
                 </div>
               )}
 
@@ -2988,6 +2993,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                     style={{ borderColor: addModal === "admin" ? "#2563eb" : aTblBorder, color: addModal === "admin" ? "#60a5fa" : aTblMuted, background: aInpBg }}
                   >{addModal === "admin" ? "× cancel" : "+ add university admin"}</button>
+                  <label className="cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}>
+                    ↑ upload CSV
+                    <input type="file" accept=".csv" className="hidden" onChange={e => handleEntityCSVUpload(e, "admin")} />
+                  </label>
                 </div>
               )}
 
@@ -4219,8 +4229,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         <select value={String(val)} onChange={e => setEditEntry(prev => ({ ...prev, year: e.target.value }))}
                           className="px-3 py-2 rounded-lg text-sm outline-none border" style={inpStyle}>
                           <option value="">select</option>
-                          <option value="3">year 3</option>
-                          <option value="4">year 4</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
                         </select>
                       </div>
                     );
