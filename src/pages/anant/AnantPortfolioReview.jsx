@@ -7,7 +7,7 @@ import { useAnantTheme } from "../../context/AnantThemeContext";
 
 const CALENDLY_URL =
   import.meta.env.VITE_CALENDLY_URL ||
-  "https://calendly.com/sonam-evolvedesign/30min";
+  "https://calendly.com/content-evolvedesign/30min";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
@@ -748,7 +748,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
   // ── Profile menu click-outside ───────────────────────────────────────────────
   useEffect(() => {
     if (!showMenu) return;
-    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setShowMenu(false);
+    };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showMenu]);
@@ -1019,7 +1022,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
             <button
               onClick={() => setShowMenu((v) => !v)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl border"
-              style={{ borderColor: "#1e3a8a", background: showMenu ? "rgba(37,99,235,0.15)" : "transparent" }}
+              style={{
+                borderColor: "#1e3a8a",
+                background: showMenu ? "rgba(37,99,235,0.15)" : "transparent"
+              }}
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -1027,7 +1033,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
               >
                 {studentInitial}
               </div>
-              <span className="text-sm font-semibold hidden md:block" style={{ color: "rgba(255,255,255,0.75)" }}>
+              <span
+                className="text-sm font-semibold hidden md:block"
+                style={{ color: "rgba(255,255,255,0.75)" }}
+              >
                 {studentName}
               </span>
             </button>
@@ -1038,7 +1047,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
               >
                 <div className="p-2 flex flex-col gap-0.5">
                   <button
-                    onClick={() => { navigate("/profile"); setShowMenu(false); }}
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowMenu(false);
+                    }}
                     className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold hover:bg-white/5"
                     style={{ color: "#93c5fd" }}
                   >
@@ -1161,7 +1173,12 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   >
                     let's get to know you <span>({currentQ + 1}/4)</span>
                     {currentQ === QUESTIONS.length - 1 && (
-                      <span className="ml-2 normal-case font-normal" style={{ color: mutedCol, opacity: 0.7 }}>· optional</span>
+                      <span
+                        className="ml-2 normal-case font-normal"
+                        style={{ color: mutedCol, opacity: 0.7 }}
+                      >
+                        · optional
+                      </span>
                     )}
                   </p>
 
@@ -1236,7 +1253,11 @@ export default function AnantPortfolioReview({ session, studentData }) {
                         onClick={skipQ4}
                         disabled={saving}
                         className="px-5 py-2.5 rounded-xl text-sm font-semibold border disabled:opacity-40"
-                        style={{ borderColor: inputBorder, background: inputBg, color: mutedCol }}
+                        style={{
+                          borderColor: inputBorder,
+                          background: inputBg,
+                          color: mutedCol
+                        }}
                       >
                         skip
                       </button>
