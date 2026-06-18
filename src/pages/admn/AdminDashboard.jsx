@@ -1486,7 +1486,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
   const TABS = isAnantAdmin ? ANANT_TABS : ALL_TABS;
 
   /* ── anant admin theme helpers ── */
-  const aBg = dark ? "#060c17" : "#f5f3ff";
+  const aBg = dark ? "#060c17" : "#f8fafc";
   const aColor = dark ? "#ffffff" : "#0f172a";
   const aHdrBg = "#060c17"; // always dark — matches all Anant pages
   const aHdrBord = "#0d1f3c"; // always dark border
@@ -1496,26 +1496,26 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
   const aBtnClr = dark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.6)";
   const aTabBord = dark ? "#0d1f3c" : "#e2e8f0";
   /* ── anant reviews table theme ── */
-  const aTblBorder = dark ? "#0d1f3c" : "#e0e7ff";
-  const aTblHdrBg = dark ? "#071022" : "#eef2ff";
-  const aTblHdrTxt = dark ? "#475569" : "#6366f1";
+  const aTblBorder = dark ? "#0d1f3c" : "#dbeafe";
+  const aTblHdrBg = dark ? "#071022" : "#eff6ff";
+  const aTblHdrTxt = dark ? "#475569" : "#64748b";
   const aTblRowEven = dark ? "#060c17" : "#ffffff";
   const aTblRowOdd = dark ? "#04080f" : "#f8fafc";
-  const aTblRowBrd = dark ? "#0d1f3c" : "#e0e7ff";
+  const aTblRowBrd = dark ? "#0d1f3c" : "#dbeafe";
   const aTblText = dark ? "#ffffff" : "#0f172a";
   const aTblMuted = dark ? "#94a3b8" : "#475569";
   const aTblDim = dark ? "#475569" : "#94a3b8";
   const aInpBg = dark ? "#071022" : "#f1f5f9";
-  const aInpBord = dark ? "#1e3a5f" : "#c7d2fe";
+  const aInpBord = dark ? "#1e3a5f" : "#bfdbfe";
   const aInpText = dark ? "#ffffff" : "#0f172a";
-  const aCsvBg = dark ? "#111827" : "#1e1b4b";
+  const aCsvBg = dark ? "#111827" : "#0f172a";
   const aCsvText = Y;
-  /* ── management button style (light = blue-tinted, dark = subtle) ── */
-  const aMgmtBg = dark ? aInpBg : "rgba(99,102,241,0.08)";
-  const aMgmtBord = dark ? aTblBorder : "rgba(99,102,241,0.3)";
-  const aMgmtClr = dark ? aTblMuted : "#4f46e5";
+  /* ── management button style (light = blue, dark = subtle) ── */
+  const aMgmtBg = dark ? aInpBg : "rgba(37,99,235,0.07)";
+  const aMgmtBord = dark ? aTblBorder : "rgba(37,99,235,0.25)";
+  const aMgmtClr = dark ? aTblMuted : "#2563eb";
   /* ── table row hover ── */
-  const aRowHover = dark ? "rgba(255,255,255,0.03)" : "#ede9fe";
+  const aRowHover = dark ? "rgba(255,255,255,0.03)" : "#eff6ff";
 
   return (
     <div
@@ -2975,10 +2975,10 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     e.stopPropagation();
                     toggleSort(field);
                   }}
-                  className="ml-1 text-[10px] leading-none"
+                  className="ml-1.5 text-xs leading-none font-bold"
                   style={{
-                    color: active ? "#60a5fa" : aTblDim,
-                    opacity: active ? 1 : 0.5
+                    color: active ? "#2563eb" : dark ? "#475569" : "#94a3b8",
+                    opacity: active ? 1 : 0.7
                   }}
                 >
                   {active && sortDir === "desc" ? "↓" : "↑"}
@@ -3086,12 +3086,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                       style={{
                         borderColor:
-                          addModal === "student" ? "#6366f1" : aMgmtBord,
+                          addModal === "student" ? "#2563eb" : aMgmtBord,
                         color:
                           addModal === "student"
                             ? dark
-                              ? "#818cf8"
-                              : "#4f46e5"
+                              ? "#60a5fa"
+                              : "#1d4ed8"
                             : aMgmtClr,
                         background: aMgmtBg
                       }}
@@ -3121,9 +3121,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         style={{
                           background: dark
                             ? "rgba(37,99,235,0.15)"
-                            : "rgba(79,70,229,0.12)",
-                          color: dark ? "#60a5fa" : "#4f46e5",
-                          border: `1px solid ${dark ? "rgba(37,99,235,0.3)" : "rgba(79,70,229,0.3)"}`
+                            : "rgba(37,99,235,0.1)",
+                          color: dark ? "#60a5fa" : "#1d4ed8",
+                          border: `1px solid ${dark ? "rgba(37,99,235,0.3)" : "rgba(37,99,235,0.25)"}`
                         }}
                       >
                         → send invites to all pending ({uninvitedCount})
@@ -3138,7 +3138,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     className="rounded-xl border p-5 flex flex-col gap-4"
                     style={{
                       borderColor: aTblBorder,
-                      background: dark ? "#04080f" : "#f5f3ff"
+                      background: dark ? "#04080f" : "#ffffff"
                     }}
                   >
                     <p
@@ -3536,8 +3536,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   borderBottom: `1px solid ${aTblRowBrd}`,
                                   background: isSelected
                                     ? dark
-                                      ? "rgba(99,102,241,0.12)"
-                                      : "#ede9fe"
+                                      ? "rgba(37,99,235,0.12)"
+                                      : "#dbeafe"
                                     : undefined
                                 }}
                                 onMouseEnter={(e) => {
@@ -3685,7 +3685,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       className="flex flex-col md:w-[48%] rounded-xl border overflow-hidden"
                       style={{
                         borderColor: aTblBorder,
-                        background: dark ? "#04080f" : "#faf9ff",
+                        background: dark ? "#04080f" : "#ffffff",
                         maxHeight: "calc(100vh - 220px)"
                       }}
                     >
@@ -3693,7 +3693,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       <div
                         className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 py-4 border-b shrink-0"
                         style={{
-                          background: dark ? "#060c17" : "#ede9fe",
+                          background: dark ? "#060c17" : "#eff6ff",
                           borderColor: aTblBorder
                         }}
                       >
@@ -4029,12 +4029,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                       style={{
                         borderColor:
-                          addModal === "faculty" ? "#6366f1" : aMgmtBord,
+                          addModal === "faculty" ? "#2563eb" : aMgmtBord,
                         color:
                           addModal === "faculty"
                             ? dark
-                              ? "#818cf8"
-                              : "#4f46e5"
+                              ? "#60a5fa"
+                              : "#1d4ed8"
                             : aMgmtClr,
                         background: aMgmtBg
                       }}
@@ -4066,7 +4066,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     className="rounded-xl border p-5 flex flex-col gap-4"
                     style={{
                       borderColor: aTblBorder,
-                      background: dark ? "#04080f" : "#f5f3ff"
+                      background: dark ? "#04080f" : "#ffffff"
                     }}
                   >
                     <p
@@ -4515,12 +4515,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                       style={{
                         borderColor:
-                          addModal === "admin" ? "#6366f1" : aMgmtBord,
+                          addModal === "admin" ? "#2563eb" : aMgmtBord,
                         color:
                           addModal === "admin"
                             ? dark
-                              ? "#818cf8"
-                              : "#4f46e5"
+                              ? "#60a5fa"
+                              : "#1d4ed8"
                             : aMgmtClr,
                         background: aMgmtBg
                       }}
@@ -4554,7 +4554,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     className="rounded-xl border p-5 flex flex-col gap-4"
                     style={{
                       borderColor: aTblBorder,
-                      background: dark ? "#04080f" : "#f5f3ff"
+                      background: dark ? "#04080f" : "#ffffff"
                     }}
                   >
                     <p
