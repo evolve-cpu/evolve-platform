@@ -575,7 +575,7 @@ export default function AdminDashboard() {
   const [filterYear, setFilterYear] = useState("all");
   const [sortField, setSortField] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
-  const [addModal, setAddModal] = useState(null); // "student"|"faculty"|"admin"|null
+  const [addModal, setAddModal] = useState(null); // "student"|"faculty"|"admin"|null — now drives INLINE form, not a modal overlay
   const [addForm, setAddForm] = useState({});
   const [addLoading, setAddLoading] = useState(false);
   const [addMsg, setAddMsg] = useState("");
@@ -1074,7 +1074,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
   async function saveMeetRecording() {
     if (!selectedStudent?.review) return;
-    await supabaseAdmin.from("portfolio_reviews").update({ meet_recording_url: meetRecInput }).eq("id", selectedStudent.review.id);
+    const { error } = await supabaseAdmin.from("portfolio_reviews").update({ meet_recording_url: meetRecInput }).eq("id", selectedStudent.review.id);
+    if (error) { console.error("saveMeetRecording:", error.message); return; }
     setPortfolioReviews(prev => prev.map(r => r.id === selectedStudent.review.id ? { ...r, meet_recording_url: meetRecInput } : r));
     setSelectedStudent(prev => prev ? { ...prev, review: { ...prev.review, meet_recording_url: meetRecInput } } : null);
     setShowMeetRecInput(false);
@@ -2369,8 +2370,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             if (!s.review || st === "draft") return { label: "onboarding", clr: "rgba(167,139,250,0.12)", txt: "#a78bfa" };
             if (st === "pending")            return { label: "portfolio submitted", clr: "rgba(96,165,250,0.12)", txt: "#60a5fa" };
             if (st === "share")              return { label: "call booked", clr: "rgba(52,211,153,0.1)", txt: "#34d399" };
+            // check report URL FIRST so "done" with report_url shows "report ready", not "review in progress"
+            if (s.review?.review_report_url || st === "report") return { label: "report ready", clr: "rgba(52,211,153,0.15)", txt: "#34d399" };
             if (st === "in_review" || st === "done") return { label: "review in progress", clr: "rgba(251,146,60,0.12)", txt: "#fb923c" };
-            if (st === "report" || s.review?.review_report_url) return { label: "report ready", clr: "rgba(52,211,153,0.15)", txt: "#34d399" };
             return { label: st || "—", clr: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", txt: "#94a3b8" };
           }
 
@@ -2416,18 +2418,18 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               {/* ── Management buttons (evolve + uni admin, not faculty) ── */}
               {!isFaculty && (
                 <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setAddModal(addModal === "student" ? null : "student"); setAddForm({}); setAddMsg(""); }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: addModal === "student" ? "#2563eb" : aTblBorder, color: addModal === "student" ? "#60a5fa" : aTblMuted, background: aInpBg }}
+                  >
+                    {addModal === "student" ? "× cancel" : "+ add one"}
+                  </button>
                   <label className="cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
                     style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}>
-                    <span>↑</span> upload CSV
+                    ↑ upload CSV
                     <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
                   </label>
-                  <button
-                    onClick={() => { setAddModal("student"); setAddForm({}); setAddMsg(""); }}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
-                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
-                  >
-                    + add one
-                  </button>
                   {isEvolveAdmin && uninvitedCount > 0 && (
                     <button
                       onClick={bulkSendInvites}
@@ -2437,6 +2439,78 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       → send invites to all pending ({uninvitedCount})
                     </button>
                   )}
+                </div>
+              )}
+
+              {/* ── Inline add student form ── */}
+              {addModal === "student" && !isFaculty && (
+                <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: aTblBorder, background: dark ? "#04080f" : "#fff" }}>
+                  <p className="font-semibold text-sm" style={{ color: aTblText }}>add student</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>first name</label>
+                      <input value={addForm.first_name || ""} onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>last name</label>
+                      <input value={addForm.last_name || ""} onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>anu email *</label>
+                      <input type="email" value={addForm.anu_email || ""} onChange={e => setAddForm(f => ({ ...f, anu_email: e.target.value }))}
+                        placeholder="student@anu.edu.in"
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>program</label>
+                      <select value={addForm.program || ""} onChange={e => setAddForm(f => ({ ...f, program: e.target.value, stream: e.target.value === "BArch" ? "Architecture" : "" }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                        <option value="">select program</option>
+                        <option value="BDes">BDes</option>
+                        <option value="BArch">BArch</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>stream</label>
+                      {addForm.program === "BArch" ? (
+                        <input value="Architecture" disabled className="px-3 py-2 rounded-lg text-sm outline-none border opacity-60"
+                          style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                      ) : (
+                        <select value={addForm.stream || ""} onChange={e => setAddForm(f => ({ ...f, stream: e.target.value }))}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border"
+                          style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                          <option value="">select stream</option>
+                          {(ANU_STREAMS[addForm.program] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>year</label>
+                      <select value={String(addForm.year || "")} onChange={e => setAddForm(f => ({ ...f, year: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                        <option value="">select year</option>
+                        <option value="3">year 3</option>
+                        <option value="4">year 4</option>
+                      </select>
+                    </div>
+                  </div>
+                  {addMsg && <p className="text-red-400 text-xs">{addMsg}</p>}
+                  <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => { setAddModal(null); setAddForm({}); setAddMsg(""); }}
+                      className="text-sm px-4 py-2 rounded-lg" style={{ color: aTblDim }}>cancel</button>
+                    <button onClick={handleAddSubmit} disabled={addLoading || !addForm.anu_email}
+                      className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
+                      style={{ background: "#2563eb", color: "#fff" }}>
+                      {addLoading ? "saving…" : "add & invite"}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -2496,7 +2570,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             year <SortBtn field="year" />
                           </th>
                           <th className="px-4 py-3 text-left font-semibold" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>status</th>
-                          {isEvolveAdmin && <th className="px-2 py-3" style={{ color: aTblHdrTxt }}></th>}
+                          {isEvolveAdmin && <th className="px-4 py-3 text-left font-semibold text-[11px]" style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>edit / delete</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -2540,16 +2614,20 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                     )}
                                     <button
                                       onClick={() => setEditEntry({ type: "student", id: s.id, first_name: s.first_name || "", last_name: s.last_name || "", program: s.program || "", stream: s.stream || "", year: String(s.year || "") })}
-                                      className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                      style={{ color: aTblDim, background: "transparent" }}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
                                       title="edit"
-                                    >✏</button>
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
                                     <button
                                       onClick={() => setDeleteConfirm({ type: "student", entry: s })}
-                                      className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                      style={{ color: "#f87171", background: "transparent" }}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }}
                                       title="delete"
-                                    >✕</button>
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </button>
                                   </div>
                                 </td>
                               )}
@@ -2614,6 +2692,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                 style={{ color: aTblDim }}
                               >+ add recording</button>
                             ) : null}
+                            {sel.review.review_report_url && (
+                              <a href={sel.review.review_report_url} target="_blank" rel="noreferrer"
+                                className="text-xs font-bold underline underline-offset-2"
+                                style={{ color: "#34d399" }}>view report</a>
+                            )}
                           </div>
 
                           {/* Recording input (evolve admin) */}
@@ -2648,8 +2731,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             <p className="text-xs" style={{ color: aTblDim }}>Submitted {fmtDate(sel.review.created_at)}</p>
                           )}
 
-                          {/* Remarks (evolve admin) */}
-                          {isEvolveAdmin && (
+                          {/* Remarks — editable for evolve admin, read-only for faculty/uni admin */}
+                          {isEvolveAdmin ? (
                             <div className="flex flex-col gap-2">
                               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: aTblDim }}>remark for faculty</p>
                               <textarea
@@ -2669,7 +2752,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                 >{panelRemarksSaving ? "saving…" : "save remark"}</button>
                               </div>
                             </div>
-                          )}
+                          ) : sel.review?.remarks ? (
+                            <div className="flex flex-col gap-1.5">
+                              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: aTblDim }}>evolve remark</p>
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: aTblText }}>{sel.review.remarks}</p>
+                            </div>
+                          ) : null}
                         </>
                       )}
 
@@ -2730,12 +2818,81 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               {!isFaculty && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => { setAddModal("faculty"); setAddForm({}); setAddMsg(""); }}
+                    onClick={() => { setAddModal(addModal === "faculty" ? null : "faculty"); setAddForm({}); setAddMsg(""); }}
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
-                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
-                  >+ add faculty</button>
+                    style={{ borderColor: addModal === "faculty" ? "#2563eb" : aTblBorder, color: addModal === "faculty" ? "#60a5fa" : aTblMuted, background: aInpBg }}
+                  >{addModal === "faculty" ? "× cancel" : "+ add faculty"}</button>
                 </div>
               )}
+
+              {/* ── Inline add faculty form ── */}
+              {addModal === "faculty" && !isFaculty && (
+                <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: aTblBorder, background: dark ? "#04080f" : "#fff" }}>
+                  <p className="font-semibold text-sm" style={{ color: aTblText }}>add faculty member</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>first name</label>
+                      <input value={addForm.first_name || ""} onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>last name</label>
+                      <input value={addForm.last_name || ""} onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>anu email *</label>
+                      <input type="email" value={addForm.anu_email || ""} onChange={e => setAddForm(f => ({ ...f, anu_email: e.target.value }))}
+                        placeholder="faculty@anu.edu.in"
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>designation</label>
+                      <input value={addForm.designation || ""} onChange={e => setAddForm(f => ({ ...f, designation: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>program</label>
+                      <select value={addForm.program || ""} onChange={e => setAddForm(f => ({ ...f, program: e.target.value, stream: e.target.value === "BArch" ? "Architecture" : "" }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                        <option value="">select program</option>
+                        <option value="BDes">BDes</option>
+                        <option value="BArch">BArch</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>stream</label>
+                      {addForm.program === "BArch" ? (
+                        <input value="Architecture" disabled className="px-3 py-2 rounded-lg text-sm outline-none border opacity-60"
+                          style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                      ) : (
+                        <select value={addForm.stream || ""} onChange={e => setAddForm(f => ({ ...f, stream: e.target.value }))}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border"
+                          style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                          <option value="">select stream</option>
+                          {(ANU_STREAMS[addForm.program] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                  {addMsg && <p className="text-red-400 text-xs">{addMsg}</p>}
+                  <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => { setAddModal(null); setAddForm({}); setAddMsg(""); }}
+                      className="text-sm px-4 py-2 rounded-lg" style={{ color: aTblDim }}>cancel</button>
+                    <button onClick={handleAddSubmit} disabled={addLoading || !addForm.anu_email}
+                      className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
+                      style={{ background: "#2563eb", color: "#fff" }}>
+                      {addLoading ? "saving…" : "add & invite"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3">
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="search faculty…"
@@ -2747,8 +2904,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {["name", "email", "designation", "program", "stream", "invited", ...(isEvolveAdmin ? [""] : [])].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                      {["name", "email", "designation", "program", "stream", "invited", ...(isEvolveAdmin ? ["edit / delete"] : [])].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold text-[11px]"
                           style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
@@ -2783,11 +2940,15 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>invite</button>
                               )}
                               <button onClick={() => setEditEntry({ type: "faculty", id: f.id, first_name: f.first_name || "", last_name: f.last_name || "", designation: f.designation || "", program: f.program || "", stream: f.stream || "" })}
-                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                style={{ color: aTblDim }}>✏</button>
+                                className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }} title="edit">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
                               <button onClick={() => setDeleteConfirm({ type: "faculty", entry: f })}
-                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                style={{ color: "#f87171" }}>✕</button>
+                                className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }} title="delete">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                              </button>
                             </div>
                           </td>
                         )}
@@ -2823,12 +2984,57 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               {!isFaculty && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => { setAddModal("admin"); setAddForm({}); setAddMsg(""); }}
+                    onClick={() => { setAddModal(addModal === "admin" ? null : "admin"); setAddForm({}); setAddMsg(""); }}
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
-                    style={{ borderColor: aTblBorder, color: aTblMuted, background: aInpBg }}
-                  >+ add university admin</button>
+                    style={{ borderColor: addModal === "admin" ? "#2563eb" : aTblBorder, color: addModal === "admin" ? "#60a5fa" : aTblMuted, background: aInpBg }}
+                  >{addModal === "admin" ? "× cancel" : "+ add university admin"}</button>
                 </div>
               )}
+
+              {/* ── Inline add university admin form ── */}
+              {addModal === "admin" && !isFaculty && (
+                <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: aTblBorder, background: dark ? "#04080f" : "#fff" }}>
+                  <p className="font-semibold text-sm" style={{ color: aTblText }}>add university admin</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>first name</label>
+                      <input value={addForm.first_name || ""} onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>last name</label>
+                      <input value={addForm.last_name || ""} onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>anu email *</label>
+                      <input type="email" value={addForm.anu_email || ""} onChange={e => setAddForm(f => ({ ...f, anu_email: e.target.value }))}
+                        placeholder="admin@anu.edu.in"
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: aTblDim }}>designation</label>
+                      <input value={addForm.designation || ""} onChange={e => setAddForm(f => ({ ...f, designation: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }} />
+                    </div>
+                  </div>
+                  {addMsg && <p className="text-red-400 text-xs">{addMsg}</p>}
+                  <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => { setAddModal(null); setAddForm({}); setAddMsg(""); }}
+                      className="text-sm px-4 py-2 rounded-lg" style={{ color: aTblDim }}>cancel</button>
+                    <button onClick={handleAddSubmit} disabled={addLoading || !addForm.anu_email}
+                      className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
+                      style={{ background: "#2563eb", color: "#fff" }}>
+                      {addLoading ? "saving…" : "add & invite"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3">
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="search admins…"
@@ -2840,8 +3046,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: aTblHdrBg, borderBottom: `1px solid ${aTblBorder}` }}>
-                      {["name", "email", "designation", "invited", ...(isEvolveAdmin ? [""] : [])].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-semibold"
+                      {["name", "email", "designation", "invited", ...(isEvolveAdmin ? ["edit / delete"] : [])].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold text-[11px]"
                           style={{ color: aTblHdrTxt, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
@@ -2874,11 +3080,15 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>invite</button>
                               )}
                               <button onClick={() => setEditEntry({ type: "admin", id: a.id, first_name: a.first_name || "", last_name: a.last_name || "", designation: a.designation || "" })}
-                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                style={{ color: aTblDim }}>✏</button>
+                                className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }} title="edit">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
                               <button onClick={() => setDeleteConfirm({ type: "admin", entry: a })}
-                                className="w-6 h-6 flex items-center justify-center rounded text-[11px]"
-                                style={{ color: "#f87171" }}>✕</button>
+                                className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }} title="delete">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                              </button>
                             </div>
                           </td>
                         )}
@@ -3953,64 +4163,10 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
       </div>
 
-      {/* ── Add modal ── */}
-      {addModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.7)" }}
-          onClick={() => setAddModal(null)}
-        >
-          <div className="w-full max-w-md rounded-2xl border p-6 flex flex-col gap-4"
-            style={{ background: dark ? "#060c17" : "#fff", borderColor: "#1e3a5f" }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>
-                Add {addModal === "student" ? "student" : addModal === "faculty" ? "faculty member" : "university admin"}
-              </h2>
-              <button onClick={() => setAddModal(null)} style={{ color: "#64748b" }}>✕</button>
-            </div>
-            <div className="flex flex-col gap-3">
-              {[
-                { key: "first_name", label: "First name" },
-                { key: "last_name",  label: "Last name" },
-                { key: "anu_email",  label: "Email (ANU)", type: "email" },
-                ...(addModal !== "admin" ? [{ key: "designation", label: "Designation" }] : [{ key: "designation", label: "Designation" }]),
-                ...(addModal === "student" || addModal === "faculty" ? [
-                  { key: "program", label: "Program (BDes / BArch)" },
-                  { key: "stream",  label: "Stream" },
-                ] : []),
-                ...(addModal === "student" ? [{ key: "year", label: "Year (3 / 4)" }] : []),
-              ].map(({ key, label, type }) => (
-                <div key={key} className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold" style={{ color: dark ? "rgba(255,255,255,0.5)" : "#64748b" }}>{label}</label>
-                  <input
-                    type={type || "text"}
-                    value={addForm[key] || ""}
-                    onChange={e => setAddForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="px-3 py-2 rounded-lg text-sm outline-none border"
-                    style={{ background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", borderColor: dark ? "#1e3a5f" : "#cbd5e1", color: dark ? "#fff" : "#0f172a" }}
-                  />
-                </div>
-              ))}
-            </div>
-            {addMsg && <p className="text-red-400 text-xs">{addMsg}</p>}
-            <div className="flex justify-end gap-2 mt-1">
-              <button onClick={() => setAddModal(null)}
-                className="text-sm px-4 py-2 rounded-lg" style={{ color: "#64748b" }}>cancel</button>
-              <button onClick={handleAddSubmit} disabled={addLoading || !addForm.anu_email}
-                className="text-sm font-semibold px-4 py-2 rounded-lg transition-opacity disabled:opacity-40"
-                style={{ background: "#2563eb", color: "#fff" }}>
-                {addLoading ? "saving…" : "add & invite"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Edit modal ── */}
       {editEntry && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.7)" }}
+          style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={() => setEditEntry(null)}
         >
           <div className="w-full max-w-md rounded-2xl border p-6 flex flex-col gap-4"
@@ -4018,23 +4174,69 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>Edit entry</h2>
+              <h2 className="font-bold text-base" style={{ color: dark ? "#fff" : "#0f172a" }}>edit entry</h2>
               <button onClick={() => setEditEntry(null)} style={{ color: "#64748b" }}>✕</button>
             </div>
             <div className="flex flex-col gap-3">
               {Object.entries(editEntry)
                 .filter(([k]) => !["type", "id"].includes(k))
-                .map(([key, val]) => (
-                  <div key={key} className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold" style={{ color: dark ? "rgba(255,255,255,0.5)" : "#64748b" }}>{key.replace(/_/g, " ")}</label>
-                    <input
-                      value={val}
-                      onChange={e => setEditEntry(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="px-3 py-2 rounded-lg text-sm outline-none border"
-                      style={{ background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", borderColor: dark ? "#1e3a5f" : "#cbd5e1", color: dark ? "#fff" : "#0f172a" }}
-                    />
-                  </div>
-                ))
+                .map(([key, val]) => {
+                  const inpStyle = { background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9", borderColor: dark ? "#1e3a5f" : "#cbd5e1", color: dark ? "#fff" : "#0f172a" };
+                  const labelStyle = { color: dark ? "rgba(255,255,255,0.5)" : "#64748b" };
+                  if (key === "program") {
+                    return (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold" style={labelStyle}>program</label>
+                        <select value={val} onChange={e => setEditEntry(prev => ({ ...prev, program: e.target.value, stream: e.target.value === "BArch" ? "Architecture" : (prev.stream || "") }))}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border" style={inpStyle}>
+                          <option value="">select</option>
+                          <option value="BDes">BDes</option>
+                          <option value="BArch">BArch</option>
+                        </select>
+                      </div>
+                    );
+                  }
+                  if (key === "stream") {
+                    return (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold" style={labelStyle}>stream</label>
+                        {editEntry.program === "BArch" ? (
+                          <input value="Architecture" disabled className="px-3 py-2 rounded-lg text-sm outline-none border opacity-60" style={inpStyle} />
+                        ) : (
+                          <select value={val} onChange={e => setEditEntry(prev => ({ ...prev, stream: e.target.value }))}
+                            className="px-3 py-2 rounded-lg text-sm outline-none border" style={inpStyle}>
+                            <option value="">select stream</option>
+                            {(ANU_STREAMS[editEntry.program] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  }
+                  if (key === "year") {
+                    return (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold" style={labelStyle}>year</label>
+                        <select value={String(val)} onChange={e => setEditEntry(prev => ({ ...prev, year: e.target.value }))}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border" style={inpStyle}>
+                          <option value="">select</option>
+                          <option value="3">year 3</option>
+                          <option value="4">year 4</option>
+                        </select>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold" style={labelStyle}>{key.replace(/_/g, " ")}</label>
+                      <input
+                        value={val}
+                        onChange={e => setEditEntry(prev => ({ ...prev, [key]: e.target.value }))}
+                        className="px-3 py-2 rounded-lg text-sm outline-none border"
+                        style={inpStyle}
+                      />
+                    </div>
+                  );
+                })
               }
             </div>
             <div className="flex justify-end gap-2 mt-1">
