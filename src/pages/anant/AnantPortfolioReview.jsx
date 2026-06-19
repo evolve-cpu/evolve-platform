@@ -10,6 +10,7 @@ const CALENDLY_URL =
   "https://calendly.com/content-evolvedesign/30min";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
+// const ANU_ORIGIN = "http://localhost:8080"; // for local dev
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
 
