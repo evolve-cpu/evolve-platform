@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, Fragment } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
@@ -14,28 +14,41 @@ const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
 
-async function sendSubmissionConfirmation(toEmail, toName) {
+// Convert Google Drive share link → embeddable preview URL
+function driveEmbedUrl(url) {
+  if (!url) return null;
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+  return url;
+}
+
+async function sendSubmissionConfirmation(toEmail, toName, calendlyUrl) {
   if (!BREVO_KEY) return;
   const firstName = (toName || "").split(" ")[0] || "there";
   const htmlContent = `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
       <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
       <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
-      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">We've received your portfolio</h1>
-      <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0">
-        Thanks for sharing your resume, portfolio link, and answers about your goals. Your reviewer will look these over before your call.
+      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">We've received your portfolio, ${firstName}!</h1>
+      <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 28px">
+        Your portfolio, resume and answers have been received. Your reviewer will look these over before your call. The next step is to book your 1:1 review call — choose a slot that works for you.
       </p>
+      <a href="${calendlyUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">
+        Book your review call →
+      </a>
+      <p style="font-size:13px;color:rgba(255,255,255,0.35);margin:20px 0 0">If you've already booked your call, you can ignore the button above.</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:28px 0 20px" />
+      <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This email is for ${toEmail}. If this wasn't you, please ignore it.</p>
     </div>`;
   await fetch(BREVO_URL, {
     method: "POST",
     headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      sender: {
-        name: "Anant National University x evolve",
-        email: "noreply@evolvedesign.academy"
-      },
+      sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
       to: [{ email: toEmail, name: toName || "" }],
-      subject: "We've received your portfolio",
+      subject: "We've received your portfolio — book your review call",
       htmlContent
     })
   });
@@ -199,7 +212,10 @@ function ProgressSidebar({
   shareDone,
   bookDone,
   dark,
-  onSelectQuestion
+  onSelectQuestion,
+  onNavigate,
+  isSubmitted,
+  recordingUrl
 }) {
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
@@ -220,7 +236,7 @@ function ProgressSidebar({
     ...QUESTIONS.map((q, i) => ({
       type: "item",
       label: q.short,
-      active: phase === "questions" && i === currentQ,
+      active: phase === "questions" && i === currentQ && !isSubmitted,
       done: i < qDone,
       questionIndex: i
     })),
@@ -246,8 +262,23 @@ function ProgressSidebar({
       type: "item",
       label: "meet your reviewer",
       active: phase === "done",
-      done: phase === "report"
+      done: phase === "recording" || phase === "report"
     },
+    ...(recordingUrl ? [
+      {
+        type: "section",
+        label: "session recording",
+        active: phase === "recording",
+        done: phase === "report"
+      },
+      {
+        type: "item",
+        label: "watch your session",
+        active: phase === "recording",
+        done: phase === "report",
+        navigateTo: "recording"
+      }
+    ] : []),
     {
       type: "section",
       label: "view report",
@@ -258,7 +289,8 @@ function ProgressSidebar({
       type: "item",
       label: "check out your report!",
       active: phase === "report",
-      done: false
+      done: false,
+      navigateTo: "report"
     }
   ];
 
@@ -271,13 +303,18 @@ function ProgressSidebar({
         const gap = isLast ? 0 : nextNode.type === "section" ? 14 : 7;
         const dotSize = node.type === "section" ? 12 : 8;
 
-        // Question items that have been answered are navigable (including from share phase)
-        const isNavigable =
-          (phase === "questions" || phase === "share") &&
+        // Questions: navigable during form-fill OR post-submission (to view read-only)
+        const isQuestionNavigable =
           node.type === "item" &&
           node.questionIndex !== undefined &&
-          node.done &&
-          !node.active;
+          (isSubmitted || ((phase === "questions" || phase === "share") && node.done && !node.active));
+        // Phase items: navigable when report/recording available
+        const isPhaseNavigable =
+          node.navigateTo &&
+          node.navigateTo !== phase &&
+          (node.navigateTo === "recording" ? !!recordingUrl : true) &&
+          (phase === "recording" || phase === "report");
+        const isNavigable = isQuestionNavigable || isPhaseNavigable;
         const isHovered = hoveredIdx === i;
 
         const dotStyle =
@@ -315,9 +352,11 @@ function ProgressSidebar({
                     : "transparent",
                 transition: "background 0.15s"
               }}
-              onClick={() =>
-                isNavigable && onSelectQuestion?.(node.questionIndex)
-              }
+              onClick={() => {
+                if (!isNavigable) return;
+                if (isQuestionNavigable) onSelectQuestion?.(node.questionIndex);
+                else if (isPhaseNavigable) onNavigate?.(node.navigateTo);
+              }}
               onMouseEnter={() => isNavigable && setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
             >
@@ -394,7 +433,10 @@ function MobileStepAccordion({
   sidebarBg,
   sidebarBdr,
   mutedCol,
-  onSelectQuestion
+  onSelectQuestion,
+  onNavigate,
+  isSubmitted,
+  recordingUrl
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -403,7 +445,8 @@ function MobileStepAccordion({
     share: { num: 1, label: "Let's get to know you" },
     booking: { num: 2, label: "Meet your reviewer" },
     done: { num: 2, label: "Meet your reviewer" },
-    report: { num: 3, label: "View report" }
+    recording: { num: 3, label: "Session recording" },
+    report: { num: recordingUrl ? 4 : 3, label: "View report" }
   };
   const current = stepMap[phase] || { num: 1, label: "Let's get to know you" };
 
@@ -450,17 +493,17 @@ function MobileStepAccordion({
         }
       ]
     },
+    ...(recordingUrl ? [{
+      label: "Session recording",
+      secActive: phase === "recording",
+      secDone: phase === "report",
+      items: [{ label: "Watch your session", done: phase === "report", active: phase === "recording", navigateTo: "recording" }]
+    }] : []),
     {
       label: "View report",
       secActive: phase === "report",
       secDone: false,
-      items: [
-        {
-          label: "Check out your report!",
-          done: false,
-          active: phase === "report"
-        }
-      ]
+      items: [{ label: "Check out your report!", done: false, active: phase === "report", navigateTo: "report" }]
     }
   ];
 
@@ -540,11 +583,15 @@ function MobileStepAccordion({
                 </span>
               </div>
               {sec.items.map((item, ii) => {
-                const canNav =
+                const canNavQ =
                   item.questionIndex !== undefined &&
-                  item.done &&
-                  !item.active &&
-                  (phase === "questions" || phase === "share");
+                  (isSubmitted || (item.done && !item.active && (phase === "questions" || phase === "share")));
+                const canNavPhase =
+                  item.navigateTo &&
+                  item.navigateTo !== phase &&
+                  (item.navigateTo === "recording" ? !!recordingUrl : true) &&
+                  (phase === "recording" || phase === "report");
+                const canNav = canNavQ || canNavPhase;
                 return (
                   <div
                     key={ii}
@@ -555,8 +602,8 @@ function MobileStepAccordion({
                     }}
                     onClick={() => {
                       if (!canNav) return;
-                      onSelectQuestion?.(item.questionIndex);
-                      setExpanded(false);
+                      if (canNavQ) { onSelectQuestion?.(item.questionIndex); setExpanded(false); }
+                      else if (canNavPhase) { onNavigate?.(item.navigateTo); setExpanded(false); }
                     }}
                   >
                     <div
@@ -604,6 +651,7 @@ function MobileStepAccordion({
 /* ── Main component ─────────────────────────────────────────────────────────── */
 export default function AnantPortfolioReview({ session, studentData }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { dark, toggleDark } = useAnantTheme();
 
   const [phase, setPhase] = useState("init");
@@ -618,12 +666,26 @@ export default function AnantPortfolioReview({ session, studentData }) {
   const [savedMsg, setSavedMsg] = useState(false);
   const [reviewId, setReviewId] = useState(null);
   const [reportUrl, setReportUrl] = useState(null);
+  const [recordingUrl, setRecordingUrl] = useState(null);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  // Resume: "upload" (file) | "link" (URL)
+  const [resumeMode, setResumeMode] = useState("upload");
+  const [resumeLink, setResumeLink] = useState("");
+  // Portfolio: "link" (URL) | "upload" (file)
+  const [portfolioMode, setPortfolioMode] = useState("link");
+  const [portfolioFileUrl, setPortfolioFileUrl] = useState("");
+  const [portfolioFile, setPortfolioFile] = useState(null);
+  const [portfolioUploading, setPortfolioUploading] = useState(false);
+  const [portfolioDragOver, setPortfolioDragOver] = useState(false);
+  // Post-submission: view submitted answers read-only
+  const [viewAnswers, setViewAnswers] = useState(false);
+  const savedPhaseRef = useRef(null);
 
   const fileRef = useRef();
+  const portfolioFileRef = useRef();
   const calendlyLoaded = useRef(false);
   const feedbackTimer = useRef(null);
   const menuRef = useRef(null);
@@ -672,13 +734,26 @@ export default function AnantPortfolioReview({ session, studentData }) {
           q3: data.proud_project || "",
           q4: parts[1] || ""
         });
+        // Portfolio: stored in portfolio_link
         setPortfolioLink(data.portfolio_link || "");
-        setResumeUrl(data.portfolio_file_url || "");
+        // Resume: stored in portfolio_file_url — detect if it's a file upload or a pasted link
+        const storedResume = data.portfolio_file_url || "";
+        if (storedResume) {
+          if (storedResume.includes("supabase") || storedResume.includes("/storage/")) {
+            setResumeUrl(storedResume);
+            setResumeMode("upload");
+          } else {
+            setResumeLink(storedResume);
+            setResumeMode("link");
+          }
+        }
         if (data.feedback_rating) setFeedbackGiven(true);
+        if (data.meet_recording_url) setRecordingUrl(data.meet_recording_url);
 
         if (data.review_report_url) {
           setReportUrl(data.review_report_url);
-          setPhase("report");
+          // If recording exists, start there; otherwise go straight to report
+          setPhase(data.meet_recording_url ? "recording" : "report");
         } else if (
           data.review_status === "done" ||
           data.review_status === "in_review"
@@ -687,7 +762,6 @@ export default function AnantPortfolioReview({ session, studentData }) {
         } else if (data.review_status === "pending") {
           setPhase("booking");
         } else if (data.review_status === "draft") {
-          // Restore to the first unanswered question, or share if all answered
           const loaded = {
             q1: parts[0] || "",
             q2: data.target_roles || "",
@@ -698,17 +772,21 @@ export default function AnantPortfolioReview({ session, studentData }) {
           if (allAnswered) {
             setPhase("share");
           } else {
-            const firstEmpty = QUESTIONS.findIndex(
-              (q) => !loaded[q.key].trim()
-            );
+            const firstEmpty = QUESTIONS.findIndex((q) => !loaded[q.key].trim());
             setCurrentQ(firstEmpty >= 0 ? firstEmpty : 0);
             setPhase("questions");
           }
         } else {
           setPhase("share");
         }
+
+        // If navigated from profile "view form" button, open read-only view
+        if (location.state?.viewAnswers) {
+          setViewAnswers(true);
+          setCurrentQ(0);
+        }
       });
-  }, [email]);
+  }, [email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Auto feedback modal ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -767,6 +845,9 @@ export default function AnantPortfolioReview({ session, studentData }) {
     const notesVal = answers.q4
       ? `${answers.q1}\n\n---q4---\n${answers.q4}`
       : answers.q1;
+    // Resolve active resume and portfolio values based on selected mode
+    const activeResumeVal = resumeMode === "upload" ? resumeUrl : resumeLink.trim();
+    const activePortfolioVal = portfolioMode === "link" ? portfolioLink.trim() : portfolioFileUrl;
     const payload = {
       email,
       name: studentName,
@@ -775,8 +856,8 @@ export default function AnantPortfolioReview({ session, studentData }) {
       notes: notesVal || null,
       target_roles: answers.q2 || null,
       proud_project: answers.q3 || null,
-      portfolio_link: portfolioLink || null,
-      portfolio_file_url: resumeUrl || null,
+      portfolio_link: activePortfolioVal || null,
+      portfolio_file_url: activeResumeVal || null,
       review_status: status,
       course: studentData?.program || null,
       batch: studentData?.year ? String(studentData.year) : null
@@ -871,6 +952,24 @@ export default function AnantPortfolioReview({ session, studentData }) {
     setUploading(false);
   }
 
+  async function handlePortfolioFile(file) {
+    if (!file) return;
+    if (file.type !== "application/pdf") { setError("Please upload a PDF file."); return; }
+    if (file.size > 20 * 1024 * 1024) { setError("File must be under 20MB."); return; }
+    setError("");
+    setPortfolioUploading(true);
+    setPortfolioFile(file);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `portfolios/${user.id}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("review-reports")
+      .upload(path, file, { upsert: true, contentType: "application/pdf" });
+    if (upErr) { setPortfolioUploading(false); setPortfolioFile(null); setError(upErr.message); return; }
+    const { data: urlData } = supabaseAdmin.storage.from("review-reports").getPublicUrl(path);
+    setPortfolioFileUrl(urlData?.publicUrl || "");
+    setPortfolioUploading(false);
+  }
+
   async function handleSaveForLater() {
     setSaving(true);
     await persist("draft");
@@ -880,29 +979,43 @@ export default function AnantPortfolioReview({ session, studentData }) {
   }
 
   async function handleSubmit() {
-    if (!resumeUrl || !portfolioLink.trim()) return;
+    const hasResume = resumeMode === "upload" ? !!resumeUrl : !!resumeLink.trim();
+    const hasPortfolio = portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFileUrl;
+    if (!hasResume || !hasPortfolio) return;
     setSubmitting(true);
     setError("");
     const err = await persist("pending");
     setSubmitting(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    // Fire-and-forget confirmation email; don't block the user
-    sendSubmissionConfirmation(email, studentName).catch(() => {});
+    if (err) { setError(err.message); return; }
+    sendSubmissionConfirmation(email, studentName, CALENDLY_URL).catch(() => {});
     setPhase("booking");
   }
 
   // ── Sidebar / progress state ─────────────────────────────────────────────────
-  // Highest question index the user has answered (derived from answers, works across back/forward nav)
+  const isSubmitted = ["booking", "done", "recording", "report"].includes(phase);
+
+  function handleSelectQuestion(idx) {
+    setCurrentQ(idx);
+    if (isSubmitted) {
+      savedPhaseRef.current = phase;
+      setViewAnswers(true);
+    } else {
+      setPhase("questions");
+    }
+  }
+
+  function handleNavigatePhase(p) {
+    setViewAnswers(false);
+    setPhase(p);
+  }
+
   const maxReachedQ = QUESTIONS.reduce(
     (max, q, i) => (answers[q.key]?.trim() ? i : max),
     -1
   );
-  const qDone = phase !== "questions" ? QUESTIONS.length : maxReachedQ + 1;
-  const shareDone = ["booking", "done", "report"].includes(phase);
-  const bookDone = ["done", "report"].includes(phase);
+  const qDone = (phase !== "questions" || isSubmitted) ? QUESTIONS.length : maxReachedQ + 1;
+  const shareDone = ["booking", "done", "recording", "report"].includes(phase);
+  const bookDone = ["done", "recording", "report"].includes(phase);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (phase === "init") {
@@ -1082,10 +1195,10 @@ export default function AnantPortfolioReview({ session, studentData }) {
         sidebarBg={sidebarBg}
         sidebarBdr={sidebarBdr}
         mutedCol="rgba(255,255,255,0.32)"
-        onSelectQuestion={(idx) => {
-          setCurrentQ(idx);
-          setPhase("questions");
-        }}
+        onSelectQuestion={handleSelectQuestion}
+        onNavigate={handleNavigatePhase}
+        isSubmitted={isSubmitted}
+        recordingUrl={recordingUrl}
       />
 
       {/* ── BODY ── */}
@@ -1119,20 +1232,69 @@ export default function AnantPortfolioReview({ session, studentData }) {
             shareDone={shareDone}
             bookDone={bookDone}
             dark={dark}
-            onSelectQuestion={(idx) => {
-              setCurrentQ(idx);
-              setPhase("questions");
-            }}
+            onSelectQuestion={handleSelectQuestion}
+            onNavigate={handleNavigatePhase}
+            isSubmitted={isSubmitted}
+            recordingUrl={recordingUrl}
           />
         </aside>
 
         {/* ── MAIN CONTENT ── */}
         <main
-          className={`flex-1 overflow-y-auto flex flex-col ${phase === "report" ? "" : "items-center justify-center px-5 md:px-14 py-10 md:py-16"}`}
+          className={`flex-1 overflow-y-auto flex flex-col ${(phase === "report" || phase === "recording") && !viewAnswers ? "" : "items-center justify-center px-5 md:px-14 py-10 md:py-16"}`}
           style={{ background: bg }}
         >
+          {/* ── VIEW ANSWERS (read-only, post-submission) ── */}
+          {viewAnswers && (() => {
+            const q = QUESTIONS[currentQ];
+            return (
+              <div className="w-full max-w-xl">
+                <div className="mb-5 flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      setViewAnswers(false);
+                      if (savedPhaseRef.current) setPhase(savedPhaseRef.current);
+                    }}
+                    className="text-sm font-semibold flex items-center gap-1.5"
+                    style={{ color: mutedCol }}
+                  >
+                    ← back
+                  </button>
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: mutedCol }}>
+                    viewing submitted answers
+                  </span>
+                </div>
+                <div className="mb-4 flex gap-2 flex-wrap">
+                  {QUESTIONS.map((qItem, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentQ(i)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors"
+                      style={{
+                        borderColor: i === currentQ ? "#2563eb" : inputBorder,
+                        background: i === currentQ ? "rgba(37,99,235,0.1)" : inputBg,
+                        color: i === currentQ ? "#2563eb" : mutedCol
+                      }}
+                    >
+                      Q{i + 1}
+                    </button>
+                  ))}
+                </div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: mutedCol }}>
+                  {q.question}
+                </p>
+                <div
+                  className="w-full rounded-xl border px-4 py-4 text-sm leading-relaxed whitespace-pre-wrap min-h-[140px]"
+                  style={{ borderColor: inputBorder, background: inputBg, color: answers[q.key] ? textCol : mutedCol, fontFamily: "inherit" }}
+                >
+                  {answers[q.key] || "No answer provided."}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* ── QUESTIONS ── */}
-          {phase === "questions" &&
+          {!viewAnswers && phase === "questions" &&
             (() => {
               const q = QUESTIONS[currentQ];
               return (
@@ -1277,167 +1439,140 @@ export default function AnantPortfolioReview({ session, studentData }) {
             })()}
 
           {/* ── SHARE ── */}
-          {phase === "share" && (
-            <div className="w-full max-w-md">
-              <button
-                onClick={goBackToQuestions}
-                className="text-sm font-semibold mb-6 flex items-center gap-1"
-                style={{ color: mutedCol }}
-              >
-                ← back to questions
-              </button>
-              <h2
-                className="font-bold mb-2"
-                style={{ fontSize: "clamp(22px, 4vw, 30px)", color: textCol }}
-              >
-                Share your resume and portfolio
-              </h2>
-              <p className="text-sm mb-8" style={{ color: subCol }}>
-                Make sure your portfolio link is accessible to anyone who has
-                it.
-              </p>
-
-              <div className="mb-5">
-                <label
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: subCol }}
-                >
-                  Upload resume (PDF, max 5MB)
-                </label>
-                {resumeUrl ? (
-                  <div
-                    className="flex items-center gap-3 rounded-xl border px-4 py-3"
-                    style={{ borderColor: inputBorder, background: cardBg }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                        stroke="#ef4444"
-                        strokeWidth="1.8"
-                      />
-                      <polyline
-                        points="14 2 14 8 20 8"
-                        stroke="#ef4444"
-                        strokeWidth="1.8"
-                      />
-                    </svg>
-                    <span
-                      className="text-sm flex-1 truncate"
-                      style={{ color: textCol }}
-                    >
-                      {resumeFile?.name || "resume.pdf"}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setResumeUrl("");
-                        setResumeFile(null);
-                      }}
-                      className="text-xs"
-                      style={{ color: mutedCol }}
-                    >
-                      remove
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer"
-                    style={{
-                      borderColor: dragOver ? "#2563eb" : inputBorder,
-                      background: dragOver ? "rgba(37,99,235,0.05)" : cardBg,
-                      minHeight: 100,
-                      padding: "22px 16px"
-                    }}
-                    onClick={() => fileRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setDragOver(true);
-                    }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setDragOver(false);
-                      handleResumeFile(e.dataTransfer.files?.[0]);
-                    }}
-                  >
-                    {uploading ? (
-                      <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <p
-                        className="text-sm text-center"
-                        style={{ color: mutedCol }}
-                      >
-                        Drag & drop file here, or click to browse
-                      </p>
-                    )}
-                  </div>
-                )}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  onChange={(e) => handleResumeFile(e.target.files?.[0])}
-                />
-              </div>
-
-              <div className="mb-8">
-                <label
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: subCol }}
-                >
-                  Portfolio link
-                </label>
-                <input
-                  type="url"
-                  value={portfolioLink}
-                  onChange={(e) => setPortfolioLink(e.target.value)}
-                  placeholder="https://your-portfolio-link.com"
-                  className="w-full rounded-xl border px-4 py-3.5 outline-none"
-                  style={{
-                    borderColor: inputBorder,
-                    color: textCol,
-                    background: inputBg,
-                    fontFamily: "inherit",
-                    fontSize: 15
-                  }}
-                />
-              </div>
-
-              {error && (
-                <p className="mb-3 text-sm" style={{ color: "#f87171" }}>
-                  {error}
-                </p>
-              )}
-
-              <button
-                onClick={handleSubmit}
-                disabled={!resumeUrl || !portfolioLink.trim() || submitting}
-                className="w-full py-4 rounded-xl text-base font-bold transition-opacity disabled:opacity-35 mb-5"
-                style={{ background: btnBg, color: btnText }}
-              >
-                {submitting ? "submitting…" : "submit"}
-              </button>
-
-              <p className="text-sm text-center" style={{ color: mutedCol }}>
-                {!resumeUrl && "Upload your resume to enable submit. "}
-                <button
-                  onClick={handleSaveForLater}
-                  disabled={saving}
-                  className="underline underline-offset-2"
-                  style={{ color: subCol }}
-                >
-                  {savedMsg
-                    ? "saved ✓"
-                    : saving
-                      ? "saving…"
-                      : "save your answers and come back later"}
+          {!viewAnswers && phase === "share" && (() => {
+            const hasResume = resumeMode === "upload" ? !!resumeUrl : !!resumeLink.trim();
+            const hasPortfolio = portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFileUrl;
+            const tabStyle = (active) => ({
+              padding: "6px 14px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              border: `1px solid ${active ? "#2563eb" : inputBorder}`,
+              background: active ? "rgba(37,99,235,0.1)" : inputBg,
+              color: active ? "#2563eb" : mutedCol
+            });
+            return (
+              <div className="w-full max-w-md">
+                <button onClick={goBackToQuestions} className="text-sm font-semibold mb-6 flex items-center gap-1" style={{ color: mutedCol }}>
+                  ← back to questions
                 </button>
-              </p>
-            </div>
-          )}
+                <h2 className="font-bold mb-2" style={{ fontSize: "clamp(22px, 4vw, 30px)", color: textCol }}>
+                  Share your resume and portfolio
+                </h2>
+                <p className="text-sm mb-8" style={{ color: subCol }}>
+                  Make sure any links you share are accessible to anyone who has them.
+                </p>
+
+                {/* ── Resume field ── */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold" style={{ color: subCol }}>Resume</label>
+                    <div className="flex gap-1.5">
+                      <button style={tabStyle(resumeMode === "upload")} onClick={() => setResumeMode("upload")}>upload file</button>
+                      <button style={tabStyle(resumeMode === "link")} onClick={() => setResumeMode("link")}>paste link</button>
+                    </div>
+                  </div>
+                  {resumeMode === "upload" ? (
+                    resumeUrl ? (
+                      <div className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: inputBorder, background: cardBg }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#ef4444" strokeWidth="1.8"/>
+                          <polyline points="14 2 14 8 20 8" stroke="#ef4444" strokeWidth="1.8"/>
+                        </svg>
+                        <span className="text-sm flex-1 truncate" style={{ color: textCol }}>{resumeFile?.name || "resume.pdf"}</span>
+                        <button onClick={() => { setResumeUrl(""); setResumeFile(null); }} className="text-xs" style={{ color: mutedCol }}>remove</button>
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer"
+                        style={{ borderColor: dragOver ? "#2563eb" : inputBorder, background: dragOver ? "rgba(37,99,235,0.05)" : cardBg, minHeight: 100, padding: "22px 16px" }}
+                        onClick={() => fileRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleResumeFile(e.dataTransfer.files?.[0]); }}
+                      >
+                        {uploading ? <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : <p className="text-sm text-center" style={{ color: mutedCol }}>Drag & drop PDF here, or click to browse</p>}
+                      </div>
+                    )
+                  ) : (
+                    <input
+                      type="url"
+                      value={resumeLink}
+                      onChange={(e) => setResumeLink(e.target.value)}
+                      placeholder="https://drive.google.com/... or any link to your resume"
+                      className="w-full rounded-xl border px-4 py-3.5 outline-none"
+                      style={{ borderColor: inputBorder, color: textCol, background: inputBg, fontFamily: "inherit", fontSize: 15 }}
+                    />
+                  )}
+                  <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => handleResumeFile(e.target.files?.[0])} />
+                </div>
+
+                {/* ── Portfolio field ── */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold" style={{ color: subCol }}>Portfolio</label>
+                    <div className="flex gap-1.5">
+                      <button style={tabStyle(portfolioMode === "link")} onClick={() => setPortfolioMode("link")}>paste link</button>
+                      <button style={tabStyle(portfolioMode === "upload")} onClick={() => setPortfolioMode("upload")}>upload file</button>
+                    </div>
+                  </div>
+                  {portfolioMode === "link" ? (
+                    <input
+                      type="url"
+                      value={portfolioLink}
+                      onChange={(e) => setPortfolioLink(e.target.value)}
+                      placeholder="https://your-portfolio-link.com"
+                      className="w-full rounded-xl border px-4 py-3.5 outline-none"
+                      style={{ borderColor: inputBorder, color: textCol, background: inputBg, fontFamily: "inherit", fontSize: 15 }}
+                    />
+                  ) : portfolioFileUrl ? (
+                    <div className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: inputBorder, background: cardBg }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#ef4444" strokeWidth="1.8"/>
+                        <polyline points="14 2 14 8 20 8" stroke="#ef4444" strokeWidth="1.8"/>
+                      </svg>
+                      <span className="text-sm flex-1 truncate" style={{ color: textCol }}>{portfolioFile?.name || "portfolio.pdf"}</span>
+                      <button onClick={() => { setPortfolioFileUrl(""); setPortfolioFile(null); }} className="text-xs" style={{ color: mutedCol }}>remove</button>
+                    </div>
+                  ) : (
+                    <div
+                      className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer"
+                      style={{ borderColor: portfolioDragOver ? "#2563eb" : inputBorder, background: portfolioDragOver ? "rgba(37,99,235,0.05)" : cardBg, minHeight: 100, padding: "22px 16px" }}
+                      onClick={() => portfolioFileRef.current?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setPortfolioDragOver(true); }}
+                      onDragLeave={() => setPortfolioDragOver(false)}
+                      onDrop={(e) => { e.preventDefault(); setPortfolioDragOver(false); handlePortfolioFile(e.dataTransfer.files?.[0]); }}
+                    >
+                      {portfolioUploading ? <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : <p className="text-sm text-center" style={{ color: mutedCol }}>Drag & drop PDF here, or click to browse</p>}
+                    </div>
+                  )}
+                  <input ref={portfolioFileRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => handlePortfolioFile(e.target.files?.[0])} />
+                </div>
+
+                {error && <p className="mb-3 text-sm" style={{ color: "#f87171" }}>{error}</p>}
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={!hasResume || !hasPortfolio || submitting}
+                  className="w-full py-4 rounded-xl text-base font-bold transition-opacity disabled:opacity-35 mb-5"
+                  style={{ background: btnBg, color: btnText }}
+                >
+                  {submitting ? "submitting…" : "submit"}
+                </button>
+
+                <p className="text-sm text-center" style={{ color: mutedCol }}>
+                  {(!hasResume || !hasPortfolio) && "Add your resume and portfolio to submit. "}
+                  <button onClick={handleSaveForLater} disabled={saving} className="underline underline-offset-2" style={{ color: subCol }}>
+                    {savedMsg ? "saved ✓" : saving ? "saving…" : "save and come back later"}
+                  </button>
+                </p>
+              </div>
+            );
+          })()}
 
           {/* ── BOOKING ── */}
-          {phase === "booking" && (
+          {!viewAnswers && phase === "booking" && (
             <div className="w-full max-w-2xl">
               <h2
                 className="font-bold mb-2"
@@ -1458,7 +1593,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
           )}
 
           {/* ── DONE ── */}
-          {phase === "done" && (
+          {!viewAnswers && phase === "done" && (
             <div className="w-full max-w-lg text-center">
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -1518,7 +1653,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
                 </p>
                 <ul className="space-y-2.5">
                   {[
-                    "A 30-minute live session with one of our industry reviewers",
+                    "A 45-minute live session with one of our industry reviewers",
                     "They'll go through your resume and portfolio in detail",
                     "You'll get real-time suggestions on layout, content and presentation",
                     "Come prepared with questions about your career goals"
@@ -1552,15 +1687,107 @@ export default function AnantPortfolioReview({ session, studentData }) {
             </div>
           )}
 
+          {/* ── RECORDING ── */}
+          {!viewAnswers && phase === "recording" && recordingUrl && (() => {
+            const embedUrl = driveEmbedUrl(recordingUrl);
+            return (
+              <div className="flex flex-col flex-1 min-h-0">
+                <div
+                  className="shrink-0 flex items-center justify-between px-5 md:px-8 py-4 border-b"
+                  style={{ borderColor: border, background: dark ? "#060c17" : "#f8fafc" }}
+                >
+                  <div>
+                    <h2 className="font-bold text-base" style={{ color: textCol }}>Your session recording</h2>
+                    <p className="text-xs mt-0.5" style={{ color: mutedCol }}>Your 1:1 review session — watch it back anytime</p>
+                  </div>
+                  <button
+                    onClick={() => setPhase("report")}
+                    className="text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
+                    style={{ background: "rgba(37,99,235,0.12)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}
+                  >
+                    view report →
+                  </button>
+                </div>
+                <div className="flex-1 min-h-0 relative">
+                  <iframe
+                    src={embedUrl}
+                    title="Session recording"
+                    allow="autoplay"
+                    className="absolute inset-0 w-full h-full"
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
           {/* ── REPORT ── */}
-          {phase === "report" && (
-            <iframe
-              src={reportUrl}
-              title="Your portfolio review report"
-              className="flex-1 w-full"
-              style={{ border: "none", display: "block" }}
-            />
-          )}
+          {!viewAnswers && phase === "report" && (() => {
+            return (
+              <div className="flex flex-col flex-1 min-h-0">
+                {/* header strip with back-to-recording button if recording exists */}
+                {recordingUrl && (
+                  <div
+                    className="shrink-0 flex items-center justify-between px-5 md:px-8 py-3 border-b"
+                    style={{ borderColor: border, background: dark ? "#060c17" : "#f8fafc" }}
+                  >
+                    <button
+                      onClick={() => setPhase("recording")}
+                      className="text-xs font-semibold flex items-center gap-1.5"
+                      style={{ color: mutedCol }}
+                    >
+                      ← session recording
+                    </button>
+                    <a
+                      href={reportUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: "rgba(37,99,235,0.1)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.2)" }}
+                    >
+                      open in new tab ↗
+                    </a>
+                  </div>
+                )}
+                {/* Mobile: show a button to open PDF in new tab + fallback iframe */}
+                <div className="flex-1 min-h-0 relative">
+                  {/* Visible on mobile as fallback */}
+                  <div className="md:hidden flex flex-col items-center justify-center h-full gap-5 px-6 text-center" style={{ minHeight: 300 }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke={mutedCol} strokeWidth="1.5"/>
+                      <polyline points="14 2 14 8 20 8" stroke={mutedCol} strokeWidth="1.5"/>
+                      <path d="M9 13h6M9 17h4" stroke={mutedCol} strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <div>
+                      <p className="font-bold text-base mb-1" style={{ color: textCol }}>Your report is ready</p>
+                      <p className="text-sm" style={{ color: mutedCol }}>Tap below to open your portfolio review report.</p>
+                    </div>
+                    <a
+                      href={reportUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-6 py-3 rounded-xl font-bold text-sm"
+                      style={{ background: btnBg, color: btnText }}
+                    >
+                      open report →
+                    </a>
+                    {!feedbackGiven && (
+                      <button onClick={() => setFeedbackOpen(true)} className="text-xs underline underline-offset-2" style={{ color: mutedCol }}>
+                        share feedback
+                      </button>
+                    )}
+                  </div>
+                  {/* Desktop: iframe */}
+                  <iframe
+                    src={reportUrl}
+                    title="Your portfolio review report"
+                    className="hidden md:block absolute inset-0 w-full h-full"
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
         </main>
       </div>
     </div>

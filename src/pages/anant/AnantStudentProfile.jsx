@@ -479,7 +479,7 @@ export default function AnantStudentProfile() {
                   </a>
                 </p>
                 <button
-                  onClick={() => navigate(FORM_PATH)}
+                  onClick={() => navigate(FORM_PATH, { state: { viewAnswers: true } })}
                   className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-80"
                   style={{ borderColor: border, color: sub }}
                 >
