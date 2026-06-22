@@ -1469,8 +1469,8 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-semibold" style={{ color: subCol }}>Resume</label>
                     <div className="flex gap-1.5">
-                      <button style={tabStyle(resumeMode === "upload")} onClick={() => setResumeMode("upload")}>upload file</button>
-                      <button style={tabStyle(resumeMode === "link")} onClick={() => setResumeMode("link")}>paste link</button>
+                      <button style={tabStyle(resumeMode === "upload")} onClick={() => { setResumeMode("upload"); setResumeLink(""); }}>upload file</button>
+                      <button style={tabStyle(resumeMode === "link")} onClick={() => { setResumeMode("link"); setResumeUrl(""); setResumeFile(null); }}>paste link</button>
                     </div>
                   </div>
                   {resumeMode === "upload" ? (
@@ -1513,8 +1513,8 @@ export default function AnantPortfolioReview({ session, studentData }) {
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-semibold" style={{ color: subCol }}>Portfolio</label>
                     <div className="flex gap-1.5">
-                      <button style={tabStyle(portfolioMode === "link")} onClick={() => setPortfolioMode("link")}>paste link</button>
-                      <button style={tabStyle(portfolioMode === "upload")} onClick={() => setPortfolioMode("upload")}>upload file</button>
+                      <button style={tabStyle(portfolioMode === "link")} onClick={() => { setPortfolioMode("link"); setPortfolioFileUrl(""); setPortfolioFile(null); }}>paste link</button>
+                      <button style={tabStyle(portfolioMode === "upload")} onClick={() => { setPortfolioMode("upload"); setPortfolioLink(""); }}>upload file</button>
                     </div>
                   </div>
                   {portfolioMode === "link" ? (
