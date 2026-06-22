@@ -226,6 +226,92 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
   .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
 const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY;
+const ANU_LOGO = `${ANU_ORIGIN_URL}/images/anant-logo.png`;
+
+async function sendReportNotifications(review, reportUrl, apiKey) {
+  if (!apiKey) return;
+
+  // 1. Fetch student record to get their stream, program, year
+  const { data: student } = await supabaseAdmin
+    .from("anu_students")
+    .select("stream, first_name, last_name, program, year")
+    .eq("anu_email", review.email)
+    .maybeSingle();
+
+  const stream = student?.stream || null;
+  const studentName = review.name ||
+    [student?.first_name, student?.last_name].filter(Boolean).join(" ") || review.email;
+  const program = student?.program || "—";
+  const year = student?.year ? `Year ${student.year}` : "—";
+
+  // 2. Fetch faculty with matching stream + all uni admins (invited only)
+  const [{ data: faculty }, { data: admins }] = await Promise.all([
+    stream
+      ? supabaseAdmin.from("anu_faculty").select("anu_email, first_name, last_name")
+          .eq("stream", stream).not("invite_sent_at", "is", null)
+      : Promise.resolve({ data: [] }),
+    supabaseAdmin.from("anu_admins").select("anu_email, first_name, last_name")
+      .not("invite_sent_at", "is", null)
+  ]);
+
+  const recipients = [...(faculty || []), ...(admins || [])];
+  if (!recipients.length) return;
+
+  // 3. Send email to each recipient
+  await Promise.all(recipients.map((r) => {
+    const rName = [r.first_name, r.last_name].filter(Boolean).join(" ") || "there";
+    const htmlContent = `
+      <div style="font-family:sans-serif;max-width:540px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
+        <img src="${ANU_LOGO}" alt="Anant National University" style="height:40px;margin:0 auto 28px 0;display:block" />
+        <p style="color:rgba(255,255,255,0.45);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 8px">Anant National University × evolve</p>
+        <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.02em;line-height:1.3;margin:0 0 20px">Portfolio review report ready</h1>
+        <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.7);margin:0 0 24px">
+          Hi ${rName}, the portfolio review report for <strong style="color:#fff">${studentName}</strong> is now ready.
+        </p>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px 24px;margin:0 0 28px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;width:90px">Name</td>
+              <td style="padding:6px 0;color:#fff;font-size:14px;font-weight:600">${studentName}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Email</td>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.75);font-size:14px">${review.email}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Program</td>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.75);font-size:14px">${program}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Stream</td>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.75);font-size:14px">${stream || "—"}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Year</td>
+              <td style="padding:6px 0;color:rgba(255,255,255,0.75);font-size:14px">${year}</td>
+            </tr>
+          </table>
+        </div>
+        <a href="${reportUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:14px;padding:13px 26px;border-radius:10px;text-decoration:none">
+          View report →
+        </a>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:32px 0 18px" />
+        <p style="font-size:12px;color:rgba(255,255,255,0.25);margin:0">
+          This notification was sent to you as part of the Anant National University × evolve portfolio review programme.
+        </p>
+      </div>`;
+    return fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: { name: "Anant National University × evolve", email: "noreply@evolvedesign.academy" },
+        to: [{ email: r.anu_email, name: rName }],
+        subject: `Report ready — ${studentName} | ANU × evolve`,
+        htmlContent
+      })
+    });
+  }));
+}
 
 function ReviewUploadCell({ review, onDone }) {
   const [state, setState] = useState("idle"); // idle | preview | uploading | sending | done | error
@@ -337,6 +423,9 @@ function ReviewUploadCell({ review, onDone }) {
         setMsg(err.message || `email failed (${brevoRes.status})`);
         return;
       }
+
+      // Send report-ready notification to matching faculty + all uni admins (fire-and-forget)
+      sendReportNotifications(review, reportUrl, BREVO_API_KEY).catch(() => {});
     } else {
       // Non-Anant reviews: use edge function with Brevo template + PDF attachment
       const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
@@ -3114,7 +3203,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         onChange={handleCSVUpload}
                       />
                     </label>
-                    {isEvolveAdmin && uninvitedCount > 0 && (
+                    {!isFaculty && uninvitedCount > 0 && (
                       <button
                         onClick={bulkSendInvites}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg"
@@ -3497,7 +3586,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             >
                               status
                             </th>
-                            {isEvolveAdmin && (
+                            {!isFaculty && (
                               <th
                                 className="px-4 py-3 text-left font-semibold text-[11px]"
                                 style={{
@@ -3505,7 +3594,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   whiteSpace: "nowrap"
                                 }}
                               >
-                                edit / delete
+                                actions
                               </th>
                             )}
                           </tr>
@@ -3514,7 +3603,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           {mergedRows.length === 0 && (
                             <tr>
                               <td
-                                colSpan={isEvolveAdmin ? 6 : 5}
+                                colSpan={!isFaculty ? 6 : 5}
                                 className="px-4 py-8 text-center"
                                 style={{ color: aTblDim }}
                               >
@@ -3582,7 +3671,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                     {label}
                                   </span>
                                 </td>
-                                {isEvolveAdmin && (
+                                {!isFaculty && (
                                   <td
                                     className="px-2 py-3"
                                     onClick={(e) => e.stopPropagation()}
@@ -3590,84 +3679,41 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                     <div className="flex items-center gap-1.5">
                                       {!s.invite_sent_at && (
                                         <button
-                                          onClick={() =>
-                                            sendSingleInvite("student", s)
-                                          }
+                                          onClick={() => sendSingleInvite("student", s)}
                                           className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
-                                          style={{
-                                            background: "rgba(37,99,235,0.15)",
-                                            color: "#60a5fa"
-                                          }}
+                                          style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
                                         >
                                           invite
                                         </button>
                                       )}
-                                      <button
-                                        onClick={() =>
-                                          setEditEntry({
-                                            type: "student",
-                                            id: s.id,
-                                            first_name: s.first_name || "",
-                                            last_name: s.last_name || "",
-                                            program: s.program || "",
-                                            stream: s.stream || "",
-                                            year: String(s.year || "")
-                                          })
-                                        }
-                                        className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                        style={{
-                                          color: aTblDim,
-                                          background: dark
-                                            ? "rgba(255,255,255,0.05)"
-                                            : "#f1f5f9"
-                                        }}
-                                        title="edit"
-                                      >
-                                        <svg
-                                          width="13"
-                                          height="13"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        >
-                                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          setDeleteConfirm({
-                                            type: "student",
-                                            entry: s
-                                          })
-                                        }
-                                        className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                        style={{
-                                          color: "#f87171",
-                                          background: "rgba(248,113,113,0.08)"
-                                        }}
-                                        title="delete"
-                                      >
-                                        <svg
-                                          width="13"
-                                          height="13"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        >
-                                          <polyline points="3,6 5,6 21,6" />
-                                          <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
-                                          <path d="M10,11v6" />
-                                          <path d="M14,11v6" />
-                                          <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                                        </svg>
-                                      </button>
+                                      {isEvolveAdmin && (
+                                        <>
+                                          <button
+                                            onClick={() => setEditEntry({ type: "student", id: s.id, first_name: s.first_name || "", last_name: s.last_name || "", program: s.program || "", stream: s.stream || "", year: String(s.year || "") })}
+                                            className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                            style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+                                            title="edit"
+                                          >
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => setDeleteConfirm({ type: "student", entry: s })}
+                                            className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                            style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }}
+                                            title="delete"
+                                          >
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <polyline points="3,6 5,6 21,6" />
+                                              <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
+                                              <path d="M10,11v6" /><path d="M14,11v6" />
+                                              <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                            </svg>
+                                          </button>
+                                        </>
+                                      )}
                                     </div>
                                   </td>
                                 )}
@@ -4303,7 +4349,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           "program",
                           "stream",
                           "invited",
-                          ...(isEvolveAdmin ? ["edit / delete"] : [])
+                          ...(!isFaculty ? ["actions"] : [])
                         ].map((h) => (
                           <th
                             key={h}
@@ -4378,89 +4424,46 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                               <span style={{ color: aTblDim }}>—</span>
                             )}
                           </td>
-                          {isEvolveAdmin && (
+                          {!isFaculty && (
                             <td className="px-2 py-3">
                               <div className="flex items-center gap-1.5">
                                 {!f.invite_sent_at && (
                                   <button
-                                    onClick={() =>
-                                      sendSingleInvite("faculty", f)
-                                    }
+                                    onClick={() => sendSingleInvite("faculty", f)}
                                     className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
-                                    style={{
-                                      background: "rgba(37,99,235,0.15)",
-                                      color: "#60a5fa"
-                                    }}
+                                    style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
                                   >
                                     invite
                                   </button>
                                 )}
-                                <button
-                                  onClick={() =>
-                                    setEditEntry({
-                                      type: "faculty",
-                                      id: f.id,
-                                      first_name: f.first_name || "",
-                                      last_name: f.last_name || "",
-                                      designation: f.designation || "",
-                                      program: f.program || "",
-                                      stream: f.stream || ""
-                                    })
-                                  }
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                  style={{
-                                    color: aTblDim,
-                                    background: dark
-                                      ? "rgba(255,255,255,0.05)"
-                                      : "#f1f5f9"
-                                  }}
-                                  title="edit"
-                                >
-                                  <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setDeleteConfirm({
-                                      type: "faculty",
-                                      entry: f
-                                    })
-                                  }
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                  style={{
-                                    color: "#f87171",
-                                    background: "rgba(248,113,113,0.08)"
-                                  }}
-                                  title="delete"
-                                >
-                                  <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <polyline points="3,6 5,6 21,6" />
-                                    <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
-                                    <path d="M10,11v6" />
-                                    <path d="M14,11v6" />
-                                    <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                                  </svg>
-                                </button>
+                                {isEvolveAdmin && (
+                                  <>
+                                    <button
+                                      onClick={() => setEditEntry({ type: "faculty", id: f.id, first_name: f.first_name || "", last_name: f.last_name || "", designation: f.designation || "", program: f.program || "", stream: f.stream || "" })}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+                                      title="edit"
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteConfirm({ type: "faculty", entry: f })}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }}
+                                      title="delete"
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="3,6 5,6 21,6" />
+                                        <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
+                                        <path d="M10,11v6" /><path d="M14,11v6" />
+                                        <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           )}
@@ -4717,7 +4720,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           "email",
                           "designation",
                           "invited",
-                          ...(isEvolveAdmin ? ["edit / delete"] : [])
+                          ...(!isFaculty ? ["actions"] : [])
                         ].map((h) => (
                           <th
                             key={h}
@@ -4733,7 +4736,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       {filtered.length === 0 && (
                         <tr>
                           <td
-                            colSpan={isEvolveAdmin ? 5 : 4}
+                            colSpan={!isFaculty ? 5 : 4}
                             className="px-4 py-8 text-center"
                             style={{ color: aTblDim }}
                           >
@@ -4780,85 +4783,46 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                               <span style={{ color: aTblDim }}>—</span>
                             )}
                           </td>
-                          {isEvolveAdmin && (
+                          {!isFaculty && (
                             <td className="px-2 py-3">
                               <div className="flex items-center gap-1.5">
                                 {!a.invite_sent_at && (
                                   <button
                                     onClick={() => sendSingleInvite("admin", a)}
                                     className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
-                                    style={{
-                                      background: "rgba(37,99,235,0.15)",
-                                      color: "#60a5fa"
-                                    }}
+                                    style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
                                   >
                                     invite
                                   </button>
                                 )}
-                                <button
-                                  onClick={() =>
-                                    setEditEntry({
-                                      type: "admin",
-                                      id: a.id,
-                                      first_name: a.first_name || "",
-                                      last_name: a.last_name || "",
-                                      designation: a.designation || ""
-                                    })
-                                  }
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                  style={{
-                                    color: aTblDim,
-                                    background: dark
-                                      ? "rgba(255,255,255,0.05)"
-                                      : "#f1f5f9"
-                                  }}
-                                  title="edit"
-                                >
-                                  <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setDeleteConfirm({
-                                      type: "admin",
-                                      entry: a
-                                    })
-                                  }
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg"
-                                  style={{
-                                    color: "#f87171",
-                                    background: "rgba(248,113,113,0.08)"
-                                  }}
-                                  title="delete"
-                                >
-                                  <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <polyline points="3,6 5,6 21,6" />
-                                    <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
-                                    <path d="M10,11v6" />
-                                    <path d="M14,11v6" />
-                                    <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                                  </svg>
-                                </button>
+                                {isEvolveAdmin && (
+                                  <>
+                                    <button
+                                      onClick={() => setEditEntry({ type: "admin", id: a.id, first_name: a.first_name || "", last_name: a.last_name || "", designation: a.designation || "" })}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
+                                      title="edit"
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteConfirm({ type: "admin", entry: a })}
+                                      className="w-7 h-7 flex items-center justify-center rounded-lg"
+                                      style={{ color: "#f87171", background: "rgba(248,113,113,0.08)" }}
+                                      title="delete"
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="3,6 5,6 21,6" />
+                                        <path d="M19,6l-1,14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5,6" />
+                                        <path d="M10,11v6" /><path d="M14,11v6" />
+                                        <path d="M9,6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           )}
