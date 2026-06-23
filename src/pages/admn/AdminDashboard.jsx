@@ -40,6 +40,17 @@ const ANU_STREAMS = {
 };
 const ANU_YEARS = ["3", "4"];
 const ANU_ORIGIN_URL = "https://anu.evolvedesign.academy";
+
+// Parses the `stream` DB column which may be a JSON array string OR a legacy plain string
+function parseStreams(val) {
+  if (!val) return [];
+  try {
+    const p = JSON.parse(val);
+    return Array.isArray(p) ? p : [String(p)];
+  } catch {
+    return [val];
+  }
+}
 // const ANU_ORIGIN_URL = "http://localhost:8080";
 
 async function sendANUPersonInvite(email, role, apiKey) {
@@ -244,15 +255,18 @@ async function sendReportNotifications(review, reportUrl, apiKey) {
   const program = student?.program || "—";
   const year = student?.year ? `Year ${student.year}` : "—";
 
-  // 2. Fetch faculty with matching stream + all uni admins (invited only)
-  const [{ data: faculty }, { data: admins }] = await Promise.all([
-    stream
-      ? supabaseAdmin.from("anu_faculty").select("anu_email, first_name, last_name")
-          .eq("stream", stream).not("invite_sent_at", "is", null)
-      : Promise.resolve({ data: [] }),
+  // 2. Fetch all invited faculty + all uni admins
+  const [{ data: allFaculty }, { data: admins }] = await Promise.all([
+    supabaseAdmin.from("anu_faculty").select("anu_email, first_name, last_name, stream")
+      .not("invite_sent_at", "is", null),
     supabaseAdmin.from("anu_admins").select("anu_email, first_name, last_name")
       .not("invite_sent_at", "is", null)
   ]);
+
+  // Filter faculty whose streams include the student's stream (supports multi-stream JSON array)
+  const faculty = stream
+    ? (allFaculty || []).filter(f => parseStreams(f.stream).includes(stream))
+    : [];
 
   const recipients = [...(faculty || []), ...(admins || [])];
   if (!recipients.length) return;
@@ -967,12 +981,13 @@ export default function AdminDashboard() {
       setWaitlist(wData || []);
       setProfiles(prData || []);
 
-      // Faculty stream filtering: load emails for faculty's assigned stream
+      // Faculty stream filtering: load emails for faculty's assigned streams (multi-stream support)
       if (isFaculty && anuStream) {
+        const facultyStreams = parseStreams(anuStream);
         const { data: sData } = await supabaseAdmin
           .from("anu_students")
           .select("anu_email")
-          .eq("stream", anuStream);
+          .in("stream", facultyStreams.length ? facultyStreams : ["__none__"]);
         setStreamEmails(
           new Set((sData || []).map((s) => s.anu_email.toLowerCase()))
         );
@@ -1323,7 +1338,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         : addModal === "faculty"
           ? "anu_faculty"
           : "anu_admins";
-    const { error } = await supabaseAdmin.from(table).insert(addForm);
+    // Serialize stream array to JSON string for faculty
+    const formData = { ...addForm };
+    if (addModal === "faculty" && Array.isArray(formData.stream)) {
+      formData.stream = formData.stream.length ? JSON.stringify(formData.stream) : null;
+    }
+    const { error } = await supabaseAdmin.from(table).insert(formData);
     if (error) {
       setAddMsg(error.message);
       setAddLoading(false);
@@ -1344,6 +1364,10 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         : type === "faculty"
           ? "anu_faculty"
           : "anu_admins";
+    // Serialize stream array to JSON string for faculty
+    if (type === "faculty" && Array.isArray(fields.stream)) {
+      fields.stream = fields.stream.length ? JSON.stringify(fields.stream) : null;
+    }
     await supabaseAdmin.from(table).update(fields).eq("id", id);
     if (type === "student")
       setAnuStudents((prev) =>
@@ -4225,67 +4249,59 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                         </label>
                         <select
                           value={addForm.program || ""}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const prog = e.target.value;
                             setAddForm((f) => ({
                               ...f,
-                              program: e.target.value,
-                              stream:
-                                e.target.value === "BArch" ? "Architecture" : ""
-                            }))
-                          }
-                          className="px-3 py-2 rounded-lg text-sm outline-none border"
-                          style={{
-                            background: aInpBg,
-                            borderColor: aInpBord,
-                            color: aInpText
+                              program: prog,
+                              stream: prog === "BArch" ? ["Architecture"] : []
+                            }));
                           }}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border"
+                          style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}
                         >
                           <option value="">select program</option>
                           <option value="BDes">BDes</option>
                           <option value="BArch">BArch</option>
                         </select>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="col-span-2 flex flex-col gap-1">
                         <label
                           className="text-[11px] font-semibold uppercase tracking-wide"
                           style={{ color: aTblDim }}
                         >
-                          stream
+                          streams
                         </label>
                         {addForm.program === "BArch" ? (
-                          <input
-                            value="Architecture"
-                            disabled
-                            className="px-3 py-2 rounded-lg text-sm outline-none border opacity-60"
-                            style={{
-                              background: aInpBg,
-                              borderColor: aInpBord,
-                              color: aInpText
-                            }}
-                          />
+                          <div className="px-3 py-2 rounded-lg border text-sm opacity-60" style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
+                            Architecture
+                          </div>
+                        ) : addForm.program ? (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {(ANU_STREAMS[addForm.program] || []).map((s) => {
+                              const sel = Array.isArray(addForm.stream) ? addForm.stream.includes(s) : false;
+                              return (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => setAddForm((f) => {
+                                    const cur = Array.isArray(f.stream) ? f.stream : [];
+                                    return { ...f, stream: sel ? cur.filter(x => x !== s) : [...cur, s] };
+                                  })}
+                                  className="text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors"
+                                  style={{
+                                    background: sel ? "#2563eb" : aInpBg,
+                                    borderColor: sel ? "#2563eb" : aInpBord,
+                                    color: sel ? "#fff" : aInpText
+                                  }}
+                                >
+                                  {s}
+                                </button>
+                              );
+                            })}
+                          </div>
                         ) : (
-                          <select
-                            value={addForm.stream || ""}
-                            onChange={(e) =>
-                              setAddForm((f) => ({
-                                ...f,
-                                stream: e.target.value
-                              }))
-                            }
-                            className="px-3 py-2 rounded-lg text-sm outline-none border"
-                            style={{
-                              background: aInpBg,
-                              borderColor: aInpBord,
-                              color: aInpText
-                            }}
-                          >
-                            <option value="">select stream</option>
-                            {(ANU_STREAMS[addForm.program] || []).map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
+                          <p className="text-xs py-1" style={{ color: aTblDim }}>select a program first</p>
                         )}
                       </div>
                     </div>
@@ -4304,7 +4320,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                       </button>
                       <button
                         onClick={handleAddSubmit}
-                        disabled={addLoading || !addForm.anu_email}
+                        disabled={addLoading || !addForm.anu_email || !Array.isArray(addForm.stream) || addForm.stream.length === 0}
                         className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
                         style={{ background: "#2563eb", color: "#fff" }}
                       >
@@ -4415,7 +4431,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             className="px-4 py-3 text-xs"
                             style={{ color: aTblMuted }}
                           >
-                            {f.stream || "—"}
+                            {parseStreams(f.stream).join(", ") || "—"}
                           </td>
                           <td className="px-4 py-3 text-xs">
                             {f.invite_sent_at ? (
@@ -4439,7 +4455,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                 {isEvolveAdmin && (
                                   <>
                                     <button
-                                      onClick={() => setEditEntry({ type: "faculty", id: f.id, first_name: f.first_name || "", last_name: f.last_name || "", designation: f.designation || "", program: f.program || "", stream: f.stream || "" })}
+                                      onClick={() => setEditEntry({ type: "faculty", id: f.id, first_name: f.first_name || "", last_name: f.last_name || "", designation: f.designation || "", program: f.program || "", stream: parseStreams(f.stream) })}
                                       className="w-7 h-7 flex items-center justify-center rounded-lg"
                                       style={{ color: aTblDim, background: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9" }}
                                       title="edit"
@@ -6189,24 +6205,19 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                   if (key === "program") {
                     return (
                       <div key={key} className="flex flex-col gap-1">
-                        <label
-                          className="text-xs font-semibold"
-                          style={labelStyle}
-                        >
-                          program
-                        </label>
+                        <label className="text-xs font-semibold" style={labelStyle}>program</label>
                         <select
                           value={val}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const prog = e.target.value;
                             setEditEntry((prev) => ({
                               ...prev,
-                              program: e.target.value,
-                              stream:
-                                e.target.value === "BArch"
-                                  ? "Architecture"
-                                  : prev.stream || ""
-                            }))
-                          }
+                              program: prog,
+                              stream: editEntry.type === "faculty"
+                                ? (prog === "BArch" ? ["Architecture"] : [])
+                                : (prog === "BArch" ? "Architecture" : prev.stream || "")
+                            }));
+                          }}
                           className="px-3 py-2 rounded-lg text-sm outline-none border"
                           style={inpStyle}
                         >
@@ -6218,41 +6229,55 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     );
                   }
                   if (key === "stream") {
+                    // Only faculty entries have multi-stream editing
+                    if (editEntry.type === "faculty") {
+                      const selectedStreams = Array.isArray(val) ? val : parseStreams(val);
+                      return (
+                        <div key={key} className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold" style={labelStyle}>streams</label>
+                          {editEntry.program === "BArch" ? (
+                            <div className="px-3 py-2 rounded-lg border text-sm opacity-60" style={inpStyle}>Architecture</div>
+                          ) : editEntry.program ? (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {(ANU_STREAMS[editEntry.program] || []).map((s) => {
+                                const sel = selectedStreams.includes(s);
+                                return (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setEditEntry((prev) => {
+                                      const cur = Array.isArray(prev.stream) ? prev.stream : parseStreams(prev.stream);
+                                      return { ...prev, stream: sel ? cur.filter(x => x !== s) : [...cur, s] };
+                                    })}
+                                    className="text-xs px-2.5 py-1 rounded-lg border font-medium"
+                                    style={{ background: sel ? "#2563eb" : inpStyle.background, borderColor: sel ? "#2563eb" : inpStyle.borderColor, color: sel ? "#fff" : inpStyle.color }}
+                                  >
+                                    {s}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-xs" style={{ color: "#64748b" }}>select a program first</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    // Student stream: single select
                     return (
                       <div key={key} className="flex flex-col gap-1">
-                        <label
-                          className="text-xs font-semibold"
-                          style={labelStyle}
+                        <label className="text-xs font-semibold" style={labelStyle}>stream</label>
+                        <select
+                          value={typeof val === "string" ? val : ""}
+                          onChange={(e) => setEditEntry((prev) => ({ ...prev, stream: e.target.value }))}
+                          className="px-3 py-2 rounded-lg text-sm outline-none border"
+                          style={inpStyle}
                         >
-                          stream
-                        </label>
-                        {editEntry.program === "BArch" ? (
-                          <input
-                            value="Architecture"
-                            disabled
-                            className="px-3 py-2 rounded-lg text-sm outline-none border opacity-60"
-                            style={inpStyle}
-                          />
-                        ) : (
-                          <select
-                            value={val}
-                            onChange={(e) =>
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                stream: e.target.value
-                              }))
-                            }
-                            className="px-3 py-2 rounded-lg text-sm outline-none border"
-                            style={inpStyle}
-                          >
-                            <option value="">select stream</option>
-                            {(ANU_STREAMS[editEntry.program] || []).map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                          <option value="">select stream</option>
+                          {(ANU_STREAMS[editEntry.program] || []).map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
                       </div>
                     );
                   }
