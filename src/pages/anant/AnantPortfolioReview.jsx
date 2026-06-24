@@ -233,7 +233,7 @@ function ProgressSidebar({
   const nodes = [
     {
       type: "section",
-      label: "let's get to know you",
+      label: "Let's get to know you",
       active: phase === "questions" || phase === "share",
       done: phase !== "questions" && phase !== "share"
     },
@@ -246,7 +246,7 @@ function ProgressSidebar({
     })),
     {
       type: "item",
-      label: "upload resume & portfolio",
+      label: "Upload resume & portfolio",
       active: phase === "share",
       done: shareDone
     },
@@ -270,20 +270,20 @@ function ProgressSidebar({
     },
     {
       type: "section",
-      label: "report ready",
+      label: "Report ready",
       active: phase === "report" || phase === "recording",
       done: false
     },
     {
       type: "item",
-      label: "view report",
+      label: "View report",
       active: phase === "report",
       done: false,
       navigateTo: "report"
     },
     {
       type: "item",
-      label: "view session",
+      label: "View session",
       active: phase === "recording",
       done: false,
       navigateTo: "recording"
@@ -2031,7 +2031,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
                         className="text-xs font-semibold flex items-center gap-1.5"
                         style={{ color: mutedCol }}
                       >
-                        ← report
+                        ← session recording
                       </button>
                       <a
                         href={reportUrl}
