@@ -4,11 +4,11 @@ import { supabase } from "../../supabaseClient";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 
-const NAV_BG    = "#060c17";
-const NAV_BORD  = "#0d1f3c";
-const ACCENT    = "#2563eb";
+const NAV_BG = "#060c17";
+const NAV_BORD = "#0d1f3c";
+const ACCENT = "#2563eb";
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
-const REDIRECT  = `${ANU_ORIGIN}/admin/dashboard`;
+const REDIRECT = `${ANU_ORIGIN}/admin/dashboard`;
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
 
@@ -33,7 +33,10 @@ async function sendSignInEmail(toEmail, magicLink, role) {
     method: "POST",
     headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
+      sender: {
+        name: "Anant National University x evolve",
+        email: "noreply@evolvedesign.academy"
+      },
       to: [{ email: toEmail }],
       subject: `Your ${roleLabel} portal access, Anant National University x Evolve`,
       htmlContent
@@ -46,20 +49,23 @@ export default function AnantAdminLogin() {
   const [searchParams] = useSearchParams();
 
   // mode: "email" (faculty/uni-admin OTP) or "pin" (evolve super-admin via ?ea=1)
-  const [mode,    setMode]    = useState(searchParams.get("ea") === "1" ? "pin" : "email");
-  const [step,    setStep]    = useState("input"); // input | sending | sent
-  const [email,   setEmail]   = useState("");
-  const [pin,     setPin]     = useState("");
-  const [error,   setError]   = useState("");
+  const [mode, setMode] = useState(
+    searchParams.get("ea") === "1" ? "pin" : "email"
+  );
+  const [step, setStep] = useState("input"); // input | sending | sent
+  const [email, setEmail] = useState("");
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
 
   const evolvePin = import.meta.env.VITE_ADMIN_PIN;
-  const anantPin  = import.meta.env.VITE_ANANT_ADMIN_PIN;
+  const anantPin = import.meta.env.VITE_ANANT_ADMIN_PIN;
 
   // If PIN session or Supabase session already valid, skip login
   useEffect(() => {
     if (sessionStorage.getItem("admin_access") === "true") {
-      navigate("/admin/dashboard", { replace: true }); return;
+      navigate("/admin/dashboard", { replace: true });
+      return;
     }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) navigate("/admin/dashboard", { replace: true });
@@ -70,36 +76,49 @@ export default function AnantAdminLogin() {
   async function handleSend() {
     const addr = email.trim().toLowerCase();
     if (!addr) return;
-    setError(""); setStep("sending");
+    setError("");
+    setStep("sending");
 
     // Whitelist check
     const [{ data: faculty }, { data: admin }] = await Promise.all([
-      supabaseAdmin.from("anu_faculty").select("id").eq("anu_email", addr).maybeSingle(),
-      supabaseAdmin.from("anu_admins").select("id").eq("anu_email", addr).maybeSingle()
+      supabaseAdmin
+        .from("anu_faculty")
+        .select("id")
+        .eq("anu_email", addr)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("anu_admins")
+        .select("id")
+        .eq("anu_email", addr)
+        .maybeSingle()
     ]);
 
     if (!faculty && !admin) {
       setError("This email is not registered as faculty or admin.");
-      setStep("input"); return;
+      setStep("input");
+      return;
     }
 
     const role = admin ? "uni_admin" : "faculty";
-    const { data: linkData, error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: addr,
-      options: { redirectTo: REDIRECT }
-    });
+    const { data: linkData, error: otpErr } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: addr,
+        options: { redirectTo: REDIRECT }
+      });
 
     if (otpErr) {
       console.error("generateLink error:", otpErr);
       setError(otpErr.message);
-      setStep("input"); return;
+      setStep("input");
+      return;
     }
 
     const magicLink = linkData?.properties?.action_link;
     if (!magicLink) {
       setError("Could not generate sign-in link. Please try again.");
-      setStep("input"); return;
+      setStep("input");
+      return;
     }
 
     await sendSignInEmail(addr, magicLink, role);
@@ -111,34 +130,55 @@ export default function AnantAdminLogin() {
   function handlePinSubmit(e) {
     e.preventDefault();
     const entered = pin.trim();
-    if ((evolvePin && entered === String(evolvePin)) ||
-        (anantPin  && entered === String(anantPin))) {
+    if (
+      (evolvePin && entered === String(evolvePin)) ||
+      (anantPin && entered === String(anantPin))
+    ) {
       sessionStorage.setItem("admin_access", "true");
       sessionStorage.setItem("admin_tenant", "anant");
       sessionStorage.removeItem("anu_role");
-      navigate("/admin/dashboard"); return;
+      navigate("/admin/dashboard");
+      return;
     }
     setError("Wrong PIN.");
   }
 
   function startCountdown() {
     setCountdown(60);
-    const iv = setInterval(() =>
-      setCountdown(c => { if (c <= 1) { clearInterval(iv); return 0; } return c - 1; }), 1000);
+    const iv = setInterval(
+      () =>
+        setCountdown((c) => {
+          if (c <= 1) {
+            clearInterval(iv);
+            return 0;
+          }
+          return c - 1;
+        }),
+      1000
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#060c17" }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "#060c17" }}
+    >
       {/* nav */}
-      <header className="flex items-center px-6 border-b" style={{ height: "64px", borderColor: NAV_BORD, background: NAV_BG }}>
+      <header
+        className="flex items-center px-6 border-b"
+        style={{ height: "64px", borderColor: NAV_BORD, background: NAV_BG }}
+      >
         <button onClick={() => navigate("/")} className="focus:outline-none">
-          <img src={anant_logo} alt="Anant National University" className="h-10 w-auto object-contain" />
+          <img
+            src={anant_logo}
+            alt="Anant National University"
+            className="h-10 w-auto object-contain"
+          />
         </button>
       </header>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm flex flex-col gap-5">
-
           {/* ══ EMAIL MODE ══ */}
           {mode === "email" && (
             <>
@@ -146,10 +186,16 @@ export default function AnantAdminLogin() {
               {(step === "input" || step === "sending") && (
                 <>
                   <div>
-                    <h1 className="font-extrabold text-white" style={{ fontSize: 32, letterSpacing: "-0.04em" }}>
-                      faculty access
+                    <h1
+                      className="font-extrabold text-white"
+                      style={{ fontSize: 32, letterSpacing: "-0.04em" }}
+                    >
+                      admin access
                     </h1>
-                    <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "rgba(255,255,255,0.45)" }}
+                    >
                       enter your ANU email — we'll send you a sign-in link.
                     </p>
                   </div>
@@ -157,10 +203,18 @@ export default function AnantAdminLogin() {
                     type="email"
                     placeholder="yourname@anu.edu.in"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && email.trim() && step === "input" && handleSend()}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      email.trim() &&
+                      step === "input" &&
+                      handleSend()
+                    }
                     className="w-full rounded-2xl px-5 py-4 text-white text-base outline-none border"
-                    style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)" }}
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      borderColor: "rgba(255,255,255,0.12)"
+                    }}
                     autoFocus
                   />
                   {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -179,34 +233,81 @@ export default function AnantAdminLogin() {
               {step === "sent" && (
                 <>
                   <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                      style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)" }}>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                        <rect x="2" y="5" width="20" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.8"/>
-                        <path d="M2 7l10 7 10-7" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"/>
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                      style={{
+                        background: "rgba(37,99,235,0.12)",
+                        border: "1px solid rgba(37,99,235,0.25)"
+                      }}
+                    >
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <rect
+                          x="2"
+                          y="5"
+                          width="20"
+                          height="14"
+                          rx="2"
+                          stroke="#60a5fa"
+                          strokeWidth="1.8"
+                        />
+                        <path
+                          d="M2 7l10 7 10-7"
+                          stroke="#60a5fa"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="text-center">
-                    <h1 className="font-extrabold text-white" style={{ fontSize: 26, letterSpacing: "-0.03em" }}>
+                    <h1
+                      className="font-extrabold text-white"
+                      style={{ fontSize: 26, letterSpacing: "-0.03em" }}
+                    >
                       check your email
                     </h1>
-                    <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <p
+                      className="text-sm mt-2"
+                      style={{ color: "rgba(255,255,255,0.45)" }}
+                    >
                       sign-in link sent to
                     </p>
-                    <p className="text-sm font-semibold mt-0.5 text-white">{email}</p>
-                    <p className="text-sm mt-3" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      click the link in the email — you'll land directly on the dashboard.
+                    <p className="text-sm font-semibold mt-0.5 text-white">
+                      {email}
+                    </p>
+                    <p
+                      className="text-sm mt-3"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
+                      click the link in the email — you'll land directly on the
+                      dashboard.
                     </p>
                   </div>
                   <p className="text-center text-sm">
-                    {countdown > 0
-                      ? <span style={{ color: "rgba(255,255,255,0.25)" }}>resend in {countdown}s</span>
-                      : <button onClick={handleSend} style={{ color: "#60a5fa" }} className="underline underline-offset-2">resend link</button>
-                    }
+                    {countdown > 0 ? (
+                      <span style={{ color: "rgba(255,255,255,0.25)" }}>
+                        resend in {countdown}s
+                      </span>
+                    ) : (
+                      <button
+                        onClick={handleSend}
+                        style={{ color: "#60a5fa" }}
+                        className="underline underline-offset-2"
+                      >
+                        resend link
+                      </button>
+                    )}
                   </p>
                   <button
-                    onClick={() => { setStep("input"); setError(""); }}
+                    onClick={() => {
+                      setStep("input");
+                      setError("");
+                    }}
                     className="text-xs text-center w-full"
                     style={{ color: "rgba(255,255,255,0.2)" }}
                   >
@@ -214,7 +315,6 @@ export default function AnantAdminLogin() {
                   </button>
                 </>
               )}
-
             </>
           )}
 
@@ -222,26 +322,44 @@ export default function AnantAdminLogin() {
           {mode === "pin" && (
             <>
               <button
-                onClick={() => { setMode("email"); setPin(""); setError(""); }}
+                onClick={() => {
+                  setMode("email");
+                  setPin("");
+                  setError("");
+                }}
                 className="flex items-center gap-1.5 text-sm font-semibold w-fit"
                 style={{ color: "#60a5fa" }}
               >
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <path d="M12.5 15L7.5 10L12.5 5" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M12.5 15L7.5 10L12.5 5"
+                    stroke="#60a5fa"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 back
               </button>
-              <h1 className="font-extrabold text-white" style={{ fontSize: 32, letterSpacing: "-0.04em" }}>
+              <h1
+                className="font-extrabold text-white"
+                style={{ fontSize: 32, letterSpacing: "-0.04em" }}
+              >
                 admin PIN
               </h1>
               <form onSubmit={handlePinSubmit} className="flex flex-col gap-4">
                 <input
                   value={pin}
-                  onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onChange={(e) =>
+                    setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
+                  }
                   inputMode="numeric"
                   placeholder="••••"
                   className="w-full rounded-2xl px-5 py-4 text-white text-center text-2xl tracking-[0.3em] font-bold outline-none border"
-                  style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)" }}
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    borderColor: "rgba(255,255,255,0.12)"
+                  }}
                   autoFocus
                 />
                 {error && <p className="text-red-400 text-sm">{error}</p>}

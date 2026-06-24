@@ -69,7 +69,7 @@ async function sendANUPersonInvite(email, role, apiKey) {
   } catch {}
   const isStudent = role === "student";
   const headline = isStudent
-    ? "Your portfolio review portal is ready"
+    ? "Your portal is ready"
     : role === "uni_admin"
       ? "Your admin portal is ready"
       : "Your faculty portal is ready";
@@ -77,13 +77,13 @@ async function sendANUPersonInvite(email, role, apiKey) {
     ? "Click below to sign in and submit your portfolio for expert feedback. No password needed."
     : "You've been invited to the Anant National University x evolve admin panel. No password needed.";
   const cta = isStudent
-    ? "Open my portfolio review portal"
+    ? "Go to portal"
     : "Access my dashboard";
   const link =
     magicLink ||
     (isStudent ? `${ANU_ORIGIN_URL}/signin` : `${ANU_ORIGIN_URL}/admin`);
   const subject = isStudent
-    ? "Your portfolio review portal is ready, Anant National University x Evolve"
+    ? "Your portal is ready, Anant National University x Evolve"
     : "Your admin portal access, Anant National University x Evolve";
   const htmlContent = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px"><img src="${ANU_ORIGIN_URL}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" /><p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">${headline}</h1><p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">${body}</p><a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">${cta}</a><hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" /><p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${email}. If this wasn't you, ignore this email.</p></div>`;
   await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -328,7 +328,7 @@ async function sendReportNotifications(review, reportUrl, apiKey) {
 }
 
 function ReviewUploadCell({ review, onDone }) {
-  const [state, setState] = useState("idle"); // idle | preview | uploading | sending | done | error
+  const [state, setState] = useState("idle"); // idle | preview | ready | uploading | sending | done | error
   const [msg, setMsg] = useState("");
   const [remarks, setRemarks] = useState(review.remarks || "");
   const [pendingFile, setPendingFile] = useState(null);
@@ -552,16 +552,43 @@ function ReviewUploadCell({ review, onDone }) {
               ✕ cancel
             </button>
             <button
-              onClick={() => handle(pendingFile)}
+              onClick={() => { if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); setState("ready"); }}
               className="text-xs px-5 py-2.5 rounded-lg font-bold"
               style={{ background: GR, color: "#000", cursor: "pointer" }}
             >
-              ✓ looks good — send
+              ✓ looks good
             </button>
           </div>
         </div>
       </>,
       document.body
+    );
+  }
+
+  // Ready state: file chosen & confirmed, waiting for explicit "send" or "delete"
+  if (state === "ready" && pendingFile) {
+    return (
+      <div className="flex flex-col gap-1.5" style={{ minWidth: 180 }}>
+        <p className="text-xs truncate max-w-[160px]" style={{ color: "#aaa" }}>
+          {pendingFile.name}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handle(pendingFile)}
+            className="text-xs px-3 py-1.5 rounded-lg font-bold whitespace-nowrap"
+            style={{ background: GR, color: "#000" }}
+          >
+            send report →
+          </button>
+          <button
+            onClick={cancelPreview}
+            className="text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap"
+            style={{ background: "#222", border: "1px solid #444", color: "#f87171" }}
+          >
+            delete
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -3599,6 +3626,15 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                 whiteSpace: "nowrap"
                               }}
                             >
+                              stream
+                            </th>
+                            <th
+                              className="px-4 py-3 text-left font-semibold"
+                              style={{
+                                color: aTblHdrTxt,
+                                whiteSpace: "nowrap"
+                              }}
+                            >
                               year <SortBtn field="year" />
                             </th>
                             <th
@@ -3627,7 +3663,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           {mergedRows.length === 0 && (
                             <tr>
                               <td
-                                colSpan={!isFaculty ? 6 : 5}
+                                colSpan={!isFaculty ? 7 : 6}
                                 className="px-4 py-8 text-center"
                                 style={{ color: aTblDim }}
                               >
@@ -3680,6 +3716,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   style={{ color: aTblMuted }}
                                 >
                                   {s.program || "—"}
+                                </td>
+                                <td
+                                  className="px-4 py-3 text-xs"
+                                  style={{ color: aTblMuted }}
+                                >
+                                  {s.stream || "—"}
                                 </td>
                                 <td
                                   className="px-4 py-3 text-xs"
@@ -3780,12 +3822,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           >
                             {sel.anu_email}
                           </div>
-                          {(sel.program || sel.year) && (
+                          {(sel.program || sel.stream || sel.year) && (
                             <div
                               className="text-xs mt-0.5"
                               style={{ color: aTblDim }}
                             >
-                              {[sel.program, sel.year]
+                              {[sel.program, sel.stream, sel.year]
                                 .filter(Boolean)
                                 .join(" · ")}
                             </div>
@@ -4270,7 +4312,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           className="text-[11px] font-semibold uppercase tracking-wide"
                           style={{ color: aTblDim }}
                         >
-                          streams
+                          streams <span className="normal-case font-normal">(you can select multiple)</span>
                         </label>
                         {addForm.program === "BArch" ? (
                           <div className="px-3 py-2 rounded-lg border text-sm opacity-60" style={{ background: aInpBg, borderColor: aInpBord, color: aInpText }}>
