@@ -35,8 +35,7 @@ async function sendSubmissionConfirmation(toEmail, toName, calendlyUrl) {
       <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 28px">
         Your portfolio, resume and answers have been received. Your reviewer will look these over before your call. The next step is to book your 1:1 review call — choose a slot that works for you.
       </p>
-      // <a href="${calendlyUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">
-      <a href="https://anu.evolvedesign.academy/portfolio-review/form" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">
+      <a href="${ANU_ORIGIN}/portfolio-review/form" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">
         Book your review call →
       </a>
       <p style="font-size:13px;color:rgba(255,255,255,0.35);margin:20px 0 0">If you've already booked your call, you can ignore the button above.</p>

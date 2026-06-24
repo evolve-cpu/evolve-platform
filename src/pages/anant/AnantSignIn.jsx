@@ -149,19 +149,24 @@ export default function AnantSignIn() {
         </button>
       </header>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-10">
+        {/* large centred heading — always visible regardless of step */}
+        <h1
+          className="font-extrabold text-white text-center w-full"
+          style={{ fontSize: "clamp(32px, 8vw, 64px)", letterSpacing: "-0.03em", lineHeight: 1.1 }}
+        >
+          portfolio review portal
+        </h1>
+
         <div className="w-full max-w-sm flex flex-col gap-5">
 
           {/* ── email step ── */}
           {(step === "email" || step === "sending") && (
             <>
               <div>
-                <p className="font-extrabold text-white mb-1" style={{ fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
-                  portfolio review portal
-                </p>
-                <h1 className="font-extrabold text-white" style={{ fontSize: 36, letterSpacing: "-0.04em" }}>
+                <p className="font-extrabold text-white" style={{ fontSize: 28, letterSpacing: "-0.04em" }}>
                   sign in
-                </h1>
+                </p>
                 <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
                   enter your ANU email — we'll send you a sign-in link.
                 </p>
