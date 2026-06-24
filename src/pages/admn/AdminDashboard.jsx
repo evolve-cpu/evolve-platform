@@ -63,7 +63,7 @@ async function sendANUPersonInvite(email, role, apiKey) {
     const { data } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
-      options: { redirectTo }
+      options: { redirectTo, expiresIn: 86400 }
     });
     if (data?.properties?.action_link) magicLink = data.properties.action_link;
   } catch {}

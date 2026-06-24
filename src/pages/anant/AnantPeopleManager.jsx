@@ -74,7 +74,7 @@ async function generateAndSend({ email, role }) {
   let magicLink = null;
   try {
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink", email, options: { redirectTo }
+      type: "magiclink", email, options: { redirectTo, expiresIn: 86400 }
     });
     if (!error && data?.properties?.action_link) magicLink = data.properties.action_link;
   } catch {}

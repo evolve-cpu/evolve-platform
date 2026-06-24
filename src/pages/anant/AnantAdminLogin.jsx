@@ -104,7 +104,7 @@ export default function AnantAdminLogin() {
       await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email: addr,
-        options: { redirectTo: REDIRECT }
+        options: { redirectTo: REDIRECT, expiresIn: 86400 }
       });
 
     if (otpErr) {
