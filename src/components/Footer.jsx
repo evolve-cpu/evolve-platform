@@ -1059,7 +1059,7 @@ const Footer = ({ onContactClick }) => {
               be remarkable?
             </h2>
 
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <a
                 href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
                 target="_blank"
@@ -1071,6 +1071,37 @@ const Footer = ({ onContactClick }) => {
                   alt="join us"
                   className="w-auto h-[3.5rem] hover:opacity-80 transition-opacity duration-300"
                 />
+              </a>
+            </div> */}
+            <div className="mt-8">
+              <a
+                href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                target="_blank"
+                rel="noopener noreferrer"
+                // onClick={trackCommunityJoin}
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  w-[160px] md:w-[200px]
+                  h-[52px] md:h-[58px]
+                  rounded-[16px]
+                  bg-[#1F1F1F]
+                  text-white
+                  text-[18px] md:text-[24px]
+                  font-bold
+                  leading-none
+                  transition-all
+                  duration-150
+                  hover:opacity-90
+                  active:shadow-none
+                  select-none
+                "
+                style={{
+                  boxShadow: "0 6px 0 #808080"
+                }}
+              >
+                Join Us
               </a>
             </div>
 
@@ -1179,7 +1210,7 @@ const Footer = ({ onContactClick }) => {
             ready to be remarkable?
           </h2>
 
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <a
               href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
               target="_blank"
@@ -1195,6 +1226,37 @@ const Footer = ({ onContactClick }) => {
                 onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
                 className="w-auto h-[3rem] "
               />
+            </a>
+          </div> */}
+          <div className="mt-8">
+            <a
+              href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+              target="_blank"
+              rel="noopener noreferrer"
+              // onClick={trackCommunityJoin}
+              className="
+                inline-flex
+                items-center
+                justify-center
+                w-[160px] md:w-[200px]
+                h-[52px] md:h-[58px]
+                rounded-[16px]
+                bg-[#1F1F1F]
+                text-white
+                text-[18px] md:text-[24px]
+                font-bold
+                leading-none
+                transition-all
+                duration-150
+                hover:opacity-90
+                active:shadow-none
+                select-none
+              "
+              style={{
+                boxShadow: "0 6px 0 #808080"
+              }}
+            >
+              Join Us
             </a>
           </div>
 
