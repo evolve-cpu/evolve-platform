@@ -769,8 +769,7 @@ export default function AnantPortfolioReview({ session, studentData }) {
 
         if (data.review_report_url) {
           setReportUrl(data.review_report_url);
-          // If recording exists, start there; otherwise go straight to report
-          setPhase(data.meet_recording_url ? "recording" : "report");
+          setPhase("report"); // always land on report; recording accessible via sidebar
         } else if (
           data.review_status === "done" ||
           data.review_status === "in_review"

@@ -34,11 +34,13 @@ const ANU_STREAMS = {
     "Moving Image",
     "Space Design",
     "Product Design",
-    "Interaction Design"
+    "Interaction Design",
+    "Sustainable Fashion and Textile Design"
   ],
   BArch: ["Architecture"]
 };
-const ANU_YEARS = ["3", "4"];
+const ANU_YEARS = { BDes: ["3", "4"], BArch: ["3", "4", "5"] };
+const ANU_YEARS_ALL = ["3", "4", "5"];
 const ANU_ORIGIN_URL = "https://anu.evolvedesign.academy";
 
 // Parses the `stream` DB column which may be a JSON array string OR a legacy plain string
@@ -411,7 +413,7 @@ function ReviewUploadCell({ review, onDone }) {
           <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
           <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portfolio review report is ready</h1>
           <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">Great news, your personalised portfolio review report is ready to view.</p>
-          <a href="${reportUrl}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">View your report</a>
+          <a href="${ANU_ORIGIN_URL}/portfolio-review/form" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">View your report →</a>
           <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
           <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">We'd love to hear what you thought of the experience. There's a quick feedback form on the report page.</p>
         </div>`;
@@ -3451,8 +3453,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           }}
                         >
                           <option value="">select year</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
+                          {(ANU_YEARS[addForm.program] || ANU_YEARS_ALL).map((y) => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -3544,7 +3547,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                     }}
                   >
                     <option value="all">all years</option>
-                    {ANU_YEARS.map((y) => (
+                    {ANU_YEARS_ALL.map((y) => (
                       <option key={y} value={y}>
                         year {y}
                       </option>
@@ -6344,8 +6347,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                           style={inpStyle}
                         >
                           <option value="">select</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
+                          {(ANU_YEARS[editEntry.program] || ANU_YEARS_ALL).map((y) => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
                         </select>
                       </div>
                     );
