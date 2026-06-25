@@ -2015,37 +2015,39 @@ export default function AnantPortfolioReview({ session, studentData }) {
             (() => {
               return (
                 <div className="flex flex-col flex-1 min-h-0">
-                  {/* header strip with back-to-recording button if recording exists */}
-                  {recordingUrl && (
-                    <div
-                      className="shrink-0 flex items-center justify-between px-5 md:px-8 py-3 border-b"
-                      style={{
-                        borderColor: border,
-                        background: dark ? "#060c17" : "#f8fafc"
-                      }}
-                    >
+                  {/* header strip — always shown */}
+                  <div
+                    className="shrink-0 flex items-center justify-between px-5 md:px-8 py-3 border-b"
+                    style={{
+                      borderColor: border,
+                      background: dark ? "#060c17" : "#f8fafc"
+                    }}
+                  >
+                    {recordingUrl ? (
                       <button
                         onClick={() => setPhase("recording")}
-                        className="text-xs font-semibold flex items-center gap-1.5"
+                        className="text-xs font-semibold flex items-center gap-1"
                         style={{ color: mutedCol }}
                       >
-                        ← session recording
+                        view session →
                       </button>
-                      <a
-                        href={reportUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{
-                          background: "rgba(37,99,235,0.1)",
-                          color: "#60a5fa",
-                          border: "1px solid rgba(37,99,235,0.2)"
-                        }}
-                      >
-                        open in new tab ↗
-                      </a>
-                    </div>
-                  )}
+                    ) : (
+                      <span />
+                    )}
+                    <a
+                      href={reportUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{
+                        background: "rgba(37,99,235,0.1)",
+                        color: "#60a5fa",
+                        border: "1px solid rgba(37,99,235,0.2)"
+                      }}
+                    >
+                      open in new tab ↗
+                    </a>
+                  </div>
                   {/* Mobile: show a button to open PDF in new tab + fallback iframe */}
                   <div className="flex-1 min-h-0 relative">
                     {/* Visible on mobile as fallback */}

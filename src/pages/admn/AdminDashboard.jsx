@@ -3886,15 +3886,28 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   </a>
                                 )}
                                 {sel.review.meet_recording_url ? (
-                                  <a
-                                    href={sel.review.meet_recording_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs font-semibold underline underline-offset-2"
-                                    style={{ color: "#60a5fa" }}
-                                  >
-                                    meet recording
-                                  </a>
+                                  <div className="flex items-center gap-2">
+                                    <a
+                                      href={sel.review.meet_recording_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-xs font-semibold underline underline-offset-2"
+                                      style={{ color: "#60a5fa" }}
+                                    >
+                                      meet recording
+                                    </a>
+                                    {isEvolveAdmin && (
+                                      <button
+                                        onClick={() =>
+                                          setShowMeetRecInput((v) => !v)
+                                        }
+                                        className="text-xs font-semibold"
+                                        style={{ color: aTblDim }}
+                                      >
+                                        {showMeetRecInput ? "cancel" : "edit"}
+                                      </button>
+                                    )}
+                                  </div>
                                 ) : isEvolveAdmin ? (
                                   <button
                                     onClick={() =>
@@ -4072,6 +4085,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                                   view pdf
                                 </a>
                               </div>
+                            ) : !sel.review.meet_recording_url ? (
+                              <p
+                                className="text-xs italic"
+                                style={{ color: aTblDim }}
+                              >
+                                add the session recording link before uploading the report
+                              </p>
                             ) : (
                               <ReviewUploadCell
                                 review={sel.review}
