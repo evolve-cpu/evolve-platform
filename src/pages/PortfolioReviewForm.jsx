@@ -1286,20 +1286,23 @@ export default function PortfolioReviewForm() {
       setAnantSession(session || null);
       if (session?.user) {
         const email = session.user.email?.toLowerCase();
-        // Populate sessionStorage cache so home/profile pages load instantly
-        try {
-          const existing = sessionStorage.getItem("anu_student_cache");
-          if (existing) {
-            const p = JSON.parse(existing);
-            if (p.anu_email === email) return; // already cached
-          }
-        } catch {}
         const { data } = await supabaseAdmin
           .from("anu_students")
-          .select("first_name, last_name, program, stream, year, anu_email")
+          .select("id, auth_user_id, first_name, last_name, program, stream, year, anu_email")
           .eq("anu_email", email)
           .maybeSingle();
-        if (data) sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+        if (data) {
+          // Populate sessionStorage cache so home/profile pages load instantly
+          sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
+          // Stamp auth_user_id + invite_accepted_at when student first arrives
+          // (magic link invites redirect here directly, bypassing AnantSignIn)
+          if (!data.auth_user_id) {
+            supabaseAdmin.from("anu_students").update({
+              auth_user_id: session.user.id,
+              invite_accepted_at: new Date().toISOString()
+            }).eq("id", data.id).then(() => {});
+          }
+        }
         // If not a student, redirect to sign-in (handles admin sessions bleeding in)
         if (!data) {
           navigate("/signin", { replace: true });
