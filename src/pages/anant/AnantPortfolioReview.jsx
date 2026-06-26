@@ -10,7 +10,7 @@ const CALENDLY_URL =
   "https://calendly.com/evolvedesignacademy/portfolioreview";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
-// const ANU_ORIGIN = "http://localhost:8080"; // for local dev
+// const ANU_ORIGIN = "http://localhost:8080"; // for local dev checking
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
 
