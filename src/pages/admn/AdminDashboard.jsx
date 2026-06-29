@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../../supabaseClient";
+import AIReportModal from "./AIReportModal";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -838,6 +839,8 @@ export default function AdminDashboard() {
   const [waitlist, setWaitlist] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [portfolioReviews, setPortfolioReviews] = useState([]);
+  const [aiReportReview, setAiReportReview] = useState(null); // review row currently open in AIReportModal
+  const [regeneratingIds, setRegeneratingIds] = useState(new Set());
   const [anuStudents, setAnuStudents] = useState([]);
   const [anuFacultyData, setAnuFacultyData] = useState(null);
   const [anuAdminsData, setAnuAdminsData] = useState(null);
@@ -1117,6 +1120,28 @@ export default function AdminDashboard() {
           : r
       )
     );
+  };
+
+  const handleAiRegenerate = async (review) => {
+    setRegeneratingIds((prev) => new Set([...prev, review.id]));
+    setPortfolioReviews((prev) =>
+      prev.map((r) => r.id === review.id ? { ...r, ai_report_status: "generating" } : r)
+    );
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/generate-ai-review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ review_id: review.id })
+      });
+    } catch {
+      // silent — status will be updated by the edge function
+    } finally {
+      setRegeneratingIds((prev) => { const s = new Set(prev); s.delete(review.id); return s; });
+    }
   };
 
   const handleMentorshipReportDone = (versionId, reportUrl, remarks) => {
@@ -2818,6 +2843,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
               "proud project",
               "notes",
               "submitted",
+              "ai report",
               "remarks",
               "report"
             ];
@@ -3012,6 +3038,51 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
                             title={r.remarks}
                           >
                             {r.remarks || "—"}
+                          </td>
+                          {/* AI REPORT STATUS */}
+                          <td className="px-4 py-3">
+                            {r.tenant_id !== "anant" && (() => {
+                              const st = r.ai_report_status;
+                              const isRegen = regeneratingIds.has(r.id);
+                              if (st === "ready") {
+                                return (
+                                  <button
+                                    onClick={() => setAiReportReview(r)}
+                                    className="text-xs px-3 py-1 rounded-full font-black"
+                                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}
+                                  >
+                                    view report
+                                  </button>
+                                );
+                              }
+                              if (st === "generating" || isRegen) {
+                                return (
+                                  <span className="text-xs" style={{ color: "#FFD007" }}>
+                                    generating…
+                                  </span>
+                                );
+                              }
+                              if (st === "failed") {
+                                return (
+                                  <button
+                                    onClick={() => handleAiRegenerate(r)}
+                                    className="text-xs px-2 py-1 rounded-full font-semibold"
+                                    style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}
+                                  >
+                                    retry
+                                  </button>
+                                );
+                              }
+                              return (
+                                <button
+                                  onClick={() => handleAiRegenerate(r)}
+                                  className="text-xs px-2 py-1 rounded-full font-semibold"
+                                  style={{ background: "#1a1a1a", color: "#555", border: "1px solid #2a2a2a" }}
+                                >
+                                  generate
+                                </button>
+                              );
+                            })()}
                           </td>
                           <td className="px-4 py-3">
                             <ReviewUploadCell
@@ -6468,6 +6539,24 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </div>
           </div>
         </div>
+      )}
+
+      {/* AI Report Modal — evolve reviews only */}
+      {aiReportReview && (
+        <AIReportModal
+          review={aiReportReview}
+          onClose={() => setAiReportReview(null)}
+          onSaved={(updated) => {
+            setPortfolioReviews((prev) =>
+              prev.map((r) => r.id === updated.id ? updated : r)
+            );
+            setAiReportReview(updated);
+          }}
+          onRegenerate={(review) => {
+            setAiReportReview(null);
+            handleAiRegenerate(review);
+          }}
+        />
       )}
     </div>
   );

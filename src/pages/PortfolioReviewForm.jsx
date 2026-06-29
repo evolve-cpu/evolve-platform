@@ -1526,7 +1526,7 @@ export default function PortfolioReviewForm() {
         portfolio_file_url = urlData?.publicUrl || null;
       }
 
-      const { error: insertErr } = await supabase
+      const { data: insertData, error: insertErr } = await supabase
         .from("portfolio_reviews")
         .insert({
           user_id: actingUser.id,
@@ -1541,9 +1541,24 @@ export default function PortfolioReviewForm() {
           tenant_id: tenant.id,
           course: course.trim() || null,
           batch: batch.trim() || null
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertErr) throw new Error(insertErr.message);
+
+      // Fire AI report generation for evolve tenant only (best-effort, non-blocking)
+      if (!isAnant && insertData?.id) {
+        fetch(`${SUPABASE_URL}/functions/v1/generate-ai-review`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "apikey": SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ review_id: insertData.id })
+        }).catch(() => {});
+      }
 
       // Fire "review in progress" email — best-effort, don't block on failure
       const inProgressTplId = tenant.brevoInProgressTemplateId || BREVO_IN_PROGRESS_TEMPLATE_ID;
