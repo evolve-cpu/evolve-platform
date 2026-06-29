@@ -6556,6 +6556,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             setAiReportReview(null);
             handleAiRegenerate(review);
           }}
+          onReportSent={(updated) => {
+            setPortfolioReviews((prev) =>
+              prev.map((r) => r.id === updated.id ? { ...r, ...updated } : r)
+            );
+            setAiReportReview(null);
+          }}
         />
       )}
     </div>

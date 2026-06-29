@@ -1,18 +1,65 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import ReactDOM from "react-dom/client";
 import { supabaseAdmin } from "../../supabaseAdminClient";
+import PortfolioReviewPDFTemplate from "./PortfolioReviewPDFTemplate";
+
+const SUPABASE_URL              = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY         = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env.VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
 
 const Y = "#FFD007";
 const P = "#DF0586";
 
-/* ── Tiny helpers ─────────────────────────────────────────────────────────── */
+/* ── PDF capture helper ──────────────────────────────────────────────────── */
+
+async function captureAsPDF(report, review) {
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;";
+  document.body.appendChild(container);
+
+  const root = ReactDOM.createRoot(container);
+  await new Promise((resolve) => {
+    root.render(<PortfolioReviewPDFTemplate report={report} review={review} />);
+    setTimeout(resolve, 400);
+  });
+
+  try {
+    const { default: html2canvas } = await import("html2canvas");
+    const canvas = await html2canvas(container.firstChild, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#0a0a0a",
+      logging: false,
+    });
+
+    const { jsPDF } = await import("jspdf");
+    const pdf    = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pdfW   = 210;
+    const pdfH   = 297;
+    const imgW   = pdfW;
+    const imgH   = (canvas.height / canvas.width) * pdfW;
+    const imgData = canvas.toDataURL("image/jpeg", 0.93);
+
+    let yPos = 0, page = 0;
+    while (yPos < imgH) {
+      if (page > 0) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, -yPos, imgW, imgH);
+      yPos += pdfH;
+      page++;
+    }
+    return pdf;
+  } finally {
+    root.unmount();
+    document.body.removeChild(container);
+  }
+}
+
+/* ── Tiny UI helpers ─────────────────────────────────────────────────────── */
 
 function Label({ children }) {
   return (
-    <span
-      className="text-[10px] font-black uppercase tracking-widest"
-      style={{ color: "#555" }}
-    >
+    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#555" }}>
       {children}
     </span>
   );
@@ -20,44 +67,30 @@ function Label({ children }) {
 
 function Field({ label, value, onChange, multiline = false, rows = 3 }) {
   const style = {
-    background: "#111",
-    border: "1px solid #2a2a2a",
-    color: "#fff",
-    borderRadius: 8,
-    padding: "8px 12px",
-    fontSize: 13,
-    width: "100%",
-    resize: multiline ? "vertical" : "none",
-    outline: "none",
-    fontFamily: "inherit",
+    background: "#111", border: "1px solid #2a2a2a", color: "#fff",
+    borderRadius: 8, padding: "8px 12px", fontSize: 13, width: "100%",
+    resize: multiline ? "vertical" : "none", outline: "none", fontFamily: "inherit",
   };
   return (
     <div className="flex flex-col gap-1">
       <Label>{label}</Label>
-      {multiline ? (
-        <textarea rows={rows} value={value} onChange={(e) => onChange(e.target.value)} style={style} />
-      ) : (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={style} />
-      )}
+      {multiline
+        ? <textarea rows={rows} value={value} onChange={(e) => onChange(e.target.value)} style={style} />
+        : <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={style} />
+      }
     </div>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <div
-      className="rounded-xl p-4 flex flex-col gap-3"
-      style={{ background: "#0d0d0d", border: "1px solid #1e1e1e" }}
-    >
-      <p className="text-xs font-black uppercase tracking-widest" style={{ color: P }}>
-        {title}
-      </p>
+    <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: "#0d0d0d", border: "1px solid #1e1e1e" }}>
+      <p className="text-xs font-black uppercase tracking-widest" style={{ color: P }}>{title}</p>
       {children}
     </div>
   );
 }
 
-/* ── deep-clone safe setter helper ──────────────────────────────────────── */
 function set(obj, path, value) {
   const keys = path.split(".");
   const clone = JSON.parse(JSON.stringify(obj));
@@ -70,15 +103,28 @@ function set(obj, path, value) {
   return clone;
 }
 
-/* ── AIReportModal ───────────────────────────────────────────────────────── */
+/* ── PDF status label ────────────────────────────────────────────────────── */
+const PDF_LABELS = {
+  idle:       null,
+  generating: "generating pdf…",
+  uploading:  "uploading…",
+  sending:    "sending email…",
+  done:       "sent ✓",
+  error:      null,
+};
 
-export default function AIReportModal({ review, onClose, onSaved, onRegenerate }) {
+/* ── Main modal component ────────────────────────────────────────────────── */
+
+export default function AIReportModal({ review, onClose, onSaved, onRegenerate, onReportSent }) {
   const [report, setReport] = useState(() =>
     review.ai_report ? JSON.parse(JSON.stringify(review.ai_report)) : {}
   );
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState("");
+  const [saving,   setSaving]   = useState(false);
+  const [saveMsg,  setSaveMsg]  = useState("");
+  const [pdfState, setPdfState] = useState("idle");
+  const [pdfMsg,   setPdfMsg]   = useState("");
 
+  /* ── state helpers ── */
   const upd = (path, value) => setReport((prev) => set(prev, path, value));
 
   const updArr = (key, index, field, value) => {
@@ -101,6 +147,7 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
     });
   };
 
+  /* ── save edits ── */
   const handleSave = async () => {
     setSaving(true);
     setSaveMsg("");
@@ -114,29 +161,110 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
     } else {
       setSaveMsg("saved");
       onSaved?.({ ...review, ai_report: report });
-      setTimeout(() => setSaveMsg(""), 2000);
+      setTimeout(() => setSaveMsg(""), 2500);
     }
   };
 
-  const m = report.metrics || {};
-  const wy = report.where_you_are || {};
-  const ww = report.working_well || [];
-  const hb = report.holding_back || {};
-  const fn = report.focus_next || [];
+  /* ── download PDF only ── */
+  const handleDownloadPDF = async () => {
+    setPdfState("generating");
+    setPdfMsg("");
+    try {
+      const pdf = await captureAsPDF(report, review);
+      const slug = (review.name || "report").toLowerCase().replace(/\s+/g, "-");
+      pdf.save(`portfolio-review-${slug}.pdf`);
+      setPdfState("idle");
+    } catch (err) {
+      setPdfState("error");
+      setPdfMsg(err.message || "PDF generation failed");
+    }
+  };
+
+  /* ── generate → upload → send ── */
+  const handleGenerateAndSend = async () => {
+    setPdfState("generating");
+    setPdfMsg("");
+    try {
+      // 1. Generate PDF blob
+      const pdf = await captureAsPDF(report, review);
+      const pdfBlob = pdf.output("blob");
+      const pdfFile = new File([pdfBlob], `${review.id}.pdf`, { type: "application/pdf" });
+
+      // 2. Upload to Supabase Storage
+      setPdfState("uploading");
+      const path = `${review.user_id}/${review.id}.pdf`;
+      const { error: upErr } = await supabaseAdmin.storage
+        .from("review-reports")
+        .upload(path, pdfFile, { upsert: true, contentType: "application/pdf" });
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: urlData } = supabaseAdmin.storage
+        .from("review-reports")
+        .getPublicUrl(path);
+      const reportUrl = urlData?.publicUrl;
+
+      // 3. Update portfolio_reviews row
+      const { error: dbErr } = await supabaseAdmin
+        .from("portfolio_reviews")
+        .update({ review_report_url: reportUrl, review_status: "done" })
+        .eq("id", review.id);
+      if (dbErr) throw new Error(dbErr.message);
+
+      // 4. Send email via edge function (with PDF attachment)
+      setPdfState("sending");
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-review-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          to_email: review.email,
+          to_name:  review.name,
+          report_url: reportUrl,
+          template_id: BREVO_PORTFOLIO_TEMPLATE_ID,
+          remarks: "",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || `email failed (${res.status})`);
+      }
+
+      setPdfState("done");
+      setPdfMsg("sent ✓");
+      onReportSent?.({ ...review, review_report_url: reportUrl, review_status: "done" });
+    } catch (err) {
+      setPdfState("error");
+      setPdfMsg(err.message || "failed");
+    }
+  };
+
+  const pdfBusy = ["generating", "uploading", "sending"].includes(pdfState);
+
+  /* ── local shortcuts ── */
+  const m  = report.metrics          || {};
+  const wy = report.where_you_are    || {};
+  const ww = report.working_well     || [];
+  const hb = report.holding_back     || {};
+  const fn = report.focus_next       || [];
 
   const METRIC_KEYS = [
-    { key: "first_impression", label: "first impression" },
-    { key: "project_depth", label: "project depth" },
-    { key: "stack_breadth", label: "stack breadth" },
+    { key: "first_impression",  label: "first impression"  },
+    { key: "project_depth",     label: "project depth"     },
+    { key: "stack_breadth",     label: "stack breadth"     },
     { key: "direction_clarity", label: "direction clarity" },
   ];
 
   const HB_SECTIONS = [
-    { key: "portfolio_gaps", label: "portfolio & project gaps" },
-    { key: "thinking_gaps", label: "thinking & process gaps" },
-    { key: "positioning_gaps", label: "positioning & direction gaps" },
+    { key: "portfolio_gaps",    label: "portfolio & project gaps"     },
+    { key: "thinking_gaps",     label: "thinking & process gaps"      },
+    { key: "positioning_gaps",  label: "positioning & direction gaps" },
   ];
 
+  /* ── render ── */
   const modal = (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center"
@@ -147,27 +275,41 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
         className="relative flex flex-col w-full max-w-3xl max-h-[92vh] rounded-2xl overflow-hidden"
         style={{ background: "#0a0a0a", border: "1px solid #222" }}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 shrink-0"
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between px-6 py-4 shrink-0 gap-3 flex-wrap"
           style={{ borderBottom: "1px solid #1a1a1a" }}
         >
-          <div>
-            <p className="text-white font-black text-base">
-              AI report — {review.name}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: "#555" }}>
+          {/* Left: name + meta */}
+          <div className="min-w-0">
+            <p className="text-white font-black text-base truncate">AI report — {review.name}</p>
+            <p className="text-xs mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: "#555" }}>
               {report.generated_at
                 ? `generated ${new Date(report.generated_at).toLocaleString()}`
                 : "draft"}
               {report.portfolio_scraped && (
-                <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full"
+                  style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
                   portfolio scraped
+                </span>
+              )}
+              {pdfState === "done" && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                  {pdfMsg}
+                </span>
+              )}
+              {pdfState === "error" && pdfMsg && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+                  {pdfMsg}
                 </span>
               )}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Right: action buttons */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {/* Regenerate */}
             {onRegenerate && (
               <button
                 onClick={() => { onClose(); onRegenerate(review); }}
@@ -177,34 +319,66 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
                 regenerate
               </button>
             )}
+
+            {/* Save edits */}
             <button
               onClick={handleSave}
               disabled={saving}
               className="text-xs px-4 py-1.5 rounded-lg font-black"
-              style={{ background: Y, color: "#000" }}
+              style={{ background: "#1a1a1a", border: `1px solid ${Y}`, color: Y }}
             >
               {saving ? "saving…" : saveMsg === "saved" ? "saved ✓" : "save edits"}
             </button>
             {saveMsg && saveMsg !== "saved" && (
               <p className="text-xs" style={{ color: "#f87171" }}>{saveMsg}</p>
             )}
+
+            {/* Download PDF */}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={pdfBusy}
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+              style={{ background: "#161616", border: "1px solid #333", color: pdfBusy ? "#444" : "#aaa" }}
+            >
+              {pdfState === "generating" ? "generating…" : "↓ pdf"}
+            </button>
+
+            {/* Generate & Send */}
+            <button
+              onClick={handleGenerateAndSend}
+              disabled={pdfBusy || pdfState === "done"}
+              className="text-xs px-4 py-1.5 rounded-lg font-black"
+              style={{
+                background: pdfBusy ? "#333" : pdfState === "done" ? "rgba(34,197,94,0.15)" : P,
+                color: pdfBusy ? "#666" : pdfState === "done" ? "#22c55e" : "#fff",
+                opacity: pdfBusy ? 0.7 : 1,
+              }}
+            >
+              {pdfBusy
+                ? (PDF_LABELS[pdfState] ?? "working…")
+                : pdfState === "done"
+                  ? "sent ✓"
+                  : "generate & send"}
+            </button>
+
+            {/* Close */}
             <button
               onClick={onClose}
               className="text-xs px-3 py-1.5 rounded-lg"
               style={{ background: "#161616", border: "1px solid #222", color: "#666" }}
             >
-              ✕ close
+              ✕
             </button>
           </div>
         </div>
 
-        {/* Scrollable body */}
+        {/* ── Scrollable body ── */}
         <div className="overflow-y-auto flex-1 p-6 flex flex-col gap-5">
 
           {/* Student */}
           <Section title="student">
-            <Field label="name" value={report.student?.name || ""} onChange={(v) => upd("student.name", v)} />
-            <Field label="tagline" value={report.student?.tagline || ""} onChange={(v) => upd("student.tagline", v)} />
+            <Field label="name"     value={report.student?.name    || ""} onChange={(v) => upd("student.name",    v)} />
+            <Field label="tagline"  value={report.student?.tagline || ""} onChange={(v) => upd("student.tagline", v)} />
             <Field
               label="tags (comma separated)"
               value={Array.isArray(report.student?.tags) ? report.student.tags.join(", ") : ""}
@@ -216,9 +390,10 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
           <Section title="01 metrics">
             <div className="grid grid-cols-2 gap-3">
               {METRIC_KEYS.map(({ key, label }) => (
-                <div key={key} className="flex flex-col gap-2 p-3 rounded-lg" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+                <div key={key} className="flex flex-col gap-2 p-3 rounded-lg"
+                  style={{ background: "#111", border: "1px solid #1e1e1e" }}>
                   <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: Y }}>{label}</p>
-                  <Field label="label (one word)" value={m[key]?.label || ""} onChange={(v) => upd(`metrics.${key}.label`, v)} />
+                  <Field label="label (one word)"        value={m[key]?.label       || ""} onChange={(v) => upd(`metrics.${key}.label`,       v)} />
                   <Field label="description (max 8 words)" value={m[key]?.description || ""} onChange={(v) => upd(`metrics.${key}.description`, v)} />
                 </div>
               ))}
@@ -227,18 +402,19 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
 
           {/* Where you are */}
           <Section title="02 where you are right now">
-            <Field label="stage" value={wy.stage || ""} onChange={(v) => upd("where_you_are.stage", v)} />
+            <Field label="stage"    value={wy.stage    || ""} onChange={(v) => upd("where_you_are.stage",    v)} />
             <Field label="strength" value={wy.strength || ""} onChange={(v) => upd("where_you_are.strength", v)} />
             <Field label="role fit" value={wy.role_fit || ""} onChange={(v) => upd("where_you_are.role_fit", v)} />
-            <Field label="summary" value={wy.summary || ""} onChange={(v) => upd("where_you_are.summary", v)} multiline rows={4} />
+            <Field label="summary"  value={wy.summary  || ""} onChange={(v) => upd("where_you_are.summary",  v)} multiline rows={4} />
           </Section>
 
           {/* What is working well */}
           <Section title="03 what is working well">
             {(ww.length > 0 ? ww : [{}, {}, {}]).map((pt, i) => (
-              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg"
+                style={{ background: "#111", border: "1px solid #1e1e1e" }}>
                 <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#555" }}>point {i + 1}</p>
-                <Field label="title" value={pt.title || ""} onChange={(v) => updArr("working_well", i, "title", v)} />
+                <Field label="title"       value={pt.title       || ""} onChange={(v) => updArr("working_well", i, "title",       v)} />
                 <Field label="description" value={pt.description || ""} onChange={(v) => updArr("working_well", i, "description", v)} multiline rows={3} />
               </div>
             ))}
@@ -256,8 +432,7 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
                       label={`gap ${i + 1}`}
                       value={item}
                       onChange={(v) => updHoldingBack(key, i, v)}
-                      multiline
-                      rows={2}
+                      multiline rows={2}
                     />
                   ))}
                 </div>
@@ -268,13 +443,17 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
           {/* Focus next */}
           <Section title="05 what you should focus on next">
             {(fn.length > 0 ? fn : [{}, {}, {}, {}]).map((pr, i) => (
-              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg"
+                style={{ background: "#111", border: "1px solid #1e1e1e" }}>
                 <div className="flex items-center gap-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#555" }}>priority {(pr.number || String(i + 1).padStart(2, "0"))}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#555" }}>
+                    priority {pr.number || String(i + 1).padStart(2, "0")}
+                  </p>
                   <select
                     value={pr.timing || "now"}
                     onChange={(e) => updArr("focus_next", i, "timing", e.target.value)}
-                    style={{ background: "#1a1a1a", border: "1px solid #333", color: pr.timing === "now" ? Y : "#888", borderRadius: 6, padding: "2px 8px", fontSize: 11 }}
+                    style={{ background: "#1a1a1a", border: "1px solid #333",
+                      color: pr.timing === "now" ? Y : "#888", borderRadius: 6, padding: "2px 8px", fontSize: 11 }}
                   >
                     <option value="now">now</option>
                     <option value="soon">soon</option>
@@ -285,30 +464,60 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate }
             ))}
           </Section>
 
-          {/* What this means + Where to go */}
+          {/* What this means */}
           <Section title="06 what this means">
             <Field label="content" value={report.what_this_means || ""} onChange={(v) => upd("what_this_means", v)} multiline rows={4} />
           </Section>
 
+          {/* Where to go */}
           <Section title="07 where to go from here">
             <Field label="content" value={report.where_to_go || ""} onChange={(v) => upd("where_to_go", v)} multiline rows={4} />
           </Section>
 
-          {/* Bottom save bar */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-5 py-2 rounded-lg font-black text-sm"
-              style={{ background: Y, color: "#000" }}
-            >
-              {saving ? "saving…" : "save edits"}
-            </button>
-            {saveMsg && (
-              <p className="text-sm self-center" style={{ color: saveMsg === "saved" ? "#22c55e" : "#f87171" }}>
-                {saveMsg}
-              </p>
-            )}
+          {/* Bottom action bar */}
+          <div className="flex items-center justify-between gap-3 pt-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadPDF}
+                disabled={pdfBusy}
+                className="px-4 py-2 rounded-lg font-semibold text-sm"
+                style={{ background: "#161616", border: "1px solid #333", color: pdfBusy ? "#444" : "#aaa" }}
+              >
+                {pdfState === "generating" ? "generating…" : "↓ download pdf"}
+              </button>
+
+              {pdfState === "error" && pdfMsg && (
+                <p className="text-xs" style={{ color: "#f87171" }}>{pdfMsg}</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-5 py-2 rounded-lg font-black text-sm"
+                style={{ background: "#1a1a1a", border: `1px solid ${Y}`, color: Y }}
+              >
+                {saving ? "saving…" : "save edits"}
+              </button>
+
+              <button
+                onClick={handleGenerateAndSend}
+                disabled={pdfBusy || pdfState === "done"}
+                className="px-5 py-2 rounded-lg font-black text-sm"
+                style={{
+                  background: pdfBusy ? "#333" : pdfState === "done" ? "rgba(34,197,94,0.15)" : P,
+                  color: pdfBusy ? "#666" : pdfState === "done" ? "#22c55e" : "#fff",
+                  opacity: pdfBusy ? 0.7 : 1,
+                }}
+              >
+                {pdfBusy
+                  ? (PDF_LABELS[pdfState] ?? "working…")
+                  : pdfState === "done"
+                    ? "sent ✓"
+                    : "generate & send"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

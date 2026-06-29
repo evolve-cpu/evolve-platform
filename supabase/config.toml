@@ -32,3 +32,6 @@ enable_signup = true
 
 [edge_runtime]
 enabled = true
+
+[functions.generate-ai-review]
+verify_jwt = false
