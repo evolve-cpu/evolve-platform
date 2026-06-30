@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import ReactDOM from "react-dom/client";
 import { supabaseAdmin } from "../../supabaseAdminClient";
-import PortfolioReviewPDFTemplate from "./PortfolioReviewPDFTemplate";
 
 const SUPABASE_URL              = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY         = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -11,48 +9,16 @@ const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env.VITE_BREVO_PORTFOLIO_TEMPLAT
 const Y = "#FFD007";
 const P = "#DF0586";
 
-/* ── PDF capture helper ──────────────────────────────────────────────────── */
+/* ── PDF generation via @react-pdf/renderer ─────────────────────────────
+   No DOM, no html2canvas — uses its own PDF layout engine.
+   Returns a Blob (application/pdf).                                        */
 
-async function captureAsPDF(report, review) {
-  const container = document.createElement("div");
-  container.style.cssText = "position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;";
-  document.body.appendChild(container);
-
-  const root = ReactDOM.createRoot(container);
-  await new Promise((resolve) => {
-    root.render(<PortfolioReviewPDFTemplate report={report} review={review} />);
-    setTimeout(resolve, 400);
-  });
-
-  try {
-    const { default: html2canvas } = await import("html2canvas");
-    const canvas = await html2canvas(container.firstChild, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#0a0a0a",
-      logging: false,
-    });
-
-    const { jsPDF } = await import("jspdf");
-    const pdf    = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pdfW   = 210;
-    const pdfH   = 297;
-    const imgW   = pdfW;
-    const imgH   = (canvas.height / canvas.width) * pdfW;
-    const imgData = canvas.toDataURL("image/jpeg", 0.93);
-
-    let yPos = 0, page = 0;
-    while (yPos < imgH) {
-      if (page > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, -yPos, imgW, imgH);
-      yPos += pdfH;
-      page++;
-    }
-    return pdf;
-  } finally {
-    root.unmount();
-    document.body.removeChild(container);
-  }
+async function generatePDFBlob(report, review) {
+  const [{ pdf }, { default: Template }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("./PortfolioReviewPDFTemplate"),
+  ]);
+  return pdf(<Template report={report} review={review} />).toBlob();
 }
 
 /* ── Tiny UI helpers ─────────────────────────────────────────────────────── */
@@ -170,9 +136,14 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate, 
     setPdfState("generating");
     setPdfMsg("");
     try {
-      const pdf = await captureAsPDF(report, review);
+      const blob = await generatePDFBlob(report, review);
       const slug = (review.name || "report").toLowerCase().replace(/\s+/g, "-");
-      pdf.save(`portfolio-review-${slug}.pdf`);
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `portfolio-review-${slug}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
       setPdfState("idle");
     } catch (err) {
       setPdfState("error");
@@ -186,8 +157,7 @@ export default function AIReportModal({ review, onClose, onSaved, onRegenerate, 
     setPdfMsg("");
     try {
       // 1. Generate PDF blob
-      const pdf = await captureAsPDF(report, review);
-      const pdfBlob = pdf.output("blob");
+      const pdfBlob = await generatePDFBlob(report, review);
       const pdfFile = new File([pdfBlob], `${review.id}.pdf`, { type: "application/pdf" });
 
       // 2. Upload to Supabase Storage

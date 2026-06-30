@@ -1,362 +1,610 @@
 /* ─────────────────────────────────────────────────────────────────────────
    PortfolioReviewPDFTemplate
-   Renders the report JSON as a styled HTML page at A4 width (794 px).
-   Captured by html2canvas → jsPDF in AIReportModal.
+   Uses @react-pdf/renderer — its own PDF layout engine, NOT the DOM.
+
+   Known constraints:
+   • Only paralucent-medium.otf (weight 500) is available. Never use > 500.
+   • Paralucent does NOT have ✦ (U+2736) — use a small yellow View dot instead.
+   • rgba() on borderColor can mis-parse in some react-pdf versions — use solid
+     hex colours for all borders/backgrounds.
+   • letterSpacing in react-pdf is measured in pt per glyph — 0.5 is plenty.
 ───────────────────────────────────────────────────────────────────────── */
+import { Document, Page, View, Text, Font, Link } from "@react-pdf/renderer";
+import paralucentRawUrl from "../../assets/fonts/paralucent-medium.otf?url";
 
-const BG       = "#0a0a0a";
-const CARD_BG  = "#111111";
-const CARD_BG2 = "#161616";
-const BORDER   = "#1e1e1e";
-const WHITE    = "#ffffff";
-const MUTED    = "rgba(255,255,255,0.52)";
-const YELLOW   = "#FFDC47";
-const PINK     = "#DF0586";
-const PURPLE   = "#A35BFB";
-const GREEN    = "#22c55e";
+// @react-pdf/renderer's worker fetches the font via fetch().
+// A root-relative URL like "/src/assets/..." fails in the worker context
+// because the worker resolves it against blob:// — not the page origin.
+// Making it absolute fixes the font not loading.
+const FONT_URL =
+  typeof globalThis.location !== "undefined"
+    ? new URL(paralucentRawUrl, globalThis.location.href).href
+    : paralucentRawUrl;
 
-const base = {
-  fontFamily: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
-  fontSize: 13,
-  color: WHITE,
-  lineHeight: 1.6,
-  background: BG,
-};
+Font.register({ family: "Paralucent", src: FONT_URL });
+Font.registerHyphenationCallback((word) => [word]);
 
-function Tag({ children }) {
+/* ── Solid colour palette (no rgba on borders — react-pdf can misparse) ── */
+const BG = "#0a0a0a";
+const CARD = "#111111";
+const CARD2 = "#161616";
+const BORDER = "#252525";
+const WHITE = "#ffffff";
+const MUTED = "#606060"; // ≈ rgba(255,255,255,0.38) on #0a0a0a
+const MUTED2 = "#c2c2c2"; // ≈ rgba(255,255,255,0.76)
+const YELLOW = "#FFD007";
+const YELLOW_BG = "#1f1b00"; // ≈ rgba(255,208,7,0.12) on #0a0a0a
+const YELLOW_BD = "#4d4200"; // ≈ rgba(255,208,7,0.30) border
+const PINK = "#DF0586";
+const PURPLE = "#A35BFB";
+const PURPLE_BG = "#130d21"; // ≈ rgba(163,91,251,0.12) on #0a0a0a
+const PURPLE_BD = "#2e1a4d"; // ≈ rgba(163,91,251,0.30) border
+const TAG_BD = "#4a3e00"; // ≈ rgba(255,208,7,0.28) border for tag chips
+
+const F = "Paralucent";
+
+/* ── Small yellow dot (replaces ✦ which Paralucent doesn't have) ── */
+function YellowDot() {
   return (
-    <span style={{
-      display: "inline-block",
-      padding: "3px 10px",
-      borderRadius: 99,
-      border: `1px solid rgba(255,220,71,0.3)`,
-      color: YELLOW,
-      fontSize: 11,
-      fontWeight: 600,
-      letterSpacing: "0.03em",
-      marginRight: 6,
-      marginBottom: 6,
-    }}>
-      {children}
-    </span>
+    <View
+      style={{
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
+        backgroundColor: YELLOW,
+        marginRight: 8,
+        marginTop: 3,
+        flexShrink: 0
+      }}
+    />
   );
 }
 
-function MetricCard({ title, label, description }) {
+/* ── Section header ── */
+function SectionHeader({ n, title }) {
   return (
-    <div style={{
-      flex: 1,
-      background: CARD_BG,
-      border: `1px solid ${BORDER}`,
-      borderRadius: 10,
-      padding: "16px 14px",
-      minWidth: 0,
-    }}>
-      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: MUTED, textTransform: "uppercase", margin: "0 0 8px" }}>
-        {title}
-      </p>
-      <p style={{ fontSize: 20, fontWeight: 900, color: WHITE, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-        {label || "—"}
-      </p>
-      <p style={{ fontSize: 10, color: MUTED, margin: 0, lineHeight: 1.45 }}>
-        {description || ""}
-      </p>
-    </div>
+    <View
+      style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}
+    >
+      <Text
+        style={{ fontSize: 10, color: PINK, fontFamily: F, marginRight: 10 }}
+      >
+        {String(n).padStart(2, "0")}
+      </Text>
+      <Text style={{ fontSize: 14, color: WHITE, fontFamily: F }}>{title}</Text>
+    </View>
   );
 }
 
-function SectionNumber({ n }) {
-  return (
-    <span style={{ fontSize: 11, fontWeight: 900, color: PINK, marginRight: 8, letterSpacing: "0.05em" }}>
-      {String(n).padStart(2, "0")}
-    </span>
-  );
-}
-
-function SectionTitle({ n, children }) {
-  return (
-    <p style={{ fontSize: 13, fontWeight: 900, color: WHITE, letterSpacing: "0.04em", textTransform: "lowercase", margin: "0 0 14px", display: "flex", alignItems: "center" }}>
-      <SectionNumber n={n} />
-      {children}
-    </p>
-  );
-}
-
+/* ── Row (stage / strength / role fit) ── */
 function Row({ label, value }) {
   if (!value) return null;
   return (
-    <div style={{ display: "flex", gap: 12, marginBottom: 8, fontSize: 12 }}>
-      <span style={{ color: YELLOW, fontWeight: 700, minWidth: 80, flexShrink: 0 }}>{label}</span>
-      <span style={{ color: "rgba(255,255,255,0.78)", lineHeight: 1.55 }}>{value}</span>
-    </div>
+    <View style={{ flexDirection: "row", marginBottom: 9 }}>
+      <Text
+        style={{
+          fontSize: 10,
+          color: YELLOW,
+          fontFamily: F,
+          width: 62,
+          flexShrink: 0
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          fontSize: 10,
+          color: MUTED2,
+          fontFamily: F,
+          flex: 1,
+          lineHeight: 1.6
+        }}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
 
-function BulletList({ items }) {
-  if (!items?.length) return null;
+/* ── Bullet item ── */
+function Bullet({ text }) {
+  if (!text) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {items.filter(Boolean).map((item, i) => (
-        <div key={i} style={{ display: "flex", gap: 8, fontSize: 12, lineHeight: 1.55 }}>
-          <span style={{ color: PINK, flexShrink: 0, marginTop: 1 }}>—</span>
-          <span style={{ color: "rgba(255,255,255,0.72)" }}>{item}</span>
-        </div>
-      ))}
-    </div>
+    <View style={{ flexDirection: "row", marginBottom: 7 }}>
+      <Text
+        style={{ fontSize: 10, color: MUTED, fontFamily: F, marginRight: 10 }}
+      >
+        —
+      </Text>
+      <Text
+        style={{
+          fontSize: 10,
+          color: MUTED2,
+          fontFamily: F,
+          flex: 1,
+          lineHeight: 1.65
+        }}
+      >
+        {text}
+      </Text>
+    </View>
   );
 }
 
-function WorkingWellCard({ title, description }) {
+/* ── Sub-label (a. portfolio and project gaps) — lowercase, minimal spacing ── */
+function SubLabel({ children }) {
   return (
-    <div style={{
-      background: CARD_BG2,
-      border: `1px solid ${BORDER}`,
-      borderRadius: 10,
-      padding: "16px 16px",
-      flex: 1,
-      minWidth: 0,
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
-        <span style={{ color: YELLOW, fontSize: 14, flexShrink: 0 }}>✦</span>
-        <p style={{ fontSize: 13, fontWeight: 800, color: WHITE, margin: 0, lineHeight: 1.3 }}>{title}</p>
-      </div>
-      <p style={{ fontSize: 11, color: MUTED, margin: 0, lineHeight: 1.6 }}>{description}</p>
-    </div>
+    <Text
+      style={{
+        fontSize: 8,
+        color: MUTED,
+        fontFamily: F,
+        letterSpacing: 0.5,
+        marginBottom: 9
+      }}
+    >
+      {children}
+    </Text>
   );
 }
 
-function FocusItem({ number, action, timing }) {
-  return (
-    <div style={{
-      display: "flex",
-      gap: 14,
-      background: CARD_BG,
-      border: `1px solid ${BORDER}`,
-      borderRadius: 10,
-      padding: "14px 16px",
-      marginBottom: 8,
-    }}>
-      <span style={{ fontSize: 20, fontWeight: 900, color: PURPLE, flexShrink: 0, lineHeight: 1 }}>
-        {number}
-      </span>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", margin: 0, lineHeight: 1.65 }}>{action}</p>
-      </div>
-      <span style={{
-        fontSize: 10,
-        fontWeight: 700,
-        padding: "3px 10px",
-        borderRadius: 99,
-        flexShrink: 0,
-        alignSelf: "flex-start",
-        background: timing === "now" ? "rgba(255,220,71,0.12)" : "rgba(163,91,251,0.12)",
-        color: timing === "now" ? YELLOW : PURPLE,
-        border: `1px solid ${timing === "now" ? "rgba(255,220,71,0.2)" : "rgba(163,91,251,0.2)"}`,
-      }}>
-        {timing}
-      </span>
-    </div>
-  );
-}
-
+/* ═══════════════════════════════════════════════════════════════════════════
+   Main component
+═══════════════════════════════════════════════════════════════════════════ */
 export default function PortfolioReviewPDFTemplate({ report, review }) {
   if (!report) return null;
 
-  const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" }).toLowerCase();
+  const monthYear = new Date()
+    .toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric"
+    })
+    .toLowerCase();
 
-  const m  = report.metrics         || {};
-  const wy = report.where_you_are   || {};
-  const ww = (report.working_well   || []).filter((p) => p.title);
-  const hb = report.holding_back    || {};
-  const fn = (report.focus_next     || []).filter((p) => p.action);
+  const m = report.metrics || {};
+  const wy = report.where_you_are || {};
+  const ww = (report.working_well || []).filter((p) => p?.title);
+  const hb = report.holding_back || {};
+  const fn = (report.focus_next || []).filter((p) => p?.action);
+  const tags = Array.isArray(report.student?.tags) ? report.student.tags : [];
+  const name = (report.student?.name || review?.name || "").toLowerCase();
 
-  const pairRows = (arr) => {
-    const rows = [];
-    for (let i = 0; i < arr.length; i += 2) {
-      rows.push(arr.slice(i, i + 2));
-    }
-    return rows;
-  };
+  const pairs = [];
+  for (let i = 0; i < ww.length; i += 2) pairs.push(ww.slice(i, i + 2));
+
+  const METRIC_CARDS = [
+    { title: "first impression", data: m.first_impression },
+    { title: "project depth", data: m.project_depth },
+    { title: "stack breadth", data: m.stack_breadth },
+    { title: "direction clarity", data: m.direction_clarity }
+  ];
+
+  const GAPS = [
+    { label: "a. portfolio and project gaps", items: hb.portfolio_gaps },
+    { label: "b. thinking and process gaps", items: hb.thinking_gaps },
+    { label: "c. positioning and direction gaps", items: hb.positioning_gaps }
+  ].filter((g) => g.items?.some(Boolean));
 
   return (
-    <div style={{ ...base, width: 794, padding: "48px 56px 64px", boxSizing: "border-box" }}>
+    <Document>
+      <Page
+        size="A4"
+        style={{
+          backgroundColor: BG,
+          paddingHorizontal: 48,
+          paddingTop: 44,
+          paddingBottom: 44,
+          fontFamily: F
+        }}
+      >
+        {/* ── Header bar ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 28
+          }}
+        >
+          <Text style={{ fontSize: 8, color: MUTED, fontFamily: F }}>
+            evolve portfolio review · {monthYear}
+          </Text>
+          <Text style={{ fontSize: 8, color: MUTED, fontFamily: F }}>
+            evolvedesign.academy
+          </Text>
+        </View>
 
-      {/* ── Top header bar ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
-        <span style={{ fontSize: 10, color: MUTED, letterSpacing: "0.06em" }}>
-          evolve portfolio review · {monthYear}
-        </span>
-        <span style={{ fontSize: 10, color: MUTED, letterSpacing: "0.04em" }}>
-          evolve · portfolio review · {monthYear} · evolve.design
-        </span>
-      </div>
+        {/* ── "portfolio review" label ── */}
+        <Text
+          style={{
+            fontSize: 10,
+            color: PINK,
+            fontFamily: F,
+            letterSpacing: 0.8,
+            marginBottom: 10
+          }}
+        >
+          portfolio review
+        </Text>
 
-      {/* ── "portfolio review" label ── */}
-      <p style={{ fontSize: 12, fontWeight: 700, color: PINK, letterSpacing: "0.08em", textTransform: "lowercase", margin: "0 0 8px" }}>
-        portfolio review
-      </p>
+        {/* ── Student name ── */}
+        <Text
+          style={{
+            fontSize: 54,
+            color: WHITE,
+            fontFamily: F,
+            letterSpacing: -0.5,
+            lineHeight: 1.0,
+            marginBottom: 10
+          }}
+        >
+          {name}
+        </Text>
 
-      {/* ── Student name ── */}
-      <h1 style={{ fontSize: 52, fontWeight: 900, color: WHITE, margin: "0 0 8px", letterSpacing: "-0.03em", lineHeight: 1.0, textTransform: "lowercase" }}>
-        {(report.student?.name || review?.name || "").toLowerCase()}
-      </h1>
+        {/* ── Tagline ── */}
+        {report.student?.tagline ? (
+          <Text
+            style={{
+              fontSize: 11,
+              color: MUTED2,
+              fontFamily: F,
+              marginBottom: 14,
+              lineHeight: 1.5
+            }}
+          >
+            {report.student.tagline}
+          </Text>
+        ) : null}
 
-      {/* ── Tagline ── */}
-      {report.student?.tagline && (
-        <p style={{ fontSize: 13, color: MUTED, margin: "0 0 14px", fontStyle: "italic" }}>
-          {report.student.tagline}
-        </p>
-      )}
+        {/* ── Tags ── */}
+        {tags.length > 0 ? (
+          <View
+            style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 28 }}
+          >
+            {tags.map((t, i) => (
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: 99,
+                  borderWidth: 1,
+                  borderColor: TAG_BD,
+                  borderStyle: "solid",
+                  marginRight: 8,
+                  marginBottom: 6
+                }}
+              >
+                <Text style={{ fontSize: 10, color: YELLOW, fontFamily: F }}>
+                  {t}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-      {/* ── Skill tags ── */}
-      {Array.isArray(report.student?.tags) && report.student.tags.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          {report.student.tags.map((t, i) => <Tag key={i}>{t}</Tag>)}
-        </div>
-      )}
-
-      {/* ── Metric cards ── */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 36 }}>
-        <MetricCard title="first impression"  label={m.first_impression?.label}  description={m.first_impression?.description} />
-        <MetricCard title="project depth"     label={m.project_depth?.label}     description={m.project_depth?.description} />
-        <MetricCard title="stack breadth"     label={m.stack_breadth?.label}     description={m.stack_breadth?.description} />
-        <MetricCard title="direction clarity" label={m.direction_clarity?.label} description={m.direction_clarity?.description} />
-      </div>
-
-      {/* ══ Section 01 ══ */}
-      <div style={{ marginBottom: 32 }}>
-        <SectionTitle n={1}>where you are right now</SectionTitle>
-        <Row label="stage"    value={wy.stage}    />
-        <Row label="strength" value={wy.strength} />
-        <Row label="role fit" value={wy.role_fit} />
-        {wy.summary && (
-          <div style={{
-            marginTop: 14,
-            borderLeft: `3px solid ${YELLOW}`,
-            paddingLeft: 14,
-            fontSize: 12,
-            color: "rgba(255,255,255,0.72)",
-            lineHeight: 1.7,
-          }}>
-            {wy.summary}
-          </div>
-        )}
-      </div>
-
-      {/* ══ Section 02 ══ */}
-      {ww.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <SectionTitle n={2}>what is working well</SectionTitle>
-          {pairRows(ww).map((pair, ri) => (
-            <div key={ri} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-              {pair.map((pt, pi) => <WorkingWellCard key={pi} title={pt.title} description={pt.description} />)}
-              {pair.length === 1 && <div style={{ flex: 1 }} />}
-            </div>
+        {/* ── 4 metric cards ── */}
+        <View style={{ flexDirection: "row", marginBottom: 36 }}>
+          {METRIC_CARDS.map(({ title, data }, i) => (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                backgroundColor: CARD,
+                borderWidth: 1,
+                borderColor: BORDER,
+                borderStyle: "solid",
+                borderRadius: 8,
+                padding: 14,
+                marginRight: i < 3 ? 8 : 0,
+                overflow: "hidden"
+              }}
+            >
+              {/* title: uppercase, tight letter spacing */}
+              <Text
+                style={{
+                  fontSize: 7,
+                  color: MUTED,
+                  fontFamily: F,
+                  letterSpacing: 0.5,
+                  marginBottom: 8
+                }}
+              >
+                {title.toUpperCase()}
+              </Text>
+              {/* font size 16 → long labels like "surface-level" won't overflow
+                  the ~90 pt inner card width (A4 499pt − 24pt gaps, ÷4 cards − 28pt padding) */}
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: WHITE,
+                  fontFamily: F,
+                  lineHeight: 1.2,
+                  marginBottom: 6
+                }}
+              >
+                {data?.label || "—"}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 9,
+                  color: MUTED,
+                  fontFamily: F,
+                  lineHeight: 1.5
+                }}
+              >
+                {data?.description || ""}
+              </Text>
+            </View>
           ))}
-        </div>
-      )}
+        </View>
 
-      {/* ══ Section 03 ══ */}
-      {(hb.portfolio_gaps?.length || hb.thinking_gaps?.length || hb.positioning_gaps?.length) ? (
-        <div style={{ marginBottom: 32 }}>
-          <SectionTitle n={3}>what is holding you back</SectionTitle>
+        {/* ══ 01 ══ */}
+        <View style={{ marginBottom: 36 }}>
+          <SectionHeader n={1} title="where you are right now" />
+          <Row label="stage" value={wy.stage} />
+          <Row label="strength" value={wy.strength} />
+          <Row label="role fit" value={wy.role_fit} />
+          {wy.summary ? (
+            <View
+              style={{
+                marginTop: 12,
+                paddingLeft: 14,
+                borderLeftWidth: 2,
+                borderLeftColor: YELLOW,
+                borderLeftStyle: "solid"
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: MUTED2,
+                  fontFamily: F,
+                  lineHeight: 1.8
+                }}
+              >
+                {wy.summary}
+              </Text>
+            </View>
+          ) : null}
+        </View>
 
-          {hb.portfolio_gaps?.filter(Boolean).length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px" }}>
-                a. portfolio and project gaps
-              </p>
-              <BulletList items={hb.portfolio_gaps} />
-            </div>
-          )}
+        {/* ══ 02 ══ */}
+        {ww.length > 0 ? (
+          <View style={{ marginBottom: 36 }}>
+            <SectionHeader n={2} title="what is working well" />
+            {pairs.map((pair, ri) => (
+              <View key={ri} style={{ flexDirection: "row", marginBottom: 8 }}>
+                {pair.map((pt, pi) => (
+                  <View
+                    key={pi}
+                    style={{
+                      flex: 1,
+                      backgroundColor: CARD2,
+                      borderWidth: 1,
+                      borderColor: BORDER,
+                      borderStyle: "solid",
+                      borderRadius: 8,
+                      padding: 14,
+                      marginRight: pi === 0 ? 8 : 0
+                    }}
+                  >
+                    {/* ✦ replaced by yellow dot — Paralucent has no ✦ glyph */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "flex-start",
+                        marginBottom: 8
+                      }}
+                    >
+                      <YellowDot />
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: WHITE,
+                          fontFamily: F,
+                          flex: 1,
+                          lineHeight: 1.4
+                        }}
+                      >
+                        {pt.title}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        color: MUTED,
+                        fontFamily: F,
+                        lineHeight: 1.65
+                      }}
+                    >
+                      {pt.description}
+                    </Text>
+                  </View>
+                ))}
+                {pair.length === 1 ? <View style={{ flex: 1 }} /> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-          {hb.thinking_gaps?.filter(Boolean).length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px" }}>
-                b. thinking and process gaps
-              </p>
-              <BulletList items={hb.thinking_gaps} />
-            </div>
-          )}
+        {/* ══ 03 ══ */}
+        {GAPS.length > 0 ? (
+          <View style={{ marginBottom: 36 }}>
+            <SectionHeader n={3} title="what is holding you back" />
+            {GAPS.map(({ label, items }, gi) => (
+              <View key={gi} style={{ marginBottom: 14 }}>
+                {/* lowercase sub-label, minimal letter spacing to match Rahul PDF */}
+                <SubLabel>{label}</SubLabel>
+                {items.filter(Boolean).map((item, ii) => (
+                  <Bullet key={ii} text={item} />
+                ))}
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-          {hb.positioning_gaps?.filter(Boolean).length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px" }}>
-                c. positioning and direction gaps
-              </p>
-              <BulletList items={hb.positioning_gaps} />
-            </div>
-          )}
-        </div>
-      ) : null}
+        {/* ══ 04 ══ */}
+        {fn.length > 0 ? (
+          <View style={{ marginBottom: 36 }}>
+            <SectionHeader n={4} title="what you should focus on next" />
+            {fn.map((pr, i) => {
+              const isNow = pr.timing === "now";
+              return (
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    backgroundColor: CARD,
+                    borderWidth: 1,
+                    borderColor: BORDER,
+                    borderStyle: "solid",
+                    borderRadius: 8,
+                    padding: 14,
+                    marginBottom: 8
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      color: PURPLE,
+                      fontFamily: F,
+                      marginRight: 14,
+                      lineHeight: 1,
+                      width: 28
+                    }}
+                  >
+                    {pr.number || String(i + 1).padStart(2, "0")}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 10,
+                      color: MUTED2,
+                      fontFamily: F,
+                      lineHeight: 1.65
+                    }}
+                  >
+                    {pr.action}
+                  </Text>
+                  {/* solid colours — no rgba on borders */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 99,
+                      backgroundColor: isNow ? YELLOW_BG : PURPLE_BG,
+                      borderWidth: 1,
+                      borderColor: isNow ? YELLOW_BD : PURPLE_BD,
+                      borderStyle: "solid",
+                      marginLeft: 12
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        color: isNow ? YELLOW : PURPLE,
+                        fontFamily: F
+                      }}
+                    >
+                      {pr.timing || "now"}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
 
-      {/* ══ Section 04 ══ */}
-      {fn.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <SectionTitle n={4}>what you should focus on next</SectionTitle>
-          {fn.map((pr, i) => (
-            <FocusItem key={i} number={pr.number || String(i + 1).padStart(2, "0")} action={pr.action} timing={pr.timing || "now"} />
-          ))}
-        </div>
-      )}
+        {/* ══ 05 ══ */}
+        {report.what_this_means ? (
+          <View style={{ marginBottom: 36 }}>
+            <SectionHeader n={5} title="what this means" />
+            <Text
+              style={{
+                fontSize: 10,
+                color: MUTED2,
+                fontFamily: F,
+                lineHeight: 1.85
+              }}
+            >
+              {report.what_this_means}
+            </Text>
+          </View>
+        ) : null}
 
-      {/* ══ Section 05 ══ */}
-      {report.what_this_means && (
-        <div style={{ marginBottom: 32 }}>
-          <SectionTitle n={5}>what this means</SectionTitle>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", lineHeight: 1.75, margin: 0 }}>
-            {report.what_this_means}
-          </p>
-        </div>
-      )}
+        {/* ══ 06 ══ */}
+        {report.where_to_go ? (
+          <View style={{ marginBottom: 40 }}>
+            <SectionHeader n={6} title="where to go from here" />
+            <Text
+              style={{
+                fontSize: 10,
+                color: MUTED2,
+                fontFamily: F,
+                lineHeight: 1.85
+              }}
+            >
+              {report.where_to_go}
+            </Text>
+          </View>
+        ) : null}
 
-      {/* ══ Section 06 ══ */}
-      {report.where_to_go && (
-        <div style={{ marginBottom: 40 }}>
-          <SectionTitle n={6}>where to go from here</SectionTitle>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", lineHeight: 1.75, margin: 0 }}>
-            {report.where_to_go}
-          </p>
-        </div>
-      )}
+        {/* ── CTA ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 44
+          }}
+        >
+          <Link
+            src="https://calendly.com/chesna-paperclip/new-meeting"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 22,
+              paddingVertical: 11,
+              borderRadius: 8,
+              backgroundColor: YELLOW,
+              textDecoration: "none"
+            }}
+          >
+            <Text style={{ fontSize: 11, color: "#000000", fontFamily: F }}>
+              book a 30-min call
+            </Text>
+          </Link>
+        </View>
 
-      {/* ── CTAs ── */}
-      <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-        <div style={{
-          padding: "12px 22px",
-          borderRadius: 10,
-          background: YELLOW,
-          color: "#000",
-          fontWeight: 800,
-          fontSize: 12,
-          letterSpacing: "0.01em",
-        }}>
-          book a 30-min call
-        </div>
-        <div style={{
-          padding: "12px 22px",
-          borderRadius: 10,
-          border: `1px solid rgba(255,255,255,0.15)`,
-          color: WHITE,
-          fontWeight: 700,
-          fontSize: 12,
-        }}>
-          explore our mentorship
-        </div>
-      </div>
-
-      {/* ── Footer ── */}
-      <div style={{
-        marginTop: 48,
-        paddingTop: 16,
-        borderTop: `1px solid ${BORDER}`,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}>
-        <span style={{ fontSize: 10, color: MUTED }}>evolve · evolvedesign.academy</span>
-        <span style={{ fontSize: 10, color: MUTED }}>portfolio review · {monthYear}</span>
-      </div>
-    </div>
+        {/* ── Footer ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 14,
+            borderTopWidth: 1,
+            borderTopColor: BORDER,
+            borderTopStyle: "solid"
+          }}
+        >
+          <Text style={{ fontSize: 8, color: MUTED, fontFamily: F }}>
+            evolve · evolvedesign.academy
+          </Text>
+          <Text style={{ fontSize: 8, color: MUTED, fontFamily: F }}>
+            portfolio review · {monthYear}
+          </Text>
+        </View>
+      </Page>
+    </Document>
   );
 }

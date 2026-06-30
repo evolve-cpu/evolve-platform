@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => ({
         "style-src 'self' 'unsafe-inline' https:; " +
         "img-src 'self' data: https:; " +
         "font-src 'self' https: data:; " +
-        "connect-src 'self' https:;"
+        "connect-src 'self' https: blob:; " +
+        "worker-src 'self' blob:;"
     }
   },
 
@@ -40,6 +41,7 @@ export default defineConfig(({ mode }) => ({
           "lottie": ["@lottiefiles/dotlottie-react"],
           "query": ["@tanstack/react-query"],
           "pdf-tools": ["jspdf", "html2canvas"],
+          "react-pdf": ["@react-pdf/renderer"],
           "ui-radix": [
             "@radix-ui/react-accordion",
             "@radix-ui/react-alert-dialog",
