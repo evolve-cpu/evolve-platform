@@ -101,11 +101,12 @@ export const mentorship = {
     {
       q: "do i need prior design experience?",
       a: "no. freshers are preferred. if you're serious about a design career and willing to put in the work, that's enough to start."
-    },
-    {
-      q: "how many people are in each batch?",
-      a: "maximum 5. this is intentional — small means you actually get attention, not a seat at the back of a room."
     }
+    // Commented out for now — may bring back later
+    // {
+    //   q: "how many people are in each batch?",
+    //   a: "maximum 5. this is intentional — small means you actually get attention, not a seat at the back of a room."
+    // }
   ],
 
   pricing: {

@@ -605,7 +605,8 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                   isMobile ? "text-3xl" : "text-5xl"
                 }`}
               >
-                {marqueeLabel}
+                {/* {marqueeLabel} — commented out for now, static text instead */}
+                coming soon
               </span>
               <img
                 key={`icon-b-${i}`}
@@ -619,7 +620,8 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                   isMobile ? "text-3xl" : "text-5xl"
                 }`}
               >
-                {spotsText}
+                {/* {spotsText} — commented out for now, static text instead */}
+                coming soon
               </span>
             </>
           ))}
@@ -834,6 +836,7 @@ const Mentorship = () => {
               </button>
             ) : (
               <>
+                {/* Commented out for now — old "explore mentorship" image button, may bring back later
                 <img
                   src={applyHover ? explore_mentorship : explore_mentorship}
                   alt="apply now"
@@ -845,10 +848,28 @@ const Mentorship = () => {
                   }}
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
-                />
+                /> */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackCtaClick("explore_mentorship", "hero");
+                    scrollTo(section5Ref);
+                  }}
+                  className="font-extrabold lowercase text-evolve-yellow border-2 border-evolve-yellow rounded-2xl cursor-pointer flex items-center gap-2 transition-opacity duration-150 hover:opacity-90"
+                  style={{
+                    backgroundColor: "#000",
+                    boxShadow: "6px 6px 0 0 #806804",
+                    padding: isMobile ? "12px 24px" : "14px 32px",
+                    fontSize: isMobile ? "16px" : "18px"
+                  }}
+                >
+                  coming soon <span aria-hidden="true">→</span>
+                </button>
+                {/* limited seats note not needed for now
                 <p className="text-black text-sm font-semibold">
                   {COPY.limitedSeatsNote}
                 </p>
+                */}
               </>
             )}
           </div>
@@ -940,7 +961,8 @@ const Mentorship = () => {
                     key={`label-${i}`}
                     className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
-                    {marqueeLabel}
+                    {/* {marqueeLabel} — commented out for now, static text instead */}
+                    coming soon
                   </span>
                   <img
                     key={`icon-b-${i}`}
@@ -952,7 +974,8 @@ const Mentorship = () => {
                     key={`spots-${i}`}
                     className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
-                    {spotsText}
+                    {/* {spotsText} — commented out for now, static text instead */}
+                    coming soon
                   </span>
                 </>
               ))}
@@ -1381,8 +1404,7 @@ const Mentorship = () => {
               lineHeight: "1.05"
             }}
           >
-            {spotsLeft} spots.
-            <br />
+            {/* {spotsLeft} spots. — commented out for now */}
             {COPY.framework.stagesLine}
             <br />
             {COPY.framework.sessionsLine}
@@ -1458,8 +1480,7 @@ const Mentorship = () => {
               lineHeight: "1.05"
             }}
           >
-            5 spots.
-            <br />
+            {/* 5 spots. — commented out for now */}
             {COPY.framework.stagesLine}
             <br />
             {COPY.framework.sessionsLine}
@@ -1506,52 +1527,56 @@ const Mentorship = () => {
       <div ref={section6Ref} />
 
       {/* ================= SECTION 6 — PRICING ================= */}
-      <section className="bg-evolve-yellow overflow-hidden">
-        {/* ── Full-width pink header banner ── */}
-        <div className="w-full bg-evolve-pink flex items-center justify-center py-5 md:py-7">
-          <h2
-            className="text-white font-extrabold lowercase text-center"
-            style={{
-              fontSize: "clamp(28px, 5vw, 56px)",
-              letterSpacing: "-0.02em"
-            }}
-          >
-            {COPY.pricing.sectionHeading}
-          </h2>
-        </div>
-
-        {/* ── DESKTOP: two columns ── */}
-        <div className="hidden md:flex w-full">
-          <div style={{ flex: "0 0 50%" }}>
-            <PlanColumn
-              tier="starter"
-              cutPrice={COPY.pricing.starterCutPrice}
-              price={COPY.pricing.starterPrice}
-              tagline={renderWithBreaks(COPY.pricing.starterTaglineDesktop)}
-              features={starterFeatures}
-              isRight={false}
-              onPay={handlePayment}
-              hasPaid={hasPaid}
-              allBatchesFull={allBatchesFull}
-            />
+      {/* Pricing section commented out for now — keep code for later, may bring back */}
+      {false && (
+        <section className="bg-evolve-yellow overflow-hidden">
+          {/* ── Full-width pink header banner ── */}
+          <div className="w-full bg-evolve-pink flex items-center justify-center py-5 md:py-7">
+            <h2
+              className="text-white font-extrabold lowercase text-center"
+              style={{
+                fontSize: "clamp(28px, 5vw, 56px)",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              {COPY.pricing.sectionHeading}
+            </h2>
           </div>
-          <div style={{ flex: "0 0 50%" }}>
-            <PlanColumn
-              tier="accelerator"
-              cutPrice={COPY.pricing.acceleratorCutPrice}
-              price={COPY.pricing.acceleratorPrice}
-              tagline={renderWithBreaks(COPY.pricing.acceleratorTaglineDesktop)}
-              features={acceleratorFeatures}
-              isRight={true}
-              onPay={handlePayment}
-              hasPaid={hasPaid}
-              allBatchesFull={allBatchesFull}
-            />
-          </div>
-        </div>
 
-        {/* ── DESKTOP: marquee ── */}
-        {/* <div
+          {/* ── DESKTOP: two columns ── */}
+          <div className="hidden md:flex w-full">
+            <div style={{ flex: "0 0 50%" }}>
+              <PlanColumn
+                tier="starter"
+                cutPrice={COPY.pricing.starterCutPrice}
+                price={COPY.pricing.starterPrice}
+                tagline={renderWithBreaks(COPY.pricing.starterTaglineDesktop)}
+                features={starterFeatures}
+                isRight={false}
+                onPay={handlePayment}
+                hasPaid={hasPaid}
+                allBatchesFull={allBatchesFull}
+              />
+            </div>
+            <div style={{ flex: "0 0 50%" }}>
+              <PlanColumn
+                tier="accelerator"
+                cutPrice={COPY.pricing.acceleratorCutPrice}
+                price={COPY.pricing.acceleratorPrice}
+                tagline={renderWithBreaks(
+                  COPY.pricing.acceleratorTaglineDesktop
+                )}
+                features={acceleratorFeatures}
+                isRight={true}
+                onPay={handlePayment}
+                hasPaid={hasPaid}
+                allBatchesFull={allBatchesFull}
+              />
+            </div>
+          </div>
+
+          {/* ── DESKTOP: marquee ── */}
+          {/* <div
           ref={pricingMarqueeRef}
           className="hidden md:block relative left-0 w-full border-t-2 border-b-2 border-evolve-yellow bg-evolve-lavender-indigo overflow-hidden z-30 h-[7rem]"
         >
@@ -1592,62 +1617,65 @@ const Mentorship = () => {
           </div>
         </div> */}
 
-        {/* ── MOBILE: tab system ── */}
-        <div className="block md:hidden">
-          {!hasPaid && (
-            <div className="flex">
-              <button
-                onClick={() => setPricingTab("starter")}
-                className="flex-1 py-3 font-extrabold lowercase text-lg"
-                style={{
-                  backgroundColor:
-                    pricingTab === "starter" ? "rgba(223,5,134,1)" : "#BF9C05",
-                  color: pricingTab === "starter" ? "#fff" : "#000"
-                }}
-              >
-                starter
-              </button>
-              <button
-                onClick={() => setPricingTab("accelerator")}
-                className="flex-1 py-3 font-extrabold lowercase text-lg"
-                style={{
-                  backgroundColor:
-                    pricingTab === "accelerator"
-                      ? "rgba(223,5,134,1)"
-                      : "#BF9C05",
-                  color: pricingTab === "accelerator" ? "#fff" : "#000"
-                }}
-              >
-                accelerator
-              </button>
-            </div>
-          )}
-          {pricingTab === "starter" && (
-            <PlanCardMobile
-              tier="starter"
-              cutPrice={COPY.pricing.starterCutPrice}
-              price={COPY.pricing.starterPrice}
-              tagline={COPY.pricing.starterTaglineMobile}
-              features={starterFeatures}
-              onPay={handlePayment}
-              hasPaid={hasPaid}
-              allBatchesFull={allBatchesFull}
-            />
-          )}
-          {pricingTab === "accelerator" && (
-            <PlanCardMobile
-              tier="accelerator"
-              cutPrice={COPY.pricing.acceleratorCutPrice}
-              price={COPY.pricing.acceleratorPrice}
-              tagline={COPY.pricing.acceleratorTaglineMobile}
-              features={acceleratorFeatures}
-              onPay={handlePayment}
-              hasPaid={hasPaid}
-              allBatchesFull={allBatchesFull}
-            />
-          )}
-        </div>
-      </section>
+          {/* ── MOBILE: tab system ── */}
+          <div className="block md:hidden">
+            {!hasPaid && (
+              <div className="flex">
+                <button
+                  onClick={() => setPricingTab("starter")}
+                  className="flex-1 py-3 font-extrabold lowercase text-lg"
+                  style={{
+                    backgroundColor:
+                      pricingTab === "starter"
+                        ? "rgba(223,5,134,1)"
+                        : "#BF9C05",
+                    color: pricingTab === "starter" ? "#fff" : "#000"
+                  }}
+                >
+                  starter
+                </button>
+                <button
+                  onClick={() => setPricingTab("accelerator")}
+                  className="flex-1 py-3 font-extrabold lowercase text-lg"
+                  style={{
+                    backgroundColor:
+                      pricingTab === "accelerator"
+                        ? "rgba(223,5,134,1)"
+                        : "#BF9C05",
+                    color: pricingTab === "accelerator" ? "#fff" : "#000"
+                  }}
+                >
+                  accelerator
+                </button>
+              </div>
+            )}
+            {pricingTab === "starter" && (
+              <PlanCardMobile
+                tier="starter"
+                cutPrice={COPY.pricing.starterCutPrice}
+                price={COPY.pricing.starterPrice}
+                tagline={COPY.pricing.starterTaglineMobile}
+                features={starterFeatures}
+                onPay={handlePayment}
+                hasPaid={hasPaid}
+                allBatchesFull={allBatchesFull}
+              />
+            )}
+            {pricingTab === "accelerator" && (
+              <PlanCardMobile
+                tier="accelerator"
+                cutPrice={COPY.pricing.acceleratorCutPrice}
+                price={COPY.pricing.acceleratorPrice}
+                tagline={COPY.pricing.acceleratorTaglineMobile}
+                features={acceleratorFeatures}
+                onPay={handlePayment}
+                hasPaid={hasPaid}
+                allBatchesFull={allBatchesFull}
+              />
+            )}
+          </div>
+        </section>
+      )}
       {/* ================= SECTION 7 — IMPACT ================= */}
       {/* Desktop */}
       <div className="hidden md:block w-full">
@@ -2081,7 +2109,7 @@ const Mentorship = () => {
             {marqueeLabel}
           </h2>
 
-          {/* Limited seats */}
+          {/* Limited seats — not needed for now
           <p
             className="font-normal lowercase text-white"
             style={{
@@ -2092,6 +2120,7 @@ const Mentorship = () => {
           >
             {spotsText}
           </p>
+          */}
 
           {/* Applications close */}
           {/* {!allBatchesFull && (
@@ -2164,7 +2193,7 @@ const Mentorship = () => {
             {marqueeLabel}
           </h2>
 
-          {/* Limited seats */}
+          {/* Limited seats — not needed for now
           <p
             className="font-normal lowercase text-white"
             style={{
@@ -2175,6 +2204,7 @@ const Mentorship = () => {
           >
             {spotsText}
           </p>
+          */}
 
           {/* Applications close */}
           {!allBatchesFull && (
