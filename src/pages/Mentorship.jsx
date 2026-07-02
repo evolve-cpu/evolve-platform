@@ -849,6 +849,7 @@ const Mentorship = () => {
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 /> */}
+                {/* Commented out for now — "coming soon" button, changed to plain text
                 <button
                   type="button"
                   onClick={() => {
@@ -864,7 +865,17 @@ const Mentorship = () => {
                   }}
                 >
                   coming soon <span aria-hidden="true">→</span>
-                </button>
+                </button> */}
+                <p
+                  className="font-extrabold lowercase text-black"
+                  style={{
+                    fontSize: isMobile ? "18px" : "22px",
+                    letterSpacing: "-0.02em"
+                  }}
+                >
+                  coming soon
+                  {/* → */}
+                </p>
                 {/* limited seats note not needed for now
                 <p className="text-black text-sm font-semibold">
                   {COPY.limitedSeatsNote}
@@ -917,7 +928,7 @@ const Mentorship = () => {
               onMouseLeave={() => setHowHover(false)}
               onClick={() => {
                 trackCtaClick("how_it_works", "section2");
-                scrollTo(section6Ref);
+                scrollTo(section5Ref);
               }}
               className="cursor-pointer transition-opacity duration-150"
               style={{ width: isMobile ? "180px" : "220px" }}
@@ -1752,13 +1763,24 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
+            /* explore_plans button not needed for now — changed to text
             <img
               src={explore_plans}
               alt="explore plans"
               onClick={() => scrollTo(section6Ref)}
               className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
               style={{ width: "clamp(200px, 22vw, 320px)" }}
-            />
+            /> */
+            <p
+              className="font-extrabold lowercase text-black mt-8"
+              style={{
+                fontSize: "clamp(18px, 2vw, 28px)",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              coming soon
+              {/* → */}
+            </p>
           )}
         </div>
 
@@ -1840,13 +1862,24 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
+            /* explore_plans button not needed for now — changed to text
             <img
               src={explore_plans}
               alt="explore plans"
               onClick={() => scrollTo(section6Ref)}
               className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
               style={{ width: "clamp(180px, 55vw, 260px)" }}
-            />
+            /> */
+            <p
+              className="font-extrabold lowercase text-black mt-6"
+              style={{
+                fontSize: "clamp(16px, 4.5vw, 22px)",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              coming soon
+              {/* → */}
+            </p>
           )}
         </div>
 
@@ -2097,7 +2130,7 @@ const Mentorship = () => {
           className="relative z-10 flex flex-col  items-center text-center max-w-[50%] px-8"
           style={{ paddingBottom: "clamp(120px, 18vh, 200px)" }}
         >
-          {/* Batch heading */}
+          {/* Batch heading — not needed for now, tagline is the heading
           <h2
             className="font-extrabold  lowercase text-evolve-yellow"
             style={{
@@ -2108,6 +2141,7 @@ const Mentorship = () => {
           >
             {marqueeLabel}
           </h2>
+          */}
 
           {/* Limited seats — not needed for now
           <p
@@ -2137,18 +2171,18 @@ const Mentorship = () => {
             </p>
           )} */}
 
-          {/* Tagline */}
-          <p
-            className="font-normal lowercase text-white"
+          {/* Tagline promoted to heading — body removed for now */}
+          <h2
+            className="font-extrabold lowercase text-evolve-yellow"
             style={{
-              fontSize: "clamp(20px, 2vw, 32px)",
-              lineHeight: "1.2",
-              marginTop: "clamp(24px, 3vh, 40px)",
+              fontSize: "clamp(40px, 4.5vw, 80px)",
+              lineHeight: "1.05",
+              letterSpacing: "-0.03em",
               maxWidth: "60ch"
             }}
           >
             {renderWithBreaks(COPY.closingCta.tagline)}
-          </p>
+          </h2>
 
           {/* CTA button */}
           {hasPaid ? (
@@ -2163,7 +2197,18 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+            /* GetStartedButton not needed for now — changed to text
+            <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
+            <p
+              className="font-extrabold lowercase text-white mt-8"
+              style={{
+                fontSize: "clamp(18px, 2vw, 28px)",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              coming soon
+              {/* → */}
+            </p>
           )}
         </div>
 
@@ -2181,7 +2226,7 @@ const Mentorship = () => {
           className="relative z-10 flex flex-col items-center text-center px-5"
           style={{ paddingBottom: "clamp(100px, 32vw, 160px)" }}
         >
-          {/* Batch heading */}
+          {/* Batch heading — not needed for now, tagline is the heading
           <h2
             className="font-extrabold lowercase text-evolve-yellow"
             style={{
@@ -2192,6 +2237,7 @@ const Mentorship = () => {
           >
             {marqueeLabel}
           </h2>
+          */}
 
           {/* Limited seats — not needed for now
           <p
@@ -2206,7 +2252,7 @@ const Mentorship = () => {
           </p>
           */}
 
-          {/* Applications close */}
+          {/* Applications close — not needed for now
           {!allBatchesFull && (
             <p
               className="font-extrabold lowercase text-white"
@@ -2220,19 +2266,20 @@ const Mentorship = () => {
               {`applications close on ${closeLabel}`}
             </p>
           )}
+          */}
 
-          {/* Tagline */}
-          <p
-            className="font-normal lowercase mb-2 text-white"
+          {/* Tagline promoted to heading — body removed for now */}
+          <h2
+            className="font-extrabold lowercase text-evolve-yellow"
             style={{
-              fontSize: "clamp(16px, 4.5vw, 22px)",
-              lineHeight: "1.4",
-              marginTop: "clamp(16px, 5vw, 28px)",
+              fontSize: "clamp(32px, 9vw, 52px)",
+              lineHeight: "1.05",
+              letterSpacing: "-0.03em",
               maxWidth: "36ch"
             }}
           >
             {renderWithBreaks(COPY.closingCta.tagline)}
-          </p>
+          </h2>
 
           {/* CTA button */}
           {hasPaid ? (
@@ -2247,7 +2294,18 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            <GetStartedButton onClick={() => scrollTo(section6Ref)} />
+            /* GetStartedButton not needed for now — changed to text
+            <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
+            <p
+              className="font-extrabold lowercase text-white mt-6"
+              style={{
+                fontSize: "clamp(16px, 4.5vw, 22px)",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              coming soon
+              {/* → */}
+            </p>
           )}
         </div>
 

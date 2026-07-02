@@ -935,7 +935,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 // assets
 import {
@@ -965,6 +965,14 @@ const useIsMobile = (bp = 768) => {
 
 const Footer = ({ onContactClick }) => {
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  const isActive = (path) => {
+    if (!path) return false;
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname === path) return true;
+    return false;
+  };
 
   const marqueeRef = useRef(null);
   const marqueeTrackRef = useRef(null);
@@ -978,6 +986,17 @@ const Footer = ({ onContactClick }) => {
     {
       path: "/community/portfolio-review",
       label: "- portfolio review",
+      sub: true
+    },
+    { label: "for institutes", isHeader: true },
+    {
+      path: "/for-institutes/portfolio-review-programme",
+      label: "- portfolio review programme",
+      sub: true
+    },
+    {
+      path: "/for-institutes/find-your-niche-programme",
+      label: "- find your niche programme",
       sub: true
     },
     { path: "/mentorship", label: "mentorship" },
@@ -1127,33 +1146,44 @@ const Footer = ({ onContactClick }) => {
                       </Link>
                     </li>
                   ))} */}
-                  {navigationLinks.map((item) => (
-                    <li key={item.label} className={item.sub ? "pl-4" : ""}>
-                      {item.isModal ? (
-                        <button
-                          onClick={() => onContactClick && onContactClick()}
-                          className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                            item.sub
-                              ? "text-[1.5rem] text-black/50"
-                              : "text-[2rem]"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ) : (
-                        <Link
-                          to={item.path}
-                          className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                            item.sub
-                              ? "text-[1.5rem] text-black/50"
-                              : "text-[2rem]"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
+                  {navigationLinks.map((item) => {
+                    if (item.isHeader) {
+                      return (
+                        <li key={item.label}>
+                          <span className="text-[2rem] leading-tight text-black">
+                            {item.label}
+                          </span>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                        {item.isModal ? (
+                          <button
+                            onClick={() => onContactClick && onContactClick()}
+                            className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                              item.sub
+                                ? "text-[1.5rem] text-black/50"
+                                : "text-[2rem] text-black"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ) : (
+                          <Link
+                            to={item.path}
+                            className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                              item.sub
+                                ? `text-[1.5rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black/50"}`
+                                : `text-[2rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black"}`
+                            }`}
+                          >
+                            {item.label}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 
@@ -1295,33 +1325,44 @@ const Footer = ({ onContactClick }) => {
                   </Link>
                 </li>
               ))} */}
-              {navigationLinks.map((item) => (
-                <li key={item.label} className={item.sub ? "pl-4" : ""}>
-                  {item.isModal ? (
-                    <button
-                      onClick={() => onContactClick && onContactClick()}
-                      className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                        item.sub
-                          ? "text-[1.25rem] text-black/50"
-                          : "text-[1.5rem]"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ) : (
-                    <Link
-                      to={item.path}
-                      className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                        item.sub
-                          ? "text-[1.25rem] text-black/50"
-                          : "text-[1.5rem]"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+              {navigationLinks.map((item) => {
+                if (item.isHeader) {
+                  return (
+                    <li key={item.label}>
+                      <span className="text-[1.5rem] leading-tight text-black">
+                        {item.label}
+                      </span>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                    {item.isModal ? (
+                      <button
+                        onClick={() => onContactClick && onContactClick()}
+                        className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                          item.sub
+                            ? "text-[1.25rem] text-black/50"
+                            : "text-[1.5rem] text-black"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.path}
+                        className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
+                          item.sub
+                            ? `text-[1.25rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black/50"}`
+                            : `text-[1.5rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black"}`
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

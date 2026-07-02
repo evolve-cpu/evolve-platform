@@ -45,6 +45,8 @@ import vector_portfolio from "./vector_portfolio.svg";
 import vector_portfolio_mobile from "./vector_portfolio_mobile.svg";
 import outcomes_portfolio from "./outcomes_portfolio.svg";
 import outcomes_portfolio_mobile from "./outcomes_portfolio_mobile.svg";
+import outcomes_mentorship_ins_mobile from "./outcomes_mentorship_ins_mobile.svg";
+import outcomes_mentorship_ins from "./outcomes_mentorship_ins.svg";
 
 export {
   hero_mentorship,
@@ -93,5 +95,7 @@ export {
   vector_portfolio,
   vector_portfolio_mobile,
   left_eye_ribbon_1,
-  right_eye_ribbon_1
+  right_eye_ribbon_1,
+  outcomes_mentorship_ins_mobile,
+  outcomes_mentorship_ins
 };

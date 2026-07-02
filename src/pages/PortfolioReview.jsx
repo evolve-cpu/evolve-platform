@@ -83,13 +83,23 @@ const PortfolioReview = () => {
             {COPY.hero.body}
           </p>
 
-          {/* CTA Button */}
+          {/* CTA — ShareYourWorkButton not needed for now, changed to text
           <div className="mt-8">
             <ShareYourWorkButton
               to="/community/portfolio-review/form"
               onClick={() => trackPortfolioReviewCta("hero_desktop")}
             />
-          </div>
+          </div> */}
+          <p
+            className="font-extrabold lowercase text-black mt-8"
+            style={{
+              fontSize: "clamp(18px, 2vw, 28px)",
+              letterSpacing: "-0.02em"
+            }}
+          >
+            coming soon
+            {/* → */}
+          </p>
         </div>
 
         {/* Ribbons — bottom corners */}
@@ -137,13 +147,20 @@ const PortfolioReview = () => {
             {COPY.hero.body}
           </p>
 
-          {/* CTA Button */}
+          {/* CTA — ShareYourWorkButton not needed for now, changed to text
           <div className="mt-6">
             <ShareYourWorkButton
               to="/community/portfolio-review/form"
               onClick={() => trackPortfolioReviewCta("hero_mobile")}
             />
-          </div>
+          </div> */}
+          <p
+            className="font-extrabold lowercase text-black mt-6"
+            style={{ fontSize: "18px", letterSpacing: "-0.02em" }}
+          >
+            coming soon
+            {/* → */}
+          </p>
         </div>
 
         {/* Ribbons — bottom corners, mobile variants */}
@@ -343,13 +360,23 @@ const PortfolioReview = () => {
             fix before you send this to a studio or client.
           </p>
 
-          {/* CTA Button */}
+          {/* CTA — ShareYourWorkButton not needed for now, changed to text
           <div className="mt-8">
             <ShareYourWorkButton
               to="/community/portfolio-review/form"
               onClick={() => trackPortfolioReviewCta("benefits_desktop")}
             />
-          </div>
+          </div> */}
+          <p
+            className="font-extrabold lowercase text-evolve-yellow mt-8"
+            style={{
+              fontSize: "clamp(18px, 2vw, 28px)",
+              letterSpacing: "-0.02em"
+            }}
+          >
+            coming soon
+            {/* → */}
+          </p>
         </div>
 
         {/* Bottom vector — full width */}
@@ -393,13 +420,20 @@ const PortfolioReview = () => {
             fix before you send this to a studio or client.
           </p>
 
-          {/* CTA Button */}
+          {/* CTA — ShareYourWorkButton not needed for now, changed to text
           <div className="mt-6">
             <ShareYourWorkButton
               to="/community/portfolio-review/form"
               onClick={() => trackPortfolioReviewCta("benefits_mobile")}
             />
-          </div>
+          </div> */}
+          <p
+            className="font-extrabold lowercase text-evolve-yellow mt-6"
+            style={{ fontSize: "18px", letterSpacing: "-0.02em" }}
+          >
+            coming soon
+            {/* → */}
+          </p>
         </div>
 
         {/* Bottom vector — full width */}
