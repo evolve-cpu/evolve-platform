@@ -9,33 +9,11 @@ const NAV_BORD  = "#0d1f3c";
 const ACCENT    = "#2563eb";
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const REDIRECT  = `${ANU_ORIGIN}/portfolio-review/form`;
-const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
-const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
-
-async function sendSignInEmail(toEmail, magicLink) {
-  const htmlContent = `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
-      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
-      <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
-      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">Your portal is ready</h1>
-      <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">
-        Your portfolio review portal at Anant National University is ready. Click below to sign in and submit your portfolio for expert feedback. No password needed.
-      </p>
-      <a href="${magicLink}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">
-        Go to portal
-      </a>
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
-      <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${toEmail}. If this wasn't you, ignore this email.</p>
-    </div>`;
-  await fetch(BREVO_URL, {
+async function sendSignInEmail(toEmail) {
+  await fetch("/api/send-person-invite", {
     method: "POST",
-    headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
-      to: [{ email: toEmail }],
-      subject: "Your portal is ready, Anant National University x Evolve",
-      htmlContent
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: toEmail, role: "student" })
   });
 }
 
@@ -111,25 +89,7 @@ export default function AnantSignIn() {
       anu_email:  student.anu_email
     }));
 
-    const { data: linkData, error: otpErr } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: addr,
-      options: { redirectTo: REDIRECT, expiresIn: 86400 }
-    });
-
-    if (otpErr) {
-      console.error("generateLink error:", otpErr);
-      setError(otpErr.message);
-      setStep("email"); return;
-    }
-
-    const magicLink = linkData?.properties?.action_link;
-    if (!magicLink) {
-      setError("Could not generate sign-in link. Please try again.");
-      setStep("email"); return;
-    }
-
-    await sendSignInEmail(addr, magicLink);
+    await sendSignInEmail(addr);
     setStep("sent");
     startCountdown();
   }

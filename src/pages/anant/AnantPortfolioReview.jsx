@@ -11,9 +11,6 @@ const CALENDLY_URL =
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 // const ANU_ORIGIN = "http://localhost:8080"; // for local dev
-const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
-const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
-
 // Convert Google Drive share link → embeddable preview URL
 function driveEmbedUrl(url) {
   if (!url) return null;
@@ -24,8 +21,7 @@ function driveEmbedUrl(url) {
   return url;
 }
 
-async function sendSubmissionConfirmation(toEmail, toName, calendlyUrl) {
-  if (!BREVO_KEY) return;
+async function sendSubmissionConfirmation(toEmail, toName) {
   const firstName = (toName || "").split(" ")[0] || "there";
   const htmlContent = `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
@@ -42,14 +38,11 @@ async function sendSubmissionConfirmation(toEmail, toName, calendlyUrl) {
       <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:28px 0 20px" />
       <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This email is for ${toEmail}. If this wasn't you, please ignore it.</p>
     </div>`;
-  await fetch(BREVO_URL, {
+  await fetch("/api/send-brevo-email", {
     method: "POST",
-    headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      sender: {
-        name: "Anant National University x evolve",
-        email: "noreply@evolvedesign.academy"
-      },
+      sender: { name: "Anant National University x evolve", email: "noreply@evolvedesign.academy" },
       to: [{ email: toEmail, name: toName || "" }],
       subject: "We've received your portfolio — book your review call",
       htmlContent

@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 
-const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
-const BREVO_KEY = import.meta.env.VITE_BREVO_API_KEY;
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 
 /* ── small helpers ── */
@@ -18,68 +16,15 @@ function parseCSV(raw) {
   });
 }
 
-async function sendBrevoEmail({ to, subject, htmlContent }) {
-  if (!BREVO_KEY) return { error: "VITE_BREVO_API_KEY not set" };
-  const res = await fetch(BREVO_URL, {
+/* ── single-person invite ── */
+async function generateAndSend({ email, role }) {
+  const res = await fetch("/api/send-person-invite", {
     method: "POST",
-    headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sender: { name: "Anant × evolve", email: "noreply@evolvedesign.academy" },
-      to: [{ email: to }],
-      subject,
-      htmlContent
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, role })
   });
   if (!res.ok) { const t = await res.text(); return { error: t }; }
   return { ok: true };
-}
-
-async function sendInviteEmail({ email, magicLink, role }) {
-  const isStudent = role === "student";
-  const subject = isStudent
-    ? "Your portfolio review portal is ready, Anant National University x Evolve"
-    : "Your admin portal access, Anant National University x Evolve";
-
-  const headline = isStudent
-    ? "Your portfolio review portal is ready"
-    : `Your ${role === "uni_admin" ? "admin" : "faculty"} portal is ready`;
-
-  const body = isStudent
-    ? "Your portfolio review portal at Anant National University is ready. Click below to sign in and submit your portfolio for expert feedback. No password needed."
-    : "You've been invited to the Anant National University x evolve admin panel. Click below to access your dashboard. No password needed.";
-
-  const cta = isStudent ? "Open my portfolio review portal" : "Access my dashboard";
-  const link = magicLink || (isStudent ? `${ANU_ORIGIN}/signin` : `${ANU_ORIGIN}/admin`);
-
-  const htmlContent = `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px">
-      <img src="${ANU_ORIGIN}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" />
-      <p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p>
-      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">${headline}</h1>
-      <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">${body}</p>
-      <a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">${cta}</a>
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
-      <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${email}. If this wasn't you, ignore this email.</p>
-    </div>`;
-
-  return sendBrevoEmail({ to: email, subject, htmlContent });
-}
-
-/* ── single-person invite ── */
-async function generateAndSend({ email, role }) {
-  const redirectTo = role === "student"
-    ? `${ANU_ORIGIN}/portfolio-review/form`
-    : `${ANU_ORIGIN}/admin/dashboard`;
-
-  let magicLink = null;
-  try {
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink", email, options: { redirectTo, expiresIn: 86400 }
-    });
-    if (!error && data?.properties?.action_link) magicLink = data.properties.action_link;
-  } catch {}
-
-  return sendInviteEmail({ email, magicLink, role });
 }
 
 /* ═══════════════════════════════════════════════

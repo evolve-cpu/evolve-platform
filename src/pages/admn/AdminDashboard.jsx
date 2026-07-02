@@ -56,48 +56,11 @@ function parseStreams(val) {
 }
 // const ANU_ORIGIN_URL = "http://localhost:8080";
 
-async function sendANUPersonInvite(email, role, apiKey) {
-  const redirectTo =
-    role === "student"
-      ? `${ANU_ORIGIN_URL}/portfolio-review/form`
-      : `${ANU_ORIGIN_URL}/admin/dashboard`;
-  let magicLink = null;
-  try {
-    const { data } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: { redirectTo, expiresIn: 86400 }
-    });
-    if (data?.properties?.action_link) magicLink = data.properties.action_link;
-  } catch {}
-  const isStudent = role === "student";
-  const headline = isStudent
-    ? "Your portal is ready"
-    : role === "uni_admin"
-      ? "Your admin portal is ready"
-      : "Your faculty portal is ready";
-  const body = isStudent
-    ? "Click below to sign in and submit your portfolio for expert feedback. No password needed."
-    : "You've been invited to the Anant National University x evolve admin panel. No password needed.";
-  const cta = isStudent
-    ? "Go to portal"
-    : "Access my dashboard";
-  const link =
-    magicLink ||
-    (isStudent ? `${ANU_ORIGIN_URL}/signin` : `${ANU_ORIGIN_URL}/admin`);
-  const subject = isStudent
-    ? "Your portal is ready, Anant National University x Evolve"
-    : "Your admin portal access, Anant National University x Evolve";
-  const htmlContent = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 32px;background:#060c17;color:#fff;border-radius:16px"><img src="${ANU_ORIGIN_URL}/images/anant-logo.png" alt="Anant National University" style="height:40px;margin:0 auto 32px 0;display:block" /><p style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Anant National University x evolve</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;line-height:1.25;margin:0 0 16px">${headline}</h1><p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0 0 32px">${body}</p><a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none">${cta}</a><hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" /><p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">This link is for ${email}. If this wasn't you, ignore this email.</p></div>`;
-  await fetch("https://api.brevo.com/v3/smtp/email", {
+async function sendANUPersonInvite(email, role) {
+  await fetch("/api/send-person-invite", {
     method: "POST",
-    headers: { "api-key": apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sender: { name: "Anant × evolve", email: "noreply@evolvedesign.academy" },
-      to: [{ email }],
-      subject,
-      htmlContent
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, role })
   });
 }
 
@@ -239,11 +202,9 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const BREVO_PORTFOLIO_TEMPLATE_ID = import.meta.env
   .VITE_BREVO_PORTFOLIO_TEMPLATE_ID;
-const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY;
 const ANU_LOGO = `${ANU_ORIGIN_URL}/images/anant-logo.png`;
 
-async function sendReportNotifications(review, reportUrl, apiKey) {
-  if (!apiKey) return;
+async function sendReportNotifications(review, reportUrl) {
 
   // 1. Fetch student record to get their stream, program, year
   const { data: student } = await supabaseAdmin
@@ -317,9 +278,9 @@ async function sendReportNotifications(review, reportUrl, apiKey) {
           This notification was sent to you as part of the Anant National University × evolve portfolio review programme.
         </p>
       </div>`;
-    return fetch("https://api.brevo.com/v3/smtp/email", {
+    return fetch("/api/send-brevo-email", {
       method: "POST",
-      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sender: { name: "Anant National University × evolve", email: "noreply@evolvedesign.academy" },
         to: [{ email: r.anu_email, name: rName }],
@@ -418,12 +379,9 @@ function ReviewUploadCell({ review, onDone }) {
           <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:36px 0 20px" />
           <p style="font-size:12px;color:rgba(255,255,255,0.28);margin:0">We'd love to hear what you thought of the experience. There's a quick feedback form on the report page.</p>
         </div>`;
-      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+      const brevoRes = await fetch("/api/send-brevo-email", {
         method: "POST",
-        headers: {
-          "api-key": BREVO_API_KEY,
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sender: {
             name: "Anant National University x evolve",
@@ -442,7 +400,7 @@ function ReviewUploadCell({ review, onDone }) {
       }
 
       // Send report-ready notification to matching faculty + all uni admins (fire-and-forget)
-      sendReportNotifications(review, reportUrl, BREVO_API_KEY).catch(() => {});
+      sendReportNotifications(review, reportUrl).catch(() => {});
     } else {
       // Non-Anant reviews: use edge function with Brevo template + PDF attachment
       const fnUrl = `${SUPABASE_URL}/functions/v1/send-review-email`;
@@ -1518,7 +1476,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         : type === "faculty"
           ? "anu_faculty"
           : "anu_admins";
-    await sendANUPersonInvite(entry.anu_email, role, BREVO_API_KEY);
+    await sendANUPersonInvite(entry.anu_email, role);
     await supabaseAdmin
       .from(table)
       .update({ invite_sent_at: new Date().toISOString() })
