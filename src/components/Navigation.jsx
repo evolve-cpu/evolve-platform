@@ -112,6 +112,12 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       label: "- portfolio review",
       sub: true
     },
+    { label: "for institutes", isHeader: true },
+    {
+      path: "/for-institutes/portfolio-review-programme",
+      label: "- portfolio review programme",
+      sub: true
+    },
     { path: "/mentorship", label: "mentorship" },
     { path: "/webinars", label: "webinars" },
     { path: "/contact", label: "contact us", isModal: true }
@@ -680,6 +686,17 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                       const subClass = item.sub
                         ? "text-[20px] md:text-[26px] text-black/50 pl-5 md:pl-6"
                         : "text-[32px] md:text-[40px]";
+
+                      if (item.isHeader) {
+                        return (
+                          <span
+                            key={item.label}
+                            className="text-[32px] md:text-[40px] font-extrabold leading-[1.05] text-black"
+                          >
+                            {item.label}
+                          </span>
+                        );
+                      }
 
                       if (item.external) {
                         return (

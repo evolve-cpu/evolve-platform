@@ -349,20 +349,24 @@ export const portfolioReview = {
     heading: "how it\nworks.",
     steps: [
       {
-        q: "step 1: create your account",
-        a: "we need the basics to reach you with your feedback. name, email, that's it. no lengthy forms."
+        q: "step 1: Orientation & Portfolio Submission",
+        a: "students attend an orientation session, complete a self-assessment, and submit their portfolio along with their career aspirations."
       },
       {
-        q: "step 2: share your portfolio",
-        a: "drop a link or upload your work. behance, figma, notion, your own site. whatever you've got, we'll take it."
+        q: "step 2:  Industry Portfolio Review",
+        a: "our reviewers evaluate each portfolio against the student's goals and current industry expectations."
       },
       {
-        q: "step 3: tell us more",
-        a: "share the kind of design roles you're leaning towards. \nand one project you're really proud of - what it was, what you worked on, and how you thought through it. \nwe know putting this into words can feel like a task. \nbut this is honestly the best way for us to understand your work and how you think. No need to over-prepare, just be yourself and keep it real."
+        q: "step 3:  On-Campus/online Feedback Session",
+        a: "our reviewers engage directly with students through live portfolio presentations and personalised feedback."
       },
       {
-        q: "step 4: submit",
-        a: "that's it. once you submit, we take it from here."
+        q: "step 4:  Personalised Report",
+        a: "every student receives a detailed report with strengths, recommendations, and a clear roadmap for improvement."
+      },
+      {
+        q: "step 5:  Follow-Up Review",
+        a: "after refining their portfolio, students reconnect with their reviewer for a final round of feedback before applying."
       }
     ]
   }

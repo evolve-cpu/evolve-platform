@@ -1049,6 +1049,9 @@ const Webinars = lazy(() => import("./pages/Webinars.jsx"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const Community = lazy(() => import("./pages/Community.jsx"));
 const PortfolioReview = lazy(() => import("./pages/PortfolioReview.jsx"));
+const PortfolioReviewForInstitutions = lazy(
+  () => import("./pages/PortfolioReviewForInstitutions.jsx")
+);
 const PortfolioReviewForm = lazy(
   () => import("./pages/PortfolioReviewForm.jsx")
 );
@@ -1544,6 +1547,10 @@ const AppLayout = () => {
             <Route
               path="/community/portfolio-review"
               element={<PortfolioReview />}
+            />
+            <Route
+              path="/for-institutes/portfolio-review-programme"
+              element={<PortfolioReviewForInstitutions />}
             />
             <Route
               path="/community/portfolio-review/form"

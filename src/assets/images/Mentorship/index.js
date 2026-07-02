@@ -10,8 +10,10 @@ import impact_thing from "./impact_thing.svg";
 import impact_thing_mobile from "./impact_thing_mobile.svg";
 import get_started_button from "./get_started_button.svg";
 import left_eye_ribbon from "./left_eye_ribbon.svg";
+import left_eye_ribbon_1 from "./left_eye_ribbon_1.svg";
 import left_eye_ribbon_mobile from "./left_eye_ribbon_mobile.svg";
 import right_eye_ribbon from "./right_eye_ribbon.svg";
+import right_eye_ribbon_1 from "./right_eye_ribbon_1.svg";
 import right_eye_ribbon_mobile from "./right_eye_ribbon_mobile.svg";
 import mentorship_vector from "./mentorship_vector.svg";
 import mentorship_vector_mobile from "./mentorship_vector_mobile.svg";
@@ -39,6 +41,10 @@ import upload_portfolio from "./upload_portfolio.svg";
 import upload_resume from "./upload_resume.svg";
 import upload_sheet from "./upload_sheet.svg";
 import linkedin_logo from "./linkedin_logo.svg";
+import vector_portfolio from "./vector_portfolio.svg";
+import vector_portfolio_mobile from "./vector_portfolio_mobile.svg";
+import outcomes_portfolio from "./outcomes_portfolio.svg";
+import outcomes_portfolio_mobile from "./outcomes_portfolio_mobile.svg";
 
 export {
   hero_mentorship,
@@ -81,5 +87,11 @@ export {
   upload_portfolio,
   upload_resume,
   upload_sheet,
-  linkedin_logo
+  linkedin_logo,
+  outcomes_portfolio,
+  outcomes_portfolio_mobile,
+  vector_portfolio,
+  vector_portfolio_mobile,
+  left_eye_ribbon_1,
+  right_eye_ribbon_1
 };

@@ -13,8 +13,25 @@ import {
   mentorship_vector_mobile
 } from "../assets/images/Mentorship";
 
-// Steps data lives in src/content.js
-const STEPS = COPY.howItWorks.steps;
+// Community portfolio review steps (institution page steps live in content.js)
+const STEPS = [
+  {
+    q: "step 1: create your account",
+    a: "we need the basics to reach you with your feedback. name, email, that's it. no lengthy forms."
+  },
+  {
+    q: "step 2: share your portfolio",
+    a: "drop a link or upload your work. behance, figma, notion, your own site. whatever you've got, we'll take it."
+  },
+  {
+    q: "step 3: tell us more",
+    a: "share the kind of design roles you're leaning towards. \nand one project you're really proud of - what it was, what you worked on, and how you thought through it. \nwe know putting this into words can feel like a task. \nbut this is honestly the best way for us to understand your work and how you think. No need to over-prepare, just be yourself and keep it real."
+  },
+  {
+    q: "step 4: submit",
+    a: "that's it. once you submit, we take it from here."
+  }
+];
 
 /* ─────────────────────────────────────────────
    PortfolioReview
@@ -31,7 +48,7 @@ const PortfolioReview = () => {
       />
 
       {/* ================= SECTION 1 — HERO (Desktop) ================= */}
-      <section className="hidden md:flex relative min-h-screen bg-evolve-yellow overflow-hidden flex-col items-center">
+      <section className="hidden md:flex relative min-h-[120vh] bg-evolve-yellow overflow flex-col items-center">
         {/* Content — centered top */}
         <div
           className="relative z-10 flex flex-col items-center text-center"
@@ -79,12 +96,12 @@ const PortfolioReview = () => {
         <img
           src={right_eye_ribbon}
           alt=""
-          className="absolute bottom-[0rem] right-0 z-10 w-[45%]"
+          className="absolute bottom-[0rem] right-0 z-10 w-[55%]"
         />
         <img
           src={left_eye_ribbon}
           alt=""
-          className="absolute bottom-[0rem] left-0 z-20 w-[45%]"
+          className="absolute bottom-[0rem] -left-[0.65rem] z-20 w-[53%]"
         />
       </section>
 
