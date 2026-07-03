@@ -1,3 +1,5 @@
+import { sendEmail } from "./_sendEmail.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "method not allowed" });
@@ -10,22 +12,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "missing required fields" });
   }
 
-  const brevoKey = process.env.BREVO_API_KEY;
-  if (!brevoKey) {
-    return res.status(500).json({ error: "server misconfigured: missing BREVO_API_KEY" });
-  }
+  // Support both array of objects [{email, name}] and array of strings
+  const toEmails = Array.isArray(to)
+    ? to.map(t => (typeof t === "string" ? t : t.email))
+    : [typeof to === "string" ? to : to.email];
 
-  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: { "api-key": brevoKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ sender, to, subject, htmlContent })
-  });
+  const from = sender?.email || "noreply@evolvedesign.academy";
+  const fromName = sender?.name || "evolve";
 
-  if (!r.ok) {
-    const err = await r.text();
-    console.error("brevo send-brevo-email error:", err);
+  try {
+    await sendEmail({ from, fromName, to: toEmails, subject, html: htmlContent });
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("send-brevo-email error:", err.message);
     return res.status(500).json({ error: "failed to send email" });
   }
-
-  return res.status(200).json({ ok: true });
 }
