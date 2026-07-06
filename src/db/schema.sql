@@ -128,7 +128,7 @@ CREATE POLICY "institute_inquiries: public insert"
   ON public.institute_inquiries FOR INSERT
   WITH CHECK (true);
 
-
+-- now deploy
 -- ─────────────────────────────────────────────
 -- NOTES FOR RAZORPAY INTEGRATION (when ready)
 -- ─────────────────────────────────────────────
