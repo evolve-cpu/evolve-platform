@@ -985,18 +985,18 @@ const Footer = ({ onContactClick }) => {
     // { path: "/community/portfolio-review", label: "↳ portfolio review", sub: true },
     {
       path: "/community/portfolio-review",
-      label: "- portfolio review",
+      label: "portfolio review",
       sub: true
     },
     { label: "for institutes", isHeader: true },
     {
       path: "/for-institutes/portfolio-review-programme",
-      label: "- portfolio review programme",
+      label: "portfolio review programme",
       sub: true
     },
     {
       path: "/for-institutes/find-your-niche-programme",
-      label: "- find your niche programme",
+      label: "find your niche programme",
       sub: true
     },
     { path: "/mentorship", label: "mentorship" },
@@ -1131,7 +1131,7 @@ const Footer = ({ onContactClick }) => {
                 <div className="text-[1.25rem] leading-none mb-4">
                   navigation
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {/* {navigationLinks.map((item) => (
                     <li key={item.label} className={item.sub ? "pl-4" : ""}>
                       <Link
@@ -1157,7 +1157,7 @@ const Footer = ({ onContactClick }) => {
                       );
                     }
                     return (
-                      <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                      <li key={item.label} className={item.sub ? "" : ""}>
                         {item.isModal ? (
                           <button
                             onClick={() => onContactClick && onContactClick()}
@@ -1189,7 +1189,7 @@ const Footer = ({ onContactClick }) => {
 
               <div>
                 <div className="text-[1.25rem] leading-none mb-4">socials</div>
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {socialLinks.map((item) => (
                     <li key={item.label}>
                       <a
@@ -1336,14 +1336,14 @@ const Footer = ({ onContactClick }) => {
                   );
                 }
                 return (
-                  <li key={item.label} className={item.sub ? "pl-4" : ""}>
+                  <li key={item.label} className={item.sub ? "" : ""}>
                     {item.isModal ? (
                       <button
                         onClick={() => onContactClick && onContactClick()}
                         className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
                           item.sub
                             ? "text-[1.25rem] text-black/50"
-                            : "text-[1.5rem] text-black"
+                            : "text-[1.5rem]"
                         }`}
                       >
                         {item.label}
@@ -1353,8 +1353,8 @@ const Footer = ({ onContactClick }) => {
                         to={item.path}
                         className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
                           item.sub
-                            ? `text-[1.25rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black/50"}`
-                            : `text-[1.5rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black"}`
+                            ? "text-[1.25rem] text-black/50"
+                            : "text-[1.5rem]"
                         }`}
                       >
                         {item.label}

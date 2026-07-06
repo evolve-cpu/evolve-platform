@@ -104,6 +104,32 @@ CREATE TRIGGER mentorship_payments_updated_at
 
 
 -- ─────────────────────────────────────────────
+-- 3. INSTITUTE INQUIRIES
+--    leads from the "for institutes" pages
+--    (find your niche + portfolio review programmes)
+--    submitted via "get in touch" and "download handbook" modals
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.institute_inquiries (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           TEXT        NOT NULL,
+  institute_name TEXT        NOT NULL,
+  email          TEXT        NOT NULL,
+  phone          TEXT        NOT NULL,
+  looking_for    TEXT,
+  programme      TEXT        NOT NULL CHECK (programme IN ('find-your-niche', 'portfolio-review')),
+  intent         TEXT        NOT NULL DEFAULT 'contact' CHECK (intent IN ('contact', 'handbook')),
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.institute_inquiries ENABLE ROW LEVEL SECURITY;
+
+-- public lead-gen form — anyone can submit, nobody can read back via anon/authenticated
+CREATE POLICY "institute_inquiries: public insert"
+  ON public.institute_inquiries FOR INSERT
+  WITH CHECK (true);
+
+
+-- ─────────────────────────────────────────────
 -- NOTES FOR RAZORPAY INTEGRATION (when ready)
 -- ─────────────────────────────────────────────
 -- 1. frontend creates a payment row (status = 'pending') using user's supabase session

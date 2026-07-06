@@ -3,6 +3,7 @@ import SEO from "../components/SEO";
 import { portfolioReview as COPY } from "../content";
 import { renderWithBreaks } from "../utils/renderWithBreaks";
 import { trackPortfolioReviewCta } from "../utils/analytics";
+import InstituteContactModal from "../components/InstituteContactModal";
 import {
   right_eye_ribbon,
   left_eye_ribbon,
@@ -27,14 +28,24 @@ const STEPS = COPY.howItWorks.steps;
 const GET_IN_TOUCH_URL =
   "https://wa.me/919227123007?text=Hi%2C%20I%27m%20interested%20in%20the%20Portfolio%20Review%20Programme";
 
+// TODO: add the handbook PDF / drive link here once it's ready
+const HANDBOOK_URL = "";
+
 /* ─────────────────────────────────────────────
    PortfolioReviewForInstitutions
 ───────────────────────────────────────────── */
 const PortfolioReviewForInstitutions = () => {
   const [howHover, setHowHover] = useState(false);
   const howItWorksRef = useRef(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIntent, setModalIntent] = useState("contact");
 
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: "smooth" });
+  const openModal = (intent, trackLabel) => {
+    if (trackLabel) trackPortfolioReviewCta(trackLabel);
+    setModalIntent(intent);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -93,11 +104,9 @@ const PortfolioReviewForInstitutions = () => {
 
           {/* CTA */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackPortfolioReviewCta("hero_desktop")}
+            <button
+              type="button"
+              onClick={() => openModal("contact", "hero_desktop")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity duration-150 hover:opacity-90"
               style={{
                 backgroundColor: "#000",
@@ -109,9 +118,10 @@ const PortfolioReviewForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
+              type="button"
+              onClick={() => openModal("handbook", "hero_desktop_handbook")}
               className="font-bold lowercase text-black"
               style={{
                 fontSize: "clamp(16px, 1.4vw, 22px)",
@@ -121,7 +131,7 @@ const PortfolioReviewForInstitutions = () => {
               }}
             >
               download handbook
-            </a>
+            </button>
           </div>
         </div>
 
@@ -193,11 +203,9 @@ const PortfolioReviewForInstitutions = () => {
 
           {/* CTA */}
           <div className="mt-6 flex flex-col items-center gap-4">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackPortfolioReviewCta("hero_mobile")}
+            <button
+              type="button"
+              onClick={() => openModal("contact", "hero_mobile")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity active:opacity-70"
               style={{
                 backgroundColor: "#000",
@@ -209,9 +217,10 @@ const PortfolioReviewForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
+              type="button"
+              onClick={() => openModal("handbook", "hero_mobile_handbook")}
               className="font-bold lowercase text-black"
               style={{
                 fontSize: "18px",
@@ -221,7 +230,7 @@ const PortfolioReviewForInstitutions = () => {
               }}
             >
               download handbook
-            </a>
+            </button>
           </div>
         </div>
 
@@ -484,11 +493,9 @@ const PortfolioReviewForInstitutions = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackPortfolioReviewCta("closing_desktop")}
+            <button
+              type="button"
+              onClick={() => openModal("contact", "closing_desktop")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity duration-150 hover:opacity-90"
               style={{
                 backgroundColor: "#000",
@@ -500,7 +507,7 @@ const PortfolioReviewForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -548,11 +555,9 @@ const PortfolioReviewForInstitutions = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackPortfolioReviewCta("closing_mobile")}
+            <button
+              type="button"
+              onClick={() => openModal("contact", "closing_mobile")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity active:opacity-70"
               style={{
                 backgroundColor: "#000",
@@ -564,7 +569,7 @@ const PortfolioReviewForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -575,6 +580,16 @@ const PortfolioReviewForInstitutions = () => {
           className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
+
+      <InstituteContactModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        programme="portfolio-review"
+        whatsappUrl={GET_IN_TOUCH_URL}
+        intent={modalIntent}
+        handbookUrl={HANDBOOK_URL}
+        onTrack={(label) => trackPortfolioReviewCta(`modal_${label}`)}
+      />
     </div>
   );
 };

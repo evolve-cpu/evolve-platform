@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import SEO from "../components/SEO";
+import InstituteContactModal from "../components/InstituteContactModal";
 import {
   right_eye_ribbon,
   left_eye_ribbon,
@@ -42,14 +43,23 @@ const STEPS = [
 const GET_IN_TOUCH_URL =
   "https://wa.me/919227123007?text=Hi%2C%20I%27m%20interested%20in%20the%20Find%20Your%20Niche%20Programme";
 
+// TODO: add the handbook PDF / drive link here once it's ready
+const HANDBOOK_URL = "";
+
 /* ─────────────────────────────────────────────
    MentorshipForInstitutions
 ───────────────────────────────────────────── */
 const MentorshipForInstitutions = () => {
   const [howHover, setHowHover] = useState(false);
   const howItWorksRef = useRef(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIntent, setModalIntent] = useState("contact");
 
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: "smooth" });
+  const openModal = (intent) => {
+    setModalIntent(intent);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -89,8 +99,8 @@ const MentorshipForInstitutions = () => {
             }}
           >
             find your niche
-            <br />
-            programme
+            {/* <br /> */}
+            {/* programme */}
           </h1>
 
           {/* Body text */}
@@ -108,10 +118,9 @@ const MentorshipForInstitutions = () => {
 
           {/* CTA */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => openModal("contact")}
               className="font-extrabold lowercase flex items-center gap-3 px-8 py-4 rounded-2xl transition-opacity duration-150 hover:opacity-90"
               style={{
                 backgroundColor: "#000",
@@ -123,7 +132,20 @@ const MentorshipForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
+            <button
+              type="button"
+              onClick={() => openModal("handbook")}
+              className="font-bold lowercase text-black"
+              style={{
+                fontSize: "clamp(16px, 1.4vw, 22px)",
+                textDecoration: "underline",
+                textDecorationColor: "#000",
+                textDecorationThickness: "2px"
+              }}
+            >
+              download handbook
+            </button>
           </div>
         </div>
 
@@ -203,10 +225,9 @@ const MentorshipForInstitutions = () => {
 
           {/* CTA */}
           <div className="mt-6 flex flex-col items-center gap-4">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => openModal("contact")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity active:opacity-70"
               style={{
                 backgroundColor: "#000",
@@ -218,7 +239,7 @@ const MentorshipForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -254,7 +275,7 @@ const MentorshipForInstitutions = () => {
       </section>
 
       {/* ================= SECTION 2 — CTA (like mentorship section 2) ================= */}
-      <section className="relative min-h-screen bg-evolve-yellow overflow-hidden">
+      <section className="relative min-h-[90vh] bg-evolve-yellow overflow-hidden">
         <div
           className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-6"
           style={{ top: "20%" }}
@@ -603,10 +624,9 @@ const MentorshipForInstitutions = () => {
 
           {/* CTA Button */}
           <div className="mt-8">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => openModal("contact")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity duration-150 hover:opacity-90"
               style={{
                 backgroundColor: "#000",
@@ -618,7 +638,7 @@ const MentorshipForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -666,10 +686,9 @@ const MentorshipForInstitutions = () => {
 
           {/* CTA Button */}
           <div className="mt-6">
-            <a
-              href={GET_IN_TOUCH_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => openModal("contact")}
               className="font-extrabold lowercase flex items-center gap-3 px-7 py-4 rounded-2xl transition-opacity active:opacity-70"
               style={{
                 backgroundColor: "#000",
@@ -681,7 +700,7 @@ const MentorshipForInstitutions = () => {
             >
               <span>get in touch</span>
               <span style={{ fontSize: "1.1em" }}>→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -692,6 +711,15 @@ const MentorshipForInstitutions = () => {
           className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
+
+      <InstituteContactModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        programme="find-your-niche"
+        whatsappUrl={GET_IN_TOUCH_URL}
+        intent={modalIntent}
+        handbookUrl={HANDBOOK_URL}
+      />
     </div>
   );
 };
