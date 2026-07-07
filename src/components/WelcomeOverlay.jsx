@@ -50,6 +50,9 @@ export default function WelcomeOverlay() {
   ─────────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!user) return;
+    // incomplete onboarding gets routed to /onboarding by OnboardingGate instead —
+    // the onboarding flow itself is their "welcome," not this overlay
+    if (!user.onboarding_completed) return;
     const flag = sessionStorage.getItem("show_welcome_overlay") || localStorage.getItem("show_welcome_overlay");
     if (!flag) return;
 

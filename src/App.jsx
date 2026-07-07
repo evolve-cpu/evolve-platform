@@ -1042,6 +1042,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 import ContactModal from "./components/ContactModal";
 import WelcomeOverlay from "./components/WelcomeOverlay";
+import OnboardingGate from "./components/OnboardingGate";
 
 // Lazy load non-critical routes
 const AboutUs = lazy(() => import("./pages/AboutUs"));
@@ -1062,6 +1063,9 @@ const Course = lazy(() => import("./pages/Course"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
 const Footer = lazy(() => import("./components/Footer"));
+const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const TeamSpace = lazy(() => import("./pages/TeamSpace"));
 
 // Import only critical home images
 import * as images from "./assets/images/Home";
@@ -1142,9 +1146,13 @@ const AppLayout = () => {
     "/admin/signin",
     "/admin/dashboard",
     "/community/portfolio-review/form",
-    "/portfolio-review/form"
+    "/portfolio-review/form",
+    "/onboarding"
   ];
-  const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
+  const shouldShowFooter =
+    !hideFooterRoutes.includes(location.pathname) &&
+    !location.pathname.startsWith("/u/") &&
+    !location.pathname.startsWith("/space/");
 
   // Check orientation for tablets
   useEffect(() => {
@@ -1196,7 +1204,10 @@ const AppLayout = () => {
       location.pathname === "/mentorship-session" ||
       location.pathname === "/admin" ||
       location.pathname === "/admin/signin" ||
-      location.pathname === "/admin/dashboard"
+      location.pathname === "/admin/dashboard" ||
+      location.pathname === "/onboarding" ||
+      location.pathname.startsWith("/u/") ||
+      location.pathname.startsWith("/space/")
     ) {
       setShowNavbar(false);
       setIsHomeIntroActive(false);
@@ -1564,6 +1575,9 @@ const AppLayout = () => {
               element={<PortfolioReviewForm />}
             />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/u/:username" element={<PublicProfile />} />
+            <Route path="/space/:slug" element={<TeamSpace />} />
             <Route path="/payment" element={<Payment />} />
             <Route
               path="/mentorship-session"
@@ -1591,6 +1605,7 @@ const AppLayout = () => {
       </div>
 
       <WelcomeOverlay />
+      <OnboardingGate />
     </>
   );
 };

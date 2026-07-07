@@ -309,11 +309,26 @@ export function useAuth() {
 
   function buildUser(authUser, profile) {
     return {
-      id:         authUser.id,
-      email:      authUser.email,
-      name:       profile.name,
-      avatar_url: profile.avatar_url,
-      phone:      profile.phone ?? null
+      id:                     authUser.id,
+      email:                  authUser.email,
+      name:                   profile.name,
+      avatar_url:             profile.avatar_url,
+      phone:                  profile.phone ?? null,
+      username:               profile.username ?? null,
+      bio:                    profile.bio ?? null,
+      persona:                profile.persona ?? null,
+      level:                  profile.level ?? null,
+      level_confidence:       profile.level_confidence ?? null,
+      country:                profile.country ?? null,
+      motivation:             profile.motivation ?? null,
+      learning_method:        profile.learning_method ?? null,
+      learning_modes:         profile.learning_modes ?? [],
+      discipline:             profile.discipline ?? [],
+      intent:                 profile.intent ?? [],
+      work_type:              profile.work_type ?? null,
+      onboarding_completed:   profile.onboarding_completed ?? false,
+      onboarding_completed_at:profile.onboarding_completed_at ?? null,
+      growth_stage:           profile.growth_stage ?? 0
     };
   }
 

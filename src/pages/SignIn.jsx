@@ -98,6 +98,14 @@ export default function SignIn() {
 
   const { user, authLoading } = useAuth();
 
+  // stash where to land after onboarding (if this user needs it) — read by
+  // Onboarding.jsx once the chat/review flow completes
+  useEffect(() => {
+    if (from && from !== "/") {
+      sessionStorage.setItem("post_onboarding_redirect", from);
+    }
+  }, [from]);
+
   const [step,      setStep]      = useState("options");
   const [name,      setName]      = useState("");
   const [email,     setEmail]     = useState("");
