@@ -1043,6 +1043,7 @@ import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 import ContactModal from "./components/ContactModal";
 import WelcomeOverlay from "./components/WelcomeOverlay";
 import OnboardingGate from "./components/OnboardingGate";
+import { AuthProvider } from "./context/AuthContext";
 
 // Lazy load non-critical routes
 const AboutUs = lazy(() => import("./pages/AboutUs"));
@@ -1645,9 +1646,11 @@ const AnantAppLayout = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {isAnant ? <AnantThemeProvider><AnantAppLayout /></AnantThemeProvider> : <AppLayout />}
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          {isAnant ? <AnantThemeProvider><AnantAppLayout /></AnantThemeProvider> : <AppLayout />}
+        </BrowserRouter>
+      </AuthProvider>
       {navigator.userAgent !== "ReactSnap" && <Analytics />}
     </QueryClientProvider>
   );
