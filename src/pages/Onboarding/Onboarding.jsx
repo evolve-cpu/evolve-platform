@@ -100,7 +100,7 @@ export default function Onboarding() {
       } else if (redirectTo) {
         navigate(redirectTo, { replace: true });
       } else {
-        navigate(`/u/${username}`, { replace: true });
+        navigate(`/profile/${username}`, { replace: true });
       }
     } catch (e) {
       setError(e.message || "something went wrong saving your profile. please try again.");

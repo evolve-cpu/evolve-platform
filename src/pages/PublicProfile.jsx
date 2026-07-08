@@ -202,7 +202,13 @@ export default function PublicProfile() {
         {/* sidebar */}
         <aside className="w-full md:w-[300px] md:border-r border-white/10 px-6 py-8 flex flex-col gap-6 flex-shrink-0">
           <div className="flex justify-center">
-            <GrowthMascot progress={card.growth_stage ?? 0} size={110} />
+            <div className="w-[110px] h-[110px] rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
+              {card.avatar_url ? (
+                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-bold text-4xl">{(card.name || "?")[0].toUpperCase()}</span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-around">

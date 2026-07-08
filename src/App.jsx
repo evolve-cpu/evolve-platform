@@ -1152,7 +1152,7 @@ const AppLayout = () => {
   ];
   const shouldShowFooter =
     !hideFooterRoutes.includes(location.pathname) &&
-    !location.pathname.startsWith("/u/") &&
+    !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/");
 
   // Check orientation for tablets
@@ -1207,7 +1207,7 @@ const AppLayout = () => {
       location.pathname === "/admin/signin" ||
       location.pathname === "/admin/dashboard" ||
       location.pathname === "/onboarding" ||
-      location.pathname.startsWith("/u/") ||
+      location.pathname.startsWith("/profile/") ||
       location.pathname.startsWith("/space/")
     ) {
       setShowNavbar(false);
@@ -1577,7 +1577,7 @@ const AppLayout = () => {
             />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/u/:username" element={<PublicProfile />} />
+            <Route path="/profile/:username" element={<PublicProfile />} />
             <Route path="/space/:slug" element={<TeamSpace />} />
             <Route path="/payment" element={<Payment />} />
             <Route
