@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { sendOtp, verifyOtp, signInWithGoogle, signInWithLinkedIn } from "../auth/signInLogic";
 import { useAuth } from "../hooks/useAuth";
 import BlackNav from "../components/BlackNav";
+import GrowthMascot from "../components/GrowthMascot";
 import { evolve_cube } from "../assets/images/Home";
 
 /* ─── Google icon ─────────────────────────────────────────────────────────── */
@@ -25,6 +26,16 @@ function BackBtn({ onBack }) {
       </svg>
       <span className="text-sm font-semibold">back</span>
     </button>
+  );
+}
+
+/* ─── Stat (left brand panel) ─────────────────────────────────────────────── */
+function Stat({ value, label }) {
+  return (
+    <div>
+      <p className="text-white font-bold text-lg">{value}</p>
+      <p className="text-white/35 text-[10px] font-semibold uppercase tracking-wide mt-0.5">{label}</p>
+    </div>
   );
 }
 
@@ -60,7 +71,16 @@ function LoadingStep({ label, sub, progress }) {
 /* ══════════════════════════════════════════════════════════════════════════════
    Helpers
 ══════════════════════════════════════════════════════════════════════════════ */
-function goToFrom(navigate, from) {
+// When no specific page was requested (from === "/"), an already-onboarded
+// user should land on their own profile, not the marketing landing page.
+// Any explicit `from` (a deep link, /payment, /webinars, etc.) always wins.
+function resolveLandingPath(user, from) {
+  if (from && from !== "/") return from;
+  if (user?.onboarding_completed && user?.username) return `/profile/${user.username}`;
+  return "/";
+}
+
+function goToFrom(navigate, from, user) {
   // Payment page shows its own welcome in the gift screen — skip the overlay
   // Portfolio review form handles its own post-signin flow — skip the overlay
   const skipOverlay =
@@ -73,7 +93,7 @@ function goToFrom(navigate, from) {
   localStorage.removeItem("signin_from");
   sessionStorage.removeItem("signin_from");
   sessionStorage.removeItem("post_signin_redirect");
-  navigate(from, { replace: true });
+  navigate(resolveLandingPath(user, from), { replace: true });
 }
 
 function getSignInFrom(location) {
@@ -127,7 +147,7 @@ export default function SignIn() {
       localStorage.removeItem("signin_from");
       sessionStorage.removeItem("signin_from");
       sessionStorage.removeItem("post_signin_redirect");
-      navigate(from, { replace: true });
+      navigate(resolveLandingPath(user, from), { replace: true });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
@@ -136,7 +156,7 @@ export default function SignIn() {
   useEffect(() => {
     if (user && (step === "verifying" || step === "sending")) {
       setProgress(100);
-      setTimeout(() => goToFrom(navigate, from), 400);
+      setTimeout(() => goToFrom(navigate, from, user), 400);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -199,6 +219,9 @@ export default function SignIn() {
       from.startsWith("/portfolio-review");
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
+      // lets WelcomeOverlay know it's safe to send an onboarded user to their
+      // profile instead of "/" once the OAuth redirect lands (see resolveLandingPath)
+      localStorage.setItem("oauth_default_landing", from === "/" ? "1" : "0");
     }
     // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
     // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
@@ -221,6 +244,9 @@ export default function SignIn() {
       from.startsWith("/portfolio-review");
     if (!skipOverlay) {
       localStorage.setItem("show_welcome_overlay", "1");
+      // lets WelcomeOverlay know it's safe to send an onboarded user to their
+      // profile instead of "/" once the OAuth redirect lands (see resolveLandingPath)
+      localStorage.setItem("oauth_default_landing", from === "/" ? "1" : "0");
     }
     // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
     // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
@@ -292,49 +318,89 @@ export default function SignIn() {
 
       {/* OPTIONS */}
       {step === "options" && (
-        <div className="flex flex-col flex-1 px-6 pt-24 pb-10 md:items-center md:justify-center md:pt-0">
-          <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-5">
-            {showBack && <BackBtn onBack={goBack} />}
-            <h1 className="text-white font-bold leading-tight" style={{ fontSize: 40, letterSpacing: "-0.16px" }}>
-              let's sign you in.
-            </h1>
-            <div className="flex flex-col gap-3">
+        <div className="flex flex-col md:flex-row flex-1">
+          {/* left brand panel — desktop only */}
+          <div
+            className="hidden md:flex md:w-[44%] flex-col justify-between p-14"
+            style={{ background: "radial-gradient(circle at 30% 15%, rgba(163,91,251,0.14), transparent 55%), #101010" }}
+          >
+            <div />
+            <div className="flex flex-col items-center text-center gap-6">
+              <GrowthMascot progress={8} size={100} />
+              <div>
+                <h2 className="text-white font-bold text-3xl leading-tight">
+                  grow your design<br />career in public.
+                </h2>
+                <p className="text-white/40 text-sm mt-4 max-w-xs mx-auto leading-relaxed">
+                  your seed is waiting. every quiz, project, mentorship, and achievement makes it grow.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-10">
+              <Stat value="12k+" label="designers" />
+              <Stat value="840" label="mentors" />
+              <Stat value="3.2k" label="companies" />
+            </div>
+          </div>
+
+          {/* form panel */}
+          <div className="flex flex-col flex-1 px-6 pt-24 pb-10 md:items-center md:justify-center md:pt-0">
+            <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-5">
+              {showBack && <BackBtn onBack={goBack} />}
+
+              {/* mobile-only compact brand header */}
+              <div className="flex md:hidden flex-col items-center text-center gap-2 mb-2">
+                <GrowthMascot progress={8} size={64} />
+                <p className="text-white font-bold text-sm">evolve</p>
+              </div>
+
+              <div className="text-center md:text-left">
+                <h1 className="text-white font-bold leading-tight" style={{ fontSize: 40, letterSpacing: "-0.16px" }}>
+                  let's build your<br />design space.
+                </h1>
+                <p className="text-white/40 text-sm mt-3">
+                  join designers, institutes, and companies building the future of the design industry.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 mt-2">
+                <button
+                  onClick={handleGoogleSignIn}
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold text-base rounded-2xl py-4 active:opacity-80"
+                >
+                  {GOOGLE_ICON}
+                  continue with google
+                </button>
+                <button
+                  onClick={handleLinkedInSignIn}
+                  className="w-full flex items-center justify-center gap-3 bg-[#0A66C2] text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M16.667 1.667H3.333A1.667 1.667 0 0 0 1.667 3.333v13.334A1.667 1.667 0 0 0 3.333 18.333h13.334A1.667 1.667 0 0 0 18.333 16.667V3.333A1.667 1.667 0 0 0 16.667 1.667ZM6.667 15H4.167V7.917h2.5V15ZM5.417 6.875a1.458 1.458 0 1 1 0-2.917 1.458 1.458 0 0 1 0 2.917ZM15.833 15h-2.5v-3.542c0-.833-.015-1.916-1.166-1.916-1.167 0-1.334.908-1.334 1.85V15H8.333V7.917h2.4v.983h.034c.333-.633 1.15-1.3 2.366-1.3 2.534 0 3 1.667 3 3.834V15Z"/>
+                  </svg>
+                  continue with linkedin
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-white/20" />
+                <span className="text-white/40 text-sm whitespace-nowrap">or continue with email</span>
+                <div className="flex-1 h-px bg-white/20" />
+              </div>
               <button
-                onClick={handleGoogleSignIn}
-                className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold text-base rounded-2xl py-4 active:opacity-80"
+                onClick={() => setStep("email-form")}
+                className="w-full flex items-center justify-center gap-2 border border-white/20 text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
               >
-                {GOOGLE_ICON}
-                continue with google
-              </button>
-              <button
-                onClick={handleLinkedInSignIn}
-                className="w-full flex items-center justify-center gap-3 bg-[#0A66C2] text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M16.667 1.667H3.333A1.667 1.667 0 0 0 1.667 3.333v13.334A1.667 1.667 0 0 0 3.333 18.333h13.334A1.667 1.667 0 0 0 18.333 16.667V3.333A1.667 1.667 0 0 0 16.667 1.667ZM6.667 15H4.167V7.917h2.5V15ZM5.417 6.875a1.458 1.458 0 1 1 0-2.917 1.458 1.458 0 0 1 0 2.917ZM15.833 15h-2.5v-3.542c0-.833-.015-1.916-1.166-1.916-1.167 0-1.334.908-1.334 1.85V15H8.333V7.917h2.4v.983h.034c.333-.633 1.15-1.3 2.366-1.3 2.534 0 3 1.667 3 3.834V15Z"/>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M1.5 4.5A1.5 1.5 0 0 1 3 3h12a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 15 15H3A1.5 1.5 0 0 1 1.5 13.5v-9Z" stroke="white" strokeWidth="1.3"/>
+                  <path d="M1.5 4.5 9 9.75 16.5 4.5" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
-                continue with linkedin
+                continue with email
               </button>
+              {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+              <p className="text-white/25 text-xs text-center">
+                by continuing, you agree to evolve's terms &amp; conditions and privacy policy.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/20" />
-              <span className="text-white/40 text-sm whitespace-nowrap">or sign in with your email</span>
-              <div className="flex-1 h-px bg-white/20" />
-            </div>
-            <button
-              onClick={() => setStep("email-form")}
-              className="w-full flex items-center justify-center gap-2 border border-white/20 text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M1.5 4.5A1.5 1.5 0 0 1 3 3h12a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 15 15H3A1.5 1.5 0 0 1 1.5 13.5v-9Z" stroke="white" strokeWidth="1.3"/>
-                <path d="M1.5 4.5 9 9.75 16.5 4.5" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
-              </svg>
-              sign in with email
-            </button>
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-            <p className="text-white/25 text-xs text-center">
-              by signing in, you agree to our terms of service and privacy policy.
-            </p>
           </div>
         </div>
       )}

@@ -69,6 +69,17 @@ export default function WelcomeOverlay() {
       }
     }
 
+    // OAuth landed on the generic "/" (no specific page was requested) — send an
+    // already-onboarded user to their own profile instead of the landing page.
+    const wasDefaultLanding = localStorage.getItem("oauth_default_landing") === "1";
+    localStorage.removeItem("oauth_default_landing");
+    if (wasDefaultLanding && user.username) {
+      sessionStorage.removeItem("show_welcome_overlay");
+      localStorage.removeItem("show_welcome_overlay");
+      navigate(`/profile/${user.username}`, { replace: true });
+      return;
+    }
+
     sessionStorage.removeItem("show_welcome_overlay");
     localStorage.removeItem("show_welcome_overlay");
     setSheetUp(false);

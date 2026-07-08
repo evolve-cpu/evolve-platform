@@ -544,9 +544,20 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 <p className="text-black font-normal text-[14px] mt-1">
                   {user.email}
                 </p>
+                {user.onboarding_completed && user.username && (
+                  <button
+                    onClick={() => {
+                      setAccountOpen(false);
+                      navigate(`/profile/${user.username}`);
+                    }}
+                    className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] lowercase tracking-wide"
+                  >
+                    my profile page
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
-                  className="mt-5 text-black font-extrabold underline flex items-center gap-2"
+                  className="mt-3 text-black font-extrabold underline flex items-center gap-2"
                 >
                   log out
                 </button>
@@ -621,9 +632,20 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
             <p className="text-black font-normal text-[14px] mt-1">
               {user.email}
             </p>
+            {user.onboarding_completed && user.username && (
+              <button
+                onClick={() => {
+                  setAccountOpen(false);
+                  navigate(`/profile/${user.username}`);
+                }}
+                className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] lowercase tracking-wide"
+              >
+                my profile page
+              </button>
+            )}
             <button
               onClick={handleLogout}
-              className="mt-5 text-black font-extrabold underline"
+              className="mt-3 text-black font-extrabold underline"
             >
               log out
             </button>
