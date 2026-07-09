@@ -18,7 +18,9 @@ import Scene3_refined from "./Scene3_refined";
 import Scene4_refined from "./Scene4_refined";
 import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 
-const Scene1 = lazy(() => import("./Scene1"));
+// Scene1 (the "welcome to evolve" door-zoom intro) is now covered by the
+// global landing page's hero — designers land straight on Scene2 here.
+// const Scene1 = lazy(() => import("./Scene1"));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 // Sections after intro: 0=Scene2, 1=Scene3, 2=Scene4, 3=Scene1_4
@@ -65,18 +67,19 @@ const Home = ({
     return navigationType === "POP" ? stored : -1;
   }, []); // eslint-disable-line — intentionally computed once on mount
 
-  // True when we're skipping the intro and jumping straight to a saved section
-  const introSkippedRef = useRef(restoredSection >= 0);
+  // Scene1 is disabled (see import above) — always land straight on a scene.
+  // -1 (fresh visit, nothing to restore) falls back to section 0 (Scene2).
+  const initialSection = restoredSection >= 0 ? restoredSection : 0;
+
+  // Always true now that Scene1's intro is skipped — kept as a ref (rather than
+  // deleted) so the rest of the restore/position logic below stays unchanged.
+  const introSkippedRef = useRef(true);
 
   // State
-  const [introDone, setIntroDone] = useState(restoredSection >= 0);
+  const [introDone, setIntroDone] = useState(true);
   const [animationsReady, setAnimationsReady] = useState(false);
-  const [activeSection, setActiveSection] = useState(
-    restoredSection >= 0 ? restoredSection : -1
-  );
-  const [scrollProgress, setScrollProgress] = useState(
-    restoredSection >= 0 ? restoredSection / 4 : 0
-  );
+  const [activeSection, setActiveSection] = useState(initialSection);
+  const [scrollProgress, setScrollProgress] = useState(initialSection / 4);
   const scene1_4StartedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(() => {
@@ -135,9 +138,14 @@ const Home = ({
     };
   }, []);
 
-  // ── Scroll lock during intro ────────────────────────────────────────────────
+  // ── Scroll lock until the scene wheel/touch handlers are attached ───────────
+  // introDone is true from the very first render now that Scene1 is skipped, but
+  // the handlers below only attach once animationsReady flips true (a beat
+  // later). Without gating on animationsReady too, an early scroll in that gap
+  // falls through to the native document scroll and jumps straight past every
+  // scene into the footer.
   useLayoutEffect(() => {
-    if (introDone) {
+    if (introDone && animationsReady) {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     } else {
@@ -148,7 +156,7 @@ const Home = ({
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     };
-  }, [introDone]);
+  }, [introDone, animationsReady]);
 
   // ── Logo click handler ──────────────────────────────────────────────────────
   const handleLogoClick = useCallback(() => {
@@ -206,14 +214,14 @@ const Home = ({
     // Position s2, s3, s4 relative to restored section
     [s2, s3, s4].forEach((el, i) => {
       if (!el) return;
-      if (i === restoredSection) gsap.set(el, { y: 0 });
-      else if (i < restoredSection) gsap.set(el, { y: "-100vh" });
+      if (i === initialSection) gsap.set(el, { y: 0 });
+      else if (i < initialSection) gsap.set(el, { y: "-100vh" });
       else gsap.set(el, { y: "100vh" });
     });
 
     // Scene1_4 (index 3)
     if (s14) {
-      if (restoredSection === 3) {
+      if (initialSection === 3) {
         gsap.set(s14, {
           y: "0%",
           rotation: 0,
@@ -264,7 +272,7 @@ const Home = ({
     }
     // When restoring, the restore useLayoutEffect has already set correct positions
 
-    let currentSection = introSkippedRef.current ? restoredSection : 0;
+    let currentSection = introSkippedRef.current ? initialSection : 0;
     // Block briefly on fresh load (intro slide takes ~1.1s); immediate on restore
     let isAnimating = !introSkippedRef.current;
     const unblockId = isAnimating
@@ -276,7 +284,7 @@ const Home = ({
     // If restoring to Scene1_4, kick off its internal timeline
     if (
       introSkippedRef.current &&
-      restoredSection === 3 &&
+      initialSection === 3 &&
       !scene1_4StartedRef.current
     ) {
       scene1_4StartedRef.current = true;
@@ -434,28 +442,31 @@ const Home = ({
   }, [introDone, animationsReady, isMobile, setShowNavbar]);
 
   // ── Intro complete → transition Scene1 out, Scene2 in (skipped when restoring) ──
-  useLayoutEffect(() => {
-    if (!introDone || introSkippedRef.current) return;
-
-    const s1 = scene1ContainerRef.current;
-    const s2 = scene2Ref.current;
-    if (!s1 || !s2) return;
-
-    // Show navbar immediately after intro
-    if (setShowNavbar) setShowNavbar(true);
-
-    // Position scene2 below viewport, then slide both simultaneously
-    gsap.set(s2, { y: "100vh" });
-    gsap.to(s1, {
-      y: "-100vh",
-      duration: 0.8,
-      delay: 0.3,
-      ease: "power2.inOut"
-    });
-    gsap.to(s2, { y: 0, duration: 0.8, delay: 0.3, ease: "power2.inOut" });
-
-    setActiveSection(0);
-  }, [introDone, setShowNavbar]);
+  // Dead code now that Scene1 is disabled — introSkippedRef.current is always
+  // true, so this effect's guard clause always returns early. Left commented
+  // out (rather than deleted) in case Scene1 is ever reinstated.
+  // useLayoutEffect(() => {
+  //   if (!introDone || introSkippedRef.current) return;
+  //
+  //   const s1 = scene1ContainerRef.current;
+  //   const s2 = scene2Ref.current;
+  //   if (!s1 || !s2) return;
+  //
+  //   // Show navbar immediately after intro
+  //   if (setShowNavbar) setShowNavbar(true);
+  //
+  //   // Position scene2 below viewport, then slide both simultaneously
+  //   gsap.set(s2, { y: "100vh" });
+  //   gsap.to(s1, {
+  //     y: "-100vh",
+  //     duration: 0.8,
+  //     delay: 0.3,
+  //     ease: "power2.inOut"
+  //   });
+  //   gsap.to(s2, { y: 0, duration: 0.8, delay: 0.3, ease: "power2.inOut" });
+  //
+  //   setActiveSection(0);
+  // }, [introDone, setShowNavbar]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -463,7 +474,7 @@ const Home = ({
       <SEO
         title="evolve — a design ecosystem built around your journey"
         description="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design."
-        path="/"
+        path="/designers"
       />
 
       {/* Outer scroll container — h-screen so footer appears naturally below */}
@@ -490,8 +501,12 @@ const Home = ({
           </div>
         )}
 
-        {/* ── Scene1 (intro) wrapper ── */}
-        <div
+        {/*
+          ── Scene1 (intro) wrapper ──
+          Disabled: the global landing page's hero now covers the "welcome to
+          evolve" beat, so designers land straight on Scene2 below.
+        */}
+        {/* <div
           ref={scene1ContainerRef}
           style={{
             position: "absolute",
@@ -511,7 +526,7 @@ const Home = ({
               }}
             />
           </Suspense>
-        </div>
+        </div> */}
 
         {/* ── Scene2_refined — "where designers find their…" ── */}
         <div

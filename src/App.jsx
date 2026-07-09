@@ -1035,7 +1035,8 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
-// Eager load only Home page (critical)
+// Eager load only the global landing + Home page (critical)
+import GlobalLanding from "./pages/GlobalLanding/GlobalLanding";
 import Home from "./pages/Home/Home";
 import Navigation from "./components/Navigation";
 import LoadingScreen from "./components/LoadingScreen";
@@ -1067,6 +1068,8 @@ const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamSpace = lazy(() => import("./pages/TeamSpace"));
+const Institutions = lazy(() => import("./pages/Institutions"));
+const Corporates = lazy(() => import("./pages/Corporates"));
 
 // Import only critical home images
 import * as images from "./assets/images/Home";
@@ -1155,6 +1158,13 @@ const AppLayout = () => {
     !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/");
 
+  // Global landing + its sibling audience pages get the "global" footer
+  // (designers / institutions / corporates nav) instead of the designer-flow footer.
+  const globalFooterRoutes = ["/", "/institutions", "/corporates"];
+  const footerVariant = globalFooterRoutes.includes(location.pathname)
+    ? "global"
+    : "designer";
+
   // Check orientation for tablets
   useEffect(() => {
     const checkOrientation = () => {
@@ -1197,8 +1207,9 @@ const AppLayout = () => {
   // Set navbar visibility based on route
   useEffect(() => {
     if (location.pathname === "/") {
+      // Global landing page — no navbar at all, matches the reference design
       setShowNavbar(false);
-      setIsHomeIntroActive(true);
+      setIsHomeIntroActive(false);
     } else if (
       location.pathname === "/signin" ||
       location.pathname === "/payment" ||
@@ -1506,7 +1517,7 @@ const AppLayout = () => {
         <Navigation
           showNavbar={showNavbar}
           onLogoClick={() => {
-            if (location.pathname === "/") {
+            if (location.pathname === "/designers") {
               window.dispatchEvent(new CustomEvent("scrollToScene1_1"));
             }
           }}
@@ -1526,8 +1537,11 @@ const AppLayout = () => {
               }
             />
 
+            <Route path="/" element={<GlobalLanding />} />
+            <Route path="/institutions" element={<Institutions />} />
+            <Route path="/corporates" element={<Corporates />} />
             <Route
-              path="/"
+              path="/designers"
               element={
                 <Home
                   setShowNavbar={setShowNavbar}
@@ -1598,9 +1612,12 @@ const AppLayout = () => {
         </Suspense>
 
         {shouldShowFooter &&
-          !(location.pathname === "/" && isHomeIntroActive) && (
+          !(location.pathname === "/designers" && isHomeIntroActive) && (
             <Suspense fallback={null}>
-              <Footer onContactClick={() => setIsContactModalOpen(true)} />
+              <Footer
+                variant={footerVariant}
+                onContactClick={() => setIsContactModalOpen(true)}
+              />
             </Suspense>
           )}
       </div>

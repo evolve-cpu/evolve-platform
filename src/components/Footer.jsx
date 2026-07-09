@@ -963,7 +963,7 @@ const useIsMobile = (bp = 768) => {
   return isMobile;
 };
 
-const Footer = ({ onContactClick }) => {
+const Footer = ({ onContactClick, variant = "designer" }) => {
   const isMobile = useIsMobile();
   const location = useLocation();
 
@@ -979,37 +979,44 @@ const Footer = ({ onContactClick }) => {
   const marqueeGroupRef = useRef(null);
   const marqueeTL = useRef(null);
 
-  const navigationLinks = [
-    { label: "home", path: "/" },
-    { path: "/community", label: "community" },
-    // { path: "/community/portfolio-review", label: "↳ portfolio review", sub: true },
-    {
-      path: "/community/portfolio-review",
-      label: "portfolio review",
-      sub: true
-    },
-    { label: "for institutes", isHeader: true },
-    {
-      path: "/for-institutes/portfolio-review-programme",
-      label: "portfolio review programme",
-      sub: true
-    },
-    {
-      path: "/for-institutes/find-your-niche-programme",
-      label: "find your niche programme",
-      sub: true
-    },
-    { path: "/mentorship", label: "mentorship" },
-    // { path: "/evolve-in-person", label: "evolve in-person" },
-    { path: "/webinars", label: "webinars" },
-    // { label: "contact us", path: "/contact" }
-    { path: "/contact", label: "contact us", isModal: true }
-    // {
-    //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-    //   label: "rate this website",
-    //   external: true
-    // }
-  ];
+  const navigationLinks =
+    variant === "global"
+      ? [
+          { path: "/designers", label: "designers" },
+          { path: "/institutions", label: "institutions" },
+          { path: "/corporates", label: "corporates" }
+        ]
+      : [
+          { label: "home", path: "/" },
+          { path: "/community", label: "community" },
+          // { path: "/community/portfolio-review", label: "↳ portfolio review", sub: true },
+          {
+            path: "/community/portfolio-review",
+            label: "portfolio review",
+            sub: true
+          },
+          { label: "for institutes", isHeader: true },
+          {
+            path: "/for-institutes/portfolio-review-programme",
+            label: "portfolio review programme",
+            sub: true
+          },
+          {
+            path: "/for-institutes/find-your-niche-programme",
+            label: "find your niche programme",
+            sub: true
+          },
+          { path: "/mentorship", label: "mentorship" },
+          // { path: "/evolve-in-person", label: "evolve in-person" },
+          { path: "/webinars", label: "webinars" },
+          // { label: "contact us", path: "/contact" }
+          { path: "/contact", label: "contact us", isModal: true }
+          // {
+          //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
+          //   label: "rate this website",
+          //   external: true
+          // }
+        ];
 
   const socialLinks = [
     { label: "instagram", url: "https://www.instagram.com/evolvebypaperclip/" },

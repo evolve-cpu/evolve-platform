@@ -150,7 +150,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
 
   const handleLogoClick = () => {
     const isOnHomePage =
-      location.pathname === "/" || location.pathname === "/home";
+      location.pathname === "/designers" || location.pathname === "/home";
 
     if (isOnHomePage && typeof window.handleLogoClick === "function") {
       window.handleLogoClick();
