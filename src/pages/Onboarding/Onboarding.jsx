@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supabaseClient";
 import { findFreeSlug } from "../../lib/slug";
 import { emptyProfile } from "./questions";
+import GrowthMascot from "../../components/GrowthMascot";
 import SpaceTypeStep from "./SpaceTypeStep";
 import ChatOnboarding from "./ChatOnboarding";
 import TeamSetupStep from "./TeamSetupStep";
@@ -15,8 +16,16 @@ import ReviewStep from "./ReviewStep";
  * on the user's public profile (or their new team space).
  */
 export default function Onboarding() {
-  const { user, refreshUser } = useAuth();
+  const { user, authLoading, refreshUser } = useAuth();
   const navigate = useNavigate();
+
+  // signed-out visitors have no business here — send them to sign in first,
+  // bounce back to /onboarding once they do
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/signin", { replace: true, state: { from: "/onboarding" } });
+    }
+  }, [authLoading, user, navigate]);
 
   const [step, setStep] = useState("space-type"); // space-type | chat | team-setup | review | submitting
   const [spaceType, setSpaceType] = useState("individual");
@@ -106,6 +115,14 @@ export default function Onboarding() {
       setError(e.message || "something went wrong saving your profile. please try again.");
       setStep("review");
     }
+  }
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
+        <GrowthMascot progress={5} size={56} />
+      </div>
+    );
   }
 
   if (step === "space-type") return <SpaceTypeStep onContinue={handleSpaceType} />;
