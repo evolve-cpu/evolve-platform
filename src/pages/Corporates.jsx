@@ -1,27 +1,34 @@
-import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
-import BlackNav from "../components/BlackNav";
+import AudienceNav from "../components/AudienceNav";
+import AudienceFooter from "../components/AudienceFooter";
 
 export default function Corporates() {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen lowercase" style={{ backgroundColor: "#161618" }}>
+    <div className="w-full lowercase">
       <SEO
         title="evolve for corporates — build strong design teams"
         description="evolve for corporates helps organizations build strong design teams through continuous learning, upskilling, and the right talent."
         path="/corporates"
       />
-      <BlackNav onLogoClick={() => navigate("/")} />
+      <AudienceNav />
 
-      <div className="px-6 pt-32 pb-24 max-w-2xl mx-auto text-center">
+      <section
+        className="w-full bg-evolve-black flex flex-col items-center text-center"
+        style={{
+          padding:
+            "clamp(120px,20vh,180px) clamp(24px,6vw,96px) clamp(96px,16vh,160px)"
+        }}
+      >
         <h1
           className="text-evolve-yellow font-extrabold"
           style={{ fontSize: "clamp(32px,6vw,56px)", letterSpacing: "-0.02em" }}
         >
           corporates
         </h1>
-        <p className="text-white/70 mt-6 text-lg leading-relaxed">
+        <p
+          className="text-white/70 mt-6 max-w-2xl"
+          style={{ fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.5 }}
+        >
           for organisations who believe in building strong design teams
           through constant learning, upskilling, and finding the right kind
           of members to join them.
@@ -36,7 +43,9 @@ export default function Corporates() {
           </a>{" "}
           in the meantime.
         </p>
-      </div>
+      </section>
+
+      <AudienceFooter programme="corporates" />
     </div>
   );
 }

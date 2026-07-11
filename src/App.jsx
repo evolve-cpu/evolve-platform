@@ -1151,19 +1151,19 @@ const AppLayout = () => {
     "/admin/dashboard",
     "/community/portfolio-review/form",
     "/portfolio-review/form",
-    "/onboarding"
+    "/onboarding",
+    // Institutions/corporates render their own AudienceNav + AudienceFooter inline
+    "/institutions",
+    "/corporates"
   ];
   const shouldShowFooter =
     !hideFooterRoutes.includes(location.pathname) &&
     !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/");
 
-  // Global landing + its sibling audience pages get the "global" footer
-  // (designers / institutions / corporates nav) instead of the designer-flow footer.
-  const globalFooterRoutes = ["/", "/institutions", "/corporates"];
-  const footerVariant = globalFooterRoutes.includes(location.pathname)
-    ? "global"
-    : "designer";
+  // Global landing gets the "global" footer (designers / institutions /
+  // corporates nav) instead of the designer-flow footer.
+  const footerVariant = location.pathname === "/" ? "global" : "designer";
 
   // Check orientation for tablets
   useEffect(() => {
@@ -1206,8 +1206,12 @@ const AppLayout = () => {
 
   // Set navbar visibility based on route
   useEffect(() => {
-    if (location.pathname === "/") {
-      // Global landing page — no navbar at all, matches the reference design
+    if (
+      location.pathname === "/" ||
+      location.pathname === "/institutions" ||
+      location.pathname === "/corporates"
+    ) {
+      // Global landing + audience pages render their own nav (or none at all)
       setShowNavbar(false);
       setIsHomeIntroActive(false);
     } else if (
