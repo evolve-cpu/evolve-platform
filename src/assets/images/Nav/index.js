@@ -17,6 +17,7 @@ import evolve_yellow_with_name from "./evolve_yellow_with_name.svg";
 import arrow_black from "./arrow_black.svg";
 import arrow_yellow from "./arrow_yellow.svg";
 import download_icon from "./download_icon.svg";
+import right_arrow_icon from "./right_arrow_icon.svg";
 
 export {
   evolve_logo_nav,
@@ -37,5 +38,6 @@ export {
   evolve_yellow_with_name,
   arrow_black,
   arrow_yellow,
-  download_icon
+  download_icon,
+  right_arrow_icon
 };

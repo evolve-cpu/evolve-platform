@@ -6,7 +6,11 @@ import AudienceFooter from "../components/AudienceFooter";
 import InstituteContactModal from "../components/InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 import { preventWidow } from "../utils/preventWidow";
-import { arrow_yellow, download_icon } from "../assets/images/Nav";
+import {
+  arrow_yellow,
+  download_icon,
+  right_arrow_icon
+} from "../assets/images/Nav";
 
 const INQUIRY = AUDIENCE_INQUIRY_CONFIG.institutions;
 
@@ -138,10 +142,9 @@ export default function Institutions() {
               className="text-white/90"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              the biggest gap for design students isn't
-              <br /> skill. it is clarity. they struggle to define their design
-              path, target the right roles,
-              <br /> and present themselves effectively.
+              the biggest gap for design students isn't skill. it is clarity.
+              they struggle to define their design path, target the right roles,
+              and present themselves effectively.
             </p>
             <p
               className="text-white/90 mt-6"
@@ -157,7 +160,10 @@ export default function Institutions() {
               className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
-              get in touch <span>→</span>
+              get in touch{" "}
+              <span>
+                <img src={right_arrow_icon} alt="" className="w-6 h-6" />
+              </span>
             </button>
           </div>
         </div>
@@ -204,7 +210,7 @@ export default function Institutions() {
             }}
           >
             download handbook
-            <img src={download_icon} alt="" className="w-4 h-4" />
+            <img src={download_icon} alt="" className="w-5 h-5" />
           </button>
         </div>
       </section>

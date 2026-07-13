@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import InstituteContactModal from "./InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 import { preventWidow } from "../utils/preventWidow";
+import { right_arrow_icon } from "../assets/images/Nav";
 
 const NAV_LINKS = [
   { path: "/designers", label: "designers" },
@@ -76,7 +77,10 @@ const AudienceFooter = ({
               className="mt-6 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
-              {ctaLabel} <span>→</span>
+              {ctaLabel}{" "}
+              <span>
+                <img src={right_arrow_icon} alt="" className="w-5 h-5" />
+              </span>
             </button>
           </div>
 

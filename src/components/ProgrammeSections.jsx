@@ -2,6 +2,7 @@
 // (/for-institutes/portfolio-review-programme, /for-institutes/find-your-niche-programme).
 // Both pages share the same hero / outcomes / how-it-works shape and only
 // swap copy, so the layout lives here once.
+import { right_arrow_icon } from "../assets/images/Nav";
 import { preventWidow } from "../utils/preventWidow";
 
 export const ProgrammeHero = ({
@@ -56,7 +57,10 @@ export const ProgrammeHero = ({
             className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
             style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
           >
-            get in touch <span>→</span>
+            get in touch{" "}
+            <span>
+              <img src={right_arrow_icon} alt="" className="w-6 h-6" />
+            </span>
           </button>
 
           {onDownloadHandbook && (
