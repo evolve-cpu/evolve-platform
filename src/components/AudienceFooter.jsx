@@ -6,6 +6,16 @@ import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 const NAV_LINKS = [
   { path: "/designers", label: "designers" },
   { path: "/institutions", label: "institutions" },
+  {
+    path: "/for-institutes/portfolio-review-programme",
+    label: "portfolio review programme",
+    sub: true
+  },
+  {
+    path: "/for-institutes/find-your-niche-programme",
+    label: "find your niche",
+    sub: true
+  },
   { path: "/corporates", label: "corporates" }
 ];
 
@@ -73,15 +83,17 @@ const AudienceFooter = ({
           <div className="md:border-l md:border-white/15 md:pl-16">
             <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-20">
               <div>
-                <div className="text-white/40 text-[13px] mb-3">
-                  navigation
-                </div>
+                <div className="text-white/40 text-[13px] mb-3">navigation</div>
                 <ul className="space-y-2">
                   {NAV_LINKS.map((item) => (
                     <li key={item.path}>
                       <Link
                         to={item.path}
-                        className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
+                        className={`hover:text-evolve-yellow transition-colors duration-200 ${
+                          item.sub
+                            ? "text-white font-normal text-[13px]"
+                            : "text-white text-[16px]"
+                        }`}
                       >
                         {item.label}
                       </Link>
@@ -116,11 +128,17 @@ const AudienceFooter = ({
           <span>©2026 evolve. all rights reserved</span>
           <span className="hidden md:inline">·</span>
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="hover:text-white transition-colors duration-200">
+            <Link
+              to="/privacy"
+              className="hover:text-white transition-colors duration-200"
+            >
               privacy policy
             </Link>
             <span>·</span>
-            <Link to="/terms" className="hover:text-white transition-colors duration-200">
+            <Link
+              to="/terms"
+              className="hover:text-white transition-colors duration-200"
+            >
               terms &amp; conditions
             </Link>
           </div>

@@ -29,10 +29,13 @@ const OFFERINGS = [
 const ArrowButton = () => (
   <div
     className="flex items-center justify-center rounded-full bg-evolve-black flex-shrink-0"
-    style={{ width: "clamp(40px,3.2vw,52px)", height: "clamp(40px,3.2vw,52px)" }}
+    style={{
+      width: "clamp(40px,3.2vw,52px)",
+      height: "clamp(40px,3.2vw,52px)"
+    }}
   >
     <span
-      className="text-evolve-yellow"
+      className="text-evolve-yellow font-regular"
       style={{ fontSize: "clamp(18px,1.5vw,24px)", lineHeight: 1 }}
     >
       ↗
@@ -101,12 +104,19 @@ export default function Institutions() {
         style={{
           minHeight: "100vh",
           background: "linear-gradient(180deg, #161616 0%, #000000 100%)",
-          padding: "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
+          padding:
+            "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
         }}
       >
         <div className="flex-1 flex flex-col md:flex-row md:items-stretch gap-10 md:gap-10">
           {/* left — heading, pinned toward the top */}
           <div className="md:self-start md:mt-[6vh]">
+            <p
+              className="text-white mt-4"
+              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
+            >
+              evolve for institutions
+            </p>
             <h1
               className="font-extrabold text-evolve-yellow"
               style={{
@@ -119,12 +129,6 @@ export default function Institutions() {
               <br />
               industry ready
             </h1>
-            <p
-              className="text-white mt-4"
-              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
-            >
-              with evolve
-            </p>
           </div>
 
           {/* right — bigger paragraph text + button, anchored to the bottom */}
@@ -134,15 +138,15 @@ export default function Institutions() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               the biggest gap for design students isn't skill. it is clarity.
-              they struggle to define their design path, target the right
-              roles, and present themselves effectively.
+              they struggle to define their design path, target the right roles,
+              and present themselves effectively.
             </p>
             <p
               className="text-white/90 mt-6"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               evolve closes this gap through practitioner-led programmes
-              delivered on your own branded portal
+              delivered on your own branded portal.
             </p>
 
             <button
@@ -175,9 +179,8 @@ export default function Institutions() {
           className="text-evolve-black mt-3"
           style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
         >
-          custom space for your institute &nbsp;•&nbsp; personalised journey
-          for your students &nbsp;•&nbsp; 100% delivered by industry
-          professionals
+          custom space for your institute &nbsp;•&nbsp; personalised journey for
+          your students &nbsp;•&nbsp; 100% delivered by industry professionals
         </p>
 
         <div className="mt-10 flex flex-col md:flex-row gap-6">

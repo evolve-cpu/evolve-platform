@@ -1218,7 +1218,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
                 to="/terms"
                 className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
               >
-                t&amp;c conditions
+                terms &amp; conditions
               </Link>
             </div>
           </div>

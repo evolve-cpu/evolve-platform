@@ -72,7 +72,13 @@ const PortfolioReviewForInstitutions = () => {
 
       <AudienceFooter
         audience="institutions"
-        heading="bring the programme to your institution"
+        heading={
+          <>
+            bring the programme
+            <br />
+            to your institution
+          </>
+        }
         description="help students gain the clarity, feedback, and direction they need before entering the industry."
       />
 

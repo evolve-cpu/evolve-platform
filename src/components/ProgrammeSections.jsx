@@ -115,41 +115,56 @@ const OutcomeColumn = ({ label, items, className = "" }) => (
 );
 
 export const ProgrammeOutcomes = ({ forStudents, forInstitutions }) => (
-  <section
-    className="w-full bg-evolve-yellow flex flex-col justify-center"
-    style={{ minHeight: "92vh", padding: "clamp(56px,8vh,96px) clamp(24px,6vw,96px)" }}
-  >
-    <h2
-      className="font-extrabold text-evolve-black text-left md:text-center"
-      style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
-    >
-      outcomes
-    </h2>
-
-    <div
-      className="mt-10 md:mx-auto md:w-full flex flex-col justify-center"
+  <>
+    <section
+      className="w-full bg-evolve-yellow flex flex-col justify-center"
       style={{
-        background: "rgba(255,229,110,1)",
-        padding: "clamp(28px,4vw,64px)",
-        maxWidth: "min(100%, 1040px)",
-        minHeight: "clamp(320px, 46vh, 520px)",
-        borderRadius: 0
+        minHeight: "92vh",
+        padding: "clamp(56px,8vh,96px) clamp(24px,6vw,96px)"
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0 md:divide-x md:divide-black/20">
-        <OutcomeColumn
-          label="for students"
-          items={forStudents}
-          className="md:pr-8"
-        />
-        <OutcomeColumn
-          label="for institutions"
-          items={forInstitutions}
-          className="md:pl-8"
-        />
+      <h2
+        className="font-extrabold text-evolve-black text-left md:text-center"
+        style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
+      >
+        outcomes
+      </h2>
+
+      <div
+        className="mt-10 md:mx-auto md:w-full flex flex-col justify-center"
+        style={{
+          background: "rgba(255,229,110,1)",
+          padding: "clamp(28px,4vw,64px)",
+          maxWidth: "min(100%, 1040px)",
+          minHeight: "clamp(320px, 46vh, 520px)",
+          borderRadius: 0
+        }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0 md:divide-x md:divide-black/20">
+          <OutcomeColumn
+            label="for students"
+            items={forStudents}
+            className="md:pr-8"
+          />
+          <OutcomeColumn
+            label="for institutions"
+            items={forInstitutions}
+            className="md:pl-8"
+          />
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    {/* light divider marking the end of the outcomes section */}
+    <div
+      classname="bg-[#806804] w-full"
+      style={{
+        height: "0.5px"
+        // width: "100%"
+        // background: "rgba(128,104,4,0.5)"
+      }}
+    />
+  </>
 );
 
 export const ProgrammeHowItWorks = ({ steps }) => (
@@ -159,7 +174,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
       <div
         className="flex-shrink-0 flex flex-col"
         style={{
-          width: "35%",
+          width: "45%",
           paddingTop: "clamp(80px, 10vh, 140px)",
           paddingLeft: "clamp(40px, 5vw, 80px)",
           paddingRight: "clamp(24px, 2vw, 40px)"
@@ -179,21 +194,23 @@ export const ProgrammeHowItWorks = ({ steps }) => (
         </h2>
       </div>
 
+      {/* paddingTop matches the heading column so the first step lines up
+          with "how it works." instead of being vertically centered. */}
       <div
-        className="flex-1 flex items-center"
+        className="flex-1"
         style={{
           paddingRight: "clamp(40px, 5vw, 80px)",
-          paddingTop: "clamp(48px, 6vh, 80px)",
+          paddingTop: "clamp(80px, 10vh, 140px)",
           paddingBottom: "clamp(48px, 6vh, 80px)"
         }}
       >
-        <div className="w-full">
+        <div className="w-[90%]">
           {steps.map((item, i) => (
             <div key={i}>
               <div
                 className="flex items-start justify-between"
                 style={{
-                  paddingTop: "clamp(20px, 4vh, 32px)",
+                  paddingTop: i === 0 ? 0 : "clamp(20px, 4vh, 32px)",
                   paddingBottom: "clamp(12px, 2vh, 20px)"
                 }}
               >
@@ -223,7 +240,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
                 <div
                   style={{
                     height: "1px",
-                    backgroundColor: "#000000",
+                    backgroundColor: "#806804",
                     width: "100%"
                   }}
                 />
@@ -287,7 +304,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
               <div
                 style={{
                   height: "1px",
-                  backgroundColor: "#000000",
+                  backgroundColor: "#806804",
                   width: "100%"
                 }}
               />

@@ -6,13 +6,13 @@ const AUDIENCE_CARDS = [
   {
     id: "designers",
     title: "designers",
-    desc: "self learners, design school students, career shifters. we make learning and growing in design accessible to all",
+    desc: "self learners, design school students, career shifters. we make learning and growing in design accessible to all.",
     path: "/designers"
   },
   {
     id: "institutions",
     title: "institutions",
-    desc: "for design colleges, coaching institutes, co-hort looking to provide their students industry exposure & ready for the world",
+    desc: "for design colleges, coaching institutes, co-hort looking to provide their students industry exposure & ready for the world.",
     path: "/institutions"
   },
   {
@@ -39,7 +39,7 @@ const ArrowButton = () => (
     }}
   >
     <span
-      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200"
+      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200 font-regular"
       style={{ fontSize: "clamp(20px, 1.9vw, 28px)", lineHeight: 1 }}
     >
       ↗

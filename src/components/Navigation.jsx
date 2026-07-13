@@ -138,8 +138,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   };
 
   const handleLogoClick = () => {
-    const isOnHomePage =
-      location.pathname === "/designers" || location.pathname === "/home";
+    const isOnHomePage = location.pathname === "/";
 
     if (isOnHomePage && typeof window.handleLogoClick === "function") {
       window.handleLogoClick();

@@ -3,8 +3,13 @@ import { X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 
 const WhatsAppIcon = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.858.505 3.6 1.383 5.096L2 22l5.03-1.352a9.96 9.96 0 004.974 1.328h.004c5.518 0 10.004-4.486 10.004-10.004C22.012 6.486 17.526 2 12.004 2zm0 18.312a8.25 8.25 0 01-4.213-1.156l-.302-.18-3.03.813.81-2.955-.196-.303a8.25 8.25 0 01-1.263-4.427c0-4.55 3.703-8.253 8.253-8.253 4.549 0 8.252 3.703 8.252 8.253 0 4.55-3.703 8.253-8.252 8.253zm4.522-6.18c-.248-.124-1.463-.722-1.69-.805-.227-.083-.392-.124-.557.124-.164.248-.638.805-.782.97-.144.165-.289.186-.536.062-.248-.124-1.046-.386-1.992-1.23-.736-.657-1.233-1.469-1.378-1.717-.144-.248-.015-.382.109-.505.112-.112.248-.29.372-.434.124-.145.165-.248.248-.413.083-.165.041-.31-.02-.434-.062-.124-.557-1.344-.763-1.84-.201-.483-.406-.418-.557-.425-.144-.007-.31-.008-.475-.008-.165 0-.434.062-.661.31-.227.248-.867.847-.867 2.066 0 1.22.888 2.398 1.012 2.563.124.165 1.747 2.668 4.233 3.74.591.255 1.052.408 1.412.522.593.189 1.133.162 1.56.098.476-.071 1.463-.598 1.67-1.176.207-.578.207-1.074.145-1.177-.062-.104-.227-.165-.475-.29z"/>
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.858.505 3.6 1.383 5.096L2 22l5.03-1.352a9.96 9.96 0 004.974 1.328h.004c5.518 0 10.004-4.486 10.004-10.004C22.012 6.486 17.526 2 12.004 2zm0 18.312a8.25 8.25 0 01-4.213-1.156l-.302-.18-3.03.813.81-2.955-.196-.303a8.25 8.25 0 01-1.263-4.427c0-4.55 3.703-8.253 8.253-8.253 4.549 0 8.252 3.703 8.252 8.253 0 4.55-3.703 8.253-8.252 8.253zm4.522-6.18c-.248-.124-1.463-.722-1.69-.805-.227-.083-.392-.124-.557.124-.164.248-.638.805-.782.97-.144.165-.289.186-.536.062-.248-.124-1.046-.386-1.992-1.23-.736-.657-1.233-1.469-1.378-1.717-.144-.248-.015-.382.109-.505.112-.112.248-.29.372-.434.124-.145.165-.248.248-.413.083-.165.041-.31-.02-.434-.062-.124-.557-1.344-.763-1.84-.201-.483-.406-.418-.557-.425-.144-.007-.31-.008-.475-.008-.165 0-.434.062-.661.31-.227.248-.867.847-.867 2.066 0 1.22.888 2.398 1.012 2.563.124.165 1.747 2.668 4.233 3.74.591.255 1.052.408 1.412.522.593.189 1.133.162 1.56.098.476-.071 1.463-.598 1.67-1.176.207-.578.207-1.074.145-1.177-.062-.104-.227-.165-.475-.29z" />
   </svg>
 );
 
@@ -146,14 +151,22 @@ const InstituteContactModal = ({
             <div className="flex flex-col items-center text-center gap-4 py-6">
               <svg className="w-14 h-14" viewBox="0 0 36 36" fill="none">
                 <circle cx="18" cy="18" r="17" stroke="#000" strokeWidth="2" />
-                <path d="M9 18l6 6 12-13" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M9 18l6 6 12-13"
+                  stroke="#000"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               <h2 className="font-extrabold lowercase text-black text-[28px] md:text-[34px] leading-tight">
-                {intent === "handbook" ? "handbook on its way!" : "thanks for reaching out!"}
+                {intent === "handbook"
+                  ? "handbook on its way!"
+                  : "thanks for reaching out!"}
               </h2>
               <p className="font-normal lowercase text-black text-[15px] md:text-[17px]">
                 {intent === "handbook"
-                  ? "your download should start shortly. we'll also be in touch soon."
+                  ? "Your download should begin in a few seconds. We'll also reach out to you soon."
                   : "our team will get back to you shortly."}
               </p>
               <button
@@ -175,7 +188,10 @@ const InstituteContactModal = ({
                   : "tell us a bit about you and we'll get back to you."}
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+              <form
+                onSubmit={handleSubmit}
+                className="mt-6 flex flex-col gap-4"
+              >
                 <input
                   type="text"
                   required
@@ -233,8 +249,8 @@ const InstituteContactModal = ({
                   {submitting
                     ? "sending…"
                     : intent === "handbook"
-                    ? "submit & download"
-                    : "submit"}
+                      ? "submit & download"
+                      : "submit"}
                 </button>
               </form>
 

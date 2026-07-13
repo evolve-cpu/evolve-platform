@@ -65,11 +65,12 @@ const BuiltAroundSection = () => (
       >
         built around
         <br />
-        real industry experience
+        real industry
+        <br /> experience
       </h2>
       <p
         className="text-white/90 md:flex-1"
-        style={{ fontSize: "clamp(16px,1.2vw,19px)", lineHeight: 1.6 }}
+        style={{ fontSize: "clamp(18px,1.8vw,20px)", lineHeight: 1.6 }}
       >
         every cohort is mentored by industry experts who actively hire, build
         products, and work with clients, not just teach design. through evolve's
@@ -117,7 +118,13 @@ const MentorshipForInstitutions = () => {
 
       <AudienceFooter
         audience="institutions"
-        heading="bring the programme to your institution"
+        heading={
+          <>
+            bring the programme
+            <br />
+            to your institution
+          </>
+        }
         description="help students discover the design path that's right for them before they begin applying for internships and placements."
       />
 

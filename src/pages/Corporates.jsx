@@ -84,12 +84,19 @@ export default function Corporates() {
         style={{
           minHeight: "100vh",
           background: "linear-gradient(180deg, #161616 0%, #000000 100%)",
-          padding: "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
+          padding:
+            "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
         }}
       >
         <div className="flex-1 flex flex-col md:flex-row md:items-stretch gap-10 md:gap-10">
           {/* left — heading, pinned toward the top */}
           <div className="md:self-start md:mt-[6vh]">
+            <p
+              className="text-white mt-4"
+              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
+            >
+              evolve for corporates
+            </p>
             <h1
               className="font-extrabold text-evolve-yellow"
               style={{
@@ -102,12 +109,6 @@ export default function Corporates() {
               <br />
               team remarkable
             </h1>
-            <p
-              className="text-white mt-4"
-              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
-            >
-              with evolve
-            </p>
           </div>
 
           {/* right — bigger paragraph text + button, anchored to the bottom */}
@@ -124,7 +125,7 @@ export default function Corporates() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               will evolve platform, you'd be able to nurture and grow a team
-              which delivers real impact
+              which delivers real impact.
             </p>
 
             <button
