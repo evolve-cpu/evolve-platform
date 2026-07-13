@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import InstituteContactModal from "./InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
+import { preventWidow } from "../utils/preventWidow";
 
 const NAV_LINKS = [
   { path: "/designers", label: "designers" },
@@ -67,7 +68,7 @@ const AudienceFooter = ({
                   maxWidth: "46ch"
                 }}
               >
-                {description}
+                {preventWidow(description)}
               </p>
             )}
             <button
@@ -84,21 +85,35 @@ const AudienceFooter = ({
             <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-20">
               <div>
                 <div className="text-white/40 text-[13px] mb-3">navigation</div>
-                <ul className="space-y-2">
-                  {NAV_LINKS.map((item) => (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={`hover:text-evolve-yellow transition-colors duration-200 ${
-                          item.sub
-                            ? "text-white font-normal text-[13px]"
-                            : "text-white text-[16px]"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
+                <ul>
+                  {NAV_LINKS.map((item, i) => {
+                    const prev = NAV_LINKS[i - 1];
+                    // Sub-items sit close to their parent and to each other;
+                    // the next top-level item after a sub-cluster gets extra
+                    // room so the nesting actually reads as nesting.
+                    const spacing =
+                      i === 0
+                        ? ""
+                        : item.sub
+                          ? "mt-0"
+                          : prev?.sub
+                            ? "mt-3"
+                            : "mt-2";
+                    return (
+                      <li key={item.path} className={spacing}>
+                        <Link
+                          to={item.path}
+                          className={`hover:text-evolve-yellow transition-colors duration-200 ${
+                            item.sub
+                              ? "text-white font-normal text-[13px]"
+                              : "text-white font-semibold text-[16px]"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
               <div>
@@ -110,7 +125,7 @@ const AudienceFooter = ({
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
+                        className="text-white font-semibold hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
                       >
                         {item.label}
                       </a>

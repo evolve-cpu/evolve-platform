@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SEO from "../../components/SEO";
+import { arrow_yellow, arrow_black } from "../../assets/images/Nav";
 
 const AUDIENCE_CARDS = [
   {
@@ -32,18 +33,24 @@ const getIsMobile = () => {
 
 const ArrowButton = () => (
   <div
-    className="flex items-center justify-center rounded-full bg-evolve-black group-hover:bg-white group-focus-visible:bg-white transition-colors duration-200 flex-shrink-0"
+    className="relative flex items-center justify-center rounded-full bg-evolve-black group-hover:bg-white group-focus-visible:bg-white transition-colors duration-200 flex-shrink-0"
     style={{
       width: "clamp(44px, 3.6vw, 60px)",
       height: "clamp(44px, 3.6vw, 60px)"
     }}
   >
-    <span
-      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200 font-regular group-hover:font-semibold "
-      style={{ fontSize: "clamp(20px, 1.9vw, 28px)", lineHeight: 1 }}
-    >
-      ↗
-    </span>
+    <img
+      src={arrow_yellow}
+      alt=""
+      className="absolute transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0"
+      style={{ width: "clamp(18px, 1.6vw, 24px)", height: "auto" }}
+    />
+    <img
+      src={arrow_black}
+      alt=""
+      className="absolute opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+      style={{ width: "clamp(18px, 1.6vw, 24px)", height: "auto" }}
+    />
   </div>
 );
 

@@ -182,15 +182,15 @@ const InstituteContactModal = ({
               <h2 className="font-extrabold lowercase text-black text-[28px] md:text-[36px] leading-tight">
                 {intent === "handbook" ? "get the handbook" : "let's talk"}
               </h2>
-              <p className="font-normal lowercase text-black text-[15px] md:text-[18px] mt-2">
+              {/* <p className="font-normal lowercase text-black text-[15px] md:text-[18px] mt-2">
                 {intent === "handbook"
                   ? "share a few details and we'll send it right over."
                   : "tell us a bit about you and we'll get back to you."}
-              </p>
+              </p> */}
 
               <form
                 onSubmit={handleSubmit}
-                className="mt-6 flex flex-col gap-4"
+                className="mt-6 flex flex-col gap-2"
               >
                 <input
                   type="text"
@@ -228,7 +228,7 @@ const InstituteContactModal = ({
                 />
                 <textarea
                   placeholder="what're you looking for? (optional)"
-                  rows={3}
+                  rows={2}
                   value={lookingFor}
                   onChange={(e) => setLookingFor(e.target.value)}
                   className={`${inputClass} resize-none`}

@@ -2,6 +2,7 @@
 // (/for-institutes/portfolio-review-programme, /for-institutes/find-your-niche-programme).
 // Both pages share the same hero / outcomes / how-it-works shape and only
 // swap copy, so the layout lives here once.
+import { preventWidow } from "../utils/preventWidow";
 
 export const ProgrammeHero = ({
   heading,
@@ -46,7 +47,7 @@ export const ProgrammeHero = ({
           className="text-white/90"
           style={{ fontSize: "clamp(17px,1.3vw,20px)", lineHeight: 1.5 }}
         >
-          {description}
+          {preventWidow(description)}
         </p>
 
         <div className="mt-8 flex items-center gap-6 flex-wrap">
@@ -65,7 +66,7 @@ export const ProgrammeHero = ({
               style={{
                 textDecoration: "underline",
                 textDecorationColor: "currentColor",
-                textDecorationThickness: "2px"
+                textDecorationThickness: "1px"
               }}
             >
               download handbook
@@ -105,7 +106,7 @@ const OutcomeColumn = ({ label, items, className = "" }) => (
             style={{ fontSize: "clamp(15px,1.05vw,16px)", lineHeight: 1.4 }}
           >
             <span className="md:hidden">•</span>
-            <span>{item}</span>
+            <span>{preventWidow(item)}</span>
           </div>
           {i !== items.length - 1 && <Dash />}
         </li>
@@ -222,7 +223,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
                     lineHeight: 1.2
                   }}
                 >
-                  {item.q}
+                  {preventWidow(item.q)}
                 </span>
               </div>
               <p
@@ -234,7 +235,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
                   paddingBottom: "clamp(20px, 2.5vh, 32px)"
                 }}
               >
-                {item.a}
+                {preventWidow(item.a)}
               </p>
               {i !== steps.length - 1 && (
                 <div
@@ -286,7 +287,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
                   lineHeight: 1.2
                 }}
               >
-                {item.q}
+                {preventWidow(item.q)}
               </span>
             </div>
             <p
@@ -298,7 +299,7 @@ export const ProgrammeHowItWorks = ({ steps }) => (
                 paddingBottom: 20
               }}
             >
-              {item.a}
+              {preventWidow(item.a)}
             </p>
             {i !== steps.length - 1 && (
               <div

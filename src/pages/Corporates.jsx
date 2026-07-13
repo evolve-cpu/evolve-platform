@@ -4,6 +4,8 @@ import AudienceNav from "../components/AudienceNav";
 import AudienceFooter from "../components/AudienceFooter";
 import InstituteContactModal from "../components/InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
+import { preventWidow } from "../utils/preventWidow";
+import { download_icon } from "../assets/images/Nav";
 
 const INQUIRY = AUDIENCE_INQUIRY_CONFIG.corporates;
 
@@ -41,13 +43,13 @@ const OfferingCard = ({ card }) => (
         className="font-extrabold text-evolve-black"
         style={{ fontSize: "clamp(20px,1.7vw,27px)", lineHeight: 1.15 }}
       >
-        {card.title}
+        {preventWidow(card.title)}
       </h3>
       <p
         className="font-semibold text-evolve-black mt-2"
         style={{ fontSize: "clamp(14px,1.1vw,16px)" }}
       >
-        {card.subtitle}
+        {preventWidow(card.subtitle)}
       </p>
     </div>
 
@@ -55,7 +57,7 @@ const OfferingCard = ({ card }) => (
       className="text-evolve-black"
       style={{ fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.55 }}
     >
-      {card.body}
+      {preventWidow(card.body)}
     </p>
   </div>
 );
@@ -117,15 +119,17 @@ export default function Corporates() {
               className="text-white/90"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              key to becoming a strong design team is to constantly upskill,
-              work better as team and getting to pick who makes up this team.
+              {preventWidow(
+                "key to becoming a strong design team is to constantly upskill, work better as team and getting to pick who makes up this team."
+              )}
             </p>
             <p
               className="text-white/90 mt-6"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              will evolve platform, you'd be able to nurture and grow a team
-              which delivers real impact.
+              {preventWidow(
+                "will evolve platform, you'd be able to nurture and grow a team which delivers real impact."
+              )}
             </p>
 
             <button
@@ -159,8 +163,9 @@ export default function Corporates() {
             className="text-evolve-black mt-3"
             style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
           >
-            practical design programmes built for individuals, teams, and
-            organisations looking to grow with industry-led learning.
+            {preventWidow(
+              "practical design programmes built for individuals, teams, and organisations looking to grow with industry-led learning."
+            )}
           </p>
 
           <div className="mt-10 flex flex-col md:flex-row gap-6">
@@ -175,11 +180,12 @@ export default function Corporates() {
               className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
               style={{
                 borderRadius: 16,
-                border: "2px solid rgba(255,208,7,1)",
+                border: "1px solid rgba(255,208,7,1)",
                 boxShadow: "4px 4px 0 0 #806804"
               }}
             >
-              download handbook <span>↓</span>
+              download handbook
+              <img src={download_icon} alt="" className="w-4 h-4" />
             </button>
           </div>
         </div>

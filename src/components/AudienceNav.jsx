@@ -80,7 +80,7 @@ const AudienceNav = ({ audience = "institutions" }) => {
                     to={item.path}
                     className={`transition-colors duration-200 hover:text-[#FFE470] text-[13px] md:text-[17px] ${
                       isActive
-                        ? "text-evolve-yellow font-extrabold "
+                        ? "text-evolve-yellow font-black "
                         : "text-[#BF9C05] font-regular letterspacing-[-3%]"
                     }`}
                   >

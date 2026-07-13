@@ -1113,7 +1113,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
                   select-none
                 "
                 style={{
-                  boxShadow: "0 6px 0 #808080"
+                  boxShadow: "0 6px 0 #806804"
                 }}
               >
                 Join Us
@@ -1283,7 +1283,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
                 select-none
               "
               style={{
-                boxShadow: "0 6px 0 #808080"
+                boxShadow: "0 6px 0 #806804"
               }}
             >
               Join Us

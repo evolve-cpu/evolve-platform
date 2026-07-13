@@ -5,6 +5,8 @@ import AudienceNav from "../components/AudienceNav";
 import AudienceFooter from "../components/AudienceFooter";
 import InstituteContactModal from "../components/InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
+import { preventWidow } from "../utils/preventWidow";
+import { arrow_yellow, download_icon } from "../assets/images/Nav";
 
 const INQUIRY = AUDIENCE_INQUIRY_CONFIG.institutions;
 
@@ -34,12 +36,11 @@ const ArrowButton = () => (
       height: "clamp(40px,3.2vw,52px)"
     }}
   >
-    <span
-      className="text-evolve-yellow font-regular"
-      style={{ fontSize: "clamp(18px,1.5vw,24px)", lineHeight: 1 }}
-    >
-      ↗
-    </span>
+    <img
+      src={arrow_yellow}
+      alt=""
+      style={{ width: "clamp(16px,1.3vw,20px)", height: "auto" }}
+    />
   </div>
 );
 
@@ -62,19 +63,19 @@ const OfferingCard = ({ card }) => {
         className="font-extrabold text-evolve-black pr-14"
         style={{ fontSize: "clamp(20px,1.7vw,27px)", lineHeight: 1.15 }}
       >
-        {card.title}
+        {preventWidow(card.title)}
       </h3>
       <p
         className="font-semibold text-evolve-black mt-2 pr-14"
         style={{ fontSize: "clamp(14px,1.1vw,16px)" }}
       >
-        {card.subtitle}
+        {preventWidow(card.subtitle)}
       </p>
       <p
         className="text-evolve-black mt-4"
         style={{ fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.55 }}
       >
-        {card.body}
+        {preventWidow(card.body)}
       </p>
     </button>
   );
@@ -137,16 +138,18 @@ export default function Institutions() {
               className="text-white/90"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              the biggest gap for design students isn't skill. it is clarity.
-              they struggle to define their design path, target the right roles,
-              and present themselves effectively.
+              the biggest gap for design students isn't
+              <br /> skill. it is clarity. they struggle to define their design
+              path, target the right roles,
+              <br /> and present themselves effectively.
             </p>
             <p
               className="text-white/90 mt-6"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              evolve closes this gap through practitioner-led programmes
-              delivered on your own branded portal.
+              {preventWidow(
+                "evolve closes this gap through practitioner-led programmes delivered on your own branded portal."
+              )}
             </p>
 
             <button
@@ -180,7 +183,8 @@ export default function Institutions() {
           style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
         >
           custom space for your institute &nbsp;•&nbsp; personalised journey for
-          your students &nbsp;•&nbsp; 100% delivered by industry professionals
+          your students &nbsp;•&nbsp;{" "}
+          {preventWidow("100% delivered by industry professionals")}
         </p>
 
         <div className="mt-10 flex flex-col md:flex-row gap-6">
@@ -195,11 +199,12 @@ export default function Institutions() {
             className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
             style={{
               borderRadius: 16,
-              border: "2px solid rgba(255,208,7,1)",
+              border: "1px solid rgba(255,208,7,1)",
               boxShadow: "4px 4px 0 0 #806804"
             }}
           >
-            download handbook <span>↓</span>
+            download handbook
+            <img src={download_icon} alt="" className="w-4 h-4" />
           </button>
         </div>
       </section>

@@ -8,6 +8,7 @@ import {
   ProgrammeOutcomes,
   ProgrammeHowItWorks
 } from "../components/ProgrammeSections";
+import { preventWidow } from "../utils/preventWidow";
 
 const STEPS = [
   {
@@ -72,10 +73,9 @@ const BuiltAroundSection = () => (
         className="text-white/90 md:flex-1"
         style={{ fontSize: "clamp(18px,1.8vw,20px)", lineHeight: 1.6 }}
       >
-        every cohort is mentored by industry experts who actively hire, build
-        products, and work with clients, not just teach design. through evolve's
-        dedicated portal, every student receives a structured, personalised
-        journey from self-discovery to career readiness.
+        {preventWidow(
+          "every cohort is mentored by industry experts who actively hire, build products, and work with clients, not just teach design. through evolve's dedicated portal, every student receives a structured, personalised journey from self-discovery to career readiness."
+        )}
       </p>
     </div>
   </section>

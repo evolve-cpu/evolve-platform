@@ -14,6 +14,9 @@ import evolve_text from "./evolve_text.svg";
 import evolve_be_remarkable from "./evolve_be_remarkable.svg";
 import evolve_yellow_logo from "./evolve_yellow_logo.svg";
 import evolve_yellow_with_name from "./evolve_yellow_with_name.svg";
+import arrow_black from "./arrow_black.svg";
+import arrow_yellow from "./arrow_yellow.svg";
+import download_icon from "./download_icon.svg";
 
 export {
   evolve_logo_nav,
@@ -31,5 +34,8 @@ export {
   cross_line_pink1,
   cross_line_black,
   evolve_yellow_logo,
-  evolve_yellow_with_name
+  evolve_yellow_with_name,
+  arrow_black,
+  arrow_yellow,
+  download_icon
 };
