@@ -1,51 +1,195 @@
+import { useState } from "react";
 import SEO from "../components/SEO";
 import AudienceNav from "../components/AudienceNav";
 import AudienceFooter from "../components/AudienceFooter";
+import InstituteContactModal from "../components/InstituteContactModal";
+
+const OFFERINGS = [
+  {
+    title: "team upskilling",
+    subtitle: "structured learning for every designer.",
+    body: "give every team member their own learning journey with industry-led courses, webinars, progress tracking, and visible skill growth, so learning becomes continuous, not occasional."
+  },
+  {
+    title: "team workshops",
+    subtitle: "solve real business problems together.",
+    body: "collaborative workshops and design sprints that bring cross-functional teams together to align, innovate, and turn ideas into actionable outcomes."
+  },
+  {
+    title: "hire industry-ready designers",
+    subtitle: "access vetted design talent.",
+    body: "skip the guesswork with a curated pipeline of designers who've already been mentored, reviewed, and benchmarked for real-world readiness."
+  }
+];
+
+// TODO: add the handbook PDF / drive link here once it's ready
+const HANDBOOK_URL = "";
+
+const OfferingCard = ({ card }) => (
+  <div
+    className="flex-1 flex flex-col justify-between rounded-[24px] border border-black/10 md:min-h-[440px]"
+    style={{
+      background: "rgba(255,229,110,1)",
+      padding: "clamp(28px,3.2vw,44px)"
+    }}
+  >
+    <div>
+      <h3
+        className="font-extrabold text-evolve-black"
+        style={{ fontSize: "clamp(20px,1.7vw,27px)", lineHeight: 1.15 }}
+      >
+        {card.title}
+      </h3>
+      <p
+        className="font-semibold text-evolve-black mt-2"
+        style={{ fontSize: "clamp(14px,1.1vw,16px)" }}
+      >
+        {card.subtitle}
+      </p>
+    </div>
+
+    <p
+      className="text-evolve-black"
+      style={{ fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.55 }}
+    >
+      {card.body}
+    </p>
+  </div>
+);
 
 export default function Corporates() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIntent, setModalIntent] = useState("contact");
+
+  const openModal = (intent) => {
+    setModalIntent(intent);
+    setModalOpen(true);
+  };
+
   return (
     <div className="w-full lowercase">
       <SEO
-        title="evolve for corporates — build strong design teams"
-        description="evolve for corporates helps organizations build strong design teams through continuous learning, upskilling, and the right talent."
+        title="evolve for corporates — make your design team remarkable"
+        description="evolve for corporates helps organizations build strong design teams through continuous upskilling, team workshops, and access to industry-ready design talent."
         path="/corporates"
       />
-      <AudienceNav />
+      <AudienceNav programme="corporates" />
 
+      {/* ── Hero — full screen ── */}
       <section
-        className="w-full bg-evolve-black flex flex-col items-center text-center"
+        className="w-full flex flex-col"
         style={{
-          padding:
-            "clamp(120px,20vh,180px) clamp(24px,6vw,96px) clamp(96px,16vh,160px)"
+          minHeight: "100vh",
+          background: "linear-gradient(180deg, #161616 0%, #000000 100%)",
+          padding: "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
         }}
       >
-        <h1
-          className="text-evolve-yellow font-extrabold"
-          style={{ fontSize: "clamp(32px,6vw,56px)", letterSpacing: "-0.02em" }}
-        >
-          corporates
-        </h1>
-        <p
-          className="text-white/70 mt-6 max-w-2xl"
-          style={{ fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.5 }}
-        >
-          for organisations who believe in building strong design teams
-          through constant learning, upskilling, and finding the right kind
-          of members to join them.
-        </p>
-        <p className="text-white/40 mt-10 text-sm">
-          this page is coming soon — reach out at{" "}
-          <a
-            href="mailto:content@evolvedesign.academy"
-            className="text-evolve-yellow underline"
+        <div className="flex-1 flex flex-col md:flex-row md:items-stretch gap-10 md:gap-10">
+          {/* left — heading, pinned toward the top */}
+          <div className="md:self-start">
+            <h1
+              className="font-extrabold text-evolve-yellow"
+              style={{
+                fontSize: "clamp(56px,5.5vw,68px)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em"
+              }}
+            >
+              make your design
+              <br />
+              team remarkable
+            </h1>
+            <p
+              className="text-white mt-4"
+              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
+            >
+              with evolve
+            </p>
+          </div>
+
+          {/* right — bigger paragraph text + button, anchored to the bottom */}
+          <div className="md:flex-1 md:flex md:flex-col md:justify-end md:items-start md:max-w-[520px] md:ml-auto">
+            <p
+              className="text-white/90"
+              style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
+            >
+              key to becoming a strong design team is to constantly upskill,
+              work better as team and getting to pick who makes up this team.
+            </p>
+            <p
+              className="text-white/90 mt-6"
+              style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
+            >
+              will evolve platform, you'd be able to nurture and grow a team
+              which delivers real impact
+            </p>
+
+            <button
+              onClick={() => openModal("contact")}
+              className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
+              style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
+            >
+              get in touch <span>→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Our offerings — full screen ── */}
+      <section
+        className="w-full bg-evolve-yellow flex flex-col justify-center items-center"
+        style={{
+          minHeight: "100vh",
+          padding:
+            "clamp(48px,7vh,80px) clamp(24px,6vw,96px) clamp(56px,8vh,96px)"
+        }}
+      >
+        <div className="w-full">
+          <h2
+            className="font-extrabold text-evolve-black"
+            style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
           >
-            content@evolvedesign.academy
-          </a>{" "}
-          in the meantime.
-        </p>
+            our offerings
+          </h2>
+          <p
+            className="text-evolve-black mt-3"
+            style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
+          >
+            practical design programmes built for individuals, teams, and
+            organisations looking to grow with industry-led learning.
+          </p>
+
+          <div className="mt-10 flex flex-col md:flex-row gap-6">
+            {OFFERINGS.map((card) => (
+              <OfferingCard key={card.title} card={card} />
+            ))}
+          </div>
+
+          <div className="mt-10 flex justify-center">
+            <button
+              onClick={() => openModal("handbook")}
+              className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
+              style={{
+                borderRadius: 16,
+                border: "2px solid rgba(255,208,7,1)",
+                boxShadow: "4px 4px 0 0 #806804"
+              }}
+            >
+              download handbook <span>↓</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <AudienceFooter programme="corporates" />
+
+      <InstituteContactModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        programme="corporates"
+        intent={modalIntent}
+        handbookUrl={HANDBOOK_URL}
+      />
     </div>
   );
 }

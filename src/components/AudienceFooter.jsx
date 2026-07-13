@@ -28,10 +28,10 @@ const AudienceFooter = ({ programme = "general" }) => {
 
   return (
     <footer className="w-full bg-evolve-black text-white lowercase">
-      <div className="px-6 md:px-16 pt-14 md:pt-20 pb-10 md:pb-14">
-        <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-16">
-          {/* CTA */}
-          <div className="md:flex-1">
+      <div className="px-6 md:px-16 pt-20 md:pt-32 pb-16 md:pb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0">
+          {/* CTA — left half */}
+          <div className="md:pr-16">
             <h2
               className="text-evolve-yellow font-extrabold"
               style={{ fontSize: "clamp(28px,4vw,44px)", lineHeight: 1.1 }}
@@ -40,49 +40,50 @@ const AudienceFooter = ({ programme = "general" }) => {
             </h2>
             <button
               onClick={() => setModalOpen(true)}
-              className="mt-6 inline-flex items-center justify-center bg-evolve-yellow text-evolve-black font-extrabold rounded-2xl px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
+              className="mt-6 inline-flex items-center justify-center bg-evolve-yellow text-evolve-black font-extrabold px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
+              style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
               get in touch
             </button>
           </div>
 
-          {/* divider */}
-          <div className="hidden md:block w-px bg-white/15 self-stretch" />
-          <div className="md:hidden h-px bg-white/15" />
-
-          {/* nav + socials */}
-          <div className="flex gap-16 md:gap-20">
-            <div>
-              <div className="text-white/40 text-[13px] mb-3">navigation</div>
-              <ul className="space-y-2">
-                {NAV_LINKS.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="text-white/40 text-[13px] mb-3">socials</div>
-              <ul className="space-y-2">
-                {SOCIAL_LINKS.map((item) => (
-                  <li key={item.label}>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+          {/* nav + socials — right half, 50/50 split with the CTA */}
+          <div className="md:border-l md:border-white/15 md:pl-16">
+            <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-20">
+              <div>
+                <div className="text-white/40 text-[13px] mb-3">
+                  navigation
+                </div>
+                <ul className="space-y-2">
+                  {NAV_LINKS.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="text-white/40 text-[13px] mb-3">socials</div>
+                <ul className="space-y-2">
+                  {SOCIAL_LINKS.map((item) => (
+                    <li key={item.label}>
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white hover:text-evolve-yellow transition-colors duration-200 text-[16px]"
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

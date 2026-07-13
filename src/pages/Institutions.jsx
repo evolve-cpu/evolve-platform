@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
 import AudienceNav from "../components/AudienceNav";
 import AudienceFooter from "../components/AudienceFooter";
+import InstituteContactModal from "../components/InstituteContactModal";
 
 const OFFERINGS = [
   {
@@ -21,7 +23,10 @@ const OFFERINGS = [
 const ArrowButton = () => (
   <div
     className="flex items-center justify-center rounded-full bg-evolve-black flex-shrink-0"
-    style={{ width: "clamp(40px,3.2vw,52px)", height: "clamp(40px,3.2vw,52px)" }}
+    style={{
+      width: "clamp(40px,3.2vw,52px)",
+      height: "clamp(40px,3.2vw,52px)"
+    }}
   >
     <span
       className="text-evolve-yellow"
@@ -37,7 +42,7 @@ const OfferingCard = ({ card }) => {
   return (
     <button
       onClick={() => navigate(card.path)}
-      className="group relative text-left flex-1 rounded-[24px] border border-black/10 hover:border-black/20 transition-colors duration-200"
+      className="group relative text-left flex-1 flex flex-col md:justify-end rounded-[24px] border border-black/10 hover:border-black/20 transition-colors duration-200 md:min-h-[440px]"
       style={{
         background: "rgba(255,229,110,1)",
         padding: "clamp(28px,3.2vw,44px)"
@@ -60,7 +65,7 @@ const OfferingCard = ({ card }) => {
         {card.subtitle}
       </p>
       <p
-        className="text-evolve-black/70 mt-4"
+        className="text-evolve-black mt-4"
         style={{ fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.55 }}
       >
         {card.body}
@@ -70,7 +75,7 @@ const OfferingCard = ({ card }) => {
 };
 
 export default function Institutions() {
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="w-full lowercase">
@@ -79,22 +84,25 @@ export default function Institutions() {
         description="evolve for institutions gives design colleges and coaching institutes practitioner-led programmes — portfolio reviews and niche-finding mentorship — delivered on your own branded portal."
         path="/institutions"
       />
-      <AudienceNav />
+      <AudienceNav programme="institutions" />
 
-      {/* ── Hero ── */}
+      {/* ── Hero — full screen ── */}
       <section
-        className="w-full bg-evolve-black"
+        className="w-full flex flex-col"
         style={{
+          minHeight: "100vh",
+          background: "linear-gradient(180deg, #161616 0%, #000000 100%)",
           padding:
             "clamp(96px,16vh,150px) clamp(24px,6vw,96px) clamp(48px,7vh,88px)"
         }}
       >
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-8 md:gap-10">
-          <div>
+        <div className="flex-1 flex flex-col md:flex-row md:items-stretch gap-10 md:gap-10">
+          {/* left — heading, pinned toward the top */}
+          <div className="md:self-start">
             <h1
               className="font-extrabold text-evolve-yellow"
               style={{
-                fontSize: "clamp(40px,5.5vw,68px)",
+                fontSize: "clamp(56px,5.5vw,68px)",
                 lineHeight: 1.05,
                 letterSpacing: "-0.02em"
               }}
@@ -105,43 +113,46 @@ export default function Institutions() {
             </h1>
             <p
               className="text-white mt-4"
-              style={{ fontSize: "clamp(18px,1.6vw,24px)" }}
+              style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
             >
               with evolve
             </p>
           </div>
 
-          <div className="md:max-w-[420px] md:mt-16">
+          {/* right — bigger paragraph text + button, anchored to the bottom */}
+          <div className="md:flex-1 md:flex md:flex-col md:justify-end md:items-start md:max-w-[520px] md:ml-auto">
             <p
               className="text-white/90"
-              style={{ fontSize: "clamp(15px,1.15vw,18px)", lineHeight: 1.5 }}
+              style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               the biggest gap for design students isn't skill. it is clarity.
-              they struggle to define their design path, target the right
-              roles, and present themselves effectively.
+              they struggle to define their design path, target the right roles,
+              and present themselves effectively.
             </p>
             <p
               className="text-white/90 mt-6"
-              style={{ fontSize: "clamp(15px,1.15vw,18px)", lineHeight: 1.5 }}
+              style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               evolve closes this gap through practitioner-led programmes
               delivered on your own branded portal
             </p>
+
+            <button
+              onClick={() => openModal("contact")}
+              className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
+              style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
+            >
+              get in touch <span>→</span>
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={() => navigate("/signin")}
-          className="mt-10 inline-flex items-center justify-center bg-evolve-yellow text-evolve-black font-extrabold rounded-2xl px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
-        >
-          sign in
-        </button>
       </section>
 
-      {/* ── Our offerings ── */}
+      {/* ── Our offerings — full screen ── */}
       <section
-        className="w-full bg-evolve-yellow"
+        className="w-full bg-evolve-yellow flex flex-col justify-center"
         style={{
+          minHeight: "100vh",
           padding:
             "clamp(48px,7vh,80px) clamp(24px,6vw,96px) clamp(56px,8vh,96px)"
         }}
@@ -153,12 +164,11 @@ export default function Institutions() {
           our offerings
         </h2>
         <p
-          className="text-evolve-black/80 mt-3"
-          style={{ fontSize: "clamp(13px,1vw,15px)" }}
+          className="text-evolve-black mt-3"
+          style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
         >
-          custom space for your institute &nbsp;•&nbsp; personalised journey
-          for your students &nbsp;•&nbsp; 100% delivered by industry
-          professionals
+          custom space for your institute &nbsp;•&nbsp; personalised journey for
+          your students &nbsp;•&nbsp; 100% delivered by industry professionals
         </p>
 
         <div className="mt-10 flex flex-col md:flex-row gap-6">
@@ -169,6 +179,13 @@ export default function Institutions() {
       </section>
 
       <AudienceFooter programme="institutions" />
+
+      <InstituteContactModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        programme="institutions"
+        intent="contact"
+      />
     </div>
   );
 }
