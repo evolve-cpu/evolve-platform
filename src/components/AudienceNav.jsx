@@ -5,6 +5,7 @@ import {
   evolve_yellow_logo
 } from "../assets/images/Nav";
 import InstituteContactModal from "./InstituteContactModal";
+import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 
 /**
  * AudienceNav — shared header for the institutions & corporates pages.
@@ -17,10 +18,11 @@ const NAV_ITEMS = [
   { path: "/corporates", label: "corporates" }
 ];
 
-const AudienceNav = ({ programme = "general" }) => {
+const AudienceNav = ({ audience = "institutions" }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
+  const inquiry = AUDIENCE_INQUIRY_CONFIG[audience];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -66,13 +68,20 @@ const AudienceNav = ({ programme = "general" }) => {
             {/* nav links + get in touch — right */}
             <div className="flex items-center gap-4 md:gap-8">
               {NAV_ITEMS.map((item) => {
-                const isActive = location.pathname === item.path;
+                // Programme sub-pages (e.g. /for-institutes/...) don't match
+                // any NAV_ITEMS path exactly, so fall back to the `audience`
+                // prop the page was rendered with to decide what's active.
+                const isActive =
+                  location.pathname === item.path ||
+                  item.path === AUDIENCE_INQUIRY_CONFIG[audience]?.path;
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`text-evolve-yellow transition-colors duration-200 hover:text-white text-[13px] md:text-[17px] ${
-                      isActive ? "font-extrabold" : "font-medium"
+                    className={`transition-colors duration-200 hover:text-white text-[13px] md:text-[17px] ${
+                      isActive
+                        ? "text-evolve-yellow font-extrabold"
+                        : "text-[#BF9C05] font-regular"
                     }`}
                   >
                     {item.label}
@@ -81,7 +90,7 @@ const AudienceNav = ({ programme = "general" }) => {
               })}
               <button
                 onClick={() => setModalOpen(true)}
-                className="hidden md:inline text-evolve-yellow font-medium text-[17px] hover:text-white transition-colors duration-200"
+                className="hidden md:inline text-[#BF9C05] font-medium text-[17px] hover:text-white transition-colors duration-200"
               >
                 get in touch
               </button>
@@ -93,7 +102,11 @@ const AudienceNav = ({ programme = "general" }) => {
       <InstituteContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        programme={programme}
+        programme={inquiry.programme}
+        table={inquiry.table}
+        orgLabel={inquiry.orgLabel}
+        orgField={inquiry.orgField}
+        whatsappUrl={inquiry.whatsappUrl}
         intent="contact"
       />
     </nav>

@@ -1,5 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import { gsap } from "gsap";
+import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../supabaseClient";
 
 import {
   pink_bigger_orbit,
@@ -9,6 +12,10 @@ import {
   stairsfull_right_mobile,
   left_stairs_mod6_mobile
 } from "../../assets/images/Home";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const WAITLIST_CONFIRMATION =
+  "you're on the list — we'll email you the moment our ecosystem launches.";
 
 // Match SceneNew's screen multipliers exactly
 const getOrbitScreenMultipliers = () => {
@@ -42,6 +49,54 @@ const Scene4_refined = React.forwardRef(
     React.useImperativeHandle(ref, () => ({
       container: containerRef.current
     }));
+
+    // ── "Be the first to know" waitlist CTA ────────────────────────────────
+    const { user } = useAuth();
+    const [waitlistStage, setWaitlistStage] = useState("idle"); // idle | prompting | done
+    const [waitlistSaving, setWaitlistSaving] = useState(false);
+    const [waitlistEmail, setWaitlistEmail] = useState("");
+    const [waitlistError, setWaitlistError] = useState("");
+
+    const saveToWaitlist = async (email) => {
+      setWaitlistSaving(true);
+      setWaitlistError("");
+      try {
+        const { error } = await supabase.from("ecosystem_waitlist").upsert(
+          {
+            email: email.trim().toLowerCase(),
+            user_id: user?.id ?? null,
+            source: "home_scene4"
+          },
+          { onConflict: "email", ignoreDuplicates: true }
+        );
+        if (error) throw error;
+        setWaitlistStage("done");
+      } catch (err) {
+        console.error("waitlist save error", err);
+        setWaitlistError("something went wrong, please try again.");
+      } finally {
+        setWaitlistSaving(false);
+      }
+    };
+
+    const handleCtaClick = (e) => {
+      e.stopPropagation();
+      if (waitlistStage === "done") return;
+      if (user?.email) {
+        saveToWaitlist(user.email);
+      } else {
+        setWaitlistStage("prompting");
+      }
+    };
+
+    const handleWaitlistSubmit = (e) => {
+      e.preventDefault();
+      if (!EMAIL_RE.test(waitlistEmail.trim())) {
+        setWaitlistError("please enter a valid email address.");
+        return;
+      }
+      saveToWaitlist(waitlistEmail);
+    };
 
     // Continuous orbit rotation (matches SceneNew pinkOrbitInner)
     useEffect(() => {
@@ -91,6 +146,7 @@ const Scene4_refined = React.forwardRef(
     const orbitWidth = isMobile ? "130%" : "80vw";
 
     return (
+      <>
       <section
         ref={containerRef}
         style={{
@@ -295,32 +351,109 @@ const Scene4_refined = React.forwardRef(
             left: "50%",
             bottom: isMobile ? "12%" : "10%",
             transform: "translateX(-50%)",
-            zIndex: 20
+            zIndex: 20,
+            maxWidth: isMobile ? "88vw" : "34vw",
+            textAlign: "center"
           }}
         >
-          <a
-            href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: "inline-block",
-              background: "rgb(20,20,20)",
-              color: "#ffffff",
-              padding: isMobile ? "13px 26px" : "15px 32px",
-              borderRadius: "20px",
-              fontSize: isMobile ? "1rem" : "1.1rem",
-              fontWeight: 700,
-              letterSpacing: "-0.01em",
-              textDecoration: "none",
-              cursor: "pointer",
-              whiteSpace: "nowrap"
-            }}
-          >
-            Be the first to know
-          </a>
+          {waitlistStage === "done" ? (
+            <div
+              style={{
+                display: "inline-block",
+                background: "rgb(20,20,20)",
+                color: "#ffffff",
+                padding: isMobile ? "13px 22px" : "15px 28px",
+                borderRadius: "20px",
+                fontSize: isMobile ? "0.9rem" : "1rem",
+                fontWeight: 600,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.4
+              }}
+            >
+              {WAITLIST_CONFIRMATION}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCtaClick}
+              disabled={waitlistSaving}
+              style={{
+                display: "inline-block",
+                background: "rgb(20,20,20)",
+                color: "#ffffff",
+                padding: isMobile ? "13px 26px" : "15px 32px",
+                borderRadius: "20px",
+                fontSize: isMobile ? "1rem" : "1.1rem",
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                border: "none",
+                cursor: waitlistSaving ? "default" : "pointer",
+                whiteSpace: "nowrap",
+                opacity: waitlistSaving ? 0.7 : 1
+              }}
+            >
+              {waitlistSaving ? "saving…" : "Be the first to know"}
+            </button>
+          )}
         </div>
       </section>
+
+      {/* Anonymous-user email prompt — portalled to <body> so it isn't
+          clipped/transformed by this scene's animated ancestor wrappers. */}
+      {waitlistStage === "prompting" &&
+        ReactDOM.createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
+            onClick={() => setWaitlistStage("idle")}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[420px] bg-[#FFD007] border-2 border-black rounded-2xl p-6"
+              style={{ boxShadow: "8px 8px 0 0 rgba(0,0,0,0.5)" }}
+            >
+              <button
+                type="button"
+                onClick={() => setWaitlistStage("idle")}
+                className="absolute top-3 right-3 text-black text-2xl font-extrabold leading-none"
+                aria-label="close"
+              >
+                ×
+              </button>
+              <h3 className="font-extrabold text-black text-xl lowercase mb-2">
+                be the first to know
+              </h3>
+              <p className="text-black/70 text-sm lowercase mb-4">
+                drop your email and we'll let you know the moment our
+                ecosystem launches.
+              </p>
+              <form onSubmit={handleWaitlistSubmit} className="flex flex-col gap-3">
+                <input
+                  type="email"
+                  required
+                  placeholder="email*"
+                  value={waitlistEmail}
+                  onChange={(e) => setWaitlistEmail(e.target.value)}
+                  autoComplete="email"
+                  className="w-full rounded-xl px-4 py-3 bg-transparent border-2 border-black/40 placeholder-black/60 font-bold text-black outline-none focus:border-black text-[15px]"
+                />
+                {waitlistError && (
+                  <p className="text-sm font-semibold text-red-700 lowercase">
+                    {waitlistError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={waitlistSaving}
+                  className="bg-black text-[#FFD007] font-extrabold rounded-xl py-3 lowercase disabled:opacity-60"
+                >
+                  {waitlistSaving ? "saving…" : "notify me"}
+                </button>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
     );
   }
 );

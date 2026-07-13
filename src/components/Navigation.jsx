@@ -112,17 +112,6 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       label: "- portfolio review",
       sub: true
     },
-    { label: "for institutes", isHeader: true },
-    {
-      path: "/for-institutes/portfolio-review-programme",
-      label: "- portfolio review programme",
-      sub: true
-    },
-    {
-      path: "/for-institutes/find-your-niche-programme",
-      label: "- find your niche programme",
-      sub: true
-    },
     { path: "/mentorship", label: "mentorship" },
     { path: "/webinars", label: "webinars" },
     { path: "/contact", label: "contact us", isModal: true }

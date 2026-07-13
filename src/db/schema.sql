@@ -107,6 +107,7 @@ CREATE TRIGGER mentorship_payments_updated_at
 -- 3. INSTITUTE INQUIRIES
 --    leads from the "for institutes" pages
 --    (find your niche + portfolio review programmes)
+--    plus the generic /institutions audience page
 --    submitted via "get in touch" and "download handbook" modals
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.institute_inquiries (
@@ -116,7 +117,7 @@ CREATE TABLE IF NOT EXISTS public.institute_inquiries (
   email          TEXT        NOT NULL,
   phone          TEXT        NOT NULL,
   looking_for    TEXT,
-  programme      TEXT        NOT NULL CHECK (programme IN ('find-your-niche', 'portfolio-review')),
+  programme      TEXT        NOT NULL CHECK (programme IN ('find-your-niche', 'portfolio-review', 'institutions')),
   intent         TEXT        NOT NULL DEFAULT 'contact' CHECK (intent IN ('contact', 'handbook')),
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
@@ -126,6 +127,47 @@ ALTER TABLE public.institute_inquiries ENABLE ROW LEVEL SECURITY;
 -- public lead-gen form — anyone can submit, nobody can read back via anon/authenticated
 CREATE POLICY "institute_inquiries: public insert"
   ON public.institute_inquiries FOR INSERT
+  WITH CHECK (true);
+
+-- ─────────────────────────────────────────────
+-- 3b. CORPORATE INQUIRIES
+--     leads from the /corporates audience page
+--     submitted via "get in touch" and "download handbook" modals
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.corporate_inquiries (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           TEXT        NOT NULL,
+  company_name   TEXT        NOT NULL,
+  email          TEXT        NOT NULL,
+  phone          TEXT        NOT NULL,
+  looking_for    TEXT,
+  programme      TEXT        NOT NULL DEFAULT 'corporates' CHECK (programme IN ('corporates')),
+  intent         TEXT        NOT NULL DEFAULT 'contact' CHECK (intent IN ('contact', 'handbook')),
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.corporate_inquiries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "corporate_inquiries: public insert"
+  ON public.corporate_inquiries FOR INSERT
+  WITH CHECK (true);
+
+-- ─────────────────────────────────────────────
+-- 3c. ECOSYSTEM WAITLIST
+--     "be the first to know" CTA on the designers Home page (Scene4_refined)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.ecosystem_waitlist (
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  email      TEXT        NOT NULL UNIQUE,
+  user_id    UUID        REFERENCES public.profiles(id) ON DELETE SET NULL,
+  source     TEXT        NOT NULL DEFAULT 'home_scene4',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.ecosystem_waitlist ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "ecosystem_waitlist: public insert"
+  ON public.ecosystem_waitlist FOR INSERT
   WITH CHECK (true);
 
 -- now deploy

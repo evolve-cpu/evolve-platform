@@ -995,17 +995,6 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
             label: "portfolio review",
             sub: true
           },
-          { label: "for institutes", isHeader: true },
-          {
-            path: "/for-institutes/portfolio-review-programme",
-            label: "portfolio review programme",
-            sub: true
-          },
-          {
-            path: "/for-institutes/find-your-niche-programme",
-            label: "find your niche programme",
-            sub: true
-          },
           { path: "/mentorship", label: "mentorship" },
           // { path: "/evolve-in-person", label: "evolve in-person" },
           { path: "/webinars", label: "webinars" },
@@ -1213,7 +1202,11 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
               </div>
             </div>
 
-            <div className="mt-8 flex items-center gap-6">
+            <div className="mt-8 text-[0.9rem] text-black/50">
+              ©2026 evolve. all rights reserved
+            </div>
+
+            <div className="mt-3 flex items-center gap-6">
               <Link
                 to="/privacy"
                 className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
@@ -1376,7 +1369,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
           <div className="h-px bg-black my-6" />
 
           <div className="text-[0.9375rem] leading-6">
-            @2025 evolve. all rights reserved
+            ©2026 evolve. all rights reserved
           </div>
 
           <div className="flex items-center gap-4 mt-3">

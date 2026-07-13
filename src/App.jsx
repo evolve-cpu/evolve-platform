@@ -1152,9 +1152,11 @@ const AppLayout = () => {
     "/community/portfolio-review/form",
     "/portfolio-review/form",
     "/onboarding",
-    // Institutions/corporates render their own AudienceNav + AudienceFooter inline
+    // These render their own AudienceNav + AudienceFooter inline
     "/institutions",
-    "/corporates"
+    "/corporates",
+    "/for-institutes/portfolio-review-programme",
+    "/for-institutes/find-your-niche-programme"
   ];
   const shouldShowFooter =
     !hideFooterRoutes.includes(location.pathname) &&
@@ -1209,7 +1211,9 @@ const AppLayout = () => {
     if (
       location.pathname === "/" ||
       location.pathname === "/institutions" ||
-      location.pathname === "/corporates"
+      location.pathname === "/corporates" ||
+      location.pathname === "/for-institutes/portfolio-review-programme" ||
+      location.pathname === "/for-institutes/find-your-niche-programme"
     ) {
       // Global landing + audience pages render their own nav (or none at all)
       setShowNavbar(false);

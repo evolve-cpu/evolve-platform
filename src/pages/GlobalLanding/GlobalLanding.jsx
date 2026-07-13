@@ -32,14 +32,14 @@ const getIsMobile = () => {
 
 const ArrowButton = () => (
   <div
-    className="flex items-center justify-center rounded-full bg-evolve-black flex-shrink-0"
+    className="flex items-center justify-center rounded-full bg-evolve-black group-hover:bg-white group-focus-visible:bg-white transition-colors duration-200 flex-shrink-0"
     style={{
       width: "clamp(44px, 3.6vw, 60px)",
       height: "clamp(44px, 3.6vw, 60px)"
     }}
   >
     <span
-      className="text-evolve-yellow"
+      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200"
       style={{ fontSize: "clamp(20px, 1.9vw, 28px)", lineHeight: 1 }}
     >
       ↗
@@ -50,7 +50,7 @@ const ArrowButton = () => (
 const AudienceCard = ({ card, isMobile, onClick }) => (
   <button
     onClick={onClick}
-    className="group text-left bg-evolve-yellow flex-1 flex flex-col justify-between focus:outline-none"
+    className="group text-left bg-evolve-yellow hover:bg-evolve-pink focus-visible:bg-evolve-pink transition-colors duration-200 flex-1 flex flex-col justify-between focus:outline-none"
     style={{
       padding: isMobile
         ? "32px 24px"
@@ -60,14 +60,14 @@ const AudienceCard = ({ card, isMobile, onClick }) => (
   >
     <div>
       <h3
-        className="font-extrabold text-evolve-black"
+        className="font-extrabold text-evolve-black group-hover:text-white group-focus-visible:text-white transition-colors duration-200"
         style={{ fontSize: isMobile ? "22px" : "clamp(22px, 1.8vw, 28px)" }}
       >
         {card.title}
       </h3>
 
       <p
-        className="text-evolve-black/90 mt-2"
+        className="text-evolve-black/90 group-hover:text-white/90 group-focus-visible:text-white/90 transition-colors duration-200 mt-2"
         style={{
           fontSize: isMobile ? "16px" : "clamp(16px, 1.5vw, 19px)",
           lineHeight: 1.28,

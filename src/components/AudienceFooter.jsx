@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import InstituteContactModal from "./InstituteContactModal";
+import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 
 const NAV_LINKS = [
   { path: "/designers", label: "designers" },
@@ -20,11 +21,20 @@ const SOCIAL_LINKS = [
 ];
 
 /**
- * AudienceFooter — shared footer for the institutions & corporates pages.
- * `programme` tags the lead so institute vs. corporate inbound is distinguishable.
+ * AudienceFooter — shared footer for the institutions & corporates pages
+ * (and the programme sub-pages under them).
+ * `audience` picks which inquiry table/fields the "get in touch" modal writes to.
+ * `heading` / `description` let a specific programme page swap the default
+ * "ready to be remarkable?" CTA copy for something more targeted.
  */
-const AudienceFooter = ({ programme = "general" }) => {
+const AudienceFooter = ({
+  audience = "institutions",
+  heading = "ready to be remarkable?",
+  description,
+  ctaLabel = "get in touch"
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const inquiry = AUDIENCE_INQUIRY_CONFIG[audience];
 
   return (
     <footer className="w-full bg-evolve-black text-white lowercase">
@@ -36,14 +46,26 @@ const AudienceFooter = ({ programme = "general" }) => {
               className="text-evolve-yellow font-extrabold"
               style={{ fontSize: "clamp(28px,4vw,44px)", lineHeight: 1.1 }}
             >
-              ready to be remarkable?
+              {heading}
             </h2>
+            {description && (
+              <p
+                className="text-white/80 mt-3"
+                style={{
+                  fontSize: "clamp(15px,1.1vw,18px)",
+                  lineHeight: 1.5,
+                  maxWidth: "46ch"
+                }}
+              >
+                {description}
+              </p>
+            )}
             <button
               onClick={() => setModalOpen(true)}
-              className="mt-6 inline-flex items-center justify-center bg-evolve-yellow text-evolve-black font-extrabold px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
+              className="mt-6 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
-              get in touch
+              {ctaLabel} <span>→</span>
             </button>
           </div>
 
@@ -108,7 +130,11 @@ const AudienceFooter = ({ programme = "general" }) => {
       <InstituteContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        programme={programme}
+        programme={inquiry.programme}
+        table={inquiry.table}
+        orgLabel={inquiry.orgLabel}
+        orgField={inquiry.orgField}
+        whatsappUrl={inquiry.whatsappUrl}
         intent="contact"
       />
     </footer>

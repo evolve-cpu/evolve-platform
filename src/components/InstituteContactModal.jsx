@@ -17,10 +17,15 @@ const InstituteContactModal = ({
   whatsappUrl,
   intent = "contact",
   handbookUrl,
-  onTrack
+  onTrack,
+  // Institute vs corporate leads land in different tables with a differently
+  // named organisation column — these three default to the institute shape.
+  table = "institute_inquiries",
+  orgLabel = "institute name",
+  orgField = "institute_name"
 }) => {
   const [name, setName] = useState("");
-  const [instituteName, setInstituteName] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [lookingFor, setLookingFor] = useState("");
@@ -51,7 +56,7 @@ const InstituteContactModal = ({
   useEffect(() => {
     if (isOpen) {
       setName("");
-      setInstituteName("");
+      setOrgName("");
       setEmail("");
       setPhone("");
       setLookingFor("");
@@ -79,7 +84,7 @@ const InstituteContactModal = ({
     e.preventDefault();
     setErrorMsg("");
 
-    if (!name.trim() || !instituteName.trim() || !email.trim() || !phone.trim()) {
+    if (!name.trim() || !orgName.trim() || !email.trim() || !phone.trim()) {
       setErrorMsg("please fill in all mandatory fields.");
       return;
     }
@@ -90,9 +95,9 @@ const InstituteContactModal = ({
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("institute_inquiries").insert({
+      const { error } = await supabase.from(table).insert({
         name: name.trim(),
-        institute_name: instituteName.trim(),
+        [orgField]: orgName.trim(),
         email: email.trim(),
         phone: phone.trim(),
         looking_for: lookingFor.trim() || null,
@@ -105,7 +110,7 @@ const InstituteContactModal = ({
       setStatus("success");
       if (intent === "handbook") triggerHandbookDownload();
     } catch (err) {
-      console.error("institute inquiry submit error", err);
+      console.error("inquiry submit error", err);
       setErrorMsg("something went wrong, please try again.");
       setStatus("error");
     } finally {
@@ -182,9 +187,9 @@ const InstituteContactModal = ({
                 <input
                   type="text"
                   required
-                  placeholder="institute name*"
-                  value={instituteName}
-                  onChange={(e) => setInstituteName(e.target.value)}
+                  placeholder={`${orgLabel}*`}
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
                   className={inputClass}
                 />
                 <input

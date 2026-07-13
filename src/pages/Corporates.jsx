@@ -3,6 +3,9 @@ import SEO from "../components/SEO";
 import AudienceNav from "../components/AudienceNav";
 import AudienceFooter from "../components/AudienceFooter";
 import InstituteContactModal from "../components/InstituteContactModal";
+import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
+
+const INQUIRY = AUDIENCE_INQUIRY_CONFIG.corporates;
 
 const OFFERINGS = [
   {
@@ -22,8 +25,8 @@ const OFFERINGS = [
   }
 ];
 
-// TODO: add the handbook PDF / drive link here once it's ready
-const HANDBOOK_URL = "";
+const HANDBOOK_URL =
+  "https://drive.google.com/uc?export=download&id=1kAec9-UKMj_Hp2X-R20K1nXHYq8-fdd2";
 
 const OfferingCard = ({ card }) => (
   <div
@@ -73,7 +76,7 @@ export default function Corporates() {
         description="evolve for corporates helps organizations build strong design teams through continuous upskilling, team workshops, and access to industry-ready design talent."
         path="/corporates"
       />
-      <AudienceNav programme="corporates" />
+      <AudienceNav audience="corporates" />
 
       {/* ── Hero — full screen ── */}
       <section
@@ -86,7 +89,7 @@ export default function Corporates() {
       >
         <div className="flex-1 flex flex-col md:flex-row md:items-stretch gap-10 md:gap-10">
           {/* left — heading, pinned toward the top */}
-          <div className="md:self-start">
+          <div className="md:self-start md:mt-[6vh]">
             <h1
               className="font-extrabold text-evolve-yellow"
               style={{
@@ -108,7 +111,7 @@ export default function Corporates() {
           </div>
 
           {/* right — bigger paragraph text + button, anchored to the bottom */}
-          <div className="md:flex-1 md:flex md:flex-col md:justify-end md:items-start md:max-w-[520px] md:ml-auto">
+          <div className="md:flex-1 md:flex md:flex-col md:justify-end md:items-start md:max-w-[520px] md:ml-auto md:mb-[6vh]">
             <p
               className="text-white/90"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
@@ -181,12 +184,16 @@ export default function Corporates() {
         </div>
       </section>
 
-      <AudienceFooter programme="corporates" />
+      <AudienceFooter audience="corporates" />
 
       <InstituteContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        programme="corporates"
+        programme={INQUIRY.programme}
+        table={INQUIRY.table}
+        orgLabel={INQUIRY.orgLabel}
+        orgField={INQUIRY.orgField}
+        whatsappUrl={INQUIRY.whatsappUrl}
         intent={modalIntent}
         handbookUrl={HANDBOOK_URL}
       />
