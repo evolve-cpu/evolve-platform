@@ -39,7 +39,7 @@ const ArrowButton = () => (
     }}
   >
     <span
-      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200 font-regular"
+      className="text-evolve-yellow group-hover:text-evolve-black group-focus-visible:text-evolve-black transition-colors duration-200 font-regular group-hover:font-semibold "
       style={{ fontSize: "clamp(20px, 1.9vw, 28px)", lineHeight: 1 }}
     >
       ↗
