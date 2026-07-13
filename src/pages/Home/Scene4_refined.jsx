@@ -61,15 +61,14 @@ const Scene4_refined = React.forwardRef(
       setWaitlistSaving(true);
       setWaitlistError("");
       try {
-        const { error } = await supabase.from("ecosystem_waitlist").upsert(
-          {
-            email: email.trim().toLowerCase(),
-            user_id: user?.id ?? null,
-            source: "home_scene4"
-          },
-          { onConflict: "email", ignoreDuplicates: true }
-        );
-        if (error) throw error;
+        const { error } = await supabase.from("ecosystem_waitlist").insert({
+          email: email.trim().toLowerCase(),
+          user_id: user?.id ?? null,
+          source: "home_scene4"
+        });
+        // 23505 = unique_violation — this email is already on the waitlist,
+        // treat it the same as a fresh success rather than an error.
+        if (error && error.code !== "23505") throw error;
         setWaitlistStage("done");
       } catch (err) {
         console.error("waitlist save error", err);
