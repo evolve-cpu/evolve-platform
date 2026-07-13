@@ -142,9 +142,9 @@ export default function Institutions() {
               className="text-white/90"
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
-              the biggest gap for design students isn't skill. it is clarity.
-              they struggle to define their design path, target the right roles,
-              and present themselves effectively.
+              {preventWidow(
+                "the biggest gap for design students isn't skill. it is clarity. they struggle to define their design path, target the right roles, and present themselves effectively."
+              )}
             </p>
             <p
               className="text-white/90 mt-6"
