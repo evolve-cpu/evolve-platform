@@ -18,6 +18,7 @@ import arrow_black from "./arrow_black.svg";
 import arrow_yellow from "./arrow_yellow.svg";
 import download_icon from "./download_icon.svg";
 import right_arrow_icon from "./right_arrow_icon.svg";
+import signin_left_pannel from "./signin_left_pannel.svg";
 
 export {
   evolve_logo_nav,
@@ -39,5 +40,6 @@ export {
   arrow_black,
   arrow_yellow,
   download_icon,
-  right_arrow_icon
+  right_arrow_icon,
+  signin_left_pannel
 };
