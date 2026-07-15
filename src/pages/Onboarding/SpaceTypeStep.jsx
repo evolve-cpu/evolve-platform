@@ -8,14 +8,14 @@ const OPTIONS = [
     title: "myself",
     sub: "i'm building a personal space to track my design journey, showcase my work, and grow my career.",
     tags: ["individual", "personal portfolio", "career growth"]
-  },
-  {
-    value: "team",
-    emoji: "🏛️",
-    title: "for my team",
-    sub: "i'm setting up a space for a design institute, company, or studio — to showcase the team and grow together.",
-    tags: ["design institute", "company", "studio"]
   }
+  // {
+  //   value: "team",
+  //   emoji: "🏛️",
+  //   title: "for my team",
+  //   sub: "i'm setting up a space for a design institute, company, or studio — to showcase the team and grow together.",
+  //   tags: ["design institute", "company", "studio"]
+  // }
 ];
 
 export default function SpaceTypeStep({ onContinue }) {
