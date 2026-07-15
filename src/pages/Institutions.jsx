@@ -130,9 +130,8 @@ export default function Institutions() {
                 letterSpacing: "-0.02em"
               }}
             >
-              get your students
-              <br />
-              industry ready
+              design students,
+              <br /> made industry-ready
             </h1>
           </div>
 
@@ -143,7 +142,7 @@ export default function Institutions() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "the biggest gap for design students isn't skill. it is clarity. they struggle to define their design path, target the right roles, and present themselves effectively."
+                "recruiters don't reject your design students for lack of skill. they reject unclear portfolios, wrong role targeting, and weak presentation."
               )}
             </p>
             <p
@@ -151,7 +150,7 @@ export default function Institutions() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "evolve closes this gap through practitioner-led programmes delivered on your own branded portal."
+                "evolve fixes exactly that. industry professional led programmes which run on your own branded portal."
               )}
             </p>
 
@@ -167,6 +166,35 @@ export default function Institutions() {
             </button>
           </div>
         </div>
+      </section>
+
+      {/* ── Stat callout ── */}
+      <section
+        className="w-full flex flex-col items-start md:items-center justify-center"
+        style={{
+          background: "#161616",
+          minHeight: "20vh",
+          padding: "clamp(56px,10vh,96px) clamp(24px,6vw,96px)"
+        }}
+      >
+        <h2
+          className="font-extrabold text-evolve-yellow text-left md:text-center md:max-w-[680px]"
+          style={{
+            fontSize: "clamp(32px,3.4vw,44px)",
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em"
+          }}
+        >
+          {/* 48% of grads feel unprepared
+          <br className="hidden md:block" /> to apply for entry-level positions */}
+          48% of grads feel unprepared to apply for entry-level positions
+        </h2>
+        <p
+          className="text-white text-left md:text-center mt-6 md:max-w-[980px]"
+          style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
+        >
+          cengage 2025 graduate employability report
+        </p>
       </section>
 
       {/* ── Our offerings — full screen ── */}
