@@ -226,13 +226,15 @@ const InstituteContactModal = ({
                   autoComplete="tel"
                   className={inputClass}
                 />
-                <textarea
-                  placeholder="what're you looking for? (optional)"
-                  rows={2}
-                  value={lookingFor}
-                  onChange={(e) => setLookingFor(e.target.value)}
-                  className={`${inputClass} resize-none`}
-                />
+                {intent !== "handbook" && (
+                  <textarea
+                    placeholder="what're you looking for? (optional)"
+                    rows={2}
+                    value={lookingFor}
+                    onChange={(e) => setLookingFor(e.target.value)}
+                    className={`${inputClass} resize-none`}
+                  />
+                )}
 
                 {errorMsg && (
                   <p className="text-sm md:text-base font-semibold text-red-700 lowercase">
@@ -254,7 +256,7 @@ const InstituteContactModal = ({
                 </button>
               </form>
 
-              {whatsappUrl && (
+              {whatsappUrl && intent !== "handbook" && (
                 <a
                   href={whatsappUrl}
                   target="_blank"
