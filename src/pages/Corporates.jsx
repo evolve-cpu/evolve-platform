@@ -132,12 +132,27 @@ export default function Corporates() {
               )}
             </p>
 
-            <button
+            {/* <button
               onClick={() => openModal("contact")}
               className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
               get in touch{" "}
+              <span>
+                <img src={right_arrow_icon} alt="" className="w-6 h-6" />
+              </span>
+            </button> */}
+            <button
+              onClick={() =>
+                window.open(
+                  "https://calendly.com/chesna-paperclip/new-meeting",
+                  "_blank"
+                )
+              }
+              className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
+              style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
+            >
+              book a 30-min call{" "}
               <span>
                 <img src={right_arrow_icon} alt="" className="w-6 h-6" />
               </span>
