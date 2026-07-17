@@ -14,6 +14,7 @@ const WhatsAppIcon = ({ className }) => (
 );
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CALENDLY_URL = "https://calendly.com/chesna-paperclip/new-meeting";
 
 const InstituteContactModal = ({
   isOpen,
@@ -125,6 +126,9 @@ const InstituteContactModal = ({
 
   if (!isOpen) return null;
 
+  const isFormFilled =
+    name.trim() && orgName.trim() && email.trim() && phone.trim();
+
   const inputClass =
     "w-full rounded-2xl px-4 py-3 md:py-3.5 bg-transparent border-2 border-[#806804] placeholder-black/60 font-bold text-black outline-none focus:ring-2 ring-[#806804] focus:border-black text-[15px] md:text-[17px]";
 
@@ -135,7 +139,7 @@ const InstituteContactModal = ({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-[92vw] md:max-w-[560px] max-h-[90vh] bg-[#FFD007] border-2 border-black rounded-2xl overflow-hidden"
+        className="relative w-full max-w-[92vw] md:max-w-[600px] max-h-[90vh] bg-[#FFD007] border-2 border-black rounded-2xl overflow-hidden"
         style={{ boxShadow: "8px 8px 0 0 rgba(0,0,0,0.5)" }}
       >
         <button
@@ -190,42 +194,46 @@ const InstituteContactModal = ({
 
               <form
                 onSubmit={handleSubmit}
-                className="mt-6 flex flex-col gap-2"
+                className="mt-5 flex flex-col gap-2"
               >
-                <input
-                  type="text"
-                  required
-                  placeholder="name*"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={inputClass}
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder={`${orgLabel}*`}
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  className={inputClass}
-                />
-                <input
-                  type="email"
-                  required
-                  placeholder="email*"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className={inputClass}
-                />
-                <input
-                  type="tel"
-                  required
-                  placeholder="phone number*"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  autoComplete="tel"
-                  className={inputClass}
-                />
+                <div className="flex flex-col md:flex-row gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="name*"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={`${inputClass} md:flex-1`}
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder={`${orgLabel}*`}
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    className={`${inputClass} md:flex-1`}
+                  />
+                </div>
+                <div className="flex flex-col md:flex-row gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="email*"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    className={`${inputClass} md:flex-1`}
+                  />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="phone number*"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    autoComplete="tel"
+                    className={`${inputClass} md:flex-1`}
+                  />
+                </div>
                 {intent !== "handbook" && (
                   <textarea
                     placeholder="what're you looking for? (optional)"
@@ -244,8 +252,8 @@ const InstituteContactModal = ({
 
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="mt-1 font-extrabold lowercase px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-[#FFD007] transition-opacity disabled:opacity-60"
+                  disabled={submitting || !isFormFilled}
+                  className="mt-1 font-extrabold lowercase px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow transition-colors hover:bg-[#FFE470] hover:text-black disabled:opacity-60 disabled:hover:bg-evolve-yellow"
                   style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
                 >
                   {submitting
@@ -256,13 +264,34 @@ const InstituteContactModal = ({
                 </button>
               </form>
 
+              {intent !== "handbook" && (
+                <>
+                  <div className="flex items-center gap-3 mt-4">
+                    <div className="h-px flex-1 bg-black/20" />
+                    <span className="font-bold lowercase text-black/60 text-[13px]">
+                      or
+                    </span>
+                    <div className="h-px flex-1 bg-black/20" />
+                  </div>
+                  <a
+                    href={CALENDLY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 font-extrabold lowercase px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-[#FFD007] hover:opacity-90 transition-opacity"
+                    style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
+                  >
+                    book a 30-min call
+                  </a>
+                </>
+              )}
+
               {whatsappUrl && intent !== "handbook" && (
                 <a
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onTrack?.("whatsapp")}
-                  className="mt-5 flex items-center justify-center gap-2 font-bold lowercase text-black text-[14px] md:text-[16px] underline underline-offset-4"
+                  className="mt-4 flex items-center justify-center gap-2 font-bold lowercase text-black text-[14px] md:text-[16px] underline underline-offset-4"
                 >
                   <WhatsAppIcon className="w-5 h-5" />
                   or message us on whatsapp
