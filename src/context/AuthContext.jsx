@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 
 /**
@@ -24,6 +24,17 @@ export function AuthProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true); // true on start to avoid UI flash
   const [isNewUser, setIsNewUser]     = useState(false);
 
+  // Tracks whose profile is currently loaded into `user`. Supabase's client
+  // re-validates the session (and fires onAuthStateChange again — often as
+  // TOKEN_REFRESHED, sometimes even SIGNED_IN) every time the tab regains
+  // focus/visibility, even though nothing actually changed. Without this
+  // guard, that re-fire calls loadProfile() again, which flips authLoading
+  // to true and back — every screen gated on authLoading (mid-onboarding
+  // forms included) unmounts and remounts, wiping whatever the user had
+  // typed. So: only do a full (re)load when the session's user is actually
+  // different from the one we already have loaded.
+  const loadedUserIdRef = useRef(null);
+
   useEffect(() => {
     // 1. restore existing session on mount
     // clean OAuth callback params AFTER getSession() so Supabase can exchange the code first
@@ -47,8 +58,16 @@ export function AuthProvider({ children }) {
         window.history.replaceState(null, "", window.location.pathname);
       }
       const authUser = session?.user;
-      if (authUser) loadProfile(authUser);
-      else { setUser(null); setAuthLoading(false); }
+      if (!authUser) {
+        loadedUserIdRef.current = null;
+        setUser(null);
+        setAuthLoading(false);
+        return;
+      }
+      // same user already loaded — this is just Supabase re-validating the
+      // session on focus, not a real sign-in. Skip the reload entirely.
+      if (loadedUserIdRef.current === authUser.id) return;
+      loadProfile(authUser);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -56,6 +75,7 @@ export function AuthProvider({ children }) {
 
   async function loadProfile(authUser) {
     setAuthLoading(true);
+    loadedUserIdRef.current = authUser.id;
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -106,6 +126,7 @@ export function AuthProvider({ children }) {
       phone:                   profile.phone ?? null,
       username:                profile.username ?? null,
       bio:                     profile.bio ?? null,
+      portfolio_url:           profile.portfolio_url ?? null,
       persona:                 profile.persona ?? null,
       level:                   profile.level ?? null,
       level_confidence:        profile.level_confidence ?? null,

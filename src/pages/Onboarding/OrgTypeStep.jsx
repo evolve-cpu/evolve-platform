@@ -1,24 +1,30 @@
 import { useState } from "react";
 import GrowthMascot from "../../components/GrowthMascot";
 
-const OPTIONS = [
+const ORG_TYPES = [
   {
-    value: "individual",
-    emoji: "🌱",
-    title: "myself",
-    sub: "i'm building a personal space to track my design journey, showcase my work, and grow my career.",
-    tags: ["individual", "personal portfolio", "career growth"]
+    value: "institute",
+    emoji: "🎓",
+    title: "design institute",
+    sub: "a college, design school, or coaching institute — set up a space for your faculty and students.",
+    tags: ["college", "design school", "bootcamp"]
   },
   {
-    value: "team",
-    emoji: "🏛️",
-    title: "for my team",
-    sub: "i'm setting up a space for a design institute, company, or studio — to showcase the team and grow together.",
-    tags: ["design institute", "company", "studio"]
+    value: "company",
+    emoji: "🏢",
+    title: "company / studio",
+    sub: "a design team, studio, or startup — set up a space for your team.",
+    tags: ["studio", "startup", "in-house team"]
   }
 ];
 
-export default function SpaceTypeStep({ onContinue }) {
+/**
+ * Shown right after "for my team" is picked in SpaceTypeStep — decides which
+ * flavor of team onboarding to run. Institute picks the rich, link-fetch-driven
+ * self-serve flow (Door 2); company falls back to the existing lightweight
+ * team-setup flow until that door gets its own shape.
+ */
+export default function OrgTypeStep({ onBack, onContinue }) {
   const [selected, setSelected] = useState(null);
 
   return (
@@ -27,23 +33,22 @@ export default function SpaceTypeStep({ onContinue }) {
       style={{ backgroundColor: "#161618" }}
     >
       <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-6 text-center">
-        {/* <GrowthMascot progress={5} size={64} /> */}
+        <GrowthMascot progress={8} size={64} />
 
-        {/* <p className="text-evolve-lavender-indigo text-xs font-bold tracking-widest uppercase">
-          your seed · waiting to be planted
-        </p> */}
+        <p className="text-evolve-lavender-indigo text-xs font-bold tracking-widest uppercase">
+          team setup · step 1
+        </p>
         <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight">
-          who are you creating
+          what kind of space
           <br />
-          this evolve space for?
+          are you setting up?
         </h1>
         <p className="text-white/50 text-sm max-w-sm">
-          your answer shapes how we build your space and what features you'll
-          have access to.
+          this shapes the questions we ask next and how your space gets built.
         </p>
 
         <div className="w-full flex flex-col gap-3 mt-4">
-          {OPTIONS.map((opt) => {
+          {ORG_TYPES.map((opt) => {
             const isSelected = selected === opt.value;
             return (
               <button
@@ -83,13 +88,21 @@ export default function SpaceTypeStep({ onContinue }) {
           })}
         </div>
 
-        <button
-          onClick={() => selected && onContinue(selected)}
-          disabled={!selected}
-          className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 mt-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
-        >
-          continue →
-        </button>
+        <div className="w-full flex gap-3 mt-2">
+          <button
+            onClick={onBack}
+            className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
+          >
+            back
+          </button>
+          <button
+            onClick={() => selected && onContinue(selected)}
+            disabled={!selected}
+            className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
+          >
+            continue →
+          </button>
+        </div>
       </div>
     </div>
   );

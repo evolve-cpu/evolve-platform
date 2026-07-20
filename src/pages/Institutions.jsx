@@ -86,6 +86,7 @@ const OfferingCard = ({ card }) => {
 };
 
 export default function Institutions() {
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIntent, setModalIntent] = useState("contact");
 
@@ -154,16 +155,25 @@ export default function Institutions() {
               )}
             </p>
 
-            <button
-              onClick={() => openModal("contact")}
-              className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
-              style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
-            >
-              get in touch{" "}
-              <span>
-                <img src={right_arrow_icon} alt="" className="w-6 h-6" />
-              </span>
-            </button>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => openModal("contact")}
+                className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
+                style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
+              >
+                get in touch{" "}
+                <span>
+                  <img src={right_arrow_icon} alt="" className="w-6 h-6" />
+                </span>
+              </button>
+              <button
+                onClick={() => navigate("/onboarding")}
+                className="inline-flex items-center justify-center gap-2 border border-evolve-yellow/70 text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:bg-evolve-yellow/10 transition-colors w-fit"
+                style={{ borderRadius: 16 }}
+              >
+                sign in &amp; set up your space
+              </button>
+            </div>
             {/* <button
               onClick={() =>
                 window.open(

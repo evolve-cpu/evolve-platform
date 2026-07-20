@@ -6,14 +6,23 @@ import { findFreeSlug } from "../../lib/slug";
 import { emptyProfile } from "./questions";
 import GrowthMascot from "../../components/GrowthMascot";
 import SpaceTypeStep from "./SpaceTypeStep";
+import OrgTypeStep from "./OrgTypeStep";
+import InstituteAdminProfileStep from "./InstituteAdminProfileStep";
+import InstituteSpaceStep from "./InstituteSpaceStep";
 import ChatOnboarding from "./ChatOnboarding";
 import TeamSetupStep from "./TeamSetupStep";
 import ReviewStep from "./ReviewStep";
 
 /**
- * Orchestrates the full post-signin onboarding: space-type choice → chat
- * Q&A → (team setup, if applicable) → review → persist to Supabase → land
- * on the user's public profile (or their new team space).
+ * Orchestrates the full post-signin onboarding. Three shapes branch off the
+ * initial space-type choice:
+ *   individual        → chat Q&A → review → persist → land on public profile
+ *   team → company     → chat Q&A → team-setup (name) → review → persist → /space/:slug
+ *   team → institute    → admin profile → institute space (link-fetch) → persist → /space/:slug
+ *
+ * The institute branch (Door 2 self-serve) skips the individual persona chat
+ * entirely — "are you a high schooler or career shifter" doesn't fit an
+ * institute admin — and instead collects their org-facing title directly.
  */
 export default function Onboarding() {
   const { user, authLoading, refreshUser } = useAuth();
@@ -27,15 +36,30 @@ export default function Onboarding() {
     }
   }, [authLoading, user, navigate]);
 
-  const [step, setStep] = useState("space-type"); // space-type | chat | team-setup | review | submitting
+  const [step, setStep] = useState("space-type");
+  // space-type | org-type | inst-profile | inst-space | submitting-inst
+  // | chat | team-setup | review | submitting
   const [spaceType, setSpaceType] = useState("individual");
+  const [orgType, setOrgType] = useState(null);
   const [chatProfile, setChatProfile] = useState(null);
   const [orgDraft, setOrgDraft] = useState(null);
+  const [instProfile, setInstProfile] = useState(null);
+  const [instSpaceDraft, setInstSpaceDraft] = useState(null);
   const [error, setError] = useState("");
 
   function handleSpaceType(value) {
     setSpaceType(value);
-    setStep("chat");
+    setStep(value === "team" ? "org-type" : "chat");
+  }
+
+  function handleOrgType(value) {
+    setOrgType(value);
+    setStep(value === "institute" ? "inst-profile" : "chat");
+  }
+
+  function handleInstProfile(draft) {
+    setInstProfile(draft);
+    setStep("inst-space");
   }
 
   function handleChatComplete(profile) {
@@ -46,6 +70,72 @@ export default function Onboarding() {
   function handleTeamSetup(draft) {
     setOrgDraft(draft);
     setStep("review");
+  }
+
+  async function handleInstituteConfirm(spaceDraft) {
+    if (!user || !instProfile) return;
+    setInstSpaceDraft(spaceDraft);
+    setStep("submitting-inst");
+    setError("");
+    try {
+      const fullName = `${instProfile.firstName} ${instProfile.lastName}`.trim();
+      const username = await findFreeSlug(
+        supabase,
+        "profile_cards",
+        "username",
+        fullName || user.name || user.email
+      );
+
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({
+          username,
+          name: fullName,
+          portfolio_url: instProfile.portfolio || null,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+          growth_stage: 25
+        })
+        .eq("id", user.id);
+      if (profileErr) throw profileErr;
+
+      const orgSlug = await findFreeSlug(supabase, "organizations", "slug", spaceDraft.spaceName);
+      const { data: org, error: orgErr } = await supabase
+        .from("organizations")
+        .insert({
+          owner_id: user.id,
+          name: spaceDraft.spaceName,
+          slug: orgSlug,
+          org_type: "institute",
+          website: spaceDraft.website || null,
+          logo_url: spaceDraft.logoUrl || null,
+          bio: spaceDraft.bio || null,
+          location: spaceDraft.location || null,
+          year_founded: spaceDraft.yearFounded || null,
+          setup_mode: spaceDraft.mode || null,
+          expected_members: spaceDraft.members || null,
+          programme_details: spaceDraft.programmeDetails || null,
+          source_url: spaceDraft.sourceUrl || null
+        })
+        .select()
+        .single();
+      if (orgErr) throw orgErr;
+
+      const { error: memberErr } = await supabase.from("organization_members").insert({
+        org_id: org.id,
+        user_id: user.id,
+        role: "owner",
+        status: "active",
+        title: instProfile.roleLabel || null
+      });
+      if (memberErr) throw memberErr;
+
+      await refreshUser();
+      navigate(`/space/${orgSlug}`, { replace: true, state: { justCreated: true } });
+    } catch (e) {
+      setError(e.message || "something went wrong setting up your space. please try again.");
+      setStep("inst-space");
+    }
   }
 
   async function handleConfirm(finalProfile) {
@@ -105,7 +195,7 @@ export default function Onboarding() {
       sessionStorage.removeItem("post_onboarding_redirect");
 
       if (orgSlug) {
-        navigate(`/space/${orgSlug}`, { replace: true });
+        navigate(`/space/${orgSlug}`, { replace: true, state: { justCreated: true } });
       } else if (redirectTo) {
         navigate(redirectTo, { replace: true });
       } else {
@@ -127,12 +217,44 @@ export default function Onboarding() {
 
   if (step === "space-type") return <SpaceTypeStep onContinue={handleSpaceType} />;
 
+  if (step === "org-type") {
+    return <OrgTypeStep onBack={() => setStep("space-type")} onContinue={handleOrgType} />;
+  }
+
+  if (step === "inst-profile") {
+    return (
+      <InstituteAdminProfileStep
+        initial={instProfile}
+        onBack={() => setStep("org-type")}
+        onContinue={handleInstProfile}
+      />
+    );
+  }
+
+  if (step === "inst-space" || step === "submitting-inst") {
+    return (
+      <InstituteSpaceStep
+        initial={instSpaceDraft}
+        onBack={() => setStep("inst-profile")}
+        onSubmit={handleInstituteConfirm}
+        submitting={step === "submitting-inst"}
+        error={error}
+      />
+    );
+  }
+
   if (step === "chat") {
     return <ChatOnboarding initialProfile={emptyProfile()} onComplete={handleChatComplete} />;
   }
 
   if (step === "team-setup") {
-    return <TeamSetupStep onBack={() => setStep("chat")} onContinue={handleTeamSetup} />;
+    return (
+      <TeamSetupStep
+        onBack={() => setStep("chat")}
+        onContinue={handleTeamSetup}
+        presetOrgType={orgType || "company"}
+      />
+    );
   }
 
   if (step === "review" || step === "submitting") {

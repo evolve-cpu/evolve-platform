@@ -6,9 +6,9 @@ const ORG_TYPES = [
   { value: "company", emoji: "🏢", title: "company / studio", sub: "a design team, studio, or startup" }
 ];
 
-export default function TeamSetupStep({ onBack, onContinue }) {
+export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
   const [name, setName] = useState("");
-  const [orgType, setOrgType] = useState(null);
+  const [orgType, setOrgType] = useState(presetOrgType || null);
 
   const canContinue = name.trim().length > 1 && orgType;
 
@@ -41,7 +41,7 @@ export default function TeamSetupStep({ onBack, onContinue }) {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" style={{ display: presetOrgType ? "none" : undefined }}>
             {ORG_TYPES.map(t => {
               const isSelected = orgType === t.value;
               return (
