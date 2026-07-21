@@ -1468,32 +1468,32 @@ const AppLayout = () => {
   //   }
   // }, []);
 
-  // useEffect(() => {
-  //   const hostname = window.location.hostname;
-  //   const isDevEnv = hostname === "dev.evolvedesign.academy";
-  //   const isAllowed = new URLSearchParams(window.location.search).has("dev");
-
-  //   if (isDevEnv && !isAllowed) {
-  //     window.location.href = "https://www.evolvedesign.academy";
-  //   }
-  // }, []);
-
   useEffect(() => {
     const hostname = window.location.hostname;
-    const params = new URLSearchParams(window.location.search);
-
     const isDevEnv = hostname === "dev.evolvedesign.academy";
-    const isAllowed = params.get("dev") === "1";
+    const isAllowed = new URLSearchParams(window.location.search).has("dev");
 
     if (isDevEnv && !isAllowed) {
-      const path =
-        window.location.pathname +
-        window.location.search +
-        window.location.hash;
-
-      window.location.href = `https://www.evolvedesign.academy${path}`;
+      window.location.href = "https://www.evolvedesign.academy";
     }
   }, []);
+
+  // useEffect(() => {
+  //   const hostname = window.location.hostname;
+  //   const params = new URLSearchParams(window.location.search);
+
+  //   const isDevEnv = hostname === "dev.evolvedesign.academy";
+  //   const isAllowed = params.get("dev") === "1";
+
+  //   if (isDevEnv && !isAllowed) {
+  //     const path =
+  //       window.location.pathname +
+  //       window.location.search +
+  //       window.location.hash;
+
+  //     window.location.href = `https://www.evolvedesign.academy${path}`;
+  //   }
+  // }, []);
 
   return (
     <>
@@ -1649,10 +1649,15 @@ const AnantAppLayout = () => {
   }, [location.pathname]);
 
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#060c17" }} />}>
+    <Suspense
+      fallback={<div style={{ minHeight: "100vh", background: "#060c17" }} />}
+    >
       <Routes>
         <Route path="/" element={<AnantHome />} />
-        <Route path="/portfolio-review/form" element={<PortfolioReviewForm />} />
+        <Route
+          path="/portfolio-review/form"
+          element={<PortfolioReviewForm />}
+        />
         <Route path="/signin" element={<AnantSignIn />} />
         <Route path="/profile" element={<AnantStudentProfile />} />
         <Route path="/admin" element={<AnantAdminLanding />} />
@@ -1677,7 +1682,13 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          {isAnant ? <AnantThemeProvider><AnantAppLayout /></AnantThemeProvider> : <AppLayout />}
+          {isAnant ? (
+            <AnantThemeProvider>
+              <AnantAppLayout />
+            </AnantThemeProvider>
+          ) : (
+            <AppLayout />
+          )}
         </BrowserRouter>
       </AuthProvider>
       {navigator.userAgent !== "ReactSnap" && <Analytics />}

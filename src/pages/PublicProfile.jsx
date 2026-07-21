@@ -108,6 +108,8 @@ export default function PublicProfile() {
   const [activeTab, setActiveTab] = useState("learnings");
   const [viewingPublic, setViewingPublic] = useState(false);
   const [orgSpaces, setOrgSpaces] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [respondingId, setRespondingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,24 +141,50 @@ export default function PublicProfile() {
 
   // owner's org space(s) — lets them hop back and forth between their
   // profile and the space(s) they own/belong to
-  useEffect(() => {
+  const loadOrgSpaces = useCallback(async () => {
     if (!isOwner || !user) {
       setOrgSpaces([]);
       return;
     }
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("organization_members")
-        .select("role, organizations:org_id(name, slug, logo_url, org_type)")
-        .eq("user_id", user.id)
-        .eq("status", "active");
-      if (!cancelled) setOrgSpaces((data || []).filter((r) => r.organizations));
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const { data } = await supabase
+      .from("organization_members")
+      .select("role, organizations:org_id(name, slug, logo_url, org_type)")
+      .eq("user_id", user.id)
+      .eq("status", "active");
+    setOrgSpaces((data || []).filter((r) => r.organizations));
   }, [isOwner, user]);
+
+  useEffect(() => {
+    loadOrgSpaces();
+  }, [loadOrgSpaces]);
+
+  // pending "find on evolve" additions — someone already on evolve was added
+  // directly (no email/token), so they accept it right here, in-app
+  const loadPendingInvites = useCallback(async () => {
+    if (!isOwner || !user) {
+      setPendingInvites([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("organization_members")
+      .select("id, role, member_type, organizations:org_id(name, slug, logo_url), inviter:profiles!invited_by(name)")
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+    setPendingInvites((data || []).filter((r) => r.organizations));
+  }, [isOwner, user]);
+
+  useEffect(() => {
+    loadPendingInvites();
+  }, [loadPendingInvites]);
+
+  async function respondToInvite(id, accept) {
+    setRespondingId(id);
+    const { error } = await supabase.rpc("respond_to_org_invite", { p_member_id: id, p_accept: accept });
+    setRespondingId(null);
+    if (error) return;
+    loadPendingInvites();
+    if (accept) loadOrgSpaces();
+  }
 
   async function saveBio() {
     setEditingBio(false);
@@ -293,6 +321,51 @@ export default function PublicProfile() {
           <div className="w-fit text-[10px] font-bold uppercase tracking-wide text-evolve-inchworm border border-evolve-inchworm/30 rounded-full px-3 py-1.5">
             🌱 growing steadily
           </div>
+
+          {isOwner && pendingInvites.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">pending invites</p>
+              {pendingInvites.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-3 py-2.5 flex flex-col gap-2"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
+                      {inv.organizations.logo_url ? (
+                        <img src={inv.organizations.logo_url} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-sm">🏫</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">{inv.organizations.name}</p>
+                      <p className="text-white/40 text-[10px] truncate">
+                        as {inv.member_type || inv.role}
+                        {inv.inviter?.name ? ` · invited by ${inv.inviter.name}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => respondToInvite(inv.id, true)}
+                      disabled={respondingId === inv.id}
+                      className="flex-1 bg-evolve-yellow text-evolve-black text-[11px] font-bold rounded-lg py-1.5 disabled:opacity-50"
+                    >
+                      accept
+                    </button>
+                    <button
+                      onClick={() => respondToInvite(inv.id, false)}
+                      disabled={respondingId === inv.id}
+                      className="flex-1 border border-white/15 text-white/50 hover:text-white text-[11px] font-semibold rounded-lg py-1.5 disabled:opacity-50"
+                    >
+                      decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {isOwner && orgSpaces.length > 0 && (
             <div className="flex flex-col gap-2">
