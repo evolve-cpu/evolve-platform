@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
 import AudienceNav from "../components/AudienceNav";
@@ -6,6 +6,8 @@ import AudienceFooter from "../components/AudienceFooter";
 import InstituteContactModal from "../components/InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 import { preventWidow } from "../utils/preventWidow";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../supabaseClient";
 import {
   arrow_yellow,
   download_icon,
@@ -87,8 +89,31 @@ const OfferingCard = ({ card }) => {
 
 export default function Institutions() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIntent, setModalIntent] = useState("contact");
+  const [mySpaceSlug, setMySpaceSlug] = useState(null);
+
+  useEffect(() => {
+    if (!user) {
+      setMySpaceSlug(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("organization_members")
+        .select("organizations:org_id(slug)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setMySpaceSlug(data?.organizations?.slug || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const openModal = (intent) => {
     setModalIntent(intent);
@@ -167,11 +192,17 @@ export default function Institutions() {
                 </span>
               </button>
               <button
-                onClick={() => navigate("/onboarding")}
+                onClick={() =>
+                  mySpaceSlug ? navigate(`/space/${mySpaceSlug}`) : navigate("/onboarding")
+                }
                 className="inline-flex items-center justify-center gap-2 border border-evolve-yellow/70 text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:bg-evolve-yellow/10 transition-colors w-fit"
                 style={{ borderRadius: 16 }}
               >
-                sign in &amp; set up your space
+                {mySpaceSlug
+                  ? "go to my space"
+                  : user
+                    ? "set up your space"
+                    : "sign in & set up your space"}
               </button>
             </div>
             {/* <button

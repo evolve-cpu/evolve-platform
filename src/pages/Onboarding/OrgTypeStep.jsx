@@ -33,7 +33,7 @@ export default function OrgTypeStep({ onBack, onContinue }) {
       style={{ backgroundColor: "#161618" }}
     >
       <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-6 text-center">
-        <GrowthMascot progress={8} size={64} />
+        {/* <GrowthMascot progress={8} size={64} /> */}
 
         <p className="text-evolve-lavender-indigo text-xs font-bold tracking-widest uppercase">
           team setup · step 1

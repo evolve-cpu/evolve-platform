@@ -107,6 +107,7 @@ export default function PublicProfile() {
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState("learnings");
   const [viewingPublic, setViewingPublic] = useState(false);
+  const [orgSpaces, setOrgSpaces] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -135,6 +136,27 @@ export default function PublicProfile() {
   }, [username, isOwner]);
 
   useEffect(() => { load(); }, [load]);
+
+  // owner's org space(s) — lets them hop back and forth between their
+  // profile and the space(s) they own/belong to
+  useEffect(() => {
+    if (!isOwner || !user) {
+      setOrgSpaces([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("organization_members")
+        .select("role, organizations:org_id(name, slug, logo_url, org_type)")
+        .eq("user_id", user.id)
+        .eq("status", "active");
+      if (!cancelled) setOrgSpaces((data || []).filter((r) => r.organizations));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwner, user]);
 
   async function saveBio() {
     setEditingBio(false);
@@ -174,7 +196,9 @@ export default function PublicProfile() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
       {/* top bar */}
       <div className="flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0">
-        <Link to="/" className="text-white font-bold text-sm">evolve</Link>
+        <Link to="/" className="text-white font-extrabold text-base tracking-tight">
+          evolve<span className="text-evolve-lavender-indigo">.</span>
+        </Link>
         <div className="flex items-center gap-2.5">
           <button
             title="coming soon"
@@ -188,13 +212,27 @@ export default function PublicProfile() {
           >
             evolve community
           </Link>
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-            {card.avatar_url ? (
-              <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              (card.name || "?")[0].toUpperCase()
-            )}
-          </div>
+          {isOwner && orgSpaces[0] ? (
+            <Link
+              to={`/space/${orgSpaces[0].organizations.slug}`}
+              title="go to my space"
+              className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-transform hover:scale-105"
+            >
+              {card.avatar_url ? (
+                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                (card.name || "?")[0].toUpperCase()
+              )}
+            </Link>
+          ) : (
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {card.avatar_url ? (
+                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                (card.name || "?")[0].toUpperCase()
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -255,6 +293,31 @@ export default function PublicProfile() {
           <div className="w-fit text-[10px] font-bold uppercase tracking-wide text-evolve-inchworm border border-evolve-inchworm/30 rounded-full px-3 py-1.5">
             🌱 growing steadily
           </div>
+
+          {isOwner && orgSpaces.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">your spaces</p>
+              {orgSpaces.map(({ role, organizations: org }) => (
+                <Link
+                  key={org.slug}
+                  to={`/space/${org.slug}`}
+                  className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/40 px-3 py-2.5 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
+                    {org.logo_url ? (
+                      <img src={org.logo_url} alt="" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-sm">{org.org_type === "institute" ? "🎓" : "🏢"}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-xs font-semibold truncate">{org.name}</p>
+                    <p className="text-white/30 text-[10px] capitalize">{role}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="mt-auto pt-2">
             {isOwner ? (

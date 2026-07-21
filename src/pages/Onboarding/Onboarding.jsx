@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supabaseClient";
 import { findFreeSlug } from "../../lib/slug";
@@ -215,24 +215,44 @@ export default function Onboarding() {
     );
   }
 
-  if (step === "space-type") return <SpaceTypeStep onContinue={handleSpaceType} />;
+  // once signed in, a small "who you're signed in as" chip sits top-left
+  // through every step of onboarding — it's not a link until a profile
+  // page actually exists for them (username is set on final confirm)
+  const profileChip = (
+    <Link
+      to={user.username ? `/profile/${user.username}` : "#"}
+      className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 border border-white/10 transition-colors hover:border-white/25"
+      style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)", pointerEvents: user.username ? "auto" : "none" }}
+    >
+      <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+        {user.avatar_url ? (
+          <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          (user.name || user.email || "?")[0].toUpperCase()
+        )}
+      </div>
+      <span className="text-white/70 text-xs font-semibold truncate max-w-[160px]">
+        {user.name || user.email}
+      </span>
+    </Link>
+  );
 
-  if (step === "org-type") {
-    return <OrgTypeStep onBack={() => setStep("space-type")} onContinue={handleOrgType} />;
-  }
+  let content = null;
 
-  if (step === "inst-profile") {
-    return (
+  if (step === "space-type") {
+    content = <SpaceTypeStep onContinue={handleSpaceType} />;
+  } else if (step === "org-type") {
+    content = <OrgTypeStep onBack={() => setStep("space-type")} onContinue={handleOrgType} />;
+  } else if (step === "inst-profile") {
+    content = (
       <InstituteAdminProfileStep
         initial={instProfile}
         onBack={() => setStep("org-type")}
         onContinue={handleInstProfile}
       />
     );
-  }
-
-  if (step === "inst-space" || step === "submitting-inst") {
-    return (
+  } else if (step === "inst-space" || step === "submitting-inst") {
+    content = (
       <InstituteSpaceStep
         initial={instSpaceDraft}
         onBack={() => setStep("inst-profile")}
@@ -241,24 +261,18 @@ export default function Onboarding() {
         error={error}
       />
     );
-  }
-
-  if (step === "chat") {
-    return <ChatOnboarding initialProfile={emptyProfile()} onComplete={handleChatComplete} />;
-  }
-
-  if (step === "team-setup") {
-    return (
+  } else if (step === "chat") {
+    content = <ChatOnboarding initialProfile={emptyProfile()} onComplete={handleChatComplete} />;
+  } else if (step === "team-setup") {
+    content = (
       <TeamSetupStep
         onBack={() => setStep("chat")}
         onContinue={handleTeamSetup}
         presetOrgType={orgType || "company"}
       />
     );
-  }
-
-  if (step === "review" || step === "submitting") {
-    return (
+  } else if (step === "review" || step === "submitting") {
+    content = (
       <>
         <ReviewStep
           profile={chatProfile}
@@ -275,5 +289,10 @@ export default function Onboarding() {
     );
   }
 
-  return null;
+  return (
+    <>
+      {profileChip}
+      {content}
+    </>
+  );
 }
