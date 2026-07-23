@@ -103,12 +103,11 @@ export default function Institutions() {
     (async () => {
       const { data } = await supabase
         .from("organization_members")
-        .select("organizations:org_id(slug)")
+        .select("organizations:org_id(slug, deleted_at)")
         .eq("user_id", user.id)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
-      if (!cancelled) setMySpaceSlug(data?.organizations?.slug || null);
+        .eq("status", "active");
+      const firstActive = (data || []).find((r) => r.organizations && !r.organizations.deleted_at);
+      if (!cancelled) setMySpaceSlug(firstActive?.organizations?.slug || null);
     })();
     return () => {
       cancelled = true;

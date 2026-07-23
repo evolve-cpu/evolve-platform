@@ -148,10 +148,10 @@ export default function PublicProfile() {
     }
     const { data } = await supabase
       .from("organization_members")
-      .select("role, organizations:org_id(name, slug, logo_url, org_type)")
+      .select("role, organizations:org_id(name, slug, logo_url, org_type, deleted_at)")
       .eq("user_id", user.id)
       .eq("status", "active");
-    setOrgSpaces((data || []).filter((r) => r.organizations));
+    setOrgSpaces((data || []).filter((r) => r.organizations && !r.organizations.deleted_at));
   }, [isOwner, user]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
@@ -9,9 +9,27 @@ const ROLE_LABEL = { owner: "owner", admin: "admin", member: "member" };
 // team-tab role context — colors match the team-management mockup's
 // green/purple/yellow role dots exactly (evolve-inchworm / evolve-lavender-indigo / evolve-yellow)
 const ROLE_META = {
-  student: { word: "student", plural: "students", text: "text-evolve-inchworm", bg: "bg-evolve-inchworm/10", dot: "bg-evolve-inchworm" },
-  faculty: { word: "faculty member", plural: "faculty", text: "text-evolve-lavender-indigo", bg: "bg-evolve-lavender-indigo/10", dot: "bg-evolve-lavender-indigo" },
-  admin: { word: "admin", plural: "admins", text: "text-evolve-yellow", bg: "bg-evolve-yellow/10", dot: "bg-evolve-yellow" }
+  student: {
+    word: "student",
+    plural: "students",
+    text: "text-evolve-inchworm",
+    bg: "bg-evolve-inchworm/10",
+    dot: "bg-evolve-inchworm"
+  },
+  faculty: {
+    word: "faculty member",
+    plural: "faculty",
+    text: "text-evolve-lavender-indigo",
+    bg: "bg-evolve-lavender-indigo/10",
+    dot: "bg-evolve-lavender-indigo"
+  },
+  admin: {
+    word: "admin",
+    plural: "admins",
+    text: "text-evolve-yellow",
+    bg: "bg-evolve-yellow/10",
+    dot: "bg-evolve-yellow"
+  }
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,11 +42,41 @@ function parseCSV(raw) {
   const emailIdx = headers.indexOf("email");
   return lines.slice(1).map((line) => {
     const vals = line.split(",").map((v) => v.trim());
-    return { name: nameIdx >= 0 ? vals[nameIdx] || "" : "", email: emailIdx >= 0 ? (vals[emailIdx] || "").toLowerCase() : "" };
+    return {
+      name: nameIdx >= 0 ? vals[nameIdx] || "" : "",
+      email: emailIdx >= 0 ? (vals[emailIdx] || "").toLowerCase() : ""
+    };
   });
 }
 
-const PLATFORMS = ["instagram", "linkedin", "x / twitter", "facebook", "youtube"];
+const PLATFORMS = [
+  "instagram",
+  "linkedin",
+  "x / twitter",
+  "facebook",
+  "youtube"
+];
+
+const EVOLVE_PROGRAMS = [
+  {
+    id: "portfolio-review",
+    name: "portfolio review",
+    emoji: "📋",
+    accent: "purple",
+    desc: "every student gets a personalised report from a working reviewer, plus a live 1:1 session.",
+    meta: ["2–3 weeks", "on-campus", "best for yr 2–3"],
+    href: "/for-institutes/portfolio-review-programme"
+  },
+  {
+    id: "find-your-niche",
+    name: "find your niche",
+    emoji: "🧭",
+    accent: "green",
+    desc: 'a 4-day mentorship that takes students from "who am i as a designer" to "where do i fit."',
+    meta: ["4 days", "hybrid", "2 industry pros"],
+    href: "/for-institutes/find-your-niche-programme"
+  }
+];
 
 const AVATAR_GRADIENTS = [
   "linear-gradient(135deg, rgba(223,5,134,1), rgba(163,91,251,1))",
@@ -48,6 +96,25 @@ function initialsOf(name) {
   return (name || "?").trim()[0]?.toUpperCase() || "?";
 }
 
+function timeAgo(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.floor(days / 30);
+  return `${months} month${months === 1 ? "" : "s"} ago`;
+}
+
+const TYPE_META = {
+  exam: { label: "entrance exam", text: "text-evolve-lavender-indigo", bg: "bg-evolve-lavender-indigo/10" },
+  event: { label: "event", text: "text-evolve-pink", bg: "bg-evolve-pink/10" },
+  deadline: { label: "deadline", text: "text-evolve-yellow", bg: "bg-evolve-yellow/10" },
+  result: { label: "results", text: "text-evolve-inchworm", bg: "bg-evolve-inchworm/10" }
+};
+
 /* ── small building blocks ────────────────────────────────────────────── */
 
 function LogoBox({ org, size = 56 }) {
@@ -66,7 +133,9 @@ function LogoBox({ org, size = 56 }) {
           }}
         />
       ) : (
-        <span style={{ fontSize: size * 0.4 }}>{org.org_type === "institute" ? "🎓" : "🏢"}</span>
+        <span style={{ fontSize: size * 0.4 }}>
+          {org.org_type === "institute" ? "🎓" : "🏢"}
+        </span>
       )}
     </div>
   );
@@ -83,7 +152,9 @@ function SetupTag() {
 function Field({ label, hint, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide">{label}</label>
+      <label className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide">
+        {label}
+      </label>
       {children}
       {hint && <p className="text-white/25 text-[10.5px] text-right">{hint}</p>}
     </div>
@@ -104,8 +175,8 @@ function SectionCard({ icon, iconBg, title, desc, children }) {
           {icon}
         </div>
         <div>
-          <p className="text-white font-extrabold text-[15px]">{title}</p>
-          <p className="text-white/30 text-xs mt-0.5 leading-snug">{desc}</p>
+          <p className="text-white font-extrabold text-base">{title}</p>
+          <p className="text-white/30 text-[13px] mt-0.5 leading-snug">{desc}</p>
         </div>
       </div>
       {children}
@@ -160,16 +231,23 @@ function ProgressBanner({ leftCount }) {
         ✨
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-extrabold text-sm">let's finish setting up your page</p>
+        <p className="text-white font-extrabold text-sm">
+          let's finish setting up your page
+        </p>
         <p className="text-white/40 text-xs mt-0.5">
-          we've carried over what you told us when you set up this space — logo, links, awards, and your team
-          are still yours to add.
+          we've carried over what you told us when you set up this space — logo,
+          links, awards, and your team are still yours to add.
         </p>
       </div>
       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className="text-evolve-lavender-indigo text-[11px] font-bold">{leftCount} things left to add</span>
+        <span className="text-evolve-lavender-indigo text-[11px] font-bold">
+          {leftCount} things left to add
+        </span>
         <div className="w-[110px] h-1.5 rounded-full bg-white/10 overflow-hidden">
-          <div className="h-full bg-evolve-lavender-indigo rounded-full" style={{ width: `${pct}%` }} />
+          <div
+            className="h-full bg-evolve-lavender-indigo rounded-full"
+            style={{ width: `${pct}%` }}
+          />
         </div>
       </div>
     </div>
@@ -192,7 +270,11 @@ function AvatarStack({ members }) {
           }}
         >
           {m.profiles?.avatar_url ? (
-            <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+            <img
+              src={m.profiles.avatar_url}
+              alt=""
+              className="w-full h-full object-cover"
+            />
           ) : (
             initialsOf(m.profiles?.name || m.invited_email)
           )}
@@ -214,10 +296,42 @@ function AvatarStack({ members }) {
 const Icon = {
   overview: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect
+        x="3"
+        y="3"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <rect
+        x="14"
+        y="3"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <rect
+        x="3"
+        y="14"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <rect
+        x="14"
+        y="14"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
     </svg>
   ),
   team: (
@@ -233,7 +347,12 @@ const Icon = {
   ),
   programs: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path
+        d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
   spotlight: (
@@ -248,7 +367,24 @@ const Icon = {
   ),
   updates: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path
+        d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  settings: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 };
@@ -258,6 +394,7 @@ const Icon = {
 export default function TeamSpace() {
   const { slug } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [org, setOrg] = useState(null);
@@ -294,6 +431,13 @@ export default function TeamSpace() {
   const [findSearching, setFindSearching] = useState(false);
   const [findSubmitting, setFindSubmitting] = useState(false);
 
+  // evolve programs — "request a program" modal (institute only)
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [reqMessage, setReqMessage] = useState("");
+  const [reqBatchSize, setReqBatchSize] = useState("");
+  const [reqTimeline, setReqTimeline] = useState("");
+  const [reqSubmitting, setReqSubmitting] = useState(false);
+
   // editable-section drafts
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
@@ -317,6 +461,41 @@ export default function TeamSpace() {
   const [programmeDirty, setProgrammeDirty] = useState(false);
   const [programmeSaving, setProgrammeSaving] = useState(false);
 
+  // settings
+  const [visibilityDraft, setVisibilityDraft] = useState("public");
+  const [visibilityDirty, setVisibilityDirty] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({
+    new_member: true,
+    weekly_analytics: true,
+    billing: true,
+    product_updates: false
+  });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  // updates: institute highlights (moderated feed) + calendar events
+  const [updates, setUpdates] = useState([]);
+  const [updatesLoaded, setUpdatesLoaded] = useState(false);
+  const [updatesFilter, setUpdatesFilter] = useState("pending");
+  const [events, setEvents] = useState([]);
+  const [showPastEvents, setShowPastEvents] = useState(false);
+
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareTitle, setShareTitle] = useState("");
+  const [shareDesc, setShareDesc] = useState("");
+  const [shareSubmitting, setShareSubmitting] = useState(false);
+
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [eventEditingId, setEventEditingId] = useState(null);
+  const [evTitle, setEvTitle] = useState("");
+  const [evDate, setEvDate] = useState("");
+  const [evMeta, setEvMeta] = useState("");
+  const [evType, setEvType] = useState("event");
+  const [evAudience, setEvAudience] = useState("open");
+  const [eventSubmitting, setEventSubmitting] = useState(false);
+
   const isOwner = org && user && org.owner_id === user.id;
   const isInstitute = org?.org_type === "institute";
 
@@ -328,6 +507,7 @@ export default function TeamSpace() {
       .from("organizations")
       .select("*")
       .eq("slug", slug)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (orgErr || !orgData) {
@@ -350,6 +530,25 @@ export default function TeamSpace() {
     load();
   }, [load]);
 
+  const loadUpdates = useCallback(async () => {
+    if (!org) return;
+    const [{ data: updateRows }, { data: eventRows }] = await Promise.all([
+      supabase
+        .from("org_updates")
+        .select("*, profiles:author_id(name, avatar_url)")
+        .eq("org_id", org.id)
+        .order("created_at", { ascending: false }),
+      supabase.from("org_events").select("*").eq("org_id", org.id).order("event_date", { ascending: true })
+    ]);
+    setUpdates(updateRows || []);
+    setEvents(eventRows || []);
+    setUpdatesLoaded(true);
+  }, [org]);
+
+  useEffect(() => {
+    if (section === "updates" && org) loadUpdates();
+  }, [section, org, loadUpdates]);
+
   // seed the editable drafts from the org row once per org (not on every
   // reload — reloads happen after invites, and shouldn't clobber in-progress edits)
   useEffect(() => {
@@ -361,6 +560,14 @@ export default function TeamSpace() {
     setLinks(org.social_links || []);
     setAwards(org.awards || []);
     setProgrammeDraft(org.programme_details || "");
+    setVisibilityDraft(org.visibility || "public");
+    setNotifPrefs({
+      new_member: true,
+      weekly_analytics: true,
+      billing: true,
+      product_updates: false,
+      ...(org.notification_prefs || {})
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [org?.id]);
 
@@ -371,7 +578,10 @@ export default function TeamSpace() {
 
   async function saveProfile() {
     setProfileSaving(true);
-    const { error: saveErr } = await supabase.from("organizations").update({ name, website }).eq("id", org.id);
+    const { error: saveErr } = await supabase
+      .from("organizations")
+      .update({ name, website })
+      .eq("id", org.id);
     setProfileSaving(false);
     if (saveErr) return showToast("couldn't save — try again");
     setOrg((o) => ({ ...o, name, website }));
@@ -394,7 +604,10 @@ export default function TeamSpace() {
 
   async function saveLinks() {
     setLinksSaving(true);
-    const { error: saveErr } = await supabase.from("organizations").update({ social_links: links }).eq("id", org.id);
+    const { error: saveErr } = await supabase
+      .from("organizations")
+      .update({ social_links: links })
+      .eq("id", org.id);
     setLinksSaving(false);
     if (saveErr) return showToast("couldn't save — try again");
     setOrg((o) => ({ ...o, social_links: links }));
@@ -404,7 +617,10 @@ export default function TeamSpace() {
 
   async function saveAwards() {
     setAwardsSaving(true);
-    const { error: saveErr } = await supabase.from("organizations").update({ awards }).eq("id", org.id);
+    const { error: saveErr } = await supabase
+      .from("organizations")
+      .update({ awards })
+      .eq("id", org.id);
     setAwardsSaving(false);
     if (saveErr) return showToast("couldn't save — try again");
     setOrg((o) => ({ ...o, awards }));
@@ -425,12 +641,154 @@ export default function TeamSpace() {
     showToast(`${isInstitute ? "evolve programs" : "what we do"} saved`);
   }
 
+  async function saveVisibility() {
+    setVisibilitySaving(true);
+    const { error: saveErr } = await supabase
+      .from("organizations")
+      .update({ visibility: visibilityDraft })
+      .eq("id", org.id);
+    setVisibilitySaving(false);
+    if (saveErr) return showToast("couldn't save — try again");
+    setOrg((o) => ({ ...o, visibility: visibilityDraft }));
+    setVisibilityDirty(false);
+    showToast("privacy setting saved");
+  }
+
+  async function toggleNotifPref(key) {
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next);
+    const { error: saveErr } = await supabase
+      .from("organizations")
+      .update({ notification_prefs: next })
+      .eq("id", org.id);
+    if (saveErr) {
+      setNotifPrefs(notifPrefs); // revert on failure
+      showToast("couldn't save — try again");
+      return;
+    }
+    setOrg((o) => ({ ...o, notification_prefs: next }));
+  }
+
+  async function confirmDeleteSpace() {
+    setDeleteSubmitting(true);
+    const { error: delErr } = await supabase
+      .from("organizations")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", org.id);
+    setDeleteSubmitting(false);
+    if (delErr) {
+      showToast("couldn't delete — try again");
+      return;
+    }
+    navigate("/", { replace: true });
+  }
+
+  /* ── updates: institute highlights + calendar events ─────────────────── */
+
+  function openShareModal() {
+    setShareTitle("");
+    setShareDesc("");
+    setShareModalOpen(true);
+  }
+
+  async function submitShareUpdate() {
+    if (!shareTitle.trim()) return;
+    setShareSubmitting(true);
+    const publishDirectly = canModerateUpdates;
+    const { error: insErr } = await supabase.from("org_updates").insert({
+      org_id: org.id,
+      author_id: user.id,
+      title: shareTitle.trim(),
+      description: shareDesc.trim() || null,
+      status: publishDirectly ? "live" : "pending",
+      published_at: publishDirectly ? new Date().toISOString() : null
+    });
+    setShareSubmitting(false);
+    if (insErr) {
+      showToast("couldn't share that — try again");
+      return;
+    }
+    setShareModalOpen(false);
+    loadUpdates();
+    showToast(publishDirectly ? "posted to your public feed" : "submitted for review");
+  }
+
+  async function approveUpdate(id) {
+    const { error: updErr } = await supabase
+      .from("org_updates")
+      .update({ status: "live", published_at: new Date().toISOString() })
+      .eq("id", id);
+    if (updErr) return showToast("couldn't publish — try again");
+    loadUpdates();
+    showToast("post published to your public feed");
+  }
+
+  async function removeUpdate(id, wasLive) {
+    const { error: delErr } = await supabase.from("org_updates").delete().eq("id", id);
+    if (delErr) return showToast("couldn't remove — try again");
+    loadUpdates();
+    showToast(wasLive ? "removed from public feed" : "post removed");
+  }
+
+  function openAddEventModal() {
+    setEventEditingId(null);
+    setEvTitle("");
+    setEvDate(new Date().toISOString().slice(0, 10));
+    setEvMeta("");
+    setEvType("event");
+    setEvAudience("open");
+    setEventModalOpen(true);
+  }
+
+  function openEditEventModal(ev) {
+    setEventEditingId(ev.id);
+    setEvTitle(ev.title);
+    setEvDate(ev.event_date);
+    setEvMeta(ev.meta || "");
+    setEvType(ev.type);
+    setEvAudience(ev.audience);
+    setEventModalOpen(true);
+  }
+
+  async function submitEvent() {
+    if (!evTitle.trim() || !evDate) return;
+    setEventSubmitting(true);
+    const payload = {
+      org_id: org.id,
+      title: evTitle.trim(),
+      event_date: evDate,
+      meta: evMeta.trim() || null,
+      type: evType,
+      audience: evAudience
+    };
+    const { error: evErr } = eventEditingId
+      ? await supabase.from("org_events").update(payload).eq("id", eventEditingId)
+      : await supabase.from("org_events").insert(payload);
+    setEventSubmitting(false);
+    if (evErr) {
+      showToast("couldn't save that event — try again");
+      return;
+    }
+    setEventModalOpen(false);
+    loadUpdates();
+    showToast(eventEditingId ? "event updated" : "event added to calendar");
+  }
+
+  async function deleteEventRow(id) {
+    const { error: delErr } = await supabase.from("org_events").delete().eq("id", id);
+    if (delErr) return showToast("couldn't delete — try again");
+    loadUpdates();
+    showToast("event removed from calendar");
+  }
+
   function addLinkRow() {
     setLinks((l) => [...l, { platform: PLATFORMS[0], url: "" }]);
     setLinksDirty(true);
   }
   function updateLinkRow(i, patch) {
-    setLinks((l) => l.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    setLinks((l) =>
+      l.map((row, idx) => (idx === i ? { ...row, ...patch } : row))
+    );
     setLinksDirty(true);
   }
   function removeLinkRow(i) {
@@ -443,7 +801,9 @@ export default function TeamSpace() {
     setAwardsDirty(true);
   }
   function updateAwardRow(i, patch) {
-    setAwards((a) => a.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    setAwards((a) =>
+      a.map((row, idx) => (idx === i ? { ...row, ...patch } : row))
+    );
     setAwardsDirty(true);
   }
   function removeAwardRow(i) {
@@ -496,7 +856,9 @@ export default function TeamSpace() {
       if (!res.ok) throw new Error("email failed");
       setInviteSent(`invite sent to ${email}`);
     } catch {
-      setError("invite saved, but the email couldn't be sent — try resending later.");
+      setError(
+        "invite saved, but the email couldn't be sent — try resending later."
+      );
     }
 
     setInviting(false);
@@ -509,7 +871,9 @@ export default function TeamSpace() {
   const existingEmails = new Set(
     members.map((m) => m.invited_email?.toLowerCase()).filter(Boolean)
   );
-  const existingUserIds = new Set(members.map((m) => m.user_id).filter(Boolean));
+  const existingUserIds = new Set(
+    members.map((m) => m.user_id).filter(Boolean)
+  );
 
   function openTeamModal(type) {
     setModalOpen(type);
@@ -614,18 +978,28 @@ export default function TeamSpace() {
   }
 
   function updateCsvRow(i, patch) {
-    setCsvRows((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    setCsvRows((rows) =>
+      rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
+    );
   }
   function skipCsvRow(i) {
     updateCsvRow(i, { skipped: true });
   }
 
   const csvReadyRows = csvRows.filter(
-    (r) => !r.skipped && !r.alreadyMember && !r.duplicateInFile && EMAIL_RE.test(r.email)
+    (r) =>
+      !r.skipped &&
+      !r.alreadyMember &&
+      !r.duplicateInFile &&
+      EMAIL_RE.test(r.email)
   );
   const csvErrorRows = csvRows
     .map((r, i) => ({ ...r, i }))
-    .filter((r) => !r.skipped && (r.alreadyMember || r.duplicateInFile || !EMAIL_RE.test(r.email)));
+    .filter(
+      (r) =>
+        !r.skipped &&
+        (r.alreadyMember || r.duplicateInFile || !EMAIL_RE.test(r.email))
+    );
 
   async function submitCsv() {
     if (!csvReadyRows.length) return;
@@ -653,7 +1027,9 @@ export default function TeamSpace() {
     }
 
     await Promise.allSettled(
-      inserted.map((row) => sendInviteEmail(row.invited_email, teamRoleTab, row.invite_token))
+      inserted.map((row) =>
+        sendInviteEmail(row.invited_email, teamRoleTab, row.invite_token)
+      )
     );
 
     setCsvSubmitting(false);
@@ -712,7 +1088,9 @@ export default function TeamSpace() {
       status: "pending"
     }));
 
-    const { error: insErr } = await supabase.from("organization_members").insert(payload);
+    const { error: insErr } = await supabase
+      .from("organization_members")
+      .insert(payload);
     setFindSubmitting(false);
     if (insErr) {
       showToast("couldn't add them — try again");
@@ -720,7 +1098,9 @@ export default function TeamSpace() {
     }
     closeTeamModal();
     load();
-    showToast(`added ${selected.length} ${selected.length === 1 ? "person" : "people"} — they'll see it to accept`);
+    showToast(
+      `added ${selected.length} ${selected.length === 1 ? "person" : "people"} — they'll see it to accept`
+    );
   }
 
   function removeMember(id) {
@@ -734,9 +1114,41 @@ export default function TeamSpace() {
       });
   }
 
+  async function submitProgramRequest() {
+    if (!reqMessage.trim()) return;
+    setReqSubmitting(true);
+    try {
+      const res = await fetch("/api/request-program", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgName: org.name,
+          requesterName: user.name,
+          requesterEmail: user.email,
+          message: reqMessage.trim(),
+          batchSize: reqBatchSize.trim(),
+          timeline: reqTimeline.trim()
+        })
+      });
+      if (!res.ok) throw new Error();
+      setProgramModalOpen(false);
+      setReqMessage("");
+      setReqBatchSize("");
+      setReqTimeline("");
+      showToast("request sent — we'll get back within 2 working days");
+    } catch {
+      showToast("couldn't send that — try again");
+    } finally {
+      setReqSubmitting(false);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#161618" }}
+      >
         <GrowthMascot progress={10} size={56} />
       </div>
     );
@@ -749,7 +1161,9 @@ export default function TeamSpace() {
         style={{ backgroundColor: "#161618" }}
       >
         <p className="text-white font-bold text-xl">no team space here yet.</p>
-        <p className="text-white/40 text-sm">the space "{slug}" hasn't been created, or you don't have access.</p>
+        <p className="text-white/40 text-sm">
+          the space "{slug}" hasn't been created, or you don't have access.
+        </p>
       </div>
     );
   }
@@ -759,42 +1173,89 @@ export default function TeamSpace() {
   const programsLabel = isInstitute ? "evolve programs" : "what we do";
 
   const activeMembers = members.filter((m) => m.status === "active");
-  const adminCount = activeMembers.filter((m) => m.role === "owner" || m.role === "admin").length;
-  const facultyCount = activeMembers.filter((m) => m.member_type === "faculty").length;
-  const studentCount = activeMembers.filter((m) => m.member_type === "student").length;
+  const adminCount = activeMembers.filter(
+    (m) => m.role === "owner" || m.role === "admin"
+  ).length;
+  const facultyCount = activeMembers.filter(
+    (m) => m.member_type === "faculty"
+  ).length;
+  const studentCount = activeMembers.filter(
+    (m) => m.member_type === "student"
+  ).length;
 
   const needsLogo = !org.logo_url || org.logo_url.includes("s2/favicons");
   const needsLinks = !(org.social_links || []).length;
   const needsAwards = !(org.awards || []).length;
   const needsTeam = activeMembers.length <= 1;
-  const leftCount = [needsLogo, needsLinks, needsAwards, needsTeam].filter(Boolean).length;
+  const leftCount = [needsLogo, needsLinks, needsAwards, needsTeam].filter(
+    Boolean
+  ).length;
   const showSetupChrome = leftCount > 0;
+  const pendingUpdatesCount = updates.filter((u) => u.status === "pending").length;
+  const myMembership = members.find((m) => m.user_id === user?.id);
+  const canModerateUpdates = isOwner || myMembership?.role === "admin";
 
   const NAV_ITEMS = [
     { id: "overview", label: "overview", icon: Icon.overview },
     { id: "team", label: "team", icon: Icon.team, count: activeMembers.length },
     { id: "programs", label: programsLabel, icon: Icon.programs },
-    { id: "spotlight", label: "spotlight", icon: Icon.spotlight },
-    { id: "updates", label: "updates", icon: Icon.updates }
+    // spotlight: commented out for v1 — not needed yet
+    // { id: "spotlight", label: "spotlight", icon: Icon.spotlight },
+    {
+      id: "updates",
+      label: "updates",
+      icon: Icon.updates,
+      ...(canModerateUpdates && pendingUpdatesCount > 0 ? { count: pendingUpdatesCount } : {})
+    }
   ];
-  const sectionLabel = NAV_ITEMS.find((n) => n.id === section)?.label || "overview";
+  const sectionLabel =
+    section === "settings"
+      ? "settings"
+      : NAV_ITEMS.find((n) => n.id === section)?.label || "overview";
+
+  const ownerMember = members.find((m) => m.role === "owner");
+  const ownerName = ownerMember?.profiles?.name || (isOwner ? user.name : null) || "—";
+  const spaceIdShort = `spc_${org.id.slice(0, 8)}`;
+  const createdOnLabel = org.created_at
+    ? new Date(org.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
+
+  const canSubmitUpdate = isOwner || myMembership?.role === "admin" || myMembership?.member_type === "faculty";
+
+  const pendingUpdates = updates.filter((u) => u.status === "pending");
+  const liveUpdates = updates.filter((u) => u.status === "live");
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = events.filter((e) => e.event_date >= todayStr);
+  const pastEvents = events.filter((e) => e.event_date < todayStr);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "#161618" }}
+    >
       {/* topbar */}
       <div
         className="h-14 flex-shrink-0 border-b border-white/10 flex items-center px-5 md:px-6 gap-4 sticky top-0 z-40"
-        style={{ background: "rgba(22,22,22,0.92)", backdropFilter: "blur(14px)" }}
+        style={{
+          background: "rgba(22,22,22,0.92)",
+          backdropFilter: "blur(14px)"
+        }}
       >
-        <Link to="/" className="font-extrabold text-base tracking-tight text-white flex-shrink-0">
+        <Link
+          to="/"
+          className="font-extrabold text-base tracking-tight text-white flex-shrink-0"
+        >
           evolve<span className="text-evolve-lavender-indigo">.</span>
         </Link>
-        <div className="hidden sm:flex items-center gap-2 text-[12.5px] text-white/40 min-w-0">
+        <div className="hidden sm:flex items-center gap-2 text-sm text-white/40 min-w-0">
           <span className="truncate">my spaces</span>
           <span className="text-white/20">/</span>
           <span className="truncate">{org.name}</span>
           <span className="text-white/20">/</span>
-          <span className="text-white font-semibold truncate">{sectionLabel}</span>
+          <span className="text-white font-semibold truncate">
+            {sectionLabel}
+          </span>
         </div>
         <div className="ml-auto flex items-center gap-3 flex-shrink-0">
           {user?.username && (
@@ -802,10 +1263,17 @@ export default function TeamSpace() {
               to={`/profile/${user.username}`}
               title="my profile"
               className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-transform hover:scale-105"
-              style={{ background: "linear-gradient(135deg, rgba(163,91,251,1), #c264ff)" }}
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(163,91,251,1), #c264ff)"
+              }}
             >
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={user.avatar_url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 initialsOf(user.name)
               )}
@@ -817,15 +1285,19 @@ export default function TeamSpace() {
       <div className="flex flex-1 min-h-0">
         {/* sidebar */}
         <aside
-          className="hidden md:flex flex-col gap-4 w-[240px] flex-shrink-0 border-r border-white/10 px-3 py-5 sticky self-start"
+          className="hidden md:flex flex-col gap-4 w-[280px] flex-shrink-0 border-r border-white/10 px-3 py-5 sticky self-start"
           style={{ top: 56, height: "calc(100vh - 56px)" }}
         >
           <div className="flex items-center gap-2.5 px-2 pb-3.5 border-b border-white/10">
             <LogoBox org={org} size={38} />
             <div className="min-w-0">
-              <p className="text-white font-extrabold text-[13px] leading-tight truncate">{org.name}</p>
-              <p className="text-white/30 text-[10.5px] mt-0.5 truncate">
-                {[isInstitute ? "institute" : "company", org.location].filter(Boolean).join(" · ")}
+              <p className="text-white font-extrabold text-sm leading-tight truncate">
+                {org.name}
+              </p>
+              <p className="text-white/30 text-[11.5px] mt-0.5 truncate">
+                {[isInstitute ? "institute" : "company", org.location]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             </div>
           </div>
@@ -834,7 +1306,7 @@ export default function TeamSpace() {
               <button
                 key={item.id}
                 onClick={() => setSection(item.id)}
-                className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-colors text-left ${
+                className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
                   section === item.id
                     ? "bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo font-semibold"
                     : "text-white/50 hover:bg-white/[0.04] hover:text-white"
@@ -844,8 +1316,10 @@ export default function TeamSpace() {
                 {item.label}
                 {typeof item.count === "number" && (
                   <span
-                    className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      section === item.id ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo" : "bg-white/[0.05] text-white/40"
+                    className={`ml-auto text-[10.5px] font-bold px-2 py-0.5 rounded-full ${
+                      section === item.id
+                        ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo"
+                        : "bg-white/[0.05] text-white/40"
                     }`}
                   >
                     {item.count}
@@ -854,13 +1328,30 @@ export default function TeamSpace() {
               </button>
             ))}
           </nav>
+
+          {isOwner && (
+            <div className="mt-auto pt-3.5 border-t border-white/10">
+              <button
+                onClick={() => setSection("settings")}
+                className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-colors text-left w-full ${
+                  section === "settings"
+                    ? "bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo font-semibold"
+                    : "text-white/50 hover:bg-white/[0.04] hover:text-white"
+                }`}
+              >
+                {Icon.settings}
+                settings
+              </button>
+            </div>
+          )}
         </aside>
 
         {/* main */}
-        <main className="flex-1 min-w-0 px-5 md:px-10 py-8 pb-20 max-w-3xl mx-auto w-full flex flex-col gap-5">
+        <main className="flex-1 min-w-0 px-4 md:px-7 py-8 pb-20 max-w-4xl mx-auto w-full flex flex-col gap-5">
           {location.state?.justCreated && (
             <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
-              🎉 your space is live — here's how it looks. you can keep customising anytime.
+              🎉 your space is live — here's how it looks. you can keep
+              customising anytime.
             </div>
           )}
           {location.state?.justJoined && (
@@ -877,12 +1368,16 @@ export default function TeamSpace() {
             </Link>
           )}
 
-          <h1 className="text-white font-extrabold text-[26px] tracking-tight -mb-1 capitalize">{sectionLabel}</h1>
+          <h1 className="text-white font-extrabold text-[29px] tracking-tight -mb-1 capitalize">
+            {sectionLabel}
+          </h1>
 
           {/* ============ overview ============ */}
           {section === "overview" && (
             <>
-              {isOwner && showSetupChrome && <ProgressBanner leftCount={leftCount} />}
+              {isOwner && showSetupChrome && (
+                <ProgressBanner leftCount={leftCount} />
+              )}
 
               {/* profile */}
               <SectionCard
@@ -894,7 +1389,11 @@ export default function TeamSpace() {
                       strokeWidth="1.8"
                       strokeLinejoin="round"
                     />
-                    <path d="M9 22V12h6v10" stroke="rgba(163,91,251,1)" strokeWidth="1.8" />
+                    <path
+                      d="M9 22V12h6v10"
+                      stroke="rgba(163,91,251,1)"
+                      strokeWidth="1.8"
+                    />
                   </svg>
                 }
                 iconBg="rgba(163,91,251,0.14)"
@@ -906,7 +1405,14 @@ export default function TeamSpace() {
                   <div className="flex-1 min-w-0 flex flex-col gap-3">
                     {isOwner ? (
                       <>
-                        <Field label={<>{isInstitute ? "institute" : "space"} name{showSetupChrome && <SetupTag />}</>}>
+                        <Field
+                          label={
+                            <>
+                              {isInstitute ? "institute" : "space"} name
+                              {showSetupChrome && <SetupTag />}
+                            </>
+                          }
+                        >
                           <input
                             value={name}
                             onChange={(e) => {
@@ -916,7 +1422,11 @@ export default function TeamSpace() {
                             className={fieldInputCls}
                           />
                         </Field>
-                        <Field label={<>website url{showSetupChrome && <SetupTag />}</>}>
+                        <Field
+                          label={
+                            <>website url{showSetupChrome && <SetupTag />}</>
+                          }
+                        >
                           <input
                             value={website}
                             onChange={(e) => {
@@ -930,7 +1440,9 @@ export default function TeamSpace() {
                       </>
                     ) : (
                       <>
-                        <p className="text-white font-bold text-sm">{org.name}</p>
+                        <p className="text-white font-bold text-sm">
+                          {org.name}
+                        </p>
                         {org.website && (
                           <a
                             href={org.website}
@@ -945,15 +1457,32 @@ export default function TeamSpace() {
                     )}
                   </div>
                 </div>
-                {isOwner && <SectionFooter dirty={profileDirty} saving={profileSaving} onSave={saveProfile} />}
+                {isOwner && (
+                  <SectionFooter
+                    dirty={profileDirty}
+                    saving={profileSaving}
+                    onSave={saveProfile}
+                  />
+                )}
               </SectionCard>
 
               {/* about */}
               <SectionCard
                 icon={
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="rgba(1,241,217,1)" strokeWidth="1.8" />
-                    <path d="M12 16v-5M12 8h.01" stroke="rgba(1,241,217,1)" strokeWidth="1.8" strokeLinecap="round" />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="rgba(1,241,217,1)"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M12 16v-5M12 8h.01"
+                      stroke="rgba(1,241,217,1)"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 }
                 iconBg="rgba(1,241,217,0.12)"
@@ -963,7 +1492,9 @@ export default function TeamSpace() {
                 {isOwner ? (
                   <div className="flex flex-col gap-3.5">
                     <Field
-                      label={<>about (short){showSetupChrome && <SetupTag />}</>}
+                      label={
+                        <>about (short){showSetupChrome && <SetupTag />}</>
+                      }
                       hint={`${aboutShort.length}/90`}
                     >
                       <input
@@ -977,7 +1508,9 @@ export default function TeamSpace() {
                         className={fieldInputCls}
                       />
                     </Field>
-                    <Field label={<>description{showSetupChrome && <SetupTag />}</>}>
+                    <Field
+                      label={<>description{showSetupChrome && <SetupTag />}</>}
+                    >
                       <textarea
                         rows={3}
                         value={bio}
@@ -991,9 +1524,17 @@ export default function TeamSpace() {
                     </Field>
                   </div>
                 ) : (
-                  <p className="text-white/60 text-sm leading-relaxed">{org.bio || "no description yet."}</p>
+                  <p className="text-white/60 text-sm leading-relaxed">
+                    {org.bio || "no description yet."}
+                  </p>
                 )}
-                {isOwner && <SectionFooter dirty={aboutDirty} saving={aboutSaving} onSave={saveAbout} />}
+                {isOwner && (
+                  <SectionFooter
+                    dirty={aboutDirty}
+                    saving={aboutSaving}
+                    onSave={saveAbout}
+                  />
+                )}
               </SectionCard>
 
               {/* social links */}
@@ -1021,7 +1562,9 @@ export default function TeamSpace() {
                       onCta={addLinkRow}
                     />
                   ) : (
-                    <p className="text-white/25 text-sm italic">no links added yet.</p>
+                    <p className="text-white/25 text-sm italic">
+                      no links added yet.
+                    </p>
                   )
                 ) : (
                   <div className="flex flex-col gap-2 mb-3">
@@ -1030,18 +1573,29 @@ export default function TeamSpace() {
                         <div key={i} className="flex items-center gap-2">
                           <select
                             value={l.platform}
-                            onChange={(e) => updateLinkRow(i, { platform: e.target.value })}
+                            onChange={(e) =>
+                              updateLinkRow(i, { platform: e.target.value })
+                            }
                             className="bg-white/[0.055] border border-white/10 text-white/70 text-xs font-semibold rounded-lg px-2.5 py-2.5 outline-none flex-shrink-0 w-[120px]"
                           >
                             {PLATFORMS.map((p) => (
-                              <option key={p} value={p} style={{ backgroundColor: "#1f1f22", color: "#fff" }}>
+                              <option
+                                key={p}
+                                value={p}
+                                style={{
+                                  backgroundColor: "#1f1f22",
+                                  color: "#fff"
+                                }}
+                              >
                                 {p}
                               </option>
                             ))}
                           </select>
                           <input
                             value={l.url}
-                            onChange={(e) => updateLinkRow(i, { url: e.target.value })}
+                            onChange={(e) =>
+                              updateLinkRow(i, { url: e.target.value })
+                            }
                             placeholder="paste link…"
                             className={`${fieldInputCls} flex-1`}
                           />
@@ -1055,7 +1609,11 @@ export default function TeamSpace() {
                       ) : (
                         <a
                           key={i}
-                          href={/^https?:\/\//.test(l.url) ? l.url : `https://${l.url}`}
+                          href={
+                            /^https?:\/\//.test(l.url)
+                              ? l.url
+                              : `https://${l.url}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-evolve-lavender-indigo text-sm"
@@ -1067,19 +1625,39 @@ export default function TeamSpace() {
                   </div>
                 )}
                 {isOwner && links.length > 0 && (
-                  <button onClick={addLinkRow} className="text-evolve-lavender-indigo text-xs font-semibold">
+                  <button
+                    onClick={addLinkRow}
+                    className="text-evolve-lavender-indigo text-xs font-semibold"
+                  >
                     + add link
                   </button>
                 )}
-                {isOwner && <SectionFooter dirty={linksDirty} saving={linksSaving} onSave={saveLinks} />}
+                {isOwner && (
+                  <SectionFooter
+                    dirty={linksDirty}
+                    saving={linksSaving}
+                    onSave={saveLinks}
+                  />
+                )}
               </SectionCard>
 
               {/* awards */}
               <SectionCard
                 icon={
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="6" stroke="rgba(255,208,7,1)" strokeWidth="1.8" />
-                    <path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5" stroke="rgba(255,208,7,1)" strokeWidth="1.8" strokeLinejoin="round" />
+                    <circle
+                      cx="12"
+                      cy="8"
+                      r="6"
+                      stroke="rgba(255,208,7,1)"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"
+                      stroke="rgba(255,208,7,1)"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 }
                 iconBg="rgba(255,208,7,0.12)"
@@ -1095,23 +1673,32 @@ export default function TeamSpace() {
                       onCta={addAwardRow}
                     />
                   ) : (
-                    <p className="text-white/25 text-sm italic">no awards added yet.</p>
+                    <p className="text-white/25 text-sm italic">
+                      no awards added yet.
+                    </p>
                   )
                 ) : (
                   <div className="flex flex-col gap-2 mb-3">
                     {awards.map((a, i) =>
                       isOwner ? (
-                        <div key={i} className="flex items-start gap-2 bg-white/[0.03] border border-white/10 rounded-xl p-2.5">
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 bg-white/[0.03] border border-white/10 rounded-xl p-2.5"
+                        >
                           <div className="flex-1 grid grid-cols-[1.4fr_1fr] gap-2">
                             <input
                               value={a.title}
-                              onChange={(e) => updateAwardRow(i, { title: e.target.value })}
+                              onChange={(e) =>
+                                updateAwardRow(i, { title: e.target.value })
+                              }
                               placeholder="award or accreditation title"
                               className={fieldInputCls}
                             />
                             <input
                               value={a.issuer}
-                              onChange={(e) => updateAwardRow(i, { issuer: e.target.value })}
+                              onChange={(e) =>
+                                updateAwardRow(i, { issuer: e.target.value })
+                              }
                               placeholder="issued by · year"
                               className={fieldInputCls}
                             />
@@ -1124,20 +1711,36 @@ export default function TeamSpace() {
                           </button>
                         </div>
                       ) : (
-                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-white/5 last:border-b-0">
-                          <span className="text-white font-medium">{a.title}</span>
-                          <span className="text-white/30 text-xs">{a.issuer}</span>
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-sm py-1.5 border-b border-white/5 last:border-b-0"
+                        >
+                          <span className="text-white font-medium">
+                            {a.title}
+                          </span>
+                          <span className="text-white/30 text-xs">
+                            {a.issuer}
+                          </span>
                         </div>
                       )
                     )}
                   </div>
                 )}
                 {isOwner && awards.length > 0 && (
-                  <button onClick={addAwardRow} className="text-evolve-lavender-indigo text-xs font-semibold">
+                  <button
+                    onClick={addAwardRow}
+                    className="text-evolve-lavender-indigo text-xs font-semibold"
+                  >
                     + add award
                   </button>
                 )}
-                {isOwner && <SectionFooter dirty={awardsDirty} saving={awardsSaving} onSave={saveAwards} />}
+                {isOwner && (
+                  <SectionFooter
+                    dirty={awardsDirty}
+                    saving={awardsSaving}
+                    onSave={saveAwards}
+                  />
+                )}
               </SectionCard>
 
               {/* faculty / team summary */}
@@ -1150,7 +1753,13 @@ export default function TeamSpace() {
                       strokeWidth="1.8"
                       strokeLinecap="round"
                     />
-                    <circle cx="9" cy="7" r="4" stroke="rgba(194,253,92,1)" strokeWidth="1.8" />
+                    <circle
+                      cx="9"
+                      cy="7"
+                      r="4"
+                      stroke="rgba(194,253,92,1)"
+                      strokeWidth="1.8"
+                    />
                   </svg>
                 }
                 iconBg="rgba(194,253,92,0.11)"
@@ -1162,20 +1771,26 @@ export default function TeamSpace() {
                     <EmptyBlock
                       text="no one added yet"
                       sub={`invites happen from the team tab${
-                        org.expected_members ? ` — you told us to expect ${org.expected_members} people` : ""
+                        org.expected_members
+                          ? ` — you told us to expect ${org.expected_members} people`
+                          : ""
                       }`}
                       cta="go to team"
                       primary
                       onCta={() => setSection("team")}
                     />
                   ) : (
-                    <p className="text-white/25 text-sm italic">no team members yet.</p>
+                    <p className="text-white/25 text-sm italic">
+                      no team members yet.
+                    </p>
                   )
                 ) : (
                   <div className="flex items-center gap-4 flex-wrap">
                     <AvatarStack members={activeMembers} />
                     <div className="flex-1 min-w-[160px]">
-                      <p className="text-white font-extrabold text-[15px]">{activeMembers.length} members</p>
+                      <p className="text-white font-extrabold text-[15px]">
+                        {activeMembers.length} members
+                      </p>
                       <p className="text-white/40 text-xs mt-0.5">
                         {[
                           adminCount ? `${adminCount} admin` : null,
@@ -1203,7 +1818,9 @@ export default function TeamSpace() {
             <div className="flex flex-col gap-4">
               {isOwner && (
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col gap-3">
-                  <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">invite a member</p>
+                  <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
+                    invite a member
+                  </p>
                   <div className="flex gap-2">
                     <input
                       value={inviteEmail}
@@ -1222,30 +1839,52 @@ export default function TeamSpace() {
                     </button>
                   </div>
                   {error && <p className="text-evolve-red text-xs">{error}</p>}
-                  {!error && inviteSent && <p className="text-evolve-inchworm text-xs">{inviteSent}</p>}
+                  {!error && inviteSent && (
+                    <p className="text-evolve-inchworm text-xs">{inviteSent}</p>
+                  )}
                 </div>
               )}
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col gap-1">
-                <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide mb-3">team</p>
+                <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide mb-3">
+                  team
+                </p>
                 {members.length === 0 && (
                   <p className="text-white/25 text-sm italic">
-                    no members yet — invite your team to fill this space with activity, spotlight, and updates.
+                    no members yet — invite your team to fill this space with
+                    activity, spotlight, and updates.
                   </p>
                 )}
                 {members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-b-0">
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-b-0"
+                  >
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden">
                       {m.profiles?.avatar_url ? (
-                        <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={m.profiles.avatar_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        initialsOf(m.profiles?.name || m.invited_name || m.invited_email)
+                        initialsOf(
+                          m.profiles?.name || m.invited_name || m.invited_email
+                        )
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{m.profiles?.name || m.invited_name || m.invited_email}</p>
+                      <p className="text-white text-sm truncate">
+                        {m.profiles?.name || m.invited_name || m.invited_email}
+                      </p>
                       <p className="text-white/30 text-[11px]">
-                        {[m.title || m.member_type, ROLE_LABEL[m.role], m.status].filter(Boolean).join(" · ")}
+                        {[
+                          m.title || m.member_type,
+                          ROLE_LABEL[m.role],
+                          m.status
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </div>
                   </div>
@@ -1259,7 +1898,12 @@ export default function TeamSpace() {
             <div className="flex flex-col gap-4">
               <div className="flex gap-1 border-b border-white/10">
                 {["student", "faculty", "admin"].map((r) => {
-                  const count = r === "admin" ? adminCount : r === "faculty" ? facultyCount : studentCount;
+                  const count =
+                    r === "admin"
+                      ? adminCount
+                      : r === "faculty"
+                        ? facultyCount
+                        : studentCount;
                   return (
                     <button
                       key={r}
@@ -1270,7 +1914,10 @@ export default function TeamSpace() {
                           : "text-white/40 border-transparent hover:text-white/70"
                       }`}
                     >
-                      {ROLE_META[r].plural} <span className="text-white/25 text-xs ml-1">{count}</span>
+                      {ROLE_META[r].plural}{" "}
+                      <span className="text-white/25 text-xs ml-1">
+                        {count}
+                      </span>
                     </button>
                   );
                 })}
@@ -1278,13 +1925,20 @@ export default function TeamSpace() {
 
               {(() => {
                 const tabMembers = members.filter((m) =>
-                  teamRoleTab === "admin" ? m.role === "owner" || m.role === "admin" : m.member_type === teamRoleTab
+                  teamRoleTab === "admin"
+                    ? m.role === "owner" || m.role === "admin"
+                    : m.member_type === teamRoleTab
                 );
                 const filtered = tabMembers.filter((m) => {
-                  if (teamStatusFilter !== "all" && m.status !== teamStatusFilter) return false;
+                  if (
+                    teamStatusFilter !== "all" &&
+                    m.status !== teamStatusFilter
+                  )
+                    return false;
                   if (teamSearch.trim()) {
                     const q = teamSearch.trim().toLowerCase();
-                    const hay = `${m.profiles?.name || m.invited_name || ""} ${m.invited_email || ""}`.toLowerCase();
+                    const hay =
+                      `${m.profiles?.name || m.invited_name || ""} ${m.invited_email || ""}`.toLowerCase();
                     if (!hay.includes(q)) return false;
                   }
                   return true;
@@ -1292,14 +1946,20 @@ export default function TeamSpace() {
 
                 if (tabMembers.length === 0) {
                   if (!isOwner) {
-                    return <p className="text-white/25 text-sm italic">no {ROLE_META[teamRoleTab].plural} yet.</p>;
+                    return (
+                      <p className="text-white/25 text-sm italic">
+                        no {ROLE_META[teamRoleTab].plural} yet.
+                      </p>
+                    );
                   }
                   return (
                     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 flex flex-col items-center text-center gap-2.5">
-                      <p className="text-white font-bold text-[15px]">no {ROLE_META[teamRoleTab].plural} yet</p>
+                      <p className="text-white font-bold text-[15px]">
+                        no {ROLE_META[teamRoleTab].plural} yet
+                      </p>
                       <p className="text-white/35 text-xs max-w-sm">
-                        add {ROLE_META[teamRoleTab].plural} one by one, upload a csv, or find them if they're
-                        already on evolve.
+                        add {ROLE_META[teamRoleTab].plural} one by one, upload a
+                        csv, or find them if they're already on evolve.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mt-3">
                         <button
@@ -1310,8 +1970,12 @@ export default function TeamSpace() {
                             +
                           </div>
                           <div>
-                            <p className="text-white text-xs font-bold">add one by one</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">name, email — role is set for you</p>
+                            <p className="text-white text-xs font-bold">
+                              add one by one
+                            </p>
+                            <p className="text-white/35 text-[11px] mt-0.5">
+                              name, email — role is set for you
+                            </p>
                           </div>
                         </button>
                         <button
@@ -1322,8 +1986,12 @@ export default function TeamSpace() {
                             ⇧
                           </div>
                           <div>
-                            <p className="text-white text-xs font-bold">upload a csv</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">for the whole batch</p>
+                            <p className="text-white text-xs font-bold">
+                              upload a csv
+                            </p>
+                            <p className="text-white/35 text-[11px] mt-0.5">
+                              for the whole batch
+                            </p>
                           </div>
                         </button>
                         <button
@@ -1334,8 +2002,12 @@ export default function TeamSpace() {
                             ⌕
                           </div>
                           <div>
-                            <p className="text-white text-xs font-bold">find on evolve</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">if they already have an account</p>
+                            <p className="text-white text-xs font-bold">
+                              find on evolve
+                            </p>
+                            <p className="text-white/35 text-[11px] mt-0.5">
+                              if they already have an account
+                            </p>
                           </div>
                         </button>
                       </div>
@@ -1376,13 +2048,31 @@ export default function TeamSpace() {
                           onChange={(e) => setTeamStatusFilter(e.target.value)}
                           className="bg-white/[0.04] border border-white/10 text-xs text-white/60 rounded-lg px-2.5 py-2 outline-none"
                         >
-                          <option value="all" style={{ backgroundColor: "#1f1f22", color: "#fff" }}>
+                          <option
+                            value="all"
+                            style={{
+                              backgroundColor: "#1f1f22",
+                              color: "#fff"
+                            }}
+                          >
                             all statuses
                           </option>
-                          <option value="active" style={{ backgroundColor: "#1f1f22", color: "#fff" }}>
+                          <option
+                            value="active"
+                            style={{
+                              backgroundColor: "#1f1f22",
+                              color: "#fff"
+                            }}
+                          >
                             active
                           </option>
-                          <option value="pending" style={{ backgroundColor: "#1f1f22", color: "#fff" }}>
+                          <option
+                            value="pending"
+                            style={{
+                              backgroundColor: "#1f1f22",
+                              color: "#fff"
+                            }}
+                          >
                             invited
                           </option>
                         </select>
@@ -1391,24 +2081,44 @@ export default function TeamSpace() {
 
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
                       {filtered.length === 0 ? (
-                        <p className="text-white/25 text-sm italic p-6">no matches.</p>
+                        <p className="text-white/25 text-sm italic p-6">
+                          no matches.
+                        </p>
                       ) : (
                         <div className="divide-y divide-white/5">
                           {filtered.map((m, i) => (
-                            <div key={m.id} className="flex items-center gap-3 px-5 py-3">
+                            <div
+                              key={m.id}
+                              className="flex items-center gap-3 px-5 py-3"
+                            >
                               <div
                                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden"
-                                style={{ background: AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length] }}
+                                style={{
+                                  background:
+                                    AVATAR_GRADIENTS[
+                                      i % AVATAR_GRADIENTS.length
+                                    ]
+                                }}
                               >
                                 {m.profiles?.avatar_url ? (
-                                  <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                  <img
+                                    src={m.profiles.avatar_url}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
-                                  initialsOf(m.profiles?.name || m.invited_name || m.invited_email)
+                                  initialsOf(
+                                    m.profiles?.name ||
+                                      m.invited_name ||
+                                      m.invited_email
+                                  )
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white text-sm font-semibold truncate">
-                                  {m.profiles?.name || m.invited_name || m.invited_email}
+                                  {m.profiles?.name ||
+                                    m.invited_name ||
+                                    m.invited_email}
                                   {m.user_id === user.id && (
                                     <span className="ml-2 text-[9px] font-bold text-evolve-yellow bg-evolve-yellow/10 px-2 py-0.5 rounded-full uppercase align-middle">
                                       you
@@ -1416,11 +2126,15 @@ export default function TeamSpace() {
                                   )}
                                 </p>
                                 {m.invited_email && (
-                                  <p className="text-white/30 text-[11px] truncate">{m.invited_email}</p>
+                                  <p className="text-white/30 text-[11px] truncate">
+                                    {m.invited_email}
+                                  </p>
                                 )}
                               </div>
                               <span className="text-white/40 text-xs flex-shrink-0 hidden sm:block">
-                                {m.role === "owner" ? "space owner" : ROLE_META[teamRoleTab].word}
+                                {m.role === "owner"
+                                  ? "space owner"
+                                  : ROLE_META[teamRoleTab].word}
                               </span>
                               <span
                                 className={`text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${
@@ -1450,17 +2164,22 @@ export default function TeamSpace() {
             </div>
           )}
 
-          {/* ============ evolve programs / what we do ============ */}
-          {section === "programs" && (
+          {/* ============ what we do (company spaces) ============ */}
+          {section === "programs" && !isInstitute && (
             <SectionCard
               icon={
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" stroke="rgba(255,208,7,1)" strokeWidth="1.8" strokeLinejoin="round" />
+                  <path
+                    d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z"
+                    stroke="rgba(255,208,7,1)"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               }
               iconBg="rgba(255,208,7,0.12)"
               title={programsLabel}
-              desc={isInstitute ? "programmes running through evolve at your institute." : "what your team is building."}
+              desc="what your team is building."
             >
               {isOwner ? (
                 <>
@@ -1471,32 +2190,577 @@ export default function TeamSpace() {
                       setProgrammeDraft(e.target.value);
                       setProgrammeDirty(true);
                     }}
-                    placeholder={isInstitute ? "programmes, tracks, or what students can expect" : "what your team does"}
+                    placeholder="what your team does"
                     className={`${fieldInputCls} resize-y`}
                   />
                   <SectionFooter dirty={programmeDirty} saving={programmeSaving} onSave={saveProgramme} />
                 </>
               ) : (
                 <p className="text-white/60 text-sm leading-relaxed">
-                  {org.programme_details || (isInstitute ? "no programme details added yet." : "no details added yet.")}
+                  {org.programme_details || "no details added yet."}
                 </p>
               )}
-              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-5 text-center mt-4">
-                <p className="text-white/40 text-sm">portfolio review for your team — coming soon.</p>
-              </div>
             </SectionCard>
           )}
 
-          {/* ============ spotlight / updates ============ */}
-          {(section === "spotlight" || section === "updates") && (
-            <SectionCard
-              icon={Icon[section]}
-              iconBg="rgba(255,255,255,0.06)"
-              title={section}
-              desc={section === "spotlight" ? "standout work from your community." : "news and announcements."}
-            >
-              <EmptyBlock text="coming soon" sub={`${section} isn't wired up yet — check back soon.`} />
-            </SectionCard>
+          {/* ============ evolve programs (institute spaces) ============ */}
+          {section === "programs" && isInstitute && (
+            <div className="flex flex-col gap-4">
+              <p className="text-white/40 text-xs -mt-2">
+                structured, industry-led programmes you can unlock for your students.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {EVOLVE_PROGRAMS.map((p) => (
+                  <a
+                    key={p.id}
+                    href={p.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 overflow-hidden flex flex-col transition-colors"
+                  >
+                    <div
+                      className={`h-24 flex items-center justify-center text-3xl ${
+                        p.accent === "purple" ? "bg-evolve-lavender-indigo/15" : "bg-evolve-inchworm/15"
+                      }`}
+                    >
+                      {p.emoji}
+                    </div>
+                    <div className="p-4 flex flex-col gap-2.5 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-white font-extrabold text-[15px]">{p.name}</p>
+                        <span className="text-[9px] font-bold uppercase text-white/30 bg-white/[0.05] px-2 py-1 rounded-full flex-shrink-0">
+                          locked
+                        </span>
+                      </div>
+                      <p className="text-white/40 text-xs leading-relaxed flex-1">{p.desc}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.meta.map((m) => (
+                          <span
+                            key={m}
+                            className="text-[10px] font-semibold text-white/40 bg-white/[0.04] border border-white/10 px-2 py-1 rounded-full"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-3 mt-1 border-t border-white/10">
+                        <span
+                          className={`text-xs font-bold ${
+                            p.accent === "purple" ? "text-evolve-lavender-indigo" : "text-evolve-inchworm"
+                          }`}
+                        >
+                          learn more →
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+
+                {isOwner && (
+                  <button
+                    onClick={() => setProgramModalOpen(true)}
+                    className="rounded-2xl border border-dashed border-white/15 hover:border-evolve-lavender-indigo/40 p-5 flex flex-col items-start gap-2.5 text-left transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex items-center justify-center text-base">
+                      ✎
+                    </div>
+                    <p className="text-white font-extrabold text-sm">need something tailored?</p>
+                    <p className="text-white/35 text-xs leading-relaxed">
+                      timeline, format, and disciplines shaped around your batch. tell us what you need.
+                    </p>
+                    <span className="mt-1 text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-3.5 py-2">
+                      request a program
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ============ updates ============ */}
+          {/* spotlight section commented out for v1 — not needed yet */}
+          {section === "updates" && (
+            <div className="flex flex-col gap-3">
+              <p className="text-white/40 text-xs -mt-2">
+                what shows up in the feed and calendar on your public page.
+              </p>
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
+                {/* institute highlights */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <p className="text-white font-extrabold text-base">institute highlights</p>
+                    {canSubmitUpdate && (
+                      <button
+                        onClick={openShareModal}
+                        className="text-xs font-bold text-evolve-lavender-indigo flex-shrink-0"
+                      >
+                        + share an update
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-white/30 text-[13px] mb-4 leading-relaxed">
+                    posts are written by admins and faculty
+                    {canModerateUpdates
+                      ? " — approve or remove submissions here before they go live."
+                      : " — an owner or admin reviews them before they go live."}
+                  </p>
+
+                  <div className="inline-flex bg-white/[0.04] border border-white/10 rounded-lg p-1 gap-1 mb-4">
+                    {[
+                      { id: "pending", label: "pending", count: pendingUpdates.length },
+                      { id: "live", label: "published", count: liveUpdates.length }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setUpdatesFilter(t.id)}
+                        className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
+                          updatesFilter === t.id ? "bg-white/[0.08] text-white" : "text-white/40 hover:text-white/70"
+                        }`}
+                      >
+                        {t.label}
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            updatesFilter === t.id
+                              ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo"
+                              : "bg-white/[0.06] text-white/30"
+                          }`}
+                        >
+                          {t.count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {!updatesLoaded ? (
+                    <p className="text-white/25 text-xs italic py-6 text-center">loading…</p>
+                  ) : updatesFilter === "pending" ? (
+                    pendingUpdates.length === 0 ? (
+                      <EmptyBlock text="you're all caught up" sub="no posts waiting for review right now." />
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {pendingUpdates.map((u) => {
+                          const authorMembership = members.find((m) => m.user_id === u.author_id);
+                          const roleBadge =
+                            authorMembership?.role === "admin"
+                              ? "admin"
+                              : authorMembership?.member_type === "faculty"
+                                ? "faculty"
+                                : null;
+                          return (
+                            <div
+                              key={u.id}
+                              className="rounded-xl border border-evolve-yellow/25 bg-white/[0.02] p-4"
+                            >
+                              <div className="flex items-center gap-2.5 mb-3">
+                                <div
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden"
+                                  style={{ background: AVATAR_GRADIENTS[0] }}
+                                >
+                                  {u.profiles?.avatar_url ? (
+                                    <img src={u.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    initialsOf(u.profiles?.name)
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-white text-xs font-bold truncate">
+                                    {u.profiles?.name || "someone"}
+                                    {roleBadge && (
+                                      <span
+                                        className={`ml-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                          roleBadge === "admin"
+                                            ? "bg-evolve-yellow/10 text-evolve-yellow"
+                                            : "bg-evolve-lavender-indigo/10 text-evolve-lavender-indigo"
+                                        }`}
+                                      >
+                                        {roleBadge}
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-white/30 text-[10.5px]">submitted {timeAgo(u.created_at)}</p>
+                                </div>
+                                <span className="ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full bg-evolve-yellow/10 text-evolve-yellow flex-shrink-0">
+                                  pending
+                                </span>
+                              </div>
+                              <p className="text-white text-[13px] font-bold mb-1">{u.title}</p>
+                              {u.description && (
+                                <p className="text-white/40 text-xs leading-relaxed">{u.description}</p>
+                              )}
+                              {canModerateUpdates && (
+                                <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-white/10">
+                                  <button
+                                    onClick={() => removeUpdate(u.id, false)}
+                                    className="text-[11px] font-bold text-evolve-red bg-evolve-red/10 border border-evolve-red/30 rounded-lg px-3 py-1.5"
+                                  >
+                                    remove
+                                  </button>
+                                  <button
+                                    onClick={() => approveUpdate(u.id)}
+                                    className="text-[11px] font-bold text-evolve-black bg-evolve-inchworm rounded-lg px-3 py-1.5"
+                                  >
+                                    approve & publish
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : liveUpdates.length === 0 ? (
+                    <EmptyBlock text="nothing published yet" sub="approved posts will show up here." />
+                  ) : (
+                    <div className="flex flex-col">
+                      {liveUpdates.map((u) => (
+                        <div key={u.id} className="flex items-start gap-3 py-3.5 border-b border-white/5 last:border-b-0">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-[13px] font-bold mb-1">{u.title}</p>
+                            {u.description && (
+                              <p className="text-white/40 text-xs leading-relaxed">{u.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-evolve-inchworm/10 text-evolve-inchworm">
+                                live
+                              </span>
+                              <span className="text-white/25 text-[10.5px]">
+                                posted {timeAgo(u.published_at || u.created_at)}
+                                {u.profiles?.name ? ` · by ${u.profiles.name}` : ""}
+                              </span>
+                            </div>
+                          </div>
+                          {canModerateUpdates && (
+                            <button
+                              onClick={() => removeUpdate(u.id, true)}
+                              title="remove from feed"
+                              className="text-white/25 hover:text-evolve-red w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.04] flex-shrink-0"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* mark your calendar */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <p className="text-white font-extrabold text-sm flex-1">mark your calendar</p>
+                    {isOwner && (
+                      <button onClick={openAddEventModal} className="text-evolve-lavender-indigo text-xs font-bold flex-shrink-0">
+                        + add
+                      </button>
+                    )}
+                  </div>
+
+                  {!updatesLoaded ? (
+                    <p className="text-white/25 text-xs italic py-4 text-center">loading…</p>
+                  ) : upcomingEvents.length === 0 ? (
+                    <p className="text-white/25 text-xs italic py-4 text-center">no upcoming events yet.</p>
+                  ) : (
+                    <div className="flex flex-col divide-y divide-white/5">
+                      {upcomingEvents.map((ev) => {
+                        const d = new Date(`${ev.event_date}T00:00:00`);
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const mon = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
+                        const tm = TYPE_META[ev.type];
+                        return (
+                          <div key={ev.id} className="flex items-start gap-2.5 py-3 group">
+                            <div className="w-10 min-w-10 rounded-lg border border-white/10 bg-white/[0.03] flex flex-col items-center justify-center py-1.5 flex-shrink-0">
+                              <p className="text-white font-extrabold text-[13px] leading-none">{day}</p>
+                              <p className="text-white/30 text-[8px] font-bold uppercase mt-0.5">{mon}</p>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full ${tm.bg} ${tm.text}`}>
+                                  {tm.label}
+                                </span>
+                                <span className="text-white text-xs font-bold">{ev.title}</span>
+                                {ev.audience === "internal" && (
+                                  <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-white/40">
+                                    team only
+                                  </span>
+                                )}
+                              </div>
+                              {ev.meta && <p className="text-white/25 text-[10.5px] mt-0.5">{ev.meta}</p>}
+                            </div>
+                            {isOwner && (
+                              <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => openEditEventModal(ev)}
+                                  className="w-6 h-6 rounded-md text-white/30 hover:text-white hover:bg-white/[0.06] flex items-center justify-center"
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  onClick={() => deleteEventRow(ev.id)}
+                                  className="w-6 h-6 rounded-md text-white/30 hover:text-evolve-red hover:bg-white/[0.06] flex items-center justify-center"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {pastEvents.length > 0 && (
+                    <>
+                      <button
+                        onClick={() => setShowPastEvents((v) => !v)}
+                        className="flex items-center gap-1.5 text-white/30 hover:text-white/50 text-[11px] font-semibold pt-3 mt-3 border-t border-white/10 w-full transition-colors"
+                      >
+                        <span
+                          className="inline-block transition-transform"
+                          style={{ transform: showPastEvents ? "rotate(180deg)" : "none" }}
+                        >
+                          ▾
+                        </span>
+                        past events ({pastEvents.length})
+                      </button>
+                      {showPastEvents && (
+                        <div className="flex flex-col divide-y divide-white/5 opacity-60 mt-1">
+                          {pastEvents.map((ev) => {
+                            const d = new Date(`${ev.event_date}T00:00:00`);
+                            const day = String(d.getDate()).padStart(2, "0");
+                            const mon = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
+                            const tm = TYPE_META[ev.type];
+                            return (
+                              <div key={ev.id} className="flex items-start gap-2.5 py-3">
+                                <div className="w-10 min-w-10 rounded-lg border border-white/10 bg-white/[0.03] flex flex-col items-center justify-center py-1.5 flex-shrink-0">
+                                  <p className="text-white font-extrabold text-[13px] leading-none">{day}</p>
+                                  <p className="text-white/30 text-[8px] font-bold uppercase mt-0.5">{mon}</p>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full ${tm.bg} ${tm.text}`}>
+                                      {tm.label}
+                                    </span>
+                                    <span className="text-white text-xs font-bold">{ev.title}</span>
+                                  </div>
+                                  {ev.meta && <p className="text-white/25 text-[10.5px] mt-0.5">{ev.meta}</p>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============ settings ============ */}
+          {section === "settings" && isOwner && (
+            <div className="flex flex-col gap-4">
+              {/* general */}
+              <SectionCard
+                icon={
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="rgba(163,91,251,1)" strokeWidth="1.8" />
+                    <path d="M12 8v4l2.5 2.5" stroke="rgba(163,91,251,1)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                }
+                iconBg="rgba(163,91,251,0.14)"
+                title="general"
+                desc="the basics — who owns this space and where it lives."
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <div>
+                    <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1">space name</p>
+                    <p className="text-white text-sm font-semibold">{org.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1">owner</p>
+                    <p className="text-white text-sm font-semibold">{ownerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1">space id</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white/60 text-[13px] font-mono">{spaceIdShort}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard?.writeText(spaceIdShort).catch(() => {});
+                          showToast("space id copied");
+                        }}
+                        title="copy"
+                        className="text-white/25 hover:text-evolve-lavender-indigo"
+                      >
+                        ⧉
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1">created on</p>
+                    <p className="text-white text-sm font-semibold">{createdOnLabel}</p>
+                  </div>
+                </div>
+              </SectionCard>
+
+              {/* privacy & visibility */}
+              <SectionCard
+                icon={
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
+                      stroke="rgba(1,241,217,1)"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="12" cy="12" r="3" stroke="rgba(1,241,217,1)" strokeWidth="1.8" />
+                  </svg>
+                }
+                iconBg="rgba(1,241,217,0.12)"
+                title="privacy & visibility"
+                desc="who can see this institution's page."
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { value: "public", title: "public", desc: "anyone with the link can view your page." },
+                    { value: "private", title: "team only", desc: "only signed-in members of this space can view the page." }
+                  ].map((v) => (
+                    <button
+                      key={v.value}
+                      onClick={() => {
+                        setVisibilityDraft(v.value);
+                        setVisibilityDirty(true);
+                      }}
+                      className={`text-left rounded-xl border-[1.5px] p-3.5 transition-colors ${
+                        visibilityDraft === v.value
+                          ? "border-evolve-lavender-indigo bg-evolve-lavender-indigo/10"
+                          : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                      }`}
+                    >
+                      <p className="text-white text-[13px] font-bold mb-1">{v.title}</p>
+                      <p className="text-white/35 text-[11.5px] leading-relaxed">{v.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                <SectionFooter dirty={visibilityDirty} saving={visibilitySaving} onSave={saveVisibility} />
+              </SectionCard>
+
+              {/* notifications */}
+              <SectionCard
+                icon={
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z" stroke="rgba(255,208,7,1)" strokeWidth="1.8" strokeLinejoin="round" />
+                    <path d="M13.73 21a2 2 0 01-3.46 0" stroke="rgba(255,208,7,1)" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                }
+                iconBg="rgba(255,208,7,0.12)"
+                title="notifications"
+                desc="what this space emails you about."
+              >
+                <div className="flex flex-col">
+                  {[
+                    { key: "new_member", label: "new team member joins", desc: "get notified when someone joins via invite link." },
+                    { key: "weekly_analytics", label: "weekly page analytics", desc: "a summary of views and engagement on your public page." },
+                    { key: "billing", label: "billing & invoice emails", desc: "receipts and payment reminders for paid features." },
+                    { key: "product_updates", label: "product updates", desc: "occasional news about new evolve features." }
+                  ].map((row, i, arr) => (
+                    <div
+                      key={row.key}
+                      className={`flex items-center justify-between gap-5 py-3.5 ${i < arr.length - 1 ? "border-b border-white/10" : ""}`}
+                    >
+                      <div>
+                        <p className="text-white text-[13.5px] font-semibold">{row.label}</p>
+                        <p className="text-white/30 text-[11.5px] mt-0.5 leading-relaxed">{row.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleNotifPref(row.key)}
+                        className={`w-[42px] h-6 min-w-[42px] rounded-full relative transition-colors flex-shrink-0 ${
+                          notifPrefs[row.key] ? "bg-evolve-lavender-indigo" : "bg-white/10 border border-white/15"
+                        }`}
+                      >
+                        <span
+                          className="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"
+                          style={{ left: notifPrefs[row.key] ? 20 : 2 }}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              {/* billing */}
+              <SectionCard
+                icon={
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="rgba(194,253,92,1)" strokeWidth="1.8" />
+                    <path d="M2 10h20" stroke="rgba(194,253,92,1)" strokeWidth="1.8" />
+                  </svg>
+                }
+                iconBg="rgba(194,253,92,0.11)"
+                title="billing"
+                desc="features you've unlocked, like portfolio review or find your niche."
+              >
+                <EmptyBlock
+                  text="no paid features yet"
+                  sub="this space hasn't unlocked any paid features. explore evolve programs like portfolio review or find your niche to get started."
+                  cta="explore evolve programs"
+                  primary
+                  onCta={() => setSection("programs")}
+                />
+              </SectionCard>
+
+              {/* danger zone */}
+              <SectionCard
+                icon={
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                      stroke="rgba(223,5,134,1)"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M12 9v4M12 17h.01" stroke="rgba(223,5,134,1)" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                }
+                iconBg="rgba(223,5,134,0.14)"
+                title="account management"
+                desc="ownership transfer and space deletion — these actions are difficult or impossible to undo."
+              >
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between gap-5 bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                    <div>
+                      <p className="text-white text-[13px] font-bold">transfer ownership</p>
+                      <p className="text-white/35 text-[11.5px] mt-0.5 leading-relaxed max-w-md">
+                        hand over admin control of this space to another team member. you'll be moved to an admin role.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => showToast("ownership transfer isn't available yet — reach out to us if you need this")}
+                      className="text-xs font-bold border border-white/15 text-white/60 hover:text-white rounded-lg px-4 py-2 flex-shrink-0 transition-colors"
+                    >
+                      transfer
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-5 bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                    <div>
+                      <p className="text-white text-[13px] font-bold">delete this space</p>
+                      <p className="text-white/35 text-[11.5px] mt-0.5 leading-relaxed max-w-md">
+                        deactivates the page and removes team access immediately.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setDeleteConfirmText("");
+                        setDeleteModalOpen(true);
+                      }}
+                      className="text-xs font-bold border border-evolve-red/40 text-evolve-red bg-evolve-red/[0.06] hover:bg-evolve-red/[0.14] rounded-lg px-4 py-2 flex-shrink-0 transition-colors"
+                    >
+                      delete space
+                    </button>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
           )}
         </main>
       </div>
@@ -1507,11 +2771,18 @@ export default function TeamSpace() {
           className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
           onClick={(e) => e.target === e.currentTarget && closeTeamModal()}
         >
-          <div className="w-full max-w-[440px] rounded-2xl border border-white/15" style={{ background: "#1c1c1e" }}>
+          <div
+            className="w-full max-w-[440px] rounded-2xl border border-white/15"
+            style={{ background: "#1c1c1e" }}
+          >
             <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
               <div>
-                <p className="text-white font-extrabold text-lg">add a {ROLE_META[teamRoleTab].word}</p>
-                <p className="text-white/40 text-xs mt-1">they'll get an email invite to join your space.</p>
+                <p className="text-white font-extrabold text-lg">
+                  add a {ROLE_META[teamRoleTab].word}
+                </p>
+                <p className="text-white/40 text-xs mt-1">
+                  they'll get an email invite to join your space.
+                </p>
               </div>
               <button
                 onClick={closeTeamModal}
@@ -1524,8 +2795,10 @@ export default function TeamSpace() {
               <span
                 className={`inline-flex items-center gap-2 w-fit text-xs font-bold px-3 py-1.5 rounded-lg ${ROLE_META[teamRoleTab].bg} ${ROLE_META[teamRoleTab].text}`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`} /> adding as{" "}
-                {ROLE_META[teamRoleTab].word}
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`}
+                />{" "}
+                adding as {ROLE_META[teamRoleTab].word}
               </span>
               <Field label="full name">
                 <input
@@ -1548,8 +2821,10 @@ export default function TeamSpace() {
                 <div className="rounded-xl border border-evolve-yellow/30 bg-evolve-yellow/[0.06] p-3 flex gap-2.5">
                   <span className="text-evolve-yellow flex-shrink-0">⚠</span>
                   <p className="text-white/70 text-xs leading-relaxed">
-                    <strong className="text-evolve-yellow">admins have the same rights as you</strong> — including
-                    managing members and deleting this space.
+                    <strong className="text-evolve-yellow">
+                      admins have the same rights as you
+                    </strong>{" "}
+                    — including managing members and deleting this space.
                   </p>
                 </div>
               )}
@@ -1587,12 +2862,19 @@ export default function TeamSpace() {
           className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
           onClick={(e) => e.target === e.currentTarget && closeTeamModal()}
         >
-          <div className="w-full max-w-[580px] rounded-2xl border border-white/15" style={{ background: "#1c1c1e" }}>
+          <div
+            className="w-full max-w-[580px] rounded-2xl border border-white/15"
+            style={{ background: "#1c1c1e" }}
+          >
             <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
               <div>
-                <p className="text-white font-extrabold text-lg">upload a csv · {ROLE_META[teamRoleTab].plural}</p>
+                <p className="text-white font-extrabold text-lg">
+                  upload a csv · {ROLE_META[teamRoleTab].plural}
+                </p>
                 <p className="text-white/40 text-xs mt-1">
-                  {csvPhase === "upload" ? "columns: name, email" : `${csvFileName} · ${csvRows.length} rows parsed`}
+                  {csvPhase === "upload"
+                    ? "columns: name, email"
+                    : `${csvFileName} · ${csvRows.length} rows parsed`}
                 </p>
               </div>
               <button
@@ -1608,16 +2890,30 @@ export default function TeamSpace() {
                 <span
                   className={`inline-flex items-center gap-2 w-fit text-xs font-bold px-3 py-1.5 rounded-lg ${ROLE_META[teamRoleTab].bg} ${ROLE_META[teamRoleTab].text}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`} /> every row will be
-                  added as {teamRoleTab === "admin" ? "an admin" : `a ${ROLE_META[teamRoleTab].word}`}
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`}
+                  />{" "}
+                  every row will be added as{" "}
+                  {teamRoleTab === "admin"
+                    ? "an admin"
+                    : `a ${ROLE_META[teamRoleTab].word}`}
                 </span>
                 <label className="border-[1.5px] border-dashed border-white/15 hover:border-evolve-lavender-indigo/50 hover:bg-evolve-lavender-indigo/[0.04] rounded-xl py-9 px-5 text-center cursor-pointer transition-colors relative flex flex-col items-center gap-2">
-                  <input type="file" accept=".csv" onChange={handleCsvFile} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvFile}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
                   <div className="w-10 h-10 rounded-xl bg-evolve-inchworm/10 text-evolve-inchworm flex items-center justify-center text-lg">
                     ⇧
                   </div>
-                  <p className="text-white font-bold text-sm">drop your file here</p>
-                  <p className="text-white/40 text-xs">or click to browse — accepts .csv</p>
+                  <p className="text-white font-bold text-sm">
+                    drop your file here
+                  </p>
+                  <p className="text-white/40 text-xs">
+                    or click to browse — accepts .csv
+                  </p>
                 </label>
               </div>
             ) : (
@@ -1627,8 +2923,12 @@ export default function TeamSpace() {
                     ▤
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-white text-xs font-semibold truncate">{csvFileName}</p>
-                    <p className="text-white/30 text-[11px]">{csvRows.length} rows</p>
+                    <p className="text-white text-xs font-semibold truncate">
+                      {csvFileName}
+                    </p>
+                    <p className="text-white/30 text-[11px]">
+                      {csvRows.length} rows
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -1644,12 +2944,16 @@ export default function TeamSpace() {
 
                 <div className="flex gap-2.5">
                   <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2.5">
-                    <p className="text-evolve-inchworm font-extrabold text-xl">{csvReadyRows.length}</p>
+                    <p className="text-evolve-inchworm font-extrabold text-xl">
+                      {csvReadyRows.length}
+                    </p>
                     <p className="text-white/35 text-[11px]">ready to invite</p>
                   </div>
                   {csvErrorRows.length > 0 && (
                     <div className="flex-1 bg-evolve-red/[0.06] border border-evolve-red/30 rounded-xl px-3.5 py-2.5">
-                      <p className="text-evolve-red font-extrabold text-xl">{csvErrorRows.length}</p>
+                      <p className="text-evolve-red font-extrabold text-xl">
+                        {csvErrorRows.length}
+                      </p>
                       <p className="text-white/35 text-[11px]">need fixing</p>
                     </div>
                   )}
@@ -1662,18 +2966,28 @@ export default function TeamSpace() {
                         key={r.i}
                         className="bg-evolve-red/[0.06] border border-evolve-red/25 rounded-lg px-3 py-2 flex items-center gap-2.5"
                       >
-                        <span className="text-white/25 text-[10px] font-bold flex-shrink-0">#{r.i + 1}</span>
+                        <span className="text-white/25 text-[10px] font-bold flex-shrink-0">
+                          #{r.i + 1}
+                        </span>
                         {r.alreadyMember || r.duplicateInFile ? (
                           <>
-                            <span className="text-white text-xs font-semibold truncate">{r.name || r.email}</span>
+                            <span className="text-white text-xs font-semibold truncate">
+                              {r.name || r.email}
+                            </span>
                             <span className="text-evolve-red text-[11px] flex-shrink-0">
-                              {r.alreadyMember ? "already in your space" : "duplicate row"}
+                              {r.alreadyMember
+                                ? "already in your space"
+                                : "duplicate row"}
                             </span>
                           </>
                         ) : (
                           <input
                             value={r.email}
-                            onChange={(e) => updateCsvRow(r.i, { email: e.target.value.toLowerCase() })}
+                            onChange={(e) =>
+                              updateCsvRow(r.i, {
+                                email: e.target.value.toLowerCase()
+                              })
+                            }
                             placeholder="fix email"
                             className="flex-1 min-w-0 bg-black/25 border border-evolve-red/30 rounded-md text-xs text-white px-2 py-1.5 outline-none"
                           />
@@ -1693,7 +3007,9 @@ export default function TeamSpace() {
 
             <div className="flex items-center gap-2.5 px-6 py-4 border-t border-white/10">
               {csvPhase === "review" && (
-                <span className="text-white/25 text-[11px]">fixed rows are included automatically</span>
+                <span className="text-white/25 text-[11px]">
+                  fixed rows are included automatically
+                </span>
               )}
               <span className="flex-1" />
               <button
@@ -1708,7 +3024,9 @@ export default function TeamSpace() {
                   disabled={csvSubmitting || !csvReadyRows.length}
                   className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40"
                 >
-                  {csvSubmitting ? "sending…" : `send ${csvReadyRows.length} invites`}
+                  {csvSubmitting
+                    ? "sending…"
+                    : `send ${csvReadyRows.length} invites`}
                 </button>
               )}
             </div>
@@ -1722,12 +3040,18 @@ export default function TeamSpace() {
           className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
           onClick={(e) => e.target === e.currentTarget && closeTeamModal()}
         >
-          <div className="w-full max-w-[560px] rounded-2xl border border-white/15" style={{ background: "#1c1c1e" }}>
+          <div
+            className="w-full max-w-[560px] rounded-2xl border border-white/15"
+            style={{ background: "#1c1c1e" }}
+          >
             <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
               <div>
-                <p className="text-white font-extrabold text-lg">find {ROLE_META[teamRoleTab].plural} on evolve</p>
+                <p className="text-white font-extrabold text-lg">
+                  find {ROLE_META[teamRoleTab].plural} on evolve
+                </p>
                 <p className="text-white/40 text-xs mt-1">
-                  invite people who already have an evolve account — they accept in-app.
+                  invite people who already have an evolve account — they accept
+                  in-app.
                 </p>
               </div>
               <button
@@ -1741,8 +3065,13 @@ export default function TeamSpace() {
               <span
                 className={`inline-flex items-center gap-2 w-fit text-xs font-bold px-3 py-1.5 rounded-lg ${ROLE_META[teamRoleTab].bg} ${ROLE_META[teamRoleTab].text}`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`} /> selected people will
-                be added as {teamRoleTab === "admin" ? "admins" : ROLE_META[teamRoleTab].plural}
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${ROLE_META[teamRoleTab].dot}`}
+                />{" "}
+                selected people will be added as{" "}
+                {teamRoleTab === "admin"
+                  ? "admins"
+                  : ROLE_META[teamRoleTab].plural}
               </span>
               <input
                 value={findQuery}
@@ -1752,10 +3081,18 @@ export default function TeamSpace() {
               />
 
               <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto">
-                {findSearching && <p className="text-white/30 text-xs text-center py-4">searching…</p>}
-                {!findSearching && findQuery.trim() && findResults.length === 0 && (
-                  <p className="text-white/25 text-xs text-center py-4 italic">no matches.</p>
+                {findSearching && (
+                  <p className="text-white/30 text-xs text-center py-4">
+                    searching…
+                  </p>
                 )}
+                {!findSearching &&
+                  findQuery.trim() &&
+                  findResults.length === 0 && (
+                    <p className="text-white/25 text-xs text-center py-4 italic">
+                      no matches.
+                    </p>
+                  )}
                 {findResults.map((p, i) => {
                   const sel = findSelected.has(p.id);
                   return (
@@ -1770,17 +3107,28 @@ export default function TeamSpace() {
                     >
                       <div
                         className={`w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex-shrink-0 flex items-center justify-center ${
-                          sel ? "bg-evolve-lavender-indigo border-evolve-lavender-indigo" : "border-white/20"
+                          sel
+                            ? "bg-evolve-lavender-indigo border-evolve-lavender-indigo"
+                            : "border-white/20"
                         }`}
                       >
-                        {sel && <span className="text-white text-[10px]">✓</span>}
+                        {sel && (
+                          <span className="text-white text-[10px]">✓</span>
+                        )}
                       </div>
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 overflow-hidden"
-                        style={{ background: AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length] }}
+                        style={{
+                          background:
+                            AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length]
+                        }}
                       >
                         {p.avatar_url ? (
-                          <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={p.avatar_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           initialsOf(p.name)
                         )}
@@ -1788,7 +3136,11 @@ export default function TeamSpace() {
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-sm font-semibold truncate">
                           {p.name}{" "}
-                          {p.username && <span className="text-white/30 text-[11px] font-normal">@{p.username}</span>}
+                          {p.username && (
+                            <span className="text-white/30 text-[11px] font-normal">
+                              @{p.username}
+                            </span>
+                          )}
                         </p>
                         {(p.persona || p.level) && (
                           <p className="text-white/35 text-[11px] mt-0.5 truncate">
@@ -1796,18 +3148,15 @@ export default function TeamSpace() {
                           </p>
                         )}
                       </div>
-                      <span
-                        className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${ROLE_META[teamRoleTab].bg} ${ROLE_META[teamRoleTab].text}`}
-                      >
-                        {teamRoleTab}
-                      </span>
                     </div>
                   );
                 })}
               </div>
             </div>
             <div className="flex items-center gap-2.5 px-6 py-4 border-t border-white/10 mt-2">
-              <span className="text-white/25 text-[11px]">{findSelected.size} selected</span>
+              <span className="text-white/25 text-[11px]">
+                {findSelected.size} selected
+              </span>
               <span className="flex-1" />
               <button
                 onClick={closeTeamModal}
@@ -1827,11 +3176,303 @@ export default function TeamSpace() {
         </div>
       )}
 
+      {/* ============ modal: request a program ============ */}
+      {programModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
+          onClick={(e) => e.target === e.currentTarget && setProgramModalOpen(false)}
+        >
+          <div className="w-full max-w-[460px] rounded-2xl border border-white/15" style={{ background: "#1c1c1e" }}>
+            <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3">
+              <div>
+                <p className="text-white font-extrabold text-lg">request a program</p>
+                <p className="text-white/40 text-xs mt-1">
+                  tell us your batch size, semester, and what outcome you're chasing — we'll come back with a plan.
+                </p>
+              </div>
+              <button
+                onClick={() => setProgramModalOpen(false)}
+                className="text-white/40 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.06] flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+            <div className="px-6 pb-2 flex flex-col gap-4">
+              <Field label="what do you need?">
+                <textarea
+                  rows={3}
+                  value={reqMessage}
+                  onChange={(e) => setReqMessage(e.target.value)}
+                  placeholder="e.g. a 2-day ux research bootcamp for our 3rd-year batch of 45, before placement season…"
+                  className={`${fieldInputCls} resize-y`}
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="batch size">
+                  <input
+                    value={reqBatchSize}
+                    onChange={(e) => setReqBatchSize(e.target.value)}
+                    placeholder="e.g. 45"
+                    className={fieldInputCls}
+                  />
+                </Field>
+                <Field label="timeline">
+                  <input
+                    value={reqTimeline}
+                    onChange={(e) => setReqTimeline(e.target.value)}
+                    placeholder="e.g. before nov"
+                    className={fieldInputCls}
+                  />
+                </Field>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 px-6 py-4 border-t border-white/10 mt-2">
+              <span className="flex-1" />
+              <button
+                onClick={() => setProgramModalOpen(false)}
+                className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white"
+              >
+                cancel
+              </button>
+              <button
+                onClick={submitProgramRequest}
+                disabled={reqSubmitting || !reqMessage.trim()}
+                className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40"
+              >
+                {reqSubmitting ? "sending…" : "send request"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ modal: delete space ============ */}
+      {deleteModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-center justify-center px-5 py-5 overflow-y-auto"
+          onClick={(e) => e.target === e.currentTarget && setDeleteModalOpen(false)}
+        >
+          <div className="w-full max-w-[440px] rounded-2xl border border-white/15 p-6" style={{ background: "#1c1c1e" }}>
+            <div className="w-11 h-11 rounded-xl bg-evolve-red/[0.14] text-evolve-red flex items-center justify-center mb-4">
+              ⚠
+            </div>
+            <p className="text-white font-extrabold text-lg mb-2">delete "{org.name}"?</p>
+            <p className="text-white/50 text-[13px] leading-relaxed mb-4">
+              this deactivates the space, its public page, and team access for all{" "}
+              <strong className="text-white">{activeMembers.length} members</strong> right away. any active paid
+              features will also be cancelled. you'll have <strong className="text-white">14 days to undo this</strong>{" "}
+              before the space and its data are permanently deleted.
+            </p>
+            <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1.5">
+              type the space name to confirm
+            </p>
+            <input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={org.name}
+              className={`${fieldInputCls} mb-5`}
+            />
+            <div className="flex justify-end gap-2.5">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white"
+              >
+                cancel
+              </button>
+              <button
+                onClick={confirmDeleteSpace}
+                disabled={
+                  deleteSubmitting || deleteConfirmText.trim().toLowerCase() !== org.name.trim().toLowerCase()
+                }
+                className="text-xs font-bold bg-evolve-red text-white rounded-lg px-4 py-2 disabled:opacity-30"
+              >
+                {deleteSubmitting ? "deleting…" : "delete space"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ modal: share an update ============ */}
+      {shareModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
+          onClick={(e) => e.target === e.currentTarget && setShareModalOpen(false)}
+        >
+          <div className="w-full max-w-[460px] rounded-2xl border border-white/15 p-6" style={{ background: "#1c1c1e" }}>
+            <div className="flex items-start justify-between gap-4 mb-1">
+              <div>
+                <p className="text-white font-extrabold text-lg">share an update</p>
+                <p className="text-white/40 text-xs mt-1">
+                  {canModerateUpdates
+                    ? "this goes live on your public page immediately."
+                    : "an owner or admin will review this before it goes live."}
+                </p>
+              </div>
+              <button
+                onClick={() => setShareModalOpen(false)}
+                className="text-white/40 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.06] flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 mt-4">
+              <Field label="title">
+                <input
+                  value={shareTitle}
+                  onChange={(e) => setShareTitle(e.target.value)}
+                  maxLength={90}
+                  placeholder="e.g. NID students win 3 D&AD pencils this year"
+                  className={fieldInputCls}
+                />
+              </Field>
+              <Field label="description">
+                <textarea
+                  rows={3}
+                  value={shareDesc}
+                  onChange={(e) => setShareDesc(e.target.value)}
+                  placeholder="a couple of sentences about what happened"
+                  className={`${fieldInputCls} resize-y`}
+                />
+              </Field>
+            </div>
+            <div className="flex justify-end gap-2.5 mt-5">
+              <button
+                onClick={() => setShareModalOpen(false)}
+                className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white"
+              >
+                cancel
+              </button>
+              <button
+                onClick={submitShareUpdate}
+                disabled={shareSubmitting || !shareTitle.trim()}
+                className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40"
+              >
+                {shareSubmitting ? "sharing…" : canModerateUpdates ? "publish" : "submit for review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ modal: add/edit calendar event ============ */}
+      {eventModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
+          onClick={(e) => e.target === e.currentTarget && setEventModalOpen(false)}
+        >
+          <div className="w-full max-w-[520px] rounded-2xl border border-white/15 p-6" style={{ background: "#1c1c1e" }}>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p className="text-white font-extrabold text-lg">
+                  {eventEditingId ? "edit calendar event" : "add calendar event"}
+                </p>
+                <p className="text-white/40 text-xs mt-1">shows in "mark your calendar" on your public page.</p>
+              </div>
+              <button
+                onClick={() => setEventModalOpen(false)}
+                className="text-white/40 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.06] flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col gap-4">
+              <Field label="event title">
+                <input
+                  value={evTitle}
+                  onChange={(e) => setEvTitle(e.target.value)}
+                  maxLength={70}
+                  placeholder="e.g. annual design expo"
+                  className={fieldInputCls}
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="date">
+                  <input
+                    type="date"
+                    value={evDate}
+                    onChange={(e) => setEvDate(e.target.value)}
+                    className={fieldInputCls}
+                  />
+                </Field>
+                <Field label={<>where / when <span className="normal-case font-normal text-white/25">optional</span></>}>
+                  <input
+                    value={evMeta}
+                    onChange={(e) => setEvMeta(e.target.value)}
+                    placeholder="e.g. on-campus · ahmedabad"
+                    className={fieldInputCls}
+                  />
+                </Field>
+              </div>
+              <div>
+                <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-2">type</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(TYPE_META).map(([key, meta]) => (
+                    <button
+                      key={key}
+                      onClick={() => setEvType(key)}
+                      className={`text-xs font-bold px-3 py-2 rounded-full border transition-colors ${
+                        evType === key
+                          ? `${meta.bg} ${meta.text} border-transparent`
+                          : "border-white/15 text-white/50 hover:text-white/80"
+                      }`}
+                    >
+                      {meta.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-2">audience</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    { value: "open", title: "open to all", desc: "visible to anyone viewing your public page." },
+                    { value: "internal", title: "team only", desc: "only signed-in members of your team can see it." }
+                  ].map((a) => (
+                    <button
+                      key={a.value}
+                      onClick={() => setEvAudience(a.value)}
+                      className={`text-left rounded-xl border-[1.5px] p-3 transition-colors ${
+                        evAudience === a.value
+                          ? "border-evolve-lavender-indigo bg-evolve-lavender-indigo/10"
+                          : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                      }`}
+                    >
+                      <p className="text-white text-xs font-bold mb-0.5">{a.title}</p>
+                      <p className="text-white/35 text-[10.5px] leading-relaxed">{a.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2.5 mt-5">
+              <button
+                onClick={() => setEventModalOpen(false)}
+                className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white"
+              >
+                cancel
+              </button>
+              <button
+                onClick={submitEvent}
+                disabled={eventSubmitting || !evTitle.trim() || !evDate}
+                className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40"
+              >
+                {eventSubmitting ? "saving…" : eventEditingId ? "save changes" : "add event"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* toast */}
       {toast && (
         <div
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl flex items-center gap-2.5"
-          style={{ background: "#232325", border: "1px solid rgba(255,255,255,0.16)", color: "#fff" }}
+          style={{
+            background: "#232325",
+            border: "1px solid rgba(255,255,255,0.16)",
+            color: "#fff"
+          }}
         >
           <span className="w-5 h-5 rounded-full bg-evolve-inchworm/15 text-evolve-inchworm flex items-center justify-center text-xs">
             ✓
