@@ -14,7 +14,8 @@ const WhatsAppIcon = ({ className }) => (
 );
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CALENDLY_URL = "https://calendly.com/chesna-paperclip/new-meeting";
+// const CALENDLY_URL = "https://calendly.com/chesna-paperclip/new-meeting";
+const CALENDLY_URL = "https://calendly.com/chesna-evolvedesign/30min";
 
 const InstituteContactModal = ({
   isOpen,
