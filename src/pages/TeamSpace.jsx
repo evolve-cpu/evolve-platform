@@ -1224,6 +1224,10 @@ export default function TeamSpace() {
 
   const pendingUpdates = updates.filter((u) => u.status === "pending");
   const liveUpdates = updates.filter((u) => u.status === "live");
+  // students (and anyone who can't submit/moderate) never had a pending
+  // queue to begin with — skip the tabs entirely and just show what's live
+  const canSeeUpdateTabs = canSubmitUpdate;
+  const effectiveUpdatesFilter = canSeeUpdateTabs ? updatesFilter : "live";
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcomingEvents = events.filter((e) => e.event_date >= todayStr);
@@ -2299,41 +2303,46 @@ export default function TeamSpace() {
                     )}
                   </div>
                   <p className="text-white/30 text-[13px] mb-4 leading-relaxed">
-                    posts are written by admins and faculty
-                    {canModerateUpdates
-                      ? " — approve or remove submissions here before they go live."
-                      : " — an owner or admin reviews them before they go live."}
+                    {canSeeUpdateTabs
+                      ? `posts are written by admins and faculty${
+                          canModerateUpdates
+                            ? " — approve or remove submissions here before they go live."
+                            : " — an owner or admin reviews them before they go live."
+                        }`
+                      : "the latest news and highlights from your institute."}
                   </p>
 
-                  <div className="inline-flex bg-white/[0.04] border border-white/10 rounded-lg p-1 gap-1 mb-4">
-                    {[
-                      { id: "pending", label: "pending", count: pendingUpdates.length },
-                      { id: "live", label: "published", count: liveUpdates.length }
-                    ].map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => setUpdatesFilter(t.id)}
-                        className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
-                          updatesFilter === t.id ? "bg-white/[0.08] text-white" : "text-white/40 hover:text-white/70"
-                        }`}
-                      >
-                        {t.label}
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                            updatesFilter === t.id
-                              ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo"
-                              : "bg-white/[0.06] text-white/30"
+                  {canSeeUpdateTabs && (
+                    <div className="inline-flex bg-white/[0.04] border border-white/10 rounded-lg p-1 gap-1 mb-4">
+                      {[
+                        { id: "pending", label: "pending", count: pendingUpdates.length },
+                        { id: "live", label: "published", count: liveUpdates.length }
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setUpdatesFilter(t.id)}
+                          className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
+                            updatesFilter === t.id ? "bg-white/[0.08] text-white" : "text-white/40 hover:text-white/70"
                           }`}
                         >
-                          {t.count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                          {t.label}
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                              updatesFilter === t.id
+                                ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo"
+                                : "bg-white/[0.06] text-white/30"
+                            }`}
+                          >
+                            {t.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {!updatesLoaded ? (
                     <p className="text-white/25 text-xs italic py-6 text-center">loading…</p>
-                  ) : updatesFilter === "pending" ? (
+                  ) : effectiveUpdatesFilter === "pending" ? (
                     pendingUpdates.length === 0 ? (
                       <EmptyBlock text="you're all caught up" sub="no posts waiting for review right now." />
                     ) : (
