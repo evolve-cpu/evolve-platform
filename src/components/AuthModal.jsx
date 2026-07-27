@@ -76,7 +76,11 @@ const AuthModal = ({ isOpen, onClose, user }) => {
     setError("");
     setLoading(true);
     try {
-      await signInWithGoogle(); // redirects — modal will unmount naturally
+      // Return to whatever page this modal was opened on (e.g. an invite-
+      // accept link) instead of always bouncing to "/" — a full-page OAuth
+      // redirect otherwise strands anything tied to the current URL, like
+      // a pending org invite's token.
+      await signInWithGoogle(window.location.pathname + window.location.search);
     } catch (err) {
       setError(err.message || "google sign-in failed. try again.");
       setLoading(false);
