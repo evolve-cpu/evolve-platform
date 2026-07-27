@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { findFreeSlug } from "../lib/slug";
 import AuthModal from "../components/AuthModal";
 import GrowthMascot from "../components/GrowthMascot";
 
@@ -50,7 +51,7 @@ function Screen({ children }) {
 export default function InviteAccept() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [phase, setPhase] = useState("loading"); // loading | notFound | landing | intake | review | submitting
   const [invite, setInvite] = useState(null);
@@ -112,7 +113,27 @@ export default function InviteAccept() {
       setPhase(fields ? "review" : "landing");
       return;
     }
-    navigate(`/space/${data.org_slug}`, { replace: true, state: { justJoined: true } });
+
+    // Invited members skip the usual individual chat onboarding entirely —
+    // so unless they already had a profile from before, they've never been
+    // given a username or been marked onboarded. Finish that here so they
+    // land on a real profile page instead of a dead /profile/undefined link.
+    let username = user.username;
+    if (!username) {
+      username = await findFreeSlug(supabase, "profile_cards", "username", user.name || user.email);
+      await supabase
+        .from("profiles")
+        .update({
+          username,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+          growth_stage: user.growth_stage || 25
+        })
+        .eq("id", user.id);
+      await refreshUser();
+    }
+
+    navigate(`/profile/${username}`, { replace: true, state: { justJoinedOrg: invite.org_name } });
   }
 
   if (phase === "loading") {

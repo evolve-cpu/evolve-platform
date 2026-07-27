@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
@@ -96,6 +96,7 @@ function WorkTab({ discipline }) {
 /* ─── page ───────────────────────────────────────────────────────────────── */
 export default function PublicProfile() {
   const { username } = useParams();
+  const location = useLocation();
   const { user, refreshUser } = useAuth();
   const isOwner = user?.username === username;
 
@@ -413,6 +414,11 @@ export default function PublicProfile() {
 
         {/* main content */}
         <main className="flex-1 px-6 md:px-8 py-8 flex flex-col gap-8">
+          {isOwner && location.state?.justJoinedOrg && (
+            <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
+              🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.
+            </div>
+          )}
           {showOwnerTools && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
