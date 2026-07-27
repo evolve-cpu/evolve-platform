@@ -1068,6 +1068,7 @@ const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamSpace = lazy(() => import("./pages/TeamSpace"));
+const InstitutePublicPage = lazy(() => import("./pages/InstitutePublicPage"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const Institutions = lazy(() => import("./pages/Institutions"));
 const Corporates = lazy(() => import("./pages/Corporates"));
@@ -1163,6 +1164,7 @@ const AppLayout = () => {
     !hideFooterRoutes.includes(location.pathname) &&
     !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/") &&
+    !location.pathname.startsWith("/institute/") &&
     !location.pathname.startsWith("/invite/");
 
   // Global landing gets the "global" footer (designers / institutions /
@@ -1230,6 +1232,7 @@ const AppLayout = () => {
       location.pathname === "/onboarding" ||
       location.pathname.startsWith("/profile/") ||
       location.pathname.startsWith("/space/") ||
+      location.pathname.startsWith("/institute/") ||
       location.pathname.startsWith("/invite/")
     ) {
       setShowNavbar(false);
@@ -1604,6 +1607,7 @@ const AppLayout = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
             <Route path="/space/:slug" element={<TeamSpace />} />
+            <Route path="/institute/:slug" element={<InstitutePublicPage />} />
             <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/payment" element={<Payment />} />
             <Route

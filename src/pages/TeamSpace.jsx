@@ -3,34 +3,17 @@ import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
-
-const ROLE_LABEL = { owner: "owner", admin: "admin", member: "member" };
-
-// team-tab role context — colors match the team-management mockup's
-// green/purple/yellow role dots exactly (evolve-inchworm / evolve-lavender-indigo / evolve-yellow)
-const ROLE_META = {
-  student: {
-    word: "student",
-    plural: "students",
-    text: "text-evolve-inchworm",
-    bg: "bg-evolve-inchworm/10",
-    dot: "bg-evolve-inchworm"
-  },
-  faculty: {
-    word: "faculty member",
-    plural: "faculty",
-    text: "text-evolve-lavender-indigo",
-    bg: "bg-evolve-lavender-indigo/10",
-    dot: "bg-evolve-lavender-indigo"
-  },
-  admin: {
-    word: "admin",
-    plural: "admins",
-    text: "text-evolve-yellow",
-    bg: "bg-evolve-yellow/10",
-    dot: "bg-evolve-yellow"
-  }
-};
+import LogoBox from "../components/OrgLogoBox";
+import {
+  ROLE_LABEL,
+  ROLE_META,
+  EVOLVE_PROGRAMS,
+  AVATAR_GRADIENTS,
+  TYPE_META,
+  yearsSince,
+  initialsOf,
+  timeAgo
+} from "../lib/orgShared";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -57,89 +40,7 @@ const PLATFORMS = [
   "youtube"
 ];
 
-const EVOLVE_PROGRAMS = [
-  {
-    id: "portfolio-review",
-    name: "portfolio review",
-    emoji: "📋",
-    accent: "purple",
-    desc: "every student gets a personalised report from a working reviewer, plus a live 1:1 session.",
-    meta: ["2–3 weeks", "on-campus", "best for yr 2–3"],
-    href: "/for-institutes/portfolio-review-programme"
-  },
-  {
-    id: "find-your-niche",
-    name: "find your niche",
-    emoji: "🧭",
-    accent: "green",
-    desc: 'a 4-day mentorship that takes students from "who am i as a designer" to "where do i fit."',
-    meta: ["4 days", "hybrid", "2 industry pros"],
-    href: "/for-institutes/find-your-niche-programme"
-  }
-];
-
-const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, rgba(223,5,134,1), rgba(163,91,251,1))",
-  "linear-gradient(135deg, rgba(194,253,92,1), rgba(1,241,217,1))",
-  "linear-gradient(135deg, rgba(255,208,7,1), rgba(235,83,40,1))",
-  "linear-gradient(135deg, rgba(49,57,255,1), rgba(163,91,251,1))"
-];
-
-function yearsSince(y) {
-  const n = parseInt(y, 10);
-  if (!n || Number.isNaN(n)) return null;
-  const diff = new Date().getFullYear() - n;
-  return diff >= 0 ? diff : null;
-}
-
-function initialsOf(name) {
-  return (name || "?").trim()[0]?.toUpperCase() || "?";
-}
-
-function timeAgo(iso) {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
-  const months = Math.floor(days / 30);
-  return `${months} month${months === 1 ? "" : "s"} ago`;
-}
-
-const TYPE_META = {
-  exam: { label: "entrance exam", text: "text-evolve-lavender-indigo", bg: "bg-evolve-lavender-indigo/10" },
-  event: { label: "event", text: "text-evolve-pink", bg: "bg-evolve-pink/10" },
-  deadline: { label: "deadline", text: "text-evolve-yellow", bg: "bg-evolve-yellow/10" },
-  result: { label: "results", text: "text-evolve-inchworm", bg: "bg-evolve-inchworm/10" }
-};
-
 /* ── small building blocks ────────────────────────────────────────────── */
-
-function LogoBox({ org, size = 56 }) {
-  return (
-    <div
-      className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"
-      style={{ width: size, height: size, minWidth: size }}
-    >
-      {org.logo_url ? (
-        <img
-          src={org.logo_url}
-          alt=""
-          className="w-full h-full object-contain"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
-      ) : (
-        <span style={{ fontSize: size * 0.4 }}>
-          {org.org_type === "institute" ? "🎓" : "🏢"}
-        </span>
-      )}
-    </div>
-  );
-}
 
 function SetupTag() {
   return (
@@ -402,6 +303,7 @@ export default function TeamSpace() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [section, setSection] = useState("overview");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
   // team tab (company org invite box — kept simple, non-institute only)
@@ -1286,6 +1188,62 @@ export default function TeamSpace() {
         </div>
       </div>
 
+      {/* mobile section nav — the sidebar is desktop-only (hidden below md),
+          so mobile gets a tap-to-expand dropdown instead of a horizontal-
+          scrolling strip (which clipped items and could hide "settings"
+          off-screen). */}
+      <div className="md:hidden sticky z-30" style={{ top: 56 }}>
+        <button
+          onClick={() => setMobileNavOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10"
+          style={{ background: "#1c1c1e" }}
+        >
+          <span className="text-white font-bold text-sm capitalize">{sectionLabel}</span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="text-white/40 flex-shrink-0 transition-transform"
+            style={{ transform: mobileNavOpen ? "rotate(180deg)" : "none" }}
+          >
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        {mobileNavOpen && (
+          <div className="flex flex-col border-b border-white/10" style={{ background: "#1c1c1e" }}>
+            {[...NAV_ITEMS, ...(isOwner ? [{ id: "settings", label: "settings", icon: Icon.settings }] : [])].map(
+              (item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setSection(item.id);
+                    setMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-left border-t border-white/5 first:border-t-0 transition-colors ${
+                    section === item.id ? "text-evolve-lavender-indigo bg-evolve-lavender-indigo/10" : "text-white/60"
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                  {typeof item.count === "number" && (
+                    <span
+                      className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        section === item.id
+                          ? "bg-evolve-lavender-indigo/25 text-evolve-lavender-indigo"
+                          : "bg-white/[0.06] text-white/40"
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-1 min-h-0">
         {/* sidebar */}
         <aside
@@ -1372,9 +1330,19 @@ export default function TeamSpace() {
             </Link>
           )}
 
-          <h1 className="text-white font-extrabold text-[29px] tracking-tight -mb-1 capitalize">
-            {sectionLabel}
-          </h1>
+          <div className="flex items-center justify-between gap-3 -mb-1">
+            <h1 className="text-white font-extrabold text-[29px] tracking-tight capitalize">{sectionLabel}</h1>
+            {section === "overview" && (
+              <Link
+                to={`/institute/${org.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-evolve-lavender-indigo text-xs font-semibold flex-shrink-0 hover:underline"
+              >
+                preview public page ↗
+              </Link>
+            )}
+          </div>
 
           {/* ============ overview ============ */}
           {section === "overview" && (
