@@ -432,6 +432,18 @@ export default function TeamSpace() {
     load();
   }, [load]);
 
+  // /space/:slug is the owner/member-only management console — a public
+  // visibility setting only controls what /institute/:slug (the public
+  // page) can read, it was never meant to let outsiders load the admin
+  // dashboard shell too. Bounce anyone who isn't actually a member there.
+  useEffect(() => {
+    if (loading || notFound || !org) return;
+    const isMember = isOwner || members.some((m) => m.user_id === user?.id && m.status === "active");
+    if (!isMember) {
+      navigate(`/institute/${org.slug}`, { replace: true });
+    }
+  }, [loading, notFound, org, members, isOwner, user, navigate]);
+
   const loadUpdates = useCallback(async () => {
     if (!org) return;
     const [{ data: updateRows }, { data: eventRows }] = await Promise.all([
@@ -1066,6 +1078,15 @@ export default function TeamSpace() {
         <p className="text-white/40 text-sm">
           the space "{slug}" hasn't been created, or you don't have access.
         </p>
+      </div>
+    );
+  }
+
+  const isMember = isOwner || members.some((m) => m.user_id === user?.id && m.status === "active");
+  if (!isMember) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
+        <GrowthMascot progress={10} size={56} />
       </div>
     );
   }
