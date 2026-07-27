@@ -1,9 +1,29 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supabaseClient";
 import { findFreeSlug } from "../../lib/slug";
 import { emptyProfile } from "./questions";
+
+// Seeds the chat with whatever's already on the profile — used when an
+// invited member (who skipped this chat entirely to join their space) comes
+// back later to fill in the rest, so they aren't asked to redo fields they
+// already answered.
+function profileFromUser(u) {
+  return {
+    name: u.name || null,
+    country: u.country || null,
+    persona: u.persona || null,
+    level: u.level || null,
+    level_confidence: u.level_confidence || null,
+    motivation: u.motivation || null,
+    learning_method: u.learning_method || null,
+    learning_modes: u.learning_modes || [],
+    discipline: u.discipline || [],
+    intent: u.intent || [],
+    work_type: u.work_type || null
+  };
+}
 import GrowthMascot from "../../components/GrowthMascot";
 import SpaceTypeStep from "./SpaceTypeStep";
 import OrgTypeStep from "./OrgTypeStep";
@@ -27,6 +47,7 @@ import ReviewStep from "./ReviewStep";
 export default function Onboarding() {
   const { user, authLoading, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // signed-out visitors have no business here — send them to sign in first,
   // bounce back to /onboarding once they do
@@ -36,7 +57,12 @@ export default function Onboarding() {
     }
   }, [authLoading, user, navigate]);
 
-  const [step, setStep] = useState("space-type");
+  // "complete your profile" from an invited member's profile page — they
+  // already have a space (joined via invite, skipping this chat entirely),
+  // so jump straight to the persona chat instead of asking space-type again.
+  const completingProfile = !!location.state?.completeProfile;
+
+  const [step, setStep] = useState(completingProfile ? "chat" : "space-type");
   // space-type | org-type | inst-profile | inst-space | submitting-inst
   // | chat | team-setup | review | submitting
   const [spaceType, setSpaceType] = useState("individual");
@@ -79,12 +105,9 @@ export default function Onboarding() {
     setError("");
     try {
       const fullName = `${instProfile.firstName} ${instProfile.lastName}`.trim();
-      const username = await findFreeSlug(
-        supabase,
-        "profile_cards",
-        "username",
-        fullName || user.name || user.email
-      );
+      const username =
+        user.username ||
+        (await findFreeSlug(supabase, "profile_cards", "username", fullName || user.name || user.email));
 
       const { error: profileErr } = await supabase
         .from("profiles")
@@ -143,12 +166,9 @@ export default function Onboarding() {
     setStep("submitting");
     setError("");
     try {
-      const username = await findFreeSlug(
-        supabase,
-        "profile_cards",
-        "username",
-        finalProfile.name || user.name || user.email
-      );
+      const username =
+        user.username ||
+        (await findFreeSlug(supabase, "profile_cards", "username", finalProfile.name || user.name || user.email));
 
       const { error: profileErr } = await supabase
         .from("profiles")
@@ -262,7 +282,12 @@ export default function Onboarding() {
       />
     );
   } else if (step === "chat") {
-    content = <ChatOnboarding initialProfile={emptyProfile()} onComplete={handleChatComplete} />;
+    content = (
+      <ChatOnboarding
+        initialProfile={completingProfile ? profileFromUser(user) : emptyProfile()}
+        onComplete={handleChatComplete}
+      />
+    );
   } else if (step === "team-setup") {
     content = (
       <TeamSetupStep

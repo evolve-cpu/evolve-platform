@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
@@ -97,6 +97,7 @@ function WorkTab({ discipline }) {
 export default function PublicProfile() {
   const { username } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const isOwner = user?.username === username;
 
@@ -307,6 +308,18 @@ export default function PublicProfile() {
               className={`text-xs text-left leading-relaxed ${card.bio ? "text-white/50" : "text-white/25 italic"}`}
             >
               {card.bio || (isOwner ? "add a short headline about yourself…" : "")}
+            </button>
+          )}
+
+          {isOwner && !user.persona && (
+            <button
+              onClick={() => navigate("/onboarding", { state: { completeProfile: true } })}
+              className="w-full text-left rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-4 py-3 flex flex-col gap-0.5 hover:bg-evolve-yellow/[0.1] transition-colors"
+            >
+              <span className="text-evolve-yellow text-xs font-bold">complete your profile →</span>
+              <span className="text-white/40 text-[11px] leading-relaxed">
+                a few quick questions to personalise your evolve experience.
+              </span>
             </button>
           )}
 
