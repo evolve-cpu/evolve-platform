@@ -38,7 +38,14 @@ export const EVOLVE_PROGRAMS = [
     emoji: "📋",
     accent: "purple",
     desc: "every student gets a personalised report from a working reviewer, plus a live 1:1 session.",
+    tagline: "1:1 review · 2 rounds · live on-campus",
     meta: ["2–3 weeks", "on-campus", "best for yr 2–3"],
+    features: [
+      "a personalised report per student, from a working reviewer",
+      "reviewer matched to the student's discipline",
+      "a live on-campus or online 1:1 session",
+      "your own branded portal for the cohort"
+    ],
     href: "/for-institutes/portfolio-review-programme"
   },
   {
@@ -47,7 +54,14 @@ export const EVOLVE_PROGRAMS = [
     emoji: "🧭",
     accent: "green",
     desc: 'a 4-day mentorship that takes students from "who am i as a designer" to "where do i fit."',
+    tagline: "4-day mentorship · 2 industry pros",
     meta: ["4 days", "hybrid", "2 industry pros"],
+    features: [
+      "day 1 — map skills, interests, and working style",
+      "day 2 — market scan: how to evaluate companies",
+      "day 3 — connect interests to real roles & niches",
+      "day 4 — resume, profile & portfolio review"
+    ],
     href: "/for-institutes/find-your-niche-programme"
   }
 ];

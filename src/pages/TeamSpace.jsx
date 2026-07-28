@@ -42,6 +42,61 @@ const PLATFORMS = [
 
 /* ── small building blocks ────────────────────────────────────────────── */
 
+// hand-drawn header art for the evolve-programs cards/modal — a stack of
+// report pages + a review "eye" for portfolio review, a dotted path to a
+// flag for find your niche — instead of a plain emoji-on-color block.
+function ProgramArt({ id }) {
+  if (id === "portfolio-review") {
+    return (
+      <svg viewBox="0 0 300 130" preserveAspectRatio="xMidYMid slice" className="w-full h-full block">
+        <rect width="300" height="130" fill="#1a1030" />
+        <circle cx="240" cy="20" r="70" fill="#A35BFB" opacity=".25" />
+        <circle cx="240" cy="20" r="45" fill="#A35BFB" opacity=".35" />
+        <rect x="40" y="30" width="70" height="90" rx="6" fill="#2a1d4a" />
+        <rect x="52" y="44" width="46" height="5" rx="2.5" fill="#A35BFB" />
+        <rect x="52" y="56" width="34" height="4" rx="2" fill="#5a4680" />
+        <rect x="52" y="65" width="40" height="4" rx="2" fill="#5a4680" />
+        <rect x="52" y="74" width="28" height="4" rx="2" fill="#5a4680" />
+        <rect x="60" y="20" width="70" height="90" rx="6" fill="#332258" opacity=".9" />
+        <rect x="72" y="34" width="46" height="5" rx="2.5" fill="#C264FF" />
+        <rect x="72" y="46" width="34" height="4" rx="2" fill="#6a5490" />
+        <rect x="72" y="55" width="40" height="4" rx="2" fill="#6a5490" />
+        <ellipse cx="215" cy="80" rx="42" ry="24" fill="#FFD007" />
+        <circle cx="215" cy="80" r="14" fill="#131313" />
+        <circle cx="220" cy="76" r="5" fill="#FFD007" />
+        <path d="M173 80 Q215 46 257 80" fill="none" stroke="#DF0586" strokeWidth="4" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 300 130" preserveAspectRatio="xMidYMid slice" className="w-full h-full block">
+      <rect width="300" height="130" fill="#0f1f14" />
+      <circle cx="50" cy="115" r="70" fill="#C2FD5C" opacity=".18" />
+      <path
+        d="M20 110 Q90 100 120 70 T230 40 L272 28"
+        fill="none"
+        stroke="#C2FD5C"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray="1 14"
+      />
+      <circle cx="60" cy="103" r="9" fill="#1d3a26" />
+      <circle cx="60" cy="103" r="4" fill="#C2FD5C" />
+      <circle cx="135" cy="62" r="9" fill="#1d3a26" />
+      <circle cx="135" cy="62" r="4" fill="#01F1D9" />
+      <circle cx="210" cy="42" r="9" fill="#1d3a26" />
+      <circle cx="210" cy="42" r="4" fill="#FFD007" />
+      <line x1="268" y1="28" x2="268" y2="72" stroke="#C2FD5C" strokeWidth="4" strokeLinecap="round" />
+      <path d="M268 28 L296 38 L268 48 Z" fill="#DF0586" />
+      <path
+        d="M40 30 l4 8 9 1-6.5 6 1.5 9-8-4.5-8 4.5 1.5-9-6.5-6 9-1z"
+        fill="#FFD007"
+        opacity=".9"
+      />
+    </svg>
+  );
+}
+
 function SetupTag() {
   return (
     <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold text-evolve-inchworm bg-evolve-inchworm/10 px-2 py-0.5 rounded-full ml-2 normal-case align-middle">
@@ -333,7 +388,10 @@ export default function TeamSpace() {
   const [findSearching, setFindSearching] = useState(false);
   const [findSubmitting, setFindSubmitting] = useState(false);
 
-  // evolve programs — "request a program" modal (institute only)
+  // evolve programs — per-program detail modal + "request a program"/"get in
+  // touch to unlock" modal (institute only) — no pricing exists yet, so
+  // "unlock" always routes to a real contact request instead of a fake price.
+  const [programDetailId, setProgramDetailId] = useState(null);
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [reqMessage, setReqMessage] = useState("");
   const [reqBatchSize, setReqBatchSize] = useState("");
@@ -2204,19 +2262,13 @@ export default function TeamSpace() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {EVOLVE_PROGRAMS.map((p) => (
-                  <a
+                  <button
                     key={p.id}
-                    href={p.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 overflow-hidden flex flex-col transition-colors"
+                    onClick={() => setProgramDetailId(p.id)}
+                    className="text-left rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 overflow-hidden flex flex-col transition-colors"
                   >
-                    <div
-                      className={`h-24 flex items-center justify-center text-3xl ${
-                        p.accent === "purple" ? "bg-evolve-lavender-indigo/15" : "bg-evolve-inchworm/15"
-                      }`}
-                    >
-                      {p.emoji}
+                    <div className="h-24 overflow-hidden">
+                      <ProgramArt id={p.id} />
                     </div>
                     <div className="p-4 flex flex-col gap-2.5 flex-1">
                       <div className="flex items-center justify-between gap-2">
@@ -2242,11 +2294,11 @@ export default function TeamSpace() {
                             p.accent === "purple" ? "text-evolve-lavender-indigo" : "text-evolve-inchworm"
                           }`}
                         >
-                          learn more →
+                          view details →
                         </span>
                       </div>
                     </div>
-                  </a>
+                  </button>
                 ))}
 
                 {isOwner && (
@@ -3173,6 +3225,83 @@ export default function TeamSpace() {
           </div>
         </div>
       )}
+
+      {/* ============ modal: program detail ============ */}
+      {programDetailId &&
+        (() => {
+          const p = EVOLVE_PROGRAMS.find((x) => x.id === programDetailId);
+          if (!p) return null;
+          const accentText = p.accent === "purple" ? "text-evolve-lavender-indigo" : "text-evolve-inchworm";
+          return (
+            <div
+              className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-sm flex items-start justify-center px-5 py-[8vh] overflow-y-auto"
+              onClick={(e) => e.target === e.currentTarget && setProgramDetailId(null)}
+            >
+              <div
+                className="w-full max-w-[560px] rounded-2xl border border-white/15 overflow-hidden"
+                style={{ background: "#1c1c1e" }}
+              >
+                <div className="h-32 relative overflow-hidden">
+                  <ProgramArt id={p.id} />
+                  <button
+                    onClick={() => setProgramDetailId(null)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-white font-extrabold text-xl">{p.name}</p>
+                    <span className="text-[9px] font-bold uppercase text-white/30 bg-white/[0.05] px-2 py-1 rounded-full flex-shrink-0">
+                      locked
+                    </span>
+                  </div>
+                  <p className="text-white/30 text-xs mb-4">{p.tagline}</p>
+                  <p className="text-white/60 text-sm leading-relaxed mb-4">{p.desc}</p>
+
+                  <ul className="flex flex-col gap-2 mb-5">
+                    {p.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-white/50 text-[13px] leading-relaxed">
+                        <span className={`mt-0.5 flex-shrink-0 font-bold ${accentText}`}>✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="text-white/30 text-[11px] leading-relaxed pt-4 border-t border-white/10">
+                    pricing isn't finalised yet — tell us about your batch and we'll get back with a plan.
+                  </p>
+
+                  <div className="flex gap-2.5 mt-4">
+                    <a
+                      href={p.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-center text-xs font-bold border border-white/15 text-white/70 hover:text-white rounded-lg px-4 py-2.5 transition-colors"
+                    >
+                      learn more
+                    </a>
+                    {isOwner && (
+                      <button
+                        onClick={() => {
+                          setProgramDetailId(null);
+                          setReqMessage(`interested in unlocking "${p.name}" for our institute.`);
+                          setProgramModalOpen(true);
+                        }}
+                        className={`flex-1 text-xs font-bold text-white rounded-lg px-4 py-2.5 transition-opacity hover:opacity-90 ${
+                          p.accent === "purple" ? "bg-evolve-lavender-indigo" : "bg-evolve-inchworm text-evolve-black"
+                        }`}
+                      >
+                        get in touch to unlock
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* ============ modal: request a program ============ */}
       {programModalOpen && (
