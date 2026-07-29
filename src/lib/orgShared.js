@@ -1,7 +1,6 @@
-// Shared constants/helpers between the org admin dashboard (TeamSpace.jsx)
-// and the public institute page (InstitutePublicPage.jsx) — kept in one
-// place so role colors, program listings, and date formatting stay in sync
-// across both.
+// Shared constants/helpers used by InstitutePublicPage.jsx — kept in one
+// place so role colors, program listings, and date formatting stay
+// consistent across the page.
 
 export const ROLE_LABEL = { owner: "owner", admin: "admin", member: "member" };
 

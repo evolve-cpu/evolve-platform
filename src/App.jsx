@@ -1031,7 +1031,7 @@
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useParams, Navigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
@@ -1067,8 +1067,8 @@ const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
 const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
-const TeamSpace = lazy(() => import("./pages/TeamSpace"));
 const InstitutePublicPage = lazy(() => import("./pages/InstitutePublicPage"));
+const InstituteSettingsPage = lazy(() => import("./pages/InstituteSettingsPage"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const Institutions = lazy(() => import("./pages/Institutions"));
 const Corporates = lazy(() => import("./pages/Corporates"));
@@ -1099,6 +1099,16 @@ const Payment = lazy(() => import("./pages/Payment.jsx"));
 const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
 const Terms = lazy(() => import("./pages/Terms.jsx"));
 const Privacy = lazy(() => import("./pages/Privacy.jsx"));
+
+// /space/:slug used to be a separate admin-only console (TeamSpace.jsx).
+// It's been merged into /institute/:slug, which is now the single page for
+// both viewing and (role-gated) editing a space — this just catches old
+// bookmarks/links and forwards them, preserving any navigation state.
+function SpaceRedirect() {
+  const { slug } = useParams();
+  const location = useLocation();
+  return <Navigate to={`/institute/${slug}`} replace state={location.state} />;
+}
 
 const queryClient = new QueryClient();
 
@@ -1606,8 +1616,9 @@ const AppLayout = () => {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
-            <Route path="/space/:slug" element={<TeamSpace />} />
+            <Route path="/space/:slug" element={<SpaceRedirect />} />
             <Route path="/institute/:slug" element={<InstitutePublicPage />} />
+            <Route path="/institute/:slug/settings" element={<InstituteSettingsPage />} />
             <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/payment" element={<Payment />} />
             <Route

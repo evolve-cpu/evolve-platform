@@ -158,7 +158,7 @@ export default function InviteAccept() {
       <Screen>
         <p className="text-white font-bold text-xl">this invite has already been accepted.</p>
         <button
-          onClick={() => navigate(`/space/${invite.org_slug}`)}
+          onClick={() => navigate(`/institute/${invite.org_slug}`)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:scale-[0.98] transition-transform"
         >
           go to {invite.org_name} →

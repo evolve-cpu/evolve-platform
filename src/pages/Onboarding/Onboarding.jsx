@@ -37,8 +37,8 @@ import ReviewStep from "./ReviewStep";
  * Orchestrates the full post-signin onboarding. Three shapes branch off the
  * initial space-type choice:
  *   individual        → chat Q&A → review → persist → land on public profile
- *   team → company     → chat Q&A → team-setup (name) → review → persist → /space/:slug
- *   team → institute    → admin profile → institute space (link-fetch) → persist → /space/:slug
+ *   team → company     → chat Q&A → team-setup (name) → review → persist → /institute/:slug
+ *   team → institute    → admin profile → institute space (link-fetch) → persist → /institute/:slug
  *
  * The institute branch (Door 2 self-serve) skips the individual persona chat
  * entirely — "are you a high schooler or career shifter" doesn't fit an
@@ -154,7 +154,7 @@ export default function Onboarding() {
       if (memberErr) throw memberErr;
 
       await refreshUser();
-      navigate(`/space/${orgSlug}`, { replace: true, state: { justCreated: true } });
+      navigate(`/institute/${orgSlug}`, { replace: true, state: { justCreated: true } });
     } catch (e) {
       setError(e.message || "something went wrong setting up your space. please try again.");
       setStep("inst-space");
@@ -215,7 +215,7 @@ export default function Onboarding() {
       sessionStorage.removeItem("post_onboarding_redirect");
 
       if (orgSlug) {
-        navigate(`/space/${orgSlug}`, { replace: true, state: { justCreated: true } });
+        navigate(`/institute/${orgSlug}`, { replace: true, state: { justCreated: true } });
       } else if (redirectTo) {
         navigate(redirectTo, { replace: true });
       } else {

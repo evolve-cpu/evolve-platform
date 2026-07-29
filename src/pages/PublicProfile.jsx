@@ -244,7 +244,7 @@ export default function PublicProfile() {
           </Link>
           {isOwner && orgSpaces[0] ? (
             <Link
-              to={`/space/${orgSpaces[0].organizations.slug}`}
+              to={`/institute/${orgSpaces[0].organizations.slug}`}
               title="go to my space"
               className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-transform hover:scale-105"
             >
@@ -387,7 +387,7 @@ export default function PublicProfile() {
               {orgSpaces.map(({ role, organizations: org }) => (
                 <Link
                   key={org.slug}
-                  to={`/space/${org.slug}`}
+                  to={`/institute/${org.slug}`}
                   className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/40 px-3 py-2.5 transition-colors"
                 >
                   <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
