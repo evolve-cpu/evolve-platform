@@ -46,6 +46,28 @@ function Field({ label, optional, half, children }) {
   );
 }
 
+// a removable-row list used for everything pulled from the site (socials,
+// awards, calendar events, testimonials, posts) — same shape, so admins
+// review it once instead of learning five different mini-editors
+function RemovableList({ label, items, onRemove, renderItem }) {
+  if (!items.length) return null;
+  return (
+    <div>
+      <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-1.5">{label}</p>
+      <div className="flex flex-col gap-1.5">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-start justify-between gap-2 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2">
+            <div className="min-w-0 text-xs text-white/70 leading-relaxed">{renderItem(item)}</div>
+            <button onClick={() => onRemove(i)} className="text-white/30 hover:text-evolve-red flex-shrink-0 text-sm leading-none mt-0.5">
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Institute flow · step 2 — the space itself. Leads with a link-fetch so an
  * admin doesn't have to hand-type everything about their own institute; the
@@ -55,6 +77,7 @@ function Field({ label, optional, half, children }) {
 export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitting, error }) {
   const [phase, setPhase] = useState("fetch"); // fetch | loading | fields
   const [autoFilled, setAutoFilled] = useState(false);
+  const [fetchNote, setFetchNote] = useState("");
   const [linkInput, setLinkInput] = useState(initial?.sourceUrl || "");
   const [linkError, setLinkError] = useState(false);
 
@@ -69,7 +92,16 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
   const [programmeDetails, setProgrammeDetails] = useState(initial?.programmeDetails || "");
   const [touched, setTouched] = useState(false);
 
-  function runFetch() {
+  // pulled from the institute's own site — reviewed here as removable
+  // drafts, then seeded onto the space once it's created. Anything left in
+  // these lists is exactly what gets saved.
+  const [socialLinks, setSocialLinks] = useState(initial?.socialLinks || []);
+  const [awards, setAwards] = useState(initial?.awards || []);
+  const [seedEvents, setSeedEvents] = useState(initial?.seedEvents || []);
+  const [seedTestimonials, setSeedTestimonials] = useState(initial?.seedTestimonials || []);
+  const [seedPosts, setSeedPosts] = useState(initial?.seedPosts || []);
+
+  async function runFetch() {
     const val = linkInput.trim();
     if (!val) {
       setLinkError(true);
@@ -77,19 +109,42 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
     }
     setLinkError(false);
     setPhase("loading");
-    setTimeout(() => {
-      const { domain, nameGuess } = guessFromLink(val);
-      const known = KNOWN_SITES[domain];
-      setSpaceName(known ? known.name : nameGuess);
-      if (known?.location) setLocation(known.location);
-      if (known?.yearFounded) setYearFounded(known.yearFounded);
-      if (known?.bio) setBio(known.bio);
-      if (known?.programmeDetails) setProgrammeDetails(known.programmeDetails);
-      setWebsite(/^https?:\/\//i.test(val) ? val : `https://${val}`);
-      setLogoUrl(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`);
-      setAutoFilled(true);
-      setPhase("fields");
-    }, 1100);
+    setFetchNote("");
+
+    const { domain, nameGuess } = guessFromLink(val);
+    const known = KNOWN_SITES[domain];
+    const fallbackWebsite = /^https?:\/\//i.test(val) ? val : `https://${val}`;
+
+    let extracted = null;
+    try {
+      const res = await fetch("/api/fetch-institute-details", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: val })
+      });
+      const data = await res.json();
+      if (data.ok) extracted = data;
+      else if (data.reason) setFetchNote(data.reason + " — everything below is still editable.");
+    } catch {
+      setFetchNote("couldn't reach that site — everything below is still editable.");
+    }
+
+    setSpaceName(extracted?.name || known?.name || nameGuess);
+    setLocation(extracted?.location || known?.location || "");
+    setYearFounded(extracted?.yearFounded || known?.yearFounded || "");
+    setBio(extracted?.about || known?.bio || "");
+    setProgrammeDetails(known?.programmeDetails || "");
+    setWebsite(extracted?.website || fallbackWebsite);
+    setLogoUrl(extracted?.logoUrl || `https://www.google.com/s2/favicons?sz=128&domain=${domain}`);
+    setSocialLinks(extracted?.socialLinks || []);
+    setAwards(extracted?.awards || []);
+    // only keep events with a real stated date — nothing here should show
+    // an admin a date evolve made up
+    setSeedEvents((extracted?.events || []).filter((e) => e.date && /^\d{4}-\d{2}-\d{2}$/.test(e.date)));
+    setSeedTestimonials(extracted?.testimonials || []);
+    setSeedPosts(extracted?.posts || []);
+    setAutoFilled(true);
+    setPhase("fields");
   }
 
   function skipToManual() {
@@ -113,7 +168,12 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
       mode,
       members,
       programmeDetails: programmeDetails.trim(),
-      sourceUrl: linkInput.trim()
+      sourceUrl: linkInput.trim(),
+      socialLinks,
+      awards,
+      seedEvents,
+      seedTestimonials,
+      seedPosts
     });
   }
 
@@ -181,9 +241,14 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
 
         {phase === "fields" && (
           <div className="w-full flex flex-col gap-4 mt-1 text-left">
-            {autoFilled && (
+            {autoFilled && !fetchNote && (
               <div className="flex items-center gap-2 rounded-full bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-3 py-1.5 w-fit">
                 ✨ auto-filled from your link — feel free to edit
+              </div>
+            )}
+            {fetchNote && (
+              <div className="flex items-center gap-2 rounded-full bg-evolve-yellow/10 border border-evolve-yellow/25 text-evolve-yellow text-xs font-bold px-3 py-1.5 w-fit">
+                ⚠ {fetchNote}
               </div>
             )}
 
@@ -219,6 +284,66 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
             >
               change link
             </button>
+
+            {(socialLinks.length > 0 || awards.length > 0 || seedEvents.length > 0 || seedTestimonials.length > 0 || seedPosts.length > 0) && (
+              <div className="rounded-2xl border border-white/10 p-4 flex flex-col gap-3" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                <p className="text-white/50 text-xs font-semibold">found on your site — remove anything that's not right. everything else stays fully editable on your space later.</p>
+                <RemovableList
+                  label="social links"
+                  items={socialLinks}
+                  onRemove={(i) => setSocialLinks((l) => l.filter((_, idx) => idx !== i))}
+                  renderItem={(l) => (
+                    <>
+                      <span className="font-semibold text-white capitalize">{l.platform}</span> · {l.url}
+                    </>
+                  )}
+                />
+                <RemovableList
+                  label="awards & accreditations"
+                  items={awards}
+                  onRemove={(i) => setAwards((a) => a.filter((_, idx) => idx !== i))}
+                  renderItem={(a) => (
+                    <>
+                      <span className="font-semibold text-white">{a.title}</span>
+                      {a.issuer ? ` · ${a.issuer}` : ""}
+                    </>
+                  )}
+                />
+                <RemovableList
+                  label="calendar events found"
+                  items={seedEvents}
+                  onRemove={(i) => setSeedEvents((e) => e.filter((_, idx) => idx !== i))}
+                  renderItem={(e) => (
+                    <>
+                      <span className="font-semibold text-white">{e.title}</span> · {e.date}
+                      {e.meta ? ` · ${e.meta}` : ""}
+                    </>
+                  )}
+                />
+                <RemovableList
+                  label="testimonials found"
+                  items={seedTestimonials}
+                  onRemove={(i) => setSeedTestimonials((t) => t.filter((_, idx) => idx !== i))}
+                  renderItem={(t) => (
+                    <>
+                      "{t.quote}" — <span className="font-semibold text-white">{t.name}</span>
+                      {t.role ? `, ${t.role}` : ""}
+                    </>
+                  )}
+                />
+                <RemovableList
+                  label="news & posts found"
+                  items={seedPosts}
+                  onRemove={(i) => setSeedPosts((p) => p.filter((_, idx) => idx !== i))}
+                  renderItem={(p) => (
+                    <>
+                      <span className="font-semibold text-white">{p.title}</span>
+                      {p.description ? ` · ${p.description}` : ""}
+                    </>
+                  )}
+                />
+              </div>
+            )}
 
             <Field label="institute name">
               <input

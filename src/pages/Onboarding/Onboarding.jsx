@@ -138,7 +138,9 @@ export default function Onboarding() {
           setup_mode: spaceDraft.mode || null,
           expected_members: spaceDraft.members || null,
           programme_details: spaceDraft.programmeDetails || null,
-          source_url: spaceDraft.sourceUrl || null
+          source_url: spaceDraft.sourceUrl || null,
+          social_links: spaceDraft.socialLinks || [],
+          awards: spaceDraft.awards || []
         })
         .select()
         .single();
@@ -152,6 +154,49 @@ export default function Onboarding() {
         title: instProfile.roleLabel || null
       });
       if (memberErr) throw memberErr;
+
+      // seed content pulled from the institute's own site during step 2 —
+      // best-effort: the space itself is already live at this point, so a
+      // failure here shouldn't block onboarding, just leave the space with
+      // less to look at on day one
+      try {
+        if (spaceDraft.seedEvents?.length) {
+          await supabase.from("org_events").insert(
+            spaceDraft.seedEvents.map((e) => ({
+              org_id: org.id,
+              title: e.title,
+              event_date: e.date,
+              meta: e.meta || null,
+              type: ["exam", "event", "deadline", "result"].includes(e.type) ? e.type : "event",
+              audience: "open"
+            }))
+          );
+        }
+        if (spaceDraft.seedTestimonials?.length) {
+          await supabase.from("org_testimonials").insert(
+            spaceDraft.seedTestimonials.map((t) => ({
+              org_id: org.id,
+              quote: t.quote,
+              name: t.name,
+              role: t.role || null
+            }))
+          );
+        }
+        if (spaceDraft.seedPosts?.length) {
+          await supabase.from("org_updates").insert(
+            spaceDraft.seedPosts.map((p) => ({
+              org_id: org.id,
+              author_id: user.id,
+              title: p.title,
+              description: p.description || null,
+              status: "live",
+              published_at: new Date().toISOString()
+            }))
+          );
+        }
+      } catch {
+        // seed content is a nice-to-have, not worth failing onboarding over
+      }
 
       await refreshUser();
       navigate(`/institute/${orgSlug}`, { replace: true, state: { justCreated: true } });
