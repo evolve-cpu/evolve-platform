@@ -61,11 +61,18 @@ export default function Onboarding() {
   // already have a space (joined via invite, skipping this chat entirely),
   // so jump straight to the persona chat instead of asking space-type again.
   const completingProfile = !!location.state?.completeProfile;
+  // arriving via the "set up your space" CTA on the institutions marketing
+  // page — that visitor is unambiguously setting up a team space, so the
+  // "myself" vs "for my team" fork is pointless friction; drop them straight
+  // on the team sub-choice (design institute vs company/studio).
+  const fromInstitution = !!location.state?.fromInstitution;
 
-  const [step, setStep] = useState(completingProfile ? "chat" : "space-type");
+  const [step, setStep] = useState(
+    completingProfile ? "chat" : fromInstitution ? "org-type" : "space-type"
+  );
   // space-type | org-type | inst-profile | inst-space | submitting-inst
   // | chat | team-setup | review | submitting
-  const [spaceType, setSpaceType] = useState("individual");
+  const [spaceType, setSpaceType] = useState(fromInstitution ? "team" : "individual");
   const [orgType, setOrgType] = useState(null);
   const [chatProfile, setChatProfile] = useState(null);
   const [orgDraft, setOrgDraft] = useState(null);
@@ -189,6 +196,10 @@ export default function Onboarding() {
               author_id: user.id,
               title: p.title,
               description: p.description || null,
+              // spaceDraft.website always carries a protocol (sourceUrl is
+              // the raw, possibly bare domain the admin typed) — use it so
+              // the "view source" link on the post is a real clickable URL
+              source_url: spaceDraft.website || null,
               status: "live",
               published_at: new Date().toISOString()
             }))
@@ -307,11 +318,21 @@ export default function Onboarding() {
   if (step === "space-type") {
     content = <SpaceTypeStep onContinue={handleSpaceType} />;
   } else if (step === "org-type") {
-    content = <OrgTypeStep onBack={() => setStep("space-type")} onContinue={handleOrgType} />;
+    content = (
+      <OrgTypeStep
+        onBack={() => (fromInstitution ? navigate("/institutions") : setStep("space-type"))}
+        onContinue={handleOrgType}
+      />
+    );
   } else if (step === "inst-profile") {
     content = (
       <InstituteAdminProfileStep
-        initial={instProfile}
+        initial={
+          instProfile ||
+          (user.name
+            ? { firstName: user.name.split(" ")[0] || "", lastName: user.name.split(" ").slice(1).join(" ") || "" }
+            : null)
+        }
         onBack={() => setStep("org-type")}
         onContinue={handleInstProfile}
       />

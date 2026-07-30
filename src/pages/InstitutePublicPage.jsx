@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
 import OrgLogoBox from "../components/OrgLogoBox";
 import InstituteInfoPanel from "../components/InstituteInfoPanel";
+import InstituteSettingsPanel from "../components/InstituteSettingsPanel";
 import {
   ROLE_META,
   EVOLVE_PROGRAMS,
@@ -226,6 +227,7 @@ export default function InstitutePublicPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [toast, setToast] = useState(null);
+  const [welcomeBannerDismissed, setWelcomeBannerDismissed] = useState(false);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileInfoOpen, setMobileInfoOpen] = useState(false);
@@ -237,11 +239,15 @@ export default function InstitutePublicPage() {
   const [showPastEvents, setShowPastEvents] = useState(false);
 
   const [postModalOpen, setPostModalOpen] = useState(false);
+  const [editingUpdateId, setEditingUpdateId] = useState(null);
   const [shareTitle, setShareTitle] = useState("");
   const [shareDesc, setShareDesc] = useState("");
+  const [shareSourceUrl, setShareSourceUrl] = useState("");
   const [shareImageFile, setShareImageFile] = useState(null);
   const [shareImagePreview, setShareImagePreview] = useState(null);
+  const [shareExistingImageUrl, setShareExistingImageUrl] = useState(null);
   const [shareSubmitting, setShareSubmitting] = useState(false);
+  const [postMenuOpenId, setPostMenuOpenId] = useState(null);
 
   // testimonials — admins bulk-manage every quote; any non-admin member can
   // add their own (add-only, matching org_testimonials' RLS)
@@ -354,7 +360,25 @@ export default function InstitutePublicPage() {
     load();
   }, [load]);
 
+  // the "your space is live" / "you're in" banner is only useful for the
+  // first few seconds after landing — fade it out on its own so it doesn't
+  // permanently squat at the top of the page, but still let people close it
+  // early if they don't want to wait.
+  useEffect(() => {
+    if (!(location.state?.justCreated || location.state?.justJoined)) return;
+    const t = setTimeout(() => setWelcomeBannerDismissed(true), 6000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isOwner = !!(org && user && org.owner_id === user.id);
+
+  // settings is owner-only — bounce anyone else back to the feed (covers a
+  // direct link to the old /settings route, and ownership changing out from
+  // under someone mid-session via a transfer elsewhere)
+  useEffect(() => {
+    if (tab === "settings" && org && !isOwner) setTab("feed");
+  }, [tab, org, isOwner]);
   const myMembership = members.find((m) => m.user_id === user?.id);
   const isAdmin = isOwner || myMembership?.role === "admin";
   const isFacultyOnly = !isAdmin && myMembership?.member_type === "faculty";
@@ -391,6 +415,28 @@ export default function InstitutePublicPage() {
     if ((isAdmin || isFacultyOnly) && org) loadPending();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, isFacultyOnly, org?.id]);
+
+  // keep the feed live — anyone with this space open sees a new post,
+  // edit, approval, or removal appear automatically instead of needing to
+  // reload the page.
+  useEffect(() => {
+    if (!org?.id) return;
+    const channel = supabase
+      .channel(`org_updates:${org.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "org_updates", filter: `org_id=eq.${org.id}` },
+        () => {
+          load();
+          if (isAdmin || isFacultyOnly) loadPending();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org?.id, isAdmin, isFacultyOnly]);
 
   // seed editable drafts from the org row once per org load
   useEffect(() => {
@@ -484,10 +530,13 @@ export default function InstitutePublicPage() {
 
   /* ── highlights feed ───────────────────────────────────────────────── */
 
-  function openPostModal() {
-    setShareTitle("");
-    setShareDesc("");
+  function openPostModal(updateToEdit) {
+    setEditingUpdateId(updateToEdit?.id || null);
+    setShareTitle(updateToEdit?.title || "");
+    setShareDesc(updateToEdit?.description || "");
+    setShareSourceUrl(updateToEdit?.source_url || "");
     clearShareImage();
+    setShareExistingImageUrl(updateToEdit?.image_url || null);
     setPostModalOpen(true);
   }
 
@@ -501,13 +550,17 @@ export default function InstitutePublicPage() {
     if (shareImagePreview) URL.revokeObjectURL(shareImagePreview);
     setShareImageFile(null);
     setShareImagePreview(null);
+    setShareExistingImageUrl(null);
   }
 
   async function submitShareUpdate() {
     if (!shareTitle.trim() || !user) return;
     setShareSubmitting(true);
 
-    let imageUrl = null;
+    const trimmedSource = shareSourceUrl.trim();
+    const sourceUrl = trimmedSource ? (/^https?:\/\//i.test(trimmedSource) ? trimmedSource : `https://${trimmedSource}`) : null;
+
+    let imageUrl = shareExistingImageUrl;
     if (shareImageFile) {
       const path = `${org.id}/${crypto.randomUUID()}-${shareImageFile.name}`;
       const { error: upErr } = await supabase.storage.from("org-update-images").upload(path, shareImageFile);
@@ -519,27 +572,41 @@ export default function InstitutePublicPage() {
       imageUrl = supabase.storage.from("org-update-images").getPublicUrl(path).data.publicUrl;
     }
 
-    const { error: insErr } = await supabase.from("org_updates").insert({
-      org_id: org.id,
-      author_id: user.id,
-      title: shareTitle.trim(),
-      description: shareDesc.trim() || null,
-      image_url: imageUrl,
-      status: isAdmin ? "live" : "pending",
-      published_at: isAdmin ? new Date().toISOString() : null
-    });
+    const { error: saveErr } = editingUpdateId
+      ? await supabase
+          .from("org_updates")
+          .update({
+            title: shareTitle.trim(),
+            description: shareDesc.trim() || null,
+            image_url: imageUrl,
+            source_url: sourceUrl
+          })
+          .eq("id", editingUpdateId)
+      : await supabase.from("org_updates").insert({
+          org_id: org.id,
+          author_id: user.id,
+          title: shareTitle.trim(),
+          description: shareDesc.trim() || null,
+          image_url: imageUrl,
+          source_url: sourceUrl,
+          status: isAdmin ? "live" : "pending",
+          published_at: isAdmin ? new Date().toISOString() : null
+        });
     setShareSubmitting(false);
-    if (insErr) {
-      showToast("couldn't share that — try again");
+    if (saveErr) {
+      showToast(editingUpdateId ? "couldn't save changes — try again" : "couldn't share that — try again");
       return;
     }
+    const wasEditing = !!editingUpdateId;
     setPostModalOpen(false);
+    setEditingUpdateId(null);
     setShareTitle("");
     setShareDesc("");
+    setShareSourceUrl("");
     clearShareImage();
     load();
     if (isAdmin) loadPending();
-    showToast(isAdmin ? "posted to the public feed" : "submitted for review");
+    showToast(wasEditing ? "post updated" : isAdmin ? "posted to the public feed" : "submitted for review");
   }
 
   async function approveUpdate(id) {
@@ -1069,6 +1136,11 @@ export default function InstitutePublicPage() {
 
   const TABS = [
     { id: "feed", label: "feed" },
+    // calendar lives inside the feed tab's sidebar on desktop already — this
+    // tab only exists so mobile (where that sidebar column stacks below a
+    // potentially long post list) has a direct way to jump to it, so it's
+    // hidden on desktop via mobileOnly.
+    { id: "calendar", label: "calendar", mobileOnly: true },
     ...(isInstitute || org.org_type === "company"
       ? [{ id: "programs", label: isInstitute ? "ongoing programs" : "programs" }]
       : []),
@@ -1133,7 +1205,7 @@ export default function InstitutePublicPage() {
           </button>
           {isOwner && (
             <button
-              onClick={() => navigate(`/institute/${slug}/settings`)}
+              onClick={() => setTab("settings")}
               title="space settings"
               className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors"
             >
@@ -1161,12 +1233,21 @@ export default function InstitutePublicPage() {
         </div>
       </div>
 
-      {(location.state?.justCreated || location.state?.justJoined) && (
+      {(location.state?.justCreated || location.state?.justJoined) && !welcomeBannerDismissed && (
         <div className="px-5 md:px-6 pt-4">
-          <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
-            {location.state?.justCreated
-              ? "🎉 your space is live — here's how it looks. admins can edit anything on this page anytime."
-              : `🎉 you're in — welcome to ${org.name}.`}
+          <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3 flex items-center gap-3">
+            <span className="flex-1">
+              {location.state?.justCreated
+                ? "🎉 your space is live — here's how it looks. admins can edit anything on this page anytime."
+                : `🎉 you're in — welcome to ${org.name}.`}
+            </span>
+            <button
+              onClick={() => setWelcomeBannerDismissed(true)}
+              title="dismiss"
+              className="text-evolve-inchworm/70 hover:text-evolve-inchworm w-5 h-5 flex items-center justify-center flex-shrink-0"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
@@ -1225,8 +1306,8 @@ export default function InstitutePublicPage() {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={`px-1 py-3.5 mr-6 text-[13px] font-semibold border-b-2 transition-colors flex items-center gap-1.5 flex-shrink-0 ${
-                    tab === t.id ? "text-white border-evolve-lavender-indigo" : "text-white/40 border-transparent hover:text-white/70"
-                  }`}
+                    t.mobileOnly ? "md:hidden" : ""
+                  } ${tab === t.id ? "text-white border-evolve-lavender-indigo" : "text-white/40 border-transparent hover:text-white/70"}`}
                 >
                   {t.label}
                   {t.count != null && (
@@ -1267,8 +1348,8 @@ export default function InstitutePublicPage() {
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                     <div className="flex items-center justify-between gap-3 mb-4">
                       <p className="text-white font-extrabold text-base">institute highlights</p>
-                      {canSubmitUpdate && (
-                        <button onClick={openPostModal} className="text-xs font-bold text-evolve-lavender-indigo flex-shrink-0">
+                      {canSubmitUpdate && feedView !== "pending" && (
+                        <button onClick={() => openPostModal()} className="text-xs font-bold text-evolve-lavender-indigo flex-shrink-0">
                           + post
                         </button>
                       )}
@@ -1301,6 +1382,16 @@ export default function InstitutePublicPage() {
                                   </span>
                                   <p className="text-white text-[13px] font-bold mb-1">{u.title}</p>
                                   {u.description && <p className="text-white/40 text-xs leading-relaxed">{u.description}</p>}
+                                  {u.source_url && (
+                                    <a
+                                      href={u.source_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-block text-evolve-lavender-indigo/80 hover:text-evolve-lavender-indigo text-[11px] font-semibold mt-1.5 no-underline hover:underline"
+                                    >
+                                      view source ↗
+                                    </a>
+                                  )}
                                   <p className="text-white/30 text-[11px] mt-2.5">
                                     submitted by {u.profiles?.name || "someone"}
                                     {roleBadge ? ` (${roleBadge})` : ""} · {timeAgo(u.created_at)}
@@ -1338,19 +1429,63 @@ export default function InstitutePublicPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-white font-bold text-sm mb-1">{u.title}</p>
                                 {u.description && <p className="text-white/45 text-[12.5px] leading-relaxed">{u.description}</p>}
-                                <p className="text-white/25 text-[11px] mt-2.5">
-                                  posted {timeAgo(u.published_at || u.created_at)}
-                                  {u.profiles?.name ? ` · by ${u.profiles.name}` : ""}
+                                <p className="text-white/25 text-[11px] mt-2.5 flex items-center gap-1.5 flex-wrap">
+                                  <span>
+                                    posted {timeAgo(u.published_at || u.created_at)}
+                                    {u.profiles?.name ? ` · by ${u.profiles.name}` : ""}
+                                  </span>
+                                  {u.source_url && (
+                                    <>
+                                      <span>·</span>
+                                      <a
+                                        href={u.source_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-evolve-lavender-indigo/80 hover:text-evolve-lavender-indigo font-semibold no-underline hover:underline"
+                                      >
+                                        view source ↗
+                                      </a>
+                                    </>
+                                  )}
                                 </p>
                               </div>
                               {isAdmin && (
-                                <button
-                                  onClick={() => removeUpdate(u.id, true)}
-                                  title="remove from feed"
-                                  className="text-white/25 hover:text-evolve-red w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.04] flex-shrink-0"
-                                >
-                                  ×
-                                </button>
+                                <div className="relative flex-shrink-0">
+                                  <button
+                                    onClick={() => setPostMenuOpenId((v) => (v === u.id ? null : u.id))}
+                                    title="post options"
+                                    className="text-white/25 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.04]"
+                                  >
+                                    ⋮
+                                  </button>
+                                  {postMenuOpenId === u.id && (
+                                    <>
+                                      <div className="fixed inset-0 z-40" onClick={() => setPostMenuOpenId(null)} />
+                                      <div
+                                        className="absolute right-0 top-8 z-50 w-36 rounded-xl border border-white/10 bg-[#1c1c1e] shadow-xl overflow-hidden py-1"
+                                      >
+                                        <button
+                                          onClick={() => {
+                                            setPostMenuOpenId(null);
+                                            openPostModal(u);
+                                          }}
+                                          className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/[0.06]"
+                                        >
+                                          edit post
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setPostMenuOpenId(null);
+                                            removeUpdate(u.id, true);
+                                          }}
+                                          className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-evolve-red hover:bg-white/[0.06]"
+                                        >
+                                          remove from feed
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1361,8 +1496,8 @@ export default function InstitutePublicPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  {/* calendar */}
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  {/* calendar — hidden on mobile here, it has its own tab there instead */}
+                  <div className="hidden lg:block rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <p className="text-white font-extrabold text-sm flex-1">mark your calendar</p>
                       {isAdmin && (
@@ -1452,6 +1587,52 @@ export default function InstitutePublicPage() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ============ calendar (mobile only — desktop shows this inside the feed tab's sidebar) ============ */}
+            {tab === "calendar" && (
+              <div className="lg:hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="text-white font-extrabold text-sm flex-1">mark your calendar</p>
+                  {isAdmin && (
+                    <button onClick={openCalendarModal} title="edit calendar" className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 20h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {upcomingEvents.length === 0 ? (
+                  <p className="text-white/25 text-xs italic py-3 text-center">no upcoming events.</p>
+                ) : (
+                  <div className="flex flex-col divide-y divide-white/5">
+                    {upcomingEvents.map((ev) => (
+                      <EventRow key={ev.id} ev={ev} />
+                    ))}
+                  </div>
+                )}
+                {pastEvents.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => setShowPastEvents((v) => !v)}
+                      className="flex items-center gap-1.5 text-white/30 hover:text-white/50 text-[11px] font-semibold pt-3 mt-3 border-t border-white/10 w-full transition-colors"
+                    >
+                      <span className="inline-block transition-transform" style={{ transform: showPastEvents ? "rotate(180deg)" : "none" }}>
+                        ▾
+                      </span>
+                      past events ({pastEvents.length})
+                    </button>
+                    {showPastEvents && (
+                      <div className="flex flex-col divide-y divide-white/5 mt-1">
+                        {pastEvents.map((ev) => (
+                          <EventRow key={ev.id} ev={ev} muted />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
@@ -1767,6 +1948,20 @@ export default function InstitutePublicPage() {
                 })()}
               </div>
             )}
+
+            {/* ============ settings (owner only) — same shell, this just swaps the main content ============ */}
+            {tab === "settings" && isOwner && (
+              <InstituteSettingsPanel
+                org={org}
+                members={allMembersLoaded ? allMembers : members}
+                user={user}
+                slug={slug}
+                onBack={() => setTab("feed")}
+                onNavigateTab={(t) => setTab(t)}
+                reloadOrg={load}
+                reloadMembers={loadAdminTeam}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -1811,8 +2006,14 @@ export default function InstitutePublicPage() {
           <div className="w-full max-w-[460px] rounded-2xl border border-white/15 p-6" style={{ background: "#1c1c1e" }}>
             <div className="flex items-start justify-between gap-4 mb-1">
               <div>
-                <p className="text-white font-extrabold text-lg">post a highlight</p>
-                <p className="text-white/40 text-xs mt-1">{isAdmin ? `visible to the ${org.name} team now · goes live immediately` : `visible to the ${org.name} team now · goes live after admin review`}</p>
+                <p className="text-white font-extrabold text-lg">{editingUpdateId ? "edit highlight" : "post a highlight"}</p>
+                <p className="text-white/40 text-xs mt-1">
+                  {editingUpdateId
+                    ? "changes save straight to the live post."
+                    : isAdmin
+                      ? `visible to the ${org.name} team now · goes live immediately`
+                      : `visible to the ${org.name} team now · goes live after admin review`}
+                </p>
               </div>
               <button onClick={() => setPostModalOpen(false)} className="text-white/40 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/[0.06] flex-shrink-0">
                 ×
@@ -1823,9 +2024,9 @@ export default function InstitutePublicPage() {
                 <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mb-2">
                   image <span className="normal-case font-normal text-white/25">optional</span>
                 </p>
-                {shareImagePreview ? (
+                {shareImagePreview || shareExistingImageUrl ? (
                   <div className="relative rounded-xl overflow-hidden bg-white/5 aspect-[16/9]">
-                    <img src={shareImagePreview} alt="" className="w-full h-full object-cover" />
+                    <img src={shareImagePreview || shareExistingImageUrl} alt="" className="w-full h-full object-cover" />
                     <button
                       onClick={clearShareImage}
                       className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center"
@@ -1859,6 +2060,14 @@ export default function InstitutePublicPage() {
               >
                 <textarea rows={3} value={shareDesc} onChange={(e) => setShareDesc(e.target.value)} placeholder="what happened, and why it matters — keep it factual and specific." className={`${fieldInputCls} resize-y`} />
               </Field>
+              <Field label="source link" hint="optional — where this is from, so people can click through">
+                <input
+                  value={shareSourceUrl}
+                  onChange={(e) => setShareSourceUrl(e.target.value)}
+                  placeholder="https://…"
+                  className={fieldInputCls}
+                />
+              </Field>
               <div className="flex gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <span className="text-white/30 flex-shrink-0">⚠</span>
                 <p className="text-white/40 text-[11px] leading-relaxed">
@@ -1873,7 +2082,7 @@ export default function InstitutePublicPage() {
               disabled={shareSubmitting || !shareTitle.trim()}
               className="w-full mt-5 text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity"
             >
-              {shareSubmitting ? "sharing…" : isAdmin ? "publish" : "submit for review"}
+              {shareSubmitting ? "saving…" : editingUpdateId ? "save changes" : isAdmin ? "publish" : "submit for review"}
             </button>
           </div>
         </div>

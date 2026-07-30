@@ -66,6 +66,9 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
   const [linkInput, setLinkInput] = useState(initial?.sourceUrl || "");
   const [noWebsite, setNoWebsite] = useState(false);
   const [manualName, setManualName] = useState(initial?.spaceName || "");
+  const [manualBio, setManualBio] = useState(initial?.bio || "");
+  const [manualLocation, setManualLocation] = useState(initial?.location || "");
+  const [manualYearFounded, setManualYearFounded] = useState(initial?.yearFounded || "");
   const [mode, setMode] = useState(initial?.mode || "");
   const [members, setMembers] = useState(initial?.members || "");
   const [touched, setTouched] = useState(false);
@@ -113,9 +116,9 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
         spaceName: manualName.trim(),
         website: "",
         logoUrl: "",
-        bio: "",
-        location: "",
-        yearFounded: "",
+        bio: manualBio.trim(),
+        location: manualLocation.trim(),
+        yearFounded: manualYearFounded.trim(),
         mode,
         members,
         programmeDetails: "",
@@ -218,7 +221,10 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                 </button>
               </div>
             ) : (
-              <div className="w-full rounded-2xl border border-white/10 p-5" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+              <div className="w-full rounded-2xl border border-white/10 p-5 flex flex-col gap-4" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                <p className="text-white/50 text-xs leading-relaxed -mt-1">
+                  no worries — fill in the details manually and evolve builds your page from that instead.
+                </p>
                 <Field label="institute name">
                   <input
                     value={manualName}
@@ -228,9 +234,39 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                     style={inputStyle}
                   />
                 </Field>
+                <Field label="about / short bio" optional>
+                  <textarea
+                    value={manualBio}
+                    onChange={(e) => setManualBio(e.target.value)}
+                    placeholder="a couple of lines about your institute"
+                    rows={3}
+                    className={`${inputCls} resize-none`}
+                    style={inputStyle}
+                  />
+                </Field>
+                <div className="flex gap-3">
+                  <Field label="location" optional half>
+                    <input
+                      value={manualLocation}
+                      onChange={(e) => setManualLocation(e.target.value)}
+                      placeholder="e.g. Ahmedabad, Gujarat"
+                      className={inputCls}
+                      style={inputStyle}
+                    />
+                  </Field>
+                  <Field label="year founded" optional half>
+                    <input
+                      value={manualYearFounded}
+                      onChange={(e) => setManualYearFounded(e.target.value)}
+                      placeholder="e.g. 1961"
+                      className={inputCls}
+                      style={inputStyle}
+                    />
+                  </Field>
+                </div>
                 <button
                   onClick={() => setNoWebsite(false)}
-                  className="text-white/40 text-xs underline underline-offset-2 mt-3 hover:text-white/70 transition-colors"
+                  className="text-white/40 text-xs underline underline-offset-2 hover:text-white/70 transition-colors self-start"
                 >
                   ← actually, use a website link
                 </button>

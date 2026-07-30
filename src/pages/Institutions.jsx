@@ -196,7 +196,7 @@ export default function Institutions() {
                 onClick={() =>
                   mySpaceSlug
                     ? navigate(`/space/${mySpaceSlug}`)
-                    : navigate("/onboarding")
+                    : navigate("/onboarding", { state: { fromInstitution: true } })
                 }
                 className="inline-flex items-center justify-center gap-2 border border-evolve-yellow/70 text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:bg-evolve-yellow/10 transition-colors w-fit"
                 style={{ borderRadius: 16 }}
