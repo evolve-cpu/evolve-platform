@@ -1,5 +1,16 @@
 {
     "buildCommand": "vite build",
+    "crons": [
+        {
+            "path": "/api/sync-institute-posts",
+            "schedule": "0 6 * * *"
+        }
+    ],
+    "functions": {
+        "api/sync-institute-posts.js": {
+            "maxDuration": 60
+        }
+    },
     "rewrites": [
         {
             "source": "/(.*)",

@@ -196,10 +196,12 @@ export default function Onboarding() {
               author_id: user.id,
               title: p.title,
               description: p.description || null,
-              // spaceDraft.website always carries a protocol (sourceUrl is
-              // the raw, possibly bare domain the admin typed) — use it so
-              // the "view source" link on the post is a real clickable URL
-              source_url: spaceDraft.website || null,
+              // prefer the specific link Gemini found for this post (points
+              // straight at the actual article/announcement); fall back to
+              // the institute's homepage — spaceDraft.website always carries
+              // a protocol (sourceUrl is the raw, possibly bare domain the
+              // admin typed), so it's a real clickable URL either way
+              source_url: p.url || spaceDraft.website || null,
               status: "live",
               published_at: new Date().toISOString()
             }))
