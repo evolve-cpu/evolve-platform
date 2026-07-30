@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
+import OrgLogoBox from "../components/OrgLogoBox";
+import InstituteInfoPanel from "../components/InstituteInfoPanel";
 import { initialsOf } from "../lib/orgShared";
 
 // A dedicated page rather than a modal — settings here covers real
@@ -63,6 +65,7 @@ export default function InstituteSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [toast, setToast] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const [visibilityDraft, setVisibilityDraft] = useState("public");
   const [visibilityDirty, setVisibilityDirty] = useState(false);
@@ -253,29 +256,101 @@ export default function InstituteSettingsPage() {
   const daysLeft = isDeleted ? Math.max(0, Math.ceil((permanentAtMs - Date.now()) / 86400000)) : null;
   const progressPct = isDeleted ? Math.min(100, Math.max(2, ((14 - daysLeft) / 14) * 100)) : 0;
   const fmtDate = (ms) => new Date(ms).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const sidebarStats = [
+    { num: org.year_founded || "—", label: "est. year" },
+    { num: org.expected_members || activeMemberCount, label: org.org_type === "institute" ? "faculty & students" : "team size" }
+  ];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#131313" }}>
-      <div className="h-[52px] border-b border-white/10 flex items-center gap-2 px-5 md:px-6 flex-shrink-0">
-        <Link to={`/institute/${slug}`} className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-semibold flex-shrink-0 transition-colors">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          back to space
+      {/* global topbar — same shell as the space page, so settings doesn't feel like a separate app */}
+      <div className="h-[52px] border-b border-white/10 flex items-center px-5 md:px-6 gap-6 sticky top-0 z-[70] flex-shrink-0" style={{ background: "rgba(19,19,19,.94)", backdropFilter: "blur(14px)" }}>
+        <Link to="/" className="font-extrabold text-[17px] text-white tracking-tight flex-shrink-0">
+          evolve<span className="text-evolve-lavender-indigo">.</span>
         </Link>
-        <span className="text-white/20 flex-shrink-0">·</span>
-        <p className="text-white font-bold text-xs truncate">
-          {org.name} <span className="text-white/40 font-semibold">· settings</span>
-        </p>
+        <div className="hidden md:flex items-center gap-5 ml-auto">
+          <span title="coming soon" className="text-white/35 text-xs font-semibold cursor-default">
+            explore spaces
+          </span>
+          <span title="coming soon" className="text-white/35 text-xs font-semibold cursor-default">
+            explore people
+          </span>
+          <Link to="/community" className="text-white/50 hover:text-white text-xs font-semibold transition-colors">
+            evolve community
+          </Link>
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto md:ml-0 flex-shrink-0">
+          <button title="notifications" className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div title="space settings" className="w-8 h-8 rounded-full flex items-center justify-center bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex-shrink-0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+              <path
+                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          {user?.username && (
+            <Link
+              to={`/profile/${user.username}`}
+              className="w-[30px] h-[30px] rounded-full overflow-hidden flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 ml-1"
+              style={{ background: "linear-gradient(135deg, rgba(163,91,251,1), #c264ff)" }}
+            >
+              {user.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : initialsOf(user.name)}
+            </Link>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 max-w-[860px] w-full mx-auto px-5 md:px-6 py-8 pb-24 flex flex-col gap-5">
-        <div>
-          <h1 className="text-white font-extrabold text-3xl">settings</h1>
-          <p className="text-white/40 text-sm mt-1.5">manage how this space works, who owns it, and what people can see.</p>
-        </div>
+      <div className="flex flex-1 min-h-0">
+        {/* institute info sidebar — collapsed by default here since settings is the focus, but expandable */}
+        <aside
+          className="hidden md:flex flex-col flex-shrink-0 border-r border-white/10 sticky self-start transition-[width] duration-200"
+          style={{ width: sidebarCollapsed ? 78 : 320, top: 52, height: "calc(100vh - 52px)", background: "rgba(19,19,19,.97)" }}
+        >
+          <div className={`flex-1 min-h-0 overflow-y-auto ${sidebarCollapsed ? "px-3 py-5 flex flex-col items-center" : "px-5 py-5"}`}>
+            <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-2.5" : "items-start justify-between gap-2"}`}>
+              <OrgLogoBox org={org} size={sidebarCollapsed ? 36 : 48} rounded="rounded-2xl" />
+              <button
+                onClick={() => setSidebarCollapsed((v) => !v)}
+                title={sidebarCollapsed ? "expand panel" : "collapse panel"}
+                className="w-[26px] h-[26px] min-w-[26px] rounded-lg border border-white/10 text-white/35 hover:text-white flex items-center justify-center flex-shrink-0 transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ transform: sidebarCollapsed ? "rotate(180deg)" : "none", transition: "transform .2s" }}>
+                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            {!sidebarCollapsed && (
+              <div className="mt-3.5">
+                <InstituteInfoPanel org={org} isAdmin={isOwner} sidebarStats={sidebarStats} onEditInfo={() => navigate(`/institute/${slug}`)} />
+              </div>
+            )}
+          </div>
+        </aside>
 
-        {isDeleted ? (
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+          <div className="max-w-[860px] w-full mx-auto px-5 md:px-6 py-8 pb-24 flex flex-col gap-5">
+            <div>
+              <Link to={`/institute/${slug}`} className="inline-flex items-center gap-1 text-evolve-lavender-indigo hover:underline text-xs font-bold mb-3">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                back
+              </Link>
+              <h1 className="text-white font-extrabold text-3xl">settings</h1>
+              <p className="text-white/40 text-sm mt-1.5">manage how this space works, who owns it, and what people can see.</p>
+            </div>
+
+            {isDeleted ? (
           <>
             <div className="rounded-2xl border border-evolve-red/30 p-5 sm:p-6" style={{ background: "linear-gradient(180deg, rgba(223,5,134,.08), #1c1c1e)" }}>
               <div className="flex items-start gap-3 mb-4">
@@ -552,6 +627,8 @@ export default function InstituteSettingsPage() {
             </SectionCard>
           </>
         )}
+          </div>
+        </div>
       </div>
 
       {/* ============ sheet: transfer ownership ============ */}

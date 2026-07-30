@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
 import OrgLogoBox from "../components/OrgLogoBox";
+import InstituteInfoPanel from "../components/InstituteInfoPanel";
 import {
   ROLE_META,
   EVOLVE_PROGRAMS,
@@ -153,77 +154,6 @@ function ProgramArt({ id }) {
 
 // the institute-info panel — the desktop sidebar and the mobile "space
 // info" sheet show identical content, just inside different containers
-function InstituteInfoPanel({ org, isAdmin, sidebarStats, onEditInfo }) {
-  return (
-    <div>
-      <p className="text-white font-extrabold text-base leading-tight">{org.name}</p>
-      {org.location && <p className="text-white/30 text-[11px] mt-1">{org.location}</p>}
-      {org.bio && <p className="text-white/45 text-[12px] leading-relaxed mt-2">{org.bio}</p>}
-
-      {(org.website || (org.social_links || []).length > 0) && (
-        <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-          {org.website && (
-            <a href={org.website} target="_blank" rel="noopener noreferrer" title="website" className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/50 hover:text-white flex-shrink-0">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
-                <path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18" stroke="currentColor" strokeWidth="1.8" />
-              </svg>
-            </a>
-          )}
-          {(org.social_links || []).map((l, i) => (
-            <a
-              key={i}
-              href={/^https?:\/\//.test(l.url) ? l.url : `https://${l.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={l.platform}
-              className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/50 hover:text-white text-[10px] font-bold flex-shrink-0"
-            >
-              {l.platform[0].toUpperCase()}
-            </a>
-          ))}
-        </div>
-      )}
-
-      {(org.awards || []).length > 0 && (
-        <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mt-3 pt-3 border-t border-white/10 text-[11px] text-white/50 font-semibold">
-          {org.awards.map((a, i) => (
-            <span key={i} className="inline-flex items-center gap-1">
-              {i > 0 && <span className="text-white/25 mx-1">·</span>}
-              🏅 {a.title}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className={`flex items-stretch ${(org.awards || []).length > 0 ? "mt-3.5" : "mt-3.5 pt-3.5 border-t border-white/10"}`}>
-        {sidebarStats.map((s, i) => (
-          <div key={s.label} className="flex items-stretch flex-1 min-w-0">
-            {i > 0 && <div className="w-px bg-white/10 flex-shrink-0 mr-3" />}
-            <div className="min-w-0">
-              <p className="text-white font-extrabold text-[12.5px] leading-tight truncate">{s.num}</p>
-              <p className="text-white/30 text-[9px] mt-0.5 leading-tight">{s.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {isAdmin && (
-        <button
-          onClick={onEditInfo}
-          className="inline-flex items-center gap-1.5 mt-3.5 pt-3.5 border-t border-white/10 w-full text-evolve-lavender-indigo text-xs font-semibold hover:underline underline-offset-2"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M12 20h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-          </svg>
-          edit info
-        </button>
-      )}
-    </div>
-  );
-}
-
 const EDIT_PANELS = [
   {
     id: "basics",
@@ -1160,6 +1090,11 @@ export default function InstitutePublicPage() {
     }
     return true;
   });
+  // when a role tab is genuinely empty, the empty-state cards below already
+  // offer add-one/csv/find-on-evolve up front — a search bar and a second
+  // "+ invite" entry point above them would have nothing to search and
+  // would just duplicate those same three options
+  const teamEmptyStateShowing = isInstitute && isAdmin && teamRoleFilter !== "all" && filteredMembers.length <= 1;
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcomingEvents = events.filter((e) => e.event_date >= todayStr);
@@ -1660,7 +1595,7 @@ export default function InstitutePublicPage() {
                   </div>
                 )}
 
-                {isAdmin && (
+                {isAdmin && !teamEmptyStateShowing && (
                   <div className="flex items-center gap-2">
                     <div className="flex-1 relative">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
@@ -1736,90 +1671,100 @@ export default function InstitutePublicPage() {
                   </div>
                 )}
 
-                {filteredMembers.length === 0 ? (
-                  isInstitute && isAdmin && teamRoleFilter !== "all" ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 flex flex-col items-center text-center gap-2.5">
-                      <p className="text-white font-bold text-[15px]">no {ROLE_META[teamRoleFilter]?.plural} yet</p>
-                      <p className="text-white/35 text-xs max-w-sm">add {ROLE_META[teamRoleFilter]?.plural} one by one, upload a csv, or find them if they're already on evolve.</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mt-3">
-                        <button onClick={() => openTeamModal("one")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex items-center justify-center text-sm font-bold">+</div>
-                          <div>
-                            <p className="text-white text-xs font-bold">add one by one</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">name, email — role is set for you</p>
-                          </div>
-                        </button>
-                        <button onClick={() => openTeamModal("csv")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-evolve-inchworm/15 text-evolve-inchworm flex items-center justify-center text-sm">⇧</div>
-                          <div>
-                            <p className="text-white text-xs font-bold">upload a csv</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">for the whole batch</p>
-                          </div>
-                        </button>
-                        <button onClick={() => openTeamModal("find")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-evolve-yellow/15 text-evolve-yellow flex items-center justify-center text-sm">⌕</div>
-                          <div>
-                            <p className="text-white text-xs font-bold">find on evolve</p>
-                            <p className="text-white/35 text-[11px] mt-0.5">if they already have an account</p>
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-white/25 text-sm italic">no matches.</p>
-                  )
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {filteredMembers.map((m, i) => {
-                      const roleBadge = m.role === "owner" || m.role === "admin" ? "admin" : m.member_type || (isInstitute ? null : "member");
-                      const discipline = m.title || m.intake?.department || m.intake?.program || m.intake?.subjects || null;
-                      return (
-                        <div key={m.id} className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 group">
-                          {isAdmin && m.user_id !== user?.id && (
-                            <button
-                              onClick={() => removeMember(m.id)}
-                              className="absolute top-3 right-3 w-6.5 h-6.5 rounded-md text-white/25 opacity-0 group-hover:opacity-100 hover:text-evolve-red hover:bg-evolve-red/10 flex items-center justify-center transition-all"
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                                <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </button>
-                          )}
-                          <div className="flex items-start gap-2.5">
-                            <div
-                              className="w-[34px] h-[34px] min-w-[34px] rounded-full flex items-center justify-center text-white text-[11.5px] font-bold flex-shrink-0 overflow-hidden"
-                              style={{ background: AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length] }}
-                            >
-                              {m.profiles?.avatar_url ? (
-                                <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                initialsOf(m.profiles?.name || m.invited_name || m.invited_email)
-                              )}
-                            </div>
-                            <div className="min-w-0 pr-6">
-                              <p className="text-white font-semibold text-[13px] truncate">{m.profiles?.name || m.invited_name || m.invited_email || "evolve member"}</p>
-                              {discipline && <p className="text-white/40 text-xs mt-0.5 truncate">{discipline}</p>}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 mt-2.5">
-                            {roleBadge && (
-                              <span
-                                className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full flex-shrink-0 ${
-                                  roleBadge === "admin" ? "bg-evolve-yellow/10 text-evolve-yellow" : roleBadge === "faculty" ? "bg-evolve-lavender-indigo/10 text-evolve-lavender-indigo" : "bg-white/[0.06] text-white/40"
-                                }`}
+                {(() => {
+                  const memberGrid = (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {filteredMembers.map((m, i) => {
+                        const roleBadge = m.role === "owner" || m.role === "admin" ? "admin" : m.member_type || (isInstitute ? null : "member");
+                        const discipline = m.title || m.intake?.department || m.intake?.program || m.intake?.subjects || null;
+                        return (
+                          <div key={m.id} className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 group">
+                            {isAdmin && m.user_id !== user?.id && (
+                              <button
+                                onClick={() => removeMember(m.id)}
+                                className="absolute top-3 right-3 w-6.5 h-6.5 rounded-md text-white/25 opacity-0 group-hover:opacity-100 hover:text-evolve-red hover:bg-evolve-red/10 flex items-center justify-center transition-all"
                               >
-                                {roleBadge}
-                              </span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                  <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                  <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
                             )}
-                            {m.user_id === user?.id && <span className="text-[10.5px] text-white/30 font-semibold">you</span>}
-                            {isAdmin && m.status && m.status !== "active" && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 bg-evolve-yellow/10 text-evolve-yellow">invited</span>}
+                            <div className="flex items-start gap-2.5">
+                              <div
+                                className="w-[34px] h-[34px] min-w-[34px] rounded-full flex items-center justify-center text-white text-[11.5px] font-bold flex-shrink-0 overflow-hidden"
+                                style={{ background: AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length] }}
+                              >
+                                {m.profiles?.avatar_url ? (
+                                  <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  initialsOf(m.profiles?.name || m.invited_name || m.invited_email)
+                                )}
+                              </div>
+                              <div className="min-w-0 pr-6">
+                                <p className="text-white font-semibold text-[13px] truncate">{m.profiles?.name || m.invited_name || m.invited_email || "evolve member"}</p>
+                                {discipline && <p className="text-white/40 text-xs mt-0.5 truncate">{discipline}</p>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2.5">
+                              {roleBadge && (
+                                <span
+                                  className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full flex-shrink-0 ${
+                                    roleBadge === "admin" ? "bg-evolve-yellow/10 text-evolve-yellow" : roleBadge === "faculty" ? "bg-evolve-lavender-indigo/10 text-evolve-lavender-indigo" : "bg-white/[0.06] text-white/40"
+                                  }`}
+                                >
+                                  {roleBadge}
+                                </span>
+                              )}
+                              {m.user_id === user?.id && <span className="text-[10.5px] text-white/30 font-semibold">you</span>}
+                              {isAdmin && m.status && m.status !== "active" && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 bg-evolve-yellow/10 text-evolve-yellow">invited</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+
+                  if (teamEmptyStateShowing) {
+                    return (
+                      <div className="flex flex-col gap-3">
+                        {filteredMembers.length > 0 && memberGrid}
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 flex flex-col items-center text-center gap-2.5">
+                          <p className="text-white font-bold text-[15px]">
+                            {filteredMembers.length === 0 ? `no ${ROLE_META[teamRoleFilter]?.plural} yet` : `add more ${ROLE_META[teamRoleFilter]?.plural}`}
+                          </p>
+                          <p className="text-white/35 text-xs max-w-sm">add {ROLE_META[teamRoleFilter]?.plural} one by one, upload a csv, or find them if they're already on evolve.</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mt-3">
+                            <button onClick={() => openTeamModal("one")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                              <div className="w-7 h-7 rounded-lg bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex items-center justify-center text-sm font-bold">+</div>
+                              <div>
+                                <p className="text-white text-xs font-bold">add one by one</p>
+                                <p className="text-white/35 text-[11px] mt-0.5">name, email — role is set for you</p>
+                              </div>
+                            </button>
+                            <button onClick={() => openTeamModal("csv")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                              <div className="w-7 h-7 rounded-lg bg-evolve-inchworm/15 text-evolve-inchworm flex items-center justify-center text-sm">⇧</div>
+                              <div>
+                                <p className="text-white text-xs font-bold">upload a csv</p>
+                                <p className="text-white/35 text-[11px] mt-0.5">for the whole batch</p>
+                              </div>
+                            </button>
+                            <button onClick={() => openTeamModal("find")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                              <div className="w-7 h-7 rounded-lg bg-evolve-yellow/15 text-evolve-yellow flex items-center justify-center text-sm">⌕</div>
+                              <div>
+                                <p className="text-white text-xs font-bold">find on evolve</p>
+                                <p className="text-white/35 text-[11px] mt-0.5">if they already have an account</p>
+                              </div>
+                            </button>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      </div>
+                    );
+                  }
+
+                  if (filteredMembers.length === 0) return <p className="text-white/25 text-sm italic">no matches.</p>;
+                  return memberGrid;
+                })()}
               </div>
             )}
           </div>
