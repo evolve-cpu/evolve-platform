@@ -93,10 +93,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "method not allowed" });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Vercel exposes every configured env var to process.env regardless of a
+  // VITE_ prefix — that prefix only controls what Vite inlines into the
+  // client bundle at build time. So this reads either name: a plain
+  // GEMINI_API_KEY if one's been added, otherwise the VITE_ one that's
+  // already set for the client-side Gemini usage elsewhere in the app.
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     console.error(
-      "fetch-institute-details error: GEMINI_API_KEY is not configured"
+      "fetch-institute-details error: no GEMINI_API_KEY or VITE_GEMINI_API_KEY configured"
     );
     return res
       .status(200)
@@ -133,8 +138,8 @@ export default async function handler(req, res) {
   try {
     const geminiRes = await fetch(
       // `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      // `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      // `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
