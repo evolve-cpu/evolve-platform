@@ -6,6 +6,7 @@ import InstituteContactModal from "../components/InstituteContactModal";
 import {
   ProgrammeHero,
   ProgrammeOutcomes,
+  ProgrammeReviewers,
   ProgrammeHowItWorks
 } from "../components/ProgrammeSections";
 import { portfolioReview as COPY } from "../content";
@@ -31,6 +32,65 @@ const FOR_INSTITUTIONS = [
   "industry insights into student progress",
   "a valuable extension to the curriculum",
   "a credible industry partnership"
+];
+
+// TODO: replace image / linkedinUrl / instagramUrl placeholders with the real links.
+const REVIEWERS = [
+  {
+    name: "Yagnesh Ahir",
+    years: "18",
+    role: ["Founder & Design Director, Paperclip Design.", "Mentor, ADPList."],
+    image:
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Yagnesh_Ahir_Profile_2025_2_ckdmsn.png",
+    linkedinUrl: "https://www.linkedin.com/in/yagnesh-ahir-24676516/",
+    instagramUrl: ""
+  },
+  {
+    name: "Sakshi Patki",
+    years: "3",
+    role: [
+      "Senior Creative Graphic Designer, Paperclip Design.",
+      "Visual Lead, evolve."
+    ],
+    image:
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288229_wt4r9u.png",
+    linkedinUrl: "https://www.linkedin.com/in/sakshi-patki-97473b200/",
+    instagramUrl: ""
+  },
+  {
+    name: "Sonam Gandhi",
+    years: "5",
+    role: ["Product Designer, Paperclip Design.", "Mentor, evolve."],
+    image:
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288230_xsbbar.png",
+    linkedinUrl: "https://www.linkedin.com/in/gandhisonam/",
+    instagramUrl: ""
+  },
+  {
+    name: "Paramdeep Singh Dayani",
+    years: "8",
+    role: [
+      "Architect, Production Designer, Photographer.",
+      "Founder: Antispace.in.",
+      "Teaching Associate at CEPT University."
+    ],
+    image:
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/param_1_bgprl1.png",
+    linkedinUrl: "",
+    instagramUrl: "https://www.instagram.com/antispace.in"
+  },
+  {
+    name: "Anuj Sharma",
+    years: "25",
+    role: [
+      "Fashion Designer, Founder, Button Masala.",
+      "Visiting faculty at top design colleges."
+    ],
+    image:
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/image_1_sopzy9.png",
+    linkedinUrl: "https://www.linkedin.com/in/anuj-sharma-34005b11/",
+    instagramUrl: "https://www.instagram.com/anujsharmanid/"
+  }
 ];
 
 const PortfolioReviewForInstitutions = () => {
@@ -66,7 +126,12 @@ const PortfolioReviewForInstitutions = () => {
         onDownloadHandbook={() => openModal("handbook", "hero_handbook")}
       />
 
-      <ProgrammeOutcomes forStudents={FOR_STUDENTS} forInstitutions={FOR_INSTITUTIONS} />
+      <ProgrammeOutcomes
+        forStudents={FOR_STUDENTS}
+        forInstitutions={FOR_INSTITUTIONS}
+      />
+
+      <ProgrammeReviewers reviewers={REVIEWERS} />
 
       <ProgrammeHowItWorks steps={STEPS} />
 
