@@ -40,7 +40,7 @@ const REVIEWERS = [
     name: "Yagnesh Ahir",
     years: "18",
     role: [
-      "Founder & Design Director, Paperclip Design, Design Coach, byStadium"
+      "Founder & Design Director, Paperclip Design. Design Coach, by Stadium."
     ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Yagnesh_Ahir_Profile_2025_2_ckdmsn.png",
@@ -84,7 +84,7 @@ const REVIEWERS = [
     name: "Anuj Sharma",
     years: "25",
     role: [
-      "Fashion Designer, Founder, Button Masala.Visiting faculty at top design colleges."
+      "Fashion Designer, Founder, Button Masala. Visiting faculty at top design colleges."
     ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785833013/Frame_1801288246_iykxnq.png",
