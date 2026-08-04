@@ -311,7 +311,7 @@ const ReviewerCard = ({ reviewer }) => (
 );
 
 export const ProgrammeReviewers = ({
-  heading = "industry experts across multiple disciplines",
+  heading = "Industry experts across multiple disciplines",
   reviewers
 }) => (
   <section
