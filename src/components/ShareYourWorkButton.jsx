@@ -11,14 +11,14 @@ const ShareYourWorkButton = ({ to, onClick }) => {
   return (
     <button
       onClick={handleClick}
-      className="font-extrabold lowercase cursor-pointer flex items-center gap-3 px-7 py-4 rounded-2xl"
+      className="font-extrabold cursor-pointer flex items-center gap-3 px-7 py-4 rounded-2xl"
       style={{
         backgroundColor: "#000",
         color: "var(--color-evolve-yellow, #FFD007)",
         boxShadow: "4px 4px 0 0 #BF9C05"
       }}
     >
-      <span>share your work</span>
+      <span>Share your work</span>
       <span style={{ fontSize: "1.1em" }}>→</span>
     </button>
   );

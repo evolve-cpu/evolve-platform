@@ -313,7 +313,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
             style={{ backgroundColor: T.inputBg, borderColor: T.border }}
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-            <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
+            <span className="text-xs font-semibold tracking-wide" style={{ color: T.sub }}>
               review in progress · 24–48 working hrs
             </span>
           </div>
@@ -499,7 +499,7 @@ function AlreadySubmittedScreen({ onBack, reportUrl }) {
                 className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ backgroundColor: isAnant ? "#3b82f6" : "#FFD007" }}
               />
-              <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
+              <span className="text-xs font-semibold tracking-wide" style={{ color: T.sub }}>
                 review in progress · 24–48 working hrs
               </span>
             </div>
@@ -573,7 +573,7 @@ function MobileForm({
         {/* Greeting */}
         <div>
           <h1
-            className="font-extrabold lowercase"
+            className="font-extrabold"
             style={{
               fontSize: "clamp(26px,7vw,36px)",
               letterSpacing: "-0.02em",
@@ -592,14 +592,14 @@ function MobileForm({
 
         {/* ── Portfolio ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+          <p className="text-sm font-semibold" style={{ color: T.inputText }}>
             your portfolio
           </p>
           {/* Tabs */}
           <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: T.border }}>
             <button
               onClick={() => setPortfolioMode("link")}
-              className="flex-1 py-3 text-sm font-bold lowercase transition-colors"
+              className="flex-1 py-3 text-sm font-bold transition-colors"
               style={{
                 backgroundColor:
                   portfolioMode === "link" ? T.accent : T.inputBg,
@@ -612,7 +612,7 @@ function MobileForm({
             <button
               type="button"
               onClick={() => setPortfolioMode("file")}
-              className="flex-1 py-3 text-sm font-bold lowercase transition-colors"
+              className="flex-1 py-3 text-sm font-bold transition-colors"
               style={{
                 backgroundColor:
                   portfolioMode === "file"
@@ -728,7 +728,7 @@ function MobileForm({
         {/* ── Course + Batch (Anant only) ── */}
         {tenant.formFields.showCourse && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+            <p className="text-sm font-semibold" style={{ color: T.inputText }}>
               your course / program
             </p>
             <input
@@ -743,7 +743,7 @@ function MobileForm({
         )}
         {tenant.formFields.showBatch && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+            <p className="text-sm font-semibold" style={{ color: T.inputText }}>
               batch / year
             </p>
             <input
@@ -759,7 +759,7 @@ function MobileForm({
 
         {/* ── Q2: Target roles ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+          <p className="text-sm font-semibold" style={{ color: T.inputText }}>
             what kind of design roles are you targeting?
           </p>
           <p className="text-xs leading-relaxed" style={{ color: T.muted }}>
@@ -777,7 +777,7 @@ function MobileForm({
 
         {/* ── Q3: Proud project ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+          <p className="text-sm font-semibold" style={{ color: T.inputText }}>
             walk us through one project you're most proud of. what was it? what
             was your role?
           </p>
@@ -797,7 +797,7 @@ function MobileForm({
 
         {/* ── Q4: Notes (optional) ── */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold lowercase" style={{ color: T.inputText }}>
+          <p className="text-sm font-semibold" style={{ color: T.inputText }}>
             anything we should know?{" "}
             <span className="font-normal" style={{ color: T.muted }}>(optional)</span>
           </p>
@@ -816,7 +816,7 @@ function MobileForm({
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
           style={{ backgroundColor: T.accent, color: T.accentText }}
         >
           {submitting ? (
@@ -893,7 +893,7 @@ function DesktopForm({
 
             <div>
               <h1
-                className="font-extrabold lowercase leading-none"
+                className="font-extrabold leading-none"
                 style={{
                   fontSize: "clamp(40px,4vw,64px)",
                   letterSpacing: "-0.03em",
@@ -964,7 +964,7 @@ function DesktopForm({
             style={{ borderColor: T.border, backgroundColor: T.inputBg }}
           >
             <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-            <span className="text-xs font-semibold lowercase tracking-wide" style={{ color: T.sub }}>
+            <span className="text-xs font-semibold tracking-wide" style={{ color: T.sub }}>
               feedback within&nbsp;&nbsp;5–7 working days
             </span>
           </div>
@@ -982,7 +982,7 @@ function DesktopForm({
                 >
                   1
                 </span>
-                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                <p className="font-semibold" style={{ color: T.inputText }}>
                   your portfolio
                 </p>
               </div>
@@ -994,7 +994,7 @@ function DesktopForm({
               <div className="pl-10 flex gap-2">
                 <button
                   onClick={() => setPortfolioMode("link")}
-                  className="px-4 py-2 rounded-xl text-sm font-bold lowercase border transition-all"
+                  className="px-4 py-2 rounded-xl text-sm font-bold border transition-all"
                   style={{
                     backgroundColor: portfolioMode === "link" ? T.accent : T.inputBg,
                     borderColor: portfolioMode === "link" ? T.accent : T.border,
@@ -1005,7 +1005,7 @@ function DesktopForm({
                 </button>
                 <button
                   onClick={() => setPortfolioMode("file")}
-                  className="px-4 py-2 rounded-xl text-sm font-bold lowercase border transition-all"
+                  className="px-4 py-2 rounded-xl text-sm font-bold border transition-all"
                   style={{
                     backgroundColor: portfolioMode === "file"
                       ? (isAnant ? "#4f46e5" : "rgba(223,5,134,1)")
@@ -1098,7 +1098,7 @@ function DesktopForm({
                   >
                     +
                   </span>
-                  <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                  <p className="font-semibold" style={{ color: T.inputText }}>
                     your course / program
                   </p>
                 </div>
@@ -1121,7 +1121,7 @@ function DesktopForm({
                   >
                     +
                   </span>
-                  <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                  <p className="font-semibold" style={{ color: T.inputText }}>
                     batch / year
                   </p>
                 </div>
@@ -1145,7 +1145,7 @@ function DesktopForm({
                 >
                   2
                 </span>
-                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                <p className="font-semibold" style={{ color: T.inputText }}>
                   what kind of design roles are you targeting?
                 </p>
               </div>
@@ -1171,7 +1171,7 @@ function DesktopForm({
                 >
                   3
                 </span>
-                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                <p className="font-semibold" style={{ color: T.inputText }}>
                   walk us through one project you're most proud of. what was it?
                   what was your role?
                 </p>
@@ -1199,7 +1199,7 @@ function DesktopForm({
                 >
                   4
                 </span>
-                <p className="font-semibold lowercase" style={{ color: T.inputText }}>
+                <p className="font-semibold" style={{ color: T.inputText }}>
                   anything we should know?{" "}
                   <span className="font-normal text-xs" style={{ color: T.muted }}>
                     (optional)
@@ -1225,7 +1225,7 @@ function DesktopForm({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="ml-10 w-full flex items-center justify-center gap-2 font-extrabold lowercase text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
+              className="ml-10 w-full flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
               style={{ backgroundColor: T.accent, color: T.accentText }}
             >
               {submitting ? (

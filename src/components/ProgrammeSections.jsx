@@ -57,7 +57,7 @@ export const ProgrammeHero = ({
             className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
             style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
           >
-            get in touch{" "}
+            Get in touch{" "}
             <span>
               <img src={right_arrow_icon} alt="" className="w-6 h-6" />
             </span>
@@ -73,7 +73,7 @@ export const ProgrammeHero = ({
                 textDecorationThickness: "1px"
               }}
             >
-              download handbook
+              Download handbook
             </button>
           )}
         </div>
@@ -132,7 +132,7 @@ export const ProgrammeOutcomes = ({ forStudents, forInstitutions }) => (
         className="font-extrabold text-evolve-black text-left md:text-center"
         style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
       >
-        outcomes
+        Outcomes
       </h2>
 
       <div
@@ -147,12 +147,12 @@ export const ProgrammeOutcomes = ({ forStudents, forInstitutions }) => (
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0 md:divide-x md:divide-black/20">
           <OutcomeColumn
-            label="for students"
+            label="For students"
             items={forStudents}
             className="md:pr-8"
           />
           <OutcomeColumn
-            label="for institutions"
+            label="For institutions"
             items={forInstitutions}
             className="md:pl-8"
           />
@@ -243,7 +243,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
 };
 
 const ReviewerCard = ({ reviewer }) => (
-  <div className="flex flex-col items-start">
+  <div className="flex flex-col items-start h-full">
     <div
       style={{
         position: "relative",
@@ -290,7 +290,7 @@ const ReviewerCard = ({ reviewer }) => (
       (years of experience: {reviewer.years}+)
     </p>
     <p
-      className="text-white mt-2"
+      className="text-white mt-2 max-w-[90%]"
       style={{ fontSize: "clamp(14px, 1vw, 16px)", lineHeight: 1.4 }}
     >
       {reviewer.role.map((line, i) => (
@@ -300,11 +300,13 @@ const ReviewerCard = ({ reviewer }) => (
         </span>
       ))}
     </p>
-    <ReviewerSocials
-      name={reviewer.name}
-      linkedinUrl={reviewer.linkedinUrl}
-      instagramUrl={reviewer.instagramUrl}
-    />
+    <div className="mt-auto">
+      <ReviewerSocials
+        name={reviewer.name}
+        linkedinUrl={reviewer.linkedinUrl}
+        instagramUrl={reviewer.instagramUrl}
+      />
+    </div>
   </div>
 );
 
@@ -315,7 +317,7 @@ export const ProgrammeReviewers = ({
   <section
     className="w-full"
     style={{
-      background: "linear-gradient(180deg, #161616 0%, #000000 100%)",
+      background: " #161616",
       padding: "clamp(64px,8vh,96px) clamp(24px,6vw,96px)"
     }}
   >
@@ -339,7 +341,7 @@ export const ProgrammeReviewers = ({
             alt={reviewer.name}
             className="w-full object-cover grayscale"
             style={{
-              height: "clamp(200px,20vw,300px)",
+              height: "clamp(170px,16vw,230px)",
               objectPosition: "top center"
             }}
           />

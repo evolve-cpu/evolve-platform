@@ -60,7 +60,7 @@ const PortfolioReview = () => {
         >
           {/* Heading */}
           <h1
-            className="font-extrabold lowercase text-evolve-pink"
+            className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(56px, 7vw, 96px)",
               lineHeight: "0.9",
@@ -72,7 +72,7 @@ const PortfolioReview = () => {
 
           {/* Body text */}
           <p
-            className="font-normal lowercase text-black mt-6"
+            className="font-normal text-black mt-6"
             style={{
               fontSize: "clamp(18px, 2.2vw, 32px)",
               lineHeight: "1.45",
@@ -91,7 +91,7 @@ const PortfolioReview = () => {
             />
           </div> */}
           <p
-            className="font-extrabold lowercase text-black mt-8"
+            className="font-extrabold text-black mt-8"
             style={{
               fontSize: "clamp(18px, 2vw, 28px)",
               letterSpacing: "-0.02em"
@@ -124,7 +124,7 @@ const PortfolioReview = () => {
         >
           {/* Heading */}
           <h1
-            className="font-extrabold lowercase text-evolve-pink"
+            className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(36px, 10vw, 52px)",
               lineHeight: "1.05",
@@ -136,7 +136,7 @@ const PortfolioReview = () => {
 
           {/* Body text */}
           <p
-            className="font-normal lowercase text-black mt-4"
+            className="font-normal text-black mt-4"
             style={{
               fontSize: "clamp(16px, 4.5vw, 22px)",
               lineHeight: "1.5",
@@ -155,7 +155,7 @@ const PortfolioReview = () => {
             />
           </div> */}
           <p
-            className="font-extrabold lowercase text-black mt-6"
+            className="font-extrabold text-black mt-6"
             style={{ fontSize: "18px", letterSpacing: "-0.02em" }}
           >
             coming soon
@@ -189,7 +189,7 @@ const PortfolioReview = () => {
           }}
         >
           <h2
-            className="font-extrabold lowercase text-black"
+            className="font-extrabold text-black"
             style={{
               fontSize: "clamp(64px, 7vw, 96px)",
               lineHeight: "1.05",
@@ -220,7 +220,7 @@ const PortfolioReview = () => {
                   }}
                 >
                   <span
-                    className="font-semibold lowercase text-black"
+                    className="font-semibold text-black"
                     style={{
                       fontSize: "34px",
                       letterSpacing: "-0.02em",
@@ -233,7 +233,7 @@ const PortfolioReview = () => {
 
                 {/* Always visible */}
                 <p
-                  className="font-normal lowercase text-black"
+                  className="font-normal text-black"
                   style={{
                     fontSize: "29px",
                     lineHeight: "1.4",
@@ -268,7 +268,7 @@ const PortfolioReview = () => {
         }}
       >
         <h2
-          className="font-extrabold lowercase text-black"
+          className="font-extrabold text-black"
           style={{
             fontSize: "clamp(40px, 12vw, 56px)",
             lineHeight: "1.05",
@@ -276,7 +276,7 @@ const PortfolioReview = () => {
             marginBottom: "clamp(28px, 7vw, 40px)"
           }}
         >
-          how it
+          How it
           <br />
           works.
         </h2>
@@ -288,7 +288,7 @@ const PortfolioReview = () => {
                 style={{ paddingTop: "20px", paddingBottom: "10px" }}
               >
                 <span
-                  className="font-semibold lowercase text-black"
+                  className="font-semibold text-black"
                   style={{
                     fontSize: "clamp(17px, 5vw, 22px)",
                     letterSpacing: "-0.02em",
@@ -301,7 +301,7 @@ const PortfolioReview = () => {
 
               {/* Always visible */}
               <p
-                className="font-normal lowercase text-black"
+                className="font-normal text-black"
                 style={{
                   fontSize: "clamp(15px, 4.5vw, 19px)",
                   lineHeight: "1.4",
@@ -335,19 +335,19 @@ const PortfolioReview = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(72px, 6vw, 128px)",
               lineHeight: "0.9",
               letterSpacing: "-0.03em"
             }}
           >
-            what you'll get
+            What you'll get
           </h2>
 
           {/* Body */}
           <p
-            className="font-normal lowercase text-white"
+            className="font-normal text-white"
             style={{
               fontSize: "clamp(20px, 2vw, 32px)",
               lineHeight: "1.2",
@@ -355,7 +355,7 @@ const PortfolioReview = () => {
               maxWidth: "60ch"
             }}
           >
-            a personalised review within 5–7 working days. we'll cover what's
+            A personalised review within 5–7 working days. we'll cover what's
             working, what isn't, how you're positioning yourself, and what to
             fix before you send this to a studio or client.
           </p>
@@ -368,7 +368,7 @@ const PortfolioReview = () => {
             />
           </div> */}
           <p
-            className="font-extrabold lowercase text-evolve-yellow mt-8"
+            className="font-extrabold text-evolve-yellow mt-8"
             style={{
               fontSize: "clamp(18px, 2vw, 28px)",
               letterSpacing: "-0.02em"
@@ -395,7 +395,7 @@ const PortfolioReview = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(44px, 12vw, 64px)",
               lineHeight: "1.05",
@@ -407,7 +407,7 @@ const PortfolioReview = () => {
 
           {/* Body */}
           <p
-            className="font-normal lowercase text-white"
+            className="font-normal text-white"
             style={{
               fontSize: "clamp(16px, 4.5vw, 22px)",
               lineHeight: "1.4",
@@ -428,7 +428,7 @@ const PortfolioReview = () => {
             />
           </div> */}
           <p
-            className="font-extrabold lowercase text-evolve-yellow mt-6"
+            className="font-extrabold text-evolve-yellow mt-6"
             style={{ fontSize: "18px", letterSpacing: "-0.02em" }}
           >
             coming soon

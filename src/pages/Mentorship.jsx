@@ -105,7 +105,7 @@ const TestimonialsMobile = () => {
   return (
     <section className="block md:hidden relative bg-evolve-yellow overflow-hidden py-10 px-5">
       <h2
-        className="text-black font-extrabold lowercase text-center w-full leading-tight mb-10"
+        className="text-black font-extrabold text-center w-full leading-tight mb-10"
         style={{ fontSize: "clamp(32px, 10vw, 46px)", letterSpacing: "-0.5px" }}
       >
         {COPY.testimonials.sectionHeading}
@@ -254,7 +254,7 @@ const PlanColumn = ({
         }}
       >
         <span
-          className="font-extrabold lowercase text-white"
+          className="font-extrabold text-white"
           style={{ fontSize: "28px", lineHeight: "1" }}
         >
           {tier}
@@ -263,7 +263,7 @@ const PlanColumn = ({
 
       {/* Strikethrough price */}
       <p
-        className="font-extrabold lowercase"
+        className="font-extrabold"
         style={{
           fontSize: "36px",
           lineHeight: "1",
@@ -279,7 +279,7 @@ const PlanColumn = ({
 
       {/* Actual price */}
       <p
-        className="font-extrabold lowercase text-black"
+        className="font-extrabold text-black"
         style={{
           fontSize: "clamp(64px, 6.5vw, 96px)",
           lineHeight: "1",
@@ -292,7 +292,7 @@ const PlanColumn = ({
 
       {/* Tagline */}
       <p
-        className="lowercase text-black text-center"
+        className="text-black text-center"
         style={{
           fontWeight: 500,
           fontSize: "clamp(16px, 1.6vw, 28px)",
@@ -317,7 +317,7 @@ const PlanColumn = ({
 
       {/* Features */}
       <div
-        className="text-black lowercase text-center"
+        className="text-black text-center"
         style={{
           fontSize: "clamp(14px, 1.4vw, 22px)",
           lineHeight: "1.5",
@@ -393,7 +393,7 @@ const PlanCardMobile = ({
         }}
       >
         <span
-          className="font-extrabold lowercase text-white"
+          className="font-extrabold text-white"
           style={{ fontSize: "22px", lineHeight: "1" }}
         >
           {tier}
@@ -402,7 +402,7 @@ const PlanCardMobile = ({
 
       {/* Strikethrough price */}
       <p
-        className="font-extrabold lowercase"
+        className="font-extrabold"
         style={{
           fontSize: "28px",
           lineHeight: "1",
@@ -417,7 +417,7 @@ const PlanCardMobile = ({
 
       {/* Actual price */}
       <p
-        className="font-extrabold lowercase text-black"
+        className="font-extrabold text-black"
         style={{
           fontSize: "clamp(52px, 14vw, 72px)",
           lineHeight: "1",
@@ -429,7 +429,7 @@ const PlanCardMobile = ({
 
       {/* Tagline */}
       <p
-        className="lowercase text-black text-center"
+        className="text-black text-center"
         style={{
           fontWeight: 500,
           fontSize: "18px",
@@ -453,7 +453,7 @@ const PlanCardMobile = ({
 
       {/* Features */}
       <div
-        className="text-black lowercase text-center"
+        className="text-black text-center"
         style={{ fontSize: "16px", lineHeight: "1.5", fontWeight: 400 }}
       >
         {features.map((f, i) => (
@@ -606,7 +606,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                 }`}
               >
                 {/* {marqueeLabel} — commented out for now, static text instead */}
-                coming soon
+                Coming Soon
               </span>
               <img
                 key={`icon-b-${i}`}
@@ -621,7 +621,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                 }`}
               >
                 {/* {spotsText} — commented out for now, static text instead */}
-                coming soon
+                Coming Soon
               </span>
             </>
           ))}
@@ -794,7 +794,7 @@ const Mentorship = () => {
       <section className="relative h-screen bg-evolve-yellow overflow-hidden">
         <div className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 top-[15%]">
           {/* <h1
-            className="lowercase text-black font-semibold max-w-[80vw]"
+            className="text-black font-semibold max-w-[80vw]"
             style={{
               fontSize: "clamp(20px, 2.5vw, 32px)",
               lineHeight: "clamp(28px, 3vw, 36px)"
@@ -803,7 +803,7 @@ const Mentorship = () => {
             evolve mentorship
           </h1> */}
           <p
-            className="hidden lg:block mt-2 font-extrabold lowercase text-evolve-pink max-w-[100vw]"
+            className="hidden lg:block mt-2 font-extrabold text-evolve-pink max-w-[100vw]"
             style={{
               fontSize: "clamp(58px, 8vw, 92px)",
               lineHeight: "1",
@@ -813,7 +813,7 @@ const Mentorship = () => {
             {renderWithBreaks(COPY.hero.headlineDesktop)}
           </p>
           <p
-            className="md:hidden mt-2 font-extrabold lowercase text-evolve-pink max-w-[100vw]"
+            className="md:hidden mt-2 font-extrabold text-evolve-pink max-w-[100vw]"
             style={{
               fontSize: "clamp(58px, 8vw, 92px)",
               lineHeight: "1",
@@ -826,7 +826,7 @@ const Mentorship = () => {
             {hasPaid ? (
               <button
                 onClick={() => navigate("/mentorship-session")}
-                className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+                className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl"
                 style={{
                   backgroundColor: "#000",
                   boxShadow: "4px 4px 0 0 #BF9C05"
@@ -849,14 +849,14 @@ const Mentorship = () => {
                   className="cursor-pointer transition-opacity duration-150"
                   style={{ width: isMobile ? "220px" : "220px" }}
                 /> */}
-                {/* Commented out for now — "coming soon" button, changed to plain text
+                {/* Commented out for now — "Coming Soon" button, changed to plain text
                 <button
                   type="button"
                   onClick={() => {
                     trackCtaClick("explore_mentorship", "hero");
                     scrollTo(section5Ref);
                   }}
-                  className="font-extrabold lowercase text-evolve-yellow border-2 border-evolve-yellow rounded-2xl cursor-pointer flex items-center gap-2 transition-opacity duration-150 hover:opacity-90"
+                  className="font-extrabold text-evolve-yellow border-2 border-evolve-yellow rounded-2xl cursor-pointer flex items-center gap-2 transition-opacity duration-150 hover:opacity-90"
                   style={{
                     backgroundColor: "#000",
                     boxShadow: "6px 6px 0 0 #806804",
@@ -864,16 +864,16 @@ const Mentorship = () => {
                     fontSize: isMobile ? "16px" : "18px"
                   }}
                 >
-                  coming soon <span aria-hidden="true">→</span>
+                  Coming Soon <span aria-hidden="true">→</span>
                 </button> */}
                 <p
-                  className="font-extrabold lowercase text-black"
+                  className="font-extrabold text-black"
                   style={{
                     fontSize: isMobile ? "18px" : "22px",
                     letterSpacing: "-0.02em"
                   }}
                 >
-                  coming soon
+                  Coming Soon
                   {/* → */}
                 </p>
                 {/* limited seats note not needed for now
@@ -909,7 +909,7 @@ const Mentorship = () => {
           style={{ top: "20%" }}
         >
           <p
-            className="text-black font-normal lowercase"
+            className="text-black font-normal"
             style={{
               fontSize: isMobile
                 ? "clamp(22px, 7vw, 36px)"
@@ -973,7 +973,7 @@ const Mentorship = () => {
                     className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {marqueeLabel} — commented out for now, static text instead */}
-                    coming soon
+                    Coming Soon
                   </span>
                   <img
                     key={`icon-b-${i}`}
@@ -986,7 +986,7 @@ const Mentorship = () => {
                     className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {spotsText} — commented out for now, static text instead */}
-                    coming soon
+                    Coming Soon
                   </span>
                 </>
               ))}
@@ -1012,7 +1012,7 @@ const Mentorship = () => {
           <div className="flex-1 flex flex-col">
             <div className="flex items-end pb-8" style={{ height: "40%" }}>
               <h2
-                className="text-black font-extrabold lowercase leading-none"
+                className="text-black font-extrabold leading-none"
                 style={{
                   fontSize: "clamp(56px, 6.5vw, 96px)",
                   letterSpacing: "-0.5px"
@@ -1026,7 +1026,7 @@ const Mentorship = () => {
               style={{ height: "60%", paddingRight: "2vw" }}
             >
               <p
-                className="font-extrabold lowercase text-evolve-yellow"
+                className="font-extrabold text-evolve-yellow"
                 style={{
                   fontSize: "clamp(40px, 4vw, 64px)",
                   letterSpacing: "-0.5px",
@@ -1101,7 +1101,7 @@ const Mentorship = () => {
         />
         <div className="relative z-20 flex flex-col px-5 pt-[10%]">
           <h2
-            className="text-black font-extrabold lowercase text-center w-full leading-tight"
+            className="text-black font-extrabold text-center w-full leading-tight"
             style={{
               fontSize: "clamp(32px, 10vw, 46px)",
               letterSpacing: "-0.5px"
@@ -1111,7 +1111,7 @@ const Mentorship = () => {
           </h2>
           <div className="flex flex-col mt-5 w-full">
             <p
-              className="font-extrabold lowercase text-evolve-pink"
+              className="font-extrabold text-evolve-pink"
               style={{
                 fontSize: "clamp(26px, 7.5vw, 40px)",
                 letterSpacing: "-0.29px",
@@ -1171,7 +1171,7 @@ const Mentorship = () => {
         style={{ height: "100vh", padding: "4vh 1vw" }}
       >
         <h2
-          className="text-black font-extrabold lowercase text-center flex-shrink-0"
+          className="text-black font-extrabold text-center flex-shrink-0"
           style={{
             fontSize: "clamp(42px, 4vw, 64px)",
             letterSpacing: "-0.53px",
@@ -1399,7 +1399,7 @@ const Mentorship = () => {
           style={{ flex: "0 0 35%" }}
         >
           <p
-            className="text-black font-normal lowercase"
+            className="text-black font-normal"
             style={{
               fontSize: "clamp(22px, 2vw, 40px)",
               letterSpacing: "-2px"
@@ -1408,7 +1408,7 @@ const Mentorship = () => {
             {COPY.framework.sectionLabel}
           </p>
           <h2
-            className="text-black font-extrabold lowercase mt-6"
+            className="text-black font-extrabold mt-6"
             style={{
               fontSize: "clamp(52px, 5vw, 96px)",
               letterSpacing: "-0.53px",
@@ -1438,7 +1438,7 @@ const Mentorship = () => {
             {COPY.framework.stagesDesktop.map(({ label }) => (
               <p
                 key={label}
-                className="font-extrabold lowercase text-evolve-yellow"
+                className="font-extrabold text-evolve-yellow"
                 style={{
                   fontSize: "clamp(20px, 2vw, 40px)",
                   letterSpacing: "0.07px",
@@ -1478,13 +1478,13 @@ const Mentorship = () => {
       <section className="block md:hidden">
         <div className="bg-evolve-yellow px-5 pt-10 pb-8">
           <p
-            className="text-black font-normal lowercase"
+            className="text-black font-normal"
             style={{ fontSize: "24px", letterSpacing: "-1px" }}
           >
             {COPY.framework.sectionLabel}
           </p>
           <h2
-            className="text-black font-extrabold lowercase mt-4"
+            className="text-black font-extrabold mt-4"
             style={{
               fontSize: "48px",
               letterSpacing: "-0.53px",
@@ -1507,7 +1507,7 @@ const Mentorship = () => {
           {COPY.framework.stagesMobile.map(({ label, body }) => (
             <div key={label}>
               <p
-                className="font-extrabold lowercase text-evolve-yellow"
+                className="font-extrabold text-evolve-yellow"
                 style={{
                   fontSize: "24px",
                   letterSpacing: "-0.53px",
@@ -1544,7 +1544,7 @@ const Mentorship = () => {
           {/* ── Full-width pink header banner ── */}
           <div className="w-full bg-evolve-pink flex items-center justify-center py-5 md:py-7">
             <h2
-              className="text-white font-extrabold lowercase text-center"
+              className="text-white font-extrabold text-center"
               style={{
                 fontSize: "clamp(28px, 5vw, 56px)",
                 letterSpacing: "-0.02em"
@@ -1605,7 +1605,7 @@ const Mentorship = () => {
                 alt=""
                 className="w-auto flex-none h-[5rem]"
               />
-              <span className="flex-none font-paralucent lowercase text-evolve-yellow text-5xl">
+              <span className="flex-none font-paralucent text-evolve-yellow text-5xl">
                 batch starts on 16th april
               </span>
               <img
@@ -1613,7 +1613,7 @@ const Mentorship = () => {
                 alt=""
                 className="w-auto flex-none h-[5rem]"
               />
-              <span className="flex-none font-paralucent lowercase text-evolve-yellow text-5xl">
+              <span className="flex-none font-paralucent text-evolve-yellow text-5xl">
                 only 5 spots left
               </span>
               <img
@@ -1621,7 +1621,7 @@ const Mentorship = () => {
                 alt=""
                 className="w-auto flex-none h-[5rem]"
               />
-              <span className="flex-none font-paralucent lowercase text-evolve-yellow text-5xl">
+              <span className="flex-none font-paralucent text-evolve-yellow text-5xl">
                 batch starts on 16th april
               </span>
             </div>
@@ -1634,7 +1634,7 @@ const Mentorship = () => {
               <div className="flex">
                 <button
                   onClick={() => setPricingTab("starter")}
-                  className="flex-1 py-3 font-extrabold lowercase text-lg"
+                  className="flex-1 py-3 font-extrabold text-lg"
                   style={{
                     backgroundColor:
                       pricingTab === "starter"
@@ -1647,7 +1647,7 @@ const Mentorship = () => {
                 </button>
                 <button
                   onClick={() => setPricingTab("accelerator")}
-                  className="flex-1 py-3 font-extrabold lowercase text-lg"
+                  className="flex-1 py-3 font-extrabold text-lg"
                   style={{
                     backgroundColor:
                       pricingTab === "accelerator"
@@ -1714,7 +1714,7 @@ const Mentorship = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-evolve-pink"
+            className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(56px, 7vw, 96px)",
               lineHeight: "1",
@@ -1726,7 +1726,7 @@ const Mentorship = () => {
 
           {/* Sub heading */}
           <p
-            className="font-normal lowercase text-evolve-pink mt-6"
+            className="font-normal text-evolve-pink mt-6"
             style={{
               fontSize: "clamp(28px, 3.2vw, 48px)",
               lineHeight: "1.15",
@@ -1754,7 +1754,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold lowercase text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
+              className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -1772,13 +1772,13 @@ const Mentorship = () => {
               style={{ width: "clamp(200px, 22vw, 320px)" }}
             /> */
             <p
-              className="font-extrabold lowercase text-black mt-8"
+              className="font-extrabold text-black mt-8"
               style={{
                 fontSize: "clamp(18px, 2vw, 28px)",
                 letterSpacing: "-0.02em"
               }}
             >
-              coming soon
+              Coming Soon
               {/* → */}
             </p>
           )}
@@ -1814,7 +1814,7 @@ const Mentorship = () => {
         >
           {/* Heading */}
           <h2
-            className="font-extrabold lowercase text-evolve-pink"
+            className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(36px, 10vw, 52px)",
               lineHeight: "1.05",
@@ -1826,7 +1826,7 @@ const Mentorship = () => {
 
           {/* Sub heading */}
           <p
-            className="font-normal lowercase text-evolve-pink mt-4"
+            className="font-normal text-evolve-pink mt-4"
             style={{
               fontSize: "clamp(22px, 6vw, 32px)",
               lineHeight: "1.2",
@@ -1853,7 +1853,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold lowercase text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
+              className="font-extrabold text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -1871,13 +1871,13 @@ const Mentorship = () => {
               style={{ width: "clamp(180px, 55vw, 260px)" }}
             /> */
             <p
-              className="font-extrabold lowercase text-black mt-6"
+              className="font-extrabold text-black mt-6"
               style={{
                 fontSize: "clamp(16px, 4.5vw, 22px)",
                 letterSpacing: "-0.02em"
               }}
             >
-              coming soon
+              Coming Soon
               {/* → */}
             </p>
           )}
@@ -1917,7 +1917,7 @@ const Mentorship = () => {
           }}
         >
           <h2
-            className="font-extrabold lowercase text-black"
+            className="font-extrabold text-black"
             style={{
               fontSize: "clamp(64px, 7vw, 96px)",
               lineHeight: "1.05",
@@ -1927,14 +1927,14 @@ const Mentorship = () => {
             {renderWithBreaks(COPY.faqSection.heading)}
           </h2>
           <div className="mt-10">
-            <p className="font-semibold lowercase text-black text-base mb-4">
+            <p className="font-semibold text-black text-base mb-4">
               {COPY.faqSection.contactPrompt}
             </p>
             <a
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-extrabold lowercase text-white rounded-xl px-6 py-3 text-base transition-opacity hover:opacity-90 active:opacity-80"
+              className="inline-flex items-center gap-2 font-extrabold text-white rounded-xl px-6 py-3 text-base transition-opacity hover:opacity-90 active:opacity-80"
               style={{ backgroundColor: "#000" }}
             >
               connect with us
@@ -1963,7 +1963,7 @@ const Mentorship = () => {
                   onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                 >
                   <span
-                    className="font-semibold lowercase text-black"
+                    className="font-semibold text-black"
                     style={{
                       fontSize: "34px",
                       letterSpacing: "-0.02em",
@@ -1997,7 +1997,7 @@ const Mentorship = () => {
                 </div>
                 {openFAQ === i && (
                   <p
-                    className="font-normal lowercase text-black"
+                    className="font-normal text-black"
                     style={{
                       fontSize: "29px",
                       lineHeight: "1.4",
@@ -2031,7 +2031,7 @@ const Mentorship = () => {
         }}
       >
         <h2
-          className="font-extrabold lowercase text-black"
+          className="font-extrabold text-black"
           style={{
             fontSize: "clamp(40px, 12vw, 56px)",
             lineHeight: "1.05",
@@ -2050,7 +2050,7 @@ const Mentorship = () => {
                 onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
               >
                 <span
-                  className="font-semibold lowercase text-black"
+                  className="font-semibold text-black"
                   style={{
                     fontSize: "clamp(17px, 5vw, 22px)",
                     letterSpacing: "-0.02em",
@@ -2084,7 +2084,7 @@ const Mentorship = () => {
               </div>
               {openFAQ === i && (
                 <p
-                  className="font-normal lowercase text-black"
+                  className="font-normal text-black"
                   style={{
                     fontSize: "clamp(15px, 4.5vw, 19px)",
                     lineHeight: "1.4",
@@ -2108,14 +2108,14 @@ const Mentorship = () => {
           ))}
         </div>
         <div className="mt-10 flex flex-col items-start gap-3">
-          <p className="font-semibold lowercase text-black text-base">
+          <p className="font-semibold text-black text-base">
             {COPY.faqSection.contactPrompt}
           </p>
           <a
             href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-extrabold lowercase text-white rounded-xl px-6 py-3 text-base active:opacity-80"
+            className="inline-flex items-center gap-2 font-extrabold text-white rounded-xl px-6 py-3 text-base active:opacity-80"
             style={{ backgroundColor: "#000" }}
           >
             connect with us
@@ -2127,12 +2127,12 @@ const Mentorship = () => {
       <section className="hidden md:flex relative bg-evolve-lavender-indigo overflow-hidden flex-col items-center justify-center min-h-screen">
         {/* Content — vertically & horizontally centered */}
         <div
-          className="relative z-10 flex flex-col  items-center text-center max-w-[50%] px-8"
+          className="relative z-10 flex flex-col items-center text-center max-w-[50%] px-8"
           style={{ paddingBottom: "clamp(120px, 18vh, 200px)" }}
         >
           {/* Batch heading — not needed for now, tagline is the heading
           <h2
-            className="font-extrabold  lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(72px, 6vw, 128px)",
               lineHeight: "0.9",
@@ -2145,7 +2145,7 @@ const Mentorship = () => {
 
           {/* Limited seats — not needed for now
           <p
-            className="font-normal lowercase text-white"
+            className="font-normal text-white"
             style={{
               fontSize: "clamp(28px, 3vw, 48px)",
               letterSpacing: "-3px",
@@ -2159,7 +2159,7 @@ const Mentorship = () => {
           {/* Applications close */}
           {/* {!allBatchesFull && (
             <p
-              className="font-extrabold lowercase text-white"
+              className="font-extrabold text-white"
               style={{
                 fontSize: "clamp(28px, 3vw, 48px)",
                 letterSpacing: "-0.5px",
@@ -2173,7 +2173,7 @@ const Mentorship = () => {
 
           {/* Tagline promoted to heading — body removed for now */}
           <h2
-            className="font-extrabold lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(40px, 4.5vw, 80px)",
               lineHeight: "1.05",
@@ -2188,7 +2188,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl mt-6"
+              className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl mt-6"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -2200,13 +2200,13 @@ const Mentorship = () => {
             /* GetStartedButton not needed for now — changed to text
             <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
             <p
-              className="font-extrabold lowercase text-white mt-8"
+              className="font-extrabold text-white mt-8"
               style={{
                 fontSize: "clamp(18px, 2vw, 28px)",
                 letterSpacing: "-0.02em"
               }}
             >
-              coming soon
+              Coming Soon
               {/* → */}
             </p>
           )}
@@ -2228,7 +2228,7 @@ const Mentorship = () => {
         >
           {/* Batch heading — not needed for now, tagline is the heading
           <h2
-            className="font-extrabold lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(44px, 12vw, 64px)",
               lineHeight: "1.05",
@@ -2241,7 +2241,7 @@ const Mentorship = () => {
 
           {/* Limited seats — not needed for now
           <p
-            className="font-normal lowercase text-white"
+            className="font-normal text-white"
             style={{
               fontSize: "clamp(20px, 5.5vw, 28px)",
               letterSpacing: "-1px",
@@ -2255,7 +2255,7 @@ const Mentorship = () => {
           {/* Applications close — not needed for now
           {!allBatchesFull && (
             <p
-              className="font-extrabold lowercase text-white"
+              className="font-extrabold text-white"
               style={{
                 fontSize: "clamp(20px, 5.5vw, 28px)",
                 letterSpacing: "-0.5px",
@@ -2270,7 +2270,7 @@ const Mentorship = () => {
 
           {/* Tagline promoted to heading — body removed for now */}
           <h2
-            className="font-extrabold lowercase text-evolve-yellow"
+            className="font-extrabold text-evolve-yellow"
             style={{
               fontSize: "clamp(32px, 9vw, 52px)",
               lineHeight: "1.05",
@@ -2285,7 +2285,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold lowercase text-white cursor-pointer px-7 py-4 rounded-2xl"
+              className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -2297,13 +2297,13 @@ const Mentorship = () => {
             /* GetStartedButton not needed for now — changed to text
             <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
             <p
-              className="font-extrabold lowercase text-white mt-6"
+              className="font-extrabold text-white mt-6"
               style={{
                 fontSize: "clamp(16px, 4.5vw, 22px)",
                 letterSpacing: "-0.02em"
               }}
             >
-              coming soon
+              Coming Soon
               {/* → */}
             </p>
           )}

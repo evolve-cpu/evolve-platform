@@ -337,7 +337,7 @@ const Scene4_refined = React.forwardRef(
                 textAlign: "center"
               }}
             >
-              The Evolve app is coming. a personal space to learn at your own
+              The Evolve app is coming. A personal space to learn at your own
               pace, track how far you've come, and stay curious about design
               every single day.
             </div>
@@ -391,7 +391,7 @@ const Scene4_refined = React.forwardRef(
                   opacity: waitlistSaving ? 0.7 : 1
                 }}
               >
-                {waitlistSaving ? "saving…" : "be the first to know"}
+                {waitlistSaving ? "Saving…" : "Be the first to know"}
               </button>
             )}
           </div>
@@ -418,10 +418,10 @@ const Scene4_refined = React.forwardRef(
                 >
                   ×
                 </button>
-                <h3 className="font-extrabold text-black text-xl lowercase mb-2">
+                <h3 className="font-extrabold text-black text-xl mb-2">
                   be the first to know
                 </h3>
-                <p className="text-black/70 text-sm lowercase mb-4">
+                <p className="text-black/70 text-sm mb-4">
                   drop your email and we'll let you know the moment our
                   ecosystem launches.
                 </p>
@@ -439,14 +439,14 @@ const Scene4_refined = React.forwardRef(
                     className="w-full rounded-xl px-4 py-3 bg-transparent border-2 border-black/40 placeholder-black/60 font-bold text-black outline-none focus:border-black text-[15px]"
                   />
                   {waitlistError && (
-                    <p className="text-sm font-semibold text-red-700 lowercase">
+                    <p className="text-sm font-semibold text-red-700">
                       {waitlistError}
                     </p>
                   )}
                   <button
                     type="submit"
                     disabled={waitlistSaving}
-                    className="bg-black text-[#FFD007] font-extrabold rounded-xl py-3 lowercase disabled:opacity-60"
+                    className="bg-black text-[#FFD007] font-extrabold rounded-xl py-3 disabled:opacity-60"
                   >
                     {waitlistSaving ? "saving…" : "notify me"}
                   </button>

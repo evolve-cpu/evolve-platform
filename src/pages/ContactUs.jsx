@@ -102,15 +102,13 @@
 //     <section className="relative w-full h-screen bg-evolve-yellow text-black overflow-hidden flex flex-col md:flex-row">
 //       {/* ================= LEFT SECTION (content) ================= */}
 //       <div
-//         className="relative z-20 w-full md:w-1/2 max-w-[80vw] mx-auto md:mx-0
-//                 px-5 md:px-12 pt-16 md:pt-24 pb-10 md:pb-20
-//                 flex flex-col justify-start md:ml-20"
+//         className="relative z-20 w-full md:w-1/2 max-w-[80vw] mx-auto md:mx-0 // px-5 md:px-12 pt-16 md:pt-24 pb-10 md:pb-20 // flex flex-col justify-start md:ml-20"
 //       >
 //         {/* headings */}
-//         <h1 className="font-extrabold lowercase mt-4 text-[2.5rem] md:text-[4rem] leading-tight">
+//         <h1 className="font-extrabold mt-4 text-[2.5rem] md:text-[4rem] leading-tight">
 //           need to talk?
 //         </h1>
-//         <p className="lowercase font-normal text-[1.25rem] md:text-[2rem] leading-snug">
+//         <p className="font-normal text-[1.25rem] md:text-[2rem] leading-snug">
 //           we&apos;re here for real questions.
 //         </p>
 
@@ -216,21 +214,15 @@
 //                   setMessage(e.target.value);
 //                   if (e.target.value.trim()) setShowEmptyHint(false);
 //                 }}
-//                 className="w-full rounded-2xl md:rounded-[16px] px-5 md:px-6 py-4 md:py-5
-//                            min-h-[9rem] md:min-h-[11rem]
-//                            bg-transparent border-2 border-[#806804]
-//                            placeholder-black font-bold
-//                            text-black outline-none focus:ring-2 ring-[#806804] focus:border-black focus:text-black
-//                            text-[1.25rem] md:text-[1.5rem]
-//                            placeholder:text-[1.25rem] md:placeholder:text-[1.5rem] resize-none"
+//                 className="w-full rounded-2xl md:rounded-[16px] px-5 md:px-6 py-4 md:py-5 // min-h-[9rem] md:min-h-[11rem] // bg-transparent border-2 border-[#806804] // placeholder-black font-bold // text-black outline-none focus:ring-2 ring-[#806804] focus:border-black focus:text-black // text-[1.25rem] md:text-[1.5rem] // placeholder:text-[1.25rem] md:placeholder:text-[1.5rem] resize-none"
 //               />
 //               {showEmptyHint && (
-//                 <p className="mt-2 text-sm md:text-base font-semibold text-[#806804] lowercase">
+//                 <p className="mt-2 text-sm md:text-base font-semibold text-[#806804]">
 //                   tell us what you want to talk about.
 //                 </p>
 //               )}
 //               {status === "error" && (
-//                 <p className="mt-2 text-sm md:text-base font-semibold text-red-700 lowercase">
+//                 <p className="mt-2 text-sm md:text-base font-semibold text-red-700">
 //                   something went wrong, please try again.
 //                 </p>
 //               )}
@@ -245,9 +237,7 @@
 //                 disabled={isSubmitting}
 //                 onMouseEnter={() => setIsHovering(true)}
 //                 onMouseLeave={() => setIsHovering(false)}
-//                 className="group grid place-items-center rounded-full bg-black
-//              w-16 h-16 md:w-24 md:h-24 transition-transform active:scale-95
-//              disabled:opacity-70 disabled:cursor-not-allowed"
+//                 className="group grid place-items-center rounded-full bg-black // w-16 h-16 md:w-24 md:h-24 transition-transform active:scale-95 // disabled:opacity-70 disabled:cursor-not-allowed"
 //               >
 //                 <svg
 //                   ref={arrowRef}
@@ -278,7 +268,7 @@
 //                       strokeLinejoin="round"
 //                     />
 //                   </svg>
-//                   <span className="text-black font-bold text-sm whitespace-nowrap lowercase">
+//                   <span className="text-black font-bold text-sm whitespace-nowrap">
 //                     your submission was successful
 //                   </span>
 //                 </div>
@@ -303,7 +293,7 @@
 //                   strokeLinejoin="round"
 //                 />
 //               </svg>
-//               <span className="text-black font-bold text-base lowercase">
+//               <span className="text-black font-bold text-base">
 //                 your submission was successful
 //               </span>
 //             </div>
@@ -476,8 +466,7 @@ const ContactModal = ({ isOpen, onClose }) => {
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-[90vw] md:w-[90vw] lg:w-[90vw] lg:h-[85vh] max-h-[85vh] bg-[#FFD007] 
-             border-2 border-black rounded-2xl overflow-hidden"
+        className="relative w-full max-w-[90vw] md:w-[90vw] lg:w-[90vw] lg:h-[85vh] max-h-[85vh] bg-[#FFD007] border-2 border-black rounded-2xl overflow-hidden"
         style={{
           boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.5)"
         }}
@@ -500,10 +489,10 @@ const ContactModal = ({ isOpen, onClose }) => {
           <div className="relative flex flex-col md:flex-row min-h-[600px]">
             {/* LEFT SECTION */}
             <div className="relative z-20 w-full md:w-1/2 px-6 md:px-12 pt-12 md:pt-16 pb-10 md:pb-20">
-              <h1 className="font-extrabold lowercase mt-4 text-[2rem] md:text-[3.5rem] leading-tight text-black">
+              <h1 className="font-extrabold mt-4 text-[2rem] md:text-[3.5rem] leading-tight text-black">
                 need to talk?
               </h1>
-              <p className="lowercase font-normal text-[1.1rem] md:text-[1.75rem] leading-snug text-black">
+              <p className="font-normal text-[1.1rem] md:text-[1.75rem] leading-snug text-black">
                 we're here for real questions.
               </p>
 
@@ -574,21 +563,15 @@ const ContactModal = ({ isOpen, onClose }) => {
                         setMessage(e.target.value);
                         if (e.target.value.trim()) setShowEmptyHint(false);
                       }}
-                      className="w-full rounded-2xl md:rounded-[16px] px-4 md:px-6 py-3 md:py-4
-                                 min-h-[8rem] md:min-h-[10rem]
-                                 bg-transparent border-2 border-[#806804]
-                                 placeholder-black font-bold
-                                 text-black outline-none focus:ring-2 ring-[#806804] focus:border-black focus:text-black
-                                 text-[1.1rem] md:text-[1.35rem]
-                                 placeholder:text-[1.1rem] md:placeholder:text-[1.35rem] resize-none"
+                      className="w-full rounded-2xl md:rounded-[16px] px-4 md:px-6 py-3 md:py-4 min-h-[8rem] md:min-h-[10rem] bg-transparent border-2 border-[#806804] placeholder-black font-bold text-black outline-none focus:ring-2 ring-[#806804] focus:border-black focus:text-black text-[1.1rem] md:text-[1.35rem] placeholder:text-[1.1rem] md:placeholder:text-[1.35rem] resize-none"
                     />
                     {showEmptyHint && (
-                      <p className="mt-2 text-sm md:text-base font-semibold text-[#806804] lowercase">
+                      <p className="mt-2 text-sm md:text-base font-semibold text-[#806804]">
                         tell us what you want to talk about.
                       </p>
                     )}
                     {status === "error" && (
-                      <p className="mt-2 text-sm md:text-base font-semibold text-red-700 lowercase">
+                      <p className="mt-2 text-sm md:text-base font-semibold text-red-700">
                         something went wrong, please try again.
                       </p>
                     )}
@@ -601,9 +584,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                       disabled={isSubmitting}
                       onMouseEnter={() => setIsHovering(true)}
                       onMouseLeave={() => setIsHovering(false)}
-                      className="group grid place-items-center rounded-full bg-black
-                       w-14 h-14 md:w-20 md:h-20 transition-transform active:scale-95
-                       disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="group grid place-items-center rounded-full bg-black w-14 h-14 md:w-20 md:h-20 transition-transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <svg
                         ref={arrowRef}
@@ -637,7 +618,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        <span className="text-black font-bold text-sm whitespace-nowrap lowercase">
+                        <span className="text-black font-bold text-sm whitespace-nowrap">
                           your submission was successful
                         </span>
                       </div>
@@ -661,7 +642,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    <span className="text-black font-bold text-base lowercase">
+                    <span className="text-black font-bold text-base">
                       your submission was successful
                     </span>
                   </div>

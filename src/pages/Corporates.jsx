@@ -11,19 +11,19 @@ const INQUIRY = AUDIENCE_INQUIRY_CONFIG.corporates;
 
 const OFFERINGS = [
   {
-    title: "team upskilling",
-    subtitle: "structured learning for every designer.",
-    body: "give every team member their own learning journey with industry-led courses, webinars, progress tracking, and visible skill growth, so learning becomes continuous, not occasional."
+    title: "Team upskilling",
+    subtitle: "Structured learning for every designer.",
+    body: "Give every team member their own learning journey with industry-led courses, webinars, progress tracking, and visible skill growth, so learning becomes continuous, not occasional."
   },
   {
-    title: "team workshops",
-    subtitle: "solve real business problems together.",
-    body: "collaborative workshops and design sprints that bring cross-functional teams together to align, innovate, and turn ideas into actionable outcomes."
+    title: "Team workshops",
+    subtitle: "Solve real business problems together.",
+    body: "Collaborative workshops and design sprints that bring cross-functional teams together to align, innovate, and turn ideas into actionable outcomes."
   },
   {
-    title: "hire industry-ready designers",
-    subtitle: "access vetted design talent.",
-    body: "skip the guesswork with a curated pipeline of designers who've already been mentored, reviewed, and benchmarked for real-world readiness."
+    title: "Hire industry-ready designers",
+    subtitle: "Access vetted design talent.",
+    body: "Skip the guesswork with a curated pipeline of designers who've already been mentored, reviewed, and benchmarked for real-world readiness."
   }
 ];
 
@@ -72,7 +72,7 @@ export default function Corporates() {
   };
 
   return (
-    <div className="w-full lowercase">
+    <div className="w-full">
       <SEO
         title="evolve for corporates — make your design team remarkable"
         description="evolve for corporates helps organizations build strong design teams through continuous upskilling, team workshops, and access to industry-ready design talent."
@@ -97,7 +97,7 @@ export default function Corporates() {
               className="text-white mt-4"
               style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
             >
-              evolve for corporates
+              Evolve for corporates
             </p>
             <h1
               className="font-extrabold text-evolve-yellow"
@@ -107,7 +107,7 @@ export default function Corporates() {
                 letterSpacing: "-0.02em"
               }}
             >
-              make your design
+              Make your design
               <br />
               team remarkable
             </h1>
@@ -120,7 +120,7 @@ export default function Corporates() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "key to becoming a strong design team is to constantly upskill, work better as team and getting to pick who makes up this team."
+                "Key to becoming a strong design team is to constantly upskill, work better as team and getting to pick who makes up this team."
               )}
             </p>
             <p
@@ -128,7 +128,7 @@ export default function Corporates() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "will evolve platform, you'd be able to nurture and grow a team which delivers real impact."
+                "Will evolve platform, you'd be able to nurture and grow a team which delivers real impact."
               )}
             </p>
 
@@ -137,7 +137,7 @@ export default function Corporates() {
               className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
             >
-              get in touch{" "}
+              Get in touch{" "}
               <span>
                 <img src={right_arrow_icon} alt="" className="w-6 h-6" />
               </span>
@@ -175,7 +175,7 @@ export default function Corporates() {
             className="font-extrabold text-evolve-black"
             style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
           >
-            our offerings
+            Our offerings
           </h2>
           <p
             className="text-evolve-black mt-3"
@@ -202,7 +202,7 @@ export default function Corporates() {
                 boxShadow: "4px 4px 0 0 #806804"
               }}
             >
-              download handbook
+              Download handbook
               <img src={download_icon} alt="" className="w-5 h-5" />
             </button>
           </div>

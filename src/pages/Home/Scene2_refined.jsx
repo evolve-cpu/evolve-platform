@@ -207,13 +207,13 @@ const Scene2_refined = React.forwardRef(({ isMobile = false }, ref) => {
       >
         {isMobile ? (
           <>
-            <div>here designers find</div>
+            <div>Here designers find</div>
             <div>their people, their niche,</div>
             <div>and their purpose.</div>
           </>
         ) : (
           <div>
-            here designers find their people,
+            Here designers find their people,
             <br />
             their niche, and their purpose.
           </div>

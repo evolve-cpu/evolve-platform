@@ -235,7 +235,7 @@ function ProfileSheet({ user, onClose }) {
                   key={label}
                   className="flex justify-between items-start gap-2"
                 >
-                  <span className="text-black/40 text-[11px] lowercase shrink-0">
+                  <span className="text-black/40 text-[11px] shrink-0">
                     {label}
                   </span>
                   <span className="text-black font-semibold text-[11px] text-right break-all">
@@ -246,7 +246,7 @@ function ProfileSheet({ user, onClose }) {
             </div>
             <button
               onClick={downloadReceipt}
-              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs lowercase rounded-xl py-2.5 active:opacity-80"
+              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs rounded-xl py-2.5 active:opacity-80"
             >
               download receipt ↓
             </button>

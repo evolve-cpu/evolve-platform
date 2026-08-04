@@ -69,7 +69,7 @@ export default function Privacy() {
         <div className="flex flex-col gap-10">
           {SECTIONS.map((s) => (
             <div key={s.title}>
-              <h2 className="text-evolve-yellow font-bold text-base mb-2 lowercase">
+              <h2 className="text-evolve-yellow font-bold text-base mb-2">
                 {s.title}
               </h2>
               <p className="text-white/70 text-sm leading-relaxed whitespace-pre-line">

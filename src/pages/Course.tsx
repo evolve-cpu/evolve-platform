@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"; // if using React Router
 const Course = () => {
   return (
-    <div className="min-h-screen lowercase bg-black">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gradient mb-6 animate-text-reveal">

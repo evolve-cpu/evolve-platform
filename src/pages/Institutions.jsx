@@ -21,15 +21,15 @@ const HANDBOOK_URL =
 
 const OFFERINGS = [
   {
-    title: "portfolio review programme",
-    subtitle: "industry feedback to build stronger portfolios.",
-    body: "a structured review delivered by industry professional.  every student gets a comprehensive report, a live on-campus or online session once they've refined their work.",
+    title: "Portfolio review programme",
+    subtitle: "Industry feedback to build stronger portfolios.",
+    body: "A structured review delivered by industry professional.  every student gets a comprehensive report, a live on-campus or online session once they've refined their work.",
     path: "/for-institutes/portfolio-review-programme"
   },
   {
-    title: "find your niche",
-    subtitle: "helping students discover where they belong in design.",
-    body: 'a 4-day mentorship programme delivered by industry professionals, taking students from "who am i as a designer" to "where do i actually fit" ending with a portfolio and presence that reflects that clarity.',
+    title: "Find your niche",
+    subtitle: "Helping students discover where they belong in design.",
+    body: 'A 4-day mentorship programme delivered by industry professionals, taking students from "who am i as a designer" to "where do i actually fit" ending with a portfolio and presence that reflects that clarity.',
     path: "/for-institutes/find-your-niche-programme"
   }
 ];
@@ -122,7 +122,7 @@ export default function Institutions() {
   };
 
   return (
-    <div className="w-full lowercase">
+    <div className="w-full">
       <SEO
         title="evolve for institutions — get your students industry ready"
         description="evolve for institutions gives design colleges and coaching institutes practitioner-led programmes — portfolio reviews and niche-finding mentorship — delivered on your own branded portal."
@@ -147,7 +147,7 @@ export default function Institutions() {
               className="text-white mt-4"
               style={{ fontSize: "clamp(24px,1.6vw,24px)" }}
             >
-              evolve for institutions
+              Evolve for institutions
             </p>
             <h1
               className="font-extrabold text-evolve-yellow"
@@ -157,7 +157,7 @@ export default function Institutions() {
                 letterSpacing: "-0.02em"
               }}
             >
-              design students,
+              Design students,
               <br /> made industry-ready
             </h1>
           </div>
@@ -169,7 +169,7 @@ export default function Institutions() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "recruiters don't reject your design students for lack of skill. they reject unclear portfolios, wrong role targeting, and weak presentation."
+                "Recruiters don't reject your design students for lack of skill. they reject unclear portfolios, wrong role targeting, and weak presentation."
               )}
             </p>
             <p
@@ -177,7 +177,7 @@ export default function Institutions() {
               style={{ fontSize: "clamp(18px,1.4vw,22px)", lineHeight: 1.5 }}
             >
               {preventWidow(
-                "evolve fixes exactly that. industry professional led programmes which run on your own branded portal."
+                "Evolve fixes exactly that. industry professional led programmes which run on your own branded portal."
               )}
             </p>
 
@@ -187,7 +187,7 @@ export default function Institutions() {
                 className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
                 style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
               >
-                get in touch{" "}
+                Get in touch{" "}
                 <span>
                   <img src={right_arrow_icon} alt="" className="w-6 h-6" />
                 </span>
@@ -196,16 +196,18 @@ export default function Institutions() {
                 onClick={() =>
                   mySpaceSlug
                     ? navigate(`/space/${mySpaceSlug}`)
-                    : navigate("/onboarding", { state: { fromInstitution: true } })
+                    : navigate("/onboarding", {
+                        state: { fromInstitution: true }
+                      })
                 }
                 className="inline-flex items-center justify-center gap-2 border border-evolve-yellow/70 text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:bg-evolve-yellow/10 transition-colors w-fit"
                 style={{ borderRadius: 16 }}
               >
                 {mySpaceSlug
-                  ? "go to my space"
+                  ? "Go to my space"
                   : user
-                    ? "set up your space"
-                    : "sign in & set up your space"}
+                    ? "Set up your space"
+                    : "Sign in & set up your space"}
               </button>
             </div>
             {/* <button
@@ -252,7 +254,7 @@ export default function Institutions() {
           className="text-white text-left md:text-center mt-6 md:max-w-[980px]"
           style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
         >
-          cengage 2025 graduate employability report
+          Cengage 2025 graduate employability report
         </p>
       </section>
 
@@ -269,13 +271,13 @@ export default function Institutions() {
           className="font-extrabold text-evolve-black"
           style={{ fontSize: "clamp(32px,3.4vw,44px)" }}
         >
-          our offerings
+          Our offerings
         </h2>
         <p
           className="text-evolve-black mt-3"
           style={{ fontSize: "clamp(16px,1.2vw,19px)" }}
         >
-          custom space for your institute &nbsp;•&nbsp; personalised journey for
+          Custom space for your institute &nbsp;•&nbsp; Personalised journey for
           your students &nbsp;•&nbsp;{" "}
           {preventWidow("100% delivered by industry professionals")}
         </p>
@@ -296,7 +298,7 @@ export default function Institutions() {
               boxShadow: "4px 4px 0 0 #806804"
             }}
           >
-            download handbook
+            Download handbook
             <img src={download_icon} alt="" className="w-5 h-5" />
           </button>
         </div>
@@ -417,7 +419,7 @@ export default function Institutions() {
 //   };
 
 //   return (
-//     <div className="w-full lowercase">
+//     <div className="w-full">
 //       <SEO
 //         title="evolve for institutions — get your students industry ready"
 //         description="evolve for institutions gives design colleges and coaching institutes practitioner-led programmes — portfolio reviews and niche-finding mentorship — delivered on your own branded portal."

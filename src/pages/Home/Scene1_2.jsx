@@ -1418,20 +1418,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={purpleHandLeftRef}
               src={purple_hand_left}
               alt="purple hand left"
-              className="absolute pointer-events-none 
-    [top:40%] 
-    [@media(min-height:768px)]:top-[39%] 
-    [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[38%]
-    [@media(min-height:1200px)]:top-[33%]
-    [@media(min-width:1700px)]:top-[42%] 
-    [@media(min-width:1700px)]:left-[30px]
-    [left:26px]
-    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%]
-    [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:left-[22px]
-[@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:scale-30
-          [w-auto]
-          [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
+              className="absolute pointer-events-none [top:40%] [@media(min-height:768px)]:top-[39%] [@media(min-height:900px)]:top-[38%] [@media(min-height:1080px)]:top-[38%] [@media(min-height:1200px)]:top-[33%] [@media(min-width:1700px)]:top-[42%] [@media(min-width:1700px)]:left-[30px] [left:26px] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:left-[22px] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:scale-30 [w-auto] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
               style={{
                 // left: "26px",
                 // width: "auto",
@@ -1449,18 +1436,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={purpleHandRightRef}
               src={purple_hand_right}
               alt="purple hand right"
-              className="absolute pointer-events-none 
-    [top:40%] 
-    [@media(min-height:768px)]:top-[39%] 
-    [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[38%]
-    [@media(min-height:1200px)]:top-[33%]
-        [@media(min-width:1700px)]:top-[42%]
-        [right:20px]
-            [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%]
-              [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:right-[18px]
-              [w-auto]
-              [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
+              className="absolute pointer-events-none [top:40%] [@media(min-height:768px)]:top-[39%] [@media(min-height:900px)]:top-[38%] [@media(min-height:1080px)]:top-[38%] [@media(min-height:1200px)]:top-[33%] [@media(min-width:1700px)]:top-[42%] [right:20px] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:top-[39.5%] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:right-[18px] [w-auto] [@media(min-width:768px)_and_(max-width:1366px)_and_(min-height:600px)_and_(max-height:1024px)]:w-[30%]"
               style={{
                 // right: "20px",
                 // width: "auto",
@@ -1478,13 +1454,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={saturnLeftRef}
               src={saturn_left}
               alt="saturn left"
-              className="absolute pointer-events-none 
-          [top:20%] 
-          [@media(min-height:768px)]:top-[18%] 
-          [@media(min-height:900px)]:top-[14%]
-          [@media(min-height:1080px)]:top-[10%]
-          [@media(min-width:1700px)]:top-[20%]
-          [@media(min-width:1700px)]:scale-100"
+              className="absolute pointer-events-none [top:20%] [@media(min-height:768px)]:top-[18%] [@media(min-height:900px)]:top-[14%] [@media(min-height:1080px)]:top-[10%] [@media(min-width:1700px)]:top-[20%] [@media(min-width:1700px)]:scale-100"
               style={{
                 left: "40px",
                 width: "auto",
@@ -1502,13 +1472,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={saturnRightRef}
               src={saturn_right}
               alt="saturn right"
-              className="absolute pointer-events-none 
-          [top:20%] 
-          [@media(min-height:768px)]:top-[18%] 
-          [@media(min-height:900px)]:top-[14%]
-          [@media(min-height:1080px)]:top-[10%]
-          [@media(min-width:1700px)]:top-[20%]
-          [@media(min-width:1700px)]:scale-100"
+              className="absolute pointer-events-none [top:20%] [@media(min-height:768px)]:top-[18%] [@media(min-height:900px)]:top-[14%] [@media(min-height:1080px)]:top-[10%] [@media(min-width:1700px)]:top-[20%] [@media(min-width:1700px)]:scale-100"
               style={{
                 right: "37.98px",
                 width: "auto",
@@ -1526,14 +1490,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={purpleHandLeftRef}
               src={purple_hand_left_mobile}
               alt="purple hand left"
-              className="absolute pointer-events-none
-          [top:45%]
-          [@media(min-height:667px)]:top-[43.5%]
-          [@media(min-height:725px)]:top-[44%]
-          [@media(min-height:812px)]:top-[44%]
-          [@media(min-height:844px)]:top-[44.9%]
-          [@media(min-height:896px)]:top-[45.9%]
-          [@media(min-height:926px)]:top-[46.9%]"
+              className="absolute pointer-events-none [top:45%] [@media(min-height:667px)]:top-[43.5%] [@media(min-height:725px)]:top-[44%] [@media(min-height:812px)]:top-[44%] [@media(min-height:844px)]:top-[44.9%] [@media(min-height:896px)]:top-[45.9%] [@media(min-height:926px)]:top-[46.9%]"
               style={{
                 left: "0",
                 width: "auto",
@@ -1551,14 +1508,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={purpleHandRightRef}
               src={purple_hand_right_mobile}
               alt="purple hand right"
-              className="absolute pointer-events-none
-          [top:45%]
-          [@media(min-height:667px)]:top-[43.5%]
-          [@media(min-height:725px)]:top-[44%]
-          [@media(min-height:812px)]:top-[44%]
-          [@media(min-height:844px)]:top-[44.9%]
-          [@media(min-height:896px)]:top-[45.9%]
-          [@media(min-height:926px)]:top-[46.9%]"
+              className="absolute pointer-events-none [top:45%] [@media(min-height:667px)]:top-[43.5%] [@media(min-height:725px)]:top-[44%] [@media(min-height:812px)]:top-[44%] [@media(min-height:844px)]:top-[44.9%] [@media(min-height:896px)]:top-[45.9%] [@media(min-height:926px)]:top-[46.9%]"
               style={{
                 right: "0",
                 width: "auto",
@@ -1576,14 +1526,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={saturnLeftRef}
               src={saturn_left_mobile}
               alt="saturn left"
-              className="absolute pointer-events-none 
-          [top:25%]
-          [@media(min-height:667px)]:top-[19%]
-          [@media(min-height:736px)]:top-[18%]
-          [@media(min-height:812px)]:top-[17%]
-          [@media(min-height:844px)]:top-[16%]
-          [@media(min-height:896px)]:top-[15%]
-          [@media(min-height:926px)]:top-[14%]"
+              className="absolute pointer-events-none [top:25%] [@media(min-height:667px)]:top-[19%] [@media(min-height:736px)]:top-[18%] [@media(min-height:812px)]:top-[17%] [@media(min-height:844px)]:top-[16%] [@media(min-height:896px)]:top-[15%] [@media(min-height:926px)]:top-[14%]"
               style={{
                 left: "0",
                 width: "auto",
@@ -1601,14 +1544,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={saturnRightRef}
               src={saturn_right_mobile}
               alt="saturn right"
-              className="absolute pointer-events-none 
-          [top:25%]
-          [@media(min-height:667px)]:top-[21%]
-          [@media(min-height:736px)]:top-[22%]
-          [@media(min-height:812px)]:top-[20%]
-          [@media(min-height:844px)]:top-[19%]
-          [@media(min-height:896px)]:top-[18%]
-          [@media(min-height:926px)]:top-[17%]"
+              className="absolute pointer-events-none [top:25%] [@media(min-height:667px)]:top-[21%] [@media(min-height:736px)]:top-[22%] [@media(min-height:812px)]:top-[20%] [@media(min-height:844px)]:top-[19%] [@media(min-height:896px)]:top-[18%] [@media(min-height:926px)]:top-[17%]"
               style={{
                 right: "0",
                 width: "auto",
@@ -1625,14 +1561,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={pinkLighteningLeftRef}
               src={pink_lightening_left}
               alt="pink lightening left"
-              className="absolute pointer-events-none 
-    [top:20%] 
-    [@media(min-height:768px)]:top-[18%] 
-    [@media(min-height:900px)]:top-[14%]
-    [@media(min-height:1080px)]:top-[10%]
-    [@media(min-width:1700px)]:top-[22%]
-          [left:24px]
-          [@media(min-width:1700px)]:left-[30px]"
+              className="absolute pointer-events-none [top:20%] [@media(min-height:768px)]:top-[18%] [@media(min-height:900px)]:top-[14%] [@media(min-height:1080px)]:top-[10%] [@media(min-width:1700px)]:top-[22%] [left:24px] [@media(min-width:1700px)]:left-[30px]"
               style={{
                 // left: "24px",
                 width: "auto",
@@ -1649,15 +1578,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={pinkLighteningRightRef}
               src={pink_lightening_right}
               alt="pink lightening right"
-              className="absolute pointer-events-none 
-[top:20%]
-[@media(min-height:768px)]:top-[18%]
-[@media(min-height:900px)]:top-[14%]
-[@media(min-height:1080px)]:top-[10%]
-[@media(min-height:1200px)]:top-[8%]
-    [@media(min-width:1700px)]:top-[22%]
-          [right:18px]
-          [@media(min-width:1700px)]:right-[20px]"
+              className="absolute pointer-events-none [top:20%] [@media(min-height:768px)]:top-[18%] [@media(min-height:900px)]:top-[14%] [@media(min-height:1080px)]:top-[10%] [@media(min-height:1200px)]:top-[8%] [@media(min-width:1700px)]:top-[22%] [right:18px] [@media(min-width:1700px)]:right-[20px]"
               style={{
                 // right: "20px",
                 // width: "full",
@@ -1674,14 +1595,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={pinkLighteningLeftRef}
               src={pink_lightening_left_mobile}
               alt="pink lightening left"
-              className="absolute pointer-events-none 
-    [top:18%]
-    [@media(min-height:667px)]:top-[16%]
-    [@media(min-height:736px)]:top-[17%]
-    [@media(min-height:812px)]:top-[15%]
-    [@media(min-height:844px)]:top-[14%]
-    [@media(min-height:896px)]:top-[13%]
-    [@media(min-height:926px)]:top-[12%]"
+              className="absolute pointer-events-none [top:18%] [@media(min-height:667px)]:top-[16%] [@media(min-height:736px)]:top-[17%] [@media(min-height:812px)]:top-[15%] [@media(min-height:844px)]:top-[14%] [@media(min-height:896px)]:top-[13%] [@media(min-height:926px)]:top-[12%]"
               style={{
                 left: "-5%",
                 width: "auto",
@@ -1698,14 +1612,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={pinkLighteningRightRef}
               src={pink_lightening_right_mobile}
               alt="pink lightening right"
-              className="absolute pointer-events-none 
-    [top:18%]
-    [@media(min-height:667px)]:top-[16%]
-    [@media(min-height:736px)]:top-[17%]
-    [@media(min-height:812px)]:top-[15%]
-    [@media(min-height:844px)]:top-[14%]
-    [@media(min-height:896px)]:top-[13%]
-    [@media(min-height:926px)]:top-[12%]"
+              className="absolute pointer-events-none [top:18%] [@media(min-height:667px)]:top-[16%] [@media(min-height:736px)]:top-[17%] [@media(min-height:812px)]:top-[15%] [@media(min-height:844px)]:top-[14%] [@media(min-height:896px)]:top-[13%] [@media(min-height:926px)]:top-[12%]"
               style={{
                 right: "-3%",
                 width: "auto",
@@ -1722,14 +1629,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={birdLeftRef}
               src={bird_left}
               alt="bird left"
-              className="absolute pointer-events-none 
-    [top:32%] 
-    [@media(min-height:768px)]:top-[26%] 
-    [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[35%]
-    [@media(min-width:1700px)]:top-[28%]
-          [left:24px]
-          [@media(min-width:1700px)]:left-[30px]"
+              className="absolute pointer-events-none [top:32%] [@media(min-height:768px)]:top-[26%] [@media(min-height:900px)]:top-[38%] [@media(min-height:1080px)]:top-[35%] [@media(min-width:1700px)]:top-[28%] [left:24px] [@media(min-width:1700px)]:left-[30px]"
               style={{
                 // left: "24px",
                 width: "28%",
@@ -1746,14 +1646,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={birdRightRef}
               src={bird_right}
               alt="bird right"
-              className="absolute pointer-events-none 
-    [top:32%] 
-    [@media(min-height:768px)]:top-[26%] 
-    [@media(min-height:900px)]:top-[38%]
-    [@media(min-height:1080px)]:top-[35%]
-    [@media(min-width:1700px)]:top-[28%]
-          [right:18px]
-          [@media(min-width:1700px)]:right-[22px]"
+              className="absolute pointer-events-none [top:32%] [@media(min-height:768px)]:top-[26%] [@media(min-height:900px)]:top-[38%] [@media(min-height:1080px)]:top-[35%] [@media(min-width:1700px)]:top-[28%] [right:18px] [@media(min-width:1700px)]:right-[22px]"
               style={{
                 // right: "20px",
                 width: "28%",
@@ -1770,14 +1663,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={birdLeftRef}
               src={bird_left_mobile}
               alt="bird left"
-              className="absolute pointer-events-none
-    [top:35.5%]
-    [@media(min-height:667px)]:top-[37.5%]
-    [@media(min-height:736px)]:top-[32.5%]
-    [@media(min-height:812px)]:top-[33%]
-    [@media(min-height:844px)]:top-[34.5%]
-    [@media(min-height:896px)]:top-[45.5%]
-    [@media(min-height:926px)]:top-[36%]"
+              className="absolute pointer-events-none [top:35.5%] [@media(min-height:667px)]:top-[37.5%] [@media(min-height:736px)]:top-[32.5%] [@media(min-height:812px)]:top-[33%] [@media(min-height:844px)]:top-[34.5%] [@media(min-height:896px)]:top-[45.5%] [@media(min-height:926px)]:top-[36%]"
               style={{
                 left: "0",
                 width: "50%",
@@ -1794,14 +1680,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
               ref={birdRightRef}
               src={bird_right_mobile}
               alt="bird right"
-              className="absolute pointer-events-none
-      [top:35.5%]
-    [@media(min-height:667px)]:top-[37.5%]
-    [@media(min-height:736px)]:top-[32.5%]
-    [@media(min-height:812px)]:top-[33%]
-    [@media(min-height:844px)]:top-[34.5%]
-    [@media(min-height:896px)]:top-[45.5%]
-    [@media(min-height:926px)]:top-[36%]"
+              className="absolute pointer-events-none [top:35.5%] [@media(min-height:667px)]:top-[37.5%] [@media(min-height:736px)]:top-[32.5%] [@media(min-height:812px)]:top-[33%] [@media(min-height:844px)]:top-[34.5%] [@media(min-height:896px)]:top-[45.5%] [@media(min-height:926px)]:top-[36%]"
               style={{
                 right: "0",
                 width: "50%",
@@ -2098,7 +1977,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <p
             ref={topTextRef}
-            className="text-white font-extrabold mb-4 px-4 lowercase"
+            className="text-white font-extrabold mb-4 px-4"
             style={{
               fontSize: isMobile ? "24px" : "32px",
               opacity: 0,
@@ -2116,7 +1995,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             {/* "learn design" text - CHANGED */}
             <h2
               ref={mainTextRef}
-              className="text-white font-extrabold px-4 lowercase absolute left-0 right-0"
+              className="text-white font-extrabold px-4 absolute left-0 right-0"
               style={{
                 fontSize: isMobile ? "3rem" : "6rem",
                 letterSpacing: 0,
@@ -2179,7 +2058,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
         >
           <p
             ref={finalTopTextRef}
-            className="text-black font-extrabold mb-4 px-4 lowercase"
+            className="text-black font-extrabold mb-4 px-4"
             style={{
               fontSize: isMobile ? "24px" : "32px",
               opacity: 0,
@@ -2232,7 +2111,7 @@ const Scene1_2 = React.forwardRef((props, ref) => {
             <img
               src={join_us_button}
               alt="join us"
-              className="w-auto "
+              className="w-auto"
               onMouseEnter={(e) => (e.currentTarget.src = join_us_button_hover)}
               onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
               style={{

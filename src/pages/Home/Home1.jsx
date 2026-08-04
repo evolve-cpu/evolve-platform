@@ -535,7 +535,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -1176,7 +1176,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -1758,7 +1758,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -2366,7 +2366,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -3030,7 +3030,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -3694,7 +3694,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -4380,7 +4380,7 @@
 //   return (
 //     <div
 //       id="scroll-container"
-//       className="relative w-full h-screen bg-black lowercase"
+//       className="relative w-full h-screen bg-black"
 //       style={{
 //         perspectiveOrigin: "50% 50%",
 //         overflow: "hidden",
@@ -4961,7 +4961,7 @@ const Home = ({
   return (
     <div
       id="scroll-container"
-      className="relative w-full h-screen bg-black lowercase"
+      className="relative w-full h-screen bg-black"
       style={{
         perspectiveOrigin: "50% 50%",
         overflow: "hidden",

@@ -62,11 +62,7 @@
 //     >
 //       {/* Top section */}
 //       <div
-//         className="
-//     bg-black h-[60%] min-h-[240px]
-//     relative overflow-hidden
-//     flex justify-center
-//   "
+//         className="// bg-black h-[60%] min-h-[240px] // relative overflow-hidden // flex justify-center //"
 //       >
 //         {/* <img
 //           src={svg}
@@ -170,12 +166,7 @@
 //           dangerouslySetInnerHTML={{ __html: title }}
 //         />
 //         {/* <h3
-//           className="
-//             font-extrabold lowercase text-white text-center
-//             transition-all duration-500 ease-in-out
-//             text-5xl leading-[40px]
-//             md:text-2xl lg:text-4xl
-//           "
+//           className="// font-extrabold text-white text-center // transition-all duration-500 ease-in-out // text-5xl leading-[40px] // md:text-2xl lg:text-4xl //"
 //           // style={{
 //           //   lineHeight: "40px",
 //           //   letterSpacing: "0"
@@ -201,16 +192,7 @@
 //           <img
 //             src={watch_playlist_button}
 //             alt="watch playlist"
-//             className="
-//       h-12 w-auto md:h-9 lg:h-12
-//       cursor-pointer
-//       transition-all duration-300 ease-out
-//       hover:-translate-y-1
-//       hover:scale-[1.04]
-//       hover:drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)]
-//       active:translate-y-0
-//       active:scale-[0.98]
-//     "
+//             className="// h-12 w-auto md:h-9 lg:h-12 // cursor-pointer // transition-all duration-300 ease-out // hover:-translate-y-1 // hover:scale-[1.04] // hover:drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)] // active:translate-y-0 // active:scale-[0.98] //"
 //           />
 //         </a>
 //       </div>
@@ -243,7 +225,7 @@
 //       {/* Bottom 40% - Pink with text */}
 //       <div className="bg-evolve-pink h-[200px] flex items-center justify-center px-6">
 //         <h3
-//           className="font-extrabold lowercase text-black text-center"
+//           className="font-extrabold text-black text-center"
 //           style={{
 //             fontSize: "40px",
 //             lineHeight: "36px",
@@ -325,7 +307,7 @@
 
 //             <div className="bg-evolve-pink h-[200px] flex flex-col items-center justify-center">
 //               <h3
-//                 className="font-extrabold lowercase text-white text-center"
+//                 className="font-extrabold text-white text-center"
 //                 style={{ fontSize: "40px", lineHeight: "36px" }}
 //                 dangerouslySetInnerHTML={{ __html: card.title }}
 //               />
@@ -426,7 +408,7 @@
 //                   {/* <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16"> */}
 //                   <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-28%]">
 //                     <h1
-//                       className="text-evolve-pink font-extrabold lowercase"
+//                       className="text-evolve-pink font-extrabold"
 //                       style={{
 //                         fontSize: "clamp(64px, 8vw, 128px)",
 //                         lineHeight: "clamp(48px, 7vw, 110px)",
@@ -437,14 +419,14 @@
 //                     </h1>
 
 //                     {/* <p
-//                       className="mt-6 font-bold lowercase text-black"
+//                       className="mt-6 font-bold text-black"
 //                       style={{ fontSize: "38px" }}
 //                     >
 //                       Free. Forever. Worth Your Time.
 //                     </p> */}
 
 //                     <p
-//                       className="mt-4 font-medium lowercase text-black leading-tight"
+//                       className="mt-4 font-medium text-black leading-tight"
 //                       style={{ fontSize: "28px" }}
 //                     >
 //                       {renderWithBreaks(COPY.hero.subtextDesktop)}
@@ -466,7 +448,7 @@
 //             {/* "upcoming webinar" text */}
 //             {/* <div className="flex justify-center mb-12">
 //                 <h2
-//                   className="lowercase font-extrabold text-black"
+//                   className="font-extrabold text-black"
 //                   style={{
 //                     fontSize: "36px",
 //                     lineHeight: "96px",
@@ -566,8 +548,7 @@
 //             <div className="absolute top-[10vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
 //               <div className="w-[80%] text-center pt-16 px-6">
 //                 <h1
-//                   className="
-//       text-evolve-pink font-extrabold lowercase"
+//                   className="// text-evolve-pink font-extrabold"
 //                   style={{
 //                     fontSize: "clamp(64px, 8vw, 128px)",
 //                     lineHeight: "clamp(48px, 7vw, 110px)",
@@ -578,21 +559,13 @@
 //                 </h1>
 
 //                 {/* <p
-//                   className="
-//       mt-4 font-bold text-black
-//       text-[18px]
-//       md:text-[clamp(18px,2vw,20px)]
-//     "
+//                   className="// mt-4 font-bold text-black // text-[18px] // md:text-[clamp(18px,2vw,20px)] //"
 //                 >
 //                   Free. Forever. Worth Your Time.
 //                 </p> */}
 
 //                 <p
-//                   className="
-//       mt-3 font-normal text-center text-black mx-auto max-w-[70vw]
-//       text-[18px]
-//       md:text-[clamp(18px,1.8vw,20px)]
-//     "
+//                   className="// mt-3 font-normal text-center text-black mx-auto max-w-[70vw] // text-[18px] // md:text-[clamp(18px,1.8vw,20px)] //"
 //                 >
 //                   {COPY.hero.subtextMobile}
 //                 </p>
@@ -612,7 +585,7 @@
 //           {/* <section className="relative z-40 pt-32 pb-20 text-center"> */}
 //           <div className="relative z-40 pt-32 pb-20 text-center">
 //             {/* <h2
-//               className="font-extrabold lowercase text-black"
+//               className="font-extrabold text-black"
 //               style={{
 //                 fontSize: "32px",
 //                 lineHeight: "32px",
@@ -707,11 +680,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
     >
       {/* Top section */}
       <div
-        className="
-    bg-black h-[60%] min-h-[240px]
-    relative overflow-hidden
-    flex justify-center
-  "
+        className="bg-black h-[60%] min-h-[240px] relative overflow-hidden flex justify-center"
       >
         {/* <img
           src={svg}
@@ -817,12 +786,7 @@ ${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
           dangerouslySetInnerHTML={{ __html: title }}
         />
         {/* <h3
-          className="
-            font-extrabold lowercase text-white text-center
-            transition-all duration-500 ease-in-out
-            text-5xl leading-[40px]
-            md:text-2xl lg:text-4xl
-          "
+          className="font-extrabold text-white text-center transition-all duration-500 ease-in-out text-5xl leading-[40px] md:text-2xl lg:text-4xl"
           // style={{
           //   lineHeight: "40px",
           //   letterSpacing: "0"
@@ -851,16 +815,7 @@ ${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
           <img
             src={watch_playlist_button}
             alt="watch playlist"
-            className="
-      h-12 w-auto md:h-9 lg:h-12
-      cursor-pointer
-      transition-all duration-300 ease-out
-      hover:-translate-y-1
-      hover:scale-[1.04]
-      hover:drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)]
-      active:translate-y-0
-      active:scale-[0.98]
-    "
+            className="h-12 w-auto md:h-9 lg:h-12 cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.04] hover:drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-[0.98]"
           />
         </a>
       </div>
@@ -893,7 +848,7 @@ const MobileWebinarCard = ({ svg, title, isVisible }) => {
       {/* Bottom 40% - Pink with text */}
       <div className="bg-evolve-pink h-[200px] flex items-center justify-center px-6">
         <h3
-          className="font-extrabold lowercase text-black text-center"
+          className="font-extrabold text-black text-center"
           style={{
             fontSize: "40px",
             lineHeight: "36px",
@@ -942,7 +897,7 @@ const MobilePinnedCards = ({ cards }) => {
       {/* STICKY TEXT (NO GSAP PIN) */}
       <div className="sticky top-0 bg-evolve-yellow pt-16 pb-8 z-10">
         <h2
-          className="text-black font-extrabold lowercase text-center mb-3"
+          className="text-black font-extrabold text-center mb-3"
           style={{
             fontSize: "48px",
             lineHeight: "1",
@@ -985,7 +940,7 @@ const MobilePinnedCards = ({ cards }) => {
 
             <div className="bg-evolve-pink h-[200px] flex flex-col items-center justify-center">
               <h3
-                className="font-extrabold lowercase text-white text-center"
+                className="font-extrabold text-white text-center"
                 style={{ fontSize: "40px", lineHeight: "36px" }}
                 dangerouslySetInnerHTML={{ __html: card.title }}
               />
@@ -1077,14 +1032,14 @@ const Webinars = () => {
             {/* First viewport content */}
             <div className="relative min-h-[140vh]">
               {/* Barfi - z-20, anchored to top */}
-              <div className="absolute inset-0 flex items-center justify-center z-20 -pt-36 ">
+              <div className="absolute inset-0 flex items-center justify-center z-20 -pt-36">
                 <div className="relative flex flex-col items-center text-center">
                   <img src={barfi} alt="barfi" className="relative w-[85%]" />
 
                   {/* Text inside Barfi - z-30 */}
                   <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-16 top-[-60%]">
                     <h1
-                      className="text-evolve-pink font-extrabold lowercase"
+                      className="text-evolve-pink font-extrabold"
                       style={{
                         fontSize: "clamp(64px, 8vw, 128px)",
                         lineHeight: "clamp(48px, 6vw, 110px)",
@@ -1095,14 +1050,14 @@ const Webinars = () => {
                     </h1>
 
                     {/* <p
-                      className="mt-6 font-bold lowercase text-black"
+                      className="mt-6 font-bold text-black"
                       style={{ fontSize: "38px" }}
                     >
                       Free. Forever. Worth Your Time.
                     </p> */}
 
                     <p
-                      className="mt-4 font-medium lowercase text-black leading-tight"
+                      className="mt-4 font-medium text-black leading-tight"
                       style={{ fontSize: "28px" }}
                     >
                       {renderWithBreaks(COPY.hero.subtextDesktop)}
@@ -1117,7 +1072,7 @@ const Webinars = () => {
                 href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-[-6%]  inset-x-0 z-50 flex justify-center"
+                className="absolute bottom-[-6%] inset-x-0 z-50 flex justify-center"
               >
                 <img
                   src={learn_to_learn}
@@ -1139,7 +1094,7 @@ const Webinars = () => {
             {/* "upcoming webinar" text */}
             {/* <div className="flex justify-center mb-12">
                 <h2
-                  className="lowercase font-extrabold text-black"
+                  className="font-extrabold text-black"
                   style={{
                     fontSize: "36px",
                     lineHeight: "96px",
@@ -1168,7 +1123,7 @@ const Webinars = () => {
           {/* Past webinars heading */}
           <div className="flex justify-center mb-6">
             <h2
-              className="text-black font-extrabold lowercase"
+              className="text-black font-extrabold"
               style={{
                 fontSize: "72px",
                 lineHeight: "1",
@@ -1252,8 +1207,7 @@ const Webinars = () => {
             <div className="absolute top-[4vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
               <div className="w-[80%] text-center pt-16 px-6">
                 <h1
-                  className="
-      text-evolve-pink font-extrabold lowercase"
+                  className="text-evolve-pink font-extrabold"
                   style={{
                     fontSize: "clamp(64px, 8vw, 128px)",
                     lineHeight: "clamp(48px, 7vw, 110px)",
@@ -1264,21 +1218,13 @@ const Webinars = () => {
                 </h1>
 
                 {/* <p
-                  className="
-      mt-4 font-bold text-black
-      text-[18px]
-      md:text-[clamp(18px,2vw,20px)]
-    "
+                  className="mt-4 font-bold text-black text-[18px] md:text-[clamp(18px,2vw,20px)]"
                 >
                   Free. Forever. Worth Your Time.
                 </p> */}
 
                 <p
-                  className="
-      mt-3 font-normal text-center text-black mx-auto max-w-[70vw]
-      text-[18px]
-      md:text-[clamp(18px,1.8vw,20px)]
-    "
+                  className="mt-3 font-normal text-center text-black mx-auto max-w-[70vw] text-[18px] md:text-[clamp(18px,1.8vw,20px)]"
                 >
                   {COPY.hero.subtextMobile}
                 </p>

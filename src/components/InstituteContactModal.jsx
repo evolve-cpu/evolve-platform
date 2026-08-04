@@ -164,30 +164,30 @@ const InstituteContactModal = ({
                   strokeLinejoin="round"
                 />
               </svg>
-              <h2 className="font-extrabold lowercase text-black text-[28px] md:text-[34px] leading-tight">
+              <h2 className="font-extrabold text-black text-[28px] md:text-[34px] leading-tight">
                 {intent === "handbook"
-                  ? "handbook on its way!"
-                  : "thanks for reaching out!"}
+                  ? "Handbook on its way!"
+                  : "Thanks for reaching out!"}
               </h2>
-              <p className="font-normal lowercase text-black text-[15px] md:text-[17px]">
+              <p className="font-normal text-black text-[15px] md:text-[17px]">
                 {intent === "handbook"
                   ? "Your download should begin in a few seconds. We'll also reach out to you soon."
-                  : "our team will get back to you shortly."}
+                  : "Our team will get back to you shortly."}
               </p>
               <button
                 onClick={onClose}
-                className="mt-2 font-extrabold lowercase px-6 py-3 rounded-2xl border-2 border-black bg-black text-[#FFD007]"
+                className="mt-2 font-extrabold px-6 py-3 rounded-2xl border-2 border-black bg-black text-[#FFD007]"
                 style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
               >
-                close
+                Close
               </button>
             </div>
           ) : (
             <>
-              <h2 className="font-extrabold lowercase text-black text-[28px] md:text-[36px] leading-tight">
-                {intent === "handbook" ? "get the handbook" : "let's talk"}
+              <h2 className="font-extrabold text-black text-[28px] md:text-[36px] leading-tight">
+                {intent === "handbook" ? "Get the handbook" : "Let's talk"}
               </h2>
-              {/* <p className="font-normal lowercase text-black text-[15px] md:text-[18px] mt-2">
+              {/* <p className="font-normal text-black text-[15px] md:text-[18px] mt-2">
                 {intent === "handbook"
                   ? "share a few details and we'll send it right over."
                   : "tell us a bit about you and we'll get back to you."}
@@ -219,7 +219,7 @@ const InstituteContactModal = ({
                   <input
                     type="email"
                     required
-                    placeholder="email*"
+                    placeholder="Email*"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
@@ -228,7 +228,7 @@ const InstituteContactModal = ({
                   <input
                     type="tel"
                     required
-                    placeholder="phone number*"
+                    placeholder="Phone number*"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     autoComplete="tel"
@@ -237,7 +237,7 @@ const InstituteContactModal = ({
                 </div>
                 {intent !== "handbook" && (
                   <textarea
-                    placeholder="what're you looking for? (optional)"
+                    placeholder="What're you looking for? (optional)"
                     rows={2}
                     value={lookingFor}
                     onChange={(e) => setLookingFor(e.target.value)}
@@ -246,7 +246,7 @@ const InstituteContactModal = ({
                 )}
 
                 {errorMsg && (
-                  <p className="text-sm md:text-base font-semibold text-red-700 lowercase">
+                  <p className="text-sm md:text-base font-semibold text-red-700">
                     {errorMsg}
                   </p>
                 )}
@@ -254,14 +254,14 @@ const InstituteContactModal = ({
                 <button
                   type="submit"
                   disabled={submitting || !isFormFilled}
-                  className="mt-1 font-extrabold lowercase px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow transition-colors hover:bg-[#FFE470] hover:text-black disabled:opacity-60 disabled:hover:bg-evolve-yellow"
+                  className="mt-1 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow transition-colors hover:bg-[#FFE470] hover:text-black disabled:opacity-60 disabled:hover:bg-evolve-yellow"
                   style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
                 >
                   {submitting
-                    ? "sending…"
+                    ? "Sending…"
                     : intent === "handbook"
-                      ? "submit & download"
-                      : "submit"}
+                      ? "Submit & Download"
+                      : "Submit"}
                 </button>
               </form>
 
@@ -269,8 +269,8 @@ const InstituteContactModal = ({
                 <>
                   <div className="flex items-center gap-3 mt-4">
                     <div className="h-px flex-1 bg-black/20" />
-                    <span className="font-bold lowercase text-black/60 text-[13px]">
-                      or
+                    <span className="font-bold text-black/60 text-[13px]">
+                      Or
                     </span>
                     <div className="h-px flex-1 bg-black/20" />
                   </div>
@@ -278,10 +278,10 @@ const InstituteContactModal = ({
                     href={CALENDLY_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-4 flex items-center justify-center gap-2 font-extrabold lowercase px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-[#FFD007] hover:opacity-90 transition-opacity"
+                    className="mt-4 flex items-center justify-center gap-2 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-[#FFD007] hover:opacity-90 transition-opacity"
                     style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
                   >
-                    book a 30-min call
+                    Book a 30-min call
                   </a>
                 </>
               )}
@@ -292,10 +292,10 @@ const InstituteContactModal = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onTrack?.("whatsapp")}
-                  className="mt-4 flex items-center justify-center gap-2 font-bold lowercase text-black text-[14px] md:text-[16px] underline underline-offset-4"
+                  className="mt-4 flex items-center justify-center gap-2 font-bold text-black text-[14px] md:text-[16px] underline underline-offset-4"
                 >
                   <WhatsAppIcon className="w-5 h-5" />
-                  or message us on whatsapp
+                  Or message us on whatsapp
                 </a>
               )}
             </>

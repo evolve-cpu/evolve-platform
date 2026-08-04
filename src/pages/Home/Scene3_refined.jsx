@@ -11,15 +11,15 @@ import {
 const CARDS = [
   {
     id: "community",
-    title: "community",
-    desc: "a safe, active space to connect, share, and grow.",
+    title: "Community",
+    desc: "A safe, active space to connect, share, and grow.",
     logo: community_logo,
     imageWidth: "70%",
     link: "/community"
   },
   {
     id: "mentorship",
-    title: "mentorship",
+    title: "Mentorship",
     desc: "1:1 support. learn from experienced designers.",
     logo: mentorship_logo,
     imageWidth: "72%",
@@ -27,8 +27,8 @@ const CARDS = [
   },
   {
     id: "webinar",
-    title: "webinar",
-    desc: "expert-led sessions. learn, engage, and grow.",
+    title: "Webinar",
+    desc: "Expert-led sessions. learn, engage, and grow.",
     logo: webinar_logo,
     imageWidth: "60%",
     link: "/webinars"
@@ -297,7 +297,7 @@ const Scene3_refined = React.forwardRef(
               zIndex: 10
             }}
           >
-            the evolve ecosystem
+            The evolve ecosystem
           </div>
 
           {/* Cards row */}
@@ -368,7 +368,7 @@ const Scene3_refined = React.forwardRef(
             paddingRight: "5vw"
           }}
         >
-          the evolve ecosystem
+          The evolve ecosystem
         </div>
 
         {/* Card area (clipping container) */}

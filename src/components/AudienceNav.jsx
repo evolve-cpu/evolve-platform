@@ -13,9 +13,9 @@ import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
  * no hamburger / slide-out menu, just the logo + inline nav links + get in touch.
  */
 const NAV_ITEMS = [
-  { path: "/designers", label: "designers" },
-  { path: "/institutions", label: "institutions" },
-  { path: "/corporates", label: "corporates" }
+  { path: "/designers", label: "Designers" },
+  { path: "/institutions", label: "Institutions" },
+  { path: "/corporates", label: "Corporates" }
 ];
 
 const AudienceNav = ({ audience = "institutions" }) => {
@@ -92,7 +92,7 @@ const AudienceNav = ({ audience = "institutions" }) => {
                 onClick={() => setModalOpen(true)}
                 className="hidden md:inline text-[#BF9C05] font-medium text-[17px] hover:text-white transition-colors duration-200"
               >
-                get in touch
+                Get in Touch
               </button>
             </div>
           </div>

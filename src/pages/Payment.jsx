@@ -253,7 +253,7 @@ function ProfileSheet({ user, onClose }) {
                   key={label}
                   className="flex justify-between items-start gap-2"
                 >
-                  <span className="text-black/40 text-[11px] lowercase shrink-0">
+                  <span className="text-black/40 text-[11px] shrink-0">
                     {label}
                   </span>
                   <span className="text-black font-semibold text-[11px] text-right break-all">
@@ -264,7 +264,7 @@ function ProfileSheet({ user, onClose }) {
             </div>
             <button
               onClick={downloadReceipt}
-              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs lowercase rounded-xl py-2.5 active:opacity-80"
+              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs rounded-xl py-2.5 active:opacity-80"
             >
               download receipt ↓
             </button>
@@ -655,7 +655,7 @@ export default function Payment() {
   //           <img src={surprise_box} alt="gift" className="w-52 h-52 object-contain" />
   //           <button
   //             onClick={() => setStep("gift2")}
-  //             className="w-full bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80"
+  //             className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-base rounded-2xl py-4 active:opacity-80"
   //           >
   //             claim your gift!
   //           </button>
@@ -705,7 +705,7 @@ export default function Payment() {
             />
             <button
               onClick={() => setStep("gift2")}
-              className="w-full bg-evolve-yellow text-evolve-black font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80"
+              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-base rounded-2xl py-4 active:opacity-80"
             >
               claim your gift!
             </button>
@@ -752,7 +752,7 @@ export default function Payment() {
               />
               <button
                 onClick={() => setStep(showBatchPicker ? "batch_pick" : "details")}
-                className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold lowercase text-base rounded-2xl py-4 active:opacity-80 mt-2"
+                className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
               >
                 claim your gift!
               </button>
@@ -782,7 +782,7 @@ export default function Payment() {
               <BackBtn onClick={() => navigate("/mentorship")} />
 
               <div>
-                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3 lowercase">
+                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3">
                   all seats till july are taken
                 </span>
                 <h1
@@ -799,7 +799,7 @@ export default function Payment() {
               <div className="flex flex-col gap-4">
                 {/* Email — pre-filled, read-only */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-white/50 text-xs lowercase">enter your email</label>
+                  <label className="text-white/50 text-xs">enter your email</label>
                   <input
                     type="email"
                     value={user?.email || ""}
@@ -811,7 +811,7 @@ export default function Payment() {
 
                 {/* Phone */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-white/50 text-xs lowercase">enter your phone</label>
+                  <label className="text-white/50 text-xs">enter your phone</label>
                   <div className="flex gap-2">
                     <div
                       className="flex items-center justify-center rounded-xl px-3 text-white text-sm font-semibold flex-none"
@@ -888,7 +888,7 @@ export default function Payment() {
               <BackBtn onClick={() => navigate("/mentorship")} />
 
               <div>
-                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3 lowercase">
+                <span className="inline-block bg-red-500/15 text-red-400 text-xs font-bold px-3 py-1 rounded-full mb-3">
                   batch 1 is full
                 </span>
                 <p className="text-white/35 text-xs mb-3">
@@ -919,7 +919,7 @@ export default function Payment() {
                         : "1.5px solid rgba(255,255,255,0.08)"
                     }}
                   >
-                    <p className="text-evolve-yellow font-bold text-base lowercase">
+                    <p className="text-evolve-yellow font-bold text-base">
                       {batchDate(b.start_date)}
                     </p>
                     <p className="text-white/50 text-sm mt-0.5">
@@ -981,7 +981,7 @@ export default function Payment() {
                   <button
                     key={t}
                     onClick={() => handlePlanChange(t)}
-                    className="flex-1 py-3 font-extrabold lowercase text-sm transition-colors"
+                    className="flex-1 py-3 font-extrabold text-sm transition-colors"
                     style={{
                       backgroundColor:
                         plan === t ? "rgba(223,5,134,1)" : "#BF9C05",

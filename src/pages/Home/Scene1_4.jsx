@@ -192,7 +192,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
         <div className="flex flex-col items-center pt-[30vh] px-8">
           {/* <p
             ref={text1Ref}
-            className="text-white lowercase mb-8 text-center"
+            className="text-white mb-8 text-center"
             style={{
               fontSize: "2.5rem",
               fontWeight: 400,
@@ -206,7 +206,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
 
           <p
             ref={text2Ref}
-            className="text-white lowercase font-extrabold text-center"
+            className="text-white font-extrabold text-center"
             style={{
               fontSize: "3.5rem",
               lineHeight: "4rem",
@@ -225,7 +225,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
         <div className="flex flex-col items-center pt-[30vh] px-6">
           {/* <p
             ref={text1Ref}
-            className="text-white lowercase mb-4 text-center"
+            className="text-white mb-4 text-center"
             style={{
               fontSize: "1.5rem",
               fontWeight: 500,
@@ -239,7 +239,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
 
           <p
             ref={text2Ref}
-            className="text-white lowercase font-extrabold text-center"
+            className="text-white font-extrabold text-center"
             style={{
               fontSize: "2.5rem",
               lineHeight: "2.25rem",

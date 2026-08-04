@@ -481,7 +481,7 @@ const Home = ({
       <div
         ref={containerRef}
         id="scroll-container"
-        className="w-full h-screen bg-black lowercase"
+        className="w-full h-screen bg-black"
         style={{ overflow: "hidden", position: "relative", zIndex: 2 }}
       >
         {/* Grain texture overlay */}
@@ -641,7 +641,7 @@ export default Home;
 //         // >
 //         //   {/* Desktop — static layout */}
 //         //   <div
-//         //     className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
+//         //     className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3"
 //         //     style={{ transform: "translateY(3px)" }}
 //         //   >
 //         //     <span className="text-black font-bold text-[28px] whitespace-nowrap">
@@ -690,7 +690,7 @@ export default Home;
 //         //       {[0, 1].map((i) => (
 //         //         <span
 //         //           key={i}
-//         //           className="inline-flex items-center gap-3 px-8 lowercase"
+//         //           className="inline-flex items-center gap-3 px-8"
 //         //         >
 //         //           {/* Label */}
 //         //           <span className="text-black font-bold text-[18px] whitespace-nowrap">
@@ -739,7 +739,7 @@ export default Home;
 //           href="/webinars"
 //           // target="_blank"
 //           rel="noopener noreferrer"
-//           className="block cursor-pointer "
+//           className="block cursor-pointer"
 //         >
 //           <div
 //             style={{
@@ -755,7 +755,7 @@ export default Home;
 //           >
 //             {/* Desktop — static layout */}
 //             <div
-//               className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3 lowercase"
+//               className="hidden md:flex items-center h-[6rem] mx-auto px-6 max-w-[80%] justify-center gap-3"
 //               style={{ transform: "translateY(5px)" }}
 //             >
 //               <span className="text-black font-bold text-[28px] whitespace-nowrap">
@@ -799,7 +799,7 @@ export default Home;
 //                 {[0, 1].map((i) => (
 //                   <span
 //                     key={i}
-//                     className="inline-flex items-center gap-3 px-8 lowercase"
+//                     className="inline-flex items-center gap-3 px-8"
 //                   >
 //                     {/* Label */}
 //                     <span className="text-black font-bold text-[18px] whitespace-nowrap">

@@ -105,16 +105,16 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
 
   const navItems = [
-    { path: "/", label: "home" },
-    { path: "/community", label: "community" },
+    { path: "/", label: "Home" },
+    { path: "/community", label: "Community" },
     {
       path: "/community/portfolio-review",
-      label: "- portfolio review",
+      label: "- Portfolio Review",
       sub: true
     },
-    { path: "/mentorship", label: "mentorship" },
-    { path: "/webinars", label: "webinars" },
-    { path: "/contact", label: "contact us", isModal: true }
+    { path: "/mentorship", label: "Mentorship" },
+    { path: "/webinars", label: "Webinars" },
+    { path: "/contact", label: "Contact Us", isModal: true }
   ];
 
   const isActive = (p) => {
@@ -538,7 +538,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                       setAccountOpen(false);
                       navigate(`/profile/${user.username}`);
                     }}
-                    className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] lowercase tracking-wide"
+                    className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
                     my profile page
                   </button>
@@ -568,7 +568,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                           key={label}
                           className="flex justify-between items-start gap-3 mb-2"
                         >
-                          <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+                          <span className="text-black/40 text-[11px] font-normal shrink-0">
                             {label}
                           </span>
                           <span className="text-black font-semibold text-[11px] text-right break-all">
@@ -579,7 +579,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     </div>
                     <button
                       onClick={downloadReceipt}
-                      className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+                      className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] tracking-wide"
                     >
                       download receipt ↓
                     </button>
@@ -626,7 +626,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   setAccountOpen(false);
                   navigate(`/profile/${user.username}`);
                 }}
-                className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] lowercase tracking-wide"
+                className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >
                 my profile page
               </button>
@@ -654,7 +654,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                       key={label}
                       className="flex justify-between items-start gap-3 mb-2"
                     >
-                      <span className="text-black/40 text-[11px] font-normal lowercase shrink-0">
+                      <span className="text-black/40 text-[11px] font-normal shrink-0">
                         {label}
                       </span>
                       <span className="text-black font-semibold text-[11px] text-right break-all">
@@ -665,7 +665,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 </div>
                 <button
                   onClick={downloadReceipt}
-                  className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] lowercase tracking-wide"
+                  className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] tracking-wide"
                 >
                   download receipt ↓
                 </button>

@@ -12,20 +12,20 @@ import { preventWidow } from "../utils/preventWidow";
 
 const STEPS = [
   {
-    q: "step 1: self-discovery & profile mapping",
-    a: "students complete a guided self-assessment to understand their skills, interests, and working style."
+    q: "Step 1: Self-discovery & profile mapping",
+    a: "Students complete a guided self-assessment to understand their skills, interests, and working style."
   },
   {
-    q: "step 2: understanding the industry",
-    a: "learn how different design roles, companies, and work environments differ from product to agency, B2B to B2C, specialist to generalist."
+    q: "Step 2: understanding the industry",
+    a: "Learn how different design roles, companies, and work environments differ from product to agency, B2B to B2C, specialist to generalist."
   },
   {
-    q: "step 3: finding the right niche",
-    a: "industry mentors help students connect their strengths to suitable career paths and company types."
+    q: "Step 3: finding the right niche",
+    a: "Industry mentors help students connect their strengths to suitable career paths and company types."
   },
   {
-    q: "step 4: portfolio & career readiness",
-    a: "students receive guidance on their resume, portfolio, and professional profile, with personalised feedback to prepare for applications."
+    q: "Step 4: portfolio & career readiness",
+    a: "Students receive guidance on their resume, portfolio, and professional profile, with personalised feedback to prepare for applications."
   }
 ];
 
@@ -36,15 +36,15 @@ const HANDBOOK_URL =
   "https://drive.google.com/uc?export=download&id=1pWk85g4nHB0-GhjhIZKuehmMqk31CJw7";
 
 const FOR_STUDENTS = [
-  "greater career clarity and confidence",
-  "better understanding of roles and companies",
-  "stronger portfolio and application direction"
+  "Greater career clarity and confidence",
+  "Better understanding of roles and companies",
+  "Stronger portfolio and application direction"
 ];
 
 const FOR_INSTITUTIONS = [
-  "improved student career readiness",
-  "industry-led mentorship and insights",
-  "better visibility into student progress and aspirations"
+  "Improved student career readiness",
+  "Industry-led mentorship and insights",
+  "Better visibility into student progress and aspirations"
 ];
 
 const BuiltAroundSection = () => (
@@ -64,7 +64,7 @@ const BuiltAroundSection = () => (
           letterSpacing: "-0.02em"
         }}
       >
-        built around
+        Built around
         <br />
         real industry
         <br /> experience
@@ -74,7 +74,7 @@ const BuiltAroundSection = () => (
         style={{ fontSize: "clamp(18px,1.8vw,20px)", lineHeight: 1.6 }}
       >
         {preventWidow(
-          "every cohort is mentored by industry experts who actively hire, build products, and work with clients, not just teach design. through evolve's dedicated portal, every student receives a structured, personalised journey from self-discovery to career readiness."
+          "Every cohort is mentored by industry experts who actively hire, build products, and work with clients, not just teach design. through evolve's dedicated portal, every student receives a structured, personalised journey from self-discovery to career readiness."
         )}
       </p>
     </div>
@@ -91,7 +91,7 @@ const MentorshipForInstitutions = () => {
   };
 
   return (
-    <div className="w-full lowercase">
+    <div className="w-full">
       <SEO
         title="Find Your Niche Programme — Mentorship for design institutions"
         description="A structured 4-day mentorship programme that helps students understand their strengths, identify the right design roles and companies, and build the clarity needed before internships and placements."
@@ -100,9 +100,9 @@ const MentorshipForInstitutions = () => {
       <AudienceNav audience="institutions" />
 
       <ProgrammeHero
-        heading="find your niche"
-        subheading="helping students discover where they belong in design."
-        description="a structured 4-day mentorship programme that helps students understand their strengths, identify the right design roles and companies, and build the clarity needed before internships, placements, and their first job."
+        heading="Find your niche"
+        subheading="Helping students discover where they belong in design."
+        description="A structured 4-day mentorship programme that helps students understand their strengths, identify the right design roles and companies, and build the clarity needed before internships, placements, and their first job."
         onGetInTouch={() => openModal("contact")}
         onDownloadHandbook={() => openModal("handbook")}
       />

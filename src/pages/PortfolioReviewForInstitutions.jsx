@@ -21,17 +21,17 @@ const HANDBOOK_URL =
   "https://drive.google.com/uc?export=download&id=1Yi9CQ28BJx3Q1Z1FhSt2quGgr1zXfCWW";
 
 const FOR_STUDENTS = [
-  "stronger, industry-ready portfolios",
-  "honest feedback from working professionals",
-  "clear direction before internships and placements",
-  "greater confidence for interviews and applications"
+  "Stronger, industry-ready portfolios",
+  "Honest feedback from working professionals",
+  "Clear direction before internships and placements",
+  "Greater confidence for interviews and applications"
 ];
 
 const FOR_INSTITUTIONS = [
-  "stronger placement readiness",
-  "industry insights into student progress",
-  "a valuable extension to the curriculum",
-  "a credible industry partnership"
+  "Stronger placement readiness",
+  "Industry insights into student progress",
+  "A valuable extension to the curriculum",
+  "A credible industry partnership"
 ];
 
 // TODO: replace image / linkedinUrl / instagramUrl placeholders with the real links.
@@ -39,7 +39,9 @@ const REVIEWERS = [
   {
     name: "Yagnesh Ahir",
     years: "18",
-    role: ["Founder & Design Director, Paperclip Design.", "Mentor, ADPList."],
+    role: [
+      "Founder & Design Director, Paperclip Design, Design Coach, byStadium"
+    ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Yagnesh_Ahir_Profile_2025_2_ckdmsn.png",
     linkedinUrl: "https://www.linkedin.com/in/yagnesh-ahir-24676516/",
@@ -49,8 +51,8 @@ const REVIEWERS = [
     name: "Sakshi Patki",
     years: "3",
     role: [
-      "Senior Creative Graphic Designer, Paperclip Design.",
-      "Visual Lead, evolve."
+      "Senior Creative Graphic Designer, Paperclip Design. Visual Lead, evolve"
+      // "Visual Lead, evolve."
     ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288229_wt4r9u.png",
@@ -60,7 +62,7 @@ const REVIEWERS = [
   {
     name: "Sonam Gandhi",
     years: "5",
-    role: ["Product Designer, Paperclip Design.", "Mentor, evolve."],
+    role: ["Product Designer", "Paperclip Design.", "Mentor, evolve"],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288230_xsbbar.png",
     linkedinUrl: "https://www.linkedin.com/in/gandhisonam/",
@@ -70,9 +72,7 @@ const REVIEWERS = [
     name: "Paramdeep Singh Dayani",
     years: "8",
     role: [
-      "Architect, Production Designer, Photographer.",
-      "Founder: Antispace.in.",
-      "Teaching Associate at CEPT University."
+      "Architect, Production Designer. Founder: Antispace.in. Teaching Associate at CEPT"
     ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/param_1_bgprl1.png",
@@ -83,8 +83,7 @@ const REVIEWERS = [
     name: "Anuj Sharma",
     years: "25",
     role: [
-      "Fashion Designer, Founder, Button Masala.",
-      "Visiting faculty at top design colleges."
+      "Fashion Designer, Founder, Button Masala.Visiting faculty at top design colleges."
     ],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/image_1_sopzy9.png",
@@ -104,7 +103,7 @@ const PortfolioReviewForInstitutions = () => {
   };
 
   return (
-    <div className="w-full lowercase">
+    <div className="w-full">
       <SEO
         title="Portfolio Review Programme — Industry feedback for institutions"
         description="Industry-led portfolio reviews that help students build stronger portfolios for internships, placements, and opportunities with leading companies and design studios."
@@ -115,13 +114,13 @@ const PortfolioReviewForInstitutions = () => {
       <ProgrammeHero
         heading={
           <>
-            portfolio review
+            Portfolio review
             <br />
             programme
           </>
         }
-        subheading="industry feedback to build stronger portfolios."
-        description="industry-led portfolio reviews that help students build stronger portfolios for internships, placements, and opportunities with leading companies and design studios."
+        subheading="Industry feedback to build stronger portfolios."
+        description="Industry-led portfolio reviews that help students build stronger portfolios for internships, placements, and opportunities with leading companies and design studios."
         onGetInTouch={() => openModal("contact", "hero")}
         onDownloadHandbook={() => openModal("handbook", "hero_handbook")}
       />
@@ -139,18 +138,18 @@ const PortfolioReviewForInstitutions = () => {
         audience="institutions"
         heading={
           <>
-            bring the programme
+            Bring the programme
             <br />
             to your institution
           </>
         }
-        description="help students gain the clarity, feedback, and direction they need before entering the industry."
+        description="Help students gain the clarity, feedback, and direction they need before entering the industry."
       />
 
       <InstituteContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        programme="portfolio-review"
+        programme="Portfolio Review"
         whatsappUrl={GET_IN_TOUCH_URL}
         intent={modalIntent}
         handbookUrl={HANDBOOK_URL}

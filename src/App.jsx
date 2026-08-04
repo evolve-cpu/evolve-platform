@@ -576,7 +576,7 @@
 
 //       {/* Main Content with Tablet Scaling */}
 //       <div
-//         className="min-h-screen bg-evolve-black lowercase"
+//         className="min-h-screen bg-evolve-black"
 //         style={{
 //           visibility: isLoading ? "hidden" : "visible",
 //           opacity: isLoading ? 0 : 1,
@@ -954,7 +954,7 @@
 
 //       {/* Main Content with Tablet Scaling */}
 //       <div
-//         className="min-h-screen bg-evolve-black lowercase"
+//         className="min-h-screen bg-evolve-black"
 //         style={{
 //           visibility: isLoading ? "hidden" : "visible",
 //           opacity: isLoading ? 0 : 1,
@@ -1526,7 +1526,7 @@ const AppLayout = () => {
 
       {/* Main Content with Tablet Scaling */}
       <div
-        className="min-h-screen bg-evolve-black lowercase"
+        className="min-h-screen bg-evolve-black"
         style={{
           visibility: isLoading ? "hidden" : "visible",
           opacity: isLoading ? 0 : 1,

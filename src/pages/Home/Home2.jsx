@@ -382,7 +382,7 @@ const Home = ({
       <div
         ref={containerRef}
         id="scroll-container"
-        className="w-full h-screen bg-black lowercase"
+        className="w-full h-screen bg-black"
         style={{ overflow: "hidden", position: "relative", zIndex: 49 }}
       >
         {/* Grain texture */}

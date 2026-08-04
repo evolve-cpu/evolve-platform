@@ -450,7 +450,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
             <div className="relative h-full bg-[#0a0a0a]">
               {/* bottom-anchored group for text + canvas */}
               <div
-                className="absolute inset-x-0 flex flex-col items-center text-white lowercase px-10"
+                className="absolute inset-x-0 flex flex-col items-center text-white px-10"
                 style={{ bottom: "6vh" }} // a bit up from very bottom for all desktops
               >
                 {/* text group that moves per step */}
@@ -511,7 +511,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
             <div className="relative">
               <div className="absolute inset-0 bg-evolve-lavender-indigo" />
               <div className="absolute inset-0 flex items-end justify-center p-4">
-                <h2 className="text-white lowercase font-extrabold text-[3rem] leading-none text-center">
+                <h2 className="text-white font-extrabold text-[3rem] leading-none text-center">
                   how you <br />
                   will evolve
                 </h2>
@@ -522,7 +522,7 @@ const Scene1_3 = React.forwardRef(({ isMobile = false }, ref) => {
             <div className="relative bg-[#0a0a0a] h-full">
               {/* bottom anchored text + canvas */}
               <div
-                className="absolute inset-x-0 flex flex-col items-center text-white lowercase px-6"
+                className="absolute inset-x-0 flex flex-col items-center text-white px-6"
                 style={{ bottom: "4vh" }} // a bit up from bottom for all mobiles
               >
                 {/* text group that moves per step */}

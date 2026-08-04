@@ -6,20 +6,20 @@ import { arrow_yellow, arrow_black } from "../../assets/images/Nav";
 const AUDIENCE_CARDS = [
   {
     id: "designers",
-    title: "designers",
-    desc: "self learners, design school students, career shifters. we make learning and growing in design accessible to all.",
+    title: "Designers",
+    desc: "Self learners, design school students, career shifters. We make learning and growing in design accessible to all.",
     path: "/designers"
   },
   {
     id: "institutions",
-    title: "institutions",
-    desc: "for design colleges, coaching institutes, co-hort looking to provide their students industry exposure & ready for the world.",
+    title: "Institutions",
+    desc: "For design colleges, coaching institutes, co-hort looking to provide their students industry exposure & ready for the world.",
     path: "/institutions"
   },
   {
     id: "corporates",
-    title: "corporates",
-    desc: "for organisations who believe in building strong design teams through constant learning, up skilling and finding the right kind of members to join them.",
+    title: "Corporates",
+    desc: "For organisations who believe in building strong design teams through constant learning, up skilling and finding the right kind of members to join them.",
     path: "/corporates"
   }
 ];
@@ -102,7 +102,7 @@ const GlobalLanding = () => {
   }, []);
 
   return (
-    <div className="w-full lowercase">
+    <div className="w-full">
       <SEO
         title="evolve — a design growth platform for designers, institutions & corporates"
         description="evolve is a design growth ecosystem — pick your path as a designer, an institution, or a corporate team, and get the tools built for you."
@@ -128,7 +128,7 @@ const GlobalLanding = () => {
             letterSpacing: "-0.02em"
           }}
         >
-          welcome
+          Welcome
           <br />
           to evolve
         </h1>
@@ -136,7 +136,7 @@ const GlobalLanding = () => {
           className="text-white mt-4"
           style={{ fontSize: isMobile ? "20px" : "clamp(22px, 2vw, 36px)" }}
         >
-          a design growth platform built for
+          A design growth platform built for
         </p>
       </section>
 

@@ -390,16 +390,14 @@
 //         <img
 //           src={doors_community}
 //           alt="doors"
-//           className="hidden md:block absolute bottom-0 w-full z-10
-//                     object-contain"
+//           className="hidden md:block absolute bottom-0 w-full z-10 // object-contain"
 //         />
 
 //         {/* Mobile */}
 //         <img
 //           src={doors_community_mobile}
 //           alt="doors mobile"
-//           className="md:hidden absolute bottom-0 w-full z-10
-//                   object-contain"
+//           className="md:hidden absolute bottom-0 w-full z-10 // object-contain"
 //         />
 
 //         {/* ---------------- Hands (Above Doors) ---------------- */}
@@ -407,41 +405,35 @@
 //         <img
 //           src={left_hand_community}
 //           alt="left hand"
-//           className="hidden md:block absolute left-0 bottom-[0%] z-20
-//                  max-w-[320px]"
+//           className="hidden md:block absolute left-0 bottom-[0%] z-20 // max-w-[320px]"
 //         />
 
 //         <img
 //           src={right_hand_community}
 //           alt="right hand"
-//           className="hidden md:block absolute right-0 bottom-[3%] z-20
-//                    max-w-[320px]"
+//           className="hidden md:block absolute right-0 bottom-[3%] z-20 // max-w-[320px]"
 //         />
 
 //         {/* Mobile */}
 //         <img
 //           src={left_hand_community_mobile}
 //           alt="left hand mobile"
-//           className="md:hidden absolute left-0 bottom-[0%] z-20
-//                    max-w-[200px]"
+//           className="md:hidden absolute left-0 bottom-[0%] z-20 // max-w-[200px]"
 //         />
 
 //         <img
 //           src={right_hand_community_mobile}
 //           alt="right hand mobile"
-//           className="md:hidden absolute right-0 bottom-[0%] z-20
-//                    max-w-[200px]"
+//           className="md:hidden absolute right-0 bottom-[0%] z-20 // max-w-[200px]"
 //         />
 
 //         {/* ---------------- Center Content ---------------- */}
 //         <div
-//           className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4
-//         top-[clamp(80px,10vh,160px)]
-//         md:top-[clamp(100px,18vh,220px)]"
+//           className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 // top-[clamp(80px,10vh,160px)] // md:top-[clamp(100px,18vh,220px)]"
 //         >
 //           {/* Heading */}
 //           <h1
-//             className="font-extrabold lowercase text-evolve-pink"
+//             className="font-extrabold text-evolve-pink"
 //             style={{
 //               fontSize: "clamp(64px, 8vw, 128px)",
 //               lineHeight: "clamp(48px, 7vw, 110px)",
@@ -453,7 +445,7 @@
 
 //           {/* Sub text */}
 //           <p
-//             className="mt-6 font-regular lowercase text-black max-w-[80vw]"
+//             className="mt-6 font-regular text-black max-w-[80vw]"
 //             style={{
 //               fontSize: "clamp(20px, 2.5vw, 32px)",
 //               lineHeight: "clamp(28px, 3vw, 36px)"
@@ -481,7 +473,7 @@
 //       {/* ================= HEADING ================= */}
 //       <section className="bg-evolve-yellow pt-28 text-center px-4">
 //         {/* <section className="bg-evolve-yellow pt-28 pb-24 text-center px-4"> */}
-//         {/* <h2 className="font-extrabold lowercase text-black text-[clamp(40px,5vw,80px)]">
+//         {/* <h2 className="font-extrabold text-black text-[clamp(40px,5vw,80px)]">
 //           inside the community circle
 //         </h2> */}
 //         <p className="mt-6 max-w-4xl mx-auto text-[24px] md:text-[36px] font-bold text-black leading-[36px]">
@@ -498,7 +490,7 @@
 //               <div
 //                 key={card.id}
 //                 ref={(el) => (cardRefs.current[i] = el)}
-//                 className="bg-evolve-yellow border-t border-[#df0586]/50  overflow-hidden"
+//                 className="bg-evolve-yellow border-t border-[#df0586]/50 overflow-hidden"
 //                 style={{
 //                   marginTop: i === 0 ? 0 : -30,
 //                   zIndex: i + 1
@@ -507,14 +499,14 @@
 //                 {/* Stack Title - Visible only when stacked (50% opacity) */}
 //                 {/* <div className="card-stack-title px-6 py-4 text-center">
 //                   <h3
-//                     className="font-extrabold lowercase text-evolve-pink"
+//                     className="font-extrabold text-evolve-pink"
 //                     style={{ fontSize: "clamp(28px,3.5vw,56px)" }}
 //                   >
 //                     {card.title}
 //                   </h3>
 //                 </div> */}
 //                 <div className="card-stack-title px-6 pt-8 pb-0 text-center">
-//                   <h3 className="font-extrabold lowercase text-evolve-pink/50 text-[clamp(38px,3.5vw,56px)] tracking-[-0.03em]">
+//                   <h3 className="font-extrabold text-evolve-pink/50 text-[clamp(38px,3.5vw,56px)] tracking-[-0.03em]">
 //                     {card.title}
 //                   </h3>
 //                 </div>
@@ -541,13 +533,13 @@
 //                     <div className="text-center w-full max-w-[640px] px-4 overflow-hidden z-10 md:pt-[-20rem]">
 //                       {/* Expanded Title - shown only when card is expanded */}
 //                       <h3
-//                         className="font-extrabold lowercase text-[#FF1493] mb-4 md:leading-none leading-[90%]"
+//                         className="font-extrabold text-[#FF1493] mb-4 md:leading-none leading-[90%]"
 //                         style={{ fontSize: "clamp(48px,6vw,64px)" }}
 //                       >
 //                         {card.title}
 //                       </h3>
 
-//                       <p className="text-xl md:text-3xl font-bold lowercase text-black mb-4">
+//                       <p className="text-xl md:text-3xl font-bold text-black mb-4">
 //                         {card.subtitle}
 //                       </p>
 
@@ -834,7 +826,7 @@
 
 //         <div className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 top-[clamp(80px,10vh,160px)] md:top-[clamp(100px,18vh,220px)]">
 //           <h1
-//             className="font-extrabold lowercase text-evolve-pink"
+//             className="font-extrabold text-evolve-pink"
 //             style={{
 //               fontSize: "clamp(64px, 8vw, 128px)",
 //               lineHeight: "clamp(48px, 7vw, 110px)",
@@ -845,7 +837,7 @@
 //           </h1>
 
 //           <p
-//             className="mt-6 lowercase text-black max-w-[80vw]"
+//             className="mt-6 text-black max-w-[80vw]"
 //             style={{
 //               fontSize: "clamp(20px, 2.5vw, 32px)",
 //               lineHeight: "clamp(28px, 3vw, 36px)"
@@ -891,7 +883,7 @@
 //               className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
 //             >
 //               <h2
-//                 className="font-extrabold lowercase text-evolve-pink text-center"
+//                 className="font-extrabold text-evolve-pink text-center"
 //                 style={{
 //                   fontSize: "clamp(48px, 8vw, 96px)",
 //                   letterSpacing: "-0.03em",
@@ -908,14 +900,12 @@
 //             {/* Expanded Content */}
 //             <div
 //               ref={(el) => (contentRefs.current[index] = el)}
-//               className="absolute inset-0 z-20 flex flex-col items-center text-center px-6
-//                          justify-start pt-[18vh]
-//                          md:justify-center md:pt-0"
+//               className="absolute inset-0 z-20 flex flex-col items-center text-center px-6 // justify-start pt-[18vh] // md:justify-center md:pt-0"
 //             >
-//               <h3 className="text-evolve-pink font-extrabold text-[32px] md:text-[48px] lowercase">
+//               <h3 className="text-evolve-pink font-extrabold text-[32px] md:text-[48px]">
 //                 {card.title}
 //               </h3>
-//               <p className="mt-3 font-semibold lowercase text-black">
+//               <p className="mt-3 font-semibold text-black">
 //                 {card.subtitle}
 //               </p>
 //               <p className="mt-6 max-w-2xl text-black">{card.description}</p>
@@ -1226,11 +1216,7 @@ const Community = () => {
         <img
           src={doors_community_mobile}
           alt="doors mobile"
-          className="
-    md:hidden absolute bottom-0 w-full z-10 object-contain
-    max-[375px]:scale-90
-    origin-bottom
-  "
+          className="md:hidden absolute bottom-0 w-full z-10 object-contain max-[375px]:scale-90 origin-bottom"
         />
 
         <img
@@ -1259,7 +1245,7 @@ const Community = () => {
 
         <div className="absolute inset-x-0 z-30 flex flex-col items-center text-center px-4 top-[clamp(80px,10vh,160px)] md:top-[clamp(100px,18vh,220px)]">
           <h1
-            className="font-extrabold lowercase text-evolve-pink"
+            className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(64px, 8vw, 128px)",
               lineHeight: "clamp(48px, 7vw, 110px)",
@@ -1270,7 +1256,7 @@ const Community = () => {
           </h1>
 
           <p
-            className="mt-6 lowercase text-black font-medium max-w-[80vw]"
+            className="mt-6 text-black font-medium max-w-[80vw]"
             style={{
               fontSize: "clamp(20px, 2.5vw, 32px)",
               lineHeight: "clamp(28px, 3vw, 36px)"
@@ -1304,24 +1290,7 @@ const Community = () => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={trackCommunityJoin}
-              className="
-      inline-flex
-      items-center
-      justify-center
-      w-[160px] md:w-[200px]
-      h-[52px] md:h-[58px]
-      rounded-[16px]
-      bg-[#1F1F1F]
-      text-white
-      text-[18px] md:text-[24px]
-      font-bold
-      leading-none
-      transition-all
-      duration-150
-      hover:opacity-90
-      active:shadow-none
-      select-none
-    "
+              className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
               style={{
                 boxShadow: "0 6px 0 #808080"
               }}
@@ -1354,7 +1323,7 @@ const Community = () => {
               className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
             >
               <h2
-                className="font-extrabold lowercase text-evolve-pink/50 text-center"
+                className="font-extrabold text-evolve-pink/50 text-center"
                 style={{
                   fontSize: "clamp(48px, 8vw, 96px)",
                   letterSpacing: "-0.03em",
@@ -1369,7 +1338,7 @@ const Community = () => {
               className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
             >
               <h2
-                className="font-extrabold lowercase text-evolve-pink/50 text-center translate-y-[0rem] md:translate-y-[3rem]"
+                className="font-extrabold text-evolve-pink/50 text-center translate-y-[0rem] md:translate-y-[3rem]"
                 style={{
                   fontSize: "clamp(48px, 8vw, 96px)",
                   letterSpacing: "-0.03em",
@@ -1386,12 +1355,10 @@ const Community = () => {
             {/* Expanded Content */}
             <div
               ref={(el) => (contentRefs.current[index] = el)}
-              className="absolute inset-0 z-20 flex flex-col items-center text-center px-6
-                         justify-start pt-[5vh]
-                         md:justify-center md:pt-0"
+              className="absolute inset-0 z-20 flex flex-col items-center text-center px-6 justify-start pt-[5vh] md:justify-center md:pt-0"
             >
               <h3
-                className="text-evolve-pink font-extrabold lowercase text-center"
+                className="text-evolve-pink font-extrabold text-center"
                 style={{
                   fontSize: "clamp(48px, 8vw, 96px)",
                   letterSpacing: "-0.03em",
@@ -1400,7 +1367,7 @@ const Community = () => {
               >
                 {card.title}
               </h3>
-              <p className="mt-2 font-bold lowercase text-black text-[20px] md:text-[36px]">
+              <p className="mt-2 font-bold text-black text-[20px] md:text-[36px]">
                 {card.subtitle}
               </p>
               {/* <p className="mt-3 max-w-2xl text-black font-normal md:font-normal text-[16px] md:text-[20px] leading-tight">

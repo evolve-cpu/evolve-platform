@@ -6,30 +6,30 @@ import { preventWidow } from "../utils/preventWidow";
 import { right_arrow_icon } from "../assets/images/Nav";
 
 const NAV_LINKS = [
-  { path: "/designers", label: "designers" },
-  { path: "/institutions", label: "institutions" },
+  { path: "/designers", label: "Designers" },
+  { path: "/institutions", label: "Institutions" },
   {
     path: "/for-institutes/portfolio-review-programme",
-    label: "portfolio review programme",
+    label: "Portfolio Review Programme",
     sub: true
   },
   {
     path: "/for-institutes/find-your-niche-programme",
-    label: "find your niche",
+    label: "Find Your Niche Programme",
     sub: true
   },
-  { path: "/corporates", label: "corporates" }
+  { path: "/corporates", label: "Corporates" }
 ];
 
 const SOCIAL_LINKS = [
-  { label: "instagram", url: "https://www.instagram.com/evolvebypaperclip/" },
-  { label: "youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
-  { label: "medium", url: "https://medium.com/@evolvebypaperclip" },
+  { label: "Instagram", url: "https://www.instagram.com/evolvebypaperclip/" },
+  { label: "Youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
+  { label: "Medium", url: "https://medium.com/@evolvebypaperclip" },
   {
-    label: "linkedin",
+    label: "LinkedIn",
     url: "https://www.linkedin.com/company/evolvedesignacademy/"
   },
-  { label: "discord", url: "https://discord.gg/wKRYG7cSWt" }
+  { label: "Discord", url: "https://discord.gg/wKRYG7cSWt" }
 ];
 
 /**
@@ -41,15 +41,15 @@ const SOCIAL_LINKS = [
  */
 const AudienceFooter = ({
   audience = "institutions",
-  heading = "ready to be remarkable?",
+  heading = "Ready to Be Remarkable?",
   description,
-  ctaLabel = "get in touch"
+  ctaLabel = "Get in touch"
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const inquiry = AUDIENCE_INQUIRY_CONFIG[audience];
 
   return (
-    <footer className="w-full bg-evolve-black text-white lowercase">
+    <footer className="w-full bg-evolve-black text-white">
       <div className="px-6 md:px-16 pt-20 md:pt-32 pb-16 md:pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0">
           {/* CTA — left half */}
@@ -88,7 +88,7 @@ const AudienceFooter = ({
           <div className="md:border-l md:border-white/15 md:pl-16">
             <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-20">
               <div>
-                <div className="text-white/40 text-[13px] mb-3">navigation</div>
+                <div className="text-white/40 text-[13px] mb-3">Navigation</div>
                 <ul>
                   {NAV_LINKS.map((item, i) => {
                     const prev = NAV_LINKS[i - 1];
@@ -121,7 +121,7 @@ const AudienceFooter = ({
                 </ul>
               </div>
               <div>
-                <div className="text-white/40 text-[13px] mb-3">socials</div>
+                <div className="text-white/40 text-[13px] mb-3">Socials</div>
                 <ul className="space-y-2">
                   {SOCIAL_LINKS.map((item) => (
                     <li key={item.label}>
@@ -151,14 +151,14 @@ const AudienceFooter = ({
               to="/privacy"
               className="hover:text-white transition-colors duration-200"
             >
-              privacy policy
+              Privacy Policy
             </Link>
             <span>·</span>
             <Link
               to="/terms"
               className="hover:text-white transition-colors duration-200"
             >
-              terms &amp; conditions
+              Terms &amp; Conditions
             </Link>
           </div>
         </div>

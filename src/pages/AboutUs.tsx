@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
 const AboutUs = () => {
   return (
-    <div className="min-h-screen lowercase bg-black">
+    <div className="min-h-screen bg-black">
       <SEO
         title="About evolve — why we built an ecosystem, not another course platform"
         description="evolve was built because no single platform was enough. We combined learning, live sessions, mentorship, and community into one ecosystem — for designers at every stage of their journey."
@@ -33,7 +33,7 @@ const AboutUs = () => {
               </p>
               <p>
                 <strong className="text-evolve-bright-turquoise">
-                  evolve is not a school.
+                  Evolve is not a school.
                 </strong>{" "}
                 It's a living, breathing space for community, mentorship,
                 late-night challenges, and the kind of learning that sticks. A
