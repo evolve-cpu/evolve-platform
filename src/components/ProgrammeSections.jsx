@@ -2,6 +2,7 @@
 // (/for-institutes/portfolio-review-programme, /for-institutes/find-your-niche-programme).
 // Both pages share the same hero / outcomes / how-it-works shape and only
 // swap copy, so the layout lives here once.
+import { useId } from "react";
 import { right_arrow_icon } from "../assets/images/Nav";
 import { preventWidow } from "../utils/preventWidow";
 
@@ -188,7 +189,9 @@ const LinkedInBadge = () => (
   </svg>
 );
 
-const InstagramBadge = ({ gradientId }) => (
+const InstagramBadge = () => {
+  const gradientId = `ig-grad-${useId()}`;
+  return (
   <svg
     width="20"
     height="20"
@@ -212,7 +215,8 @@ const InstagramBadge = ({ gradientId }) => (
       />
     </g>
   </svg>
-);
+  );
+};
 
 const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
   if (!linkedinUrl && !instagramUrl) return null;
@@ -235,7 +239,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
           rel="noopener noreferrer"
           aria-label={`${name} on Instagram`}
         >
-          <InstagramBadge gradientId={`ig-grad-${name.replace(/\s+/g, "-")}`} />
+          <InstagramBadge />
         </a>
       )}
     </div>
@@ -445,10 +449,10 @@ export const ProgrammeReviewers = ({
               className="text-white mt-2"
               style={{ fontSize: "clamp(15px,4vw,17px)", lineHeight: 1.4 }}
             >
-              {reviewer.role.map((line, i) => (
+              {(reviewer.mobileRole ?? reviewer.role).map((line, i, arr) => (
                 <span key={i}>
                   {line}
-                  {i !== reviewer.role.length - 1 && <br />}
+                  {i !== arr.length - 1 && <br />}
                 </span>
               ))}
             </p>

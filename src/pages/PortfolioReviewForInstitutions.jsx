@@ -55,7 +55,7 @@ const REVIEWERS = [
       // "Visual Lead, evolve."
     ],
     image:
-      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288229_wt4r9u.png",
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785832940/Frame_1801288229_ryj65z.png",
     linkedinUrl: "https://www.linkedin.com/in/sakshi-patki-97473b200/",
     instagramUrl: ""
   },
@@ -63,6 +63,7 @@ const REVIEWERS = [
     name: "Sonam Gandhi",
     years: "5",
     role: ["Product Designer", "Paperclip Design.", "Mentor, evolve"],
+    mobileRole: ["Product Designer, Paperclip Design.", "Mentor, evolve"],
     image:
       "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/Group_1801288230_xsbbar.png",
     linkedinUrl: "https://www.linkedin.com/in/gandhisonam/",
@@ -86,7 +87,7 @@ const REVIEWERS = [
       "Fashion Designer, Founder, Button Masala.Visiting faculty at top design colleges."
     ],
     image:
-      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785740530/image_1_sopzy9.png",
+      "https://res.cloudinary.com/diuswhkzn/image/upload/v1785833013/Frame_1801288246_iykxnq.png",
     linkedinUrl: "https://www.linkedin.com/in/anuj-sharma-34005b11/",
     instagramUrl: "https://www.instagram.com/anujsharmanid/"
   }
