@@ -1,15 +1,35 @@
-// Maps a 0-100 growth/progress value onto one of the 242 frames of the
-// "seed to plant" sprite sequence living in public/assets/seed_to_plant/.
-const TOTAL_FRAMES = 242; // seed to plant_alpha000.png … alpha241.png
+import { GROWTH_STAGES } from "../assets/images/GrowthStages";
 
-export function frameForProgress(progress) {
+// Maps a 0-100 growth/progress value onto one of the 10 seed→sprout
+// illustrations in src/assets/images/GrowthStages/ — stage 1 (bare seed) at
+// progress 0, stage 10 (sprouted) at progress 100.
+const TOTAL_STAGES = GROWTH_STAGES.length;
+
+export const STAGE_LABELS = [
+  "seed",
+  "sprouting",
+  "sprouting",
+  "budding",
+  "budding",
+  "budding",
+  "growing",
+  "growing",
+  "blooming",
+  "blooming"
+];
+
+export function stageForProgress(progress) {
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
-  const index = Math.round((clamped / 100) * (TOTAL_FRAMES - 1));
-  return index;
+  const stage = Math.max(1, Math.ceil((clamped / 100) * TOTAL_STAGES));
+  return Math.min(TOTAL_STAGES, stage);
 }
 
 export function growthFrameSrc(progress) {
-  const index = frameForProgress(progress);
-  const padded = String(index).padStart(3, "0");
-  return encodeURI(`/assets/seed_to_plant/seed to plant_alpha${padded}.png`);
+  const stage = stageForProgress(progress);
+  return GROWTH_STAGES[stage - 1];
+}
+
+export function stageLabel(progress) {
+  const stage = stageForProgress(progress);
+  return STAGE_LABELS[stage - 1];
 }

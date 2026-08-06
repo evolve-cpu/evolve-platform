@@ -1043,7 +1043,6 @@ import LoadingScreen from "./components/LoadingScreen";
 import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 import ContactModal from "./components/ContactModal";
 import WelcomeOverlay from "./components/WelcomeOverlay";
-import OnboardingGate from "./components/OnboardingGate";
 import { AuthProvider } from "./context/AuthContext";
 
 // Lazy load non-critical routes
@@ -1067,6 +1066,8 @@ const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
 const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const ProgrammePortfolioReview = lazy(() => import("./pages/ProgrammePortfolioReview"));
+const ProgrammeMentorship = lazy(() => import("./pages/ProgrammeMentorship"));
 const InstitutePublicPage = lazy(() => import("./pages/InstitutePublicPage"));
 const InstituteSettingsPage = lazy(() => import("./pages/InstituteSettingsPage"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
@@ -1616,6 +1617,8 @@ const AppLayout = () => {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
+            <Route path="/programmes/portfolio-review" element={<ProgrammePortfolioReview />} />
+            <Route path="/programmes/mentorship" element={<ProgrammeMentorship />} />
             <Route path="/space/:slug" element={<SpaceRedirect />} />
             <Route path="/institute/:slug" element={<InstitutePublicPage />} />
             <Route path="/institute/:slug/settings" element={<InstituteSettingsPage />} />
@@ -1650,7 +1653,6 @@ const AppLayout = () => {
       </div>
 
       <WelcomeOverlay />
-      <OnboardingGate />
     </>
   );
 };

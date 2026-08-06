@@ -3,6 +3,9 @@ import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
+import Spinner from "../components/Spinner";
+import { stageForProgress, stageLabel } from "../lib/growthStage";
+import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 
 /* ─── small building blocks ──────────────────────────────────────────────── */
 function Stat({ value, label }) {
@@ -53,25 +56,35 @@ function Section({ title, action, children }) {
   );
 }
 
-function DrillCard({ label }) {
+// Cards either route away (href, via Link) or open the programme right in
+// the dashboard's own content pane (onClick) — Portfolio Review does the
+// latter so the sidebar stays put instead of the whole page navigating.
+function ProgramCard({ icon, label, description, chips, href, onClick }) {
+  const Tag = onClick ? "button" : Link;
+  const tagProps = onClick ? { type: "button", onClick } : { to: href };
   return (
-    <div
-      title="coming soon"
-      className="flex-1 min-w-[110px] rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-white/50 text-xs font-semibold cursor-default"
+    <Tag
+      {...tagProps}
+      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 px-5 py-5 transition-colors text-left w-full"
     >
-      {label}
-    </div>
-  );
-}
-
-function ProgramCard({ label, href }) {
-  return (
-    <Link
-      to={href}
-      className="flex-1 rounded-xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 px-5 py-8 text-center text-white text-sm font-semibold transition-colors"
-    >
-      {label}
-    </Link>
+      <div className="flex items-center gap-2.5">
+        <span className="text-lg">{icon}</span>
+        <span className="text-white text-sm font-bold capitalize">{label}</span>
+      </div>
+      <p className="text-white/40 text-xs leading-relaxed">{description}</p>
+      {!!chips?.length && (
+        <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
+          {chips.map((c) => (
+            <span
+              key={c}
+              className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-white/50"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+    </Tag>
   );
 }
 
@@ -109,6 +122,13 @@ export default function PublicProfile() {
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState("learnings");
   const [viewingPublic, setViewingPublic] = useState(false);
+  // which programme (if any) is open in the right-hand pane — replaces the
+  // "evolve programmes" grid in place instead of navigating to a new route,
+  // so the sidebar stays put. `sidebarCollapsed` lets the owner tuck that
+  // sidebar away for more room while they're deep in a programme (e.g. mid
+  // payment) — independent of which programme is open.
+  const [activeProgramme, setActiveProgramme] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [orgSpaces, setOrgSpaces] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
   const [respondingId, setRespondingId] = useState(null);
@@ -205,7 +225,7 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
-        <GrowthMascot progress={10} size={56} />
+        <Spinner size={40} />
       </div>
     );
   }
@@ -267,8 +287,20 @@ export default function PublicProfile() {
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* sidebar */}
-        <aside className="w-full md:w-[300px] md:border-r border-white/10 px-6 py-8 flex flex-col gap-6 flex-shrink-0">
+        {/* sidebar — collapsible so a programme (or its payment flow) in the
+            right pane can claim the full width instead */}
+        {!sidebarCollapsed && (
+        <aside className="w-full md:w-[300px] md:border-r border-white/10 px-6 py-8 flex flex-col gap-6 flex-shrink-0 relative">
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(true)}
+            title="collapse panel"
+            className="hidden md:flex absolute top-3 right-3 w-7 h-7 rounded-full border border-white/10 items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
           <div className="flex justify-center">
             <div className="w-[110px] h-[110px] rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
               {card.avatar_url ? (
@@ -332,8 +364,16 @@ export default function PublicProfile() {
             <SocialIcon label="↗" />
           </div>
 
-          <div className="w-fit text-[10px] font-bold uppercase tracking-wide text-evolve-inchworm border border-evolve-inchworm/30 rounded-full px-3 py-1.5">
-            🌱 growing steadily
+          <div className="flex items-center gap-3 rounded-2xl border border-evolve-inchworm/20 bg-evolve-inchworm/[0.05] px-3 py-2.5">
+            <GrowthMascot progress={card.growth_stage ?? 0} size={40} />
+            <div className="min-w-0">
+              <p className="text-evolve-inchworm text-xs font-bold">
+                stage {stageForProgress(card.growth_stage ?? 0)}
+              </p>
+              <p className="text-white/40 text-[10px] capitalize">
+                {stageLabel(card.growth_stage ?? 0)}
+              </p>
+            </div>
           </div>
 
           {isOwner && pendingInvites.length > 0 && (
@@ -424,15 +464,29 @@ export default function PublicProfile() {
             )}
           </div>
         </aside>
+        )}
 
         {/* main content */}
         <main className="flex-1 px-6 md:px-8 py-8 flex flex-col gap-8">
+          {sidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(false)}
+              title="show profile panel"
+              className="hidden md:flex items-center gap-1.5 self-start text-white/40 hover:text-white text-xs font-semibold border border-white/10 hover:border-white/25 rounded-full pl-2 pr-3 py-1.5 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              profile
+            </button>
+          )}
           {isOwner && location.state?.justJoinedOrg && (
             <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
               🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.
             </div>
           )}
-          {showOwnerTools && (
+          {showOwnerTools && !activeProgramme && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <TabButton active={activeTab === "learnings"} onClick={() => setActiveTab("learnings")}>
@@ -451,42 +505,34 @@ export default function PublicProfile() {
             </div>
           )}
 
-          {showOwnerTools && activeTab === "learnings" ? (
-            <>
-              <textarea
-                disabled
-                title="coming soon"
-                rows={2}
-                placeholder="got a question about design, your project? ask away…"
-                className="w-full text-sm text-white/40 placeholder-white/30 outline-none border border-white/10 rounded-2xl px-5 py-4 resize-none cursor-default"
-                style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-              />
-
-              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
-                <Section title="daily drill">
-                  <div className="flex flex-wrap gap-3">
-                    <DrillCard label="quick learnings" />
-                    <DrillCard label="news" />
-                    <DrillCard label="quiz" />
-                    <DrillCard label="practice" />
-                  </div>
-                </Section>
-
-                <Section title="upcoming events on evolve">
-                  <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-5 py-8 text-center">
-                    <p className="text-white/30 text-xs">nothing scheduled yet — check back soon.</p>
-                  </div>
-                </Section>
+          {activeProgramme === "portfolio-review" ? (
+            <PortfolioReviewProgramme user={user} onBack={() => setActiveProgramme(null)} />
+          ) : showOwnerTools && activeTab === "learnings" ? (
+            <Section title="evolve programmes">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ProgramCard
+                  icon="🖼️"
+                  label="portfolio review"
+                  description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
+                  chips={["Live 1:1 review", "Written report"]}
+                  onClick={() => setActiveProgramme("portfolio-review")}
+                />
+                <ProgramCard
+                  icon="🧭"
+                  label="mentorship"
+                  description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
+                  chips={["1:1 personalised", "5 sessions"]}
+                  href="/programmes/mentorship"
+                />
+                <ProgramCard
+                  icon="📚"
+                  label="courses"
+                  description="self-paced courses to sharpen specific skills — new tracks are being added to your library."
+                  chips={["self-paced", "coming soon"]}
+                  href="/course"
+                />
               </div>
-
-              <Section title="evolve programs">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <ProgramCard label="portfolio review" href="/community/portfolio-review" />
-                  <ProgramCard label="mentorship" href="/mentorship" />
-                  <ProgramCard label="courses" href="/course" />
-                </div>
-              </Section>
-            </>
+            </Section>
           ) : (
             <WorkTab discipline={card.discipline} />
           )}

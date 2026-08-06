@@ -42,6 +42,34 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // this webhook receives every payment event for the account, across
+    // products — look up which table actually holds this order before
+    // deciding how to process it
+    const { data: portfolioMatch } = await supabase
+      .from("portfolio_review_payments")
+      .select("id")
+      .eq("razorpay_order_id", payment.order_id)
+      .maybeSingle();
+
+    if (portfolioMatch) {
+      if (event === "payment.captured") {
+        await supabase
+          .from("portfolio_review_payments")
+          .update({
+            razorpay_payment_id: payment.id,
+            razorpay_signature: signature,
+            status: "success"
+          })
+          .eq("razorpay_order_id", payment.order_id);
+      } else if (event === "payment.failed") {
+        await supabase
+          .from("portfolio_review_payments")
+          .update({ status: "failed" })
+          .eq("razorpay_order_id", payment.order_id);
+      }
+      return res.status(200).json({ ok: true });
+    }
+
     if (event === "payment.captured") {
       // Mark payment as success
       await supabase

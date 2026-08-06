@@ -6,8 +6,8 @@ import { supabase } from "../supabaseClient";
  * ───────────
  * Single shared instance of auth state for the whole app. Every component
  * that calls useAuth() reads/writes the SAME user object — critical for
- * things like OnboardingGate, which must see a profile update (e.g.
- * onboarding_completed flipping to true) the instant another component
+ * things like Navigation's account modal, which must see a profile update
+ * (e.g. onboarding_completed flipping to true) the instant another component
  * (Onboarding.jsx) calls refreshUser(), not just on its own next mount.
  *
  * Supports:

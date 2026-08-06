@@ -104,6 +104,15 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const accountBtnRef = useRef(null);
   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
 
+  // Onboarding is deliberately not tied to sign-in — a signed-in visitor can
+  // browse freely with an incomplete profile. This is the CTA that sends
+  // them into /onboarding on their own terms — as an individual, same as
+  // every other onboarding entry point.
+  const handleCompleteOnboarding = () => {
+    setAccountOpen(false);
+    navigate("/onboarding");
+  };
+
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/community", label: "Community" },
@@ -532,7 +541,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 <p className="text-black font-normal text-[14px] mt-1">
                   {user.email}
                 </p>
-                {user.onboarding_completed && user.username && (
+                {user.onboarding_completed && user.username ? (
                   <button
                     onClick={() => {
                       setAccountOpen(false);
@@ -541,6 +550,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
                     my profile page
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCompleteOnboarding}
+                    className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
+                  >
+                    complete your profile
                   </button>
                 )}
                 <button
@@ -620,7 +636,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
             <p className="text-black font-normal text-[14px] mt-1">
               {user.email}
             </p>
-            {user.onboarding_completed && user.username && (
+            {user.onboarding_completed && user.username ? (
               <button
                 onClick={() => {
                   setAccountOpen(false);
@@ -629,6 +645,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                 className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >
                 my profile page
+              </button>
+            ) : (
+              <button
+                onClick={handleCompleteOnboarding}
+                className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
+              >
+                complete your profile
               </button>
             )}
             <button

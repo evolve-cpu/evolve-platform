@@ -24,21 +24,56 @@ function profileFromUser(u) {
     work_type: u.work_type || null
   };
 }
-import GrowthMascot from "../../components/GrowthMascot";
-import SpaceTypeStep from "./SpaceTypeStep";
+import Spinner from "../../components/Spinner";
 import OrgTypeStep from "./OrgTypeStep";
 import InstituteAdminProfileStep from "./InstituteAdminProfileStep";
 import InstituteSpaceStep from "./InstituteSpaceStep";
 import ChatOnboarding from "./ChatOnboarding";
 import TeamSetupStep from "./TeamSetupStep";
-import ReviewStep from "./ReviewStep";
+import SeedPlantedModal from "./SeedPlantedModal";
+
+// Shown while handleConfirm's writes are in flight, right after the chat
+// (or team-setup) finishes — between that and the seed-planted screen.
+function PlantingLoader() {
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-8"
+      style={{ backgroundColor: "#161618" }}
+    >
+      <div className="flex items-center gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-evolve-lavender-indigo animate-pulse"
+            style={{ animationDelay: `${i * 0.15}s` }}
+          />
+        ))}
+      </div>
+      <div className="w-full max-w-xs mx-4 rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-10 flex flex-col items-center gap-4 text-center">
+        <div
+          className="w-11 h-11 rounded-full animate-spin"
+          style={{
+            border: "4px solid rgba(163,91,251,0.2)",
+            borderTopColor: "rgba(163,91,251,1)"
+          }}
+        />
+        <p className="text-white font-bold text-base">planting your seed…</p>
+        <p className="text-white/40 text-sm">setting up your design space</p>
+      </div>
+    </div>
+  );
+}
 
 /**
- * Orchestrates the full post-signin onboarding. Three shapes branch off the
- * initial space-type choice:
- *   individual        → chat Q&A → review → persist → land on public profile
- *   team → company     → chat Q&A → team-setup (name) → review → persist → /institute/:slug
- *   team → institute    → admin profile → institute space (link-fetch) → persist → /institute/:slug
+ * Orchestrates the full post-signin onboarding. Every visitor is onboarded as
+ * an individual ("myself") by default — chat Q&A → persist → seed-planted →
+ * land on public profile. There's no "myself vs my team" fork to click
+ * through: the only door into a team space is arriving with `fromInstitution`
+ * (from the institutions marketing page's "set up your space" CTA), which
+ * drops straight into the institute-vs-company choice instead:
+ *   individual                        → chat Q&A → persist → seed-planted → /profile/:username
+ *   fromInstitution → company/studio  → chat Q&A → team-setup (name) → persist → seed-planted → /institute/:slug
+ *   fromInstitution → design institute → admin profile → institute space (link-fetch) → persist → /institute/:slug
  *
  * The institute branch (Door 2 self-serve) skips the individual persona chat
  * entirely — "are you a high schooler or career shifter" doesn't fit an
@@ -59,31 +94,26 @@ export default function Onboarding() {
 
   // "complete your profile" from an invited member's profile page — they
   // already have a space (joined via invite, skipping this chat entirely),
-  // so jump straight to the persona chat instead of asking space-type again.
+  // so jump straight to the persona chat.
   const completingProfile = !!location.state?.completeProfile;
   // arriving via the "set up your space" CTA on the institutions marketing
-  // page — that visitor is unambiguously setting up a team space, so the
-  // "myself" vs "for my team" fork is pointless friction; drop them straight
-  // on the team sub-choice (design institute vs company/studio).
+  // page — the only door into a team space. Everyone else, regardless of
+  // where they came from (portfolio review, the designers funnel, the nav
+  // "complete your profile" CTA, ...), is onboarded as an individual by
+  // default — there's no "myself vs for my team" choice to click through.
   const fromInstitution = !!location.state?.fromInstitution;
 
-  const [step, setStep] = useState(
-    completingProfile ? "chat" : fromInstitution ? "org-type" : "space-type"
-  );
-  // space-type | org-type | inst-profile | inst-space | submitting-inst
-  // | chat | team-setup | review | submitting
+  const [step, setStep] = useState(fromInstitution ? "org-type" : "chat");
+  // org-type | inst-profile | inst-space | submitting-inst
+  // | chat | team-setup | submitting | planted | submit-error
   const [spaceType, setSpaceType] = useState(fromInstitution ? "team" : "individual");
   const [orgType, setOrgType] = useState(null);
   const [chatProfile, setChatProfile] = useState(null);
+  const [plantedNav, setPlantedNav] = useState(null);
   const [orgDraft, setOrgDraft] = useState(null);
   const [instProfile, setInstProfile] = useState(null);
   const [instSpaceDraft, setInstSpaceDraft] = useState(null);
   const [error, setError] = useState("");
-
-  function handleSpaceType(value) {
-    setSpaceType(value);
-    setStep(value === "team" ? "org-type" : "chat");
-  }
 
   function handleOrgType(value) {
     setOrgType(value);
@@ -95,14 +125,22 @@ export default function Onboarding() {
     setStep("inst-space");
   }
 
+  // The chat is the last thing the person actually fills in — there's no
+  // separate "review your answers" screen to click through afterward, so an
+  // individual profile saves immediately and a team space moves on to naming
+  // the space before it saves.
   function handleChatComplete(profile) {
     setChatProfile(profile);
-    setStep(spaceType === "team" ? "team-setup" : "review");
+    if (spaceType === "team") {
+      setStep("team-setup");
+    } else {
+      handleConfirm(profile);
+    }
   }
 
   function handleTeamSetup(draft) {
     setOrgDraft(draft);
-    setStep("review");
+    handleConfirm(chatProfile, draft);
   }
 
   async function handleInstituteConfirm(spaceDraft) {
@@ -124,7 +162,7 @@ export default function Onboarding() {
           portfolio_url: instProfile.portfolio || null,
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
-          growth_stage: 25
+          growth_stage: 10
         })
         .eq("id", user.id);
       if (profileErr) throw profileErr;
@@ -212,15 +250,20 @@ export default function Onboarding() {
       }
 
       await refreshUser();
-      navigate(`/institute/${orgSlug}`, { replace: true, state: { justCreated: true } });
+      setPlantedNav({ path: `/institute/${orgSlug}`, state: { justCreated: true } });
+      setStep("planted");
     } catch (e) {
       setError(e.message || "something went wrong setting up your space. please try again.");
       setStep("inst-space");
     }
   }
 
-  async function handleConfirm(finalProfile) {
+  // `orgDraftParam` lets the team flow hand off its just-picked draft
+  // directly, since calling this straight out of handleTeamSetup means the
+  // `orgDraft` state set a moment earlier hasn't necessarily flushed yet.
+  async function handleConfirm(finalProfile, orgDraftParam) {
     if (!user) return;
+    const draft = orgDraftParam || orgDraft;
     setStep("submitting");
     setError("");
     try {
@@ -245,18 +288,18 @@ export default function Onboarding() {
           work_type: finalProfile.work_type,
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
-          growth_stage: 25
+          growth_stage: 10
         })
         .eq("id", user.id);
 
       if (profileErr) throw profileErr;
 
       let orgSlug = null;
-      if (spaceType === "team" && orgDraft) {
-        orgSlug = await findFreeSlug(supabase, "organizations", "slug", orgDraft.name);
+      if (spaceType === "team" && draft) {
+        orgSlug = await findFreeSlug(supabase, "organizations", "slug", draft.name);
         const { data: org, error: orgErr } = await supabase
           .from("organizations")
-          .insert({ owner_id: user.id, name: orgDraft.name, slug: orgSlug, org_type: orgDraft.org_type })
+          .insert({ owner_id: user.id, name: draft.name, slug: orgSlug, org_type: draft.org_type })
           .select()
           .single();
         if (orgErr) throw orgErr;
@@ -273,22 +316,28 @@ export default function Onboarding() {
       sessionStorage.removeItem("post_onboarding_redirect");
 
       if (orgSlug) {
-        navigate(`/institute/${orgSlug}`, { replace: true, state: { justCreated: true } });
+        setPlantedNav({ path: `/institute/${orgSlug}`, state: { justCreated: true } });
       } else if (redirectTo) {
-        navigate(redirectTo, { replace: true });
+        setPlantedNav({ path: redirectTo });
       } else {
-        navigate(`/profile/${username}`, { replace: true });
+        setPlantedNav({ path: `/profile/${username}` });
       }
+      setStep("planted");
     } catch (e) {
       setError(e.message || "something went wrong saving your profile. please try again.");
-      setStep("review");
+      setStep("submit-error");
     }
+  }
+
+  function handlePlantedContinue() {
+    if (!plantedNav) return;
+    navigate(plantedNav.path, { replace: true, state: plantedNav.state });
   }
 
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
-        <GrowthMascot progress={5} size={56} />
+        <Spinner size={40} />
       </div>
     );
   }
@@ -317,15 +366,10 @@ export default function Onboarding() {
 
   let content = null;
 
-  if (step === "space-type") {
-    content = <SpaceTypeStep onContinue={handleSpaceType} />;
-  } else if (step === "org-type") {
-    content = (
-      <OrgTypeStep
-        onBack={() => (fromInstitution ? navigate("/institutions") : setStep("space-type"))}
-        onContinue={handleOrgType}
-      />
-    );
+  if (step === "org-type") {
+    // org-type is only ever reached via the institutions page's "set up
+    // your space" CTA, so backing out of it goes back there.
+    content = <OrgTypeStep onBack={() => navigate("/institutions")} onContinue={handleOrgType} />;
   } else if (step === "inst-profile") {
     content = (
       <InstituteAdminProfileStep
@@ -352,7 +396,11 @@ export default function Onboarding() {
   } else if (step === "chat") {
     content = (
       <ChatOnboarding
-        initialProfile={completingProfile ? profileFromUser(user) : emptyProfile()}
+        initialProfile={
+          completingProfile
+            ? profileFromUser(user)
+            : { ...emptyProfile(), name: user.name || null }
+        }
         onComplete={handleChatComplete}
       />
     );
@@ -364,21 +412,25 @@ export default function Onboarding() {
         presetOrgType={orgType || "company"}
       />
     );
-  } else if (step === "review" || step === "submitting") {
+  } else if (step === "submitting") {
+    content = <PlantingLoader />;
+  } else if (step === "planted") {
+    content = <SeedPlantedModal onContinue={handlePlantedContinue} spaceName={orgDraft?.name} />;
+  } else if (step === "submit-error") {
     content = (
-      <>
-        <ReviewStep
-          profile={chatProfile}
-          onBack={() => setStep(spaceType === "team" ? "team-setup" : "chat")}
-          onConfirm={handleConfirm}
-          submitting={step === "submitting"}
-        />
-        {error && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-evolve-red text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg z-50">
-            {error}
-          </div>
-        )}
-      </>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 text-center"
+        style={{ backgroundColor: "#161618" }}
+      >
+        <p className="text-white font-bold text-lg">something went wrong</p>
+        <p className="text-white/50 text-sm max-w-xs">{error}</p>
+        <button
+          onClick={() => handleConfirm(chatProfile, orgDraft)}
+          className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:opacity-80 transition-opacity"
+        >
+          try again →
+        </button>
+      </div>
     );
   }
 

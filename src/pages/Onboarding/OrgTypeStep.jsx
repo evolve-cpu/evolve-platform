@@ -19,10 +19,11 @@ const ORG_TYPES = [
 ];
 
 /**
- * Shown right after "for my team" is picked in SpaceTypeStep — decides which
- * flavor of team onboarding to run. Institute picks the rich, link-fetch-driven
- * self-serve flow (Door 2); company falls back to the existing lightweight
- * team-setup flow until that door gets its own shape.
+ * Reached only via the institutions marketing page's "set up your space"
+ * CTA — decides which flavor of team onboarding to run. Institute picks the
+ * rich, link-fetch-driven self-serve flow (Door 2); company falls back to
+ * the existing lightweight team-setup flow until that door gets its own
+ * shape.
  */
 export default function OrgTypeStep({ onBack, onContinue }) {
   const [selected, setSelected] = useState(null);

@@ -127,7 +127,7 @@ export default function InviteAccept() {
           username,
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
-          growth_stage: user.growth_stage || 25
+          growth_stage: user.growth_stage || 10
         })
         .eq("id", user.id);
       await refreshUser();

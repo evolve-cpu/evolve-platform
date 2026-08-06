@@ -24,6 +24,8 @@ import learn_to_learn from "./learn_to_learn.webp";
 // import learn_to_learn from "./learn_to_learn.svg";
 import learn_to_learn_mobile from "./learn_to_learn_mobile.webp";
 // import learn_to_learn_mobile from "./learn_to_learn_mobile.svg";
+import whats_included_bg from "./whats_included_bg.svg";
+import whats_included_bg_mobile from "./whats_included_bg_mobile.svg";
 export {
   left_elem,
   left_elem_mobile,
@@ -48,5 +50,7 @@ export {
   hobbies,
   watch_playlist_button,
   learn_to_learn,
-  learn_to_learn_mobile
+  learn_to_learn_mobile,
+  whats_included_bg,
+  whats_included_bg_mobile
 };

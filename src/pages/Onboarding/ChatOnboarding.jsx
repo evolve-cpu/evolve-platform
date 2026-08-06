@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QUESTIONS, PHASES, PHASE_LABEL } from "./questions";
+import { QUESTIONS, PHASES, PHASE_LABEL, firstNameOf } from "./questions";
 import GrowthMascot from "../../components/GrowthMascot";
 
 let msgId = 0;
@@ -134,9 +134,15 @@ function LiveProfileCard({ profile }) {
   );
 }
 
+// A signed-in user already handed over their name at sign-in — asking for it
+// again in the chat is redundant friction, so we skip straight past it.
+function startIndexFor(initialProfile) {
+  return initialProfile.name ? 1 : 0;
+}
+
 export default function ChatOnboarding({ initialProfile, onComplete }) {
   const [profile, setProfile] = useState(initialProfile);
-  const [qIndex, setQIndex] = useState(0);
+  const [qIndex, setQIndex] = useState(() => startIndexFor(initialProfile));
   const [messages, setMessages] = useState([]);
   const [chips, setChips] = useState([]);
   const [optionCards, setOptionCards] = useState(null);
@@ -144,20 +150,27 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
   const [inputValue, setInputValue] = useState("");
   const [busy, setBusy] = useState(false);
   const logRef = useRef(null);
+  const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    const q = QUESTIONS[0];
+    const startIndex = startIndexFor(initialProfile);
+    const q = QUESTIONS[startIndex];
     setChips(resolveChips(q, initialProfile));
-    aiSay(q.ask(initialProfile), 300);
+    const ask = q.ask(initialProfile);
+    const greeting = initialProfile.name
+      ? `hey ${firstNameOf(initialProfile.name)}! ${ask}`
+      : ask;
+    aiSay(greeting, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [messages, optionCards]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, optionCards, chips]);
 
   function pushMessage(role, text) {
     setMessages((prev) => [...prev, { id: ++msgId, role, text }]);
@@ -196,6 +209,26 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
     pushMessage("user", text);
     setInputValue("");
     await processAnswer(text);
+  }
+
+  // Chips are multi-select toggles into the input field, not one-shot
+  // inserts — tapping a selected chip again removes it instead of stacking
+  // a duplicate. Focus moves to the textarea afterward so a stray Enter
+  // press sends the message instead of re-activating the (now unfocused)
+  // chip button.
+  function selectedChips(value) {
+    return value.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+
+  function toggleChip(c) {
+    setInputValue((v) => {
+      const parts = selectedChips(v);
+      const idx = parts.findIndex((p) => p.toLowerCase() === c.toLowerCase());
+      if (idx >= 0) parts.splice(idx, 1);
+      else parts.push(c);
+      return parts.join(", ");
+    });
+    textareaRef.current?.focus();
   }
 
   async function processAnswer(text) {
@@ -328,6 +361,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                 </div>
               </motion.div>
             ))}
+            <div ref={bottomRef} />
           </div>
 
           <div className="border-t border-white/10 px-5 md:px-7 py-4 flex flex-col gap-3">
@@ -367,17 +401,34 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                     animate={{ opacity: 1 }}
                     className="flex gap-2 overflow-x-auto pb-1"
                   >
-                    {chips.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() =>
-                          setInputValue((v) => (v ? v.trim() + ", " + c : c))
-                        }
-                        className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-full border border-white/10 bg-white/[0.04] text-white/60 hover:border-evolve-lavender-indigo/60 hover:text-evolve-lavender-indigo transition-colors whitespace-nowrap"
-                      >
-                        {c}
-                      </button>
-                    ))}
+                    {chips.map((c) => {
+                      const selected = selectedChips(inputValue).some(
+                        (p) => p.toLowerCase() === c.toLowerCase()
+                      );
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => toggleChip(c)}
+                          className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-full border transition-colors whitespace-nowrap"
+                          style={
+                            selected
+                              ? {
+                                  borderColor: "rgba(163,91,251,0.7)",
+                                  background: "rgba(163,91,251,0.18)",
+                                  color: "rgba(194,165,255,1)"
+                                }
+                              : {
+                                  borderColor: "rgba(255,255,255,0.1)",
+                                  background: "rgba(255,255,255,0.04)",
+                                  color: "rgba(255,255,255,0.6)"
+                                }
+                          }
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
                   </motion.div>
                 )
               )}
@@ -385,6 +436,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
 
             <div className="flex items-end gap-2">
               <textarea
+                ref={textareaRef}
                 rows={1}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}

@@ -334,15 +334,76 @@ export const community = {
 // ─────────────────────────────────────────────
 export const portfolioReview = {
   seo: {
-    title: "Portfolio review — honest feedback. real growth.",
+    title: "Portfolio review — industry eyes on your portfolio",
     description:
-      "Share your work and get a personalised, no-sugarcoating review from experienced designers. Understand what works, what doesn't, and how to level up."
+      "Find out if your portfolio is placement-ready. Get a personalised report with a live 1:1 discussion, helping you build a stronger portfolio for internships, placements, and beyond."
   },
 
   hero: {
     // Two-line heading — \n marks the line break
-    heading: "Honest feedback.\nReal growth.",
-    body: "Getting a review isn't just about what's on screen. It's about how you think, present, and what you're actually going for. That's what we look at."
+    heading: "Industry eyes\non your portfolio",
+    body: "Find out if your portfolio is placement-ready"
+  },
+
+  intro:
+    "Industry-led portfolio reviews that go beyond what's on screen. Get a personalised report with a live 1:1 discussion, helping you build a stronger portfolio for internships, placements, and beyond.",
+
+  pricing: {
+    price: "1,400",
+    heading: "Live review with a mentor",
+    description:
+      "Go deeper with personalised guidance and dedicated reviewer support.",
+    includesHeading: "What's Included",
+    includes: [
+      "pre-review questionnaire feedback tailored to your goals",
+      "live 1:1 call with your matched reviewer",
+      "written report with actionable fixes",
+      "1 free follow-up call to check your revisions",
+      "feedback that's built around your goals"
+    ]
+  },
+
+  testimonials: {
+    sectionHeading: "results that speak for themselves",
+    quote:
+      "incredibly friendly from the get-go, he gave really clear and actionable points for me to move ahead in my design career.",
+    name: "chinmay zinjal",
+    role: "chemical engineering student, iit guwahati"
+  },
+
+  faq: {
+    heading: "good\nto know.",
+    items: [
+      {
+        q: "What format should my portfolio be in?",
+        a: "A PDF or a live link (Behance, Notion, your own site) both work. If you have a resume, attach that too. The more context you give us, the more useful the feedback."
+      },
+      {
+        q: "How long until I get my report?",
+        a: "Your written report is sent within 3 working days after your 1:1 call, so the feedback from the conversation is captured in full."
+      },
+      {
+        q: "What happens on the 1:1 call?",
+        a: "You and your reviewer go through your portfolio together, screen-shared. They'll ask about your goals, walk through each piece, point out what's working and what isn't and you can ask questions, push back, or dig into anything that's unclear. It's a conversation, not a presentation."
+      },
+      {
+        q: "When can I use my free follow-up call?",
+        a: "The follow-up is yours to use once you've made revisions based on your first call. There's no hard deadline that takes the time you need to rework your portfolio, but book it when you feel ready, this so your effort doesn't go unreviewed."
+      },
+      {
+        q: "What if I need to reschedule my call?",
+        a: "No problem. You can reschedule up to 24 hours before your call without any issue. Just use the link in your confirmation email to pick a new slot."
+      },
+      {
+        q: "Refund policy?",
+        a: "If you cancel more than 48 hours before your scheduled call, you'll receive a full refund. Cancellations within 48 hours are not eligible for a refund, but you can reschedule once at no extra cost."
+      }
+    ]
+  },
+
+  whatYoullGet: {
+    heading: "What you'll get",
+    body: "Clarity on where you stand today, confidence in what to improve next, and a clear direction for where your portfolio can take you."
   },
 
   howItWorks: {
