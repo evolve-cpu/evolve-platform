@@ -151,6 +151,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
   const [busy, setBusy] = useState(false);
   const logRef = useRef(null);
   const bottomRef = useRef(null);
+  const inputWrapRef = useRef(null);
   const textareaRef = useRef(null);
   const startedRef = useRef(false);
 
@@ -169,7 +170,11 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    // scroll far enough to reveal the input box itself, not just the latest
+    // message — otherwise a new question (plus its chips/option cards) can
+    // land below the fold, leaving the answer box out of view until the
+    // person scrolls manually.
+    inputWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, optionCards, chips]);
 
   function pushMessage(role, text) {
@@ -364,7 +369,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t border-white/10 px-5 md:px-7 py-4 flex flex-col gap-3">
+          <div ref={inputWrapRef} className="border-t border-white/10 px-5 md:px-7 py-4 flex flex-col gap-3">
             <AnimatePresence mode="wait">
               {optionCards ? (
                 <motion.div

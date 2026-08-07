@@ -57,6 +57,8 @@ export default async function handler(req, res) {
 
     await supabase.from("portfolio_review_payments").insert({
       user_id: user.id,
+      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
+      email: user.email || "",
       amount: AMOUNT_PAISE / 100, // store in rupees (1400)
       currency: "INR",
       phone: phone || "",

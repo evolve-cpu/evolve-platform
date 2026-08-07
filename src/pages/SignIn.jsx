@@ -142,9 +142,12 @@ export default function SignIn() {
   const { user, authLoading } = useAuth();
 
   // stash where to land after onboarding (if this user needs it) — read by
-  // Onboarding.jsx once the chat/review flow completes
+  // Onboarding.jsx once the chat/review flow completes. `from` is only ever
+  // "/onboarding" itself when Onboarding.jsx's own signed-out guard bounced
+  // here — that's not a real destination, so storing it would send "let's
+  // go" back into a fresh chat instead of the just-created profile.
   useEffect(() => {
-    if (from && from !== "/") {
+    if (from && from !== "/" && !from.startsWith("/onboarding")) {
       sessionStorage.setItem("post_onboarding_redirect", from);
     }
   }, [from]);

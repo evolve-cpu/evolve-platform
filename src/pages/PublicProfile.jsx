@@ -6,6 +6,7 @@ import GrowthMascot from "../components/GrowthMascot";
 import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel } from "../lib/growthStage";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
+import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 
 /* ─── small building blocks ──────────────────────────────────────────────── */
 function Stat({ value, label }) {
@@ -57,33 +58,42 @@ function Section({ title, action, children }) {
 }
 
 // Cards either route away (href, via Link) or open the programme right in
-// the dashboard's own content pane (onClick) — Portfolio Review does the
-// latter so the sidebar stays put instead of the whole page navigating.
-function ProgramCard({ icon, label, description, chips, href, onClick }) {
+// the dashboard's own content pane (onClick) — Portfolio Review and
+// Mentorship both do the latter so the sidebar stays put instead of the
+// whole page navigating.
+function ProgramCard({ icon, label, description, chips, gradient, href, onClick }) {
   const Tag = onClick ? "button" : Link;
   const tagProps = onClick ? { type: "button", onClick } : { to: href };
   return (
     <Tag
       {...tagProps}
-      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 px-5 py-5 transition-colors text-left w-full"
+      className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 overflow-hidden transition-colors text-left w-full"
     >
-      <div className="flex items-center gap-2.5">
-        <span className="text-lg">{icon}</span>
-        <span className="text-white text-sm font-bold capitalize">{label}</span>
+      <div
+        className="h-24 flex items-center justify-center text-3xl flex-shrink-0"
+        style={{ background: gradient || "linear-gradient(120deg, rgba(163,91,251,0.3), rgba(255,208,7,0.15))" }}
+      >
+        {icon}
       </div>
-      <p className="text-white/40 text-xs leading-relaxed">{description}</p>
-      {!!chips?.length && (
-        <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-          {chips.map((c) => (
-            <span
-              key={c}
-              className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-white/50"
-            >
-              {c}
-            </span>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-3 px-5 py-5 flex-1">
+        <span className="text-white text-sm font-bold capitalize">{label}</span>
+        <p className="text-white/40 text-xs leading-relaxed">{description}</p>
+        {!!chips?.length && (
+          <div className="flex flex-wrap gap-1.5 mt-auto">
+            {chips.map((c) => (
+              <span
+                key={c}
+                className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-white/50"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+        <span className="mt-1 inline-flex items-center justify-center gap-1.5 bg-evolve-yellow text-evolve-black text-xs font-bold rounded-full px-4 py-2.5 w-fit">
+          explore program →
+        </span>
+      </div>
     </Tag>
   );
 }
@@ -287,20 +297,45 @@ export default function PublicProfile() {
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* sidebar — collapsible so a programme (or its payment flow) in the
-            right pane can claim the full width instead */}
-        {!sidebarCollapsed && (
-        <aside className="w-full md:w-[300px] md:border-r border-white/10 px-6 py-8 flex flex-col gap-6 flex-shrink-0 relative">
+        {/* sidebar — collapsible on desktop into a slim rail (avatar + growth
+            stage still visible) so a programme (or its payment flow) in the
+            right pane can claim more width without losing the person's
+            context entirely. Mobile always gets the full panel. */}
+        <aside
+          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col transition-[width] duration-200`}
+        >
           <button
             type="button"
-            onClick={() => setSidebarCollapsed(true)}
-            title="collapse panel"
-            className="hidden md:flex absolute top-3 right-3 w-7 h-7 rounded-full border border-white/10 items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            title={sidebarCollapsed ? "expand panel" : "collapse panel"}
+            className={`hidden md:flex w-7 h-7 rounded-full border border-white/10 items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors flex-shrink-0 ${
+              sidebarCollapsed ? "self-center mt-5" : "absolute top-3 right-3"
+            }`}
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ transform: sidebarCollapsed ? "scaleX(-1)" : "none" }}>
               <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+
+          {sidebarCollapsed && (
+            <div className="hidden md:flex flex-col items-center gap-4 px-2 pb-6 mt-4">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
+                {card.avatar_url ? (
+                  <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold text-sm">{(card.name || "?")[0].toUpperCase()}</span>
+                )}
+              </div>
+              <div className="flex flex-col items-center gap-1 rounded-xl border border-evolve-inchworm/20 bg-evolve-inchworm/[0.05] px-1.5 py-2">
+                <GrowthMascot progress={card.growth_stage ?? 0} size={28} />
+                <span className="text-evolve-inchworm text-[9px] font-bold">
+                  s{stageForProgress(card.growth_stage ?? 0)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className={sidebarCollapsed ? "flex md:hidden flex-col gap-6 px-6 py-8" : "flex flex-col gap-6 px-6 py-8"}>
           <div className="flex justify-center">
             <div className="w-[110px] h-[110px] rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
               {card.avatar_url ? (
@@ -463,24 +498,11 @@ export default function PublicProfile() {
               </button>
             )}
           </div>
+          </div>
         </aside>
-        )}
 
         {/* main content */}
         <main className="flex-1 px-6 md:px-8 py-8 flex flex-col gap-8">
-          {sidebarCollapsed && (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(false)}
-              title="show profile panel"
-              className="hidden md:flex items-center gap-1.5 self-start text-white/40 hover:text-white text-xs font-semibold border border-white/10 hover:border-white/25 rounded-full pl-2 pr-3 py-1.5 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              profile
-            </button>
-          )}
           {isOwner && location.state?.justJoinedOrg && (
             <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
               🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.
@@ -507,6 +529,8 @@ export default function PublicProfile() {
 
           {activeProgramme === "portfolio-review" ? (
             <PortfolioReviewProgramme user={user} onBack={() => setActiveProgramme(null)} />
+          ) : activeProgramme === "mentorship" ? (
+            <MentorshipProgramme onBack={() => setActiveProgramme(null)} />
           ) : showOwnerTools && activeTab === "learnings" ? (
             <Section title="evolve programmes">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,6 +539,7 @@ export default function PublicProfile() {
                   label="portfolio review"
                   description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   chips={["Live 1:1 review", "Written report"]}
+                  gradient="linear-gradient(120deg, rgba(163,91,251,0.35), rgba(255,105,180,0.2))"
                   onClick={() => setActiveProgramme("portfolio-review")}
                 />
                 <ProgramCard
@@ -522,14 +547,8 @@ export default function PublicProfile() {
                   label="mentorship"
                   description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
                   chips={["1:1 personalised", "5 sessions"]}
-                  href="/programmes/mentorship"
-                />
-                <ProgramCard
-                  icon="📚"
-                  label="courses"
-                  description="self-paced courses to sharpen specific skills — new tracks are being added to your library."
-                  chips={["self-paced", "coming soon"]}
-                  href="/course"
+                  gradient="linear-gradient(120deg, rgba(255,208,7,0.3), rgba(163,91,251,0.25))"
+                  onClick={() => setActiveProgramme("mentorship")}
                 />
               </div>
             </Section>

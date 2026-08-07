@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import ProcessSteps from "./ProcessSteps";
 
 /* TODO: replace image placeholders with the real reviewer links once available. */
 const REVIEWERS = [
@@ -322,33 +323,23 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* the process */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-4">the process</h2>
-        <div className="flex flex-col gap-0">
-          {PROCESS_STEPS.map((s, i) => (
-            <div key={s.title} className="relative pl-7 pb-7 border-l-2 border-white/10 last:border-transparent last:pb-0">
-              <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-evolve-yellow" />
-              <p className="text-evolve-yellow font-bold text-sm">
-                step {i + 1} — {s.title}
-              </p>
-              <p className="text-white/40 text-sm mt-1 leading-relaxed">{s.body}</p>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-white font-bold text-xl mb-8">the process</h2>
+        <ProcessSteps steps={PROCESS_STEPS} />
       </div>
 
       {/* the panel */}
       <div>
         <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">the panel</p>
         <h2 className="text-white font-bold text-xl mb-4">industry experts across multiple disciplines</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap gap-5">
           {REVIEWERS.map((r) => (
-            <div key={r.name} className="flex flex-col gap-2">
-              <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.03] border border-white/10">
+            <div key={r.name} className="flex flex-col items-center text-center gap-2 w-[110px]">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-white/[0.03] border border-white/10 flex-shrink-0">
                 <img src={r.image} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
               </div>
-              <p className="text-white text-xs font-bold">{r.name}</p>
-              <p className="text-evolve-yellow text-[11px] font-semibold -mt-1.5">{r.years}+ yrs</p>
-              <p className="text-white/35 text-[11px] leading-snug">{r.role}</p>
+              <p className="text-white text-xs font-bold leading-snug">{r.name}</p>
+              <p className="text-evolve-yellow text-[10px] font-semibold -mt-1">{r.years}+ yrs</p>
+              <p className="text-white/35 text-[10px] leading-snug">{r.role}</p>
             </div>
           ))}
         </div>
