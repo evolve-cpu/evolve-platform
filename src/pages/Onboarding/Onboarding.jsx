@@ -9,6 +9,7 @@ import { emptyProfile } from "./questions";
 // invited member (who skipped this chat entirely to join their space) comes
 // back later to fill in the rest, so they aren't asked to redo fields they
 // already answered.
+// checking the commit
 function profileFromUser(u) {
   return {
     name: u.name || null,
@@ -106,7 +107,9 @@ export default function Onboarding() {
   const [step, setStep] = useState(fromInstitution ? "org-type" : "chat");
   // org-type | inst-profile | inst-space | submitting-inst
   // | chat | team-setup | submitting | planted | submit-error
-  const [spaceType, setSpaceType] = useState(fromInstitution ? "team" : "individual");
+  const [spaceType, setSpaceType] = useState(
+    fromInstitution ? "team" : "individual"
+  );
   const [orgType, setOrgType] = useState(null);
   const [chatProfile, setChatProfile] = useState(null);
   const [plantedNav, setPlantedNav] = useState(null);
@@ -149,10 +152,16 @@ export default function Onboarding() {
     setStep("submitting-inst");
     setError("");
     try {
-      const fullName = `${instProfile.firstName} ${instProfile.lastName}`.trim();
+      const fullName =
+        `${instProfile.firstName} ${instProfile.lastName}`.trim();
       const username =
         user.username ||
-        (await findFreeSlug(supabase, "profile_cards", "username", fullName || user.name || user.email));
+        (await findFreeSlug(
+          supabase,
+          "profile_cards",
+          "username",
+          fullName || user.name || user.email
+        ));
 
       const { error: profileErr } = await supabase
         .from("profiles")
@@ -167,7 +176,12 @@ export default function Onboarding() {
         .eq("id", user.id);
       if (profileErr) throw profileErr;
 
-      const orgSlug = await findFreeSlug(supabase, "organizations", "slug", spaceDraft.spaceName);
+      const orgSlug = await findFreeSlug(
+        supabase,
+        "organizations",
+        "slug",
+        spaceDraft.spaceName
+      );
       const { data: org, error: orgErr } = await supabase
         .from("organizations")
         .insert({
@@ -191,13 +205,15 @@ export default function Onboarding() {
         .single();
       if (orgErr) throw orgErr;
 
-      const { error: memberErr } = await supabase.from("organization_members").insert({
-        org_id: org.id,
-        user_id: user.id,
-        role: "owner",
-        status: "active",
-        title: instProfile.roleLabel || null
-      });
+      const { error: memberErr } = await supabase
+        .from("organization_members")
+        .insert({
+          org_id: org.id,
+          user_id: user.id,
+          role: "owner",
+          status: "active",
+          title: instProfile.roleLabel || null
+        });
       if (memberErr) throw memberErr;
 
       // seed content pulled from the institute's own site during step 2 —
@@ -212,7 +228,9 @@ export default function Onboarding() {
               title: e.title,
               event_date: e.date,
               meta: e.meta || null,
-              type: ["exam", "event", "deadline", "result"].includes(e.type) ? e.type : "event",
+              type: ["exam", "event", "deadline", "result"].includes(e.type)
+                ? e.type
+                : "event",
               audience: "open"
             }))
           );
@@ -250,10 +268,16 @@ export default function Onboarding() {
       }
 
       await refreshUser();
-      setPlantedNav({ path: `/institute/${orgSlug}`, state: { justCreated: true } });
+      setPlantedNav({
+        path: `/institute/${orgSlug}`,
+        state: { justCreated: true }
+      });
       setStep("planted");
     } catch (e) {
-      setError(e.message || "something went wrong setting up your space. please try again.");
+      setError(
+        e.message ||
+          "something went wrong setting up your space. please try again."
+      );
       setStep("inst-space");
     }
   }
@@ -269,7 +293,12 @@ export default function Onboarding() {
     try {
       const username =
         user.username ||
-        (await findFreeSlug(supabase, "profile_cards", "username", finalProfile.name || user.name || user.email));
+        (await findFreeSlug(
+          supabase,
+          "profile_cards",
+          "username",
+          finalProfile.name || user.name || user.email
+        ));
 
       const { error: profileErr } = await supabase
         .from("profiles")
@@ -296,17 +325,32 @@ export default function Onboarding() {
 
       let orgSlug = null;
       if (spaceType === "team" && draft) {
-        orgSlug = await findFreeSlug(supabase, "organizations", "slug", draft.name);
+        orgSlug = await findFreeSlug(
+          supabase,
+          "organizations",
+          "slug",
+          draft.name
+        );
         const { data: org, error: orgErr } = await supabase
           .from("organizations")
-          .insert({ owner_id: user.id, name: draft.name, slug: orgSlug, org_type: draft.org_type })
+          .insert({
+            owner_id: user.id,
+            name: draft.name,
+            slug: orgSlug,
+            org_type: draft.org_type
+          })
           .select()
           .single();
         if (orgErr) throw orgErr;
 
         const { error: memberErr } = await supabase
           .from("organization_members")
-          .insert({ org_id: org.id, user_id: user.id, role: "owner", status: "active" });
+          .insert({
+            org_id: org.id,
+            user_id: user.id,
+            role: "owner",
+            status: "active"
+          });
         if (memberErr) throw memberErr;
       }
 
@@ -316,7 +360,10 @@ export default function Onboarding() {
       sessionStorage.removeItem("post_onboarding_redirect");
 
       if (orgSlug) {
-        setPlantedNav({ path: `/institute/${orgSlug}`, state: { justCreated: true } });
+        setPlantedNav({
+          path: `/institute/${orgSlug}`,
+          state: { justCreated: true }
+        });
       } else if (redirectTo) {
         setPlantedNav({ path: redirectTo });
       } else {
@@ -324,7 +371,10 @@ export default function Onboarding() {
       }
       setStep("planted");
     } catch (e) {
-      setError(e.message || "something went wrong saving your profile. please try again.");
+      setError(
+        e.message ||
+          "something went wrong saving your profile. please try again."
+      );
       setStep("submit-error");
     }
   }
@@ -336,7 +386,10 @@ export default function Onboarding() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#161618" }}
+      >
         <Spinner size={40} />
       </div>
     );
@@ -349,11 +402,19 @@ export default function Onboarding() {
     <Link
       to={user.username ? `/profile/${user.username}` : "#"}
       className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 border border-white/10 transition-colors hover:border-white/25"
-      style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)", pointerEvents: user.username ? "auto" : "none" }}
+      style={{
+        background: "rgba(255,255,255,0.06)",
+        backdropFilter: "blur(10px)",
+        pointerEvents: user.username ? "auto" : "none"
+      }}
     >
       <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
         {user.avatar_url ? (
-          <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+          <img
+            src={user.avatar_url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
         ) : (
           (user.name || user.email || "?")[0].toUpperCase()
         )}
@@ -369,14 +430,22 @@ export default function Onboarding() {
   if (step === "org-type") {
     // org-type is only ever reached via the institutions page's "set up
     // your space" CTA, so backing out of it goes back there.
-    content = <OrgTypeStep onBack={() => navigate("/institutions")} onContinue={handleOrgType} />;
+    content = (
+      <OrgTypeStep
+        onBack={() => navigate("/institutions")}
+        onContinue={handleOrgType}
+      />
+    );
   } else if (step === "inst-profile") {
     content = (
       <InstituteAdminProfileStep
         initial={
           instProfile ||
           (user.name
-            ? { firstName: user.name.split(" ")[0] || "", lastName: user.name.split(" ").slice(1).join(" ") || "" }
+            ? {
+                firstName: user.name.split(" ")[0] || "",
+                lastName: user.name.split(" ").slice(1).join(" ") || ""
+              }
             : null)
         }
         onBack={() => setStep("org-type")}
@@ -415,7 +484,12 @@ export default function Onboarding() {
   } else if (step === "submitting") {
     content = <PlantingLoader />;
   } else if (step === "planted") {
-    content = <SeedPlantedModal onContinue={handlePlantedContinue} spaceName={orgDraft?.name} />;
+    content = (
+      <SeedPlantedModal
+        onContinue={handlePlantedContinue}
+        spaceName={orgDraft?.name}
+      />
+    );
   } else if (step === "submit-error") {
     content = (
       <div
