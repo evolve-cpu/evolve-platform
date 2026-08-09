@@ -282,7 +282,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
       {/* hero */}
       <div>
         <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-3">programme</p>
-        <h1 className="text-white font-bold" style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-white font-bold font-bricolage" style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}>
           Portfolio Review
         </h1>
         <p className="text-white/50 text-[15px] leading-relaxed mt-4 max-w-xl">
@@ -305,7 +305,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* what this solves */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-4">what this solves</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">what this solves</h2>
         <div
           className="rounded-2xl border border-white/10 px-6 py-5 flex flex-col gap-3"
           style={{ background: "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)", borderLeft: "3px solid #FFD007" }}
@@ -323,23 +323,23 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* the process */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-8">the process</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-8">the process</h2>
         <ProcessSteps steps={PROCESS_STEPS} />
       </div>
 
       {/* the panel */}
       <div>
         <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">the panel</p>
-        <h2 className="text-white font-bold text-xl mb-4">industry experts across multiple disciplines</h2>
-        <div className="flex flex-wrap gap-5">
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">industry experts across multiple disciplines</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {REVIEWERS.map((r) => (
-            <div key={r.name} className="flex flex-col items-center text-center gap-2 w-[110px]">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-white/[0.03] border border-white/10 flex-shrink-0">
+            <div key={r.name} className="flex flex-col gap-2">
+              <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.03] border border-white/10">
                 <img src={r.image} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
               </div>
               <p className="text-white text-xs font-bold leading-snug">{r.name}</p>
-              <p className="text-evolve-yellow text-[10px] font-semibold -mt-1">{r.years}+ yrs</p>
-              <p className="text-white/35 text-[10px] leading-snug">{r.role}</p>
+              <p className="text-evolve-yellow text-[11px] font-semibold -mt-1.5">{r.years}+ yrs</p>
+              <p className="text-white/35 text-[11px] leading-snug">{r.role}</p>
             </div>
           ))}
         </div>
@@ -347,7 +347,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* pricing */}
       <div id="pr-pricing">
-        <h2 className="text-white font-bold text-xl mb-4">pricing</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             className="rounded-2xl border border-evolve-yellow/60 px-6 py-6 flex flex-col gap-3"
@@ -392,7 +392,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* FAQ */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-4">good to know</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">good to know</h2>
         <div className="rounded-2xl border border-white/10 divide-y divide-white/10 overflow-hidden">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group px-5 py-4">

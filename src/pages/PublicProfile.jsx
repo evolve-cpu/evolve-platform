@@ -7,6 +7,7 @@ import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel } from "../lib/growthStage";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
+import { PortfolioReviewArt, MentorshipArt } from "../components/programmes/CardArt";
 
 /* ─── small building blocks ──────────────────────────────────────────────── */
 function Stat({ value, label }) {
@@ -61,7 +62,7 @@ function Section({ title, action, children }) {
 // the dashboard's own content pane (onClick) — Portfolio Review and
 // Mentorship both do the latter so the sidebar stays put instead of the
 // whole page navigating.
-function ProgramCard({ icon, label, description, chips, gradient, href, onClick }) {
+function ProgramCard({ art, label, description, chips, href, onClick }) {
   const Tag = onClick ? "button" : Link;
   const tagProps = onClick ? { type: "button", onClick } : { to: href };
   return (
@@ -69,14 +70,9 @@ function ProgramCard({ icon, label, description, chips, gradient, href, onClick 
       {...tagProps}
       className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 overflow-hidden transition-colors text-left w-full"
     >
-      <div
-        className="h-24 flex items-center justify-center text-3xl flex-shrink-0"
-        style={{ background: gradient || "linear-gradient(120deg, rgba(163,91,251,0.3), rgba(255,208,7,0.15))" }}
-      >
-        {icon}
-      </div>
+      <div className="h-[150px] flex-shrink-0 overflow-hidden">{art}</div>
       <div className="flex flex-col gap-3 px-5 py-5 flex-1">
-        <span className="text-white text-sm font-bold capitalize">{label}</span>
+        <span className="text-white text-sm font-bold font-bricolage capitalize">{label}</span>
         <p className="text-white/40 text-xs leading-relaxed">{description}</p>
         {!!chips?.length && (
           <div className="flex flex-wrap gap-1.5 mt-auto">
@@ -535,19 +531,17 @@ export default function PublicProfile() {
             <Section title="evolve programmes">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProgramCard
-                  icon="🖼️"
+                  art={<PortfolioReviewArt />}
                   label="portfolio review"
                   description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   chips={["Live 1:1 review", "Written report"]}
-                  gradient="linear-gradient(120deg, rgba(163,91,251,0.35), rgba(255,105,180,0.2))"
                   onClick={() => setActiveProgramme("portfolio-review")}
                 />
                 <ProgramCard
-                  icon="🧭"
+                  art={<MentorshipArt />}
                   label="mentorship"
                   description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
                   chips={["1:1 personalised", "5 sessions"]}
-                  gradient="linear-gradient(120deg, rgba(255,208,7,0.3), rgba(163,91,251,0.25))"
                   onClick={() => setActiveProgramme("mentorship")}
                 />
               </div>

@@ -69,7 +69,7 @@ export default function MentorshipProgramme({ onBack }) {
       {/* hero */}
       <div>
         <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-3">programme</p>
-        <h1 className="text-white font-bold" style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-white font-bold font-bricolage" style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}>
           Mentorship
         </h1>
         <p className="text-white/50 text-[15px] leading-relaxed mt-4 max-w-xl">
@@ -91,7 +91,7 @@ export default function MentorshipProgramme({ onBack }) {
 
       {/* why we built this */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-4">why we built this</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">why we built this</h2>
         <div
           className="rounded-2xl border border-white/10 px-6 py-5 flex flex-col gap-3"
           style={{ background: "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)", borderLeft: "3px solid #FFD007" }}
@@ -116,7 +116,7 @@ export default function MentorshipProgramme({ onBack }) {
           </div>
           <div className="p-6 flex flex-col gap-2.5">
             <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">your mentor</p>
-            <h3 className="text-evolve-yellow font-bold text-2xl">Yagnesh Ahir</h3>
+            <h3 className="text-evolve-yellow font-bold font-bricolage text-2xl">Yagnesh Ahir</h3>
             <p className="text-white/60 text-sm font-semibold">
               Founder, Paperclip Design · Founder, evolve · Design Coach, byStadium
             </p>
@@ -131,18 +131,18 @@ export default function MentorshipProgramme({ onBack }) {
 
       {/* framework */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-2">our framework</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-2">our framework</h2>
         <p className="text-white/50 text-sm leading-relaxed mb-8 max-w-xl">
           Four stages across five 1:1 sessions — moving you from <b className="text-white">who am I as a
           designer</b> to <b className="text-white">where do I fit</b> to <b className="text-white">a plan
           you're already acting on</b>.
         </p>
-        <ProcessSteps steps={FRAMEWORK} />
+        <ProcessSteps steps={FRAMEWORK} prefix={false} />
       </div>
 
       {/* pricing */}
       <div id="mt-pricing">
-        <h2 className="text-white font-bold text-xl mb-2">pricing</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-2">pricing</h2>
         <p className="text-white/40 text-sm mb-5">
           Two ways in, both fully 1:1 and personalised to you. Pick where you want to start.
         </p>
@@ -191,7 +191,7 @@ export default function MentorshipProgramme({ onBack }) {
 
       {/* FAQ */}
       <div>
-        <h2 className="text-white font-bold text-xl mb-4">good to know</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">good to know</h2>
         <div className="rounded-2xl border border-white/10 divide-y divide-white/10 overflow-hidden">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group px-5 py-4">
