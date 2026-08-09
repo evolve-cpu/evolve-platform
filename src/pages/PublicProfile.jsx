@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
 import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel } from "../lib/growthStage";
+import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 import { PortfolioReviewArt, MentorshipArt } from "../components/programmes/CardArt";
@@ -62,9 +63,10 @@ function Section({ title, action, children }) {
 // the dashboard's own content pane (onClick) — Portfolio Review and
 // Mentorship both do the latter so the sidebar stays put instead of the
 // whole page navigating.
-function ProgramCard({ art, label, description, chips, href, onClick }) {
+function ProgramCard({ art, label, description, chips, href, onClick, progress, buttonLabel }) {
   const Tag = onClick ? "button" : Link;
   const tagProps = onClick ? { type: "button", onClick } : { to: href };
+  const reportReady = progress?.step === 5;
   return (
     <Tag
       {...tagProps}
@@ -72,9 +74,21 @@ function ProgramCard({ art, label, description, chips, href, onClick }) {
     >
       <div className="h-[150px] flex-shrink-0 overflow-hidden">{art}</div>
       <div className="flex flex-col gap-3 px-5 py-5 flex-1">
-        <span className="text-white text-sm font-bold font-bricolage capitalize">{label}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-white text-sm font-bold font-bricolage capitalize">{label}</span>
+          {progress && (
+            <span
+              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide ${
+                reportReady ? "text-evolve-inchworm" : "text-evolve-yellow"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${reportReady ? "bg-evolve-inchworm" : "bg-evolve-yellow"}`} />
+              {reportReady ? "report ready" : "under review"}
+            </span>
+          )}
+        </div>
         <p className="text-white/40 text-xs leading-relaxed">{description}</p>
-        {!!chips?.length && (
+        {!!chips?.length && !progress && (
           <div className="flex flex-wrap gap-1.5 mt-auto">
             {chips.map((c) => (
               <span
@@ -86,8 +100,22 @@ function ProgramCard({ art, label, description, chips, href, onClick }) {
             ))}
           </div>
         )}
+        {progress && (
+          <div className="flex flex-col gap-1.5 mt-auto">
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-evolve-yellow rounded-full transition-[width]"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] font-semibold text-white/40">
+              <span>step {progress.step} of {progress.totalSteps} · {progress.label}</span>
+              <span className="text-white/60">{progress.percent}%</span>
+            </div>
+          </div>
+        )}
         <span className="mt-1 inline-flex items-center justify-center gap-1.5 bg-evolve-yellow text-evolve-black text-xs font-bold rounded-full px-4 py-2.5 w-fit">
-          explore program →
+          {buttonLabel || "explore program →"}
         </span>
       </div>
     </Tag>
@@ -135,6 +163,7 @@ export default function PublicProfile() {
   // payment) — independent of which programme is open.
   const [activeProgramme, setActiveProgramme] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [evolveReview, setEvolveReview] = useState(null);
   const [orgSpaces, setOrgSpaces] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
   const [respondingId, setRespondingId] = useState(null);
@@ -185,6 +214,26 @@ export default function PublicProfile() {
   useEffect(() => {
     loadOrgSpaces();
   }, [loadOrgSpaces]);
+
+  // drives the Portfolio Review card's progress pill/bar — re-checked
+  // whenever the owner steps back out of a programme pane (e.g. after
+  // saving a draft and returning), so the card reflects the latest state
+  const loadEvolveReview = useCallback(async () => {
+    if (!isOwner || !user) {
+      setEvolveReview(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("evolve_portfolio_reviews")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setEvolveReview(data || null);
+  }, [isOwner, user]);
+
+  useEffect(() => {
+    if (!activeProgramme) loadEvolveReview();
+  }, [activeProgramme, loadEvolveReview]);
 
   // pending "find on evolve" additions — someone already on evolve was added
   // directly (no email/token), so they accept it right here, in-app
@@ -536,6 +585,14 @@ export default function PublicProfile() {
                   description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   chips={["Live 1:1 review", "Written report"]}
                   onClick={() => setActiveProgramme("portfolio-review")}
+                  progress={getPortfolioReviewProgress(evolveReview)}
+                  buttonLabel={
+                    evolveReview
+                      ? getPortfolioReviewProgress(evolveReview)?.step === 5
+                        ? "view report →"
+                        : "continue your review →"
+                      : undefined
+                  }
                 />
                 <ProgramCard
                   art={<MentorshipArt />}

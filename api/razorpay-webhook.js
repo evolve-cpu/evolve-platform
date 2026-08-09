@@ -61,6 +61,28 @@ export default async function handler(req, res) {
             status: "success"
           })
           .eq("razorpay_order_id", payment.order_id);
+
+        // Grant access to the evolve Portfolio Review workspace — this is
+        // the ONLY place a evolve_portfolio_reviews row is ever created,
+        // so its existence doubles as proof of payment. upsert on user_id
+        // keeps this safe against Razorpay's webhook retries.
+        const { data: confirmedPmnt } = await supabase
+          .from("portfolio_review_payments")
+          .select("user_id, name, email")
+          .eq("razorpay_order_id", payment.order_id)
+          .single();
+
+        if (confirmedPmnt?.user_id) {
+          await supabase.from("evolve_portfolio_reviews").upsert(
+            {
+              user_id: confirmedPmnt.user_id,
+              name: confirmedPmnt.name || "",
+              email: confirmedPmnt.email || "",
+              review_status: "draft"
+            },
+            { onConflict: "user_id", ignoreDuplicates: true }
+          );
+        }
       } else if (event === "payment.failed") {
         await supabase
           .from("portfolio_review_payments")

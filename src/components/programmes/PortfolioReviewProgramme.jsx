@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import ProcessSteps from "./ProcessSteps";
+import PortfolioReviewFlow from "./PortfolioReviewFlow";
 
 /* TODO: replace image placeholders with the real reviewer links once available. */
 const REVIEWERS = [
@@ -76,11 +77,42 @@ function Chip({ children }) {
 }
 
 /* ── booking modal — collects only what onboarding doesn't already know ──── */
-function BookModal({ user, onClose }) {
+function BookModal({ user, onClose, onSuccess }) {
   const [phone, setPhone] = useState(user?.phone || "");
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState("form"); // form | success | failed
+  const [step, setStep] = useState("form"); // form | confirming | success | confirm_timeout | failed
+  const [confirmedRow, setConfirmedRow] = useState(null);
+
+  // Row creation happens server-side (webhook, or the dev bypass below) —
+  // poll for it to appear instead of assuming the client's optimistic
+  // Razorpay `handler` callback means the workspace is actually unlocked.
+  useEffect(() => {
+    if (step !== "confirming") return;
+    let cancelled = false;
+    let attempts = 0;
+    async function poll() {
+      attempts += 1;
+      const { data } = await supabase
+        .from("evolve_portfolio_reviews")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        setConfirmedRow(data);
+        setStep("success");
+        return;
+      }
+      if (attempts >= 10) {
+        setStep("confirm_timeout");
+        return;
+      }
+      setTimeout(poll, 1500);
+    }
+    poll();
+    return () => { cancelled = true; };
+  }, [step, user.id]);
 
   async function handlePay() {
     const cleaned = phone.trim().replace(/\s+/g, "");
@@ -106,7 +138,12 @@ function BookModal({ user, onClose }) {
       }
 
       if (import.meta.env.DEV) {
-        setStep("success");
+        await fetch("/api/dev-confirm-portfolio-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: session.access_token })
+        }).catch(() => {});
+        setStep("confirming");
         setPaying(false);
         return;
       }
@@ -133,7 +170,7 @@ function BookModal({ user, onClose }) {
         },
         theme: { color: "#FFD600" },
         handler: () => {
-          setStep("success");
+          setStep("confirming");
           setPaying(false);
         },
         modal: { ondismiss: () => setPaying(false) }
@@ -210,6 +247,39 @@ function BookModal({ user, onClose }) {
           </>
         )}
 
+        {step === "confirming" && (
+          <div className="flex flex-col items-center gap-4 text-center py-6">
+            <div className="w-10 h-10 border-2 border-evolve-yellow border-t-transparent rounded-full animate-spin" />
+            <div>
+              <h3 className="text-white font-bold text-lg">confirming your payment…</h3>
+              <p className="text-white/40 text-xs mt-1">this only takes a few seconds.</p>
+            </div>
+          </div>
+        )}
+
+        {step === "confirm_timeout" && (
+          <div className="flex flex-col items-center gap-4 text-center py-2">
+            <div className="w-16 h-16 rounded-full border-4 border-evolve-yellow/60 flex items-center justify-center">
+              <span className="text-evolve-yellow text-2xl font-bold leading-none">⏳</span>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">still confirming…</h3>
+              <p className="text-white/40 text-xs mt-1">
+                your payment is being verified — this can take a minute. check again in a bit.
+              </p>
+            </div>
+            <button
+              onClick={() => setStep("confirming")}
+              className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
+            >
+              check again
+            </button>
+            <button onClick={onClose} className="text-white/40 text-xs text-center hover:text-white/60">
+              close for now
+            </button>
+          </div>
+        )}
+
         {step === "success" && (
           <div className="flex flex-col items-center gap-4 text-center py-2">
             <div className="w-16 h-16 rounded-full border-4 border-green-400 flex items-center justify-center">
@@ -220,14 +290,14 @@ function BookModal({ user, onClose }) {
             <div>
               <h3 className="text-white font-bold text-lg">you're booked</h3>
               <p className="text-white/40 text-xs mt-1">
-                we'll email you the pre-review questionnaire next.
+                let's get your pre-review questionnaire out of the way.
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => onSuccess(confirmedRow)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
-              back to programme
+              start your review →
             </button>
           </div>
         )}
@@ -264,6 +334,38 @@ function BookModal({ user, onClose }) {
  */
 export default function PortfolioReviewProgramme({ user, onBack }) {
   const [bookOpen, setBookOpen] = useState(false);
+  const [reviewRow, setReviewRow] = useState(null);
+  const [checkingReview, setCheckingReview] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("evolve_portfolio_reviews")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setReviewRow(data || null);
+        setCheckingReview(false);
+      });
+    return () => { cancelled = true; };
+  }, [user.id]);
+
+  if (checkingReview) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="w-8 h-8 border-2 border-evolve-yellow border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Already paid (a row only ever exists once the webhook confirms
+  // payment) — skip the marketing page entirely and resume the workspace
+  // wherever they left off.
+  if (reviewRow) {
+    return <PortfolioReviewFlow user={user} onBack={onBack} review={reviewRow} />;
+  }
 
   return (
     <div className="flex flex-col gap-14">
@@ -420,7 +522,16 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
         </button>
       </div>
 
-      {bookOpen && <BookModal user={user} onClose={() => setBookOpen(false)} />}
+      {bookOpen && (
+        <BookModal
+          user={user}
+          onClose={() => setBookOpen(false)}
+          onSuccess={(row) => {
+            setBookOpen(false);
+            setReviewRow(row);
+          }}
+        />
+      )}
     </div>
   );
 }

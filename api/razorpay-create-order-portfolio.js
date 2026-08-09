@@ -3,7 +3,8 @@
 // Mirrors razorpay-create-order.js's mentorship flow, minus batch logic.
 import { createClient } from "@supabase/supabase-js";
 
-const AMOUNT_PAISE = 140000; // ₹1,400
+// const AMOUNT_PAISE = 140000; // ₹1,400
+const AMOUNT_PAISE = 100; // ₹1
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,10 +12,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
-    if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
-    if (!process.env.SUPABASE_URL) return res.status(500).json({ error: "SUPABASE_URL missing" });
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
+    if (!process.env.RAZORPAY_KEY_ID)
+      return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+    if (!process.env.RAZORPAY_KEY_SECRET)
+      return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+    if (!process.env.SUPABASE_URL)
+      return res.status(500).json({ error: "SUPABASE_URL missing" });
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY)
+      return res
+        .status(500)
+        .json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { phone, token } = body || {};
@@ -27,7 +34,10 @@ export default async function handler(req, res) {
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError
+    } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return res.status(401).json({ error: "unauthorized" });
     }
@@ -57,7 +67,11 @@ export default async function handler(req, res) {
 
     await supabase.from("portfolio_review_payments").insert({
       user_id: user.id,
-      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
+      name:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email ||
+        "",
       email: user.email || "",
       amount: AMOUNT_PAISE / 100, // store in rupees (1400)
       currency: "INR",

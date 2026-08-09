@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../../supabaseClient";
 import AIReportModal from "./AIReportModal";
+import EvolveReviewsPanel from "./EvolveReviewsPanel";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1588,6 +1589,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
     { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` },
+    { id: "evolve-reviews", label: "evolve portfolio reviews" },
     {
       id: "m-portfolios",
       label: `m-portfolios (${mentorshipPortfolios.length})`
@@ -2781,6 +2783,14 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             </div>
           </div>
         )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            EVOLVE PORTFOLIO REVIEWS TAB — separate table/bucket from the
+            legacy `portfolio_reviews` tab above (Anant + old form). Fully
+            self-contained: EvolveReviewsPanel owns its own fetch/poll and
+            list/detail state.
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "evolve-reviews" && !isAnantAdmin && <EvolveReviewsPanel />}
 
         {/* ══════════════════════════════════════════════════════════════
             REVIEWS TAB (evolve non-Anant admin only)
