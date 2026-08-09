@@ -83,36 +83,27 @@ function BookModal({ user, onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [step, setStep] = useState("form"); // form | confirming | success | confirm_timeout | failed
   const [confirmedRow, setConfirmedRow] = useState(null);
+  const [pendingPayload, setPendingPayload] = useState(null);
 
-  // Row creation happens server-side (webhook, or the dev bypass below) —
-  // poll for it to appear instead of assuming the client's optimistic
-  // Razorpay `handler` callback means the workspace is actually unlocked.
-  useEffect(() => {
-    if (step !== "confirming") return;
-    let cancelled = false;
-    let attempts = 0;
-    async function poll() {
-      attempts += 1;
-      const { data } = await supabase
-        .from("evolve_portfolio_reviews")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (data) {
-        setConfirmedRow(data);
-        setStep("success");
-        return;
-      }
-      if (attempts >= 10) {
-        setStep("confirm_timeout");
-        return;
-      }
-      setTimeout(poll, 1500);
+  // Verifies the payment (or dev-bypasses it) and unlocks the review
+  // workspace — synchronous and server-verified, no dependency on a
+  // Razorpay dashboard webhook ever firing.
+  async function confirmPayment(payload) {
+    setStep("confirming");
+    setPendingPayload(payload);
+    const res = await fetch("/api/razorpay-create-order-portfolio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(() => null);
+    const data = await res?.json().catch(() => null);
+    if (res?.ok && data?.review) {
+      setConfirmedRow(data.review);
+      setStep("success");
+    } else {
+      setStep("confirm_timeout");
     }
-    poll();
-    return () => { cancelled = true; };
-  }, [step, user.id]);
+  }
 
   async function handlePay() {
     const cleaned = phone.trim().replace(/\s+/g, "");
@@ -138,13 +129,8 @@ function BookModal({ user, onClose, onSuccess }) {
       }
 
       if (import.meta.env.DEV) {
-        await fetch("/api/razorpay-create-order-portfolio", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: session.access_token, devConfirm: true })
-        }).catch(() => {});
-        setStep("confirming");
         setPaying(false);
+        await confirmPayment({ token: session.access_token, devConfirm: true });
         return;
       }
 
@@ -169,9 +155,15 @@ function BookModal({ user, onClose, onSuccess }) {
           contact: cleaned
         },
         theme: { color: "#FFD600" },
-        handler: () => {
-          setStep("confirming");
+        handler: (response) => {
           setPaying(false);
+          confirmPayment({
+            action: "verify",
+            token: session.access_token,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          });
         },
         modal: { ondismiss: () => setPaying(false) }
       });
@@ -263,16 +255,16 @@ function BookModal({ user, onClose, onSuccess }) {
               <span className="text-evolve-yellow text-2xl font-bold leading-none">⏳</span>
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg">still confirming…</h3>
+              <h3 className="text-white font-bold text-lg">couldn't confirm your payment</h3>
               <p className="text-white/40 text-xs mt-1">
-                your payment is being verified — this can take a minute. check again in a bit.
+                if you were charged, this is usually a network hiccup — try again. nothing's lost.
               </p>
             </div>
             <button
-              onClick={() => setStep("confirming")}
+              onClick={() => confirmPayment(pendingPayload)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
-              check again
+              try again
             </button>
             <button onClick={onClose} className="text-white/40 text-xs text-center hover:text-white/60">
               close for now
