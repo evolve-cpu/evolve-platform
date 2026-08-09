@@ -14,6 +14,7 @@ values ('evolve-portfolio-reviews', 'evolve-portfolio-reviews', true)
 on conflict (id) do nothing;
 
 -- Allow authenticated users to upload files into their own subfolder
+drop policy if exists "evolve reviews: users upload to own folder" on storage.objects;
 create policy "evolve reviews: users upload to own folder"
   on storage.objects for insert
   to authenticated
@@ -23,12 +24,14 @@ create policy "evolve reviews: users upload to own folder"
   );
 
 -- Allow public read (bucket is public — same as mentorship-portfolios / review-reports)
+drop policy if exists "evolve reviews: public can read" on storage.objects;
 create policy "evolve reviews: public can read"
   on storage.objects for select
   to public
   using (bucket_id = 'evolve-portfolio-reviews');
 
 -- Allow users to replace/update their own files
+drop policy if exists "evolve reviews: users update own files" on storage.objects;
 create policy "evolve reviews: users update own files"
   on storage.objects for update
   to authenticated
@@ -38,6 +41,7 @@ create policy "evolve reviews: users update own files"
   );
 
 -- Allow users to delete their own files
+drop policy if exists "evolve reviews: users delete own files" on storage.objects;
 create policy "evolve reviews: users delete own files"
   on storage.objects for delete
   to authenticated

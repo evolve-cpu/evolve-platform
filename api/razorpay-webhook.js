@@ -73,7 +73,7 @@ export default async function handler(req, res) {
           .single();
 
         if (confirmedPmnt?.user_id) {
-          await supabase.from("evolve_portfolio_reviews").upsert(
+          const { error: reviewRowError } = await supabase.from("evolve_portfolio_reviews").upsert(
             {
               user_id: confirmedPmnt.user_id,
               name: confirmedPmnt.name || "",
@@ -82,6 +82,9 @@ export default async function handler(req, res) {
             },
             { onConflict: "user_id", ignoreDuplicates: true }
           );
+          if (reviewRowError) {
+            console.error("failed to grant evolve_portfolio_reviews access:", reviewRowError);
+          }
         }
       } else if (event === "payment.failed") {
         await supabase
