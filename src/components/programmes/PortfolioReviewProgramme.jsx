@@ -138,10 +138,10 @@ function BookModal({ user, onClose, onSuccess }) {
       }
 
       if (import.meta.env.DEV) {
-        await fetch("/api/dev-confirm-portfolio-review", {
+        await fetch("/api/razorpay-create-order-portfolio", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: session.access_token })
+          body: JSON.stringify({ token: session.access_token, devConfirm: true })
         }).catch(() => {});
         setStep("confirming");
         setPaying(false);

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         .json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { phone, token } = body || {};
+    const { phone, token, devConfirm } = body || {};
 
     if (!token) {
       return res.status(401).json({ error: "unauthorized" });
@@ -40,6 +40,28 @@ export default async function handler(req, res) {
     } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return res.status(401).json({ error: "unauthorized" });
+    }
+
+    // Local-dev-only stand-in for razorpay-webhook.js's row-creation step —
+    // folded in here (rather than its own api/ file) to stay under Vercel
+    // Hobby's 12-serverless-function cap. BookModal skips the real Razorpay
+    // checkout entirely in import.meta.env.DEV, so there's no webhook to
+    // grant access to the review workspace; this mimics that grant. Refuses
+    // to run once deployed (NODE_ENV === "production").
+    if (devConfirm) {
+      if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "not available in production" });
+      }
+      await supabase.from("evolve_portfolio_reviews").upsert(
+        {
+          user_id: user.id,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
+          email: user.email || "",
+          review_status: "draft"
+        },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
+      return res.status(200).json({ ok: true });
     }
 
     const auth = Buffer.from(
