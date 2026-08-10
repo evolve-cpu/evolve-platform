@@ -139,6 +139,7 @@ export default function EvolveReviewsPanel() {
   const [search, setSearch] = useState("");
   const [remarksDraft, setRemarksDraft] = useState("");
   const [recordingDraft, setRecordingDraft] = useState("");
+  const [followupRecordingDraft, setFollowupRecordingDraft] = useState("");
   const [savingField, setSavingField] = useState("");
 
   async function load() {
@@ -159,6 +160,7 @@ export default function EvolveReviewsPanel() {
   useEffect(() => {
     setRemarksDraft(selected?.remarks || "");
     setRecordingDraft(selected?.meet_recording_url || "");
+    setFollowupRecordingDraft(selected?.followup_recording_url || "");
   }, [selected?.id]);
 
   function applyRowUpdate(id, patch) {
@@ -182,6 +184,17 @@ export default function EvolveReviewsPanel() {
       .update({ meet_recording_url: recordingDraft.trim() })
       .eq("id", selected.id);
     applyRowUpdate(selected.id, { meet_recording_url: recordingDraft.trim() });
+    setSavingField("");
+  }
+
+  async function saveFollowupRecording() {
+    if (!selected) return;
+    setSavingField("followup_recording");
+    await supabaseAdmin
+      .from("evolve_portfolio_reviews")
+      .update({ followup_recording_url: followupRecordingDraft.trim() })
+      .eq("id", selected.id);
+    applyRowUpdate(selected.id, { followup_recording_url: followupRecordingDraft.trim() });
     setSavingField("");
   }
 
@@ -395,6 +408,43 @@ export default function EvolveReviewsPanel() {
                     review={selected}
                     onDone={(id, reportUrl) => applyRowUpdate(id, { review_report_url: reportUrl })}
                   />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-white/30 text-[11px] font-semibold uppercase tracking-wide">follow-up call</p>
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={
+                      selected.followup_status === "booked"
+                        ? { background: "rgba(34,197,94,0.12)", color: GR }
+                        : { background: "rgba(148,163,184,0.12)", color: "#94a3b8" }
+                    }
+                  >
+                    {selected.followup_status === "booked" ? "booked" : "not booked yet"}
+                  </span>
+                </div>
+                {selected.followup_status !== "booked" ? (
+                  <p className="text-white/30 text-xs italic">the learner hasn&apos;t booked a follow-up call yet.</p>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      value={followupRecordingDraft}
+                      onChange={(e) => setFollowupRecordingDraft(e.target.value)}
+                      placeholder="https://drive.google.com/…"
+                      className="flex-1 text-sm rounded-lg px-3 py-2 outline-none border"
+                      style={{ background: "#111827", borderColor: "#1f2937", color: "#fff" }}
+                    />
+                    <button
+                      onClick={saveFollowupRecording}
+                      disabled={savingField === "followup_recording"}
+                      className="text-xs font-bold rounded-lg px-3 disabled:opacity-50"
+                      style={{ background: "rgba(255,208,7,0.15)", color: Y }}
+                    >
+                      save
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

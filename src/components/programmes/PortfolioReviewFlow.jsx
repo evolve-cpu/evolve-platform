@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
-import { PortfolioReviewArt } from "./CardArt";
 import { getPortfolioReviewProgress } from "../../lib/portfolioReviewProgress";
 import GrowthStageModal from "../GrowthStageModal";
 
@@ -9,7 +8,8 @@ const CALENDLY_URL = "https://calendly.com/evolvedesignacademy/portfolioreview";
 
 // growth_stage (0-100) reached once the intake questions + resume/portfolio
 // are submitted — see src/lib/growthStage.js for the seed→sprout mapping.
-const SUBMIT_GROWTH_STAGE = 40;
+// 30 → stage 3 (onboarding=10→stage1, payment=20→stage2, this=30→stage3).
+const SUBMIT_GROWTH_STAGE = 30;
 
 const QUESTIONS = [
   {
@@ -47,6 +47,23 @@ function driveEmbedUrl(url) {
   const m =
     url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url;
+}
+
+function ResultTabButton({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-xs font-semibold px-3.5 py-2 rounded-full transition-colors"
+      style={
+        active
+          ? { background: "rgba(255,208,7,0.12)", color: "#FFD007" }
+          : { color: "rgba(255,255,255,0.4)" }
+      }
+    >
+      {children}
+    </button>
+  );
 }
 
 function safeFileName(name) {
@@ -445,6 +462,9 @@ export default function PortfolioReviewFlow({
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
 
+  const [resultsTab, setResultsTab] = useState("report");
+  const [bookingFollowup, setBookingFollowup] = useState(false);
+
   const calendlyLoaded = useRef(false);
 
   // `review` is the caller's latest cycle for this user (see
@@ -479,6 +499,8 @@ export default function PortfolioReviewFlow({
     setFeedbackSent(!!review.feedback_rating);
     setFeedbackRating(review.feedback_rating || 0);
     setFeedbackText(review.feedback_text || "");
+    setResultsTab("report");
+    setBookingFollowup(false);
 
     if (review.review_report_url || review.meet_recording_url) {
       setPhase("results");
@@ -510,7 +532,7 @@ export default function PortfolioReviewFlow({
   }, [review?.id]);
 
   useEffect(() => {
-    if (phase !== "booking" || calendlyLoaded.current) return;
+    if ((phase !== "booking" && !bookingFollowup) || calendlyLoaded.current) return;
     if (!document.getElementById("calendly-script")) {
       const s = document.createElement("script");
       s.id = "calendly-script";
@@ -519,11 +541,20 @@ export default function PortfolioReviewFlow({
       document.head.appendChild(s);
     }
     calendlyLoaded.current = true;
-  }, [phase]);
+  }, [phase, bookingFollowup]);
 
   useEffect(() => {
     const onMsg = async (e) => {
       if (e.data?.event !== "calendly.event_scheduled" || !row?.id) return;
+      if (bookingFollowup) {
+        await supabase
+          .from("evolve_portfolio_reviews")
+          .update({ followup_status: "booked" })
+          .eq("id", row.id);
+        setRow((r) => (r ? { ...r, followup_status: "booked" } : r));
+        setBookingFollowup(false);
+        return;
+      }
       await supabase
         .from("evolve_portfolio_reviews")
         .update({ review_status: "in_review" })
@@ -532,7 +563,7 @@ export default function PortfolioReviewFlow({
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, [row?.id]);
+  }, [row?.id, bookingFollowup]);
 
   async function persist(status) {
     if (!row?.id) return "no review row";
@@ -782,10 +813,6 @@ export default function PortfolioReviewFlow({
         </svg>
         {saving ? "saving draft…" : "back to programmes"}
       </button>
-
-      <div className="h-[110px] rounded-2xl overflow-hidden border border-white/10">
-        <PortfolioReviewArt />
-      </div>
 
       <div className="flex flex-col gap-2 pb-5 border-b border-white/10">
         <h1 className="text-white font-bold font-bricolage text-2xl md:text-[28px] leading-tight">
@@ -1102,83 +1129,177 @@ export default function PortfolioReviewFlow({
                     )}
                   </div>
 
-                  {row.review_report_url && (
-                    <div
-                      className="rounded-2xl border border-white/10 overflow-hidden"
-                      style={{ height: 640 }}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ResultTabButton
+                      active={resultsTab === "report"}
+                      onClick={() => setResultsTab("report")}
                     >
-                      <iframe
-                        title="report"
-                        src={row.review_report_url}
-                        className="w-full h-full"
-                      />
-                    </div>
-                  )}
+                      view report
+                    </ResultTabButton>
+                    <ResultTabButton
+                      active={resultsTab === "session"}
+                      onClick={() => setResultsTab("session")}
+                    >
+                      view session
+                    </ResultTabButton>
+                    {(row.followup_status === "booked" || row.followup_recording_url) && (
+                      <ResultTabButton
+                        active={resultsTab === "followup"}
+                        onClick={() => setResultsTab("followup")}
+                      >
+                        follow-up session
+                      </ResultTabButton>
+                    )}
+                  </div>
 
-                  {row.meet_recording_url && (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                        session recording
-                      </p>
+                  {resultsTab === "report" &&
+                    (row.review_report_url ? (
                       <div
                         className="rounded-2xl border border-white/10 overflow-hidden"
-                        style={{ height: 400 }}
+                        style={{ height: 640 }}
                       >
                         <iframe
-                          title="session recording"
-                          src={driveEmbedUrl(row.meet_recording_url)}
+                          title="report"
+                          src={row.review_report_url}
                           className="w-full h-full"
-                          allow="autoplay"
                         />
                       </div>
+                    ) : (
+                      <p className="text-white/40 text-sm">
+                        report not uploaded yet.
+                      </p>
+                    ))}
+
+                  {resultsTab === "session" && (
+                    <div className="flex flex-col gap-5">
+                      {row.meet_recording_url ? (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
+                            session recording
+                          </p>
+                          <div
+                            className="rounded-2xl border border-white/10 overflow-hidden"
+                            style={{ height: 400 }}
+                          >
+                            <iframe
+                              title="session recording"
+                              src={driveEmbedUrl(row.meet_recording_url)}
+                              className="w-full h-full"
+                              allow="autoplay"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-white/40 text-sm">
+                          recording not uploaded yet.
+                        </p>
+                      )}
+
+                      {!feedbackSent ? (
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 flex flex-col gap-3">
+                          <p className="text-white text-sm font-semibold">
+                            how was your review?
+                          </p>
+                          <div className="flex gap-1.5">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <button
+                                key={n}
+                                onClick={() => setFeedbackRating(n)}
+                                className="text-xl leading-none"
+                              >
+                                <span
+                                  className={
+                                    n <= feedbackRating
+                                      ? "text-evolve-yellow"
+                                      : "text-white/15"
+                                  }
+                                >
+                                  ★
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={feedbackText}
+                            onChange={(e) => setFeedbackText(e.target.value)}
+                            placeholder="anything you'd like to add? (optional)"
+                            className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-3.5 py-2.5 resize-none transition-colors"
+                            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                          />
+                          <button
+                            onClick={submitFeedback}
+                            disabled={!feedbackRating}
+                            className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2 disabled:opacity-40"
+                          >
+                            submit feedback
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-evolve-inchworm text-xs font-semibold">
+                          thanks for the feedback 🌱
+                        </p>
+                      )}
                     </div>
                   )}
 
-                  {!feedbackSent ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 flex flex-col gap-3">
-                      <p className="text-white text-sm font-semibold">
-                        how was your review?
-                      </p>
-                      <div className="flex gap-1.5">
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <button
-                            key={n}
-                            onClick={() => setFeedbackRating(n)}
-                            className="text-xl leading-none"
-                          >
-                            <span
-                              className={
-                                n <= feedbackRating
-                                  ? "text-evolve-yellow"
-                                  : "text-white/15"
-                              }
-                            >
-                              ★
-                            </span>
-                          </button>
-                        ))}
+                  {resultsTab === "followup" &&
+                    (row.followup_recording_url ? (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
+                          follow-up session recording
+                        </p>
+                        <div
+                          className="rounded-2xl border border-white/10 overflow-hidden"
+                          style={{ height: 400 }}
+                        >
+                          <iframe
+                            title="follow-up session recording"
+                            src={driveEmbedUrl(row.followup_recording_url)}
+                            className="w-full h-full"
+                            allow="autoplay"
+                          />
+                        </div>
                       </div>
-                      <textarea
-                        rows={2}
-                        value={feedbackText}
-                        onChange={(e) => setFeedbackText(e.target.value)}
-                        placeholder="anything you'd like to add? (optional)"
-                        className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-3.5 py-2.5 resize-none transition-colors"
-                        style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-                      />
-                      <button
-                        onClick={submitFeedback}
-                        disabled={!feedbackRating}
-                        className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2 disabled:opacity-40"
-                      >
-                        submit feedback
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-evolve-inchworm text-xs font-semibold">
-                      thanks for the feedback 🌱
-                    </p>
-                  )}
+                    ) : (
+                      <p className="text-white/40 text-sm">
+                        your follow-up call is booked — the recording will
+                        appear here after your session.
+                      </p>
+                    ))}
+
+                  {feedbackSent &&
+                    row.followup_status !== "booked" &&
+                    !row.followup_recording_url &&
+                    (bookingFollowup ? (
+                      <div className="flex flex-col gap-3">
+                        <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
+                          book a follow-up call
+                        </p>
+                        <div
+                          className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
+                          data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                          style={{ minWidth: 280, height: 700 }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-evolve-inchworm/30 bg-evolve-inchworm/[0.05] p-5 flex items-center justify-between flex-wrap gap-3">
+                        <div>
+                          <p className="text-white text-sm font-semibold">
+                            want to talk it through?
+                          </p>
+                          <p className="text-white/40 text-xs mt-0.5">
+                            book a free follow-up call with your reviewer.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setBookingFollowup(true)}
+                          className="bg-evolve-inchworm text-evolve-black font-bold text-xs rounded-full px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
+                        >
+                          book a follow-up call →
+                        </button>
+                      </div>
+                    ))}
 
                   {row.review_report_url && onApplyAgain && (
                     <div className="rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.05] p-5 flex items-center justify-between flex-wrap gap-3">

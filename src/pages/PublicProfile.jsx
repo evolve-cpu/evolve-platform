@@ -196,6 +196,14 @@ export default function PublicProfile() {
 
   useEffect(() => { load(); }, [load]);
 
+  // when viewing your own profile, `card` starts as a snapshot of `user`
+  // (see `load` above) — re-sync it whenever `user` changes (e.g. after
+  // `refreshUser()` bumps growth_stage inline, without a remount) so the
+  // growth-stage badge updates immediately instead of only after a reload.
+  useEffect(() => {
+    if (isOwner && user) setCard(user);
+  }, [isOwner, user]);
+
   // owner's org space(s) — lets them hop back and forth between their
   // profile and the space(s) they own/belong to
   const loadOrgSpaces = useCallback(async () => {
