@@ -49,23 +49,6 @@ function driveEmbedUrl(url) {
   return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url;
 }
 
-function ResultTabButton({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-xs font-semibold px-3.5 py-2 rounded-full transition-colors"
-      style={
-        active
-          ? { background: "rgba(255,208,7,0.12)", color: "#FFD007" }
-          : { color: "rgba(255,255,255,0.4)" }
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
 function safeFileName(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
@@ -79,8 +62,9 @@ function StepSidebar({
   bookDone,
   hasReport,
   hasRecording,
+  resultsTab,
   onSelectQuestion,
-  onNavigatePhase,
+  onSelectResultsTab,
   className = ""
 }) {
   const isSubmitted = ["booking", "confirmed", "results"].includes(phase);
@@ -138,10 +122,10 @@ function StepSidebar({
           ? [
               {
                 label: "view report",
-                active: phase === "results",
+                active: phase === "results" && resultsTab === "report",
                 done: false,
                 navigable: phase === "results",
-                onClick: () => onNavigatePhase("results")
+                onClick: () => onSelectResultsTab("report")
               }
             ]
           : []),
@@ -149,10 +133,21 @@ function StepSidebar({
           ? [
               {
                 label: "view session",
-                active: false,
+                active: phase === "results" && resultsTab === "session",
                 done: false,
                 navigable: phase === "results",
-                onClick: () => onNavigatePhase("results")
+                onClick: () => onSelectResultsTab("session")
+              }
+            ]
+          : []),
+        ...(phase === "results"
+          ? [
+              {
+                label: "book a follow-up call",
+                active: resultsTab === "followup",
+                done: false,
+                navigable: true,
+                onClick: () => onSelectResultsTab("followup")
               }
             ]
           : [])
@@ -778,11 +773,12 @@ export default function PortfolioReviewFlow({
     bookDone,
     hasReport: !!row.review_report_url,
     hasRecording: !!row.meet_recording_url,
+    resultsTab,
     onSelectQuestion: (i) => {
       setCurrentQ(i);
       setPhase("questions");
     },
-    onNavigatePhase: (p) => setPhase(p)
+    onSelectResultsTab: (tab) => setResultsTab(tab)
   };
 
   const cyclesSidebarProps = {
@@ -1129,29 +1125,6 @@ export default function PortfolioReviewFlow({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <ResultTabButton
-                      active={resultsTab === "report"}
-                      onClick={() => setResultsTab("report")}
-                    >
-                      view report
-                    </ResultTabButton>
-                    <ResultTabButton
-                      active={resultsTab === "session"}
-                      onClick={() => setResultsTab("session")}
-                    >
-                      view session
-                    </ResultTabButton>
-                    {(row.followup_status === "booked" || row.followup_recording_url) && (
-                      <ResultTabButton
-                        active={resultsTab === "followup"}
-                        onClick={() => setResultsTab("followup")}
-                      >
-                        follow-up session
-                      </ResultTabButton>
-                    )}
-                  </div>
-
                   {resultsTab === "report" &&
                     (row.review_report_url ? (
                       <div
@@ -1261,17 +1234,12 @@ export default function PortfolioReviewFlow({
                           />
                         </div>
                       </div>
-                    ) : (
+                    ) : row.followup_status === "booked" ? (
                       <p className="text-white/40 text-sm">
                         your follow-up call is booked — the recording will
                         appear here after your session.
                       </p>
-                    ))}
-
-                  {feedbackSent &&
-                    row.followup_status !== "booked" &&
-                    !row.followup_recording_url &&
-                    (bookingFollowup ? (
+                    ) : bookingFollowup ? (
                       <div className="flex flex-col gap-3">
                         <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
                           book a follow-up call
