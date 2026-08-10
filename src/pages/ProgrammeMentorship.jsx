@@ -24,7 +24,10 @@ export default function ProgrammeMentorship() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#161618" }}>
-      <div className="flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10">
+      <div
+        className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10"
+        style={{ backgroundColor: "#161618" }}
+      >
         <Link
           to={`/profile/${user.username}`}
           className="flex items-center gap-1.5 text-evolve-yellow text-sm font-semibold"

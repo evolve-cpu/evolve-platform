@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import ProcessSteps from "./ProcessSteps";
 import PortfolioReviewFlow from "./PortfolioReviewFlow";
@@ -326,23 +326,27 @@ function BookModal({ user, onClose, onSuccess }) {
  */
 export default function PortfolioReviewProgramme({ user, onBack }) {
   const [bookOpen, setBookOpen] = useState(false);
-  const [reviewRow, setReviewRow] = useState(null);
+  // Every paid attempt gets its own row (see evolve_portfolio_reviews_cycles
+  // migration), oldest first, so `reviewRows.at(-1)` is always the cycle
+  // currently being worked on/reviewed. Rows before it are always finished
+  // (a new cycle only ever opens once the prior one has a report) — the
+  // workspace renders them as read-only "review 1", "review 2", … history.
+  const [reviewRows, setReviewRows] = useState([]);
   const [checkingReview, setCheckingReview] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    supabase
+  const loadReviews = useCallback(async () => {
+    const { data } = await supabase
       .from("evolve_portfolio_reviews")
       .select("*")
       .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setReviewRow(data || null);
-        setCheckingReview(false);
-      });
-    return () => { cancelled = true; };
+      .order("attempt", { ascending: true });
+    setReviewRows(data || []);
+    setCheckingReview(false);
   }, [user.id]);
+
+  useEffect(() => {
+    loadReviews();
+  }, [loadReviews]);
 
   if (checkingReview) {
     return (
@@ -352,11 +356,35 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
     );
   }
 
+  const activeRow = reviewRows.length ? reviewRows[reviewRows.length - 1] : null;
+  const history = reviewRows.slice(0, -1);
+
   // Already paid (a row only ever exists once the webhook confirms
   // payment) — skip the marketing page entirely and resume the workspace
-  // wherever they left off.
-  if (reviewRow) {
-    return <PortfolioReviewFlow user={user} onBack={onBack} review={reviewRow} />;
+  // wherever they left off. `onApplyAgain` reuses the same payment modal to
+  // open a brand-new cycle once the current one's report is ready.
+  if (activeRow) {
+    return (
+      <>
+        <PortfolioReviewFlow
+          user={user}
+          onBack={onBack}
+          review={activeRow}
+          history={history}
+          onApplyAgain={() => setBookOpen(true)}
+        />
+        {bookOpen && (
+          <BookModal
+            user={user}
+            onClose={() => setBookOpen(false)}
+            onSuccess={(row) => {
+              setBookOpen(false);
+              setReviewRows((prev) => [...prev, row]);
+            }}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -520,7 +548,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           onClose={() => setBookOpen(false)}
           onSuccess={(row) => {
             setBookOpen(false);
-            setReviewRow(row);
+            setReviewRows((prev) => [...prev, row]);
           }}
         />
       )}

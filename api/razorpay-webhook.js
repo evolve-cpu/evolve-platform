@@ -62,10 +62,15 @@ export default async function handler(req, res) {
           })
           .eq("razorpay_order_id", payment.order_id);
 
-        // Grant access to the evolve Portfolio Review workspace — this is
-        // the ONLY place a evolve_portfolio_reviews row is ever created,
-        // so its existence doubles as proof of payment. upsert on user_id
-        // keeps this safe against Razorpay's webhook retries.
+        // Grant access to the evolve Portfolio Review workspace. A user can
+        // go through this workspace more than once — once a cycle's report
+        // is uploaded (review_report_url set), a repeat payment should open
+        // a fresh cycle ("review 2", "review 3", …) instead of reusing the
+        // finished one. If an OPEN cycle already exists (not yet reported),
+        // reuse it instead of inserting a duplicate — keeps this safe
+        // against Razorpay's webhook retries, and lines up with the partial
+        // unique index (one open cycle per user) added in
+        // evolve_portfolio_reviews_cycles.sql.
         const { data: confirmedPmnt } = await supabase
           .from("portfolio_review_payments")
           .select("user_id, name, email")
@@ -73,17 +78,25 @@ export default async function handler(req, res) {
           .single();
 
         if (confirmedPmnt?.user_id) {
-          const { error: reviewRowError } = await supabase.from("evolve_portfolio_reviews").upsert(
-            {
+          const { data: latestReview } = await supabase
+            .from("evolve_portfolio_reviews")
+            .select("attempt, review_report_url")
+            .eq("user_id", confirmedPmnt.user_id)
+            .order("attempt", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!latestReview || latestReview.review_report_url) {
+            const { error: reviewRowError } = await supabase.from("evolve_portfolio_reviews").insert({
               user_id: confirmedPmnt.user_id,
               name: confirmedPmnt.name || "",
               email: confirmedPmnt.email || "",
-              review_status: "draft"
-            },
-            { onConflict: "user_id", ignoreDuplicates: true }
-          );
-          if (reviewRowError) {
-            console.error("failed to grant evolve_portfolio_reviews access:", reviewRowError);
+              review_status: "draft",
+              attempt: (latestReview?.attempt || 0) + 1
+            });
+            if (reviewRowError) {
+              console.error("failed to open a new evolve_portfolio_reviews cycle:", reviewRowError);
+            }
           }
         }
       } else if (event === "payment.failed") {

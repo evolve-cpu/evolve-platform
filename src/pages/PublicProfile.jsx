@@ -217,7 +217,10 @@ export default function PublicProfile() {
 
   // drives the Portfolio Review card's progress pill/bar — re-checked
   // whenever the owner steps back out of a programme pane (e.g. after
-  // saving a draft and returning), so the card reflects the latest state
+  // saving a draft and returning), so the card reflects the latest state.
+  // A user can go through more than one review cycle (see
+  // evolve_portfolio_reviews_cycles migration), so this pulls the most
+  // recent one — that's the cycle the card's progress should reflect.
   const loadEvolveReview = useCallback(async () => {
     if (!isOwner || !user) {
       setEvolveReview(null);
@@ -227,6 +230,8 @@ export default function PublicProfile() {
       .from("evolve_portfolio_reviews")
       .select("*")
       .eq("user_id", user.id)
+      .order("attempt", { ascending: false })
+      .limit(1)
       .maybeSingle();
     setEvolveReview(data || null);
   }, [isOwner, user]);
@@ -298,9 +303,13 @@ export default function PublicProfile() {
   const subtitle = [card.persona, card.country].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
-      {/* top bar */}
-      <div className="flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0">
+    <div className="min-h-screen md:h-screen flex flex-col md:overflow-hidden" style={{ backgroundColor: "#161618" }}>
+      {/* top bar — sticky: stays put while the profile/programme/workspace
+          content underneath scrolls independently */}
+      <div
+        className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0"
+        style={{ backgroundColor: "#161618" }}
+      >
         <Link to="/" className="text-white font-extrabold text-base tracking-tight">
           evolve<span className="text-evolve-lavender-indigo">.</span>
         </Link>
@@ -341,13 +350,14 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row">
         {/* sidebar — collapsible on desktop into a slim rail (avatar + growth
             stage still visible) so a programme (or its payment flow) in the
             right pane can claim more width without losing the person's
-            context entirely. Mobile always gets the full panel. */}
+            context entirely. Mobile always gets the full panel. Scrolls
+            independently of <main> so the top bar above never moves. */}
         <aside
-          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col transition-[width] duration-200`}
+          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col md:overflow-y-auto transition-[width] duration-200`}
         >
           <button
             type="button"
@@ -371,6 +381,14 @@ export default function PublicProfile() {
                   <span className="text-white font-bold text-sm">{(card.name || "?")[0].toUpperCase()}</span>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* growth mascot — pinned to the bottom of the collapsed rail
+              (mt-auto), so it stays anchored there regardless of how much
+              sits above it */}
+          {sidebarCollapsed && (
+            <div className="hidden md:flex flex-col items-center gap-1 mt-auto px-2 pb-5 pt-3">
               <div className="flex flex-col items-center gap-1 rounded-xl border border-evolve-inchworm/20 bg-evolve-inchworm/[0.05] px-1.5 py-2">
                 <GrowthMascot progress={card.growth_stage ?? 0} size={28} />
                 <span className="text-evolve-inchworm text-[9px] font-bold">
@@ -546,8 +564,9 @@ export default function PublicProfile() {
           </div>
         </aside>
 
-        {/* main content */}
-        <main className="flex-1 px-6 md:px-8 py-8 flex flex-col gap-8">
+        {/* main content — the only region that scrolls on desktop; the top
+            bar and the profile sidebar stay in place above/beside it */}
+        <main className="flex-1 min-h-0 md:overflow-y-auto px-6 md:px-8 py-8 flex flex-col gap-8">
           {isOwner && location.state?.justJoinedOrg && (
             <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
               🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.
@@ -589,7 +608,7 @@ export default function PublicProfile() {
                   buttonLabel={
                     evolveReview
                       ? getPortfolioReviewProgress(evolveReview)?.step === 5
-                        ? "view report →"
+                        ? "apply again →"
                         : "continue your review →"
                       : undefined
                   }

@@ -262,7 +262,17 @@ export default function EvolveReviewsPanel() {
                       }}
                     >
                       <td className="px-3 py-2.5 text-white">
-                        <div className="font-semibold">{r.name || "—"}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold">{r.name || "—"}</span>
+                          {r.attempt > 1 && (
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                              style={{ background: "rgba(255,208,7,0.12)", color: Y }}
+                            >
+                              review {r.attempt}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-white/30 text-xs">{r.email}</div>
                       </td>
                       <td className="px-3 py-2.5">
@@ -291,7 +301,17 @@ export default function EvolveReviewsPanel() {
           >
             <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1f2937" }}>
               <div>
-                <p className="text-white font-bold text-sm">{selected.name || "—"}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white font-bold text-sm">{selected.name || "—"}</p>
+                  {selected.attempt > 1 && (
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(255,208,7,0.12)", color: Y }}
+                    >
+                      review {selected.attempt}
+                    </span>
+                  )}
+                </div>
                 <p className="text-white/40 text-xs">{selected.email}</p>
               </div>
               <button onClick={() => setSelected(null)} className="text-white/40 hover:text-white text-lg leading-none">

@@ -45,26 +45,53 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "unauthorized" });
     }
 
-    // Grants access to the evolve Portfolio Review workspace by creating the
-    // evolve_portfolio_reviews row — the only place this ever happens.
-    // upsert + ignoreDuplicates keeps this idempotent no matter how many
-    // times it's called for the same user.
+    // Grants access to the evolve Portfolio Review workspace by creating an
+    // evolve_portfolio_reviews row. A user can go through this workspace
+    // more than once — once a cycle's report is uploaded
+    // (review_report_url set), paying again starts a fresh cycle ("review
+    // 2", "review 3", …) rather than reusing the finished one. If an OPEN
+    // cycle already exists (not yet reported), reuse it instead of
+    // inserting a duplicate — keeps this idempotent against webhook
+    // retries / double taps on "pay", and lines up with the partial unique
+    // index (one open cycle per user) added in
+    // evolve_portfolio_reviews_cycles.sql.
     async function unlockReview() {
-      await supabase.from("evolve_portfolio_reviews").upsert(
-        {
-          user_id: user.id,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
-          email: user.email || "",
-          review_status: "draft"
-        },
-        { onConflict: "user_id", ignoreDuplicates: true }
-      );
-      const { data: review } = await supabase
+      const { data: latest } = await supabase
         .from("evolve_portfolio_reviews")
         .select("*")
         .eq("user_id", user.id)
+        .order("attempt", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latest && !latest.review_report_url) return latest;
+
+      const { data: created, error: insertErr } = await supabase
+        .from("evolve_portfolio_reviews")
+        .insert({
+          user_id: user.id,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "",
+          email: user.email || "",
+          review_status: "draft",
+          attempt: (latest?.attempt || 0) + 1
+        })
+        .select()
         .single();
-      return review;
+
+      if (insertErr) {
+        console.error("failed to open a new review cycle:", insertErr);
+        // most likely lost a race against the partial unique index —
+        // whatever open cycle now exists is the one to hand back
+        const { data: fallback } = await supabase
+          .from("evolve_portfolio_reviews")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("attempt", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        return fallback;
+      }
+      return created;
     }
 
     // Local-dev-only stand-in for a confirmed payment — BookModal skips the
