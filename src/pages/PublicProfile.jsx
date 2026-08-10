@@ -303,9 +303,10 @@ export default function PublicProfile() {
   const subtitle = [card.persona, card.country].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-screen md:h-screen flex flex-col md:overflow-hidden" style={{ backgroundColor: "#161618" }}>
-      {/* top bar — sticky: stays put while the profile/programme/workspace
-          content underneath scrolls independently */}
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+      {/* top bar — sticky: stays put while the page scrolls beneath it.
+          The whole page (sidebar + main) shares a single scrollbar — no
+          independently-scrolling panes, so only one scrollbar ever shows. */}
       <div
         className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0"
         style={{ backgroundColor: "#161618" }}
@@ -350,14 +351,15 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row">
         {/* sidebar — collapsible on desktop into a slim rail (avatar + growth
             stage still visible) so a programme (or its payment flow) in the
             right pane can claim more width without losing the person's
-            context entirely. Mobile always gets the full panel. Scrolls
-            independently of <main> so the top bar above never moves. */}
+            context entirely. Mobile always gets the full panel. Sticky
+            (not independently scrolling) so the whole page shares a single
+            scrollbar with <main> instead of each pane scrolling on its own. */}
         <aside
-          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col md:overflow-y-auto transition-[width] duration-200`}
+          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
         >
           <button
             type="button"
@@ -564,9 +566,17 @@ export default function PublicProfile() {
           </div>
         </aside>
 
-        {/* main content — the only region that scrolls on desktop; the top
-            bar and the profile sidebar stay in place above/beside it */}
-        <main className="flex-1 min-h-0 md:overflow-y-auto px-6 md:px-8 py-8 flex flex-col gap-8">
+        {/* main content — flows in the same single page scroll as
+            everything else; the sticky top bar and sidebar stay in place
+            above/beside it. Bottom padding is dropped while the Portfolio
+            Review programme is open since its own sticky enrol bar supplies
+            that spacing itself (avoids a gap between the bar and the true
+            bottom of the page). */}
+        <main
+          className={`flex-1 px-6 md:px-8 pt-8 flex flex-col gap-8 ${
+            activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
+          }`}
+        >
           {isOwner && location.state?.justJoinedOrg && (
             <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
               🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.

@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../hooks/useAuth";
 import ProcessSteps from "./ProcessSteps";
 import PortfolioReviewFlow from "./PortfolioReviewFlow";
+import GrowthStageModal from "../GrowthStageModal";
+
+// growth_stage (0-100) reached once a Portfolio Review payment unlocks the
+// workspace — see src/lib/growthStage.js for the seed→sprout mapping.
+const PAYMENT_GROWTH_STAGE = 20;
 
 /* TODO: replace image placeholders with the real reviewer links once available. */
 const REVIEWERS = [
@@ -325,6 +331,7 @@ function BookModal({ user, onClose, onSuccess }) {
  * content pane, next to the persistent sidebar, via `onBack`.
  */
 export default function PortfolioReviewProgramme({ user, onBack }) {
+  const { refreshUser } = useAuth();
   const [bookOpen, setBookOpen] = useState(false);
   // Every paid attempt gets its own row (see evolve_portfolio_reviews_cycles
   // migration), oldest first, so `reviewRows.at(-1)` is always the cycle
@@ -333,6 +340,27 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
   // workspace renders them as read-only "review 1", "review 2", … history.
   const [reviewRows, setReviewRows] = useState([]);
   const [checkingReview, setCheckingReview] = useState(true);
+  const [growthModal, setGrowthModal] = useState(null);
+
+  // Advances the growth mascot and surfaces a celebratory modal — but never
+  // regresses it (e.g. a repeat "apply again" cycle shouldn't re-show the
+  // stage-2 moment once the learner is already further along).
+  async function advanceGrowthStage(target, heading, message) {
+    if ((user.growth_stage ?? 0) >= target) return;
+    await supabase.from("profiles").update({ growth_stage: target }).eq("id", user.id);
+    await refreshUser();
+    setGrowthModal({ progress: target, heading, message });
+  }
+
+  function handleBookingSuccess(row) {
+    setBookOpen(false);
+    setReviewRows((prev) => [...prev, row]);
+    advanceGrowthStage(
+      PAYMENT_GROWTH_STAGE,
+      "you're one step closer 🌱",
+      "your seed is sprouting — you've booked your portfolio review. keep the momentum going."
+    );
+  }
 
   const loadReviews = useCallback(async () => {
     const { data } = await supabase
@@ -377,10 +405,13 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           <BookModal
             user={user}
             onClose={() => setBookOpen(false)}
-            onSuccess={(row) => {
-              setBookOpen(false);
-              setReviewRows((prev) => [...prev, row]);
-            }}
+            onSuccess={handleBookingSuccess}
+          />
+        )}
+        {growthModal && (
+          <GrowthStageModal
+            {...growthModal}
+            onContinue={() => setGrowthModal(null)}
           />
         )}
       </>
@@ -546,10 +577,13 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
         <BookModal
           user={user}
           onClose={() => setBookOpen(false)}
-          onSuccess={(row) => {
-            setBookOpen(false);
-            setReviewRows((prev) => [...prev, row]);
-          }}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
+      {growthModal && (
+        <GrowthStageModal
+          {...growthModal}
+          onContinue={() => setGrowthModal(null)}
         />
       )}
     </div>

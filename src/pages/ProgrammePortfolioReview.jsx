@@ -42,7 +42,10 @@ export default function ProgrammePortfolioReview() {
         </span>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 md:px-8 py-10">
+      {/* no bottom padding here — the programme's own sticky enrol bar
+          supplies its own vertical spacing, and adding padding beneath it
+          would leave a gap between the bar and the true bottom of the page */}
+      <div className="max-w-3xl mx-auto px-6 md:px-8 pt-10">
         <PortfolioReviewProgramme user={user} />
       </div>
     </div>

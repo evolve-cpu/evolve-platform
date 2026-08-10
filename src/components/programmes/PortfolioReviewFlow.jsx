@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../hooks/useAuth";
 import { PortfolioReviewArt } from "./CardArt";
 import { getPortfolioReviewProgress } from "../../lib/portfolioReviewProgress";
+import GrowthStageModal from "../GrowthStageModal";
 
 const CALENDLY_URL = "https://calendly.com/evolvedesignacademy/portfolioreview";
+
+// growth_stage (0-100) reached once the intake questions + resume/portfolio
+// are submitted — see src/lib/growthStage.js for the seed→sprout mapping.
+const SUBMIT_GROWTH_STAGE = 40;
 
 const QUESTIONS = [
   {
@@ -431,6 +437,9 @@ export default function PortfolioReviewFlow({
   const [error, setError] = useState("");
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
   const [viewingCycle, setViewingCycle] = useState(null);
+  const [growthModal, setGrowthModal] = useState(null);
+
+  const { user: authUser, refreshUser } = useAuth();
 
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
@@ -592,6 +601,16 @@ export default function PortfolioReviewFlow({
     }
   }
 
+  // Advances the growth mascot and surfaces a celebratory modal — but never
+  // regresses it (e.g. re-answering after "apply again" shouldn't re-show a
+  // stage the learner already passed on an earlier cycle).
+  async function advanceGrowthStage(target, heading, message) {
+    if (!authUser || (authUser.growth_stage ?? 0) >= target) return;
+    await supabase.from("profiles").update({ growth_stage: target }).eq("id", authUser.id);
+    await refreshUser();
+    setGrowthModal({ progress: target, heading, message });
+  }
+
   async function handleSubmitShare() {
     const resumeOk =
       resumeMode === "upload" ? !!resumeUrl : !!resumeLink.trim();
@@ -610,6 +629,11 @@ export default function PortfolioReviewFlow({
       return;
     }
     setPhase("booking");
+    advanceGrowthStage(
+      SUBMIT_GROWTH_STAGE,
+      "your portfolio is growing 🌿",
+      "you've shared your work — almost time for your live 1:1 review."
+    );
   }
 
   async function handleResumeFile(file) {
@@ -801,7 +825,7 @@ export default function PortfolioReviewFlow({
       )}
 
       <div className="flex flex-col md:flex-row gap-8">
-        <div className="hidden md:block md:w-64 flex-shrink-0 md:sticky md:top-0 md:self-start">
+        <div className="hidden md:block md:w-64 flex-shrink-0 md:sticky md:top-16 md:self-start">
           <ReviewCyclesSidebar {...cyclesSidebarProps} />
         </div>
 
@@ -1181,6 +1205,13 @@ export default function PortfolioReviewFlow({
           )}
         </div>
       </div>
+
+      {growthModal && (
+        <GrowthStageModal
+          {...growthModal}
+          onContinue={() => setGrowthModal(null)}
+        />
+      )}
     </div>
   );
 }
