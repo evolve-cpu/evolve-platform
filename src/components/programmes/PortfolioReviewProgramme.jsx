@@ -49,18 +49,45 @@ const REVIEWERS = [
 ];
 
 const PROCESS_STEPS = [
-  { title: "Pre-review questionnaire", body: "You share your goals so feedback is tailored to where you want to go." },
-  { title: "Send your portfolio", body: "A PDF or live link — Behance, Notion, your own site. A resume helps too." },
-  { title: "Matched reviewer", body: "A working reviewer studies your work against your stated goals." },
-  { title: "Live 1:1 call", body: "You go through the portfolio together, screen-shared. A conversation, not a presentation." },
-  { title: "Written report", body: "Actionable fixes in writing, sent within 3 working days of the call." }
+  {
+    title: "Pre-review questionnaire",
+    body: "You share your goals so feedback is tailored to where you want to go."
+  },
+  {
+    title: "Send your portfolio",
+    body: "A PDF or live link — Behance, Notion, your own site. A resume helps too."
+  },
+  {
+    title: "Matched reviewer",
+    body: "A working reviewer studies your work against your stated goals."
+  },
+  {
+    title: "Live 1:1 call",
+    body: "You go through the portfolio together, screen-shared. A conversation, not a presentation."
+  },
+  {
+    title: "Written report",
+    body: "Actionable fixes in writing, sent within 3 working days of the call."
+  }
 ];
 
 const FAQ = [
-  ["What format should my portfolio be in?", "A PDF or a live link (Behance, Notion, your own site) both work. If you have a resume, attach that too."],
-  ["How long until I get my report?", "Your written report is sent within 3 working days after your 1:1 call."],
-  ["What happens on the 1:1 call?", "You and your reviewer go through your portfolio together, screen-shared — a conversation, not a presentation."],
-  ["Refund policy?", "Cancel more than 48 hours before your scheduled call for a full refund. Within 48 hours, you can reschedule once at no extra cost."]
+  [
+    "What format should my portfolio be in?",
+    "A PDF or a live link (Behance, Notion, your own site) both work. If you have a resume, attach that too."
+  ],
+  [
+    "How long until I get my report?",
+    "Your written report is sent within 3 working days after your 1:1 call."
+  ],
+  [
+    "What happens on the 1:1 call?",
+    "You and your reviewer go through your portfolio together, screen-shared — a conversation, not a presentation."
+  ],
+  [
+    "Refund policy?",
+    "Cancel more than 48 hours before your scheduled call for a full refund. Within 48 hours, you can reschedule once at no extra cost."
+  ]
 ];
 
 function loadRazorpayScript() {
@@ -127,7 +154,9 @@ function BookModal({ user, onClose, onSuccess }) {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         setError("your session expired — please sign in again.");
         setPaying(false);
@@ -187,7 +216,10 @@ function BookModal({ user, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-evolve-black/70" onClick={paying ? undefined : onClose} />
+      <div
+        className="absolute inset-0 bg-evolve-black/70"
+        onClick={paying ? undefined : onClose}
+      />
       <div
         className="relative w-full max-w-sm rounded-3xl border border-white/10 px-6 py-7 flex flex-col gap-5"
         style={{ backgroundColor: "#1c1c1f" }}
@@ -195,16 +227,21 @@ function BookModal({ user, onClose, onSuccess }) {
         {step === "form" && (
           <>
             <div>
-              <h3 className="text-white font-bold text-lg">Book your portfolio review</h3>
+              <h3 className="text-white font-bold text-lg">
+                Book your portfolio review
+              </h3>
               <p className="text-white/40 text-xs mt-1">
-                A live 1:1 review with a matched reviewer, a written report, and a free follow-up.
+                A live 1:1 review with a matched reviewer, a written report, and
+                a free follow-up.
               </p>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-white/50">{user?.name || "—"}</span>
-                <span className="text-white/30 text-xs">{user?.email || ""}</span>
+                <span className="text-white/30 text-xs">
+                  {user?.email || ""}
+                </span>
               </div>
               <div className="flex items-center justify-between text-sm pt-1.5 border-t border-white/10">
                 <span className="text-white">Live review with a mentor</span>
@@ -223,7 +260,9 @@ function BookModal({ user, onClose, onSuccess }) {
                   inputMode="numeric"
                   placeholder="98765 43210"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onChange={(e) =>
+                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
                   className="flex-1 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/15 focus:border-evolve-yellow/60 transition-colors"
                   style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                 />
@@ -239,7 +278,10 @@ function BookModal({ user, onClose, onSuccess }) {
             >
               {paying ? "processing…" : "proceed to payment →"}
             </button>
-            <button onClick={onClose} className="text-white/40 text-xs text-center hover:text-white/60">
+            <button
+              onClick={onClose}
+              className="text-white/40 text-xs text-center hover:text-white/60"
+            >
               cancel
             </button>
           </>
@@ -249,8 +291,12 @@ function BookModal({ user, onClose, onSuccess }) {
           <div className="flex flex-col items-center gap-4 text-center py-6">
             <div className="w-10 h-10 border-2 border-evolve-yellow border-t-transparent rounded-full animate-spin" />
             <div>
-              <h3 className="text-white font-bold text-lg">confirming your payment…</h3>
-              <p className="text-white/40 text-xs mt-1">this only takes a few seconds.</p>
+              <h3 className="text-white font-bold text-lg">
+                confirming your payment…
+              </h3>
+              <p className="text-white/40 text-xs mt-1">
+                this only takes a few seconds.
+              </p>
             </div>
           </div>
         )}
@@ -258,12 +304,17 @@ function BookModal({ user, onClose, onSuccess }) {
         {step === "confirm_timeout" && (
           <div className="flex flex-col items-center gap-4 text-center py-2">
             <div className="w-16 h-16 rounded-full border-4 border-evolve-yellow/60 flex items-center justify-center">
-              <span className="text-evolve-yellow text-2xl font-bold leading-none">⏳</span>
+              <span className="text-evolve-yellow text-2xl font-bold leading-none">
+                ⏳
+              </span>
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg">couldn't confirm your payment</h3>
+              <h3 className="text-white font-bold text-lg">
+                couldn't confirm your payment
+              </h3>
               <p className="text-white/40 text-xs mt-1">
-                if you were charged, this is usually a network hiccup — try again. nothing's lost.
+                if you were charged, this is usually a network hiccup — try
+                again. nothing's lost.
               </p>
             </div>
             <button
@@ -272,7 +323,10 @@ function BookModal({ user, onClose, onSuccess }) {
             >
               try again
             </button>
-            <button onClick={onClose} className="text-white/40 text-xs text-center hover:text-white/60">
+            <button
+              onClick={onClose}
+              className="text-white/40 text-xs text-center hover:text-white/60"
+            >
               close for now
             </button>
           </div>
@@ -282,7 +336,13 @@ function BookModal({ user, onClose, onSuccess }) {
           <div className="flex flex-col items-center gap-4 text-center py-2">
             <div className="w-16 h-16 rounded-full border-4 border-green-400 flex items-center justify-center">
               <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-                <path d="M8 18l7 7 13-14" stroke="#4ade80" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M8 18l7 7 13-14"
+                  stroke="#4ade80"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <div>
@@ -303,11 +363,15 @@ function BookModal({ user, onClose, onSuccess }) {
         {step === "failed" && (
           <div className="flex flex-col items-center gap-4 text-center py-2">
             <div className="w-16 h-16 rounded-full border-4 border-red-400 flex items-center justify-center">
-              <span className="text-red-400 text-3xl font-bold leading-none">!</span>
+              <span className="text-red-400 text-3xl font-bold leading-none">
+                !
+              </span>
             </div>
             <div>
               <h3 className="text-white font-bold text-lg">payment failed</h3>
-              <p className="text-white/40 text-xs mt-1">nothing was charged — try again when ready.</p>
+              <p className="text-white/40 text-xs mt-1">
+                nothing was charged — try again when ready.
+              </p>
             </div>
             <button
               onClick={() => setStep("form")}
@@ -347,7 +411,10 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
   // stage-2 moment once the learner is already further along).
   async function advanceGrowthStage(target, heading, message) {
     if ((user.growth_stage ?? 0) >= target) return;
-    await supabase.from("profiles").update({ growth_stage: target }).eq("id", user.id);
+    await supabase
+      .from("profiles")
+      .update({ growth_stage: target })
+      .eq("id", user.id);
     await refreshUser();
     setGrowthModal({ progress: target, heading, message });
   }
@@ -384,7 +451,9 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
     );
   }
 
-  const activeRow = reviewRows.length ? reviewRows[reviewRows.length - 1] : null;
+  const activeRow = reviewRows.length
+    ? reviewRows[reviewRows.length - 1]
+    : null;
   const history = reviewRows.slice(0, -1);
 
   // Already paid (a row only ever exists once the webhook confirms
@@ -426,7 +495,13 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold w-fit transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M12.5 15L7.5 10L12.5 5"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           back to programmes
         </button>
@@ -434,14 +509,20 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* hero */}
       <div>
-        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-3">programme</p>
-        <h1 className="text-white font-bold font-bricolage" style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}>
+        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-3">
+          programme
+        </p>
+        <h1
+          className="text-white font-bold font-bricolage"
+          style={{ fontSize: "clamp(30px,5vw,44px)", letterSpacing: "-0.02em" }}
+        >
           Portfolio Review
         </h1>
         <p className="text-white/50 text-[15px] leading-relaxed mt-4 max-w-xl">
-          Industry eyes on your portfolio — a review that goes beyond what's on screen. Get a personalised
-          report plus a live 1:1 discussion with a working reviewer, so you build a stronger portfolio for
-          internships, placements, and beyond.
+          Industry eyes on your portfolio — a review that goes beyond what's on
+          screen. Get a personalised report plus a live 1:1 discussion with a
+          working reviewer, so you build a stronger portfolio for internships,
+          placements, and beyond.
         </p>
         <div className="flex flex-wrap gap-2 mt-5">
           <Chip>Live 1:1 review</Chip>
@@ -449,7 +530,11 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           <Chip>1 free follow-up</Chip>
         </div>
         <button
-          onClick={() => document.getElementById("pr-pricing")?.scrollIntoView({ behavior: "smooth" })}
+          onClick={() =>
+            document
+              .getElementById("pr-pricing")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
           className="mt-6 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:opacity-80"
         >
           see what's included
@@ -458,40 +543,63 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* what this solves */}
       <div>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-4">what this solves</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">
+          what this solves
+        </h2>
         <div
           className="rounded-2xl border border-white/10 px-6 py-5 flex flex-col gap-3"
-          style={{ background: "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)", borderLeft: "3px solid #FFD007" }}
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)",
+            borderLeft: "3px solid #FFD007"
+          }}
         >
           <p className="text-white/70 text-sm leading-relaxed">
-            You can spend months building a portfolio and still never hear what an industry reviewer actually
-            thinks of it before you're in the interview.
+            You can spend months building a portfolio and still never hear what
+            an industry reviewer actually thinks of it before you're in the
+            interview.
           </p>
           <p className="text-white/70 text-sm leading-relaxed">
-            This review closes that gap: honest, personalised feedback from someone who makes real hiring and
-            studio decisions — early enough to change the outcome.
+            This review closes that gap: honest, personalised feedback from
+            someone who makes real hiring and studio decisions — early enough to
+            change the outcome.
           </p>
         </div>
       </div>
 
       {/* the process */}
       <div>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-8">the process</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-8">
+          the process
+        </h2>
         <ProcessSteps steps={PROCESS_STEPS} />
       </div>
 
       {/* the panel */}
       <div>
-        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">the panel</p>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-4">industry experts across multiple disciplines</h2>
+        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">
+          the panel
+        </p>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">
+          industry experts across multiple disciplines
+        </h2>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {REVIEWERS.map((r) => (
             <div key={r.name} className="flex flex-col gap-2">
               <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.03] border border-white/10">
-                <img src={r.image} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                <img
+                  src={r.image}
+                  alt={r.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
-              <p className="text-white text-xs font-bold leading-snug">{r.name}</p>
-              <p className="text-evolve-yellow text-[11px] font-semibold -mt-1.5">{r.years}+ yrs</p>
+              <p className="text-white text-xs font-bold leading-snug">
+                {r.name}
+              </p>
+              <p className="text-evolve-yellow text-[11px] font-semibold -mt-1.5">
+                {r.years}+ yrs
+              </p>
               <p className="text-white/35 text-[11px] leading-snug">{r.role}</p>
             </div>
           ))}
@@ -500,30 +608,40 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* pricing */}
       <div id="pr-pricing">
-        <h2 className="text-white font-bold font-bricolage text-xl mb-4">pricing</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">
+          pricing
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             className="rounded-2xl border border-evolve-yellow/60 px-6 py-6 flex flex-col gap-3"
-            style={{ background: "linear-gradient(180deg, rgba(255,208,7,0.06), transparent 55%)" }}
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,208,7,0.06), transparent 55%)"
+            }}
           >
-            <p className="text-white/40 text-xs uppercase tracking-wide font-semibold">live review with a mentor</p>
+            <p className="text-white/40 text-xs uppercase tracking-wide font-semibold">
+              live review with a mentor
+            </p>
             <div className="flex items-baseline gap-2">
               <span className="text-white font-bold text-3xl">₹1,400</span>
               <span className="text-white/30 text-xs">one-time</span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
-              A matched reviewer, a live 1:1 call, a written report with actionable fixes, and a free
-              follow-up once you've made your revisions.
+              A matched reviewer, a live 1:1 call, a written report with
+              actionable fixes, and a free follow-up once you've made your
+              revisions.
             </p>
-            <button
+            {/* <button
               onClick={() => setBookOpen(true)}
               className="mt-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
               get started →
-            </button>
+            </button> */}
           </div>
           <div className="rounded-2xl border border-white/10 px-6 py-6">
-            <p className="text-white/40 text-xs uppercase tracking-wide font-semibold mb-3">what's included</p>
+            <p className="text-white/40 text-xs uppercase tracking-wide font-semibold mb-3">
+              what's included
+            </p>
             <ul className="flex flex-col gap-3">
               {[
                 "Pre-review questionnaire feedback tailored to your goals",
@@ -531,7 +649,10 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
                 "Written report with actionable fixes",
                 "1 free follow-up call to check your revisions"
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-white/60 text-sm">
+                <li
+                  key={item}
+                  className="flex items-start gap-2.5 text-white/60 text-sm"
+                >
                   <span className="w-4 h-4 rounded-full bg-evolve-inchworm/15 text-evolve-inchworm text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     ✓
                   </span>
@@ -545,15 +666,21 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* FAQ */}
       <div>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-4">good to know</h2>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-4">
+          good to know
+        </h2>
         <div className="rounded-2xl border border-white/10 divide-y divide-white/10 overflow-hidden">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group px-5 py-4">
               <summary className="text-white text-sm font-semibold cursor-pointer list-none flex items-center justify-between gap-4">
                 {q}
-                <span className="text-white/30 group-open:rotate-45 transition-transform text-lg leading-none">+</span>
+                <span className="text-white/30 group-open:rotate-45 transition-transform text-lg leading-none">
+                  +
+                </span>
               </summary>
-              <p className="text-white/40 text-sm mt-2.5 leading-relaxed">{a}</p>
+              <p className="text-white/40 text-sm mt-2.5 leading-relaxed">
+                {a}
+              </p>
             </details>
           ))}
         </div>
@@ -563,14 +690,16 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
       <div className="sticky bottom-0 -mx-6 md:-mx-8 border-t border-white/10 bg-[#1c1c1f]/95 backdrop-blur px-6 md:px-8 py-4 flex items-center justify-between gap-4">
         <div>
           <p className="text-white font-bold text-sm">Portfolio Review</p>
-          <p className="text-white/30 text-xs">₹1,400 · live 1:1 review + written report + free follow-up</p>
+          <p className="text-white/30 text-xs">
+            ₹1,400 · live 1:1 review + written report + free follow-up
+          </p>
         </div>
-        <button
+        {/* <button
           onClick={() => setBookOpen(true)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 flex-shrink-0"
         >
           get started →
-        </button>
+        </button> */}
       </div>
 
       {bookOpen && (

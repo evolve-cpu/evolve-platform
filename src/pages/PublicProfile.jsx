@@ -8,7 +8,6 @@ import { stageForProgress, stageLabel } from "../lib/growthStage";
 import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
-import { PortfolioReviewArt, MentorshipArt } from "../components/programmes/CardArt";
 
 /* ─── small building blocks ──────────────────────────────────────────────── */
 function Stat({ value, label }) {
@@ -617,7 +616,13 @@ export default function PublicProfile() {
             <Section title="evolve programmes">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProgramCard
-                  art={<PortfolioReviewArt />}
+                  art={
+                    <img
+                      src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Portfolio_review_ci4ula.png"
+                      alt="Portfolio Review"
+                      className="w-full h-full object-cover"
+                    />
+                  }
                   label="portfolio review"
                   description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   chips={["Live 1:1 review", "Written report"]}
@@ -632,7 +637,13 @@ export default function PublicProfile() {
                   }
                 />
                 <ProgramCard
-                  art={<MentorshipArt />}
+                  art={
+                    <img
+                      src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Mentorship_pawdce.png"
+                      alt="Mentorship"
+                      className="w-full h-full object-cover"
+                    />
+                  }
                   label="mentorship"
                   description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
                   chips={["1:1 personalised", "5 sessions"]}
