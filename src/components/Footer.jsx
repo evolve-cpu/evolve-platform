@@ -285,7 +285,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
       <div className="md:hidden relative px-5 pt-8 pb-28">
         <div className="relative z-30">
           <h2 className="font-extrabold text-[2rem] leading-tight">
-            ready to be remarkable?
+            Ready To Be Remarkable?
           </h2>
 
           {/* <div className="mt-4">

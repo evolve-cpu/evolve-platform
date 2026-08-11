@@ -1,9 +1,10 @@
 // api/razorpay-create-order.js
 import { createClient } from "@supabase/supabase-js";
 
+// TEMP: testing amount — ₹5 instead of real plan prices. Revert before going live.
 const PLAN_AMOUNTS_PAISE = {
-  starter: 1500000,     // ₹15,000
-  accelerator: 3500000  // ₹35,000
+  starter: 500,      // TEST: ₹5 (real: 1500000 / ₹15,000)
+  accelerator: 500   // TEST: ₹5 (real: 3500000 / ₹35,000)
 };
 
 export default async function handler(req, res) {

@@ -14,8 +14,7 @@ import {
   vector_portfolio,
   vector_portfolio_mobile,
   mentorship_vector,
-  mentorship_vector_mobile,
-  chinmayImg
+  mentorship_vector_mobile
 } from "../assets/images/Mentorship";
 import {
   rays_webinars,
@@ -83,12 +82,7 @@ const REVIEWERS = [
   }
 ];
 
-const TESTIMONIALS_LIST = [0, 1, 2].map(() => ({
-  quote: COPY.testimonials.quote,
-  name: COPY.testimonials.name,
-  role: COPY.testimonials.role,
-  image: chinmayImg
-}));
+const TESTIMONIALS_LIST = COPY.testimonials.items;
 
 /* ─────────────────────────────────────────────
    GetStartedButton — shared black CTA. Always lands on the visitor's own
@@ -389,8 +383,8 @@ const TestimonialsMobileStack = () => {
   return (
     <section className="block md:hidden relative bg-evolve-pink overflow-hidden py-10 px-5">
       <h2
-        className="text-white font-extrabold lowercase text-center w-full mb-10"
-        style={{ fontSize: "clamp(40px, 12vw, 56px)", lineHeight: "1.05" }}
+        className="text-white font-extrabold lowercase text-center w-full mb-6"
+        style={{ fontSize: "clamp(32px, 9vw, 44px)", lineHeight: "1" }}
       >
         {COPY.testimonials.sectionHeading}
       </h2>
@@ -424,27 +418,19 @@ const TestimonialsMobileStack = () => {
           >
             {t.quote}
           </p>
-          <div className="flex items-center gap-3 mt-5">
-            <img
-              src={t.image}
-              alt={t.name}
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
-              style={{ borderColor: "var(--color-evolve-pink, #EC008B)" }}
-            />
-            <div>
-              <p
-                className="font-bold text-black lowercase"
-                style={{ fontSize: "15px" }}
-              >
-                {t.name}
-              </p>
-              <p
-                className="font-normal text-black lowercase"
-                style={{ fontSize: "13px", lineHeight: "1.3" }}
-              >
-                {t.role}
-              </p>
-            </div>
+          <div className="mt-5">
+            <p
+              className="font-bold text-black lowercase"
+              style={{ fontSize: "15px" }}
+            >
+              {t.name}
+            </p>
+            <p
+              className="font-normal text-black lowercase"
+              style={{ fontSize: "13px", lineHeight: "1.3" }}
+            >
+              {t.role}
+            </p>
           </div>
         </div>
       </div>
@@ -497,7 +483,7 @@ const PortfolioReview = () => {
       />
 
       {/* ================= SECTION 1 — HERO (Desktop) ================= */}
-      <section className="hidden md:flex relative min-h-[110vh] bg-evolve-yellow overflow-hidden flex-col items-center">
+      <section className="hidden md:flex relative min-h-[110vh] bg-evolve-yellow overflow-visible flex-col items-center">
         <img
           src={rays_webinars}
           alt=""
@@ -605,7 +591,7 @@ const PortfolioReview = () => {
             className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(40px, 13vw, 62px)",
-              lineHeight: "1.05",
+              lineHeight: "1",
               letterSpacing: "-0.03em"
             }}
           >
@@ -621,7 +607,7 @@ const PortfolioReview = () => {
               maxWidth: "86vw"
             }}
           >
-            {COPY.hero.body}
+            {renderWithBreaks(COPY.hero.bodyMobile)}
           </p>
 
           <div className="mt-6">
@@ -668,7 +654,12 @@ const PortfolioReview = () => {
             maxWidth: "56ch"
           }}
         >
-          {COPY.intro}
+          {COPY.intro.split(/(?=Get a )/).map((part, i) => (
+            <span key={i}>
+              {i > 0 && <br className="hidden md:inline" />}
+              {part}
+            </span>
+          ))}
         </p>
       </section>
 
@@ -688,12 +679,12 @@ const PortfolioReview = () => {
           backgroundImage: `url(${whats_included_bg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          padding: "clamp(100px, 20vh, 180px) clamp(28px, 8vw, 140px)"
+          padding: "clamp(110px, 28vh, 180px) "
         }}
       >
         <div
           className="relative flex flex-col items-center"
-          style={{ maxWidth: 1100, width: "100%" }}
+          style={{ maxWidth: 1270, width: "100%" }}
         >
           {/* <div className="relative z-10" style={{ marginBottom: "-34px" }}>
             <StarEyeBadge size={96} />
@@ -789,7 +780,10 @@ const PortfolioReview = () => {
           backgroundImage: `url(${whats_included_bg_mobile})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          padding: "clamp(100px, 8vw, 10px) 13px"
+          paddingTop: "clamp(200px, 8vw, 10px)",
+          paddingBottom: "clamp(100px, 8vw, 10px)",
+          paddingLeft: "13px",
+          paddingRight: "13px"
         }}
       >
         <div className="relative flex flex-col items-center w-full">
@@ -812,7 +806,7 @@ const PortfolioReview = () => {
               <h2
                 className="font-extrabold text-black"
                 style={{
-                  fontSize: "clamp(30px, 11vw, 46px)",
+                  fontSize: "clamp(26px, 9vw, 38px)",
                   lineHeight: "1",
                   letterSpacing: "-0.53px"
                 }}
@@ -851,14 +845,14 @@ const PortfolioReview = () => {
                 {COPY.pricing.includesHeading}
               </h3>
               <ul className="mt-4 space-y-3">
-                {COPY.pricing.includes.map((item) => (
+                {COPY.pricing.includesMobile.map((item, i) => (
                   <li
-                    key={item}
+                    key={i}
                     className="flex items-start gap-2 text-black"
                     style={{ fontSize: "18px", lineHeight: 1.4 }}
                   >
                     <span>•</span>
-                    <span>{item}</span>
+                    <span>{renderWithBreaks(item)}</span>
                   </li>
                 ))}
               </ul>
@@ -885,7 +879,7 @@ const PortfolioReview = () => {
         </h2>
         <h2
           className="block md:hidden font-extrabold text-evolve-pink text-center"
-          style={{ fontSize: "clamp(40px, 12vw, 56px)", lineHeight: "1.05" }}
+          style={{ fontSize: "clamp(32px, 9vw, 44px)", lineHeight: "1" }}
         >
           Industry experts across multiple disciplines
         </h2>
@@ -1038,27 +1032,19 @@ const PortfolioReview = () => {
               >
                 {t.quote}
               </p>
-              <div className="flex items-center gap-3 mt-6">
-                <img
-                  src={t.image}
-                  alt={t.name}
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
-                  style={{ borderColor: "var(--color-evolve-pink, #EC008B)" }}
-                />
-                <div>
-                  <p
-                    className="font-bold text-black lowercase"
-                    style={{ fontSize: "15px" }}
-                  >
-                    {t.name}
-                  </p>
-                  <p
-                    className="font-normal text-black lowercase"
-                    style={{ fontSize: "13px" }}
-                  >
-                    {t.role}
-                  </p>
-                </div>
+              <div className="mt-6">
+                <p
+                  className="font-bold text-black lowercase"
+                  style={{ fontSize: "15px" }}
+                >
+                  {t.name}
+                </p>
+                <p
+                  className="font-normal text-black lowercase"
+                  style={{ fontSize: "13px" }}
+                >
+                  {t.role}
+                </p>
               </div>
             </div>
           ))}
@@ -1181,10 +1167,10 @@ const PortfolioReview = () => {
         <h2
           className="font-extrabold text-black"
           style={{
-            fontSize: "clamp(30px, 11vw, 46px)",
+            fontSize: "clamp(26px, 9vw, 38px)",
             lineHeight: "1",
             letterSpacing: "-0.53px",
-            marginBottom: "clamp(28px, 7vw, 40px)"
+            marginBottom: "clamp(20px, 5vw, 28px)"
           }}
         >
           {renderWithBreaks(COPY.faq.heading)}
@@ -1283,7 +1269,12 @@ const PortfolioReview = () => {
               maxWidth: "60ch"
             }}
           >
-            {COPY.whatYoullGet.body}
+            {COPY.whatYoullGet.body.split(/(?=where your)/).map((part, i) => (
+              <span key={i}>
+                {i > 0 && <br />}
+                {part}
+              </span>
+            ))}
           </p>
 
           <div className="mt-8">
