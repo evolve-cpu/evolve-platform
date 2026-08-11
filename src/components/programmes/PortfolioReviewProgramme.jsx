@@ -631,12 +631,12 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
               actionable fixes, and a free follow-up once you've made your
               revisions.
             </p>
-            {/* <button
+            <button
               onClick={() => setBookOpen(true)}
               className="mt-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
               get started →
-            </button> */}
+            </button>
           </div>
           <div className="rounded-2xl border border-white/10 px-6 py-6">
             <p className="text-white/40 text-xs uppercase tracking-wide font-semibold mb-3">
@@ -694,12 +694,12 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
             ₹1,400 · live 1:1 review + written report + free follow-up
           </p>
         </div>
-        {/* <button
+        <button
           onClick={() => setBookOpen(true)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 flex-shrink-0"
         >
           get started →
-        </button> */}
+        </button>
       </div>
 
       {bookOpen && (
