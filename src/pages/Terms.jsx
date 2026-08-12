@@ -5,11 +5,11 @@ import BlackNav from "../components/BlackNav";
 const SECTIONS = [
   {
     title: "1. acceptance of terms",
-    body: `By accessing or using the Evolve Design mentorship platform ("Service"), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the Service.`
+    body: `By accessing or using the evolve design mentorship platform ("Service"), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the Service.`
   },
   {
     title: "2. description of service",
-    body: `Evolve Design provides a group mentorship programme comprising live online sessions, portfolio and resume guidance, and career support for aspiring and early-career product designers. Session details, batch dates, and pricing are as displayed on the website at the time of purchase.`
+    body: `evolve design provides a group mentorship programme comprising live online sessions, portfolio and resume guidance, and career support for aspiring and early-career product designers. Session details, batch dates, and pricing are as displayed on the website at the time of purchase.`
   },
   {
     title: "3. eligibility",
@@ -29,15 +29,15 @@ const SECTIONS = [
   },
   {
     title: "7. intellectual property",
-    body: `All content, materials, and recordings produced as part of the Evolve Design programme are the intellectual property of Evolve Design. You may not reproduce or distribute them without prior written consent.`
+    body: `All content, materials, and recordings produced as part of the evolve design programme are the intellectual property of evolve design. You may not reproduce or distribute them without prior written consent.`
   },
   {
     title: "8. conduct",
-    body: `Participants are expected to maintain a respectful and constructive environment. Evolve Design reserves the right to remove any participant from the programme without refund in cases of disruptive or harmful behaviour.`
+    body: `Participants are expected to maintain a respectful and constructive environment. evolve design reserves the right to remove any participant from the programme without refund in cases of disruptive or harmful behaviour.`
   },
   {
     title: "9. limitation of liability",
-    body: `Evolve Design provides guidance and mentorship in good faith but does not guarantee specific career outcomes such as job placement or salary increases. Our total liability to you shall not exceed the amount paid for the programme.`
+    body: `evolve design provides guidance and mentorship in good faith but does not guarantee specific career outcomes such as job placement or salary increases. Our total liability to you shall not exceed the amount paid for the programme.`
   },
   {
     title: "10. changes to terms",

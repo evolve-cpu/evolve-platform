@@ -5,7 +5,7 @@ import BlackNav from "../components/BlackNav";
 const SECTIONS = [
   {
     title: "1. who we are",
-    body: `Evolve Design ("we", "us", "our") operates the website evolvedesign.academy and the mentorship programme described therein. We are committed to protecting your personal information and your right to privacy.`
+    body: `evolve design ("we", "us", "our") operates the website evolvedesign.academy and the mentorship programme described therein. We are committed to protecting your personal information and your right to privacy.`
   },
   {
     title: "2. information we collect",

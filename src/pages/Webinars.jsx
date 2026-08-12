@@ -1070,7 +1070,7 @@ const Webinars = () => {
               <a
                 // href={COPY.upcomingWebinar.registrationUrl}
                 // href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
-                href="#"
+                href="https://luma.com/dti5ytf0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="absolute bottom-[-6%] inset-x-0 z-50 flex justify-center"

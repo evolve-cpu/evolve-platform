@@ -137,6 +137,9 @@ export function AuthProvider({ children }) {
       discipline:              profile.discipline ?? [],
       intent:                  profile.intent ?? [],
       work_type:               profile.work_type ?? null,
+      school_name:             profile.school_name ?? null,
+      standard:                profile.standard ?? null,
+      stream:                  profile.stream ?? null,
       onboarding_completed:    profile.onboarding_completed ?? false,
       onboarding_completed_at: profile.onboarding_completed_at ?? null,
       growth_stage:            profile.growth_stage ?? 0

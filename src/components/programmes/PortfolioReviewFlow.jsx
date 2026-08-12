@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { getPortfolioReviewProgress } from "../../lib/portfolioReviewProgress";
+import { getCalendlyUrlForStream } from "../../lib/reviewerRouting";
+import { DISCIPLINE_VALUES } from "../../pages/Onboarding/questions";
 import GrowthStageModal from "../GrowthStageModal";
 
-const CALENDLY_URL = "https://calendly.com/evolvedesignacademy/portfolioreview";
+// year options mirror the "standard" onboarding question exactly (see
+// src/pages/Onboarding/questions.js) so a design-school student's prefilled
+// value always matches one of these.
+const YEAR_VALUES = ["1st year", "2nd year", "3rd year", "4th year", "Final year"];
 
 // growth_stage (0-100) reached once the intake questions + resume/portfolio
 // are submitted — see src/lib/growthStage.js for the seed→sprout mapping.
@@ -156,40 +161,56 @@ function StepSidebar({
   ];
 
   return (
-    <div className={`flex flex-col gap-5 ${className}`}>
-      {sections.map((section) => (
-        <div key={section.title} className="flex flex-col gap-1">
-          <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide mb-1.5">
-            {section.title}
-          </p>
-          {section.items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={item.navigable ? item.onClick : undefined}
-              disabled={!item.navigable}
-              className={`flex items-center gap-2.5 text-left text-xs rounded-lg px-2.5 py-2 transition-colors ${
-                item.active
-                  ? "bg-evolve-yellow/10 text-evolve-yellow font-semibold"
-                  : item.done
-                    ? "text-white/60"
-                    : "text-white/25"
-              } ${item.navigable ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}`}
+    <div className={`relative flex flex-col gap-5 ${className}`}>
+      <div className="absolute left-[18px] top-2 bottom-2 w-px bg-white/10" />
+      {sections.map((section) => {
+        const sectionActive = section.items.some((i) => i.active);
+        return (
+          <div key={section.title} className="flex flex-col gap-1">
+            <p
+              className={`flex items-center gap-2 px-2.5 text-[10px] font-bold uppercase tracking-wide mb-1.5 ${
+                sectionActive ? "text-white/70" : "text-white/25"
+              }`}
             >
-              <span
-                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  item.active
-                    ? "bg-evolve-yellow"
-                    : item.done
-                      ? "bg-evolve-inchworm"
-                      : "bg-white/15"
-                }`}
-              />
-              <span className="leading-snug">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      ))}
+              <span className="w-4 flex justify-center flex-shrink-0">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full border-2 bg-[#161618] ${
+                    sectionActive ? "border-evolve-yellow" : "border-white/15"
+                  }`}
+                />
+              </span>
+              {section.title}
+            </p>
+            {section.items.map((item) => {
+              const filled = item.active || item.done;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={item.navigable ? item.onClick : undefined}
+                  disabled={!item.navigable}
+                  className={`flex items-center gap-2 text-left text-xs rounded-lg px-2.5 py-2 transition-colors ${
+                    item.active
+                      ? "text-white font-bold"
+                      : item.done
+                        ? "text-white/70"
+                        : "text-white/25"
+                  } ${item.navigable ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}`}
+                >
+                  <span className="w-4 flex justify-center flex-shrink-0">
+                    {filled ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full border border-white/15 bg-[#161618]" />
+                    )}
+                  </span>
+                  <span className="leading-snug">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -234,46 +255,38 @@ function CyclePill({ done }) {
 }
 
 /* ── one collapsible "review N" group in the cycles sidebar ─────────────── */
-function ReviewCycleGroup({ title, done, expanded, onToggle, toggleable = true, active, children }) {
+function ReviewCycleGroup({ title, done, expanded, onToggle, toggleable = true, children }) {
   const Header = toggleable ? "button" : "div";
   return (
-    <div
-      className={`rounded-xl border overflow-hidden ${
-        active ? "border-evolve-yellow/30 bg-evolve-yellow/[0.04]" : "border-white/10"
-      }`}
-    >
+    <div>
       <Header
         type={toggleable ? "button" : undefined}
         onClick={toggleable ? onToggle : undefined}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left ${
+        className={`w-full flex items-center gap-2 py-1.5 text-left ${
           toggleable ? "cursor-pointer" : "cursor-default"
         }`}
       >
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`text-white/30 transition-transform flex-shrink-0 ${toggleable && expanded ? "rotate-180" : ""}`}
+        >
+          <path
+            d="M5 7.5L10 12.5L15 7.5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         <span className="text-white text-xs font-bold uppercase tracking-wide">
           {title}
         </span>
-        <div className="flex items-center gap-2">
-          <CyclePill done={done} />
-          {toggleable && (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 20 20"
-              fill="none"
-              className={`text-white/30 transition-transform flex-shrink-0 ${expanded ? "rotate-180" : ""}`}
-            >
-              <path
-                d="M5 7.5L10 12.5L15 7.5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </div>
+        <CyclePill done={done} />
       </Header>
-      {expanded && <div className="px-2 pb-3 pt-1">{children}</div>}
+      {expanded && <div className="pt-1">{children}</div>}
     </div>
   );
 }
@@ -324,7 +337,6 @@ function ReviewCyclesSidebar({
         done={activeCompleted}
         expanded
         toggleable={false}
-        active
       >
         {viewingCycleId ? (
           <button
@@ -452,6 +464,14 @@ export default function PortfolioReviewFlow({
   const [growthModal, setGrowthModal] = useState(null);
 
   const { user: authUser, refreshUser } = useAuth();
+
+  // reviewer-matching details — only design school students get asked for
+  // these (see src/pages/Onboarding/questions.js), prefilled from what they
+  // already gave at onboarding but editable here.
+  const isDesignSchoolStudent = authUser?.persona === "Design school student";
+  const [reviewerSchool, setReviewerSchool] = useState(authUser?.school_name || "");
+  const [reviewerYear, setReviewerYear] = useState(authUser?.standard || "");
+  const [reviewerStream, setReviewerStream] = useState(authUser?.stream || "");
 
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
@@ -648,6 +668,18 @@ export default function PortfolioReviewFlow({
     }
     setError("");
     setSaving(true);
+
+    if (isDesignSchoolStudent) {
+      const patch = {};
+      if (reviewerSchool.trim() !== (authUser?.school_name || "")) patch.school_name = reviewerSchool.trim() || null;
+      if (reviewerYear !== (authUser?.standard || "")) patch.standard = reviewerYear || null;
+      if (reviewerStream !== (authUser?.stream || "")) patch.stream = reviewerStream || null;
+      if (Object.keys(patch).length) {
+        await supabase.from("profiles").update(patch).eq("id", authUser.id);
+        await refreshUser();
+      }
+    }
+
     const err = await persist("pending");
     setSaving(false);
     if (err) {
@@ -870,14 +902,10 @@ export default function PortfolioReviewFlow({
                 <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                   <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
                     let's get to know you ({currentQ + 1}/{QUESTIONS.length})
+                    {QUESTIONS[currentQ].optional && " · optional"}
                   </p>
                   <h2 className="text-white font-bold font-bricolage text-xl leading-snug">
                     {QUESTIONS[currentQ].question}
-                    {QUESTIONS[currentQ].optional && (
-                      <span className="text-white/30 font-normal text-sm ml-2">
-                        (optional)
-                      </span>
-                    )}
                   </h2>
                   <textarea
                     autoFocus
@@ -893,40 +921,41 @@ export default function PortfolioReviewFlow({
                     className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-4 py-3.5 resize-none transition-colors"
                     style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                   />
-                  <div className="flex items-center justify-between gap-3 mt-1">
-                    <button
-                      onClick={handleBackQ}
-                      disabled={currentQ === 0 || saving}
-                      className="text-white/40 hover:text-white text-xs font-semibold disabled:opacity-30 transition-colors"
-                    >
-                      ← previous
-                    </button>
-                    <div className="flex items-center gap-3">
-                      {QUESTIONS[currentQ].optional && (
-                        <button
-                          onClick={() => setPhase("share")}
-                          disabled={saving}
-                          className="text-white/40 hover:text-white text-xs font-semibold"
-                        >
-                          skip
-                        </button>
-                      )}
+                  <p className="text-white/20 text-[10px] -mt-2">shift + enter for a new line</p>
+                  <div className="flex items-center justify-end gap-3 mt-1">
+                    {QUESTIONS[currentQ].optional && (
                       <button
-                        onClick={nextQ}
-                        disabled={
-                          saving ||
-                          (!answers[QUESTIONS[currentQ].key]?.trim() &&
-                            !QUESTIONS[currentQ].optional)
-                        }
-                        className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-6 py-2.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+                        onClick={() => setPhase("share")}
+                        disabled={saving}
+                        className="text-white/40 hover:text-white text-xs font-semibold mr-auto"
                       >
-                        {saving
-                          ? "saving…"
-                          : currentQ < QUESTIONS.length - 1
-                            ? "next →"
-                            : "continue →"}
+                        skip
                       </button>
-                    </div>
+                    )}
+                    {currentQ > 0 && (
+                      <button
+                        onClick={handleBackQ}
+                        disabled={saving}
+                        className="text-white font-bold text-xs rounded-full border border-white/20 hover:border-white/40 px-5 py-2.5 disabled:opacity-30 transition-colors"
+                      >
+                        ← back
+                      </button>
+                    )}
+                    <button
+                      onClick={nextQ}
+                      disabled={
+                        saving ||
+                        (!answers[QUESTIONS[currentQ].key]?.trim() &&
+                          !QUESTIONS[currentQ].optional)
+                      }
+                      className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+                    >
+                      {saving
+                        ? "saving…"
+                        : currentQ < QUESTIONS.length - 1
+                          ? <>next <span>→</span></>
+                          : <>continue <span>→</span></>}
+                    </button>
                   </div>
                 </div>
               )}
@@ -941,16 +970,16 @@ export default function PortfolioReviewFlow({
                       <h2 className="text-white font-bold font-bricolage text-lg">
                         your resume
                       </h2>
-                      <div className="flex rounded-full border border-white/10 overflow-hidden text-[11px] font-semibold">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setResumeMode("upload")}
-                          className={`px-3 py-1.5 ${resumeMode === "upload" ? "bg-evolve-yellow text-evolve-black" : "text-white/40"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "upload" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
                         >
                           upload
                         </button>
                         <button
                           onClick={() => setResumeMode("link")}
-                          className={`px-3 py-1.5 ${resumeMode === "link" ? "bg-evolve-yellow text-evolve-black" : "text-white/40"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "link" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
                         >
                           link
                         </button>
@@ -990,16 +1019,16 @@ export default function PortfolioReviewFlow({
                       <h2 className="text-white font-bold font-bricolage text-lg">
                         your portfolio
                       </h2>
-                      <div className="flex rounded-full border border-white/10 overflow-hidden text-[11px] font-semibold">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setPortfolioMode("link")}
-                          className={`px-3 py-1.5 ${portfolioMode === "link" ? "bg-evolve-yellow text-evolve-black" : "text-white/40"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "link" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
                         >
                           link
                         </button>
                         <button
                           onClick={() => setPortfolioMode("upload")}
-                          className={`px-3 py-1.5 ${portfolioMode === "upload" ? "bg-evolve-yellow text-evolve-black" : "text-white/40"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "upload" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
                         >
                           upload
                         </button>
@@ -1034,6 +1063,59 @@ export default function PortfolioReviewFlow({
                     )}
                   </div>
 
+                  {isDesignSchoolStudent && (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-white font-bold font-bricolage text-lg">reviewer details</h2>
+                        <span className="text-white/30 text-[10px] font-semibold text-right">prefilled from your profile — edit if needed</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">institute / school</label>
+                          <input
+                            type="text"
+                            value={reviewerSchool}
+                            onChange={(e) => setReviewerSchool(e.target.value)}
+                            placeholder="your design school or college"
+                            className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-4 py-3 transition-colors"
+                            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">year</label>
+                          <select
+                            value={reviewerYear}
+                            onChange={(e) => setReviewerYear(e.target.value)}
+                            className="w-full text-sm text-white outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-4 py-3 transition-colors"
+                            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                          >
+                            <option value="" className="bg-[#161618]">select year</option>
+                            {YEAR_VALUES.map((y) => (
+                              <option key={y} value={y} className="bg-[#161618]">{y}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">program / stream</label>
+                          <select
+                            value={reviewerStream}
+                            onChange={(e) => setReviewerStream(e.target.value)}
+                            className="w-full text-sm text-white outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-4 py-3 transition-colors"
+                            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                          >
+                            <option value="" className="bg-[#161618]">select stream</option>
+                            {DISCIPLINE_VALUES.map((d) => (
+                              <option key={d} value={d} className="bg-[#161618]">{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <p className="text-white/25 text-[10px] leading-relaxed">
+                        we'll use this to match you with the right reviewer for your program.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between gap-3 pt-1">
                     <button
                       onClick={handleSaveForLater}
@@ -1064,11 +1146,20 @@ export default function PortfolioReviewFlow({
                   <p className="text-white/40 text-xs">
                     pick a slot that works for you — we'll send a calendar invite.
                   </p>
-                  <div
-                    className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
-                    data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
-                    style={{ minWidth: 280, height: 700 }}
-                  />
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 text-white/50 text-[11px] font-semibold">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      ~30 min · live 1:1 video call
+                    </div>
+                    <div
+                      className="calendly-inline-widget"
+                      data-url={`${getCalendlyUrlForStream(reviewerStream || authUser?.stream)}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                      style={{ minWidth: 280, height: 700 }}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -1091,6 +1182,18 @@ export default function PortfolioReviewFlow({
                       your call is booked — your reviewer will go through your
                       portfolio with you live. your report lands here after.
                     </p>
+                  </div>
+                  <div className="w-full max-w-xs flex flex-col gap-2 text-left mt-2">
+                    {[
+                      "you'll get a calendar invite with the video call link",
+                      "your reviewer goes through your portfolio live with you",
+                      "a written report lands here right after your call"
+                    ].map((line) => (
+                      <div key={line} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm mt-1.5 flex-shrink-0" />
+                        <p className="text-white/40 text-xs leading-relaxed">{line}</p>
+                      </div>
+                    ))}
                   </div>
                   <button
                     onClick={() => {
@@ -1128,7 +1231,7 @@ export default function PortfolioReviewFlow({
                   {resultsTab === "report" &&
                     (row.review_report_url ? (
                       <div
-                        className="rounded-2xl border border-white/10 overflow-hidden"
+                        className="rounded-2xl overflow-hidden"
                         style={{ height: 640 }}
                       >
                         <iframe
@@ -1151,7 +1254,7 @@ export default function PortfolioReviewFlow({
                             session recording
                           </p>
                           <div
-                            className="rounded-2xl border border-white/10 overflow-hidden"
+                            className="rounded-2xl overflow-hidden"
                             style={{ height: 400 }}
                           >
                             <iframe
@@ -1169,7 +1272,7 @@ export default function PortfolioReviewFlow({
                       )}
 
                       {!feedbackSent ? (
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 flex flex-col gap-3">
+                        <div className="rounded-2xl bg-white/[0.03] p-5 flex flex-col gap-3">
                           <p className="text-white text-sm font-semibold">
                             how was your review?
                           </p>
@@ -1223,7 +1326,7 @@ export default function PortfolioReviewFlow({
                           follow-up session recording
                         </p>
                         <div
-                          className="rounded-2xl border border-white/10 overflow-hidden"
+                          className="rounded-2xl overflow-hidden"
                           style={{ height: 400 }}
                         >
                           <iframe
@@ -1246,7 +1349,7 @@ export default function PortfolioReviewFlow({
                         </p>
                         <div
                           className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
-                          data-url={`${CALENDLY_URL}?hide_landing_page_details=1&hide_gdpr_banner=1`}
+                          data-url={`${getCalendlyUrlForStream(reviewerStream || authUser?.stream)}?hide_landing_page_details=1&hide_gdpr_banner=1`}
                           style={{ minWidth: 280, height: 700 }}
                         />
                       </div>

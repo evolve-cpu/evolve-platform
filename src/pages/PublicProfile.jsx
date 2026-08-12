@@ -1,32 +1,53 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import GrowthMascot from "../components/GrowthMascot";
 import Spinner from "../components/Spinner";
-import { stageForProgress, stageLabel } from "../lib/growthStage";
+import { stageForProgress, stageLabel, STAGE_LABELS } from "../lib/growthStage";
 import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
+import { evolve_yellow_logo, evolve_yellow_with_name, right_arrow_icon } from "../assets/images/Nav";
 
-/* ─── small building blocks ──────────────────────────────────────────────── */
-function Stat({ value, label }) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      <p className="text-white font-bold text-lg">{value}</p>
-      <p className="text-white/30 text-[9px] font-semibold uppercase tracking-wide mt-0.5">{label}</p>
-    </div>
-  );
+// short encouragement line shown under the stage badge in the growth rail,
+// one per unique label in STAGE_LABELS (src/lib/growthStage.js).
+const GROWTH_ENCOURAGEMENT = {
+  seed: "you're just getting started — keep going.",
+  sprouting: "growing steadily — keep showing up.",
+  budding: "your work is starting to bloom.",
+  growing: "real momentum now — don't stop.",
+  blooming: "you're in full bloom — almost there."
+};
+
+// groups STAGE_LABELS into consecutive runs sharing the same label, so the
+// growth map can show one section header ("SEED", "SPROUTING", …) per run
+// instead of repeating the label on every stage row.
+function groupStages() {
+  const groups = [];
+  STAGE_LABELS.forEach((label, i) => {
+    const stageNum = i + 1;
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.stages.push(stageNum);
+    else groups.push({ label, stages: [stageNum] });
+  });
+  return groups;
 }
 
-function SocialIcon({ label }) {
+/* ─── small building blocks ──────────────────────────────────────────────── */
+function WhatsAppIcon({ className }) {
   return (
-    <span
-      title="coming soon"
-      className="w-8 h-8 rounded-full border border-white/15 bg-white/[0.03] flex items-center justify-center text-white/40 text-[10px] font-bold cursor-default"
-    >
-      {label}
-    </span>
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="12" fill="#25D366" />
+      <path
+        d="M12 6.5c-3.04 0-5.5 2.46-5.5 5.5 0 1.02.28 1.97.76 2.79L6.5 17.5l2.83-.74a5.47 5.47 0 002.67.69c3.04 0 5.5-2.46 5.5-5.5s-2.46-5.5-5.5-5.5z"
+        fill="white"
+      />
+      <path
+        d="M9.8 9.4c.13-.29.27-.3.39-.3h.33c.1 0 .25-.04.39.3.14.33.47 1.15.51 1.23.04.09.07.19.01.3-.06.11-.09.18-.17.28l-.25.29c-.08.08-.17.17-.07.34.1.17.43.7.92 1.14.63.56 1.16.74 1.33.82.17.08.27.07.36-.04.1-.11.41-.48.52-.65.11-.16.22-.14.37-.08.15.05.96.45 1.13.54.16.08.27.12.31.19.04.07.04.4-.1.79-.14.39-.8.74-1.11.79-.29.04-.65.06-1.04-.07-.24-.08-.55-.18-.94-.35-1.66-.72-2.74-2.4-2.83-2.5-.08-.11-.68-.9-.68-1.72s.43-1.22.58-1.38z"
+        fill="#25D366"
+      />
+    </svg>
   );
 }
 
@@ -113,8 +134,12 @@ function ProgramCard({ art, label, description, chips, href, onClick, progress, 
             </div>
           </div>
         )}
-        <span className="mt-1 inline-flex items-center justify-center gap-1.5 bg-evolve-yellow text-evolve-black text-xs font-bold rounded-full px-4 py-2.5 w-fit">
-          {buttonLabel || "explore program →"}
+        <span
+          className="mt-1 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black text-xs font-extrabold px-4 py-2.5 w-fit border-2 border-evolve-black hover:opacity-90 transition-opacity"
+          style={{ borderRadius: 10, boxShadow: "4px 4px 0 0 #000000" }}
+        >
+          {buttonLabel || "explore program"}
+          <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
         </span>
       </div>
     </Tag>
@@ -142,30 +167,35 @@ function WorkTab({ discipline }) {
 /* ─── page ───────────────────────────────────────────────────────────────── */
 export default function PublicProfile() {
   const { username } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const isOwner = user?.username === username;
 
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [bioDraft, setBioDraft] = useState("");
-  const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState("learnings");
   const [viewingPublic, setViewingPublic] = useState(false);
   // which programme (if any) is open in the right-hand pane — replaces the
   // "evolve programmes" grid in place instead of navigating to a new route,
   // so the sidebar stays put. `sidebarCollapsed` lets the owner tuck that
-  // sidebar away for more room while they're deep in a programme (e.g. mid
-  // payment) — independent of which programme is open.
+  // panel away for more room — on desktop it's a slim icon rail, on mobile
+  // it's a compact "stage N" summary bar instead of the full profile panel.
   const [activeProgramme, setActiveProgramme] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // default collapsed on mobile (short summary) / expanded on desktop —
+  // checked once on mount only, so it doesn't fight a user's own toggle
+  // afterward as the window resizes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setSidebarCollapsed(!window.matchMedia("(min-width: 768px)").matches);
+  }, []);
+
+  function openProgramme(id) {
+    setActiveProgramme(id);
+    setSidebarCollapsed(true);
+  }
   const [evolveReview, setEvolveReview] = useState(null);
-  const [orgSpaces, setOrgSpaces] = useState([]);
-  const [pendingInvites, setPendingInvites] = useState([]);
-  const [respondingId, setRespondingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -173,7 +203,6 @@ export default function PublicProfile() {
 
     if (isOwner) {
       setCard(user);
-      setBioDraft(user.bio || "");
       setLoading(false);
       return;
     }
@@ -203,25 +232,6 @@ export default function PublicProfile() {
     if (isOwner && user) setCard(user);
   }, [isOwner, user]);
 
-  // owner's org space(s) — lets them hop back and forth between their
-  // profile and the space(s) they own/belong to
-  const loadOrgSpaces = useCallback(async () => {
-    if (!isOwner || !user) {
-      setOrgSpaces([]);
-      return;
-    }
-    const { data } = await supabase
-      .from("organization_members")
-      .select("role, organizations:org_id(name, slug, logo_url, org_type, deleted_at)")
-      .eq("user_id", user.id)
-      .eq("status", "active");
-    setOrgSpaces((data || []).filter((r) => r.organizations && !r.organizations.deleted_at));
-  }, [isOwner, user]);
-
-  useEffect(() => {
-    loadOrgSpaces();
-  }, [loadOrgSpaces]);
-
   // drives the Portfolio Review card's progress pill/bar — re-checked
   // whenever the owner steps back out of a programme pane (e.g. after
   // saving a draft and returning), so the card reflects the latest state.
@@ -247,48 +257,6 @@ export default function PublicProfile() {
     if (!activeProgramme) loadEvolveReview();
   }, [activeProgramme, loadEvolveReview]);
 
-  // pending "find on evolve" additions — someone already on evolve was added
-  // directly (no email/token), so they accept it right here, in-app
-  const loadPendingInvites = useCallback(async () => {
-    if (!isOwner || !user) {
-      setPendingInvites([]);
-      return;
-    }
-    const { data } = await supabase
-      .from("organization_members")
-      .select("id, role, member_type, organizations:org_id(name, slug, logo_url), inviter:profiles!invited_by(name)")
-      .eq("user_id", user.id)
-      .eq("status", "pending");
-    setPendingInvites((data || []).filter((r) => r.organizations));
-  }, [isOwner, user]);
-
-  useEffect(() => {
-    loadPendingInvites();
-  }, [loadPendingInvites]);
-
-  async function respondToInvite(id, accept) {
-    setRespondingId(id);
-    const { error } = await supabase.rpc("respond_to_org_invite", { p_member_id: id, p_accept: accept });
-    setRespondingId(null);
-    if (error) return;
-    loadPendingInvites();
-    if (accept) loadOrgSpaces();
-  }
-
-  async function saveBio() {
-    setEditingBio(false);
-    if (!isOwner) return;
-    await supabase.from("profiles").update({ bio: bioDraft }).eq("id", user.id);
-    await refreshUser();
-    setCard(prev => ({ ...prev, bio: bioDraft }));
-  }
-
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
@@ -307,7 +275,6 @@ export default function PublicProfile() {
   }
 
   const showOwnerTools = isOwner && !viewingPublic;
-  const subtitle = [card.persona, card.country].filter(Boolean).join(" · ");
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
@@ -318,259 +285,169 @@ export default function PublicProfile() {
         className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0"
         style={{ backgroundColor: "#161618" }}
       >
-        <Link to="/" className="text-white font-extrabold text-base tracking-tight">
-          evolve<span className="text-evolve-lavender-indigo">.</span>
+        <Link to="/">
+          <img src={evolve_yellow_logo} alt="evolve" className="h-6 w-auto md:hidden" />
+          <img src={evolve_yellow_with_name} alt="evolve" className="hidden md:block h-6 w-auto" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <button
-            title="coming soon"
-            className="text-[11px] font-semibold text-white/35 border border-white/10 rounded-full px-4 py-2 cursor-default"
-          >
-            explore spaces
-          </button>
           <Link
             to="/community"
-            className="text-[11px] font-semibold text-white/70 border border-white/15 rounded-full px-4 py-2 hover:border-white/30 transition-colors"
+            className="flex items-center gap-2 text-[11px] font-semibold text-white/70 border border-white/15 rounded-full pl-1.5 pr-4 py-1.5 hover:border-white/30 transition-colors"
           >
+            <WhatsAppIcon className="w-5 h-5 flex-shrink-0" />
             evolve community
           </Link>
-          {isOwner && orgSpaces[0] ? (
-            <Link
-              to={`/institute/${orgSpaces[0].organizations.slug}`}
-              title="go to my space"
-              className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-transform hover:scale-105"
-            >
-              {card.avatar_url ? (
-                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                (card.name || "?")[0].toUpperCase()
-              )}
-            </Link>
-          ) : (
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {card.avatar_url ? (
-                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                (card.name || "?")[0].toUpperCase()
-              )}
-            </div>
-          )}
+          <button
+            title="notifications"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {card.avatar_url ? (
+              <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              (card.name || "?")[0].toUpperCase()
+            )}
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row">
-        {/* sidebar — collapsible on desktop into a slim rail (avatar + growth
-            stage still visible) so a programme (or its payment flow) in the
-            right pane can claim more width without losing the person's
-            context entirely. Mobile always gets the full panel. Sticky
-            (not independently scrolling) so the whole page shares a single
-            scrollbar with <main> instead of each pane scrolling on its own. */}
+        {/* sidebar — collapsible into a compact summary on both desktop
+            (slim icon rail) and mobile (short "stage N" bar at the top),
+            so a programme (or its payment flow) in the main pane can claim
+            more width/height without losing the person's context entirely.
+            Sticky (not independently scrolling) so the whole page shares a
+            single scrollbar with <main> instead of each pane scrolling on
+            its own. */}
         <aside
           className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
         >
+          {/* ── mobile: compact summary bar (collapsed) / small collapse
+              control above the full panel (expanded) ── */}
+          {sidebarCollapsed ? (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(false)}
+              className="flex md:hidden items-center gap-3 px-6 py-4 w-full text-left border-b border-white/10"
+            >
+              <GrowthMascot progress={card.growth_stage ?? 0} size={32} />
+              <p className="text-evolve-inchworm text-xs font-bold flex-1">
+                stage {stageForProgress(card.growth_stage ?? 0)} · <span className="capitalize">{stageLabel(card.growth_stage ?? 0)}</span>
+              </p>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="flex-shrink-0 text-white/40">
+                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          ) : (
+            <div className="flex md:hidden items-center justify-between px-6 pt-5">
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">your profile</p>
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(true)}
+                title="collapse panel"
+                className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors flex-shrink-0"
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                  <path d="M5 12.5L10 7.5L15 12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* ── desktop: collapsed icon rail — just the mascot near the top ── */}
+          {sidebarCollapsed && (
+            <div className="hidden md:flex flex-col items-center pt-6">
+              <GrowthMascot progress={card.growth_stage ?? 0} size={40} />
+            </div>
+          )}
+
+          {/* ── full panel (both breakpoints) — hidden entirely while
+              collapsed instead of always showing on mobile ── */}
+          {!sidebarCollapsed && (
+          <div className="flex flex-col gap-5 px-6 py-8">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <GrowthMascot progress={card.growth_stage ?? 0} size={140} />
+              <div>
+                <h1 className="text-white font-bold text-lg">{card.name || "evolve designer"}</h1>
+                <p className="text-white/40 text-xs mt-0.5">@{username}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10" />
+
+            <div className="flex flex-col items-center text-center gap-1">
+              <p className="text-evolve-inchworm text-sm font-bold capitalize">
+                stage {stageForProgress(card.growth_stage ?? 0)} · {stageLabel(card.growth_stage ?? 0)}
+              </p>
+              <p className="text-white/40 text-xs">
+                {GROWTH_ENCOURAGEMENT[stageLabel(card.growth_stage ?? 0)]}
+              </p>
+            </div>
+
+            <div className="border-t border-white/10" />
+
+            <div className="flex flex-col gap-1">
+              <p className="text-white/25 text-[9px] font-bold uppercase tracking-wide px-2.5">growth map</p>
+              <div className="flex flex-col gap-3">
+                {groupStages().map((g) => {
+                  const currentStage = stageForProgress(card.growth_stage ?? 0);
+                  const groupReached = g.stages[0] <= currentStage;
+                  return (
+                    <div key={g.label + g.stages[0]} className="flex flex-col gap-1">
+                      <p className={`text-[10px] font-bold uppercase tracking-wide px-2.5 ${groupReached ? "text-evolve-inchworm" : "text-white/20"}`}>
+                        {g.label}
+                      </p>
+                      <div className="flex flex-col gap-0.5">
+                        {g.stages.map((stageNum) => {
+                          const current = stageNum === currentStage;
+                          const reached = stageNum <= currentStage;
+                          if (current) {
+                            return (
+                              <div key={stageNum} className="flex flex-col gap-0.5 rounded-lg bg-evolve-inchworm/10 px-2.5 py-1.5">
+                                <span className="flex items-center gap-2 text-evolve-inchworm text-[11px] font-bold">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm flex-shrink-0" />
+                                  stage {stageNum}
+                                </span>
+                                <span className="text-white/40 text-[10px] pl-3.5">you are here</span>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={stageNum} className="flex items-center gap-2 px-2.5 py-1.5">
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${reached ? "bg-evolve-inchworm" : "bg-white/15"}`} />
+                              <span className={`text-[11px] font-semibold ${reached ? "text-white/50" : "text-white/25"}`}>
+                                stage {stageNum}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          )}
+
+          {/* desktop-only collapse toggle — a small square button pinned to
+              the bottom-right corner of the rail, straddling its edge */}
           <button
             type="button"
             onClick={() => setSidebarCollapsed((v) => !v)}
             title={sidebarCollapsed ? "expand panel" : "collapse panel"}
-            className={`hidden md:flex w-7 h-7 rounded-full border border-white/10 items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors flex-shrink-0 ${
-              sidebarCollapsed ? "self-center mt-5" : "absolute top-3 right-3"
-            }`}
+            className="hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white absolute bottom-5 z-10"
+            style={{ right: -16 }}
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ transform: sidebarCollapsed ? "scaleX(-1)" : "none" }}>
-              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ transform: sidebarCollapsed ? "none" : "scaleX(-1)" }}>
+              <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-
-          {sidebarCollapsed && (
-            <div className="hidden md:flex flex-col items-center gap-4 px-2 pb-6 mt-4">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
-                {card.avatar_url ? (
-                  <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-white font-bold text-sm">{(card.name || "?")[0].toUpperCase()}</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* growth mascot — pinned to the bottom of the collapsed rail
-              (mt-auto), so it stays anchored there regardless of how much
-              sits above it */}
-          {sidebarCollapsed && (
-            <div className="hidden md:flex flex-col items-center gap-1 mt-auto px-2 pb-5 pt-3">
-              <div className="flex flex-col items-center gap-1 rounded-xl border border-evolve-inchworm/20 bg-evolve-inchworm/[0.05] px-1.5 py-2">
-                <GrowthMascot progress={card.growth_stage ?? 0} size={28} />
-                <span className="text-evolve-inchworm text-[9px] font-bold">
-                  s{stageForProgress(card.growth_stage ?? 0)}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className={sidebarCollapsed ? "flex md:hidden flex-col gap-6 px-6 py-8" : "flex flex-col gap-6 px-6 py-8"}>
-          <div className="flex justify-center">
-            <div className="w-[110px] h-[110px] rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
-              {card.avatar_url ? (
-                <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white font-bold text-4xl">{(card.name || "?")[0].toUpperCase()}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-around">
-            <Stat value={0} label="resources consumed" />
-            <Stat value={0} label="certificates earned" />
-            <Stat value="—" label="avg quiz score" />
-          </div>
-
-          <div>
-            <h1 className="text-white font-bold text-lg">{card.name || "evolve designer"}</h1>
-            <p className="text-white/40 text-xs">@{username}</p>
-            {subtitle && <p className="text-white/50 text-xs mt-2 leading-relaxed">{subtitle}</p>}
-          </div>
-
-          {isOwner && editingBio ? (
-            <textarea
-              autoFocus
-              value={bioDraft}
-              onChange={e => setBioDraft(e.target.value)}
-              onBlur={saveBio}
-              rows={3}
-              placeholder="add a short headline about yourself…"
-              className="w-full text-sm text-white placeholder-white/30 outline-none border border-white/15 rounded-xl px-4 py-3"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-            />
-          ) : (
-            <button
-              onClick={() => isOwner && setEditingBio(true)}
-              className={`text-xs text-left leading-relaxed ${card.bio ? "text-white/50" : "text-white/25 italic"}`}
-            >
-              {card.bio || (isOwner ? "add a short headline about yourself…" : "")}
-            </button>
-          )}
-
-          {isOwner && !user.persona && (
-            <button
-              onClick={() => navigate("/onboarding", { state: { completeProfile: true } })}
-              className="w-full text-left rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-4 py-3 flex flex-col gap-0.5 hover:bg-evolve-yellow/[0.1] transition-colors"
-            >
-              <span className="text-evolve-yellow text-xs font-bold">complete your profile →</span>
-              <span className="text-white/40 text-[11px] leading-relaxed">
-                a few quick questions to personalise your evolve experience.
-              </span>
-            </button>
-          )}
-
-          {isOwner && user.email && <p className="text-white/30 text-xs">{user.email}</p>}
-
-          <div className="flex items-center gap-2">
-            <SocialIcon label="Be" />
-            <SocialIcon label="Dr" />
-            <SocialIcon label="Li" />
-            <SocialIcon label="↗" />
-          </div>
-
-          <div className="flex items-center gap-3 rounded-2xl border border-evolve-inchworm/20 bg-evolve-inchworm/[0.05] px-3 py-2.5">
-            <GrowthMascot progress={card.growth_stage ?? 0} size={40} />
-            <div className="min-w-0">
-              <p className="text-evolve-inchworm text-xs font-bold">
-                stage {stageForProgress(card.growth_stage ?? 0)}
-              </p>
-              <p className="text-white/40 text-[10px] capitalize">
-                {stageLabel(card.growth_stage ?? 0)}
-              </p>
-            </div>
-          </div>
-
-          {isOwner && pendingInvites.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">pending invites</p>
-              {pendingInvites.map((inv) => (
-                <div
-                  key={inv.id}
-                  className="rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-3 py-2.5 flex flex-col gap-2"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
-                      {inv.organizations.logo_url ? (
-                        <img src={inv.organizations.logo_url} alt="" className="w-full h-full object-contain" />
-                      ) : (
-                        <span className="text-sm">🏫</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white text-xs font-semibold truncate">{inv.organizations.name}</p>
-                      <p className="text-white/40 text-[10px] truncate">
-                        as {inv.member_type || inv.role}
-                        {inv.inviter?.name ? ` · invited by ${inv.inviter.name}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => respondToInvite(inv.id, true)}
-                      disabled={respondingId === inv.id}
-                      className="flex-1 bg-evolve-yellow text-evolve-black text-[11px] font-bold rounded-lg py-1.5 disabled:opacity-50"
-                    >
-                      accept
-                    </button>
-                    <button
-                      onClick={() => respondToInvite(inv.id, false)}
-                      disabled={respondingId === inv.id}
-                      className="flex-1 border border-white/15 text-white/50 hover:text-white text-[11px] font-semibold rounded-lg py-1.5 disabled:opacity-50"
-                    >
-                      decline
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {isOwner && orgSpaces.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">your spaces</p>
-              {orgSpaces.map(({ role, organizations: org }) => (
-                <Link
-                  key={org.slug}
-                  to={`/institute/${org.slug}`}
-                  className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/40 px-3 py-2.5 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
-                    {org.logo_url ? (
-                      <img src={org.logo_url} alt="" className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-sm">{org.org_type === "institute" ? "🎓" : "🏢"}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white text-xs font-semibold truncate">{org.name}</p>
-                    <p className="text-white/30 text-[10px] capitalize">{role}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-auto pt-2">
-            {isOwner ? (
-              <button
-                onClick={() => setViewingPublic(v => !v)}
-                className="w-full text-xs font-semibold border border-white/15 text-white/70 hover:border-white/30 rounded-full px-4 py-2.5 transition-colors"
-              >
-                {viewingPublic ? "back to my dashboard" : "view my page"}
-              </button>
-            ) : (
-              <button
-                onClick={copyLink}
-                className="w-full text-xs font-semibold text-evolve-black bg-evolve-yellow rounded-full px-4 py-2.5 active:opacity-80"
-              >
-                {copied ? "copied!" : "share this profile"}
-              </button>
-            )}
-          </div>
-          </div>
         </aside>
 
         {/* main content — flows in the same single page scroll as
@@ -584,11 +461,6 @@ export default function PublicProfile() {
             activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
           }`}
         >
-          {isOwner && location.state?.justJoinedOrg && (
-            <div className="rounded-xl bg-evolve-inchworm/10 border border-evolve-inchworm/25 text-evolve-inchworm text-xs font-bold px-4 py-3">
-              🎉 you're in — {location.state.justJoinedOrg} is now listed under "your spaces" in the sidebar.
-            </div>
-          )}
           {showOwnerTools && !activeProgramme && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
@@ -626,13 +498,13 @@ export default function PublicProfile() {
                   label="portfolio review"
                   description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   chips={["Live 1:1 review", "Written report"]}
-                  onClick={() => setActiveProgramme("portfolio-review")}
+                  onClick={() => openProgramme("portfolio-review")}
                   progress={getPortfolioReviewProgress(evolveReview)}
                   buttonLabel={
                     evolveReview
                       ? getPortfolioReviewProgress(evolveReview)?.step === 5
-                        ? "apply again →"
-                        : "continue your review →"
+                        ? "apply again"
+                        : "continue your review"
                       : undefined
                   }
                 />
@@ -647,7 +519,7 @@ export default function PublicProfile() {
                   label="mentorship"
                   description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
                   chips={["1:1 personalised", "5 sessions"]}
-                  onClick={() => setActiveProgramme("mentorship")}
+                  onClick={() => openProgramme("mentorship")}
                 />
               </div>
             </Section>

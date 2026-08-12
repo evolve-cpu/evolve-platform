@@ -181,7 +181,7 @@ function BookModal({ user, onClose, onSuccess }) {
         key: import.meta.env.VITE_RAZORPAY_API_KEY,
         amount: String(amount),
         currency,
-        name: "Evolve Design",
+        name: "evolve design",
         description: "Portfolio Review — live 1:1 review",
         order_id,
         prefill: {

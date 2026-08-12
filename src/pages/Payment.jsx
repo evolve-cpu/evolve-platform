@@ -443,7 +443,9 @@ export default function Payment() {
 
   const cfg = PLANS[plan] || PLANS.starter;
   const spotsLeft = batch?.spots_remaining ?? 5;
-  const batch1Full = !batches.some((b) => b.batch_number === 1 && b.status === "open" && b.spots_remaining > 0);
+  const batch1Full = !batches.some(
+    (b) => b.batch_number === 1 && b.status === "open" && b.spots_remaining > 0
+  );
   const showBatchPicker = batch1Full && batches.length > 0;
   const selectedBatch = batches.find((b) => b.id === selectedBatchId) || batch;
 
@@ -499,7 +501,7 @@ export default function Payment() {
         key: import.meta.env.VITE_RAZORPAY_API_KEY,
         amount: String(amount),
         currency,
-        name: "Evolve Design",
+        name: "evolve design",
         description: `Mentorship — ${cfg.label} Plan`,
         order_id,
         prefill: {
@@ -544,7 +546,9 @@ export default function Payment() {
     setWaitlistError("");
     setWaitlistSubmitting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         navigate("/signin", { state: { from: "/payment?waitlist=true" } });
         return;
@@ -584,7 +588,7 @@ export default function Payment() {
     if (!dateStr) return "—";
     const d = new Date(dateStr + "T00:00:00");
     const day = d.getDate();
-    const s = ["th","st","nd","rd"];
+    const s = ["th", "st", "nd", "rd"];
     const v = day % 100;
     const suffix = s[(v - 20) % 10] || s[v] || s[0];
     return `${day}${suffix} ${d.toLocaleDateString("en-IN", { month: "long" }).toLowerCase()}`;
@@ -751,7 +755,9 @@ export default function Payment() {
                 className="relative z-10 w-36 object-contain"
               />
               <button
-                onClick={() => setStep(showBatchPicker ? "batch_pick" : "details")}
+                onClick={() =>
+                  setStep(showBatchPicker ? "batch_pick" : "details")
+                }
                 className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
               >
                 claim your gift!
@@ -775,7 +781,6 @@ export default function Payment() {
 
       <div className="flex flex-col flex-1 px-6 pt-24 pb-12 md:items-center md:justify-center md:pt-0">
         <div className="w-full max-w-sm md:max-w-md mx-auto flex flex-col gap-6">
-
           {/* ── WAITLIST FORM ────────────────────────────────────────────────── */}
           {step === "waitlist" && !waitlistChecking && (
             <>
@@ -787,7 +792,10 @@ export default function Payment() {
                 </span>
                 <h1
                   className="text-white font-bold leading-tight"
-                  style={{ fontSize: "clamp(32px,8vw,44px)", letterSpacing: "-0.03em" }}
+                  style={{
+                    fontSize: "clamp(32px,8vw,44px)",
+                    letterSpacing: "-0.03em"
+                  }}
                 >
                   join the waitlist
                 </h1>
@@ -799,23 +807,33 @@ export default function Payment() {
               <div className="flex flex-col gap-4">
                 {/* Email — pre-filled, read-only */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-white/50 text-xs">enter your email</label>
+                  <label className="text-white/50 text-xs">
+                    enter your email
+                  </label>
                   <input
                     type="email"
                     value={user?.email || ""}
                     readOnly
                     className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    style={{
+                      background: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.12)"
+                    }}
                   />
                 </div>
 
                 {/* Phone */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-white/50 text-xs">enter your phone</label>
+                  <label className="text-white/50 text-xs">
+                    enter your phone
+                  </label>
                   <div className="flex gap-2">
                     <div
                       className="flex items-center justify-center rounded-xl px-3 text-white text-sm font-semibold flex-none"
-                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                      style={{
+                        background: "rgba(255,255,255,0.08)",
+                        border: "1px solid rgba(255,255,255,0.12)"
+                      }}
                     >
                       +91
                     </div>
@@ -824,9 +842,16 @@ export default function Payment() {
                       inputMode="numeric"
                       placeholder="9289xxxxxx"
                       value={waitlistPhone}
-                      onChange={(e) => setWaitlistPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      onChange={(e) =>
+                        setWaitlistPhone(
+                          e.target.value.replace(/\D/g, "").slice(0, 10)
+                        )
+                      }
                       className="flex-1 rounded-xl px-4 py-3 text-white text-sm outline-none"
-                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+                      style={{
+                        background: "rgba(255,255,255,0.08)",
+                        border: "1px solid rgba(255,255,255,0.12)"
+                      }}
                     />
                   </div>
                 </div>
@@ -844,7 +869,13 @@ export default function Payment() {
                 {waitlistSubmitting ? "adding you..." : "add me to list"}
                 {!waitlistSubmitting && (
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </button>
@@ -856,7 +887,13 @@ export default function Payment() {
             <div className="flex flex-col items-center gap-6 text-center pt-4">
               <div className="w-20 h-20 rounded-full border-4 border-green-400 flex items-center justify-center">
                 <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                  <path d="M8 18l7 7 13-14" stroke="#4ade80" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M8 18l7 7 13-14"
+                    stroke="#4ade80"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <div>
@@ -864,10 +901,13 @@ export default function Payment() {
                   className="text-white font-bold"
                   style={{ fontSize: 40, letterSpacing: "-0.16px" }}
                 >
-                  you're on<br />the waitlist
+                  you're on
+                  <br />
+                  the waitlist
                 </h1>
                 <p className="text-white/50 text-sm mt-3 max-w-[28ch] mx-auto leading-relaxed">
-                  we've got your details. you'll be the first to know when the batches reopen
+                  we've got your details. you'll be the first to know when the
+                  batches reopen
                 </p>
               </div>
               <button
@@ -876,7 +916,13 @@ export default function Payment() {
               >
                 back to evolve
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             </div>
@@ -914,16 +960,18 @@ export default function Payment() {
                     className="w-full rounded-2xl p-5 text-left transition-all"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.06)",
-                      border: selectedBatchId === b.id
-                        ? "1.5px solid #FFD007"
-                        : "1.5px solid rgba(255,255,255,0.08)"
+                      border:
+                        selectedBatchId === b.id
+                          ? "1.5px solid #FFD007"
+                          : "1.5px solid rgba(255,255,255,0.08)"
                     }}
                   >
                     <p className="text-evolve-yellow font-bold text-base">
                       {batchDate(b.start_date)}
                     </p>
                     <p className="text-white/50 text-sm mt-0.5">
-                      batch {b.batch_number} · {b.spots_remaining} spot{b.spots_remaining !== 1 ? "s" : ""} available
+                      batch {b.batch_number} · {b.spots_remaining} spot
+                      {b.spots_remaining !== 1 ? "s" : ""} available
                     </p>
                   </button>
                 ))}
@@ -955,7 +1003,13 @@ export default function Payment() {
           {/* ── DETAILS ──────────────────────────────────────────────────────── */}
           {step === "details" && (
             <>
-              <BackBtn onClick={() => showBatchPicker ? setStep("batch_pick") : navigate("/mentorship")} />
+              <BackBtn
+                onClick={() =>
+                  showBatchPicker
+                    ? setStep("batch_pick")
+                    : navigate("/mentorship")
+                }
+              />
 
               <div>
                 <h1
@@ -1128,7 +1182,8 @@ export default function Payment() {
                 </p>
                 {selectedBatch && (
                   <p className="text-evolve-yellow text-sm font-semibold">
-                    batch {selectedBatch.batch_number} starts {formatBatchDate(selectedBatch.start_date)}, 9:30pm ist
+                    batch {selectedBatch.batch_number} starts{" "}
+                    {formatBatchDate(selectedBatch.start_date)}, 9:30pm ist
                   </p>
                 )}
                 <p className="text-white/30 text-xs">
