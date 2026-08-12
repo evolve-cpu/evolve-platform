@@ -639,7 +639,9 @@ import {
   hobbies,
   watch_playlist_button,
   learn_to_learn,
-  learn_to_learn_mobile
+  learn_to_learn_mobile,
+  service_design_mobile,
+  service_design
 } from "../assets/images/Webinars";
 
 import { webinars as COPY } from "../content";
@@ -679,9 +681,7 @@ const WebinarCard = ({ svg, title, playlistUrl, isExpanded, onToggle }) => {
       onMouseLeave={() => !("ontouchstart" in window) && onToggle(false)}
     >
       {/* Top section */}
-      <div
-        className="bg-black h-[60%] min-h-[240px] relative overflow-hidden flex justify-center"
-      >
+      <div className="bg-black h-[60%] min-h-[240px] relative overflow-hidden flex justify-center">
         {/* <img
           src={svg}
           alt={title}
@@ -1069,13 +1069,14 @@ const Webinars = () => {
               {/* Upcoming webinar poster - above hands */}
               <a
                 // href={COPY.upcomingWebinar.registrationUrl}
-                href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
+                // href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="absolute bottom-[-6%] inset-x-0 z-50 flex justify-center"
               >
                 <img
-                  src={learn_to_learn}
+                  src={service_design}
                   alt="upcoming webinar"
                   className="w-full object-contain"
                 />
@@ -1223,9 +1224,7 @@ const Webinars = () => {
                   Free. Forever. Worth Your Time.
                 </p> */}
 
-                <p
-                  className="mt-3 font-normal text-center text-black mx-auto max-w-[70vw] text-[18px] md:text-[clamp(18px,1.8vw,20px)]"
-                >
+                <p className="mt-3 font-normal text-center text-black mx-auto max-w-[70vw] text-[18px] md:text-[clamp(18px,1.8vw,20px)]">
                   {COPY.hero.subtextMobile}
                 </p>
               </div>
@@ -1240,7 +1239,7 @@ const Webinars = () => {
               className="absolute top-[25%] inset-x-0 z-40 flex justify-center"
             >
               <img
-                src={learn_to_learn_mobile}
+                src={service_design_mobile}
                 alt="upcoming webinar"
                 className="w-[95%] object-contain"
               />

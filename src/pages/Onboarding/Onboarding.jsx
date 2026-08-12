@@ -22,7 +22,10 @@ function profileFromUser(u) {
     learning_modes: u.learning_modes || [],
     discipline: u.discipline || [],
     intent: u.intent || [],
-    work_type: u.work_type || null
+    work_type: u.work_type || null,
+    school_name: u.school_name || null,
+    standard: u.standard || null,
+    stream: u.stream || null
   };
 }
 import Spinner from "../../components/Spinner";
@@ -315,6 +318,9 @@ export default function Onboarding() {
           discipline: finalProfile.discipline || [],
           intent: finalProfile.intent || [],
           work_type: finalProfile.work_type,
+          school_name: finalProfile.school_name,
+          standard: finalProfile.standard,
+          stream: finalProfile.stream,
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
           growth_stage: 10
@@ -510,7 +516,9 @@ export default function Onboarding() {
 
   return (
     <>
-      {profileChip}
+      {/* hidden during the chat step — the name/avatar pill is redundant
+          clutter while the chat itself is asking for that same info */}
+      {step !== "chat" && profileChip}
       {content}
     </>
   );

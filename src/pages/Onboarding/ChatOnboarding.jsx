@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QUESTIONS, PHASES, PHASE_LABEL, firstNameOf } from "./questions";
+import {
+  QUESTIONS,
+  PHASES,
+  PHASE_LABEL,
+  firstNameOf,
+  isActiveQuestion,
+  nextQuestionIndex
+} from "./questions";
 import GrowthMascot from "../../components/GrowthMascot";
 
 let msgId = 0;
@@ -12,11 +19,13 @@ function resolveOptions(q, p) {
   return typeof q.options === "function" ? q.options(p) : q.options || [];
 }
 
-function PhaseBar({ qIndex }) {
+function PhaseBar({ qIndex, profile }) {
   return (
     <div className="flex items-center gap-2">
       {PHASES.map((phase) => {
-        const qs = QUESTIONS.filter((q) => q.phase === phase);
+        const qs = QUESTIONS.filter(
+          (q) => q.phase === phase && isActiveQuestion(q, profile)
+        );
         const total = qs.length;
         const doneCount = qs.filter(
           (q) => QUESTIONS.indexOf(q) < qIndex
@@ -137,7 +146,7 @@ function LiveProfileCard({ profile }) {
 // A signed-in user already handed over their name at sign-in — asking for it
 // again in the chat is redundant friction, so we skip straight past it.
 function startIndexFor(initialProfile) {
-  return initialProfile.name ? 1 : 0;
+  return nextQuestionIndex(initialProfile.name ? 1 : 0, initialProfile);
 }
 
 export default function ChatOnboarding({ initialProfile, onComplete }) {
@@ -265,7 +274,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
     });
     setProfile(nextProfile);
 
-    const nextIndex = qIndex + 1;
+    const nextIndex = nextQuestionIndex(qIndex + 1, nextProfile);
     setQIndex(nextIndex);
     setOptionCards(null);
 
@@ -298,22 +307,31 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: "#161618" }}
     >
-      <div className="flex flex-col items-center text-center gap-2 px-5 pt-10 pb-4 md:pt-12">
+      <div
+        className="sticky top-0 z-30 flex flex-col items-center text-center gap-2 px-5 pt-10 pb-4 md:static md:pt-12"
+        style={{ backgroundColor: "#161618" }}
+      >
         <h1 className="text-white font-bold text-2xl md:text-3xl">
           let's build your profile
         </h1>
-        <p className="text-white/50 text-sm max-w-sm">
+        <p className="hidden md:block text-white/50 text-sm max-w-sm">
           the more you share, the more this feels like your space.
         </p>
+        {/* mobile-only status bar — kept inside this same sticky block so it
+            pins to the top together with the heading instead of scrolling
+            away with the chat log */}
+        <div className="w-full max-w-sm pt-1 md:hidden">
+          <PhaseBar qIndex={qIndex} profile={profile} />
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 md:items-center md:px-10 md:pb-10">
         {/* chat column */}
         <div className="flex-1 flex flex-col min-h-0 w-full md:max-w-2xl md:rounded-3xl md:border md:border-white/10 md:bg-white/[0.02] overflow-hidden">
-          <div className="px-5 pt-6 pb-3 md:px-7 flex items-center justify-center gap-3">
+          <div className="hidden md:flex px-5 pt-6 pb-3 md:px-7 items-center justify-center gap-3">
             {/* <GrowthMascot progress={progress} size={32} /> */}
             <div className="flex-1">
-              <PhaseBar qIndex={qIndex} />
+              <PhaseBar qIndex={qIndex} profile={profile} />
             </div>
           </div>
 

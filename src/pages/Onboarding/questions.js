@@ -48,11 +48,10 @@ const LEVEL_BY_PERSONA = {
     chips: ["Nothing yet", "A little exploring", "Quite a bit already"],
     map: { "Nothing yet": "zero", "A little exploring": "beginner", "Quite a bit already": "intermediate" }
   },
-  "Design school student": {
-    ask: "which year of your program are you in?",
-    chips: ["1st year", "2nd year", "3rd year", "Final year"],
-    map: { "1st year": "beginner", "2nd year": "beginner", "3rd year": "intermediate", "Final year": "intermediate" }
-  },
+  // "Design school student" doesn't get a custom entry here — their year is
+  // already captured by the "standard" question right after persona, so
+  // this falls back to DEFAULT_LEVEL_MAP instead of asking "which year"
+  // twice.
   "Career shifter": {
     ask: "how far along are you in learning design so far?",
     chips: ["Just starting", "Learning casually", "Already building real projects"],
@@ -139,6 +138,42 @@ export const QUESTIONS = [
       return { persona: tags[0] || null };
     },
     ack: () => "good to know."
+  },
+  // Design school students get three extra questions right here — school
+  // name, standard/year, and stream — so that portfolio-review bookings can
+  // later be routed to the right Calendly link based on stream/topic.
+  {
+    id: "school_name", phase: "about", cardLabel: "school / college",
+    condition: (p) => p.persona === "Design school student",
+    ask: () => "which design school or college are you studying at?",
+    chips: [],
+    isVague: isGenericVague,
+    followUp: () => "no worries — just the name of your school or college is fine.",
+    parse: (text) => ({ school_name: truncate(toTitleCase(text.trim()).replace(/\.$/, ""), 80) }),
+    ack: (p) => `nice — ${p.school_name}.`
+  },
+  {
+    id: "standard", phase: "about", cardLabel: "year / standard",
+    condition: (p) => p.persona === "Design school student",
+    ask: () => "and which year or standard are you currently in?",
+    chips: ["1st year", "2nd year", "3rd year", "4th year", "Final year"],
+    isVague: isGenericVague,
+    followUp: () => "just the year's fine — like 1st year, 3rd year, or final year.",
+    parse: (text) => ({ standard: truncate(toTitleCase(text.trim()), 40) }),
+    ack: (p) => `got it — ${p.standard}.`
+  },
+  {
+    id: "stream", phase: "about", cardLabel: "stream",
+    condition: (p) => p.persona === "Design school student",
+    ask: () => "what stream or specialization are you pursuing — like UX, Fashion Design, Graphic Design, or something else?",
+    chips: DISCIPLINE_VALUES,
+    isVague: isGenericVague,
+    followUp: () => "no worries — what's the closest fit? like UX, Product Design, Fashion Design, and so on.",
+    parse: (text) => {
+      const matched = matchMulti(text, DISCIPLINE_VALUES);
+      return { stream: matched.length ? matched.join(", ") : truncate(toTitleCase(text.trim()), 60) };
+    },
+    ack: (p) => `noted — ${p.stream}.`
   },
   {
     id: "level", phase: "about", cardLabel: "level",
@@ -249,6 +284,23 @@ export const QUESTIONS = [
 export function emptyProfile() {
   return {
     name: null, country: null, persona: null, level: null, level_confidence: null,
-    motivation: null, learning_method: null, learning_modes: [], discipline: [], intent: [], work_type: null
+    motivation: null, learning_method: null, learning_modes: [], discipline: [], intent: [], work_type: null,
+    school_name: null, standard: null, stream: null
   };
+}
+
+// A question can declare `condition(profile)` to only apply for some
+// answers so far (e.g. the school/standard/stream questions only apply to
+// design school students) — these helpers walk the flat QUESTIONS array
+// while skipping over any question whose condition isn't met yet.
+export function isActiveQuestion(q, profile) {
+  return !q.condition || q.condition(profile);
+}
+
+export function nextQuestionIndex(fromIndex, profile) {
+  let i = fromIndex;
+  while (i < QUESTIONS.length && !isActiveQuestion(QUESTIONS[i], profile)) {
+    i++;
+  }
+  return i;
 }

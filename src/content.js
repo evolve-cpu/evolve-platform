@@ -665,7 +665,7 @@ export const webinars = {
   },
 
   hero: {
-    heading: "Evolve\nwebinars"
+    heading: "evolve\nwebinars"
     // Desktop subtext (two lines)
     // subtextDesktop:
     //   "Learn from people who've been there,\ndone that, and have the work to prove it."
@@ -829,6 +829,18 @@ export const portfolioReview = {
           "I realised I didn't need to apply everywhere, I needed to apply better. The review helped me refine my portfolio so it speaks directly to the kinds of companies I want to work with, and gave me a much more targeted approach.",
         name: "Umesh Bari",
         role: "Junior Product Designer"
+      },
+      {
+        quote:
+          "I just got my portfolio review in, the feedback is very on point and quite actionable. Thank you guys, you are doing a really nice thing here. Glad to be part of this community.",
+        name: "Smriti Agarwal",
+        role: "Senior Graphic Designer, Docsumo"
+      },
+      {
+        quote:
+          "The review completely changed how I position myself as a UX/UI designer. I reordered my portfolio to lead with my strongest case study and improved how I present my design decisions and thinking. The feedback gave me a much clearer direction.",
+        name: "Venkatesh Angidi",
+        role: "UI/UX Designer"
       }
     ]
   },
