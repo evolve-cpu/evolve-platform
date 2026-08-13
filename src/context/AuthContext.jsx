@@ -152,8 +152,20 @@ export function AuthProvider({ children }) {
     if (data?.user) await loadProfile(data.user);
   };
 
+  /** shared sign-out — e.g. the onboarding flow's "not you? log out" escape hatch */
+  const logout = async () => {
+    setAuthLoading(true);
+    try {
+      await supabase.auth.signOut();
+      loadedUserIdRef.current = null;
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, authLoading, setAuthLoading, refreshUser, isNewUser }}>
+    <AuthContext.Provider value={{ user, setUser, authLoading, setAuthLoading, refreshUser, isNewUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

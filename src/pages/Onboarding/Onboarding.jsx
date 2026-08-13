@@ -84,9 +84,18 @@ function PlantingLoader() {
  * institute admin — and instead collects their org-facing title directly.
  */
 export default function Onboarding() {
-  const { user, authLoading, refreshUser } = useAuth();
+  const { user, authLoading, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // sign-in and onboarding are coupled — every fresh sign-in lands here. A
+  // visitor who just wanted to browse and signed in by mistake needs a way
+  // out that isn't "close the tab and never come back", so this is reachable
+  // from every step (including the chat, which hides profileChip).
+  async function handleLogout() {
+    await logout();
+    navigate("/", { replace: true });
+  }
 
   // signed-out visitors have no business here — send them to sign in first,
   // bounce back to /onboarding once they do
@@ -362,16 +371,13 @@ export default function Onboarding() {
 
       await refreshUser();
 
-      const redirectTo = sessionStorage.getItem("post_onboarding_redirect");
-      sessionStorage.removeItem("post_onboarding_redirect");
-
+      // always land on the profile page (or the new org space) once
+      // onboarding finishes — never back on whatever page they signed in from
       if (orgSlug) {
         setPlantedNav({
           path: `/institute/${orgSlug}`,
           state: { justCreated: true }
         });
-      } else if (redirectTo) {
-        setPlantedNav({ path: redirectTo });
       } else {
         setPlantedNav({ path: `/profile/${username}` });
       }
@@ -519,6 +525,15 @@ export default function Onboarding() {
       {/* hidden during the chat step — the name/avatar pill is redundant
           clutter while the chat itself is asking for that same info */}
       {step !== "chat" && profileChip}
+      {/* always visible, every step — the "wrong account / just browsing"
+          escape hatch out of onboarding */}
+      <button
+        onClick={handleLogout}
+        className="fixed top-5 right-5 z-50 flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
+        style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
+      >
+        log out
+      </button>
       {content}
     </>
   );

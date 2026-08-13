@@ -93,26 +93,20 @@ function LoadingStep({ label, sub, progress }) {
 /* ══════════════════════════════════════════════════════════════════════════════
    Helpers
 ══════════════════════════════════════════════════════════════════════════════ */
-// When no specific page was requested (from === "/"), an already-onboarded
-// user should land on their own profile, not the marketing landing page.
-// Any explicit `from` (a deep link, /payment, /webinars, etc.) always wins.
+// Any explicit `from` (a deep link, /payment, /webinars, etc.) always wins —
+// onboarding never hijacks a deliberate destination. Otherwise, sign-in and
+// onboarding are coupled again: a freshly signed-in user with an incomplete
+// profile is sent straight into /onboarding, and an already-onboarded user
+// lands on their own profile instead of the marketing landing page.
 function resolveLandingPath(user, from) {
   if (from && from !== "/") return from;
   if (user?.onboarding_completed && user?.username)
     return `/profile/${user.username}`;
+  if (!user?.onboarding_completed) return "/onboarding";
   return "/";
 }
 
 function goToFrom(navigate, from, user) {
-  // Payment page shows its own welcome in the gift screen — skip the overlay
-  // Portfolio review form handles its own post-signin flow — skip the overlay
-  const skipOverlay =
-    from.startsWith("/payment") ||
-    from.startsWith("/community/portfolio-review") ||
-    from.startsWith("/portfolio-review");
-  if (!skipOverlay) {
-    sessionStorage.setItem("show_welcome_overlay", "1");
-  }
   localStorage.removeItem("signin_from");
   sessionStorage.removeItem("signin_from");
   sessionStorage.removeItem("post_signin_redirect");
@@ -140,17 +134,6 @@ export default function SignIn() {
   const from = getSignInFrom(location);
 
   const { user, authLoading } = useAuth();
-
-  // stash where to land after onboarding (if this user needs it) — read by
-  // Onboarding.jsx once the chat/review flow completes. `from` is only ever
-  // "/onboarding" itself when Onboarding.jsx's own signed-out guard bounced
-  // here — that's not a real destination, so storing it would send "let's
-  // go" back into a fresh chat instead of the just-created profile.
-  useEffect(() => {
-    if (from && from !== "/" && !from.startsWith("/onboarding")) {
-      sessionStorage.setItem("post_onboarding_redirect", from);
-    }
-  }, [from]);
 
   const [step, setStep] = useState("options");
   const [name, setName] = useState("");
@@ -255,50 +238,22 @@ export default function SignIn() {
   }
 
   async function handleLinkedInSignIn() {
-    const skipOverlay =
-      from.startsWith("/payment") ||
-      from.startsWith("/community/portfolio-review") ||
-      from.startsWith("/portfolio-review");
-    if (!skipOverlay) {
-      localStorage.setItem("show_welcome_overlay", "1");
-      // lets WelcomeOverlay know it's safe to send an onboarded user to their
-      // profile instead of "/" once the OAuth redirect lands (see resolveLandingPath)
-      localStorage.setItem("oauth_default_landing", from === "/" ? "1" : "0");
-    }
-    // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
-    // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
-    localStorage.setItem("signin_from", from);
     sessionStorage.removeItem("signin_from");
     sessionStorage.removeItem("post_signin_redirect");
     try {
       await signInWithLinkedIn(from);
     } catch (e) {
-      localStorage.removeItem("show_welcome_overlay");
       setError(e.message || "LinkedIn sign-in failed.");
     }
   }
 
   async function handleGoogleSignIn() {
     // Redirect directly to `from` — avoids double-redirect that breaks OAuth state on mobile
-    const skipOverlay =
-      from.startsWith("/payment") ||
-      from.startsWith("/community/portfolio-review") ||
-      from.startsWith("/portfolio-review");
-    if (!skipOverlay) {
-      localStorage.setItem("show_welcome_overlay", "1");
-      // lets WelcomeOverlay know it's safe to send an onboarded user to their
-      // profile instead of "/" once the OAuth redirect lands (see resolveLandingPath)
-      localStorage.setItem("oauth_default_landing", from === "/" ? "1" : "0");
-    }
-    // Keep signin_from in localStorage as a fallback — WelcomeOverlay will redirect
-    // if Supabase OAuth lands on the wrong page (e.g. site root instead of `from`)
-    localStorage.setItem("signin_from", from);
     sessionStorage.removeItem("signin_from");
     sessionStorage.removeItem("post_signin_redirect");
     try {
       await signInWithGoogle(from);
     } catch (e) {
-      localStorage.removeItem("show_welcome_overlay");
       setError(e.message || "Google sign-in failed.");
     }
   }

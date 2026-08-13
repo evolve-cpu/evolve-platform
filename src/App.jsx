@@ -1031,7 +1031,7 @@
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useParams, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
@@ -1042,8 +1042,8 @@ import Navigation from "./components/Navigation";
 import LoadingScreen from "./components/LoadingScreen";
 import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 import ContactModal from "./components/ContactModal";
-import WelcomeOverlay from "./components/WelcomeOverlay";
 import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 
 // Lazy load non-critical routes
 const AboutUs = lazy(() => import("./pages/AboutUs"));
@@ -1137,8 +1137,41 @@ const AppLayout = () => {
   const [showOrientationWarning, setShowOrientationWarning] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+  const { user, authLoading } = useAuth();
+
+  // Sign-in and onboarding are coupled: a signed-in visitor with an
+  // incomplete profile is routed into /onboarding regardless of which
+  // surface they signed in through — Google One Tap and the in-page
+  // AuthModal (used on other pages) don't navigate anywhere on their own,
+  // unlike the dedicated /signin page, so this is the single choke point
+  // that catches all of them. Exempted routes handle their own post-signin
+  // flow (payment, portfolio review) or are unrelated account types
+  // (admin, institute spaces, invites) that shouldn't be pulled into the
+  // designer-profile onboarding chat.
+  useEffect(() => {
+    if (authLoading || !user || user.onboarding_completed) return;
+    const path = location.pathname;
+    const exempt =
+      path === "/onboarding" ||
+      path === "/signin" ||
+      path.startsWith("/admin") ||
+      path.startsWith("/payment") ||
+      path.startsWith("/community/portfolio-review") ||
+      path.startsWith("/portfolio-review") ||
+      path.startsWith("/invite/") ||
+      path.startsWith("/institute/") ||
+      path.startsWith("/space/") ||
+      path.startsWith("/mentorship-session") ||
+      path.startsWith("/evolve-in-person");
+    if (exempt) return;
+
+    // always land on the profile page once onboarding finishes — not back on
+    // whatever marketing page the visitor happened to be signed in from
+    navigate("/onboarding", { replace: true });
+  }, [user, authLoading, location.pathname, navigate]);
 
   // GA4: track page views on route change (SPA navigation doesn't auto-fire page_view)
   useEffect(() => {
@@ -1651,8 +1684,6 @@ const AppLayout = () => {
             </Suspense>
           )}
       </div>
-
-      <WelcomeOverlay />
     </>
   );
 };
