@@ -982,7 +982,7 @@ export default function PortfolioReviewFlow({
                       <button
                         onClick={() => setPhase("share")}
                         disabled={saving}
-                        className="text-white/60 hover:text-white text-xs font-bold rounded-2xl border border-white/20 hover:border-white/40 px-5 py-2.5 mr-auto disabled:opacity-30 transition-colors"
+                        className="text-white/60 hover:text-white text-xs font-bold rounded-2xl border border-[#373737] hover:bg-[#232325] px-5 py-2.5 mr-auto disabled:opacity-30 transition-colors"
                       >
                         skip
                       </button>
@@ -991,7 +991,7 @@ export default function PortfolioReviewFlow({
                       <button
                         onClick={handleBackQ}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 text-white font-bold text-sm rounded-2xl border border-white/20 hover:border-white/40 px-7 py-3.5 disabled:opacity-30 transition-colors"
+                        className="inline-flex items-center gap-2 text-white font-bold text-sm rounded-2xl border border-[#373737] hover:bg-[#232325] px-7 py-3.5 disabled:opacity-30 transition-colors"
                       >
                         <img
                           src={right_arrow_icon}
@@ -1037,13 +1037,13 @@ export default function PortfolioReviewFlow({
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setResumeMode("upload")}
-                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "upload" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           upload
                         </button>
                         <button
                           onClick={() => setResumeMode("link")}
-                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "link" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           link
                         </button>
@@ -1088,13 +1088,13 @@ export default function PortfolioReviewFlow({
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setPortfolioMode("link")}
-                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "link" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           link
                         </button>
                         <button
                           onClick={() => setPortfolioMode("upload")}
-                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "upload" ? "border-white text-white" : "border-white/15 text-white/40 hover:border-white/30"}`}
+                          className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           upload
                         </button>
@@ -1228,9 +1228,10 @@ export default function PortfolioReviewFlow({
                     <button
                       onClick={handleSubmitShare}
                       disabled={saving || resumeUploading || portfolioUploading}
-                      className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-6 py-2.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+                      className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
                     >
-                      {saving ? "submitting…" : "submit & book a call →"}
+                      {saving ? "submitting…" : "submit & book a call"}
+                      {!saving && <img src={right_arrow_icon} alt="" className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
