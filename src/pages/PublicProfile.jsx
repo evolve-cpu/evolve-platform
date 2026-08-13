@@ -325,7 +325,7 @@ export default function PublicProfile() {
             single scrollbar with <main> instead of each pane scrolling on
             its own. */}
         <aside
-          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 relative flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
+          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
         >
           {/* ── mobile: compact summary bar (collapsed) / small collapse
               control above the full panel (expanded) ── */}
@@ -435,20 +435,27 @@ export default function PublicProfile() {
           </div>
           )}
 
-          {/* desktop-only collapse toggle — a small square button pinned to
-              the bottom-right corner of the rail, straddling its edge */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((v) => !v)}
-            title={sidebarCollapsed ? "expand panel" : "collapse panel"}
-            className="hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white absolute bottom-5 z-10"
-            style={{ right: -16 }}
-          >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ transform: sidebarCollapsed ? "none" : "scaleX(-1)" }}>
-              <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </aside>
+
+        {/* desktop-only collapse toggle — a small square button pinned to
+            the bottom-right corner of the rail, straddling its edge. Fixed
+            to the viewport (not absolute within the aside) so it stays put
+            at a consistent spot on screen no matter how tall the page is or
+            how far the user has scrolled — an aside that's merely `sticky`
+            only spans its own box height, so an absolutely-positioned
+            button anchored to its bottom edge scrolls out of view on long
+            pages instead of tracking the viewport. */}
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          title={sidebarCollapsed ? "expand panel" : "collapse panel"}
+          className="hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white fixed bottom-5 z-50"
+          style={{ left: sidebarCollapsed ? 68 : 284 }}
+        >
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ transform: sidebarCollapsed ? "none" : "scaleX(-1)" }}>
+            <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
         {/* main content — flows in the same single page scroll as
             everything else; the sticky top bar and sidebar stay in place
