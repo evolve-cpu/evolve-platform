@@ -87,6 +87,14 @@ const FAQ = [
   [
     "Refund policy?",
     "Cancel more than 48 hours before your scheduled call for a full refund. Within 48 hours, you can reschedule once at no extra cost."
+  ],
+  [
+    "When can I use my free follow-up call?",
+    "The follow-up call is yours to use once you've made revisions based on your first call. There's no hard deadline — take the time you need to rework your portfolio, then book it when you feel ready."
+  ],
+  [
+    "What if I need to reschedule my call?",
+    "No problem. You can reschedule up to 24 hours before your call without any issue — just use the link in your confirmation email to pick a new slot."
   ]
 ];
 
@@ -569,9 +577,17 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* the process */}
       <div>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-8">
+        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">
           the process
+        </p>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-3">
+          A structured 1:1 review
         </h2>
+        <p className="text-white/50 text-sm leading-relaxed mb-8 max-w-xl">
+          built around one idea: feedback from the people who actually make
+          hiring and design decisions, delivered while you still have time to
+          act on it.
+        </p>
         <ProcessSteps steps={PROCESS_STEPS} />
       </div>
 
@@ -580,10 +596,16 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
         <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">
           the panel
         </p>
-        <h2 className="text-white font-bold font-bricolage text-xl mb-4">
+        <h2 className="text-white font-bold font-bricolage text-xl mb-3">
           industry experts across multiple disciplines
         </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
+        <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xl">
+          reviews are conducted by practicing designers from leading product
+          companies, design studios, and startups — each following evolve's
+          structured review framework while bringing their own industry
+          perspective.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {REVIEWERS.map((r) => (
             <div key={r.name} className="flex flex-col gap-2">
               <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.03] border border-white/10">
@@ -608,6 +630,8 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
 
       {/* pricing */}
       <div id="pr-pricing">
+      {/* pricing — desktop: two-column layout */}
+      <div className="hidden md:block">
         <h2 className="text-white font-bold font-bricolage text-xl mb-4">
           pricing
         </h2>
@@ -662,6 +686,71 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* pricing — mobile: single flat-price card */}
+      <div className="md:hidden">
+        <p className="text-white/30 text-[11px] font-bold uppercase tracking-[0.16em] mb-2">
+          pricing
+        </p>
+        <h2 className="text-white font-bold font-bricolage text-xl mb-2">
+          One flat price for a full 1:1 review.
+        </h2>
+        <p className="text-white/50 text-sm leading-relaxed mb-5 max-w-xl">
+          go deeper with personalised guidance and dedicated reviewer
+          support.
+        </p>
+        <div
+          className="rounded-2xl border border-evolve-yellow/60 px-5 py-6 flex flex-col gap-4"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,208,7,0.06), transparent 55%)"
+          }}
+        >
+          <p className="text-white/40 text-xs uppercase tracking-wide font-semibold">
+            live review with a mentor
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-white font-bold text-3xl">₹1,400</span>
+            <span className="text-white/30 text-xs">per review</span>
+          </div>
+          <p className="text-white/50 text-sm leading-relaxed">
+            a matched reviewer, a live 1:1 call, a written report with
+            actionable fixes, and a free follow-up call once you've made your
+            revisions. everything is built around your goals.
+          </p>
+          <button
+            onClick={() => setBookOpen(true)}
+            className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
+          >
+            Get started →
+          </button>
+
+          <div className="border-t border-white/10 pt-4">
+            <p className="text-white/40 text-xs uppercase tracking-wide font-semibold mb-3">
+              what's included
+            </p>
+            <ul className="flex flex-col gap-3">
+              {[
+                "Pre-review questionnaire feedback tailored to your goals",
+                "Live 1:1 call with your matched reviewer",
+                "Written report with actionable fixes",
+                "1 free follow-up call to check your revisions"
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-2.5 text-white/60 text-sm"
+                >
+                  <span className="w-4 h-4 rounded-full bg-evolve-yellow/15 text-evolve-yellow text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    ✓
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
       </div>
 
       {/* FAQ */}

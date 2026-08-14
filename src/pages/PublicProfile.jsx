@@ -33,20 +33,6 @@ const GROWTH_ENCOURAGEMENT = {
   blooming: "you're in full bloom — almost there."
 };
 
-// groups STAGE_LABELS into consecutive runs sharing the same label, so the
-// growth map can show one section header ("SEED", "SPROUTING", …) per run
-// instead of repeating the label on every stage row.
-function groupStages() {
-  const groups = [];
-  STAGE_LABELS.forEach((label, i) => {
-    const stageNum = i + 1;
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) last.stages.push(stageNum);
-    else groups.push({ label, stages: [stageNum] });
-  });
-  return groups;
-}
-
 /* ─── small building blocks ──────────────────────────────────────────────── */
 function WhatsAppIcon({ className }) {
   return (
@@ -185,6 +171,9 @@ export default function PublicProfile() {
     location.state?.activeProgramme || null
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // the desktop collapse/expand toggle only shows up while hovering the
+  // sidebar rail (or the button itself, since it straddles the rail's edge).
+  const [sidebarHovered, setSidebarHovered] = useState(false);
 
   // default collapsed on mobile (short summary) / expanded on desktop —
   // checked once on mount only, so it doesn't fight a user's own toggle
@@ -391,7 +380,7 @@ export default function PublicProfile() {
             href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-semibold text-white/70 border border-white/15 rounded-full pl-2 pr-4 py-2 hover:border-white/30 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-white/70 border border-white/15 rounded-full pl-2 pr-4 py-2 hover:text-white hover:bg-white/[0.06] transition-colors"
           >
             <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
             evolve community
@@ -539,6 +528,8 @@ export default function PublicProfile() {
             single scrollbar with <main> instead of each pane scrolling on
             its own. */}
         <aside
+          onMouseEnter={() => setSidebarHovered(true)}
+          onMouseLeave={() => setSidebarHovered(false)}
           className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
         >
           {/* ── mobile: compact summary bar (collapsed) / small collapse
@@ -635,7 +626,7 @@ export default function PublicProfile() {
                 <p className="text-white/25 text-[10px] md:text-xs font-bold uppercase tracking-wide px-2.5">
                   growth map
                 </p>
-                <div className="relative flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   {(() => {
                     const currentStage = stageForProgress(
                       card.growth_stage ?? 0
@@ -643,72 +634,77 @@ export default function PublicProfile() {
                     const totalStages = STAGE_LABELS.length;
                     return (
                       <>
-                        <div className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
-                        <div
-                          className="absolute left-[18px] top-1 w-px bg-evolve-inchworm transition-[height]"
-                          style={{
-                            height: `${(currentStage / totalStages) * 100}%`
-                          }}
-                        />
-                        {groupStages().map((g) => {
-                          const groupReached = g.stages[0] <= currentStage;
-                          return (
-                            <div
-                              key={g.label + g.stages[0]}
-                              className="flex flex-col gap-1"
-                            >
-                              <p
-                                className={`flex items-center gap-2 px-2.5 text-[11px] md:text-sm font-bold uppercase tracking-wide ${groupReached ? "text-evolve-inchworm" : "text-white/20"}`}
-                              >
-                                <span className="w-4 flex-shrink-0" />
-                                {g.label}
-                              </p>
-                              <div className="flex flex-col gap-0.5">
-                                {g.stages.map((stageNum) => {
-                                  const current = stageNum === currentStage;
-                                  const reached = stageNum <= currentStage;
-                                  if (current) {
-                                    return (
-                                      <div
-                                        key={stageNum}
-                                        className="flex items-center gap-2 rounded-lg bg-evolve-inchworm/10 px-2.5 py-1.5"
-                                      >
-                                        <span className="w-4 flex justify-center flex-shrink-0">
-                                          <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm flex-shrink-0" />
-                                        </span>
-                                        <span className="flex flex-col">
-                                          <span className="text-evolve-inchworm text-xs md:text-sm font-bold">
-                                            stage {stageNum}
-                                          </span>
-                                          <span className="text-white/40 text-[11px] md:text-sm">
-                                            you are here
-                                          </span>
-                                        </span>
-                                      </div>
-                                    );
-                                  }
-                                  return (
-                                    <div
-                                      key={stageNum}
-                                      className="flex items-center gap-2 px-2.5 py-1.5"
-                                    >
-                                      <span className="w-4 flex justify-center flex-shrink-0">
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${reached ? "bg-evolve-inchworm" : "bg-white/15"}`}
-                                        />
-                                      </span>
-                                      <span
-                                        className={`text-xs md:text-base font-semibold ${reached ? "text-white/50" : "text-white/25"}`}
-                                      >
+                        {/* every stage shipped so far (1-10) lives under one
+                            "seed" heading — the line + fill track progress
+                            only through this section. anything beyond stage
+                            10 isn't built yet, so the list just fades out at
+                            the bottom instead of listing locked stages. */}
+                        <div className="relative flex flex-col gap-1 pb-6">
+                          <div className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
+                          <div
+                            className="absolute left-[18px] top-1 w-px bg-evolve-inchworm transition-[height]"
+                            style={{
+                              height: `${(currentStage / totalStages) * 100}%`
+                            }}
+                          />
+                          <p className="flex items-center gap-2 px-2.5 text-[11px] md:text-sm font-bold uppercase tracking-wide text-evolve-inchworm">
+                            <span className="w-4 flex-shrink-0" />
+                            seed
+                          </p>
+                          <div className="flex flex-col gap-0.5">
+                            {Array.from(
+                              { length: totalStages },
+                              (_, i) => i + 1
+                            ).map((stageNum) => {
+                              const current = stageNum === currentStage;
+                              const reached = stageNum <= currentStage;
+                              if (current) {
+                                return (
+                                  <div
+                                    key={stageNum}
+                                    className="flex items-center gap-2 rounded-lg bg-evolve-inchworm/10 px-2.5 py-1.5"
+                                  >
+                                    <span className="w-4 flex justify-center flex-shrink-0">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm flex-shrink-0" />
+                                    </span>
+                                    <span className="flex flex-col">
+                                      <span className="text-evolve-inchworm text-xs md:text-sm font-bold">
                                         stage {stageNum}
                                       </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
+                                      <span className="text-white/40 text-[11px] md:text-sm">
+                                        you are here
+                                      </span>
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div
+                                  key={stageNum}
+                                  className="flex items-center gap-2 px-2.5 py-1.5"
+                                >
+                                  <span className="w-4 flex justify-center flex-shrink-0">
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${reached ? "bg-evolve-inchworm" : "bg-white/15"}`}
+                                    />
+                                  </span>
+                                  <span
+                                    className={`text-xs md:text-base font-semibold ${reached ? "text-white/50" : "text-white/25"}`}
+                                  >
+                                    stage {stageNum}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div
+                            className="pointer-events-none absolute inset-x-0 bottom-0 h-10"
+                            style={{
+                              background:
+                                "linear-gradient(to bottom, transparent, #161618)"
+                            }}
+                          />
+                        </div>
                       </>
                     );
                   })()}
@@ -729,8 +725,12 @@ export default function PublicProfile() {
         <button
           type="button"
           onClick={() => setSidebarCollapsed((v) => !v)}
+          onMouseEnter={() => setSidebarHovered(true)}
+          onMouseLeave={() => setSidebarHovered(false)}
           title={sidebarCollapsed ? "expand panel" : "collapse panel"}
-          className="hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white fixed bottom-5 z-50"
+          className={`hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white fixed bottom-5 z-50 transition-opacity duration-150 ${
+            sidebarHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
           style={{ left: sidebarCollapsed ? 68 : 284 }}
         >
           <svg
