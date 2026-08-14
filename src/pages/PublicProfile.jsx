@@ -639,7 +639,15 @@ export default function PublicProfile() {
                             only through this section. anything beyond stage
                             10 isn't built yet, so the list just fades out at
                             the bottom instead of listing locked stages. */}
-                        <div className="relative flex flex-col gap-1 pb-6">
+                        <div
+                          className="relative flex flex-col gap-1 pb-2"
+                          style={{
+                            WebkitMaskImage:
+                              "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)",
+                            maskImage:
+                              "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)"
+                          }}
+                        >
                           <div className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
                           <div
                             className="absolute left-[18px] top-1 w-px bg-evolve-inchworm transition-[height]"
@@ -697,13 +705,6 @@ export default function PublicProfile() {
                               );
                             })}
                           </div>
-                          <div
-                            className="pointer-events-none absolute inset-x-0 bottom-0 h-10"
-                            style={{
-                              background:
-                                "linear-gradient(to bottom, transparent, #161618)"
-                            }}
-                          />
                         </div>
                       </>
                     );

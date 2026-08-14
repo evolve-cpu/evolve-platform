@@ -44,7 +44,7 @@ function PhaseBar({ qIndex, profile }) {
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${pct}%`,
-                  background: done ? "rgba(194,253,92,1)" : "rgba(163,91,251,1)"
+                  background: done ? "rgba(194,253,92,1)" : "rgba(255,208,7,1)"
                 }}
               />
             </div>
@@ -54,7 +54,7 @@ function PhaseBar({ qIndex, profile }) {
                 color: done
                   ? "rgba(194,253,92,1)"
                   : isCurrent
-                    ? "rgba(163,91,251,1)"
+                    ? "rgba(255,208,7,1)"
                     : "rgba(255,255,255,0.3)"
               }}
             >
@@ -179,10 +179,14 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
   }, []);
 
   useEffect(() => {
-    // scroll far enough to reveal the input box itself, not just the latest
-    // message — otherwise a new question (plus its chips/option cards) can
-    // land below the fold, leaving the answer box out of view until the
-    // person scrolls manually.
+    // two scroll containers can be involved: the message log itself
+    // (overflow-y-auto, so a long conversation needs to be pushed to its own
+    // bottom) and, on mobile, the page around it. Drive both so a new
+    // question — plus its chips/option cards — never lands below the fold,
+    // leaving the answer box out of view until the person scrolls manually.
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
     inputWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, optionCards, chips]);
 
@@ -351,12 +355,12 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                   style={
                     m.role === "user"
                       ? {
-                          background: "rgba(163,91,251,1)",
+                          background: "#3a3a40",
                           color: "#fff",
                           borderBottomRightRadius: 4
                         }
                       : {
-                          background: "rgba(255,255,255,0.06)",
+                          background: "#1c1c1f",
                           border: "1px solid rgba(255,255,255,0.08)",
                           color: "#eae8e2",
                           borderBottomLeftRadius: 4
@@ -422,7 +426,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                     key="chips"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex gap-2 overflow-x-auto pb-1"
+                    className="flex gap-2 overflow-x-auto pb-2 chat-chip-scrollbar"
                   >
                     {chips.map((c) => {
                       const selected = selectedChips(inputValue).some(
@@ -437,9 +441,9 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                           style={
                             selected
                               ? {
-                                  borderColor: "rgba(163,91,251,0.7)",
-                                  background: "rgba(163,91,251,0.18)",
-                                  color: "rgba(194,165,255,1)"
+                                  borderColor: "rgba(255,208,7,0.7)",
+                                  background: "rgba(255,208,7,0.18)",
+                                  color: "rgba(255,208,7,1)"
                                 }
                               : {
                                   borderColor: "rgba(255,255,255,0.1)",

@@ -30,10 +30,6 @@ export default function SeedPlantedModal({ onContinue, spaceName }) {
           </svg>
         </button>
 
-        <span className="text-evolve-inchworm text-[10px] font-bold uppercase tracking-wide bg-evolve-inchworm/10 rounded-full px-3 py-1">
-          stage progress
-        </span>
-
         <h1 className="text-white font-bold text-xl mt-1">your seed has been planted 🌱</h1>
         <p className="text-white/50 text-sm leading-relaxed">
           {spaceName
@@ -49,7 +45,7 @@ export default function SeedPlantedModal({ onContinue, spaceName }) {
 
         <button
           onClick={onContinue}
-          className="w-full bg-evolve-lavender-indigo text-white font-bold text-base rounded-2xl py-4 mt-2 active:scale-[0.98] transition-transform"
+          className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 mt-2 active:scale-[0.98] transition-transform"
         >
           let's go
         </button>
