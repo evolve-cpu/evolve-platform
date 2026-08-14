@@ -2,8 +2,8 @@ import { useState } from "react";
 import GrowthMascot from "../../components/GrowthMascot";
 
 const ORG_TYPES = [
-  { value: "institute", emoji: "🎓", title: "design institute", sub: "a college, school, or bootcamp" },
-  { value: "company", emoji: "🏢", title: "company / studio", sub: "a design team, studio, or startup" }
+  { value: "institute", emoji: "🎓", title: "Design institute", sub: "A college, school, or bootcamp" },
+  { value: "company", emoji: "🏢", title: "Company / studio", sub: "A design team, studio, or startup" }
 ];
 
 export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
@@ -21,10 +21,10 @@ export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
           account setup · step 2 of 2
         </p>
         <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight">
-          tell us about your team.
+          Tell us about your team.
         </h1>
         <p className="text-white/50 text-sm max-w-sm">
-          this creates your team space — you can invite members and manage it any time from there.
+          This creates your team space — you can invite members and manage it any time from there.
         </p>
 
         <div className="w-full flex flex-col gap-4 mt-2 text-left">
@@ -70,14 +70,14 @@ export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
-            back
+            Back
           </button>
           <button
             onClick={() => canContinue && onContinue({ name: name.trim(), org_type: orgType })}
             disabled={!canContinue}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
           >
-            continue →
+            Continue →
           </button>
         </div>
       </div>

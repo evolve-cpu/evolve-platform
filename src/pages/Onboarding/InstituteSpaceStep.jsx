@@ -23,7 +23,7 @@ const KNOWN_SITES = {
 // rather than driven by real backend progress events (there aren't any
 // granular ones to hook into), but each label is genuinely describing the
 // stage that's happening around when it appears.
-const PROGRESS_STEPS = ["fetching your website…", "reading through the details…", "putting your page together…", "almost done…"];
+const PROGRESS_STEPS = ["Fetching your website…", "Reading through the details…", "Putting your page together…", "Almost done…"];
 
 function guessFromLink(raw) {
   let s = raw.trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "");
@@ -192,7 +192,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
           🏫 institute space · step 2 of 2
         </p>
         <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight">
-          set up your institute space.
+          Set up your institute space.
         </h1>
         <p className="text-white/50 text-sm max-w-sm">
           this is the shared space for your institute on evolve.
@@ -282,7 +282,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                   style={inputStyle}
                 >
                   <option value="" disabled style={optionStyle}>
-                    select setup
+                    Select setup
                   </option>
                   {MODE_OPTIONS.map((m) => (
                     <option key={m} value={m} style={optionStyle}>
@@ -299,7 +299,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                   style={inputStyle}
                 >
                   <option value="" disabled style={optionStyle}>
-                    select range
+                    Select range
                   </option>
                   {MEMBER_OPTIONS.map((m) => (
                     <option key={m} value={m} style={optionStyle}>
@@ -333,13 +333,13 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
               onClick={onBack}
               className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
             >
-              back
+              Back
             </button>
             <button
               onClick={buildSpace}
               className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98]"
             >
-              build my space →
+              Build my space →
             </button>
           </div>
         )}

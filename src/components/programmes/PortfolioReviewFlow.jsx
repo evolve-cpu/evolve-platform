@@ -15,7 +15,7 @@ const YEAR_VALUES = [
   "2nd year",
   "3rd year",
   "4th year",
-  "Final year"
+  "5th year"
 ];
 
 // growth_stage (0-100) reached once the intake questions + resume/portfolio
@@ -717,8 +717,8 @@ export default function PortfolioReviewFlow({
     setPhase("booking");
     advanceGrowthStage(
       SUBMIT_GROWTH_STAGE,
-      "your portfolio is growing 🌿",
-      "you've shared your work — almost time for your live 1:1 review."
+      "Your portfolio is growing 🌿",
+      "You've shared your work — almost time for your live 1:1 review."
     );
   }
 
@@ -902,7 +902,13 @@ export default function PortfolioReviewFlow({
             fill="none"
             className={`text-white/40 transition-transform ${sidebarOpenMobile ? "rotate-180" : ""}`}
           >
-            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M5 7.5L10 12.5L15 7.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </span>
       </button>
@@ -997,7 +1003,10 @@ export default function PortfolioReviewFlow({
                           src={right_arrow_icon}
                           alt=""
                           className="w-4 h-4"
-                          style={{ transform: "scaleX(-1)", filter: "invert(1)" }}
+                          style={{
+                            transform: "scaleX(-1)",
+                            filter: "invert(1)"
+                          }}
                         />
                         back
                       </button>
@@ -1231,7 +1240,13 @@ export default function PortfolioReviewFlow({
                       className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
                     >
                       {saving ? "submitting…" : "submit & book a call"}
-                      {!saving && <img src={right_arrow_icon} alt="" className="w-4 h-4" />}
+                      {!saving && (
+                        <img
+                          src={right_arrow_icon}
+                          alt=""
+                          className="w-4 h-4"
+                        />
+                      )}
                     </button>
                   </div>
                 </div>

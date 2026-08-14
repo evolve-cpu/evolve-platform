@@ -48,7 +48,7 @@ function PlantingLoader() {
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="w-1.5 h-1.5 rounded-full bg-evolve-lavender-indigo animate-pulse"
+            className="w-1.5 h-1.5 rounded-full bg-evolve-yellow animate-pulse"
             style={{ animationDelay: `${i * 0.15}s` }}
           />
         ))}
@@ -57,12 +57,12 @@ function PlantingLoader() {
         <div
           className="w-11 h-11 rounded-full animate-spin"
           style={{
-            border: "4px solid rgba(163,91,251,0.2)",
-            borderTopColor: "rgba(163,91,251,1)"
+            border: "4px solid rgba(255,208,7,0.2)",
+            borderTopColor: "rgba(255,208,7,1)"
           }}
         />
-        <p className="text-white font-bold text-base">planting your seed…</p>
-        <p className="text-white/40 text-sm">setting up your design space</p>
+        <p className="text-white font-bold text-base">Planting your seed…</p>
+        <p className="text-white/40 text-sm">Setting up your design space</p>
       </div>
     </div>
   );
@@ -508,13 +508,13 @@ export default function Onboarding() {
         className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 text-center"
         style={{ backgroundColor: "#161618" }}
       >
-        <p className="text-white font-bold text-lg">something went wrong</p>
+        <p className="text-white font-bold text-lg">Something went wrong</p>
         <p className="text-white/50 text-sm max-w-xs">{error}</p>
         <button
           onClick={() => handleConfirm(chatProfile, orgDraft)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:opacity-80 transition-opacity"
         >
-          try again →
+          Try again →
         </button>
       </div>
     );
@@ -532,7 +532,7 @@ export default function Onboarding() {
         className="fixed top-5 right-5 z-50 flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
         style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
       >
-        log out
+        Log out
       </button>
       {content}
     </>

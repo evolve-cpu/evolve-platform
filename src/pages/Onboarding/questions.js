@@ -87,7 +87,7 @@ const DEFAULT_LEVEL_MAP = {
 };
 const LEVEL_BY_PERSONA = {
   "High schooler": {
-    ask: "have you explored design before — workshops, a bit of practice, or nothing yet?",
+    ask: "Have you explored design before — workshops, a bit of practice, or nothing yet?",
     chips: ["Nothing yet", "A little exploring", "Quite a bit already"],
     map: {
       "Nothing yet": "zero",
@@ -100,7 +100,7 @@ const LEVEL_BY_PERSONA = {
   // this falls back to DEFAULT_LEVEL_MAP instead of asking "which year"
   // twice.
   "Career shifter": {
-    ask: "how far along are you in learning design so far?",
+    ask: "How far along are you in learning design so far?",
     chips: [
       "Just starting",
       "Learning casually",
@@ -113,7 +113,7 @@ const LEVEL_BY_PERSONA = {
     }
   },
   "Recent grad": {
-    ask: "how would you rate where you’re at with design right now?",
+    ask: "How would you rate where you’re at with design right now?",
     chips: ["Beginner", "Intermediate", "Advanced"],
     map: {
       Beginner: "beginner",
@@ -122,7 +122,7 @@ const LEVEL_BY_PERSONA = {
     }
   },
   "Working designer": {
-    ask: "how many years have you been working as a designer?",
+    ask: "How many years have you been working as a designer?",
     chips: ["0–1 yr", "2–4 yrs", "5+ yrs"],
     map: {
       "0–1 yr": "intermediate",
@@ -264,27 +264,27 @@ export const QUESTIONS = [
     id: "name",
     phase: "about",
     cardLabel: "name",
-    ask: () => "hey! let's start simple — what's your name?",
+    ask: () => "Hey! Let's start simple — what's your name?",
     chips: [],
     isVague: (text) => text.trim().length < 2,
-    followUp: () => "sorry, didn't quite catch that — what should I call you?",
+    followUp: () => "Sorry, didn't quite catch that — what should I call you?",
     parse: (text) => {
       const m = text.match(
         /(?:i'?m|i am|my name is|this is)\s+([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?)/i
       );
       return { name: m ? toTitleCase(m[1]) : toTitleCase(text.trim()) };
     },
-    ack: (p) => `nice to meet you, ${firstNameOf(p.name)}.`
+    ack: (p) => `Nice to meet you, ${firstNameOf(p.name)}.`
   },
   {
     id: "country",
     phase: "about",
     cardLabel: "country",
-    ask: () => "which country are you based in?",
+    ask: () => "Which country are you based in?",
     chips: ["India", "United States", "United Kingdom", "Canada", "Remote"],
     isVague: isGenericVague,
     followUp: () =>
-      "just the country's fine — like India, the US, or wherever you're based.",
+      "Just the country's fine — like India, the US, or wherever you're based.",
     parse: (text) => {
       const found = COUNTRY_DICT.find((c) => text.toLowerCase().includes(c));
       return {
@@ -293,13 +293,13 @@ export const QUESTIONS = [
           : toTitleCase(text.trim())
       };
     },
-    ack: (p) => `got it — ${p.country}.`
+    ack: (p) => `Got it — ${p.country}.`
   },
   {
     id: "persona",
     phase: "about",
     cardLabel: "persona",
-    ask: () => "and where are you right now in your design journey?",
+    ask: () => "And where are you right now in your design journey?",
     chips: PERSONA_VALUES,
     options: [
       {
@@ -338,7 +338,7 @@ export const QUESTIONS = [
       const tags = matchTags(text, PERSONA_DICT);
       return { persona: tags[0] || null };
     },
-    ack: () => "good to know."
+    ack: () => "Good to know."
   },
   // Design school students get three extra questions right here — school
   // name, standard/year, and stream — so that portfolio-review bookings can
@@ -349,28 +349,28 @@ export const QUESTIONS = [
     cardLabel: "school / college",
     condition: (p) => p.persona === "Design school student",
     ask: () =>
-      "which design school or college are you studying at? (please share the full name, not a short form)",
+      "Which design school or college are you studying at? (Please share the full name, not a short form)",
     chips: [],
     isVague: isGenericVague,
     followUp: () =>
-      "no worries — just the full name of your school or college is fine, no short forms.",
+      "No worries — just the full name of your school or college is fine, no short forms.",
     parse: (text) => ({
       school_name: truncate(toTitleCase(text.trim()).replace(/\.$/, ""), 80)
     }),
-    ack: (p) => `nice — ${p.school_name}.`
+    ack: (p) => `Nice — ${p.school_name}.`
   },
   {
     id: "standard",
     phase: "about",
     cardLabel: "year / standard",
     condition: (p) => p.persona === "Design school student",
-    ask: () => "and which year or standard are you currently in?",
+    ask: () => "And which year or standard are you currently in?",
     chips: ["1st year", "2nd year", "3rd year", "4th year", "5th year"],
     isVague: isGenericVague,
     followUp: () =>
-      "just the year's fine — like 1st year, 3rd year, or final year.",
+      "Just the year's fine — like 1st year, 3rd year, or final year.",
     parse: (text) => ({ standard: truncate(toTitleCase(text.trim()), 40) }),
-    ack: (p) => `got it — ${p.standard}.`
+    ack: (p) => `Got it — ${p.standard}.`
   },
   {
     id: "stream",
@@ -378,11 +378,11 @@ export const QUESTIONS = [
     cardLabel: "stream",
     condition: (p) => p.persona === "Design school student",
     ask: () =>
-      "what stream or specialization are you pursuing — like UX, Fashion Design, Graphic Design, or something else?",
+      "What stream or specialization are you pursuing — like UX, Fashion Design, Graphic Design, or something else?",
     chips: DISCIPLINE_VALUES,
     isVague: isGenericVague,
     followUp: () =>
-      "no worries — what's the closest fit? like UX, Product Design, Fashion Design, and so on.",
+      "No worries — what's the closest fit? Like UX, Product Design, Fashion Design, and so on.",
     parse: (text) => {
       const matched = matchMulti(text, DISCIPLINE_VALUES);
       return {
@@ -391,7 +391,7 @@ export const QUESTIONS = [
           : truncate(toTitleCase(text.trim()), 60)
       };
     },
-    ack: (p) => `noted — ${p.stream}.`
+    ack: (p) => `Noted — ${p.stream}.`
   },
   {
     id: "level",
@@ -399,7 +399,7 @@ export const QUESTIONS = [
     cardLabel: "level",
     ask: (p) =>
       (LEVEL_BY_PERSONA[p.persona] || {}).ask ||
-      "how would you describe where you're at with design right now?",
+      "How would you describe where you're at with design right now?",
     chips: (p) =>
       (LEVEL_BY_PERSONA[p.persona] || {}).chips ||
       Object.keys(DEFAULT_LEVEL_MAP),
@@ -420,29 +420,29 @@ export const QUESTIONS = [
         return { level: map[matchedLabel], level_confidence: "declared" };
       return { level: "beginner", level_confidence: "inferred_weak" };
     },
-    ack: () => "noted."
+    ack: () => "Noted."
   },
   {
     id: "motivation",
     phase: "interests",
     cardLabel: "why design",
     ask: () =>
-      "let's talk design — what got you interested in it in the first place?",
+      "Let's talk design — what got you interested in it in the first place?",
     chips: [],
     isVague: isGenericVague,
     followUp: () =>
-      "no worries — even roughly, was it a project, a person, or just something you always gravitated to?",
+      "No worries — even roughly, was it a project, a person, or just something you always gravitated to?",
     parse: (text) => ({
       motivation: truncate(toTitleCase(text.trim()).replace(/\.$/, ""), 70)
     }),
-    ack: () => "that's a great starting point."
+    ack: () => "That's a great starting point."
   },
   {
     id: "learning_method",
     phase: "interests",
     cardLabel: "learning method",
     ask: () =>
-      "are you mostly self-taught, or learning through formal design education?",
+      "Are you mostly self-taught, or learning through formal design education?",
     chips: ["Self-taught", "Formal education (design school)"],
     options: [
       {
@@ -477,14 +477,14 @@ export const QUESTIONS = [
             : "Self-taught"
       };
     },
-    ack: () => "good to know."
+    ack: () => "Good to know."
   },
   {
     id: "learning_modes",
     phase: "interests",
     cardLabel: "learning modes",
     ask: () =>
-      'and are any of these part of the mix? tap as many as apply, then send — or type "none":',
+      'And are any of these part of the mix? Tap as many as apply, then send — or type "none":',
     chips: [...LEARNING_MODES_VALUES, "None of these"],
     isVague: isGenericVague,
     parse: (text) => {
@@ -494,19 +494,19 @@ export const QUESTIONS = [
     },
     ack: (p, parsed) =>
       parsed.learning_modes && parsed.learning_modes.length
-        ? `got it — ${parsed.learning_modes.join(", ")}.`
-        : "no worries, noted."
+        ? `Got it — ${parsed.learning_modes.join(", ")}.`
+        : "No worries, noted."
   },
   {
     id: "discipline",
     phase: "interests",
     cardLabel: "discipline",
     ask: () =>
-      "which areas of design are you most drawn to? tap as many as fit, then send:",
+      "Which areas of design are you most drawn to? Tap as many as fit, then send:",
     chips: DISCIPLINE_VALUES,
     isVague: isGenericVague,
     followUp: () =>
-      "totally fine not to have it pinned down — what kind of design work makes you stop and look twice when you're scrolling around?",
+      "Totally fine not to have it pinned down — what kind of design work makes you stop and look twice when you're scrolling around?",
     parse: (text) => {
       let matched = matchMulti(text, DISCIPLINE_VALUES);
       if (!matched.length) {
@@ -520,14 +520,14 @@ export const QUESTIONS = [
       return { discipline: matched.slice(0, 6) };
     },
     ack: (p, parsed) =>
-      `nice — ${(parsed.discipline || []).slice(0, 3).join(", ") || "noted"}.`
+      `Nice — ${(parsed.discipline || []).slice(0, 3).join(", ") || "noted"}.`
   },
   {
     id: "intent",
     phase: "future",
     cardLabel: "what would help",
     ask: () =>
-      "almost there — what would help you most right now? tap everything that applies, then send:",
+      "Almost there — what would help you most right now? Tap everything that applies, then send:",
     chips: INTENT_VALUES,
     options: [
       {
@@ -556,14 +556,14 @@ export const QUESTIONS = [
       return { intent: matched.slice(0, 6) };
     },
     ack: (p, parsed) =>
-      `noted — ${(parsed.intent || []).slice(0, 3).join(", ") || "got it"}.`
+      `Noted — ${(parsed.intent || []).slice(0, 3).join(", ") || "got it"}.`
   },
   {
     id: "work_type",
     phase: "future",
     cardLabel: "kind of work",
     ask: () =>
-      "last one — could you share a bit about the kind of work you'd like to do in design? could be a role, an industry, freelance vs. studio, whatever's on your mind.",
+      "Last one — could you share a bit about the kind of work you'd like to do in design? Could be a role, an industry, freelance vs. studio, whatever's on your mind.",
     chips: [
       "Full-time role",
       "Freelance",
@@ -601,7 +601,7 @@ export const QUESTIONS = [
           : truncate(toTitleCase(text.trim()).replace(/\.$/, ""), 90)
       };
     },
-    ack: () => "perfect."
+    ack: () => "Perfect."
   }
 ];
 

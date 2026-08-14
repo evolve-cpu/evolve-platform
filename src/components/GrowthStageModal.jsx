@@ -14,7 +14,7 @@ export default function GrowthStageModal({ progress, heading, message, onContinu
 
   return (
     <div className="fixed inset-0 z-[220] flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-evolve-black/70" onClick={onContinue} />
+      <div className="absolute inset-0 bg-evolve-black/40" onClick={onContinue} />
       <div
         className="relative w-full max-w-xs rounded-3xl border border-white/10 px-8 py-10 flex flex-col items-center gap-4 text-center"
         style={{ backgroundColor: "#1c1c1e" }}
@@ -29,16 +29,12 @@ export default function GrowthStageModal({ progress, heading, message, onContinu
           </svg>
         </button>
 
-        <span className="text-evolve-inchworm text-[10px] font-bold uppercase tracking-wide bg-evolve-inchworm/10 rounded-full px-3 py-1">
-          stage progress
-        </span>
-
         <h1 className="text-white font-bold text-xl mt-1">{heading}</h1>
         <p className="text-white/50 text-sm leading-relaxed">{message}</p>
 
         <GrowthMascot progress={progress} size={110} />
 
-        <span className="text-white/60 text-[11px] font-semibold bg-white/[0.05] border border-white/10 rounded-full px-3 py-1 capitalize">
+        <span className="text-evolve-inchworm text-sm font-bold capitalize">
           stage {stage} · {label}
         </span>
 
@@ -46,7 +42,7 @@ export default function GrowthStageModal({ progress, heading, message, onContinu
           onClick={onContinue}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 mt-2 active:scale-[0.98] transition-transform"
         >
-          keep going →
+          Keep going →
         </button>
       </div>
     </div>

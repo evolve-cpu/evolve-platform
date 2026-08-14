@@ -171,7 +171,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
     setChips(resolveChips(q, initialProfile));
     const ask = q.ask(initialProfile);
     const greeting = initialProfile.name
-      ? `hey ${firstNameOf(initialProfile.name)}! ${ask}`
+      ? `Hey ${firstNameOf(initialProfile.name)}! ${ask}`
       : ask;
     aiSay(greeting, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -257,7 +257,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
       const opts = resolveOptions(q, profile);
       if (opts.length) {
         await aiSay(
-          "no worries — let's try that a little differently. tap whichever fits best, or just type it out:",
+          "No worries — let's try that a little differently. Tap whichever fits best, or just type it out:",
           300
         );
         setOptionCards(opts);
@@ -289,7 +289,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
       setChips(resolveChips(nextQ, nextProfile));
     } else {
       await aiSay(
-        `${q.ack(nextProfile, parsedFields)}\n\nperfect — that's everything i need. let's take a look at your profile. 🌱`,
+        `${q.ack(nextProfile, parsedFields)}\n\nPerfect — that's everything I need. Let's take a look at your profile. 🌱`,
         300
       );
       setTimeout(() => onComplete(nextProfile), 900);
@@ -307,19 +307,16 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen md:h-screen flex flex-col md:overflow-hidden"
       style={{ backgroundColor: "#161618" }}
     >
       <div
-        className="sticky top-0 z-30 flex flex-col items-center text-center gap-2 px-5 pt-10 pb-4 md:static md:pt-12"
+        className="sticky top-0 z-30 flex flex-col items-center text-center gap-2 px-5 pt-10 pb-4 md:static md:pt-12 md:flex-shrink-0"
         style={{ backgroundColor: "#161618" }}
       >
         <h1 className="text-white font-bold text-2xl md:text-3xl">
-          let's build your profile
+          Let's build your profile
         </h1>
-        <p className="hidden md:block text-white/50 text-sm max-w-sm">
-          the more you share, the more this feels like your space.
-        </p>
         {/* mobile-only status bar — kept inside this same sticky block so it
             pins to the top together with the heading instead of scrolling
             away with the chat log */}
@@ -467,7 +464,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="type your answer…"
+                placeholder="Type your answer…"
                 className="flex-1 resize-none max-h-24 min-h-[46px] rounded-2xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
                 style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
               />

@@ -63,10 +63,10 @@ export default function InstituteAdminProfileStep({ initial, onBack, onContinue 
           🏫 institute space · step 1 of 2
         </p>
         <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight">
-          tell us about yourself.
+          Tell us about yourself.
         </h1>
         <p className="text-white/50 text-sm max-w-sm">
-          you'll be the admin of this space — this helps us verify it and shows on your profile too.
+          You'll be the admin of this space — this helps us verify it and shows on your profile too.
         </p>
 
         <div className="flex items-center gap-3 w-full mt-2">
@@ -128,7 +128,7 @@ export default function InstituteAdminProfileStep({ initial, onBack, onContinue 
               style={inputStyle}
             >
               <option value="" disabled style={optionStyle}>
-                select your role
+                Select your role
               </option>
               {INSTITUTION_ROLES.map((r) => (
                 <option key={r.value} value={r.value} style={optionStyle}>
@@ -158,13 +158,13 @@ export default function InstituteAdminProfileStep({ initial, onBack, onContinue 
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
-            back
+            Back
           </button>
           <button
             onClick={handleContinue}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98]"
           >
-            continue →
+            Continue →
           </button>
         </div>
       </div>

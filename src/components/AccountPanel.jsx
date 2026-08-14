@@ -84,7 +84,7 @@ function ChipField({ options, value, onChange, multi }) {
             }}
             className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
               active
-                ? "border-evolve-lavender-indigo/50 bg-evolve-lavender-indigo/[0.12] text-evolve-lavender-indigo"
+                ? "border-evolve-yellow/50 bg-evolve-yellow/[0.12] text-evolve-yellow"
                 : "border-[#373737] text-white/50 hover:bg-[#232325] hover:border-white/20"
             }`}
           >
@@ -116,7 +116,7 @@ export function AccountMenuList({ onSelect, onBack, onLogOut, onDeleteAccount })
   ];
   return (
     <div className="flex flex-col gap-6">
-      <BackHeader title="back" onBack={onBack} />
+      <BackHeader title="Back" onBack={onBack} />
       <div className="flex flex-col gap-2">
         {items.map((item) => (
           <button
@@ -224,7 +224,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
 
     if (username !== (user?.username || "")) {
       if (!username.trim()) {
-        setUsernameError("username can't be empty.");
+        setUsernameError("Username can't be empty.");
         setSaving(false);
         return;
       }
@@ -235,7 +235,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
         .neq("id", user.id)
         .maybeSingle();
       if (taken) {
-        setUsernameError("that username's already taken — try another.");
+        setUsernameError("That username's already taken — try another.");
         setSaving(false);
         return;
       }
@@ -278,7 +278,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-lavender-indigo/60"
+            className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60"
             style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
           />
         </div>
@@ -293,7 +293,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
               setUsername(slugify(e.target.value));
               setUsernameError("");
             }}
-            className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-lavender-indigo/60"
+            className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60"
             style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
           />
           {usernameError && <p className="text-red-400 text-xs">{usernameError}</p>}
@@ -311,15 +311,15 @@ export function MyAccountPanel({ onBack, onSaved }) {
         </div>
 
         {answeredQuestions.length > 0 && (
-          <div className="border border-evolve-lavender-indigo/20 rounded-2xl overflow-hidden">
+          <div className="border border-evolve-yellow/20 rounded-2xl overflow-hidden">
             <button
               type="button"
               onClick={() => setOnboardingOpen((v) => !v)}
               className="w-full flex items-center gap-2 px-4 py-3.5 text-left"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-evolve-lavender-indigo flex-shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow flex-shrink-0" />
               <span className="text-white text-sm font-bold flex-1">Onboarding Questions</span>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className={`text-evolve-lavender-indigo/70 transition-transform ${onboardingOpen ? "rotate-180" : ""}`}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className={`text-evolve-yellow/70 transition-transform ${onboardingOpen ? "rotate-180" : ""}`}>
                 <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
@@ -334,7 +334,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
                   return (
                     <div
                       key={q.id}
-                      className={`flex flex-col gap-2 py-4 ${i > 0 ? "border-t border-evolve-lavender-indigo/10" : ""}`}
+                      className={`flex flex-col gap-2 py-4 ${i > 0 ? "border-t border-evolve-yellow/10" : ""}`}
                     >
                       <label className="text-white/40 text-xs">{label}</label>
                       {isChipSingle || isChipMulti ? (
@@ -349,7 +349,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
                           type="text"
                           value={draftVal || ""}
                           onChange={(e) => setOnboardingDraft((d) => ({ ...d, [q.id]: e.target.value }))}
-                          className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-lavender-indigo/60"
+                          className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60"
                           style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
                         />
                       )}
@@ -367,7 +367,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
           disabled={!dirty || saving}
           className="self-start bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
         >
-          {saving ? "saving…" : saved ? "saved ✓" : "Save changes"}
+          {saving ? "Saving…" : saved ? "Saved ✓" : "Save changes"}
         </button>
       </div>
     </div>
@@ -436,12 +436,12 @@ export function InvoicePanel({ onBack }) {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <BackHeader title="Invoice" onBack={onBack} />
-      <p className="text-white/40 text-sm -mt-3">your payment history across every evolve programme.</p>
+      <p className="text-white/40 text-sm -mt-3">Your payment history across every evolve programme.</p>
 
       {loading ? (
-        <p className="text-white/40 text-sm">loading…</p>
+        <p className="text-white/40 text-sm">Loading…</p>
       ) : rows.length === 0 ? (
-        <p className="text-white/40 text-sm">no payments yet.</p>
+        <p className="text-white/40 text-sm">No payments yet.</p>
       ) : (
         <div className="flex flex-col">
           {rows.map((r) => (

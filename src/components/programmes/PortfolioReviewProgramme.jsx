@@ -432,8 +432,8 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
     setReviewRows((prev) => [...prev, row]);
     advanceGrowthStage(
       PAYMENT_GROWTH_STAGE,
-      "you're one step closer 🌱",
-      "your seed is sprouting — you've booked your portfolio review. keep the momentum going."
+      "You're one step closer 🌱",
+      "Your seed is sprouting — you've booked your portfolio review. Keep the momentum going."
     );
   }
 

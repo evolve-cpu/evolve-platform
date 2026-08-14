@@ -72,19 +72,25 @@ function ProgramCard({
   art,
   label,
   description,
-  chips,
   href,
   onClick,
   progress,
-  buttonLabel
+  buttonLabel,
+  disabled
 }) {
-  const Tag = onClick ? "button" : Link;
-  const tagProps = onClick ? { type: "button", onClick } : { to: href };
+  const Tag = disabled ? "div" : onClick ? "button" : Link;
+  const tagProps = disabled
+    ? {}
+    : onClick
+      ? { type: "button", onClick }
+      : { to: href };
   const reportReady = progress?.step === 5;
   return (
     <Tag
       {...tagProps}
-      className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] hover:border-evolve-lavender-indigo/50 overflow-hidden transition-colors text-left w-full"
+      className={`flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden transition-colors text-left w-full ${
+        disabled ? "" : "hover:border-evolve-lavender-indigo/50"
+      }`}
     >
       <div className="h-[150px] flex-shrink-0 overflow-hidden">{art}</div>
       <div className="flex flex-col gap-3 px-5 py-5 flex-1">
@@ -101,25 +107,13 @@ function ProgramCard({
               <span
                 className={`w-1.5 h-1.5 rounded-full ${reportReady ? "bg-evolve-inchworm" : "bg-evolve-yellow"}`}
               />
-              {reportReady ? "report ready" : "under review"}
+              {reportReady ? "Report ready" : "Under review"}
             </span>
           )}
         </div>
         <p className="text-white/40 text-sm md:text-[15px] leading-relaxed">
           {description}
         </p>
-        {!!chips?.length && !progress && (
-          <div className="flex flex-wrap gap-1.5 mt-auto">
-            {chips.map((c) => (
-              <span
-                key={c}
-                className="text-[11px] md:text-xs font-semibold px-2.5 py-1 rounded-full border border-white/10 text-white/50"
-              >
-                {c}
-              </span>
-            ))}
-          </div>
-        )}
         {progress && (
           <div className="flex flex-col gap-1.5 mt-auto">
             <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -130,19 +124,25 @@ function ProgramCard({
             </div>
             <div className="flex items-center justify-between text-[11px] md:text-xs font-semibold text-white/40">
               <span>
-                step {progress.step} of {progress.totalSteps} · {progress.label}
+                Step {progress.step} of {progress.totalSteps} · {progress.label}
               </span>
               <span className="text-white/60">{progress.percent}%</span>
             </div>
           </div>
         )}
-        <span
-          className="mt-1 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black text-sm font-extrabold px-4 py-2.5 w-fit border-2 border-evolve-black hover:opacity-90 transition-opacity"
-          style={{ borderRadius: 10, boxShadow: "4px 4px 0 0 #000000" }}
-        >
-          {buttonLabel || "explore program"}
-          <img src={right_arrow_icon} alt="" className="w-4 h-4" />
-        </span>
+        {disabled ? (
+          <span className="mt-1 inline-flex items-center justify-center gap-2 bg-white/[0.03] text-white/40 text-sm font-bold px-4 py-2.5 w-fit rounded-[10px] border border-white/10 opacity-50">
+            Coming soon
+          </span>
+        ) : (
+          <span
+            className="mt-1 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black text-sm font-extrabold px-4 py-2.5 w-fit border-2 border-evolve-black hover:opacity-90 transition-opacity"
+            style={{ borderRadius: 10, boxShadow: "4px 4px 0 0 #000000" }}
+          >
+            {buttonLabel || "Explore program"}
+            <img src={right_arrow_icon} alt="" className="w-4 h-4" />
+          </span>
+        )}
       </div>
     </Tag>
   );
@@ -198,6 +198,7 @@ export default function PublicProfile() {
   // instead, reusing the same activeProgramme swap the other panels use.
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const accountMenuRef = useRef(null);
 
   useEffect(() => {
@@ -237,8 +238,13 @@ export default function PublicProfile() {
     });
   }
 
-  async function handleLogOut() {
+  function handleLogOut() {
     setAccountMenuOpen(false);
+    setLogoutConfirmOpen(true);
+  }
+
+  async function confirmLogOut() {
+    setLogoutConfirmOpen(false);
     await supabase.auth.signOut();
     navigate("/");
   }
@@ -249,7 +255,7 @@ export default function PublicProfile() {
     const { error } = await supabase.rpc("delete_own_account");
     if (error) {
       window.alert(
-        "couldn't delete your account right now — please contact support."
+        "Couldn't delete your account right now — please contact support."
       );
       return;
     }
@@ -341,9 +347,9 @@ export default function PublicProfile() {
         className="min-h-screen flex flex-col items-center justify-center gap-3 text-center px-6"
         style={{ backgroundColor: "#161618" }}
       >
-        <p className="text-white font-bold text-xl">no profile here yet.</p>
+        <p className="text-white font-bold text-xl">No profile here yet.</p>
         <p className="text-white/40 text-sm">
-          the username "{username}" hasn't been claimed.
+          The username "{username}" hasn't been claimed.
         </p>
       </div>
     );
@@ -380,10 +386,10 @@ export default function PublicProfile() {
             href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-semibold text-white/70 border border-white/15 rounded-full pl-2 pr-4 py-2 hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="hidden md:flex items-center gap-2 text-sm font-semibold text-white/70 border border-white/15 rounded-full pl-2 pr-4 py-2 hover:text-white hover:bg-white/[0.06] transition-colors"
           >
             <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
-            evolve community
+            Evolve community
           </a>
           <button
             title="notifications"
@@ -477,7 +483,7 @@ export default function PublicProfile() {
               to="/signin"
               className="text-xs font-semibold text-evolve-black bg-evolve-yellow rounded-full px-4 py-2"
             >
-              sign in
+              Sign in
             </Link>
           )}
         </div>
@@ -493,11 +499,11 @@ export default function PublicProfile() {
             style={{ backgroundColor: "#1c1c1f" }}
           >
             <h3 className="text-white font-bold text-lg">
-              delete your account?
+              Delete your account?
             </h3>
             <p className="text-white/50 text-sm leading-relaxed">
-              this permanently removes your profile and everything tied to it.
-              this can't be undone.
+              This permanently removes your profile and everything tied to it.
+              This can't be undone.
             </p>
             <div className="flex items-center gap-3 justify-end">
               <button
@@ -505,14 +511,48 @@ export default function PublicProfile() {
                 onClick={() => setDeleteConfirmOpen(false)}
                 className="text-white font-bold text-xs rounded-2xl border border-[#373737] hover:bg-[#232325] px-5 py-2.5 transition-colors"
               >
-                cancel
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteAccount}
                 className="bg-red-500 text-white font-bold text-xs rounded-2xl px-5 py-2.5 hover:opacity-90 transition-opacity"
               >
-                delete my account
+                Delete my account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {logoutConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center px-6"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[#373737] p-6 flex flex-col gap-4"
+            style={{ backgroundColor: "#1c1c1f" }}
+          >
+            <h3 className="text-white font-bold text-lg">Log out?</h3>
+            <p className="text-white/50 text-sm leading-relaxed">
+              You'll need to sign in again to get back to your profile and
+              programmes.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setLogoutConfirmOpen(false)}
+                className="text-white font-bold text-xs rounded-2xl border border-[#373737] hover:bg-[#232325] px-5 py-2.5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogOut}
+                className="bg-red-500 text-white font-bold text-xs rounded-2xl px-5 py-2.5 hover:opacity-90 transition-opacity"
+              >
+                Log out
               </button>
             </div>
           </div>
@@ -795,15 +835,14 @@ export default function PublicProfile() {
                     />
                   }
                   label="portfolio review"
-                  description="a live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
-                  chips={["Live 1:1 review", "Written report"]}
+                  description="A live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
                   onClick={() => openProgramme("portfolio-review")}
                   progress={getPortfolioReviewProgress(evolveReview)}
                   buttonLabel={
                     evolveReview
                       ? getPortfolioReviewProgress(evolveReview)?.step === 5
-                        ? "apply again"
-                        : "continue your review"
+                        ? "Apply again"
+                        : "Continue your review"
                       : undefined
                   }
                 />
@@ -816,11 +855,27 @@ export default function PublicProfile() {
                     />
                   }
                   label="mentorship"
-                  description="personalised 1:1 mentorship to define your design career — someone in your corner until you land."
-                  chips={["1:1 personalised", "5 sessions"]}
-                  onClick={() => openProgramme("mentorship")}
+                  description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
+                  disabled
                 />
               </div>
+              {/* mobile-only stand-in for the "evolve community" link that's
+                  hidden from the top nav on small screens — same
+                  destination, just living down here instead. */}
+              <a
+                href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+              >
+                <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
+                Evolve community
+                <img
+                  src={right_arrow_icon}
+                  alt=""
+                  className="w-3.5 h-3.5 ml-auto flex-shrink-0"
+                />
+              </a>
             </Section>
           ) : null}
         </main>

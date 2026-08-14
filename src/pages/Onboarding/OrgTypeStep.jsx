@@ -5,15 +5,15 @@ const ORG_TYPES = [
   {
     value: "institute",
     emoji: "🎓",
-    title: "design institute",
-    sub: "a college, design school, or coaching institute — set up a space for your faculty and students.",
+    title: "Design institute",
+    sub: "A college, design school, or coaching institute — set up a space for your faculty and students.",
     tags: ["college", "design school", "bootcamp"]
   },
   {
     value: "company",
     emoji: "🏢",
-    title: "company / studio",
-    sub: "a design team, studio, or startup — set up a space for your team.",
+    title: "Company / studio",
+    sub: "A design team, studio, or startup — set up a space for your team.",
     tags: ["studio", "startup", "in-house team"]
   }
 ];
@@ -40,12 +40,12 @@ export default function OrgTypeStep({ onBack, onContinue }) {
           team setup · step 1
         </p>
         <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight">
-          what kind of space
+          What kind of space
           <br />
           are you setting up?
         </h1>
         <p className="text-white/50 text-sm max-w-sm">
-          this shapes the questions we ask next and how your space gets built.
+          This shapes the questions we ask next and how your space gets built.
         </p>
 
         <div className="w-full flex flex-col gap-3 mt-4">
@@ -94,14 +94,14 @@ export default function OrgTypeStep({ onBack, onContinue }) {
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
-            back
+            Back
           </button>
           <button
             onClick={() => selected && onContinue(selected)}
             disabled={!selected}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
           >
-            continue →
+            Continue →
           </button>
         </div>
       </div>
