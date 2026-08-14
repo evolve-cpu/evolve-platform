@@ -337,7 +337,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
 
           <div
             ref={logRef}
-            className="flex-1 min-h-0 overflow-y-auto px-5 md:px-7 py-3 flex flex-col gap-3"
+            className="flex-1 min-h-0 overflow-y-auto px-5 md:px-7 py-3 flex flex-col gap-3 chat-chip-scrollbar"
           >
             {messages.map((m) => (
               <motion.div

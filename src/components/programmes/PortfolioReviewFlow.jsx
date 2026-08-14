@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { getPortfolioReviewProgress } from "../../lib/portfolioReviewProgress";
-import { getCalendlyUrlForStream } from "../../lib/reviewerRouting";
+import {
+  getCalendlyUrlForStream,
+  getReviewerForStream
+} from "../../lib/reviewerRouting";
 import { DISCIPLINE_VALUES } from "../../pages/Onboarding/questions";
 import GrowthStageModal from "../GrowthStageModal";
 import { right_arrow_icon } from "../../assets/images/Nav";
@@ -83,7 +86,7 @@ function StepSidebar({
 
   const sections = [
     {
-      title: "let's get to know you",
+      title: "Let's get to know you",
       items: QUESTIONS.map((q, i) => ({
         label: `Q${i + 1} — ${q.question}`,
         active: phase === "questions" && currentQ === i,
@@ -94,10 +97,10 @@ function StepSidebar({
       }))
     },
     {
-      title: "share your work",
+      title: "Share your work",
       items: [
         {
-          label: "upload resume & portfolio",
+          label: "Upload resume & portfolio",
           active: phase === "share",
           done: shareDone,
           navigable: false,
@@ -106,10 +109,10 @@ function StepSidebar({
       ]
     },
     {
-      title: "book a call",
+      title: "Book a call",
       items: [
         {
-          label: "pick a slot",
+          label: "Pick a slot",
           active: phase === "booking",
           done: bookDone,
           navigable: false,
@@ -118,48 +121,42 @@ function StepSidebar({
       ]
     },
     {
-      title: "your review",
+      title: "Your review",
       items: [
         {
-          label: "call confirmed",
+          label: "Call confirmed",
           active: phase === "confirmed",
           done: phase === "results",
           navigable: false,
           onClick: () => {}
         },
-        ...(hasReport
-          ? [
-              {
-                label: "view report",
-                active: phase === "results" && resultsTab === "report",
-                done: false,
-                navigable: phase === "results",
-                onClick: () => onSelectResultsTab("report")
-              }
-            ]
-          : []),
-        ...(hasRecording
-          ? [
-              {
-                label: "view session",
-                active: phase === "results" && resultsTab === "session",
-                done: false,
-                navigable: phase === "results",
-                onClick: () => onSelectResultsTab("session")
-              }
-            ]
-          : []),
-        ...(phase === "results"
-          ? [
-              {
-                label: "book a follow-up call",
-                active: resultsTab === "followup",
-                done: false,
-                navigable: true,
-                onClick: () => onSelectResultsTab("followup")
-              }
-            ]
-          : [])
+        // always listed, even before the backend has actually uploaded
+        // them — otherwise the sidebar just stops after "call confirmed"
+        // and gives no sense of what's still coming.
+        {
+          label: "View report",
+          active: phase === "results" && resultsTab === "report",
+          done: false,
+          navigable: hasReport && phase === "results",
+          pending: !hasReport,
+          onClick: () => onSelectResultsTab("report")
+        },
+        {
+          label: "View session",
+          active: phase === "results" && resultsTab === "session",
+          done: false,
+          navigable: hasRecording && phase === "results",
+          pending: !hasRecording,
+          onClick: () => onSelectResultsTab("session")
+        },
+        {
+          label: "Book a follow-up call",
+          active: resultsTab === "followup",
+          done: false,
+          navigable: phase === "results",
+          pending: phase !== "results",
+          onClick: () => onSelectResultsTab("followup")
+        }
       ]
     }
   ];
@@ -222,12 +219,12 @@ function StepSidebar({
 /* ── read-only step list for a finished review cycle ─────────────────── */
 function ReadOnlyStepList({ row }) {
   const items = [
-    "let's get to know you",
-    "share your work",
-    "book a call",
-    "call confirmed",
-    ...(row.review_report_url ? ["view report"] : []),
-    ...(row.meet_recording_url ? ["view session"] : [])
+    "Let's get to know you",
+    "Share your work",
+    "Book a call",
+    "Call confirmed",
+    ...(row.review_report_url ? ["View report"] : []),
+    ...(row.meet_recording_url ? ["View session"] : [])
   ];
   return (
     <div className="flex flex-col gap-1">
@@ -253,7 +250,7 @@ function CyclePill({ done }) {
           : "bg-evolve-yellow/15 text-evolve-yellow"
       }`}
     >
-      {done ? "completed" : "in progress"}
+      {done ? "Completed" : "In progress"}
     </span>
   );
 }
@@ -323,7 +320,7 @@ function ReviewCyclesSidebar({
       {history.map((h) => (
         <ReviewCycleGroup
           key={h.id}
-          title={`review ${h.attempt ?? "—"}`}
+          title={`Review ${h.attempt ?? "—"}`}
           done
           expanded={openHistoryId === h.id}
           onToggle={() => setOpenHistoryId((id) => (id === h.id ? null : h.id))}
@@ -337,14 +334,14 @@ function ReviewCyclesSidebar({
                 : "text-white/40 hover:text-white/70"
             }`}
           >
-            view this review →
+            View this review →
           </button>
           <ReadOnlyStepList row={h} />
         </ReviewCycleGroup>
       ))}
 
       <ReviewCycleGroup
-        title={`review ${activeRow?.attempt ?? history.length + 1}`}
+        title={`Review ${activeRow?.attempt ?? history.length + 1}`}
         done={activeCompleted}
         expanded
         toggleable={false}
@@ -355,7 +352,7 @@ function ReviewCyclesSidebar({
             onClick={onViewActive}
             className="w-full text-left rounded-lg px-2.5 py-1.5 mb-2 text-[11px] font-semibold text-evolve-yellow"
           >
-            ← back to this review
+            ← Back to this review
           </button>
         ) : (
           <StepSidebar {...activeSidebarProps} />
@@ -368,7 +365,7 @@ function ReviewCyclesSidebar({
           onClick={onApplyAgain}
           className="rounded-xl border border-evolve-yellow/40 bg-evolve-yellow/[0.08] text-evolve-yellow text-xs font-bold px-3.5 py-3 hover:bg-evolve-yellow/[0.14] transition-colors"
         >
-          apply again →
+          Apply again →
         </button>
       )}
     </div>
@@ -384,12 +381,12 @@ function PastCycleView({ row, onBack }) {
         onClick={onBack}
         className="text-evolve-yellow text-xs font-semibold w-fit"
       >
-        ← back to your current review
+        ← Back to your current review
       </button>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-white font-bold font-bricolage text-lg">
-          review {row.attempt} — report
+          Review {row.attempt} — report
         </h2>
         {row.review_report_url && (
           <a
@@ -398,7 +395,7 @@ function PastCycleView({ row, onBack }) {
             rel="noreferrer"
             className="text-evolve-yellow text-xs font-semibold"
           >
-            open report in new tab ↗
+            Open report in new tab ↗
           </a>
         )}
       </div>
@@ -416,14 +413,14 @@ function PastCycleView({ row, onBack }) {
         </div>
       ) : (
         <p className="text-white/40 text-sm">
-          no report was uploaded for this cycle.
+          No report was uploaded for this cycle.
         </p>
       )}
 
       {row.meet_recording_url && (
         <div className="flex flex-col gap-2">
           <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-            session recording
+            Session recording
           </p>
           <div
             className="rounded-2xl border border-white/10 overflow-hidden"
@@ -798,14 +795,14 @@ export default function PortfolioReviewFlow({
     return (
       <div className="flex flex-col items-center gap-3 py-24 text-center">
         <p className="text-white/60 text-sm">
-          we couldn't find your review — try refreshing the page.
+          We couldn't find your review — try refreshing the page.
         </p>
         {onBack && (
           <button
             onClick={onBack}
             className="text-evolve-yellow text-xs font-semibold"
           >
-            back to programmes
+            Back to programmes
           </button>
         )}
       </div>
@@ -867,15 +864,15 @@ export default function PortfolioReviewFlow({
             strokeLinejoin="round"
           />
         </svg>
-        {saving ? "saving draft…" : "back to programmes"}
+        {saving ? "Saving draft…" : "Back to programmes"}
       </button>
 
       <div className="flex flex-col gap-2 pb-5 border-b border-white/10">
         <h1 className="text-white font-bold font-bricolage text-2xl md:text-[28px] leading-tight">
-          your portfolio review
+          Your portfolio review
         </h1>
         <p className="text-white/40 text-sm">
-          follow the steps below — answer a few questions, share your work, then
+          Follow the steps below — answer a few questions, share your work, then
           book your 1:1 call.
         </p>
       </div>
@@ -888,12 +885,12 @@ export default function PortfolioReviewFlow({
       >
         <span className="text-white text-xs font-semibold">
           {viewingCycle
-            ? `viewing review ${viewingCycle.attempt}`
-            : `step ${progress?.step ?? 1} of ${progress?.totalSteps ?? 5} · ${progress?.label}`}
+            ? `Viewing review ${viewingCycle.attempt}`
+            : `Step ${progress?.step ?? 1} of ${progress?.totalSteps ?? 5} · ${progress?.label}`}
         </span>
         <span className="flex items-center gap-2 flex-shrink-0">
           <span className="text-evolve-yellow text-xs font-bold">
-            {viewingCycle ? "past" : `${progress?.percent ?? 0}%`}
+            {viewingCycle ? "Past" : `${progress?.percent ?? 0}%`}
           </span>
           <svg
             width="14"
@@ -954,7 +951,7 @@ export default function PortfolioReviewFlow({
               {phase === "questions" && (
                 <div className="flex flex-col gap-3 max-w-2xl">
                   <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                    let's get to know you ({currentQ + 1}/{QUESTIONS.length})
+                    Let's get to know you ({currentQ + 1}/{QUESTIONS.length})
                     {QUESTIONS[currentQ].optional && " · optional"}
                   </p>
                   <h2 className="text-white font-bold font-bricolage text-xl leading-snug">
@@ -981,7 +978,7 @@ export default function PortfolioReviewFlow({
                     style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                   />
                   <p className="text-white/20 text-[10px]">
-                    shift + enter for a new line
+                    Shift + enter for a new line
                   </p>
                   <div className="flex items-center justify-end gap-3">
                     {QUESTIONS[currentQ].optional && (
@@ -990,7 +987,7 @@ export default function PortfolioReviewFlow({
                         disabled={saving}
                         className="text-white/60 hover:text-white text-xs font-bold rounded-2xl border border-[#373737] hover:bg-[#232325] px-5 py-2.5 mr-auto disabled:opacity-30 transition-colors"
                       >
-                        skip
+                        Skip
                       </button>
                     )}
                     {currentQ > 0 && (
@@ -1008,7 +1005,7 @@ export default function PortfolioReviewFlow({
                             filter: "invert(1)"
                           }}
                         />
-                        back
+                        Back
                       </button>
                     )}
                     <button
@@ -1020,7 +1017,7 @@ export default function PortfolioReviewFlow({
                       }
                       className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
                     >
-                      {saving ? "saving…" : "continue"}
+                      {saving ? "Saving…" : "Continue"}
                       {!saving && (
                         <img
                           src={right_arrow_icon}
@@ -1036,25 +1033,25 @@ export default function PortfolioReviewFlow({
               {phase === "share" && (
                 <div className="flex flex-col gap-6">
                   <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                    share your work
+                    Share your work
                   </p>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <h2 className="text-white font-bold font-bricolage text-lg">
-                        your resume
+                        Your resume
                       </h2>
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setResumeMode("upload")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
-                          upload
+                          Upload
                         </button>
                         <button
                           onClick={() => setResumeMode("link")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
-                          link
+                          Link
                         </button>
                       </div>
                     </div>
@@ -1070,11 +1067,11 @@ export default function PortfolioReviewFlow({
                         />
                         <span className="text-white/60 text-xs font-semibold">
                           {resumeUploading
-                            ? "uploading…"
+                            ? "Uploading…"
                             : resumeUrl
-                              ? "resume uploaded ✓ — tap to replace"
+                              ? "Resume uploaded ✓ — tap to replace"
                               : resumeFile?.name ||
-                                "tap to upload your resume (PDF, max 5MB)"}
+                                "Tap to upload your resume (PDF, max 5MB)"}
                         </span>
                       </label>
                     ) : (
@@ -1092,20 +1089,20 @@ export default function PortfolioReviewFlow({
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <h2 className="text-white font-bold font-bricolage text-lg">
-                        your portfolio
+                        Your portfolio
                       </h2>
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
                         <button
                           onClick={() => setPortfolioMode("link")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
-                          link
+                          Link
                         </button>
                         <button
                           onClick={() => setPortfolioMode("upload")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
-                          upload
+                          Upload
                         </button>
                       </div>
                     </div>
@@ -1130,11 +1127,11 @@ export default function PortfolioReviewFlow({
                         />
                         <span className="text-white/60 text-xs font-semibold">
                           {portfolioUploading
-                            ? "uploading…"
+                            ? "Uploading…"
                             : portfolioFileUrl
-                              ? "portfolio uploaded ✓ — tap to replace"
+                              ? "Portfolio uploaded ✓ — tap to replace"
                               : portfolioFile?.name ||
-                                "tap to upload your portfolio (PDF, max 20MB)"}
+                                "Tap to upload your portfolio (PDF, max 20MB)"}
                         </span>
                       </label>
                     )}
@@ -1144,10 +1141,10 @@ export default function PortfolioReviewFlow({
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-3">
                         <h2 className="text-white font-bold font-bricolage text-lg">
-                          reviewer details
+                          Reviewer details
                         </h2>
                         <span className="text-white/30 text-[10px] font-semibold text-right">
-                          prefilled from your profile — edit if needed
+                          Prefilled from your profile — edit if needed
                         </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1159,7 +1156,7 @@ export default function PortfolioReviewFlow({
                             type="text"
                             value={reviewerSchool}
                             onChange={(e) => setReviewerSchool(e.target.value)}
-                            placeholder="your design school or college"
+                            placeholder="Your design school or college"
                             className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-4 py-3 transition-colors"
                             style={{
                               backgroundColor: "rgba(255,255,255,0.06)"
@@ -1179,7 +1176,7 @@ export default function PortfolioReviewFlow({
                             }}
                           >
                             <option value="" className="bg-[#161618]">
-                              select year
+                              Select year
                             </option>
                             {YEAR_VALUES.map((y) => (
                               <option
@@ -1205,7 +1202,7 @@ export default function PortfolioReviewFlow({
                             }}
                           >
                             <option value="" className="bg-[#161618]">
-                              select stream
+                              Select stream
                             </option>
                             {DISCIPLINE_VALUES.map((d) => (
                               <option
@@ -1220,7 +1217,7 @@ export default function PortfolioReviewFlow({
                         </div>
                       </div>
                       <p className="text-white/25 text-[10px] leading-relaxed">
-                        we'll use this to match you with the right reviewer for
+                        We'll use this to match you with the right reviewer for
                         your program.
                       </p>
                     </div>
@@ -1232,14 +1229,14 @@ export default function PortfolioReviewFlow({
                       disabled={saving}
                       className="text-white/40 hover:text-white text-xs font-semibold transition-colors"
                     >
-                      {savedMsg ? "saved ✓" : "save for later"}
+                      {savedMsg ? "Saved ✓" : "Save for later"}
                     </button>
                     <button
                       onClick={handleSubmitShare}
                       disabled={saving || resumeUploading || portfolioUploading}
                       className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
                     >
-                      {saving ? "submitting…" : "submit & book a call"}
+                      {saving ? "Submitting…" : "Submit & book a call"}
                       {!saving && (
                         <img
                           src={right_arrow_icon}
@@ -1255,13 +1252,13 @@ export default function PortfolioReviewFlow({
               {phase === "booking" && (
                 <div className="flex flex-col gap-3">
                   <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                    book a call
+                    Book a call
                   </p>
                   <h2 className="text-white font-bold font-bricolage text-lg">
-                    book your 1:1 call
+                    Book your 1:1 call
                   </h2>
                   <p className="text-white/40 text-xs">
-                    pick a slot that works for you — we'll send a calendar
+                    Pick a slot that works for you — we'll send a calendar
                     invite.
                   </p>
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
@@ -1287,7 +1284,7 @@ export default function PortfolioReviewFlow({
                           strokeLinejoin="round"
                         />
                       </svg>
-                      ~30 min · live 1:1 video call
+                      ~30 min · Live 1:1 video call
                     </div>
                     <div
                       className="calendly-inline-widget"
@@ -1313,18 +1310,18 @@ export default function PortfolioReviewFlow({
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">
-                      you're all set
+                      You're all set
                     </h3>
                     <p className="text-white/40 text-xs mt-1 max-w-xs">
-                      your call is booked — your reviewer will go through your
-                      portfolio with you live. your report lands here after.
+                      Your call is booked — your reviewer will go through your
+                      portfolio with you live. Your report lands here after.
                     </p>
                   </div>
                   <div className="w-full max-w-xs flex flex-col gap-2 text-left mt-2">
                     {[
-                      "you'll get a calendar invite with the video call link",
-                      "your reviewer goes through your portfolio live with you",
-                      "a written report lands here right after your call"
+                      "You'll get a calendar invite with the video call link",
+                      "Your reviewer goes through your portfolio live with you",
+                      "A written report lands here right after your call"
                     ].map((line) => (
                       <div key={line} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm mt-1.5 flex-shrink-0" />
@@ -1334,14 +1331,40 @@ export default function PortfolioReviewFlow({
                       </div>
                     ))}
                   </div>
+                  {(() => {
+                    const reviewer = getReviewerForStream(
+                      reviewerStream || authUser?.stream,
+                      authUser?.id
+                    );
+                    return (
+                      <div className="w-full max-w-xs flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left mt-1">
+                        <img
+                          src={reviewer.image}
+                          alt={reviewer.name}
+                          className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
+                            Your reviewer
+                          </p>
+                          <p className="text-white text-sm font-bold truncate">
+                            {reviewer.name}
+                          </p>
+                          <p className="text-white/40 text-[11px] leading-snug truncate">
+                            {reviewer.role}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <button
                     onClick={() => {
-                      if (window.confirm("reschedule your call?"))
+                      if (window.confirm("Reschedule your call?"))
                         setPhase("booking");
                     }}
-                    className="text-evolve-yellow text-xs font-semibold"
+                    className="text-evolve-yellow text-xs font-semibold underline decoration-evolve-yellow underline-offset-2"
                   >
-                    need to reschedule?
+                    Need to reschedule?
                   </button>
                 </div>
               )}
@@ -1349,11 +1372,11 @@ export default function PortfolioReviewFlow({
               {phase === "results" && (
                 <div className="flex flex-col gap-5">
                   <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                    your review
+                    Your review
                   </p>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-white font-bold font-bricolage text-lg">
-                      your review is ready
+                      Your review is ready
                     </h2>
                     {row.review_report_url && (
                       <a
@@ -1362,7 +1385,7 @@ export default function PortfolioReviewFlow({
                         rel="noreferrer"
                         className="text-evolve-yellow text-xs font-semibold"
                       >
-                        open report in new tab ↗
+                        Open report in new tab ↗
                       </a>
                     )}
                   </div>
@@ -1384,7 +1407,7 @@ export default function PortfolioReviewFlow({
                       </div>
                     ) : (
                       <p className="text-white/40 text-sm">
-                        report not uploaded yet.
+                        Report not uploaded yet.
                       </p>
                     ))}
 
@@ -1393,7 +1416,7 @@ export default function PortfolioReviewFlow({
                       {row.meet_recording_url ? (
                         <div className="flex flex-col gap-2">
                           <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                            session recording
+                            Session recording
                           </p>
                           <div
                             className="rounded-2xl overflow-hidden"
@@ -1409,14 +1432,14 @@ export default function PortfolioReviewFlow({
                         </div>
                       ) : (
                         <p className="text-white/40 text-sm">
-                          recording not uploaded yet.
+                          Recording not uploaded yet.
                         </p>
                       )}
 
                       {!feedbackSent ? (
                         <div className="rounded-2xl bg-white/[0.03] p-5 flex flex-col gap-3">
                           <p className="text-white text-sm font-semibold">
-                            how was your review?
+                            How was your review?
                           </p>
                           <div className="flex gap-1.5">
                             {[1, 2, 3, 4, 5].map((n) => (
@@ -1441,7 +1464,7 @@ export default function PortfolioReviewFlow({
                             rows={2}
                             value={feedbackText}
                             onChange={(e) => setFeedbackText(e.target.value)}
-                            placeholder="anything you'd like to add? (optional)"
+                            placeholder="Anything you'd like to add? (optional)"
                             className="w-full text-sm text-white placeholder-white/25 outline-none border border-white/15 focus:border-evolve-yellow/60 rounded-xl px-3.5 py-2.5 resize-none transition-colors"
                             style={{
                               backgroundColor: "rgba(255,255,255,0.06)"
@@ -1452,12 +1475,15 @@ export default function PortfolioReviewFlow({
                             disabled={!feedbackRating}
                             className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2 disabled:opacity-40"
                           >
-                            submit feedback
+                            Submit feedback
                           </button>
                         </div>
                       ) : (
-                        <p className="text-evolve-inchworm text-xs font-semibold">
-                          thanks for the feedback 🌱
+                        <p className="flex items-center gap-2 text-white text-xs font-semibold">
+                          <span className="text-evolve-yellow font-bold">
+                            ✓
+                          </span>
+                          Thanks for the feedback 🌱
                         </p>
                       )}
                     </div>
@@ -1467,7 +1493,7 @@ export default function PortfolioReviewFlow({
                     (row.followup_recording_url ? (
                       <div className="flex flex-col gap-2">
                         <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                          follow-up session recording
+                          Follow-up session recording
                         </p>
                         <div
                           className="rounded-2xl overflow-hidden"
@@ -1483,13 +1509,13 @@ export default function PortfolioReviewFlow({
                       </div>
                     ) : row.followup_status === "booked" ? (
                       <p className="text-white/40 text-sm">
-                        your follow-up call is booked — the recording will
+                        Your follow-up call is booked — the recording will
                         appear here after your session.
                       </p>
                     ) : bookingFollowup ? (
                       <div className="flex flex-col gap-3">
                         <p className="text-white/30 text-[11px] font-bold uppercase tracking-wide">
-                          book a follow-up call
+                          Book a follow-up call
                         </p>
                         <div
                           className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
@@ -1501,17 +1527,17 @@ export default function PortfolioReviewFlow({
                       <div className="rounded-2xl border border-evolve-inchworm/30 bg-evolve-inchworm/[0.05] p-5 flex items-center justify-between flex-wrap gap-3">
                         <div>
                           <p className="text-white text-sm font-semibold">
-                            want to talk it through?
+                            Want to talk it through?
                           </p>
                           <p className="text-white/40 text-xs mt-0.5">
-                            book a free follow-up call with your reviewer.
+                            Book a free follow-up call with your reviewer.
                           </p>
                         </div>
                         <button
                           onClick={() => setBookingFollowup(true)}
                           className="bg-evolve-inchworm text-evolve-black font-bold text-xs rounded-full px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
                         >
-                          book a follow-up call →
+                          Book a follow-up call →
                         </button>
                       </div>
                     ))}
@@ -1520,10 +1546,10 @@ export default function PortfolioReviewFlow({
                     <div className="rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.05] p-5 flex items-center justify-between flex-wrap gap-3">
                       <div>
                         <p className="text-white text-sm font-semibold">
-                          want another round?
+                          Want another round?
                         </p>
                         <p className="text-white/40 text-xs mt-0.5">
-                          start a brand new portfolio review cycle whenever
+                          Start a brand new portfolio review cycle whenever
                           you're ready.
                         </p>
                       </div>
@@ -1531,7 +1557,7 @@ export default function PortfolioReviewFlow({
                         onClick={onApplyAgain}
                         className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
                       >
-                        apply again →
+                        Apply again →
                       </button>
                     </div>
                   )}

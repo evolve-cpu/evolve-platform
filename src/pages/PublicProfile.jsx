@@ -174,6 +174,10 @@ export default function PublicProfile() {
   // the desktop collapse/expand toggle only shows up while hovering the
   // sidebar rail (or the button itself, since it straddles the rail's edge).
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  // mobile-only growth-stage card (dashboard view only, see the aside below)
+  // — its stage list expands in place via this accordion instead of
+  // reusing the desktop "expand the whole panel" toggle.
+  const [mobileGrowthOpen, setMobileGrowthOpen] = useState(false);
 
   // default collapsed on mobile (short summary) / expanded on desktop —
   // checked once on mount only, so it doesn't fight a user's own toggle
@@ -191,6 +195,94 @@ export default function PublicProfile() {
   function openProgramme(id) {
     setActiveProgramme(id);
     setSidebarCollapsed(true);
+  }
+
+  // the stage-by-stage list (1-10, fading out past the current stage) —
+  // shared between the desktop sidebar panel and the mobile dashboard-only
+  // growth card's accordion, so the two never drift apart.
+  function renderGrowthMap() {
+    const currentStage = stageForProgress(card.growth_stage ?? 0);
+    const totalStages = STAGE_LABELS.length;
+    return (
+      <div className="flex flex-col gap-1">
+        <p className="text-white/25 text-[10px] md:text-xs font-bold uppercase tracking-wide px-2.5">
+          growth map
+        </p>
+        <div className="flex flex-col gap-4">
+          {/* every stage shipped so far (1-10) lives under one "seed"
+              heading — the line + fill track progress only through this
+              section. anything beyond stage 10 isn't built yet, so the
+              list just fades out at the bottom instead of listing locked
+              stages. */}
+          <div
+            className="relative flex flex-col gap-1 pb-2"
+            style={{
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)"
+            }}
+          >
+            <div className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
+            <div
+              className="absolute left-[18px] top-1 w-px bg-evolve-inchworm transition-[height]"
+              style={{
+                height: `${(currentStage / totalStages) * 100}%`
+              }}
+            />
+            <p className="flex items-center gap-2 px-2.5 text-[11px] md:text-sm font-bold uppercase tracking-wide text-evolve-inchworm">
+              <span className="w-4 flex-shrink-0" />
+              seed
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {Array.from({ length: totalStages }, (_, i) => i + 1).map(
+                (stageNum) => {
+                  const current = stageNum === currentStage;
+                  const reached = stageNum <= currentStage;
+                  if (current) {
+                    return (
+                      <div
+                        key={stageNum}
+                        className="flex items-center gap-2 rounded-lg bg-evolve-inchworm/10 px-2.5 py-1.5"
+                      >
+                        <span className="w-4 flex justify-center flex-shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm flex-shrink-0" />
+                        </span>
+                        <span className="flex flex-col">
+                          <span className="text-evolve-inchworm text-xs md:text-sm font-bold">
+                            Stage {stageNum}
+                          </span>
+                          <span className="text-white/40 text-[11px] md:text-sm">
+                            You are here
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={stageNum}
+                      className="flex items-center gap-2 px-2.5 py-1.5"
+                    >
+                      <span className="w-4 flex justify-center flex-shrink-0">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${reached ? "bg-evolve-inchworm" : "bg-white/15"}`}
+                        />
+                      </span>
+                      <span
+                        className={`text-xs md:text-base font-semibold ${reached ? "text-white/50" : "text-white/25"}`}
+                      >
+                        Stage {stageNum}
+                      </span>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // account menu — desktop gets a floating dropdown off the avatar; mobile
@@ -572,51 +664,44 @@ export default function PublicProfile() {
           onMouseLeave={() => setSidebarHovered(false)}
           className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
         >
-          {/* ── mobile: compact summary bar (collapsed) / small collapse
-              control above the full panel (expanded) ── */}
-          {sidebarCollapsed ? (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(false)}
-              className="flex md:hidden items-center gap-3 px-6 py-4 w-full text-left border-b border-white/10"
-            >
-              <GrowthMascot progress={card.growth_stage ?? 0} size={32} />
-              <p className="text-evolve-inchworm text-xs font-bold flex-1">
-                stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
-                <span className="capitalize">
-                  {stageLabel(card.growth_stage ?? 0)}
-                </span>
-              </p>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="flex-shrink-0 text-white/40"
-              >
-                <path
-                  d="M5 7.5L10 12.5L15 7.5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          ) : (
-            <div className="flex md:hidden items-center justify-between px-6 pt-5">
-              <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
-                your profile
-              </p>
+          {/* ── mobile: compact growth-stage card, dashboard view only —
+              on every other pane (account, invoice, an opened programme,
+              ...) this whole thing is absent on mobile, so main content
+              starts right under the top nav instead. Its own accordion
+              reveals the stage list in place; it doesn't reuse the
+              desktop "expand the whole panel" toggle. ── */}
+          {!activeProgramme && (
+            <div className="md:hidden flex flex-col border-b border-white/10">
               <button
                 type="button"
-                onClick={() => setSidebarCollapsed(true)}
-                title="collapse panel"
-                className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-colors flex-shrink-0"
+                onClick={() => setMobileGrowthOpen((v) => !v)}
+                className="flex items-center gap-3 px-5 py-4 w-full text-left"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <GrowthMascot progress={card.growth_stage ?? 0} size={48} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm truncate">
+                    {card.name || "evolve designer"}
+                  </p>
+                  <p className="text-white/40 text-xs mt-0.5">@{username}</p>
+                  <p className="text-evolve-inchworm text-xs font-bold mt-1.5 capitalize">
+                    Stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
+                    {stageLabel(card.growth_stage ?? 0)}
+                  </p>
+                  <p className="text-white/40 text-[11px] mt-0.5 leading-snug">
+                    {GROWTH_ENCOURAGEMENT[stageLabel(card.growth_stage ?? 0)]}
+                  </p>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className={`flex-shrink-0 text-white/40 transition-transform ${
+                    mobileGrowthOpen ? "rotate-180" : ""
+                  }`}
+                >
                   <path
-                    d="M5 12.5L10 7.5L15 12.5"
+                    d="M5 7.5L10 12.5L15 7.5"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
@@ -624,6 +709,9 @@ export default function PublicProfile() {
                   />
                 </svg>
               </button>
+              {mobileGrowthOpen && (
+                <div className="px-5 pb-5">{renderGrowthMap()}</div>
+              )}
             </div>
           )}
 
@@ -634,10 +722,11 @@ export default function PublicProfile() {
             </div>
           )}
 
-          {/* ── full panel (both breakpoints) — hidden entirely while
-              collapsed instead of always showing on mobile ── */}
+          {/* ── desktop: full panel — hidden entirely while collapsed.
+              mobile never reaches this now (see the dashboard-only growth
+              card above); it's desktop-only in practice. ── */}
           {!sidebarCollapsed && (
-            <div className="flex flex-col gap-5 px-6 py-8">
+            <div className="hidden md:flex md:flex-col gap-5 px-6 py-8">
               <div className="flex flex-col items-center gap-3 text-center">
                 <GrowthMascot progress={card.growth_stage ?? 0} size={140} />
                 <div>
@@ -652,7 +741,7 @@ export default function PublicProfile() {
 
               <div className="flex flex-col items-center text-center gap-1">
                 <p className="text-evolve-inchworm text-sm font-bold capitalize">
-                  stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
+                  Stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
                   {stageLabel(card.growth_stage ?? 0)}
                 </p>
                 <p className="text-white/40 text-xs">
@@ -662,95 +751,7 @@ export default function PublicProfile() {
 
               <div className="border-t border-white/10" />
 
-              <div className="flex flex-col gap-1">
-                <p className="text-white/25 text-[10px] md:text-xs font-bold uppercase tracking-wide px-2.5">
-                  growth map
-                </p>
-                <div className="flex flex-col gap-4">
-                  {(() => {
-                    const currentStage = stageForProgress(
-                      card.growth_stage ?? 0
-                    );
-                    const totalStages = STAGE_LABELS.length;
-                    return (
-                      <>
-                        {/* every stage shipped so far (1-10) lives under one
-                            "seed" heading — the line + fill track progress
-                            only through this section. anything beyond stage
-                            10 isn't built yet, so the list just fades out at
-                            the bottom instead of listing locked stages. */}
-                        <div
-                          className="relative flex flex-col gap-1 pb-2"
-                          style={{
-                            WebkitMaskImage:
-                              "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)",
-                            maskImage:
-                              "linear-gradient(to bottom, black, black calc(100% - 34px), transparent 100%)"
-                          }}
-                        >
-                          <div className="absolute left-[18px] top-1 bottom-1 w-px bg-white/10" />
-                          <div
-                            className="absolute left-[18px] top-1 w-px bg-evolve-inchworm transition-[height]"
-                            style={{
-                              height: `${(currentStage / totalStages) * 100}%`
-                            }}
-                          />
-                          <p className="flex items-center gap-2 px-2.5 text-[11px] md:text-sm font-bold uppercase tracking-wide text-evolve-inchworm">
-                            <span className="w-4 flex-shrink-0" />
-                            seed
-                          </p>
-                          <div className="flex flex-col gap-0.5">
-                            {Array.from(
-                              { length: totalStages },
-                              (_, i) => i + 1
-                            ).map((stageNum) => {
-                              const current = stageNum === currentStage;
-                              const reached = stageNum <= currentStage;
-                              if (current) {
-                                return (
-                                  <div
-                                    key={stageNum}
-                                    className="flex items-center gap-2 rounded-lg bg-evolve-inchworm/10 px-2.5 py-1.5"
-                                  >
-                                    <span className="w-4 flex justify-center flex-shrink-0">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-evolve-inchworm flex-shrink-0" />
-                                    </span>
-                                    <span className="flex flex-col">
-                                      <span className="text-evolve-inchworm text-xs md:text-sm font-bold">
-                                        stage {stageNum}
-                                      </span>
-                                      <span className="text-white/40 text-[11px] md:text-sm">
-                                        you are here
-                                      </span>
-                                    </span>
-                                  </div>
-                                );
-                              }
-                              return (
-                                <div
-                                  key={stageNum}
-                                  className="flex items-center gap-2 px-2.5 py-1.5"
-                                >
-                                  <span className="w-4 flex justify-center flex-shrink-0">
-                                    <span
-                                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${reached ? "bg-evolve-inchworm" : "bg-white/15"}`}
-                                    />
-                                  </span>
-                                  <span
-                                    className={`text-xs md:text-base font-semibold ${reached ? "text-white/50" : "text-white/25"}`}
-                                  >
-                                    stage {stageNum}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
+              {renderGrowthMap()}
             </div>
           )}
         </aside>
