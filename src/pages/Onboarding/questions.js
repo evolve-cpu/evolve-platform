@@ -365,14 +365,7 @@ export const QUESTIONS = [
     cardLabel: "year / standard",
     condition: (p) => p.persona === "Design school student",
     ask: () => "and which year or standard are you currently in?",
-    chips: [
-      "1st year",
-      "2nd year",
-      "3rd year",
-      "4th year",
-      "4th year as final",
-      "Final year"
-    ],
+    chips: ["1st year", "2nd year", "3rd year", "4th year", "5th year"],
     isVague: isGenericVague,
     followUp: () =>
       "just the year's fine — like 1st year, 3rd year, or final year.",
