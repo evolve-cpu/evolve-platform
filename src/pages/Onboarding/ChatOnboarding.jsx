@@ -44,16 +44,15 @@ function PhaseBar({ qIndex, profile }) {
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${pct}%`,
-                  background: done ? "rgba(194,253,92,1)" : "rgba(255,208,7,1)"
+                  background: "rgba(255,208,7,1)"
                 }}
               />
             </div>
             <span
               className="text-[9px] font-semibold uppercase tracking-wide"
               style={{
-                color: done
-                  ? "rgba(194,253,92,1)"
-                  : isCurrent
+                color:
+                  done || isCurrent
                     ? "rgba(255,208,7,1)"
                     : "rgba(255,255,255,0.3)"
               }}

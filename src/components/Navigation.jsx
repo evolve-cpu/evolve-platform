@@ -474,10 +474,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   disabled={authLoading}
                   onClick={() => {
                     if (!user) {
-                      localStorage.setItem("signin_from", location.pathname);
-                      return navigate("/signin", {
-                        state: { from: location.pathname }
-                      });
+                      // no `from` on purpose — this is the generic nav auth
+                      // button, not a deliberate deep-link destination, so
+                      // sign-in should route an already-onboarded user
+                      // straight to their profile instead of bouncing them
+                      // back to whatever marketing page they happened to be
+                      // browsing (see resolveLandingPath in SignIn.jsx).
+                      return navigate("/signin");
                     }
                     if (!accountOpen) openAccountModal();
                     else setAccountOpen(false);
