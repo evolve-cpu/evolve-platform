@@ -167,7 +167,20 @@ export async function verifyOtp(email, token) {
  *
  * @throws {Error} if OAuth setup fails
  */
+// OAuth is a hard, cross-origin redirect — it lands back on `destination`
+// with a fresh page load, bypassing every in-SPA "where should this user
+// end up" check (resolveLandingPath, App.jsx's onboarding guard, ...).
+// This flag survives that round trip (sessionStorage persists across a
+// same-tab redirect) so the app can, once the session is back, still send
+// an already-onboarded user to their profile instead of stranding them on
+// `destination` (which defaults to "/" for a generic sign-in). See the
+// matching check in App.jsx's AppLayout.
+function flagPostOAuthRedirectCheck() {
+  sessionStorage.setItem("oauth_post_signin_check", "1");
+}
+
 export async function signInWithGoogle(destination = "/") {
+  flagPostOAuthRedirectCheck();
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -180,6 +193,7 @@ export async function signInWithGoogle(destination = "/") {
 }
 
 export async function signInWithLinkedIn(destination = "/") {
+  flagPostOAuthRedirectCheck();
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "linkedin_oidc",
     options: {

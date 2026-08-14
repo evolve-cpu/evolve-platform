@@ -1,30 +1,30 @@
 // Routes a Portfolio Review booking to the right reviewer's Calendly link
-// based on the learner's stream (see src/pages/Onboarding/questions.js for
-// where `stream` is captured — DISCIPLINE_VALUES).
-//
-// TODO: no per-reviewer Calendly links exist yet — every stream points at
-// the same shared link below. Once real reviewers are assigned per stream,
-// swap the individual values here; call sites already key off `stream` so
-// no other code needs to change.
+// based on the learner's stream. `stream` isn't a closed enum — chips
+// suggest DISCIPLINE_VALUES (see src/pages/Onboarding/questions.js) but the
+// learner can type anything ("B.Des Interaction Design", "Spatial Design",
+// ...), so routing matches on keywords/phrases rather than an exact list.
 const CALENDLY_URL = "https://calendly.com/evolvedesignacademy/portfolioreview";
+const CALENDLY_URL_ARCHITECTURE_SPACE =
+  "https://calendly.com/evolveportfolioreview/30min";
 
-export const CALENDLY_URL_BY_STREAM = {
-  "UX": CALENDLY_URL,
-  "UI": CALENDLY_URL,
-  "Product Design": CALENDLY_URL,
-  "Fashion Design": CALENDLY_URL,
-  "Textile Design": CALENDLY_URL,
-  "Film & Animation": CALENDLY_URL,
-  "Visual Communication Design": CALENDLY_URL,
-  "Graphic Design": CALENDLY_URL,
-  "Architecture": CALENDLY_URL,
-  "Interior Design": CALENDLY_URL,
-  "Ceramic Design": CALENDLY_URL,
-  "Photography Design": CALENDLY_URL
-};
+// Every keyword here routes to CALENDLY_URL_ARCHITECTURE_SPACE; anything
+// that doesn't match falls back to the default CALENDLY_URL (which already
+// covers interaction/visual communication/product design and everything
+// else not listed below).
+const ARCHITECTURE_SPACE_KEYWORDS = [
+  "architecture design",
+  "architecture",
+  "moving images",
+  "space design"
+];
 
 export function getCalendlyUrlForStream(stream) {
-  return CALENDLY_URL_BY_STREAM[stream] || CALENDLY_URL;
+  const text = (stream || "").trim().toLowerCase();
+  if (!text) return CALENDLY_URL;
+  const isArchitectureOrSpace = ARCHITECTURE_SPACE_KEYWORDS.some((kw) =>
+    text.includes(kw)
+  );
+  return isArchitectureOrSpace ? CALENDLY_URL_ARCHITECTURE_SPACE : CALENDLY_URL;
 }
 
-export { CALENDLY_URL };
+export { CALENDLY_URL, CALENDLY_URL_ARCHITECTURE_SPACE };

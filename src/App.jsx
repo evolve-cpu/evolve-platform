@@ -1032,7 +1032,7 @@
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 // Eager load only the global landing + Home page (critical)
@@ -1141,6 +1141,10 @@ const AppLayout = () => {
   const [isHomeIntroActive, setIsHomeIntroActive] = useState(false);
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
   const { user, authLoading } = useAuth();
+  // tracks the anonymous → signed-in transition for the post-signin
+  // profile redirect below (as opposed to a persisted session just loading)
+  const authBootstrappedRef = useRef(false);
+  const wasSignedInRef = useRef(false);
 
   // Sign-in and onboarding are coupled: a signed-in visitor with an
   // incomplete profile is routed into /onboarding regardless of which
@@ -1171,6 +1175,63 @@ const AppLayout = () => {
     // always land on the profile page once onboarding finishes — not back on
     // whatever marketing page the visitor happened to be signed in from
     navigate("/onboarding", { replace: true });
+  }, [user, authLoading, location.pathname, navigate]);
+
+  // Mirror image of the effect above, for a visitor who's already onboarded:
+  // without this they'd just stay on whatever marketing page they signed in
+  // from (or, for Google/LinkedIn, land back on "/" — OAuth's redirectTo —
+  // since that's a hard cross-origin redirect that bypasses every in-SPA
+  // "where should this go" check).
+  //
+  // Two sign-in shapes need catching here, since neither navigates anywhere
+  // on its own:
+  //   1. In-SPA sign-in with no reload (Google One Tap, the in-page
+  //      AuthModal) — detected as the live anonymous → signed-in transition
+  //      via the refs below.
+  //   2. OAuth's hard redirect (a real page reload) — the transition refs
+  //      can't see this (the whole app remounts fresh, indistinguishable
+  //      from a returning session's page load), so signInLogic.js instead
+  //      drops an `oauth_post_signin_check` sessionStorage flag right
+  //      before redirecting, which survives the round trip.
+  // Either way this only fires once per sign-in, not on every subsequent
+  // navigation — so an already signed-in, already-onboarded visitor can
+  // still browse the marketing pages freely afterward.
+  useEffect(() => {
+    if (authLoading) return;
+    const isSignedIn = !!user;
+    const oauthFlagged =
+      sessionStorage.getItem("oauth_post_signin_check") === "1";
+
+    if (!authBootstrappedRef.current) {
+      authBootstrappedRef.current = true;
+      wasSignedInRef.current = isSignedIn;
+      if (!oauthFlagged) return;
+    } else {
+      const justSignedIn = !wasSignedInRef.current && isSignedIn;
+      wasSignedInRef.current = isSignedIn;
+      if (!justSignedIn && !oauthFlagged) return;
+    }
+
+    if (oauthFlagged) sessionStorage.removeItem("oauth_post_signin_check");
+    if (!isSignedIn || !user.onboarding_completed || !user.username) return;
+
+    const path = location.pathname;
+    const exempt =
+      path === "/onboarding" ||
+      path === "/signin" ||
+      path.startsWith("/admin") ||
+      path.startsWith("/payment") ||
+      path.startsWith("/community/portfolio-review") ||
+      path.startsWith("/portfolio-review") ||
+      path.startsWith("/invite/") ||
+      path.startsWith("/institute/") ||
+      path.startsWith("/space/") ||
+      path.startsWith("/mentorship-session") ||
+      path.startsWith("/evolve-in-person") ||
+      path.startsWith("/profile/");
+    if (exempt) return;
+
+    navigate(`/profile/${user.username}`, { replace: true });
   }, [user, authLoading, location.pathname, navigate]);
 
   // GA4: track page views on route change (SPA navigation doesn't auto-fire page_view)
