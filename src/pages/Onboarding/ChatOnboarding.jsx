@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   QUESTIONS,
@@ -9,6 +10,10 @@ import {
   nextQuestionIndex
 } from "./questions";
 import GrowthMascot from "../../components/GrowthMascot";
+import {
+  evolve_yellow_logo,
+  evolve_yellow_with_name
+} from "../../assets/images/Nav";
 
 let msgId = 0;
 
@@ -148,7 +153,7 @@ function startIndexFor(initialProfile) {
   return nextQuestionIndex(initialProfile.name ? 1 : 0, initialProfile);
 }
 
-export default function ChatOnboarding({ initialProfile, onComplete }) {
+export default function ChatOnboarding({ initialProfile, onComplete, onLogout }) {
   const [profile, setProfile] = useState(initialProfile);
   const [qIndex, setQIndex] = useState(() => startIndexFor(initialProfile));
   const [messages, setMessages] = useState([]);
@@ -307,19 +312,47 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
 
   return (
     <div
-      className="min-h-screen md:h-screen flex flex-col md:overflow-hidden"
+      className="h-dvh flex flex-col overflow-hidden"
       style={{ backgroundColor: "#161618" }}
     >
+      {/* top bar — same treatment as the profile page's header: logo on the
+          left, account action on the right. Fixed height, never scrolls —
+          it's what makes the chat log the only scrolling region below. */}
       <div
-        className="sticky top-0 z-30 flex flex-col items-center text-center gap-2 px-5 pt-10 pb-4 md:static md:pt-12 md:flex-shrink-0"
+        className="flex items-center justify-between px-5 md:px-8 py-4 border-b border-white/10 flex-shrink-0"
+        style={{ backgroundColor: "#161618" }}
+      >
+        <Link to="/">
+          <img
+            src={evolve_yellow_logo}
+            alt="evolve"
+            className="h-6 w-auto md:hidden"
+          />
+          <img
+            src={evolve_yellow_with_name}
+            alt="evolve"
+            className="hidden md:block h-6 w-auto"
+          />
+        </Link>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+          >
+            Log out
+          </button>
+        )}
+      </div>
+
+      <div
+        className="flex flex-col items-center text-center gap-2 px-5 pt-6 pb-4 md:pt-8 flex-shrink-0"
         style={{ backgroundColor: "#161618" }}
       >
         <h1 className="text-white font-bold text-2xl md:text-3xl">
           Let's build your profile
         </h1>
-        {/* mobile-only status bar — kept inside this same sticky block so it
-            pins to the top together with the heading instead of scrolling
-            away with the chat log */}
+        {/* mobile-only status bar */}
         <div className="w-full max-w-sm pt-1 md:hidden">
           <PhaseBar qIndex={qIndex} profile={profile} />
         </div>
@@ -422,7 +455,7 @@ export default function ChatOnboarding({ initialProfile, onComplete }) {
                     key="chips"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex gap-2 overflow-x-auto pb-2 chat-chip-scrollbar"
+                    className="flex flex-wrap content-start gap-2 max-h-24 overflow-y-auto pb-1 chat-chip-scrollbar"
                   >
                     {chips.map((c) => {
                       const selected = selectedChips(inputValue).some(

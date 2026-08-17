@@ -26,15 +26,22 @@ export default function SeedPlantedModal({ onContinue, spaceName }) {
           className="absolute top-4 right-4 w-7 h-7 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/40 hover:text-white hover:border-white/25 transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            <path
+              d="M1 1L11 11M11 1L1 11"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
 
-        <h1 className="text-white font-bold text-xl mt-1">Your seed has been planted 🌱</h1>
+        <h1 className="text-white font-bold text-xl mt-1">
+          Your seed has been planted 🌱
+        </h1>
         <p className="text-white/50 text-sm leading-relaxed">
           {spaceName
-            ? `${spaceName} is live. Every course, project and follow-through grows it further. Come back often — it's watching.`
-            : "Every course, project and follow-through grows it further. Come back often — it's watching."}
+            ? `${spaceName} is live. Every course, project and follow-through grows it further. Come back often, it's watching.`
+            : "Every course, project and follow-through grows it further. Come back often, it's watching."}
         </p>
 
         <GrowthMascot progress={10} size={110} />

@@ -336,7 +336,14 @@ export const QUESTIONS = [
     isVague: isGenericVague,
     parse: (text) => {
       const tags = matchTags(text, PERSONA_DICT);
-      return { persona: tags[0] || null };
+      const persona = tags[0] || null;
+      // Design school students already tell us they're in formal education
+      // right here — asking "are you mostly self-taught?" a few questions
+      // later would be redundant, so pre-fill it now and skip that question
+      // (see the `learning_method` question's `condition` below).
+      return persona === "Design school student"
+        ? { persona, learning_method: "Formal education (design school)" }
+        : { persona };
     },
     ack: () => "Good to know."
   },
@@ -441,6 +448,10 @@ export const QUESTIONS = [
     id: "learning_method",
     phase: "interests",
     cardLabel: "learning method",
+    // Design school students already answered this implicitly via their
+    // persona (see the `persona` question's `parse`, which pre-fills this
+    // field for them) — skip asking it again.
+    condition: (p) => p.persona !== "Design school student",
     ask: () =>
       "Are you mostly self-taught, or learning through formal design education?",
     chips: ["Self-taught", "Formal education (design school)"],

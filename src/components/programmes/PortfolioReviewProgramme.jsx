@@ -942,6 +942,19 @@ import { REVIEWERS } from "../../lib/reviewerRouting";
 // workspace — see src/lib/growthStage.js for the seed→sprout mapping.
 const PAYMENT_GROWTH_STAGE = 20;
 
+// Streams we currently have reviewers matched to. Anyone whose stream falls
+// outside this list gets a "join waitlist" CTA instead of "pay" in the
+// booking modal below, since we can't route them to a reviewer yet.
+const SUPPORTED_STREAMS = [
+  "Visual Communication",
+  "Interaction Design",
+  "Industrial Design",
+  "Moving Images",
+  "Space Design",
+  "Architecture",
+  "Textile and Fashion Design"
+];
+
 const PROCESS_STEPS = [
   {
     title: "Pre-review questionnaire",
@@ -1016,9 +1029,20 @@ function BookModal({ user, onClose, onSuccess }) {
   const [phone, setPhone] = useState(user?.phone || "");
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState("form"); // form | confirming | success | confirm_timeout | failed
+  const [step, setStep] = useState("form"); // form | confirming | success | confirm_timeout | failed | waitlist_success
   const [confirmedRow, setConfirmedRow] = useState(null);
   const [pendingPayload, setPendingPayload] = useState(null);
+  // Prefilled from onboarding — matched case-insensitively against the
+  // supported list so an exact-but-differently-cased profile value (e.g.
+  // "architecture") still lands on the right option instead of "Other".
+  const [streamChoice, setStreamChoice] = useState(() => {
+    const s = (user?.stream || "").trim();
+    const match = SUPPORTED_STREAMS.find(
+      (v) => v.toLowerCase() === s.toLowerCase()
+    );
+    return match || (s ? "Other" : "");
+  });
+  const isSupportedStream = SUPPORTED_STREAMS.includes(streamChoice);
 
   // Verifies the payment (or dev-bypasses it) and unlocks the review
   // workspace — synchronous and server-verified, no dependency on a
@@ -1040,15 +1064,67 @@ function BookModal({ user, onClose, onSuccess }) {
     }
   }
 
+  // Booking is the first moment we ever ask someone to confirm their
+  // stream against the supported list — the profile's onboarding-time
+  // value (possibly stale, mistyped, or never asked) may not match what
+  // they just picked here, so reconcile it before charging or waitlisting.
+  async function persistStreamIfChanged() {
+    const next = streamChoice === "Other" ? "" : streamChoice;
+    if (next && next !== (user?.stream || "")) {
+      await supabase
+        .from("profiles")
+        .update({ stream: next })
+        .eq("id", user.id);
+    }
+  }
+
+  async function handleJoinWaitlist() {
+    const cleaned = phone.trim().replace(/\s+/g, "");
+    if (cleaned.length < 10) {
+      setError("Please enter a valid mobile number");
+      return;
+    }
+    if (!streamChoice) {
+      setError("Please select your stream first");
+      return;
+    }
+    setError("");
+    setPaying(true);
+    try {
+      await persistStreamIfChanged();
+      await supabase.from("portfolio_review_stream_waitlist").upsert(
+        {
+          user_id: user.id,
+          email: user?.email || "",
+          name: user?.name || "",
+          phone: cleaned,
+          stream: streamChoice === "Other" ? "Other / not listed" : streamChoice
+        },
+        { onConflict: "user_id" }
+      );
+      setStep("waitlist_success");
+    } catch (err) {
+      console.error("portfolio review waitlist error:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setPaying(false);
+    }
+  }
+
   async function handlePay() {
     const cleaned = phone.trim().replace(/\s+/g, "");
     if (cleaned.length < 10) {
       setError("Please enter a valid mobile number");
       return;
     }
+    if (!isSupportedStream) {
+      setError("Please select your stream first");
+      return;
+    }
     setError("");
     setPaying(true);
     try {
+      await persistStreamIfChanged();
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         setError("Razorpay failed to load. Check your internet.");
@@ -1151,6 +1227,46 @@ function BookModal({ user, onClose, onSuccess }) {
               </div>
             </div>
 
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-sm gap-3">
+                <span className="text-white/50 flex-shrink-0">
+                  College / school
+                </span>
+                <span className="text-white text-xs font-semibold text-right truncate">
+                  {user?.school_name || "—"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10">
+                <label className="text-white/40 text-xs">
+                  Confirm your stream
+                </label>
+                <select
+                  value={streamChoice}
+                  onChange={(e) => setStreamChoice(e.target.value)}
+                  className="w-full rounded-xl px-3 py-2.5 text-white text-sm outline-none border border-white/15 focus:border-evolve-yellow/60 transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                >
+                  <option value="" className="bg-[#161618]">
+                    Select stream
+                  </option>
+                  {SUPPORTED_STREAMS.map((s) => (
+                    <option key={s} value={s} className="bg-[#161618]">
+                      {s}
+                    </option>
+                  ))}
+                  <option value="Other" className="bg-[#161618]">
+                    Other / not listed
+                  </option>
+                </select>
+                {streamChoice && !isSupportedStream && (
+                  <p className="text-white/40 text-[11px] leading-relaxed">
+                    join the waitlist and we'll notify you once it's covered.
+                    You can switch to a listed stream above anytime.
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-white/40 text-xs">Mobile number</label>
               <div className="flex gap-2">
@@ -1173,13 +1289,23 @@ function BookModal({ user, onClose, onSuccess }) {
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <button
-              onClick={handlePay}
-              disabled={paying || phone.trim().length < 10}
-              className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
-            >
-              {paying ? "Processing…" : "Proceed to payment →"}
-            </button>
+            {isSupportedStream ? (
+              <button
+                onClick={handlePay}
+                disabled={paying || phone.trim().length < 10}
+                className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+              >
+                {paying ? "Processing…" : "Proceed to payment →"}
+              </button>
+            ) : (
+              <button
+                onClick={handleJoinWaitlist}
+                disabled={paying || phone.trim().length < 10 || !streamChoice}
+                className="w-full bg-white/10 text-white font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity border border-white/15"
+              >
+                {paying ? "Adding you…" : "Join the waitlist →"}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-white/40 text-xs text-center hover:text-white/60"
@@ -1187,6 +1313,38 @@ function BookModal({ user, onClose, onSuccess }) {
               Cancel
             </button>
           </>
+        )}
+
+        {step === "waitlist_success" && (
+          <div className="flex flex-col items-center gap-4 text-center py-2">
+            <div className="w-16 h-16 rounded-full border-4 border-evolve-yellow/60 flex items-center justify-center">
+              <span className="text-evolve-yellow text-2xl font-bold leading-none">
+                ⏳
+              </span>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">
+                You're on the waitlist
+              </h3>
+              <p className="text-white/40 text-xs mt-1">
+                We'll email you the moment reviewers for your stream are ready.
+                Want to book now instead? Come back here and switch to a listed
+                stream anytime.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => setStep("form")}
+              className="text-white/40 text-xs text-center hover:text-white/60"
+            >
+              Back to form
+            </button>
+          </div>
         )}
 
         {step === "confirming" && (
@@ -1327,7 +1485,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
     advanceGrowthStage(
       PAYMENT_GROWTH_STAGE,
       "You're one step closer 🌱",
-      "Your seed is sprouting — you've booked your portfolio review. Keep the momentum going."
+      "Your seed is sprouting, you've booked your portfolio review. Keep the momentum going."
     );
   }
 

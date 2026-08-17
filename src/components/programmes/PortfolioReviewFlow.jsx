@@ -715,7 +715,7 @@ export default function PortfolioReviewFlow({
     advanceGrowthStage(
       SUBMIT_GROWTH_STAGE,
       "Your portfolio is growing 🌿",
-      "You've shared your work — almost time for your live 1:1 review."
+      "You've shared your work, almost time for your live 1:1 review."
     );
   }
 

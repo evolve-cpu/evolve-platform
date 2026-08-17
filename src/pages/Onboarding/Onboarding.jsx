@@ -483,6 +483,7 @@ export default function Onboarding() {
             : { ...emptyProfile(), name: user.name || null }
         }
         onComplete={handleChatComplete}
+        onLogout={handleLogout}
       />
     );
   } else if (step === "team-setup") {
@@ -525,15 +526,19 @@ export default function Onboarding() {
       {/* hidden during the chat step — the name/avatar pill is redundant
           clutter while the chat itself is asking for that same info */}
       {step !== "chat" && profileChip}
-      {/* always visible, every step — the "wrong account / just browsing"
+      {/* the chat step renders its own logo + log-out header bar, so the
+          floating pill (which would otherwise overlap it) only shows for
+          every other step — still the "wrong account / just browsing"
           escape hatch out of onboarding */}
-      <button
-        onClick={handleLogout}
-        className="fixed top-5 right-5 z-50 flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
-        style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
-      >
-        Log out
-      </button>
+      {step !== "chat" && (
+        <button
+          onClick={handleLogout}
+          className="fixed top-5 right-5 z-50 flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
+          style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
+        >
+          Log out
+        </button>
+      )}
       {content}
     </>
   );
