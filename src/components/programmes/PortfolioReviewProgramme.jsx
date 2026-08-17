@@ -1301,7 +1301,7 @@ function BookModal({ user, onClose, onSuccess }) {
               <button
                 onClick={handleJoinWaitlist}
                 disabled={paying || phone.trim().length < 10 || !streamChoice}
-                className="w-full bg-white/10 text-white font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity border border-white/15"
+                className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
               >
                 {paying ? "Adding you…" : "Join the waitlist →"}
               </button>
