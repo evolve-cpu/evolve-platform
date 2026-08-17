@@ -1,10 +1,43 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
+import { sendPhoneOtp, verifyPhoneOtp } from "../../auth/signInLogic";
 import ProcessSteps from "./ProcessSteps";
 import PortfolioReviewFlow from "./PortfolioReviewFlow";
 import GrowthStageModal from "../GrowthStageModal";
 import { REVIEWERS } from "../../lib/reviewerRouting";
+import { right_arrow_icon } from "../../assets/images/Nav";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot
+} from "../ui/input-otp";
+
+const RESEND_SECONDS = 30;
+
+function formatTimer(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function GreenTick() {
+  return (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-400/15 flex-shrink-0">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+        <path
+          d="M2.5 6.2l2.3 2.3L9.5 3.5"
+          stroke="#4ade80"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
 
 // growth_stage (0-100) reached once a Portfolio Review payment unlocks the
 // workspace — see src/lib/growthStage.js for the seed→sprout mapping.
@@ -88,6 +121,62 @@ function BookModal({ user, onClose, onSuccess }) {
   const [confirmedRow, setConfirmedRow] = useState(null);
   const [pendingPayload, setPendingPayload] = useState(null);
 
+  // otpStatus: idle (not requested yet) | sent (awaiting code) | verified
+  const [otpStatus, setOtpStatus] = useState("idle");
+  const [otp, setOtp] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [resendIn, setResendIn] = useState(0);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendIn]);
+
+  function resetOtp() {
+    setOtpStatus("idle");
+    setOtp("");
+    setOtpError("");
+    setResendIn(0);
+  }
+
+  async function requestOtp() {
+    const cleaned = phone.trim().replace(/\s+/g, "");
+    if (cleaned.length < 10) {
+      setError("Please enter a valid mobile number");
+      return;
+    }
+    setError("");
+    setOtpError("");
+    setOtpLoading(true);
+    try {
+      await sendPhoneOtp(`+91${cleaned}`);
+      setOtp("");
+      setOtpStatus("sent");
+      setResendIn(RESEND_SECONDS);
+    } catch (err) {
+      setOtpError(err?.message || "Couldn't send the OTP. Try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleOtpComplete(value) {
+    const cleaned = phone.trim().replace(/\s+/g, "");
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      await verifyPhoneOtp(`+91${cleaned}`, value);
+      setOtpStatus("verified");
+    } catch (err) {
+      setOtpError(err?.message || "That code didn't match — try again.");
+      setOtp("");
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
   // Verifies the payment (or dev-bypasses it) and unlocks the review
   // workspace — synchronous and server-verified, no dependency on a
   // Razorpay dashboard webhook ever firing.
@@ -112,6 +201,10 @@ function BookModal({ user, onClose, onSuccess }) {
     const cleaned = phone.trim().replace(/\s+/g, "");
     if (cleaned.length < 10) {
       setError("Please enter a valid mobile number");
+      return;
+    }
+    if (otpStatus !== "verified") {
+      setError("Please verify your mobile number first");
       return;
     }
     setError("");
@@ -230,24 +323,109 @@ function BookModal({ user, onClose, onSuccess }) {
                   inputMode="numeric"
                   placeholder="98765 43210"
                   value={phone}
-                  onChange={(e) =>
-                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                  }
-                  className="flex-1 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/15 focus:border-evolve-yellow/60 transition-colors"
+                  disabled={otpStatus === "verified"}
+                  onChange={(e) => {
+                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
+                    if (otpStatus !== "idle") resetOtp();
+                  }}
+                  className="flex-1 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/15 focus:border-evolve-yellow/60 disabled:opacity-50 transition-colors"
                   style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                 />
               </div>
             </div>
 
+            {otpStatus !== "idle" && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <label className="text-white/40 text-xs">
+                    Enter the code sent to +91 {phone}
+                  </label>
+                  {otpStatus === "verified" && <GreenTick />}
+                </div>
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={setOtp}
+                  onComplete={handleOtpComplete}
+                  disabled={otpStatus === "verified" || otpLoading}
+                  autoFocus
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+                {otpError && <p className="text-red-400 text-xs">{otpError}</p>}
+                {otpStatus === "sent" && (
+                  <div className="flex items-center justify-between text-xs mt-0.5">
+                    <button
+                      type="button"
+                      onClick={resetOtp}
+                      className="text-white/40 hover:text-white/60 transition-colors"
+                    >
+                      Change number
+                    </button>
+                    {resendIn > 0 ? (
+                      <span className="text-white/30">
+                        Resend in {formatTimer(resendIn)}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={requestOtp}
+                        disabled={otpLoading}
+                        className="text-evolve-yellow font-semibold hover:opacity-80 disabled:opacity-40 transition-opacity"
+                      >
+                        Resend OTP
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <button
-              onClick={handlePay}
-              disabled={paying || phone.trim().length < 10}
-              className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
-            >
-              {paying ? "Processing…" : "Proceed to payment →"}
-            </button>
+            {otpStatus === "verified" ? (
+              <button
+                onClick={handlePay}
+                disabled={paying}
+                className="w-full inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+              >
+                {paying ? "Processing…" : "Proceed to payment"}
+                {!paying && (
+                  <img src={right_arrow_icon} alt="" className="w-4 h-4" />
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={requestOtp}
+                disabled={
+                  otpStatus === "sent" ||
+                  otpLoading ||
+                  phone.trim().length < 10
+                }
+                className="w-full inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+              >
+                {otpStatus === "sent"
+                  ? otpLoading
+                    ? "Verifying…"
+                    : "Enter the code above"
+                  : otpLoading
+                  ? "Sending OTP…"
+                  : "Get OTP"}
+                {otpStatus === "idle" && !otpLoading && (
+                  <img src={right_arrow_icon} alt="" className="w-4 h-4" />
+                )}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-white/40 text-xs text-center hover:text-white/60"
