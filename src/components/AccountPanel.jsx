@@ -441,7 +441,7 @@ function PortfolioResumeSection({ user }) {
   if (!loaded) return null;
 
   return (
-    <div className="border border-evolve-yellow/20 rounded-2xl overflow-hidden">
+    <div className="border border-evolve-yellow/20 rounded-2xl overflow-hidden md:w-[135%]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
