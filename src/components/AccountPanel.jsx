@@ -4,6 +4,9 @@ import { useAuth } from "../hooks/useAuth";
 import { slugify } from "../lib/slug";
 import { QUESTIONS } from "../pages/Onboarding/questions";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 /* ── shared bits ──────────────────────────────────────────────────────── */
 function BackHeader({ title, onBack }) {
   return (
@@ -143,6 +146,373 @@ export function AccountMenuList({ onSelect, onBack, onLogOut, onDeleteAccount })
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ── Portfolio & Resume — profile-building test flow ─────────────────────
+   Lets someone paste a link or upload a file for each of portfolio/resume,
+   then kicks off the extract-profile-data edge function and shows the raw
+   scraped text back as a preview "profile" (no AI summarization layer yet —
+   this is deliberately the pre-LLM output, not a finished profile). ─────── */
+
+const PORTFOLIO_ACCEPTED_TYPES = ".pdf,.pptx,.ppt,.odp,.zip";
+const RESUME_ACCEPTED_TYPES = ".pdf,.doc,.docx";
+const MAX_FILE_MB = 10;
+
+function SourceEditor({ mode, setMode, linkValue, setLinkValue, file, setFile, accept, placeholder }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("link")}
+          className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+            mode === "link"
+              ? "border-evolve-yellow/50 bg-evolve-yellow/[0.12] text-evolve-yellow"
+              : "border-[#373737] text-white/50 hover:border-white/20"
+          }`}
+        >
+          paste a link
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("file")}
+          className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+            mode === "file"
+              ? "border-evolve-yellow/50 bg-evolve-yellow/[0.12] text-evolve-yellow"
+              : "border-[#373737] text-white/50 hover:border-white/20"
+          }`}
+        >
+          upload a file
+        </button>
+      </div>
+      {mode === "link" ? (
+        <input
+          type="url"
+          value={linkValue}
+          onChange={(e) => setLinkValue(e.target.value)}
+          placeholder={placeholder}
+          className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60"
+          style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+        />
+      ) : (
+        <div>
+          <input
+            type="file"
+            accept={accept}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              if (f.size > MAX_FILE_MB * 1024 * 1024) {
+                alert(`file must be under ${MAX_FILE_MB}MB`);
+                return;
+              }
+              setFile(f);
+            }}
+            className="w-full text-xs text-white/60 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-[#373737] file:bg-transparent file:text-white/70 file:text-xs"
+          />
+          {file && <p className="text-white/40 text-xs mt-1.5">{file.name}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExistingSourceRow({ link, fileUrl, onChange }) {
+  const value = link || fileUrl;
+  const isFile = !!fileUrl && !link;
+  return (
+    <div className="flex items-center justify-between gap-3 border border-[#373737] rounded-xl px-4 py-3">
+      <a
+        href={value}
+        target="_blank"
+        rel="noreferrer"
+        className="text-white text-sm truncate hover:text-evolve-yellow transition-colors min-w-0"
+      >
+        {isFile ? "uploaded file" : value}
+      </a>
+      <button
+        type="button"
+        onClick={onChange}
+        className="text-evolve-yellow text-xs font-semibold flex-shrink-0 hover:opacity-80"
+      >
+        Change
+      </button>
+    </div>
+  );
+}
+
+function ClippedText({ text, rawLength, previewLen = 600 }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  const isClipped = text.length > previewLen;
+  const shown = expanded || !isClipped ? text : text.slice(0, previewLen) + "…";
+  const totalChars = rawLength ?? text.length;
+  const wasTruncatedServerSide = rawLength != null && rawLength > text.length;
+  return (
+    <div>
+      <p className="text-white/60 text-xs mt-1 whitespace-pre-wrap">{shown}</p>
+      <div className="flex items-center gap-3 mt-1">
+        {isClipped && (
+          <button type="button" onClick={() => setExpanded((v) => !v)} className="text-evolve-yellow text-[11px] font-semibold hover:opacity-80">
+            {expanded ? "show less" : "show full text"}
+          </button>
+        )}
+        <span className="text-white/25 text-[11px]">
+          {totalChars.toLocaleString()} characters captured{wasTruncatedServerSide ? " (capped)" : ""}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ExtractedProfilePreview({ data }) {
+  return (
+    <div className="border border-[#373737] rounded-xl p-4 flex flex-col gap-4" style={{ backgroundColor: "rgba(255,255,255,0.02)" }}>
+      <div>
+        <p className="text-evolve-yellow text-xs font-bold mb-1">Preview — raw extracted profile</p>
+        <p className="text-white/40 text-xs">{data.note}</p>
+      </div>
+
+      {data.portfolio && (
+        <div className="flex flex-col gap-2">
+          <p className="text-white text-xs font-semibold">Portfolio</p>
+          {data.portfolio.rendered_with && <p className="text-white/30 text-[11px]">{data.portfolio.rendered_with}</p>}
+          {data.portfolio.note && <p className="text-white/40 text-xs">{data.portfolio.note}</p>}
+          {(data.portfolio.pages || []).map((p, i) => (
+            <div key={i} className="border-t border-[#2a2a2a] pt-2">
+              <p className="text-white/50 text-[11px] flex items-center gap-1.5">
+                <span className={p.ok ? "text-evolve-inchworm" : "text-red-400"}>{p.ok ? "✓" : "✗"}</span>
+                <span className="truncate">{p.url}</span>
+              </p>
+              <ClippedText text={p.text} rawLength={p.raw_length} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {data.resume && (
+        <div className="flex flex-col gap-2 border-t border-[#2a2a2a] pt-3">
+          <p className="text-white text-xs font-semibold">Resume</p>
+          <p className="text-white/50 text-[11px] truncate">{data.resume.source_url}</p>
+          {data.resume.note && <p className="text-white/40 text-xs">{data.resume.note}</p>}
+          <ClippedText text={data.resume.text} rawLength={data.resume.raw_length} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortfolioResumeSection({ user }) {
+  const [loaded, setLoaded] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const [portfolioLink, setPortfolioLink] = useState("");
+  const [portfolioFileUrl, setPortfolioFileUrl] = useState(null);
+  const [portfolioFile, setPortfolioFile] = useState(null);
+  const [portfolioMode, setPortfolioMode] = useState("link");
+  const [editingPortfolio, setEditingPortfolio] = useState(false);
+
+  const [resumeLink, setResumeLink] = useState("");
+  const [resumeFileUrl, setResumeFileUrl] = useState(null);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeMode, setResumeMode] = useState("link");
+  const [editingResume, setEditingResume] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractStatus, setExtractStatus] = useState("none");
+  const [extractedProfile, setExtractedProfile] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        setPortfolioLink(data.portfolio_link || "");
+        setPortfolioFileUrl(data.portfolio_file_url || null);
+        setResumeLink(data.resume_link || "");
+        setResumeFileUrl(data.resume_file_url || null);
+        setExtractedProfile(data.extracted_profile || null);
+        setExtractStatus(data.extracted_profile_status || "none");
+        setEditingPortfolio(!data.portfolio_link && !data.portfolio_file_url);
+        setEditingResume(!data.resume_link && !data.resume_file_url);
+      }
+      setLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user.id]);
+
+  async function uploadFile(file, prefix) {
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${prefix}-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage.from("portfolio-files").upload(path, file, { upsert: true });
+    if (uploadErr) throw new Error(uploadErr.message);
+    const { data } = supabase.storage.from("portfolio-files").getPublicUrl(path);
+    return data?.publicUrl || null;
+  }
+
+  const hasPortfolioValue = editingPortfolio
+    ? (portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFile)
+    : !!(portfolioLink || portfolioFileUrl);
+  const hasResumeValue = editingResume
+    ? (resumeMode === "link" ? !!resumeLink.trim() : !!resumeFile)
+    : !!(resumeLink || resumeFileUrl);
+  const canBuild = hasPortfolioValue || hasResumeValue;
+
+  async function handleBuildProfile() {
+    setErrorMsg("");
+    if (!canBuild) {
+      setErrorMsg("add at least a portfolio or a resume first.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {};
+
+      if (editingPortfolio) {
+        if (portfolioMode === "link" && portfolioLink.trim()) {
+          payload.portfolio_link = portfolioLink.trim();
+          payload.portfolio_file_url = null;
+        } else if (portfolioMode === "file" && portfolioFile) {
+          payload.portfolio_file_url = await uploadFile(portfolioFile, "portfolio");
+          payload.portfolio_link = null;
+        }
+      }
+
+      if (editingResume) {
+        if (resumeMode === "link" && resumeLink.trim()) {
+          payload.resume_link = resumeLink.trim();
+          payload.resume_file_url = null;
+        } else if (resumeMode === "file" && resumeFile) {
+          payload.resume_file_url = await uploadFile(resumeFile, "resume");
+          payload.resume_link = null;
+        }
+      }
+
+      if (Object.keys(payload).length > 0) {
+        await supabase.from("profiles").update(payload).eq("id", user.id);
+        if ("portfolio_link" in payload) {
+          setPortfolioLink(payload.portfolio_link || "");
+          setPortfolioFileUrl(payload.portfolio_file_url || null);
+        }
+        if ("resume_link" in payload) {
+          setResumeLink(payload.resume_link || "");
+          setResumeFileUrl(payload.resume_file_url || null);
+        }
+      }
+
+      setEditingPortfolio(false);
+      setEditingResume(false);
+      setSaving(false);
+
+      setExtracting(true);
+      setExtractStatus("pending");
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/extract-profile-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ user_id: user.id })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "extraction failed");
+      setExtractedProfile(json.extracted_profile);
+      setExtractStatus("done");
+    } catch (err) {
+      setErrorMsg(err.message || "something went wrong");
+      setExtractStatus("failed");
+    } finally {
+      setSaving(false);
+      setExtracting(false);
+    }
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <div className="border border-evolve-yellow/20 rounded-2xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-4 py-3.5 text-left"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow flex-shrink-0" />
+        <span className="text-white text-sm font-bold flex-1">Portfolio &amp; Resume</span>
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className={`text-evolve-yellow/70 transition-transform ${open ? "rotate-180" : ""}`}>
+          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="flex flex-col gap-6 px-4 pb-5">
+          <p className="text-white/40 text-xs -mt-1">
+            Give us your portfolio and resume once — we'll build a profile from them so you don't have to keep sharing either separately.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-white/40 text-xs">Portfolio</label>
+            {!editingPortfolio && (portfolioLink || portfolioFileUrl) ? (
+              <ExistingSourceRow link={portfolioLink} fileUrl={portfolioFileUrl} onChange={() => setEditingPortfolio(true)} />
+            ) : (
+              <SourceEditor
+                mode={portfolioMode}
+                setMode={setPortfolioMode}
+                linkValue={portfolioLink}
+                setLinkValue={setPortfolioLink}
+                file={portfolioFile}
+                setFile={setPortfolioFile}
+                accept={PORTFOLIO_ACCEPTED_TYPES}
+                placeholder="https://your-portfolio.com"
+              />
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-white/40 text-xs">Resume</label>
+            {!editingResume && (resumeLink || resumeFileUrl) ? (
+              <ExistingSourceRow link={resumeLink} fileUrl={resumeFileUrl} onChange={() => setEditingResume(true)} />
+            ) : (
+              <SourceEditor
+                mode={resumeMode}
+                setMode={setResumeMode}
+                linkValue={resumeLink}
+                setLinkValue={setResumeLink}
+                file={resumeFile}
+                setFile={setResumeFile}
+                accept={RESUME_ACCEPTED_TYPES}
+                placeholder="https://drive.google.com/..."
+              />
+            )}
+          </div>
+
+          {errorMsg && <p className="text-red-400 text-xs">{errorMsg}</p>}
+
+          <button
+            type="button"
+            onClick={handleBuildProfile}
+            disabled={saving || extracting || !canBuild}
+            className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-xl px-5 py-2.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+          >
+            {saving ? "Saving…" : extracting ? "Building profile…" : "Save & build profile"}
+          </button>
+
+          {extractedProfile && extractStatus === "done" && <ExtractedProfilePreview data={extractedProfile} />}
+          {extractStatus === "failed" && !errorMsg && (
+            <p className="text-red-400 text-xs">extraction failed — try again in a moment.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -360,6 +730,8 @@ export function MyAccountPanel({ onBack, onSaved }) {
             )}
           </div>
         )}
+
+        <PortfolioResumeSection user={user} />
 
         <button
           type="button"
