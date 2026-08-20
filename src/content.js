@@ -798,7 +798,7 @@ export const portfolioReview = {
     "Industry-led portfolio reviews that go beyond what's on screen. Get a personalised report with a live 1:1 discussion, helping you build a stronger portfolio for internships, placements, and beyond.",
 
   pricing: {
-    price: "1,400",
+    price: "2,500",
     heading: "Live review with a mentor",
     description:
       "Go deeper with personalised guidance and dedicated reviewer support.",

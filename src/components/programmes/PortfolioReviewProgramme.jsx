@@ -1223,7 +1223,7 @@ function BookModal({ user, onClose, onSuccess }) {
               </div>
               <div className="flex items-center justify-between text-sm pt-1.5 border-t border-white/10">
                 <span className="text-white">Live review with a mentor</span>
-                <span className="text-evolve-yellow font-bold">₹1,400</span>
+                <span className="text-evolve-yellow font-bold">₹2,500</span>
               </div>
             </div>
 
@@ -1690,7 +1690,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
               Live review with a mentor
             </p>
             <div className="flex items-baseline gap-2">
-              <span className="text-white font-bold text-3xl">₹1,400</span>
+              <span className="text-white font-bold text-3xl">₹2,500</span>
               <span className="text-white/30 text-xs">one-time</span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
@@ -1748,7 +1748,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
               Live review with a mentor
             </p>
             <div className="flex items-baseline gap-2">
-              <span className="text-white font-bold text-3xl">₹1,400</span>
+              <span className="text-white font-bold text-3xl">₹2,500</span>
               <span className="text-white/30 text-xs">per review</span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
@@ -1817,7 +1817,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
         <div>
           <p className="text-white font-bold text-sm">Portfolio Review</p>
           <p className="text-white/30 text-xs">
-            ₹1,400 · live 1:1 review + written report + free follow-up
+            ₹2,500 · live 1:1 review + written report + free follow-up
           </p>
         </div>
         <button

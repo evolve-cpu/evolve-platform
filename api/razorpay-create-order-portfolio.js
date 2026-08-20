@@ -6,8 +6,9 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "node:crypto";
 
-// const AMOUNT_PAISE = 140000; // ₹1,400
-const AMOUNT_PAISE = 100; // ₹1
+// ₹2,500 in production (main), ₹1 everywhere else (dev/preview deployments)
+// so a merge from development can never silently push the test price live.
+const AMOUNT_PAISE = process.env.VERCEL_ENV === "production" ? 250000 : 100;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
