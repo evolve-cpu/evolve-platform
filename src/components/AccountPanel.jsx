@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  BarChart, Bar, XAxis, YAxis, Cell, LabelList,
+  PieChart, Pie,
+  ResponsiveContainer
+} from "recharts";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { slugify } from "../lib/slug";
@@ -286,6 +292,20 @@ function ExtractedProfilePreview({ data }) {
                 <span className={p.ok ? "text-evolve-inchworm" : "text-red-400"}>{p.ok ? "✓" : "✗"}</span>
                 <span className="truncate">{p.url}</span>
               </p>
+              {p.screenshot_urls?.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto mt-2 pb-1">
+                  {p.screenshot_urls.map((shotUrl, si) => (
+                    <a key={si} href={shotUrl} target="_blank" rel="noreferrer" className="flex-shrink-0">
+                      <img
+                        src={shotUrl}
+                        alt=""
+                        className="h-40 rounded-lg border border-[#2a2a2a] hover:border-evolve-yellow/40 transition-colors"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {p.screenshot_debug && <p className="text-white/25 text-[10px] mt-1 font-mono break-all">{p.screenshot_debug}</p>}
               <ClippedText text={p.text} rawLength={p.raw_length} />
             </div>
           ))}
@@ -300,6 +320,337 @@ function ExtractedProfilePreview({ data }) {
           <ClippedText text={data.resume.text} rawLength={data.resume.raw_length} />
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── AI Profile Reveal — the Gemini-analyzed profile. Role/Niche/Domain/
+   Sector/Location stay as tags (they're identity, not magnitude — charting
+   a label doesn't make it truer). Everything that IS a real score or ratio
+   gets a real chart: a radar for the five qualitative signals together, a
+   ranked bar for tool emphasis, a donut for the validation ratio, and a
+   hero ring for the composite score — all derived from data already on the
+   profile, nothing fabricated to look more precise than it is. ─────────── */
+
+const YELLOW = "#FFD007";
+const TRACK = "rgba(255,255,255,0.08)";
+
+const EXPERIENCE_BUCKETS = ["Starting", "<1", "1-2", "2-5", "5-10", "10-15", "15+", "over 20"];
+const STRENGTH_LEVELS = { high: 3, strong: 3, medium: 2, partial: 2, low: 1, absent: 0 };
+const TEAM_LEVELS = { leadership: 3, collaborative: 2, mixed: 2, solo: 1 };
+
+function levelOf(v) {
+  return STRENGTH_LEVELS[String(v || "").toLowerCase()] ?? 0;
+}
+
+function computeSkillAxes(profile) {
+  return [
+    { axis: "Business", value: levelOf(profile?.understanding_of_business?.score) },
+    { axis: "Clarity", value: levelOf(profile?.foundational_clarity?.score) },
+    { axis: "Leadership", value: TEAM_LEVELS[String(profile?.team_work_proficiency?.mode || "").toLowerCase()] ?? 0 },
+    { axis: "Learning", value: profile?.learning?.present ? 3 : 0 },
+    { axis: "Community", value: profile?.contributing_back?.present ? 3 : 0 },
+  ];
+}
+
+function computeHeroScore(axes) {
+  const avg = axes.reduce((s, a) => s + a.value, 0) / (axes.length * 3);
+  return Math.round(avg * 100);
+}
+
+function Tag({ children }) {
+  if (!children) return null;
+  return <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#373737] text-white/60">{children}</span>;
+}
+
+/* Hand-drawn ring (not a chart-library radial) so the score can sit
+   centered inside it — a simple stroked circle, no illustrative path data. */
+function HeroScoreRing({ score }) {
+  const r = 54, c = 2 * Math.PI * r;
+  const offset = c - (score / 100) * c;
+  return (
+    <div className="relative w-36 h-36 flex-shrink-0">
+      <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+        <circle cx="60" cy="60" r={r} fill="none" stroke={TRACK} strokeWidth="10" />
+        <circle
+          cx="60" cy="60" r={r} fill="none" stroke={YELLOW} strokeWidth="10" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 900ms ease-out" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-white text-3xl font-bold">{score}</span>
+        <span className="text-white/40 text-[10px] uppercase tracking-wide">Signal score</span>
+      </div>
+    </div>
+  );
+}
+
+function SkillRadarChart({ axes }) {
+  return (
+    <div className="h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={axes} outerRadius="72%">
+          <PolarGrid stroke="rgba(255,255,255,0.12)" />
+          <PolarAngleAxis dataKey="axis" tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }} />
+          <Radar dataKey="value" stroke={YELLOW} fill={YELLOW} fillOpacity={0.35} strokeWidth={2} isAnimationActive />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ToolBarChart({ tools }) {
+  const rows = [...(tools || [])]
+    .filter((t) => t?.name)
+    .sort((a, b) => (b.emphasis || 0) - (a.emphasis || 0))
+    .slice(0, 8);
+  if (!rows.length) return null;
+  return (
+    <div style={{ height: Math.max(rows.length * 34, 100) }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 0 }}>
+          <XAxis type="number" domain={[0, 3]} hide />
+          <YAxis
+            type="category" dataKey="name" width={110}
+            tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
+            axisLine={false} tickLine={false}
+          />
+          <Bar dataKey="emphasis" radius={[0, 6, 6, 0]} barSize={12} isAnimationActive>
+            {rows.map((r, i) => <Cell key={i} fill={YELLOW} fillOpacity={0.4 + (r.emphasis || 0) * 0.2} />)}
+            <LabelList dataKey="emphasis" position="right" formatter={(v) => "●".repeat(v)} fill={YELLOW} fontSize={10} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ValidationDonut({ validated, unvalidated }) {
+  const v = validated || 0, u = unvalidated || 0, total = v + u;
+  const pct = total > 0 ? Math.round((v / total) * 100) : 0;
+  const data = total > 0 ? [{ name: "verified", value: v }, { name: "self-initiated", value: u }] : [{ name: "none", value: 1 }];
+  return (
+    <div className="flex items-center gap-4">
+      <div className="relative w-24 h-24 flex-shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data} dataKey="value" innerRadius={32} outerRadius={44} startAngle={90} endAngle={-270} stroke="none" isAnimationActive>
+              {total > 0 ? (
+                <>
+                  <Cell fill={YELLOW} />
+                  <Cell fill={TRACK} />
+                </>
+              ) : (
+                <Cell fill={TRACK} />
+              )}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-white text-sm font-bold">{total > 0 ? `${pct}%` : "—"}</span>
+        </div>
+      </div>
+      <p className="text-white/50 text-xs leading-relaxed">
+        {total > 0
+          ? <><span className="text-white font-semibold">{v}</span> verified project{v === 1 ? "" : "s"} tied to named clients,{" "}
+              <span className="text-white font-semibold">{u}</span> self-initiated.</>
+          : "No project ties detected."}
+      </p>
+    </div>
+  );
+}
+
+function SignalEvidence({ label, badge, points }) {
+  const list = Array.isArray(points) ? points.filter(Boolean) : points ? [points] : [];
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">{label}</p>
+        {badge}
+      </div>
+      {list.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {list.map((pt, i) => (
+            <li key={i} className="text-white/50 text-xs leading-snug flex gap-1.5">
+              <span className="text-evolve-yellow/60 flex-shrink-0">•</span>
+              <span>{pt}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function StatTile({ label, value }) {
+  return (
+    <div className="flex flex-col gap-0.5 border border-[#2a2a2a] rounded-xl px-4 py-3">
+      <span className="text-white text-xl font-bold">{value}</span>
+      <span className="text-white/40 text-[10px] uppercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+function RecruiterHighlights({ points }) {
+  const list = (points || []).filter(Boolean);
+  if (!list.length) return null;
+  return (
+    <div className="rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.05] p-4 flex flex-col gap-2.5">
+      <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide">For Recruiters — at a glance</p>
+      <ul className="flex flex-col gap-1.5">
+        {list.map((pt, i) => (
+          <li key={i} className="text-white/85 text-sm leading-snug flex gap-2">
+            <span className="text-evolve-yellow flex-shrink-0">▸</span>
+            <span>{pt}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function CareerJourney({ journey }) {
+  if (!journey?.length) return null;
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {journey.map((stage, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#373737] text-white/60">{stage}</span>
+          {i < journey.length - 1 && <span className="text-white/30 text-xs">→</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AIProfileReveal({ profile }) {
+  if (!profile) return null;
+  const {
+    role, niche, domain, sector, work_experience, type_of_work_wanted,
+    team_work_proficiency, understanding_of_business, foundational_clarity,
+    learning, contributing_back, tool_proficiency, ai_proficiency,
+    real_work_validation, career_switching, location, work_preference,
+    salary_expectations, current_status, summary, recruiter_highlights,
+  } = profile;
+
+  const axes = computeSkillAxes(profile);
+  const heroScore = computeHeroScore(axes);
+  const expIdx = EXPERIENCE_BUCKETS.findIndex((b) => b.toLowerCase() === String(work_experience || "").trim().toLowerCase());
+  const verifiedCount = real_work_validation?.validated_count || 0;
+  const toolCount = (tool_proficiency || []).length;
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl border border-evolve-yellow/25 p-6 sm:p-8 flex flex-col gap-8"
+      style={{ background: "linear-gradient(160deg, rgba(255,208,7,0.06), rgba(255,255,255,0.015))" }}
+    >
+      <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
+        <HeroScoreRing score={heroScore} />
+        <div className="flex flex-col gap-3 min-w-0">
+          <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-[0.15em]">AI-Built Profile</p>
+          <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">
+            {role?.primary}
+            {role?.secondary && <span className="text-white/40"> · {role.secondary}</span>}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {niche && niche.toLowerCase() !== "not specified" && <Tag>{niche}</Tag>}
+            <Tag>{domain}</Tag>
+            <Tag>{sector}</Tag>
+            {type_of_work_wanted && <Tag>wants: {type_of_work_wanted}</Tag>}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <StatTile label="Experience" value={work_experience || "—"} />
+        <StatTile label="Verified Projects" value={verifiedCount} />
+        <StatTile label="Tools Cited" value={toolCount} />
+      </div>
+
+      <RecruiterHighlights points={recruiter_highlights} />
+
+      {summary && (
+        <blockquote className="border-l-2 border-evolve-yellow pl-4 text-white/80 text-base leading-relaxed italic">
+          &ldquo;{summary}&rdquo;
+        </blockquote>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">Experience</p>
+        <div className="flex items-end gap-1.5">
+          {EXPERIENCE_BUCKETS.map((b, i) => (
+            <div key={b} className="flex-1 flex flex-col items-center gap-1.5">
+              <div
+                className="w-full h-1.5 rounded-full transition-colors"
+                style={expIdx !== -1 && i <= expIdx ? { background: `linear-gradient(90deg, ${YELLOW}55, ${YELLOW})` } : { background: TRACK }}
+              />
+              <span className={`text-[9px] whitespace-nowrap ${expIdx === i ? "text-evolve-yellow font-bold" : "text-white/30"}`}>{b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 items-start">
+        <div className="flex flex-col gap-2">
+          <p className="text-white/40 text-[11px] uppercase tracking-wide">Skill Signal</p>
+          <SkillRadarChart axes={axes} />
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <SignalEvidence label="Team Work" badge={<Tag>{team_work_proficiency?.mode}</Tag>} points={team_work_proficiency?.key_points} />
+          <SignalEvidence label="Business" badge={<Tag>{understanding_of_business?.score}</Tag>} points={understanding_of_business?.key_points} />
+          <SignalEvidence label="Clarity" badge={<Tag>{foundational_clarity?.score}</Tag>} points={foundational_clarity?.key_points} />
+          <SignalEvidence label="Learning" badge={<Tag>{learning?.present ? "Active" : "Not evident"}</Tag>} points={learning?.key_points} />
+          <SignalEvidence
+            label="Community"
+            badge={<Tag>{contributing_back?.present ? "Yes" : "Not evident"}</Tag>}
+            points={contributing_back?.types}
+          />
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <p className="text-white/40 text-[11px] uppercase tracking-wide">Career Switch</p>
+              <Tag>{career_switching?.detected ? "Detected" : "None"}</Tag>
+            </div>
+            <CareerJourney journey={career_switching?.journey} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
+          <p className="text-white/40 text-[11px] uppercase tracking-wide">Tool Emphasis</p>
+          <ToolBarChart tools={tool_proficiency} />
+          {ai_proficiency?.present && <Tag>AI · {(ai_proficiency.tools || []).join(", ") || ai_proficiency.mode}</Tag>}
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-white/40 text-[11px] uppercase tracking-wide">Real Work Validation</p>
+          <ValidationDonut validated={real_work_validation?.validated_count} unvalidated={real_work_validation?.unvalidated_count} />
+          {real_work_validation?.key_points?.length > 0 && (
+            <ul className="flex flex-col gap-1 mt-1">
+              {real_work_validation.key_points.map((pt, i) => (
+                <li key={i} className="text-white/50 text-xs leading-snug flex gap-1.5">
+                  <span className="text-evolve-yellow/60 flex-shrink-0">•</span>
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
+        {[
+          ["Location", location],
+          ["Work Preference", work_preference],
+          ["Current Status", current_status],
+          ["Salary", salary_expectations],
+        ].map(([label, val]) => (
+          <div key={label}>
+            <p className="text-white/30 text-[10px] uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-white/60 text-xs">{val || "Not specified"}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -326,12 +677,21 @@ function PortfolioResumeSection({ user }) {
   const [extractedProfile, setExtractedProfile] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeStatus, setAnalyzeStatus] = useState("none");
+  const [aiProfile, setAiProfile] = useState(null);
+  const [analyzeError, setAnalyzeError] = useState("");
+
+  const [isPublic, setIsPublic] = useState(false);
+  const [publicToggling, setPublicToggling] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status")
+        .select("portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status, ai_profile, ai_profile_status, ai_profile_public, username")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
@@ -342,6 +702,9 @@ function PortfolioResumeSection({ user }) {
         setResumeFileUrl(data.resume_file_url || null);
         setExtractedProfile(data.extracted_profile || null);
         setExtractStatus(data.extracted_profile_status || "none");
+        setAiProfile(data.ai_profile || null);
+        setAnalyzeStatus(data.ai_profile_status || "none");
+        setIsPublic(!!data.ai_profile_public);
         setEditingPortfolio(!data.portfolio_link && !data.portfolio_file_url);
         setEditingResume(!data.resume_link && !data.resume_file_url);
       }
@@ -349,6 +712,50 @@ function PortfolioResumeSection({ user }) {
     })();
     return () => { cancelled = true; };
   }, [user.id]);
+
+  async function handleTogglePublic() {
+    setPublicToggling(true);
+    const next = !isPublic;
+    const { error } = await supabase.from("profiles").update({ ai_profile_public: next }).eq("id", user.id);
+    if (!error) setIsPublic(next);
+    setPublicToggling(false);
+  }
+
+  const shareUrl = user?.username ? `${window.location.origin}/profile/${user.username}` : "";
+
+  function handleCopyLink() {
+    if (!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }
+
+  async function handleAnalyze() {
+    setAnalyzeError("");
+    setAnalyzing(true);
+    setAnalyzeStatus("pending");
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/analyze-profile-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ user_id: user.id })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "AI analysis failed");
+      setAiProfile(json.ai_profile);
+      setAnalyzeStatus("done");
+    } catch (err) {
+      setAnalyzeError(err.message || "AI analysis failed");
+      setAnalyzeStatus("failed");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   async function uploadFile(file, prefix) {
     const ext = file.name.split(".").pop();
@@ -510,6 +917,49 @@ function PortfolioResumeSection({ user }) {
           {extractedProfile && extractStatus === "done" && <ExtractedProfilePreview data={extractedProfile} />}
           {extractStatus === "failed" && !errorMsg && (
             <p className="text-red-400 text-xs">extraction failed — try again in a moment.</p>
+          )}
+
+          {extractStatus === "done" && (
+            <div className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={analyzing}
+                className="self-start bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-5 py-2.5 disabled:opacity-40 hover:bg-white/10 active:opacity-80 transition-colors"
+              >
+                {analyzing ? "Building AI profile…" : aiProfile ? "Rebuild AI profile" : "✨ Build AI profile"}
+              </button>
+              {analyzeError && <p className="text-red-400 text-xs">{analyzeError}</p>}
+
+              {aiProfile && (
+                <div className="flex flex-col gap-2 border border-[#2a2a2a] rounded-xl p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-white text-sm font-semibold">Share with recruiters</p>
+                      <p className="text-white/40 text-xs mt-0.5">Publishes a read-only link to this AI profile — no login required to view.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleTogglePublic}
+                      disabled={publicToggling}
+                      className={`flex-shrink-0 w-11 h-6 rounded-full transition-colors relative disabled:opacity-40 ${isPublic ? "bg-evolve-yellow" : "bg-white/15"}`}
+                    >
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${isPublic ? "left-[22px]" : "left-0.5"}`} />
+                    </button>
+                  </div>
+                  {isPublic && shareUrl && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <input readOnly value={shareUrl} className="flex-1 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-lg px-3 py-2 outline-none" />
+                      <button type="button" onClick={handleCopyLink} className="text-evolve-yellow text-xs font-semibold px-3 py-2 rounded-lg border border-evolve-yellow/40 hover:bg-evolve-yellow/10 flex-shrink-0">
+                        {linkCopied ? "Copied ✓" : "Copy"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {analyzeStatus === "done" && aiProfile && <AIProfileReveal profile={aiProfile} />}
+            </div>
           )}
         </div>
       )}

@@ -32,6 +32,25 @@ const TEXT_SNIPPET_LEN = 12000;
 const RENDER_TIMEOUT_MS = 30000; // r.jina.ai can genuinely take >20s on a cold, JS-heavy SPA
 const NON_PAGE_EXT = /\.(css|js|mjs|json|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|xml|txt|pdf|zip)$/i;
 
+// Multi-tenant platforms — one hostname shared by millions of unrelated
+// profiles. "Same domain" is meaningless as a portfolio-ownership signal
+// here: a gallery URL's own-domain links are the platform's nav (Sign In,
+// Explore, Jobs, …), not more of this designer's work. For these, the
+// submitted URL is treated as the complete, self-contained source — no
+// sub-page discovery, no wasted screenshots on Behance's marketing pages.
+const MULTI_TENANT_HOSTS = new Set([
+  "behance.net", "www.behance.net",
+  "dribbble.com", "www.dribbble.com",
+]);
+
+function isMultiTenantHost(url: string): boolean {
+  try {
+    return MULTI_TENANT_HOSTS.has(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 /* ── Supabase REST helpers ───────────────────────────────────────────────── */
 
 async function dbUpdate(userId: string, payload: Record<string, unknown>): Promise<void> {
@@ -118,6 +137,66 @@ function discoverLinksFromMarkdown(markdown: string, baseUrl: string, max: numbe
   return Array.from(found).slice(0, max);
 }
 
+// Jina's pageshot mode is the one renderer that actually gets past Behance/
+// Dribbble's bot-block (confirmed — Browserless and Microlink both got 403).
+// It has no scroll-position control (stateless, one render per request), so
+// this is a single best-effort capture, capped at roughly 1280px tall —
+// not a full-page or multi-segment shot the way non-blocked sites get.
+async function captureViaJina(url: string, userId: string): Promise<{ screenshotUrls: string[]; debug: string }> {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), SCREENSHOT_TIMEOUT_MS);
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: {
+        "Accept": "application/json",
+        "x-respond-with": "pageshot",
+        "x-respond-timing": "media-idle",
+        "x-timeout": "40",
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => "");
+      return { screenshotUrls: [], debug: `jina responded ${res.status}${bodyText ? `: ${bodyText.slice(0, 300)}` : ""}` };
+    }
+    const json = await res.json();
+    const shotUrl: string | undefined = json?.data?.screenshotUrl ?? json?.data?.screenshot;
+    if (!shotUrl) {
+      return { screenshotUrls: [], debug: `no screenshot field — keys: [${Object.keys(json?.data ?? json ?? {}).join(", ")}] raw: ${JSON.stringify(json).slice(0, 300)}` };
+    }
+
+    const imgRes = await fetch(shotUrl);
+    if (!imgRes.ok) return { screenshotUrls: [], debug: `image fetch failed: ${imgRes.status}` };
+    const bytes = new Uint8Array(await imgRes.arrayBuffer());
+    const contentType = imgRes.headers.get("content-type") || "image/png";
+    const ext = contentType.includes("jpeg") ? "jpg" : "png";
+    const path = `${userId}/screenshots/${crypto.randomUUID()}.${ext}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/portfolio-files/${path}`, {
+      method: "POST",
+      headers: {
+        "apikey": SERVICE_ROLE_KEY,
+        "Authorization": `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": contentType,
+        "x-upsert": "true",
+      },
+      body: bytes,
+    });
+    if (!uploadRes.ok) return { screenshotUrls: [], debug: `storage upload failed: ${uploadRes.status}` };
+
+    return {
+      screenshotUrls: [`${SUPABASE_URL}/storage/v1/object/public/portfolio-files/${path}`],
+      debug: `${bytes.length.toLocaleString()} bytes — via r.jina.ai (single best-effort capture, no scroll control)`,
+    };
+  } catch (err) {
+    clearTimeout(t);
+    const reason = err instanceof Error && err.name === "AbortError"
+      ? `timed out after ${SCREENSHOT_TIMEOUT_MS / 1000}s`
+      : (err as Error)?.message || "unknown error";
+    return { screenshotUrls: [], debug: `exception: ${reason}` };
+  }
+}
+
 /* ── Rendered fetch — routes through r.jina.ai, a free reader proxy that runs
    a real headless browser server-side (executes JS, waits for render) and
    hands back the page as clean text. This is the stand-in for hosting our
@@ -185,6 +264,125 @@ async function extractPdfText(fileUrl: string): Promise<{ ok: boolean; text: str
   }
 }
 
+/* ── Screenshot capture — Jina's free proxy caps full-page shots at ~1280px
+   tall (confirmed via debug output), and has no scroll control at all. A
+   real scroll-and-shoot pass needs an actual browser session, which is what
+   Browserless (or any compatible hosted-Chrome API) gives us: we send it a
+   Puppeteer script, it runs on a real browser on their infrastructure, and
+   hands back an array of screenshots taken at successive scroll positions.
+   Requires BROWSERLESS_TOKEN (and optionally BROWSERLESS_URL) to be set as
+   edge function secrets — without a token this step is skipped, not fatal. */
+
+const BROWSERLESS_TOKEN = Deno.env.get("BROWSERLESS_TOKEN") ?? "";
+const BROWSERLESS_URL = Deno.env.get("BROWSERLESS_URL") ?? "https://production-sfo.browserless.io";
+const SCREENSHOT_TIMEOUT_MS = 60000; // scrolling through a real page + several screenshots takes longer than a single render
+const MAX_SCROLL_SHOTS = 6;
+const SHOT_VIEWPORT_HEIGHT = 1600;
+
+// Puppeteer code executed server-side by Browserless's /function endpoint —
+// we never run a browser ourselves, we just ship it this script. It scrolls
+// the page once fully (to trigger lazy-loaded sections), then walks back
+// down in viewport-sized steps taking one screenshot per step.
+const SCROLL_SCREENSHOT_CODE = `
+export default async ({ page, context }) => {
+  const { url, viewportHeight, maxShots } = context;
+  await page.setViewport({ width: 1280, height: viewportHeight });
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 });
+
+  const totalHeight = await page.evaluate(async () => {
+    await new Promise((resolve) => {
+      let scrolled = 0;
+      const step = 600;
+      const timer = setInterval(() => {
+        window.scrollBy(0, step);
+        scrolled += step;
+        if (scrolled >= document.body.scrollHeight) {
+          clearInterval(timer);
+          resolve(undefined);
+        }
+      }, 250);
+    });
+    return document.body.scrollHeight;
+  });
+
+  const shotCount = Math.max(1, Math.min(maxShots, Math.ceil(totalHeight / viewportHeight)));
+  const shots = [];
+  for (let i = 0; i < shotCount; i++) {
+    await page.evaluate((y) => window.scrollTo(0, y), i * viewportHeight);
+    await new Promise((r) => setTimeout(r, 300));
+    shots.push(await page.screenshot({ encoding: "base64" }));
+  }
+
+  return { data: { shots, totalHeight, shotCount }, type: "application/json" };
+};
+`;
+
+function base64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function captureScrolledScreenshots(url: string, userId: string): Promise<{ screenshotUrls: string[]; debug: string }> {
+  if (!BROWSERLESS_TOKEN) {
+    return { screenshotUrls: [], debug: "BROWSERLESS_TOKEN not set — screenshot capture skipped" };
+  }
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), SCREENSHOT_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BROWSERLESS_URL}/function?token=${BROWSERLESS_TOKEN}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: SCROLL_SCREENSHOT_CODE,
+        context: { url, viewportHeight: SHOT_VIEWPORT_HEIGHT, maxShots: MAX_SCROLL_SHOTS },
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => "");
+      return { screenshotUrls: [], debug: `browserless responded ${res.status}${bodyText ? `: ${bodyText.slice(0, 300)}` : ""}` };
+    }
+    const json = await res.json();
+    const shots: string[] | undefined = json?.data?.shots ?? json?.shots;
+    if (!shots || !shots.length) {
+      return { screenshotUrls: [], debug: `no shots in response — keys: [${Object.keys(json ?? {}).join(", ")}] raw: ${JSON.stringify(json).slice(0, 300)}` };
+    }
+
+    const urls: string[] = [];
+    for (let i = 0; i < shots.length; i++) {
+      const bytes = base64ToBytes(shots[i]);
+      const path = `${userId}/screenshots/${crypto.randomUUID()}-${i}.png`;
+      const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/portfolio-files/${path}`, {
+        method: "POST",
+        headers: {
+          "apikey": SERVICE_ROLE_KEY,
+          "Authorization": `Bearer ${SERVICE_ROLE_KEY}`,
+          "Content-Type": "image/png",
+          "x-upsert": "true",
+        },
+        body: bytes,
+      });
+      if (uploadRes.ok) {
+        urls.push(`${SUPABASE_URL}/storage/v1/object/public/portfolio-files/${path}`);
+      }
+    }
+    const totalHeight = json?.data?.totalHeight ?? json?.totalHeight;
+    return {
+      screenshotUrls: urls,
+      debug: `${urls.length}/${shots.length} segment(s) stored — page height ~${totalHeight ?? "?"}px`,
+    };
+  } catch (err) {
+    clearTimeout(t);
+    const reason = err instanceof Error && err.name === "AbortError"
+      ? `timed out after ${SCREENSHOT_TIMEOUT_MS / 1000}s`
+      : (err as Error)?.message || "unknown error";
+    return { screenshotUrls: [], debug: `exception: ${reason}` };
+  }
+}
+
 /* ── Main handler ────────────────────────────────────────────────────────── */
 
 serve(async (req) => {
@@ -225,24 +423,46 @@ serve(async (req) => {
     // ── Portfolio: base page (headless-rendered) + discovered same-domain sub-pages ──
     if (profile.portfolio_link) {
       const baseUrl = profile.portfolio_link as string;
-      const base = await fetchRendered(baseUrl, MAX_PORTFOLIO_PAGES - 1);
-      const pages: Array<{ url: string; ok: boolean; text: string; raw_length: number }> = [
-        { url: baseUrl, ok: base.ok, text: base.text, raw_length: base.rawLength },
-      ];
+      const singlePageOnly = isMultiTenantHost(baseUrl);
+      const base = await fetchRendered(baseUrl, singlePageOnly ? 0 : MAX_PORTFOLIO_PAGES - 1);
 
       // fetched in parallel — sequential would multiply the worst-case wait
       // (up to 4 pages × RENDER_TIMEOUT_MS) instead of bounding it to one
-      const subLinks = base.links.slice(0, MAX_PORTFOLIO_PAGES - 1);
+      const subLinks = singlePageOnly ? [] : base.links.slice(0, MAX_PORTFOLIO_PAGES - 1);
       const subResults = await Promise.all(subLinks.map((link) => fetchRendered(link, 0)));
-      subResults.forEach((sub, i) => {
-        pages.push({ url: subLinks[i], ok: sub.ok, text: sub.text, raw_length: sub.rawLength });
-      });
+
+      const rendered = [
+        { url: baseUrl, ...base },
+        ...subLinks.map((url, i) => ({ url, ...subResults[i] })),
+      ];
+      // screenshots run in parallel, one per successfully-rendered page.
+      // Behance/Dribbble block a driven browser session (403) — for those,
+      // fall back to microlink.io's dedicated URL-to-screenshot service.
+      const screenshots = await Promise.all(
+        rendered.map((p) => {
+          if (!p.ok) return Promise.resolve({ screenshotUrls: [], debug: "page render failed — screenshot skipped" });
+          return singlePageOnly ? captureViaJina(p.url, user_id) : captureScrolledScreenshots(p.url, user_id);
+        })
+      );
+
+      const pages: Array<{ url: string; ok: boolean; text: string; raw_length: number; screenshot_urls: string[]; screenshot_debug: string }> =
+        rendered.map((p, i) => ({
+          url: p.url,
+          ok: p.ok,
+          text: p.text,
+          raw_length: p.rawLength,
+          screenshot_urls: screenshots[i].screenshotUrls,
+          screenshot_debug: screenshots[i].debug,
+        }));
 
       result.portfolio = {
         source_url: baseUrl,
         pages,
         pages_found: pages.length,
         rendered_with: base.renderedWith,
+        note: singlePageOnly
+          ? "This is a shared platform (Behance/Dribbble) — only the submitted gallery page was captured, not the rest of the site."
+          : undefined,
       };
     } else if (profile.portfolio_file_url) {
       result.portfolio = {

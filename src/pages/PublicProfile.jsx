@@ -15,7 +15,8 @@ import {
   UserIcon,
   InvoiceIcon,
   LogOutIcon,
-  TrashIcon
+  TrashIcon,
+  AIProfileReveal
 } from "../components/AccountPanel";
 import {
   evolve_yellow_logo,
@@ -824,7 +825,9 @@ export default function PublicProfile() {
             />
           ) : activeProgramme === "invoice" ? (
             <InvoicePanel onBack={() => setActiveProgramme("account-menu")} />
-          ) : showOwnerTools ? (
+          ) : showOwnerTools || card?.ai_profile ? (
+            <>
+            {showOwnerTools && (
             <Section title="evolve programmes">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProgramCard
@@ -878,6 +881,14 @@ export default function PublicProfile() {
                 />
               </a>
             </Section>
+            )}
+
+            {card?.ai_profile && (
+              <Section title="AI-built profile">
+                <AIProfileReveal profile={card.ai_profile} />
+              </Section>
+            )}
+            </>
           ) : null}
         </main>
       </div>

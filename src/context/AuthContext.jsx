@@ -131,6 +131,8 @@ export function AuthProvider({ children }) {
       portfolio_file_url:      profile.portfolio_file_url ?? null,
       resume_link:             profile.resume_link ?? null,
       resume_file_url:         profile.resume_file_url ?? null,
+      ai_profile:              profile.ai_profile ?? null,
+      ai_profile_public:       profile.ai_profile_public ?? false,
       persona:                 profile.persona ?? null,
       level:                   profile.level ?? null,
       level_confidence:        profile.level_confidence ?? null,
