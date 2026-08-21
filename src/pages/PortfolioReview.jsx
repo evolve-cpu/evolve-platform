@@ -113,7 +113,58 @@ const GetStartedButton = ({ trackLabel, mobile = false }) => {
       }}
     >
       <span>Get Started</span>
-      <span style={{ fontSize: "1.1em" }}>→</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M5 12H19"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12 5L19 12L12 19"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+};
+
+/* ─────────────────────────────────────────────
+   BecomeReviewerButton — yellow CTA that sends
+   visitors to the reviewer application form
+───────────────────────────────────────────── */
+const BecomeReviewerButton = () => {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => {
+        trackPortfolioReviewCta("become_a_reviewer");
+        navigate("/portfolio-review/become-a-reviewer");
+      }}
+      className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] border border-evolve-yellow hover:opacity-90 transition-opacity w-fit"
+      style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
+    >
+      Become a reviewer
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M5 12H19"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12 5L19 12L12 19"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
   );
 };
@@ -394,7 +445,7 @@ const TestimonialsMobileStack = () => {
       >
         <div
           ref={cardRef}
-          className="rounded-2xl border-2 bg-evolve-yellow flex flex-col justify-center px-6 py-7"
+          className="rounded-3xl border-2 bg-evolve-yellow flex flex-col justify-center px-6 py-7"
           style={{
             width: "100vw",
             maxWidth: "340px",
@@ -479,7 +530,7 @@ const PortfolioReview = () => {
       <SEO
         title={COPY.seo.title}
         description={COPY.seo.description}
-        path="/community/portfolio-review"
+        path="/portfolio-review"
       />
 
       {/* ================= SECTION 1 — HERO (Desktop) ================= */}
@@ -988,6 +1039,42 @@ const PortfolioReview = () => {
         </div>
       </section>
 
+      {/* ================= SECTION 5.5 — ASK FOR REVIEWER CTA ================= */}
+      <section
+        className="w-full bg-evolve-lavender-indigo"
+        style={{ padding: "clamp(56px,8vh,96px) clamp(24px,6vw,96px)" }}
+      >
+        <div className="flex flex-col items-center text-center">
+          <h2
+            className="hidden md:block font-extrabold text-white whitespace-nowrap"
+            style={{
+              fontSize: "clamp(30px, 11vw, 46px)",
+              lineHeight: "1",
+              letterSpacing: "-0.53px"
+            }}
+          >
+            Are you someone who can be the reviewer?
+          </h2>
+          <h2
+            className="block md:hidden font-extrabold text-white"
+            style={{ fontSize: "clamp(32px, 9vw, 44px)", lineHeight: "1" }}
+          >
+            Are you someone who can be the reviewer?
+          </h2>
+          <p
+            className="text-white/90 mt-5 max-w-3xl"
+            style={{ fontSize: "clamp(16px,1.5vw,20px)", lineHeight: 1.5 }}
+          >
+            Share your industry experience, help emerging designers become more
+            industry-ready, and be part of a growing community of design
+            practitioners.
+          </p>
+          <div className="mt-8">
+            <BecomeReviewerButton />
+          </div>
+        </div>
+      </section>
+
       {/* ================= SECTION 6 — TESTIMONIALS (Desktop) ================= */}
       <section
         className="hidden md:block w-full bg-evolve-pink"
@@ -1009,7 +1096,7 @@ const PortfolioReview = () => {
           {TESTIMONIALS_LIST.map((t, i) => (
             <div
               key={i}
-              className="rounded-2xl border-2 bg-evolve-yellow flex flex-col justify-center"
+              className="rounded-3xl border-2 bg-evolve-yellow flex flex-col justify-center"
               style={{
                 borderColor: "var(--color-evolve-pink, #EC008B)",
                 padding: "clamp(28px,3vw,40px)",

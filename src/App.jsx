@@ -1060,6 +1060,7 @@ const MentorshipForInstitutions = lazy(
 const PortfolioReviewForm = lazy(
   () => import("./pages/PortfolioReviewForm.jsx")
 );
+const BecomeAReviewer = lazy(() => import("./pages/BecomeAReviewer.jsx"));
 const Course = lazy(() => import("./pages/Course"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
@@ -1258,6 +1259,8 @@ const AppLayout = () => {
     "/admin/dashboard",
     "/community/portfolio-review/form",
     "/portfolio-review/form",
+    "/community/portfolio-review/become-a-reviewer",
+    "/portfolio-review/become-a-reviewer",
     "/onboarding",
     // These render their own AudienceNav + AudienceFooter inline
     "/institutions",
@@ -1692,10 +1695,7 @@ const AppLayout = () => {
             <Route path="/webinars" element={<Webinars />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
-            <Route
-              path="/community/portfolio-review"
-              element={<PortfolioReview />}
-            />
+            <Route path="/portfolio-review" element={<PortfolioReview />} />
             <Route
               path="/for-institutes/portfolio-review-programme"
               element={<PortfolioReviewForInstitutions />}
@@ -1705,8 +1705,29 @@ const AppLayout = () => {
               element={<MentorshipForInstitutions />}
             />
             <Route
-              path="/community/portfolio-review/form"
+              path="/portfolio-review/form"
               element={<PortfolioReviewForm />}
+            />
+            <Route
+              path="/portfolio-review/become-a-reviewer"
+              element={<BecomeAReviewer />}
+            />
+            {/* portfolio review used to live nested under /community — keep
+                old links/bookmarks working by redirecting to the new
+                top-level path */}
+            <Route
+              path="/community/portfolio-review"
+              element={<Navigate to="/portfolio-review" replace />}
+            />
+            <Route
+              path="/community/portfolio-review/form"
+              element={<Navigate to="/portfolio-review/form" replace />}
+            />
+            <Route
+              path="/community/portfolio-review/become-a-reviewer"
+              element={
+                <Navigate to="/portfolio-review/become-a-reviewer" replace />
+              }
             />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/onboarding" element={<Onboarding />} />

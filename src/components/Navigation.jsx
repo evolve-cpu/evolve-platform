@@ -116,11 +116,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/community", label: "Community" },
-    {
-      path: "/community/portfolio-review",
-      label: "- Portfolio Review",
-      sub: true
-    },
+    { path: "/portfolio-review", label: "Portfolio Review" },
     { path: "/mentorship", label: "Mentorship" },
     { path: "/webinars", label: "Webinars" },
     { path: "/contact", label: "Contact Us", isModal: true }

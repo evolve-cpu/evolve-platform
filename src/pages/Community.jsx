@@ -997,6 +997,131 @@ const CARD_ASSETS = [
 ];
 const CARDS = COPY.cards.map((c, i) => ({ ...c, ...CARD_ASSETS[i] }));
 
+// TODO: replace with real testimonials.
+const COMMUNITY_TESTIMONIALS = [
+  {
+    quote:
+      "Evolve has honestly ignited the fun side of design for me again. It’s made me think beyond just creating something and actually engage with new people, ideas and perspectives. I’ve really enjoyed seeing how differently people can approach the same thing, while still finding so many common points in how we think. That exchange of perspectives has probably been one of the biggest things I’ve taken away from Evolve so far.",
+    name: "Sristi Mehta",
+    role: "Freelance Graphic Designer"
+  },
+  {
+    quote:
+      "Actually knowing new things in this industry in design wise as well as connections made impacts here have impacted my design journey.",
+    name: "Jessen Joshua Thomas ",
+    role: "Graphic Designer"
+  },
+  {
+    quote:
+      "This community has given me a better perspective of the design field, to say the least. There are human beings behind the most creative and stunning portfolios and they are all ready to learn even more than they already have!!",
+    name: "Unnati Lalwani",
+    role: "Design Student"
+  }
+];
+
+/* ─────────────────────────────────────────────
+   CommunityTestimonialsMobileStack — one card at
+   a time, with dot pagination + side arrows
+───────────────────────────────────────────── */
+const CommunityTestimonialsMobileStack = () => {
+  const [current, setCurrent] = useState(0);
+
+  const prev = () =>
+    setCurrent(
+      (c) =>
+        (c - 1 + COMMUNITY_TESTIMONIALS.length) % COMMUNITY_TESTIMONIALS.length
+    );
+  const next = () => setCurrent((c) => (c + 1) % COMMUNITY_TESTIMONIALS.length);
+
+  const t = COMMUNITY_TESTIMONIALS[current];
+
+  return (
+    <section className="block md:hidden relative bg-evolve-pink overflow-hidden py-10 px-5">
+      <h2
+        className="text-white font-extrabold text-center w-full mb-6"
+        style={{ fontSize: "clamp(32px, 9vw, 44px)", lineHeight: "1" }}
+      >
+        Hear from our community members
+      </h2>
+      <div
+        className="relative flex items-center justify-center"
+        style={{ height: "380px" }}
+      >
+        <div
+          className="rounded-3xl border-2 bg-evolve-yellow flex flex-col justify-center px-6 py-7"
+          style={{
+            width: "100vw",
+            maxWidth: "340px",
+            height: "380px",
+            borderColor: "var(--color-evolve-pink, #EC008B)"
+          }}
+        >
+          <span
+            className="text-evolve-pink font-extrabold leading-none"
+            style={{
+              fontSize: "64px",
+              lineHeight: "0.7",
+              fontStyle: "italic"
+            }}
+          >
+            "
+          </span>
+          <p
+            className="font-bold text-black lowercase -mt-4"
+            style={{ fontSize: "15px", lineHeight: "1.45" }}
+          >
+            {t.quote}
+          </p>
+          <div className="mt-5">
+            <p
+              className="font-bold text-black lowercase"
+              style={{ fontSize: "15px" }}
+            >
+              {t.name}
+            </p>
+            <p
+              className="font-normal text-black lowercase"
+              style={{ fontSize: "13px", lineHeight: "1.3" }}
+            >
+              {t.role}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-5 mt-6">
+        <button
+          onClick={prev}
+          className="text-white font-normal text-2xl leading-none hover:opacity-70 transition-opacity"
+          aria-label="previous"
+        >
+          &lt;
+        </button>
+        <div className="flex items-center gap-2">
+          {COMMUNITY_TESTIMONIALS.map((_, i) => (
+            <span
+              key={i}
+              className="rounded-full"
+              style={{
+                width: 8,
+                height: 8,
+                backgroundColor:
+                  i === current ? "#fff" : "rgba(255,255,255,0.4)"
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={next}
+          className="text-white font-normal text-2xl leading-none hover:opacity-70 transition-opacity"
+          aria-label="next"
+        >
+          &gt;
+        </button>
+      </div>
+    </section>
+  );
+};
+
 const Community = () => {
   const [hover, setHover] = useState(false);
   const cardRefs = useRef([]);
@@ -1427,6 +1552,72 @@ const Community = () => {
         {/* Extra space at bottom for last card collapse */}
         {/* <div style={{ height: "100vh" }} /> */}
       </section>
+
+      {/* ================= TESTIMONIALS (Desktop) ================= */}
+      <section
+        className="hidden md:block w-full bg-evolve-pink"
+        style={{ padding: "clamp(56px,8vh,96px) clamp(24px,6vw,96px)" }}
+      >
+        <h2
+          className="font-extrabold text-white text-center"
+          style={{
+            fontSize: "clamp(28px,3.2vw,40px)",
+            marginBottom: "clamp(40px,6vh,64px)"
+          }}
+        >
+          Hear from our community members
+        </h2>
+        <div
+          className="grid grid-cols-3 gap-6"
+          style={{ maxWidth: 1100, margin: "0 auto" }}
+        >
+          {COMMUNITY_TESTIMONIALS.map((t, i) => (
+            <div
+              key={i}
+              className="rounded-3xl border-2 bg-evolve-yellow flex flex-col justify-center"
+              style={{
+                borderColor: "var(--color-evolve-pink, #EC008B)",
+                padding: "clamp(28px,3vw,40px)",
+                minHeight: "clamp(360px, 34vw, 460px)"
+              }}
+            >
+              <span
+                className="text-evolve-pink font-extrabold"
+                style={{
+                  fontSize: "clamp(48px,4vw,64px)",
+                  lineHeight: "0.7",
+                  fontStyle: "italic"
+                }}
+              >
+                "
+              </span>
+              <p
+                className="font-bold text-black lowercase mt-2"
+                style={{ fontSize: "clamp(15px,1.2vw,17px)", lineHeight: 1.5 }}
+              >
+                {t.quote}
+              </p>
+              <div className="mt-6">
+                <p
+                  className="font-bold text-black lowercase"
+                  style={{ fontSize: "15px" }}
+                >
+                  {t.name}
+                </p>
+                <p
+                  className="font-normal text-black lowercase"
+                  style={{ fontSize: "13px" }}
+                >
+                  {t.role}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= TESTIMONIALS (Mobile) ================= */}
+      <CommunityTestimonialsMobileStack />
     </div>
   );
 };

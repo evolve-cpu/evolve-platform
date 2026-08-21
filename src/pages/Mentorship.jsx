@@ -601,7 +601,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
               />
               <span
                 key={`label-${i}`}
-                className={`flex-none font-paralucent lowercase text-evolve-yellow ${
+                className={`flex-none font-paralucent text-evolve-yellow ${
                   isMobile ? "text-3xl" : "text-5xl"
                 }`}
               >
@@ -616,7 +616,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
               />
               <span
                 key={`spots-${i}`}
-                className={`flex-none font-paralucent lowercase text-evolve-yellow ${
+                className={`flex-none font-paralucent  text-evolve-yellow ${
                   isMobile ? "text-3xl" : "text-5xl"
                 }`}
               >
@@ -970,7 +970,7 @@ const Mentorship = () => {
                   />
                   <span
                     key={`label-${i}`}
-                    className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
+                    className={`flex-none font-paralucent  text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {marqueeLabel} — commented out for now, static text instead */}
                     Coming Soon
@@ -983,7 +983,7 @@ const Mentorship = () => {
                   />
                   <span
                     key={`spots-${i}`}
-                    className={`flex-none font-paralucent lowercase text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
+                    className={`flex-none font-paralucent  text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {spotsText} — commented out for now, static text instead */}
                     Coming Soon

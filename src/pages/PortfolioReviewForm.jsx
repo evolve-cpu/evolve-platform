@@ -1326,7 +1326,7 @@ export default function PortfolioReviewForm() {
       return;
     }
     if (!authLoading && !user) {
-      sessionStorage.setItem("signin_from", "/community/portfolio-review/form");
+      sessionStorage.setItem("signin_from", "/portfolio-review/form");
       navigate("/signin", { replace: true });
     }
   }, [user, authLoading, anantSession, navigate]);
@@ -1657,7 +1657,7 @@ export default function PortfolioReviewForm() {
     handleSubmit,
     fileLoading,
     setFileLoading,
-    onBack: () => navigate(tenant.id === "anant" ? "/" : "/community/portfolio-review")
+    onBack: () => navigate(tenant.id === "anant" ? "/" : "/portfolio-review")
   };
 
   const mobileFormProps = {

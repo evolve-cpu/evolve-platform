@@ -405,6 +405,8 @@ import join_us_button from "./join_us_button.svg";
 import join_us_button_hover from "./join_us_button_hover.svg";
 import community_logo from "./community_logo.svg";
 import mentorship_logo from "./mentorship_logo.svg";
+import portfolio_review_logo from "./portfolio_review_logo.svg";
+import portfolio_review_logo_hover from "./portfolio_review_logo_hover.svg";
 import webinar_logo from "./webinar_logo.svg";
 
 // ========== BACKGROUND/TEXTURES (Load Separately) ==========
@@ -558,6 +560,8 @@ export {
   join_us_button,
   join_us_button_hover,
   community_logo,
+  portfolio_review_logo,
+  portfolio_review_logo_hover,
   mentorship_logo,
   webinar_logo,
   // Textures/Background

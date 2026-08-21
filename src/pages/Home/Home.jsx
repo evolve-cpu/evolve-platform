@@ -16,6 +16,7 @@ import GrainTexture from "../../components/GrainTexture";
 import Scene2_refined from "./Scene2_refined";
 import Scene3_refined from "./Scene3_refined";
 import Scene4_refined from "./Scene4_refined";
+import SceneTestimonials from "./SceneTestimonials";
 import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 
 // Scene1 (the "welcome to evolve" door-zoom intro) is now covered by the
@@ -23,8 +24,8 @@ import Scene1_4, { useScene1_4Timeline } from "./Scene1_4";
 // const Scene1 = lazy(() => import("./Scene1"));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-// Sections after intro: 0=Scene2, 1=Scene3, 2=Scene4, 3=Scene1_4
-const TOTAL_SECTIONS = 3;
+// Sections after intro: 0=Scene2, 1=Scene3, 2=Scene4, 3=SceneTestimonials, 4=Scene1_4
+const TOTAL_SECTIONS = 4;
 
 // Generated fresh on every page load / reload (module re-executes).
 // Used to distinguish "back-button within same session" from "reload".
@@ -44,6 +45,7 @@ const Home = ({
   const scene2Ref = useRef(null);
   const scene3Ref = useRef(null);
   const scene4Ref = useRef(null);
+  const sceneTestimonialsRef = useRef(null);
   const scene1_4Refs = useRef({});
 
   // ── Session restoration ────────────────────────────────────────────────────
@@ -55,7 +57,7 @@ const Home = ({
     // Login redirect: navigate("/", { state: { homeSection: n } })
     if (location.state?.homeSection !== undefined) {
       const s = parseInt(location.state.homeSection, 10);
-      if (!isNaN(s) && s >= 0 && s <= 3) return s;
+      if (!isNaN(s) && s >= 0 && s <= 4) return s;
     }
     // Back / forward button — session ID must match (rules out page reloads)
     // SESSION_ID is a module-level constant that regenerates on every page reload.
@@ -63,7 +65,7 @@ const Home = ({
     const storedSessionId = sessionStorage.getItem("evolve_home_session_id");
     if (storedSessionId !== SESSION_ID) return -1; // reload or first visit
     const stored = parseInt(sessionStorage.getItem("evolve_home_section"), 10);
-    if (isNaN(stored) || stored < 0 || stored > 3) return -1;
+    if (isNaN(stored) || stored < 0 || stored > 4) return -1;
     return navigationType === "POP" ? stored : -1;
   }, []); // eslint-disable-line — intentionally computed once on mount
 
@@ -79,7 +81,7 @@ const Home = ({
   const [introDone, setIntroDone] = useState(true);
   const [animationsReady, setAnimationsReady] = useState(false);
   const [activeSection, setActiveSection] = useState(initialSection);
-  const [scrollProgress, setScrollProgress] = useState(initialSection / 4);
+  const [scrollProgress, setScrollProgress] = useState(initialSection / 5);
   const scene1_4StartedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(() => {
@@ -175,7 +177,7 @@ const Home = ({
 
   // ── Sync scrollbar progress with section + footer scroll ───────────────────
   useEffect(() => {
-    if (activeSection >= 0) setScrollProgress(activeSection / 4);
+    if (activeSection >= 0) setScrollProgress(activeSection / 5);
   }, [activeSection]);
 
   useEffect(() => {
@@ -209,19 +211,20 @@ const Home = ({
     const s2 = scene2Ref.current;
     const s3 = scene3Ref.current;
     const s4 = scene4Ref.current;
+    const sT = sceneTestimonialsRef.current;
     const s14 = scene1_4Refs.current?.container;
 
-    // Position s2, s3, s4 relative to restored section
-    [s2, s3, s4].forEach((el, i) => {
+    // Position s2, s3, s4, sT relative to restored section
+    [s2, s3, s4, sT].forEach((el, i) => {
       if (!el) return;
       if (i === initialSection) gsap.set(el, { y: 0 });
       else if (i < initialSection) gsap.set(el, { y: "-100vh" });
       else gsap.set(el, { y: "100vh" });
     });
 
-    // Scene1_4 (index 3)
+    // Scene1_4 (index 4)
     if (s14) {
-      if (initialSection === 3) {
+      if (initialSection === 4) {
         gsap.set(s14, {
           y: "0%",
           rotation: 0,
@@ -229,8 +232,8 @@ const Home = ({
           opacity: 1,
           transformOrigin: "center center"
         });
-        // s4 stays at y:0 as the layer underneath Scene1_4
-        if (s4) gsap.set(s4, { y: 0 });
+        // sT (Testimonials) stays at y:0 as the layer underneath Scene1_4
+        if (sT) gsap.set(sT, { y: 0 });
       } else {
         gsap.set(s14, {
           y: "120%",
@@ -254,14 +257,16 @@ const Home = ({
     const s2 = scene2Ref.current;
     const s3 = scene3Ref.current;
     const s4 = scene4Ref.current;
+    const sT = sceneTestimonialsRef.current;
     const s14 = scene1_4Refs.current?.container;
 
-    if (!s2 || !s3 || !s4 || !s14) return;
+    if (!s2 || !s3 || !s4 || !sT || !s14) return;
 
     if (!introSkippedRef.current) {
-      // Fresh load — scenes 3/4/s14 haven't been touched by the intro transition yet
+      // Fresh load — scenes 3/4/sT/s14 haven't been touched by the intro transition yet
       gsap.set(s3, { y: "100vh" });
       gsap.set(s4, { y: "100vh" });
+      gsap.set(sT, { y: "100vh" });
       gsap.set(s14, {
         y: "120%",
         rotation: 15,
@@ -284,14 +289,14 @@ const Home = ({
     // If restoring to Scene1_4, kick off its internal timeline
     if (
       introSkippedRef.current &&
-      initialSection === 3 &&
+      initialSection === 4 &&
       !scene1_4StartedRef.current
     ) {
       scene1_4StartedRef.current = true;
       useScene1_4Timeline(scene1_4Refs.current, isMobile);
     }
 
-    const scenes = [s2, s3, s4, s14];
+    const scenes = [s2, s3, s4, sT, s14];
 
     const goToSection = (idx) => {
       const to = Math.max(0, Math.min(TOTAL_SECTIONS, idx));
@@ -306,7 +311,7 @@ const Home = ({
       const outScene = scenes[prev];
       const inScene = scenes[to];
 
-      if (prev === 3 && direction < 0) {
+      if (prev === 4 && direction < 0) {
         // Scene1_4 exits mirroring its entry (rotation + scale + y)
         gsap.to(outScene, {
           y: "120%",
@@ -321,9 +326,9 @@ const Home = ({
             isAnimating = false;
           }
         });
-        // Scene4_refined is already at y:0 underneath — no in animation needed
-      } else if (to === 3 && direction > 0) {
-        // Scene1_4 slides IN over Scene4_refined — do NOT move Scene4_refined out
+        // SceneTestimonials is already at y:0 underneath — no in animation needed
+      } else if (to === 4 && direction > 0) {
+        // Scene1_4 slides IN over SceneTestimonials — do NOT move it out
         gsap.to(inScene, {
           y: "0%",
           rotation: 0,
@@ -573,7 +578,22 @@ const Home = ({
           <Scene4_refined isMobile={isMobile} isActive={activeSection === 2} />
         </div>
 
-        {/* ── Scene1_4 — overlays Scene4_refined with higher z-index ── */}
+        {/* ── SceneTestimonials — "evolve, in their words" ── */}
+        <div
+          ref={sceneTestimonialsRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 5,
+            transform: "translateY(100vh)"
+          }}
+        >
+          <SceneTestimonials isMobile={isMobile} isActive={activeSection === 3} />
+        </div>
+
+        {/* ── Scene1_4 — overlays SceneTestimonials with higher z-index ── */}
         <div
           ref={(el) => {
             if (scene1_4Refs.current) scene1_4Refs.current.container = el;

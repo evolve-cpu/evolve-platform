@@ -732,15 +732,15 @@ export const community = {
 
   // Scroll cards — each represents one community feature
   cards: [
-    {
-      title: "Portfolio reviews",
-      subtitle: "Honest feedback. Real growth.",
-      descriptionMobile:
-        "Share work and get direct feedback on what works and what doesn't.",
-      descriptionDesktop:
-        "Share your work and get direct, no-sugarcoating feedback from experienced designers. Understand what works, what doesn't, and how to level up.",
-      ctaLink: "/community/portfolio-review"
-    },
+    // {
+    //   title: "Portfolio reviews",
+    //   subtitle: "Honest feedback. Real growth.",
+    //   descriptionMobile:
+    //     "Share work and get direct feedback on what works and what doesn't.",
+    //   descriptionDesktop:
+    //     "Share your work and get direct, no-sugarcoating feedback from experienced designers. Understand what works, what doesn't, and how to level up.",
+    //   ctaLink: "/community/portfolio-review"
+    // },
     {
       title: "AMA sessions",
       subtitle: "Ask what really matters.",
@@ -757,14 +757,14 @@ export const community = {
       descriptionDesktop:
         "Jump into short, time-bound challenges designed to stretch your thinking. Ship your work, see how others approached the same brief, and pick up new ways of solving problems."
     },
-    {
-      title: "Resource library",
-      subtitle: "The good stuff, curated.",
-      descriptionMobile:
-        "Access curated articles, tools, and reads to build strong design fundamentals.",
-      descriptionDesktop:
-        "Access hand-picked articles, tools, and reads,  written by evolve and sourced from the best out there. No fluff. Just solid resources to build strong fundamentals."
-    },
+    // {
+    //   title: "Resource library",
+    //   subtitle: "The good stuff, curated.",
+    //   descriptionMobile:
+    //     "Access curated articles, tools, and reads to build strong design fundamentals.",
+    //   descriptionDesktop:
+    //     "Access hand-picked articles, tools, and reads,  written by evolve and sourced from the best out there. No fluff. Just solid resources to build strong fundamentals."
+    // },
     {
       title: "Bookclub",
       subtitle: "Read. Learn. Finish.",
@@ -777,7 +777,7 @@ export const community = {
 };
 
 // ─────────────────────────────────────────────
-//  /community/portfolio-review
+//  /portfolio-review
 // ─────────────────────────────────────────────
 export const portfolioReview = {
   seo: {

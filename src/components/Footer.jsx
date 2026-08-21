@@ -54,12 +54,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
       : [
           { label: "Home", path: "/" },
           { path: "/community", label: "Community" },
-          // { path: "/community/portfolio-review", label: "↳ portfolio review", sub: true },
-          {
-            path: "/community/portfolio-review",
-            label: "Portfolio Review",
-            sub: true
-          },
+          { path: "/portfolio-review", label: "Portfolio Review" },
           { path: "/mentorship", label: "Mentorship" },
           // { path: "/evolve-in-person", label: "evolve in-person" },
           { path: "/webinars", label: "Webinars" },

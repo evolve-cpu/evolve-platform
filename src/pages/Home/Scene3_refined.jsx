@@ -4,18 +4,21 @@ import { useNavigate } from "react-router-dom";
 import {
   community_logo,
   mentorship_logo,
+  portfolio_review_logo,
+  portfolio_review_logo_hover,
   webinar_logo
 } from "../../assets/images/Home";
 
 // ─── Card data ────────────────────────────────────────────────────────────────
 const CARDS = [
   {
-    id: "community",
-    title: "Community",
-    desc: "A safe, active space to connect, share, and grow.",
-    logo: community_logo,
+    id: "Portfolio-review",
+    title: "Portfolio review",
+    desc: "Find out if your portfolio is",
+    logo: portfolio_review_logo,
+    hoverLogo: portfolio_review_logo_hover,
     imageWidth: "70%",
-    link: "/community"
+    link: "/portfolio-review"
   },
   {
     id: "mentorship",
@@ -39,7 +42,8 @@ const CARDS = [
 const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
   const innerRef = useRef(null);
   const touchStart = useRef({ x: 0, y: 0 });
-  const { title, desc, logo, imageWidth } = card;
+  const [isHovered, setIsHovered] = useState(false);
+  const { title, desc, logo, hoverLogo, imageWidth } = card;
 
   const handleTouchStart = (e) => {
     touchStart.current = {
@@ -66,10 +70,12 @@ const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
       onMouseEnter={() => {
         if (innerRef.current)
           innerRef.current.style.background = "rgba(223,5,134,1)";
+        setIsHovered(true);
       }}
       onMouseLeave={() => {
         if (innerRef.current)
           innerRef.current.style.background = "rgba(163,91,251,1)";
+        setIsHovered(false);
       }}
       style={{
         display: "block",
@@ -107,7 +113,7 @@ const OvalFullCard = React.forwardRef(({ card, onClick, style }, ref) => {
           }}
         />
         <img
-          src={logo}
+          src={isHovered && hoverLogo ? hoverLogo : logo}
           alt={title}
           style={{
             width: imageWidth,
