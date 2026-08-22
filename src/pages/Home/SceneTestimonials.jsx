@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
-// TODO: confirm Mishti's full name, role, and quote — placeholder for now.
+// TODO: confirm Mishti's full name, role, and quote — placeholder for now. new scene
 const TESTIMONIALS = [
   {
     name: "Prisha Shah",
