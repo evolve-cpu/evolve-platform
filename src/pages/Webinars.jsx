@@ -641,7 +641,9 @@ import {
   learn_to_learn,
   learn_to_learn_mobile,
   service_design_mobile,
-  service_design
+  service_design,
+  service_design_mobile_done,
+  service_design_done
 } from "../assets/images/Webinars";
 
 import { webinars as COPY } from "../content";
@@ -1070,13 +1072,12 @@ const Webinars = () => {
               <a
                 // href={COPY.upcomingWebinar.registrationUrl}
                 // href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
-                href="https://luma.com/dti5ytf0"
-                target="_blank"
+                href="https://youtu.be/DKY5xtS6jJM"
                 rel="noopener noreferrer"
                 className="absolute bottom-[-6%] inset-x-0 z-50 flex justify-center"
               >
                 <img
-                  src={service_design}
+                  src={service_design_done}
                   alt="upcoming webinar"
                   className="w-full object-contain"
                 />
@@ -1233,13 +1234,13 @@ const Webinars = () => {
             {/* Upcoming webinar poster - anchored from top so portrait image extends down, not up */}
             <a
               // href={COPY.upcomingWebinar.registrationUrl}
-              href="https://youtu.be/HuKf2EkG3pA?si=mWiFfgFm30KRuOm-"
+              href="https://youtu.be/DKY5xtS6jJM"
               target="_blank"
               rel="noopener noreferrer"
               className="absolute top-[25%] inset-x-0 z-40 flex justify-center"
             >
               <img
-                src={service_design_mobile}
+                src={service_design_mobile_done}
                 alt="upcoming webinar"
                 className="w-[95%] object-contain"
               />

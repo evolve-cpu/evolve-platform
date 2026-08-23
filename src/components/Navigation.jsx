@@ -789,7 +789,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
               </div>
 
               {/* JOIN US */}
-              <div className="w-full flex justify-center mb-5 md:mb-6">
+              {/* <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
                   href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
                   target="_blank"
@@ -804,6 +804,20 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     alt="join evolve community"
                     className="w-auto h-12 md:h-16"
                   />
+                </a>
+              </div> */}
+              <div className="w-full flex justify-center mb-5 md:mb-6">
+                <a
+                  href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  // onClick={trackCommunityJoin}
+                  className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
+                  style={{
+                    boxShadow: "0 6px 0 #806804"
+                  }}
+                >
+                  Join Us
                 </a>
               </div>
 

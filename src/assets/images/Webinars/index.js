@@ -27,7 +27,9 @@ import learn_to_learn_mobile from "./learn_to_learn_mobile.webp";
 import whats_included_bg from "./whats_included_bg.svg";
 import whats_included_bg_mobile from "./whats_included_bg_mobile.svg";
 import service_design from "./service_design.webp";
+import service_design_done from "./service_design_done.webp";
 import service_design_mobile from "./service_design_mobile.webp";
+import service_design_mobile_done from "./service_design_mobile_done.webp";
 export {
   left_elem,
   left_elem_mobile,
@@ -56,5 +58,7 @@ export {
   whats_included_bg,
   whats_included_bg_mobile,
   service_design,
-  service_design_mobile
+  service_design_done,
+  service_design_mobile,
+  service_design_mobile_done
 };
