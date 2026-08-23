@@ -769,6 +769,109 @@ function StatTile({ label, value }) {
   );
 }
 
+function EvidenceList({ items }) {
+  const list = (items || []).filter((i) => i?.finding);
+  if (!list.length) return null;
+  return (
+    <ul className="flex flex-col gap-2">
+      {list.map((item, i) => (
+        <li key={i} className="text-sm leading-snug">
+          <span className="text-white/85">{item.finding}</span>
+          {item.evidence && (
+            <span className="block text-white/40 text-xs mt-0.5">
+              — {item.evidence}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function GapCategory({ label, items }) {
+  const list = (items || []).filter((i) => i?.finding);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        {label}
+      </p>
+      <EvidenceList items={list} />
+    </div>
+  );
+}
+
+const DIMENSION_SCORE_LEVELS = {
+  strong: 4,
+  good: 3,
+  partial: 2,
+  developing: 2,
+  unclear: 1,
+  weak: 1
+};
+
+function DimensionRatings({ ratings }) {
+  const list = (ratings || []).filter((r) => r?.dimension);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      {list.map((r, i) => (
+        <div key={i} className="flex flex-col gap-1">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-white/70 text-xs font-medium">
+              {r.dimension}
+            </span>
+            <span className="text-evolve-yellow text-[11px] font-semibold">
+              {r.score}
+            </span>
+          </div>
+          <div
+            className="w-full h-1.5 rounded-full overflow-hidden"
+            style={{ background: TRACK }}
+          >
+            <div
+              className="h-1.5 rounded-full"
+              style={{
+                width: `${((DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1) / 4) * 100}%`,
+                background: `linear-gradient(90deg, ${YELLOW}55, ${YELLOW})`
+              }}
+            />
+          </div>
+          {r.evidence && (
+            <span className="text-white/40 text-[11px] leading-snug">
+              {r.evidence}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KeyGapCallout({ keyGap }) {
+  if (!keyGap?.issue) return null;
+  return (
+    <div className="rounded-2xl border border-white/15 bg-white/[0.03] p-4 flex flex-col gap-2">
+      <p className="text-white/40 text-[11px] font-bold uppercase tracking-wide">
+        What&rsquo;s holding this back most
+      </p>
+      {keyGap.whats_solid && (
+        <p className="text-white/60 text-sm leading-relaxed">
+          {keyGap.whats_solid}
+        </p>
+      )}
+      <p className="text-white text-base font-semibold leading-snug">
+        {keyGap.issue}
+      </p>
+      {keyGap.evidence && (
+        <p className="text-white/40 text-xs leading-snug">
+          — {keyGap.evidence}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function RecruiterHighlights({ points }) {
   const list = (points || []).filter(Boolean);
   if (!list.length) return null;
@@ -814,6 +917,7 @@ export function AIProfileReveal({ profile }) {
     niche,
     domain,
     sector,
+    stage,
     work_experience,
     type_of_work_wanted,
     team_work_proficiency,
@@ -830,7 +934,11 @@ export function AIProfileReveal({ profile }) {
     salary_expectations,
     current_status,
     summary,
-    recruiter_highlights
+    recruiter_highlights,
+    strengths,
+    gaps,
+    dimension_ratings,
+    key_gap
   } = profile;
 
   const axes = computeSkillAxes(profile);
@@ -866,6 +974,7 @@ export function AIProfileReveal({ profile }) {
             )}
           </h2>
           <div className="flex flex-wrap gap-2">
+            {stage?.level && <Tag>{stage.level}</Tag>}
             {niche && niche.toLowerCase() !== "not specified" && (
               <Tag>{niche}</Tag>
             )}
@@ -1000,6 +1109,44 @@ export function AIProfileReveal({ profile }) {
           )}
         </div>
       </div>
+
+      {(dimension_ratings?.length > 0 ||
+        strengths?.length > 0 ||
+        gaps ||
+        key_gap) && (
+        <div className="flex flex-col gap-6 pt-4 border-t border-white/10">
+          <p className="text-white/40 text-[11px] uppercase tracking-wide">
+            Senior Design Review
+          </p>
+
+          <DimensionRatings ratings={dimension_ratings} />
+
+          {strengths?.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-white/40 text-[11px] uppercase tracking-wide">
+                What&rsquo;s working
+              </p>
+              <EvidenceList items={strengths} />
+            </div>
+          )}
+
+          {gaps && (
+            <div className="grid sm:grid-cols-3 gap-4">
+              <GapCategory
+                label="Portfolio & Case Studies"
+                items={gaps.portfolio_execution}
+              />
+              <GapCategory
+                label="Thinking & Process"
+                items={gaps.thinking_process}
+              />
+              <GapCategory label="Positioning" items={gaps.positioning} />
+            </div>
+          )}
+
+          <KeyGapCallout keyGap={key_gap} />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
         {[
