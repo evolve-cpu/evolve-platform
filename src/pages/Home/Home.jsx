@@ -498,7 +498,7 @@ const Home = ({
               pointerEvents: "none",
               zIndex: 9999,
               mixBlendMode: "overlay",
-              opacity: 0.2,
+              opacity: 0.05,
               filter: "contrast(100%) brightness(90%)"
             }}
           >
@@ -590,7 +590,10 @@ const Home = ({
             transform: "translateY(100vh)"
           }}
         >
-          <SceneTestimonials isMobile={isMobile} isActive={activeSection === 3} />
+          <SceneTestimonials
+            isMobile={isMobile}
+            isActive={activeSection === 3}
+          />
         </div>
 
         {/* ── Scene1_4 — overlays SceneTestimonials with higher z-index ── */}

@@ -14,7 +14,7 @@ const CARDS = [
   {
     id: "Portfolio-review",
     title: "Portfolio review",
-    desc: "Find out if your portfolio is",
+    desc: "Find out if your portfolio is placement-ready.",
     logo: portfolio_review_logo,
     hoverLogo: portfolio_review_logo_hover,
     imageWidth: "70%",
