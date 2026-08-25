@@ -750,7 +750,7 @@ export const community = {
         "Ask anything in open sessions with working professionals. Get answers from people who've been there and know how it actually works."
     },
     {
-      title: "Challenges",
+      title: "Activities",
       subtitle: "Learn by doing.",
       descriptionMobile:
         "Take short challenges, ship work, compare approaches, and learn new ways.",

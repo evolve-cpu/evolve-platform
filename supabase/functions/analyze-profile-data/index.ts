@@ -120,6 +120,7 @@ Follow this exact reasoning order:
 - Step 2 (skills): List every distinct design craft/deliverable type actually evidenced by the work itself — not software (that's tool_proficiency) but what kinds of things they've designed: logo/brand identity, illustration, packaging, editorial, motion, UI screens, design systems, UX research, service design, art direction, etc. A skill only counts if you can point to a project that demonstrates it. In a separate dedicated pass, also inventory software/tools from resume skills sections, project process text, captions, screenshots, and visible UI/prototype references; do not leave tool_proficiency empty when any actual tool name appears anywhere in the source.
 - Step 3 (persona_traits): Pick the 3-4 spectrum tensions that most usefully describe how this person works, and place them on each — e.g. execution/production craft vs. research/process depth, visual craft vs. strategic/business framing, fast-and-prolific vs. deep-and-iterative, solo maker vs. systems/team thinking. These are exactly the kind of thing a dense review sentence usually smuggles in ("focuses on visual deliverables without showing research") — surface it here as a placed, evidenced score instead of leaving it buried in a sentence.
 - Step 4 (dimension_ratings): This is the strong-zones/growth-zones map, and now the ONLY place a strength or a growth area gets stated — there is no separate strengths/gaps prose anywhere else in this schema. Rate 4-6 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage and their work (e.g. execution craft, research/process depth, business framing, presentation/curation, clarity of positioning, systems thinking, leadership scope for someone senior). Spread the scores honestly across the real range (Strong down to Weak) so the set actually reads as a map of strong vs. growing areas, not a wall of "Good."
+- Step 5 (career_timeline + career_trajectory): Only after the snapshot above is settled, check whether the resume actually supports sequencing it year by year (dated roles, dated projects, explicit tenure/promotion language). If it does, reconstruct career_timeline: one entry per relative career year, each of the five growth axes rated the same way as the snapshot, and a highlight only on years where something concrete actually changed. If the resume is too sparse for real year-level sequencing, output an empty array — a flat or invented timeline is worse than no timeline. Then read career_trajectory forward from whatever trend actually exists (the timeline's shape if you built one, otherwise the snapshot dimension_ratings/persona_traits/stage): which axis is accelerating, which has plateaued, and what that concretely implies about where this person is headed over the next ~5 years — always tied to a specific dimension/fact, never generic advice.
 
 Ground every field in the actual evidence you were given (portfolio text, resume text, screenshots). Where the evidence is genuinely absent, say so plainly using the exact fallback language specified per field below — never guess or invent specifics like names, companies, or numbers that are not present in the material.
 
@@ -188,8 +189,8 @@ const RESPONSE_SCHEMA = {
       description: "B2B / B2C / B2B2C / D2C, inferred from who the end-user is in each case study. Report the dominant pattern across the portfolio.",
     },
     work_experience: {
-      type: "STRING",
-      description: "Sum professional duration from the resume/experience section; if absent, infer from earliest dated project or explicit claims. Bucket into: Starting, <1, 1-2, 2-5, 5-10, 10-15, 15+, over 20.",
+      type: "NUMBER",
+      description: "Total years of professional experience as a precise decimal, rounded to the nearest 0.5 (e.g. 0, 0.5, 1, 1.5, 2, 2.5, 3 ...). Sum professional duration from the resume/experience section; if absent, infer from earliest dated project or explicit claims. Never output a range — always a single best-evidenced decimal number, rounded to the nearest 0.5.",
     },
     type_of_work_wanted: {
       type: "STRING",
@@ -365,6 +366,46 @@ const RESPONSE_SCHEMA = {
         required: ["dimension", "score", "evidence"],
       },
     },
+    career_timeline: {
+      type: "ARRAY",
+      description: "Step 5 — a year-by-year reconstruction of this person's growth, ONLY when the resume/portfolio actually supports year-level sequencing (dated roles, dated projects, explicit 'promoted after X years' language). One entry per relative career year, starting at year_index 1 for their first professional year, sequential with no gaps. Each year rates the same five growth axes used elsewhere in this profile (business framing, foundational clarity/craft, leadership/team scope, active learning, community contribution) so a viewer can see exactly where an inflection point happened and read why. Output an empty array rather than inventing a timeline when the source doesn't support it — this is exactly the kind of specific, checkable fact this whole profile is built on, never a guess.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          year_index: { type: "INTEGER", description: "1 = first professional year, increasing sequentially." },
+          calendar_year: { type: "STRING", nullable: true, description: "Explicit calendar year (e.g. '2022'), only if evidenced; null otherwise." },
+          title: { type: "STRING", nullable: true, description: "Job title/role held that year, if evidenced; null otherwise." },
+          business: { type: "INTEGER", description: "0-3, same scale as understanding_of_business." },
+          clarity: { type: "INTEGER", description: "0-3, same scale as foundational_clarity." },
+          leadership: { type: "INTEGER", description: "0-3, same scale as team_work_proficiency." },
+          learning: { type: "INTEGER", description: "0-3, same scale as learning." },
+          community: { type: "INTEGER", description: "0-3, same scale as contributing_back." },
+          highlight: { type: "STRING", description: "The concrete driver of any jump that year — a promotion, expanded leadership scope, a notable project, a certification, speaking/community activity. Empty string if nothing notable that year. 10 words max." },
+        },
+        required: ["year_index", "calendar_year", "title", "business", "clarity", "leadership", "learning", "community", "highlight"],
+      },
+    },
+    career_trajectory: {
+      type: "OBJECT",
+      description: "A forward-looking read of the next ~5 years, grounded in the actual trend visible in career_timeline when present, or otherwise in dimension_ratings/persona_traits/stage as a single-point read — e.g. rising leadership/business framing late in the timeline while craft plateaus reads as trending toward a leadership/strategic role, not a pure-craft one. Never generic career advice disconnected from this person's specific evidenced trend.",
+      properties: {
+        trend_summary: { type: "STRING", description: "One compact sentence naming the dominant trend and what's driving it. 20 words max." },
+        projected_roles: {
+          type: "ARRAY",
+          description: "Up to 3 roles this person is trending toward, strongest-fit first. Empty array if no legible trend.",
+          items: {
+            type: "OBJECT",
+            properties: {
+              role: { type: "STRING" },
+              rationale: { type: "STRING", description: "Tied to a specific trend/dimension, not generic. 12 words max." },
+              fit_dimension: { type: "STRING", enum: ["Business", "Clarity", "Leadership", "Learning", "Community"], description: "Which growth axis is mainly driving this projection." },
+            },
+            required: ["role", "rationale", "fit_dimension"],
+          },
+        },
+      },
+      required: ["trend_summary", "projected_roles"],
+    },
   },
   required: [
     "stage", "role", "skills", "persona_traits", "niche", "domain", "sector", "work_experience",
@@ -372,7 +413,7 @@ const RESPONSE_SCHEMA = {
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
     "salary_expectations", "current_status", "links", "summary", "recruiter_highlights",
-    "notable_works", "dimension_ratings",
+    "notable_works", "dimension_ratings", "career_timeline", "career_trajectory",
   ],
 };
 

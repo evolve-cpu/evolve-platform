@@ -12,6 +12,10 @@ import {
   LabelList,
   PieChart,
   Pie,
+  LineChart,
+  Line,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer
 } from "recharts";
 import { supabase } from "../supabaseClient";
@@ -23,8 +27,8 @@ import { QUESTIONS } from "../pages/Onboarding/questions";
 // on main. On merges from development this line should conflict (development
 // keeps it true), which is the point: it forces a conscious choice instead of
 // silently shipping the test feature to production.
-// const ENABLE_PORTFOLIO_AI = false;
-const ENABLE_PORTFOLIO_AI = true;
+const ENABLE_PORTFOLIO_AI = false;
+// const ENABLE_PORTFOLIO_AI = true;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -557,17 +561,9 @@ function ExtractedProfilePreview({ data }) {
 
 const YELLOW = "#FFD007";
 const TRACK = "rgba(255,255,255,0.08)";
+const LEADERSHIP_BLUE = "#7FB8FF";
+const COMMUNITY_PURPLE = "#C58CFF";
 
-const EXPERIENCE_BUCKETS = [
-  "Starting",
-  "<1",
-  "1-2",
-  "2-5",
-  "5-10",
-  "10-15",
-  "15+",
-  "over 20"
-];
 const STRENGTH_LEVELS = {
   high: 3,
   strong: 3,
@@ -614,9 +610,12 @@ function computeHeroScore(profile, axes) {
   if (dims.length > 0) {
     const avg =
       dims.reduce(
-        (s, r) => s + (DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1),
+        (s, r) =>
+          s +
+          (DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1),
         0
-      ) / (dims.length * 4);
+      ) /
+      (dims.length * 4);
     return Math.round(avg * 100);
   }
   const avg = axes.reduce((s, a) => s + a.value, 0) / (axes.length * 3);
@@ -629,6 +628,73 @@ function Tag({ children }) {
     <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#373737] text-white/60">
       {children}
     </span>
+  );
+}
+
+// shared hover affordance for every bar/meter/chart below — hovering the
+// trigger reveals the metric/evidence behind it instead of leaving the bar
+// purely decorative. Local state instead of a positioning library since
+// every trigger lives inside scrollable card content, never near a
+// viewport edge.
+function HoverPanel({ trigger, children, className = "" }) {
+  const [open, setOpen] = useState(false);
+  if (!children) return trigger;
+  return (
+    <div
+      className={`relative ${className}`}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      tabIndex={0}
+    >
+      {trigger}
+      {open && (
+        <div
+          className="absolute z-20 bottom-full left-0 mb-2 w-56 rounded-xl border border-white/10 bg-[#0d0d0f] p-3 shadow-xl"
+          role="tooltip"
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// dark-styled recharts tooltip content, shared by every chart below instead
+// of recharts' default light tooltip box.
+function ChartTooltip({ active, payload, label, formatter }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#0d0d0f] p-3 shadow-xl max-w-[220px]">
+      {label != null && (
+        <p className="text-white/40 text-[10px] uppercase tracking-wide mb-1.5">
+          {label}
+        </p>
+      )}
+      <div className="flex flex-col gap-1">
+        {payload.map((p, i) => {
+          const row = formatter
+            ? formatter(p)
+            : { label: p.name, value: p.value };
+          if (!row) return null;
+          return (
+            <div key={i} className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-white/60 text-[11px]">
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: p.color || p.fill || YELLOW }}
+                />
+                {row.label}
+              </span>
+              <span className="text-white text-[11px] font-bold flex-shrink-0">
+                {row.value}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -690,6 +756,16 @@ function SkillRadarChart({ axes }) {
             strokeWidth={2}
             isAnimationActive
           />
+          <Tooltip
+            content={
+              <ChartTooltip
+                formatter={(p) => ({
+                  label: p.payload?.axis,
+                  value: `${p.value}/3`
+                })}
+              />
+            }
+          />
         </RadarChart>
       </ResponsiveContainer>
     </div>
@@ -728,7 +804,9 @@ const KNOWN_TOOL_NAMES = [
 ];
 
 function inferToolRowsFromProfile(profile) {
-  const explicit = [...(profile?.tool_proficiency || [])].filter((t) => t?.name);
+  const explicit = [...(profile?.tool_proficiency || [])].filter(
+    (t) => t?.name
+  );
   const seen = new Set(explicit.map((t) => t.name.toLowerCase()));
   const haystack = JSON.stringify({
     skills: profile?.skills,
@@ -754,6 +832,12 @@ function inferToolRowsFromProfile(profile) {
 
   return [...explicit, ...inferred];
 }
+
+const TOOL_EMPHASIS_READ = {
+  1: "appears once",
+  2: "used meaningfully",
+  3: "central to their workflow"
+};
 
 function ToolBarChart({ tools }) {
   const rows = [...(tools || [])]
@@ -785,6 +869,19 @@ function ToolBarChart({ tools }) {
             tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
+          />
+          <Tooltip
+            cursor={{ fill: "rgba(255,255,255,0.04)" }}
+            content={
+              <ChartTooltip
+                formatter={(p) => ({
+                  label: p.payload?.name,
+                  value:
+                    TOOL_EMPHASIS_READ[p.payload?.emphasis] ||
+                    `${p.payload?.emphasis}/3`
+                })}
+              />
+            }
           />
           <Bar
             dataKey="emphasis"
@@ -849,6 +946,19 @@ function ValidationDonut({ validated, unvalidated }) {
                 <Cell fill={TRACK} />
               )}
             </Pie>
+            {total > 0 && (
+              <Tooltip
+                content={
+                  <ChartTooltip
+                    formatter={(p) => ({
+                      label:
+                        p.name === "verified" ? "Verified" : "Self-initiated",
+                      value: `${p.value} (${Math.round((p.value / total) * 100)}%)`
+                    })}
+                  />
+                }
+              />
+            )}
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -915,18 +1025,24 @@ function StatTile({ label, value }) {
   );
 }
 
-function SignalMetric({ label, value, max = 3, tone = YELLOW }) {
+function SignalMetric({ label, value, max = 3, tone = YELLOW, evidence }) {
   const safeValue = Math.max(0, Math.min(max, value || 0));
   const pct = max > 0 ? (safeValue / max) * 100 : 0;
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 flex flex-col gap-2">
+  const points = (
+    Array.isArray(evidence) ? evidence : evidence ? [evidence] : []
+  ).filter(Boolean);
+  const body = (
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 flex flex-col gap-2 cursor-default">
       <div className="flex items-center justify-between gap-2">
         <span className="text-white/65 text-xs font-semibold">{label}</span>
         <span className="text-white/35 text-[10px] font-bold">
           {safeValue}/{max}
         </span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: TRACK }}>
+      <div
+        className="h-1.5 rounded-full overflow-hidden"
+        style={{ background: TRACK }}
+      >
         <div
           className="h-full rounded-full"
           style={{ width: `${pct}%`, background: tone }}
@@ -939,17 +1055,35 @@ function SignalMetric({ label, value, max = 3, tone = YELLOW }) {
             className="h-5 rounded-md border"
             style={{
               borderColor: n <= safeValue ? tone : "rgba(255,255,255,0.08)",
-              background: n <= safeValue ? `${tone}22` : "rgba(255,255,255,0.02)"
+              background:
+                n <= safeValue ? `${tone}22` : "rgba(255,255,255,0.02)"
             }}
           />
         ))}
       </div>
     </div>
   );
+  if (!points.length) return body;
+  return (
+    <HoverPanel trigger={body} className="w-full">
+      <p className="text-white/40 text-[10px] uppercase tracking-wide mb-1.5">
+        {label} · {safeValue}/{max}
+      </p>
+      <div className="flex flex-col gap-1">
+        {points.map((pt, i) => (
+          <p key={i} className="text-white/70 text-[11px] leading-snug">
+            {pt}
+          </p>
+        ))}
+      </div>
+    </HoverPanel>
+  );
 }
 
 function FactStrip({ items }) {
-  const list = items.filter((item) => item.value && item.value !== "Not specified");
+  const list = items.filter(
+    (item) => item.value && item.value !== "Not specified"
+  );
   if (!list.length) return null;
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -976,19 +1110,43 @@ function FactStrip({ items }) {
   );
 }
 
+// evidence behind each of the five growth axes, pulled from the same source
+// fields computeSkillAxes already reads — so hovering a Signal Meter or a
+// Skill Signal radar point shows the specific fact the score is built on.
+function axisEvidenceMap(profile) {
+  return {
+    Business: profile?.understanding_of_business?.key_points,
+    Clarity: profile?.foundational_clarity?.key_points,
+    Leadership: profile?.team_work_proficiency?.key_points,
+    Learning: profile?.learning?.key_points,
+    Community: profile?.contributing_back?.types
+  };
+}
+
 function SignalMeterGrid({ profile, axes }) {
+  const evidence = axisEvidenceMap(profile);
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
         Signal Meters
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-      {axes.map((a) => (
-        <SignalMetric key={a.axis} label={a.axis} value={a.value} />
-      ))}
-      {profile?.ai_proficiency?.present && (
-        <SignalMetric label="AI" value={2} tone={STRONG_GREEN} />
-      )}
+        {axes.map((a) => (
+          <SignalMetric
+            key={a.axis}
+            label={a.axis}
+            value={a.value}
+            evidence={evidence[a.axis]}
+          />
+        ))}
+        {profile?.ai_proficiency?.present && (
+          <SignalMetric
+            label="AI"
+            value={2}
+            tone={STRONG_GREEN}
+            evidence={profile.ai_proficiency.tools}
+          />
+        )}
       </div>
     </div>
   );
@@ -1021,7 +1179,9 @@ function ZoneCard({ tone, title, items }) {
     <div
       className="flex-1 min-w-[220px] flex flex-col gap-3 rounded-2xl border p-4"
       style={{
-        borderColor: strong ? "rgba(141,213,124,0.28)" : "rgba(255,177,79,0.28)",
+        borderColor: strong
+          ? "rgba(141,213,124,0.28)"
+          : "rgba(255,177,79,0.28)",
         background: strong ? "rgba(141,213,124,0.06)" : "rgba(255,177,79,0.06)"
       }}
     >
@@ -1048,18 +1208,29 @@ function ZoneCard({ tone, title, items }) {
                 {r.score}
               </span>
             </div>
-            <div
-              className="w-full h-1 rounded-full overflow-hidden"
-              style={{ background: TRACK }}
+            <HoverPanel
+              className="w-full"
+              trigger={
+                <div
+                  className="w-full h-1 rounded-full overflow-hidden cursor-default"
+                  style={{ background: TRACK }}
+                >
+                  <div
+                    className="h-1 rounded-full"
+                    style={{
+                      width: `${((DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1) / 4) * 100}%`,
+                      background: color
+                    }}
+                  />
+                </div>
+              }
             >
-              <div
-                className="h-1 rounded-full"
-                style={{
-                  width: `${((DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1) / 4) * 100}%`,
-                  background: color
-                }}
-              />
-            </div>
+              {r.evidence && (
+                <p className="text-white/70 text-[11px] leading-snug">
+                  {r.evidence}
+                </p>
+              )}
+            </HoverPanel>
             {r.evidence && (
               <p
                 title={r.evidence}
@@ -1154,7 +1325,9 @@ function NotableWorks({ works }) {
               }`}
             >
               <div className="flex items-start justify-between gap-2 min-w-0">
-                <p className="text-white text-sm font-bold leading-tight">{w.title}</p>
+                <p className="text-white text-sm font-bold leading-tight">
+                  {w.title}
+                </p>
                 {w.link && (
                   <svg
                     width="12"
@@ -1190,7 +1363,9 @@ function NotableWorks({ works }) {
                         className="h-1 rounded-full"
                         style={{
                           background:
-                            n <= (w.link ? 2 : 1) ? YELLOW : "rgba(255,255,255,0.12)"
+                            n <= (w.link ? 2 : 1)
+                              ? YELLOW
+                              : "rgba(255,255,255,0.12)"
                         }}
                       />
                     ))}
@@ -1298,8 +1473,17 @@ function RoleFitMap({ role, business, clarity }) {
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        <SignalMetric label="Business framing" value={businessLevel} />
-        <SignalMetric label="Case-study clarity" value={clarityLevel} tone={STRONG_GREEN} />
+        <SignalMetric
+          label="Business framing"
+          value={businessLevel}
+          evidence={business?.key_points}
+        />
+        <SignalMetric
+          label="Case-study clarity"
+          value={clarityLevel}
+          tone={STRONG_GREEN}
+          evidence={clarity?.key_points}
+        />
       </div>
     </div>
   );
@@ -1311,10 +1495,26 @@ function ProofDepthPanel({ links, projects, validated, tools }) {
   const clientProjects = projectList.filter((w) => w.client).length;
   const linkCount = mergeLinks([], linksObjectToArray(links)).length;
   const checks = [
-    { label: "Named projects", active: projectList.length > 0, value: projectList.length },
-    { label: "Project links", active: linkedProjects > 0, value: linkedProjects },
-    { label: "Client proof", active: (validated || 0) > 0 || clientProjects > 0, value: validated || clientProjects },
-    { label: "Tools found", active: (tools || []).length > 0, value: (tools || []).length },
+    {
+      label: "Named projects",
+      active: projectList.length > 0,
+      value: projectList.length
+    },
+    {
+      label: "Project links",
+      active: linkedProjects > 0,
+      value: linkedProjects
+    },
+    {
+      label: "Client proof",
+      active: (validated || 0) > 0 || clientProjects > 0,
+      value: validated || clientProjects
+    },
+    {
+      label: "Tools found",
+      active: (tools || []).length > 0,
+      value: (tools || []).length
+    },
     { label: "Contact links", active: linkCount > 0, value: linkCount }
   ];
   return (
@@ -1331,16 +1531,25 @@ function ProofDepthPanel({ links, projects, validated, tools }) {
             <span
               className="w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
               style={{
-                borderColor: item.active ? `${YELLOW}88` : "rgba(255,255,255,0.12)",
-                background: item.active ? "rgba(255,208,7,0.12)" : "rgba(255,255,255,0.03)",
+                borderColor: item.active
+                  ? `${YELLOW}88`
+                  : "rgba(255,255,255,0.12)",
+                background: item.active
+                  ? "rgba(255,208,7,0.12)"
+                  : "rgba(255,255,255,0.03)",
                 color: item.active ? YELLOW : "rgba(255,255,255,0.35)"
               }}
             >
               {item.value}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-white/75 text-xs font-semibold">{item.label}</p>
-              <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: TRACK }}>
+              <p className="text-white/75 text-xs font-semibold">
+                {item.label}
+              </p>
+              <div
+                className="h-1 rounded-full mt-1.5 overflow-hidden"
+                style={{ background: TRACK }}
+              >
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -1372,7 +1581,10 @@ function InterviewFocus({ ratings, traits }) {
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
         {growth.map((r, i) => (
-          <div key={`g-${i}`} className="rounded-xl border border-amber-300/20 bg-amber-300/[0.06] p-3">
+          <div
+            key={`g-${i}`}
+            className="rounded-xl border border-amber-300/20 bg-amber-300/[0.06] p-3"
+          >
             <p className="text-amber-200/90 text-xs font-bold">{r.dimension}</p>
             {r.evidence && (
               <p className="text-white/50 text-[11px] leading-snug mt-1">
@@ -1384,7 +1596,10 @@ function InterviewFocus({ ratings, traits }) {
         {extremes.map((t, i) => {
           const left = (t.score || 3) <= 3;
           return (
-            <div key={`t-${i}`} className="rounded-xl border border-white/10 bg-black/10 p-3">
+            <div
+              key={`t-${i}`}
+              className="rounded-xl border border-white/10 bg-black/10 p-3"
+            >
               <p className="text-white/70 text-xs font-bold">
                 {left ? t.left_label : t.right_label}
               </p>
@@ -1606,6 +1821,277 @@ function ProfileLinksRow({
   );
 }
 
+// precise experience — replaces the old 8-bucket range strip. Accepts a
+// numeric work_experience from newly-built profiles, and falls back to a
+// best-effort midpoint parse of the old bucket strings ("2-5", "15+", "<1")
+// so already-saved profiles still render something reasonable until the
+// person rebuilds their AI profile.
+function parseExperienceYears(work_experience) {
+  if (work_experience == null || work_experience === "") return null;
+  if (typeof work_experience === "number" && Number.isFinite(work_experience)) {
+    return Math.max(0, work_experience);
+  }
+  const raw = String(work_experience).trim();
+  const asNumber = Number(raw);
+  if (raw !== "" && Number.isFinite(asNumber)) return Math.max(0, asNumber);
+  const lower = raw.toLowerCase();
+  if (lower === "starting") return 0;
+  if (lower === "<1") return 0.5;
+  if (lower === "15+" || lower === "over 20") return 15;
+  const rangeMatch = lower.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+  if (rangeMatch) {
+    return (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
+  }
+  return null;
+}
+
+function fmtExperienceLabel(years) {
+  if (years == null) return "—";
+  if (years <= 0) return "Just starting";
+  if (years < 1) return "<1 yr";
+  const rounded = Math.round(years * 2) / 2;
+  const trimmed = Number.isInteger(rounded)
+    ? String(rounded)
+    : rounded.toFixed(1);
+  return `${trimmed} yr${rounded === 1 ? "" : "s"}`;
+}
+
+const EXPERIENCE_GAUGE_MAX = 15;
+const EXPERIENCE_GAUGE_TICKS = [0, 5, 10, 15];
+
+function ExperienceGauge({ years }) {
+  if (years == null) return null;
+  const capped = Math.min(years, EXPERIENCE_GAUGE_MAX);
+  const pct = (capped / EXPERIENCE_GAUGE_MAX) * 100;
+  const label = fmtExperienceLabel(years);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Experience
+        </p>
+        <span className="text-evolve-yellow text-xs font-bold">{label}</span>
+      </div>
+      <HoverPanel
+        className="w-full"
+        trigger={
+          <div
+            className="relative w-full h-2 rounded-full cursor-default"
+            style={{ background: TRACK }}
+          >
+            <div
+              className="h-full rounded-full transition-[width] duration-500"
+              style={{
+                width: `${pct}%`,
+                background: `linear-gradient(90deg, ${YELLOW}55, ${YELLOW})`
+              }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 transition-[left] duration-500"
+              style={{
+                left: `calc(${pct}% - 6px)`,
+                background: YELLOW,
+                borderColor: "#18181b"
+              }}
+            />
+          </div>
+        }
+      >
+        <p className="text-white/70 text-[11px] leading-snug">
+          {years > EXPERIENCE_GAUGE_MAX
+            ? `${label} — shown capped at ${EXPERIENCE_GAUGE_MAX}+ on this scale.`
+            : `Exactly ${label} of professional experience.`}
+        </p>
+      </HoverPanel>
+      <div className="flex justify-between">
+        {EXPERIENCE_GAUGE_TICKS.map((t) => (
+          <span key={t} className="text-white/30 text-[9px]">
+            {t === EXPERIENCE_GAUGE_MAX ? `${t}+` : t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// the same five growth axes used by computeSkillAxes/Signal Meters, reused
+// here so the year-by-year chart and the snapshot meters read as one system.
+const GROWTH_AXES = [
+  { key: "business", label: "Business", color: STRONG_GREEN },
+  { key: "clarity", label: "Clarity", color: YELLOW },
+  { key: "leadership", label: "Leadership", color: LEADERSHIP_BLUE },
+  { key: "learning", label: "Learning", color: GROWTH_AMBER },
+  { key: "community", label: "Community", color: COMMUNITY_PURPLE }
+];
+
+function CareerPointTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0].payload;
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#0d0d0f] p-3 shadow-xl max-w-[240px]">
+      <p className="text-white text-xs font-bold mb-1">
+        Year {entry.year_index}
+        {entry.calendar_year ? ` · ${entry.calendar_year}` : ""}
+      </p>
+      {entry.title && (
+        <p className="text-white/50 text-[11px] mb-1.5">{entry.title}</p>
+      )}
+      <div className="flex flex-col gap-1 mb-1.5">
+        {GROWTH_AXES.map((a) => (
+          <div key={a.key} className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-white/60 text-[11px]">
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ background: a.color }}
+              />
+              {a.label}
+            </span>
+            <span className="text-white text-[11px] font-bold">
+              {entry[a.key]}/3
+            </span>
+          </div>
+        ))}
+      </div>
+      {entry.highlight && (
+        <p className="text-evolve-yellow text-[11px] leading-snug border-t border-white/10 pt-1.5">
+          {entry.highlight}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// year-by-year growth reconstructed by the model from dated resume history
+// (see career_timeline in analyze-profile-data) — lets someone spot exactly
+// where an inflection point happened (e.g. leadership taking off in year 2)
+// and, on hover, read the concrete driver instead of guessing at it.
+function CareerGrowthChart({ timeline }) {
+  const list = (timeline || []).filter((t) => t?.year_index != null);
+  if (list.length < 2) return null;
+  const sorted = [...list].sort((a, b) => a.year_index - b.year_index);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Career Growth
+      </p>
+      <div className="h-56">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={sorted}
+            margin={{ top: 8, right: 12, bottom: 0, left: -20 }}
+          >
+            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis
+              dataKey="year_index"
+              tickFormatter={(v) => `Y${v}`}
+              tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis domain={[0, 3]} hide />
+            <Tooltip content={<CareerPointTooltip />} />
+            {GROWTH_AXES.map((a) => (
+              <Line
+                key={a.key}
+                type="monotone"
+                dataKey={a.key}
+                stroke={a.color}
+                strokeWidth={2}
+                dot={{ r: 3, fill: a.color, strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+                isAnimationActive
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {GROWTH_AXES.map((a) => (
+          <span
+            key={a.key}
+            className="flex items-center gap-1.5 text-white/50 text-[11px]"
+          >
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ background: a.color }}
+            />
+            {a.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const TRAJECTORY_DIMENSION_COLOR = {
+  Business: STRONG_GREEN,
+  Clarity: YELLOW,
+  Leadership: LEADERSHIP_BLUE,
+  Learning: GROWTH_AMBER,
+  Community: COMMUNITY_PURPLE
+};
+
+// forward-looking read of where the trend in career_timeline/dimension_ratings
+// is heading — building blocks matching NotableWorks' Project Blocks
+// language, not a paragraph of career advice.
+function CareerTrajectory({ trajectory }) {
+  const roles = (trajectory?.projected_roles || []).filter((r) => r?.role);
+  if (!roles.length) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Career Trajectory — Next 5 Years
+      </p>
+      {trajectory.trend_summary && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3.5 flex items-center gap-3">
+          <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
+          <p className="text-white/75 text-sm leading-snug">
+            {trajectory.trend_summary}
+          </p>
+        </div>
+      )}
+      <div className="grid sm:grid-cols-3 gap-2">
+        {roles.map((r, i) => {
+          const color = TRAJECTORY_DIMENSION_COLOR[r.fit_dimension] || YELLOW;
+          return (
+            <div
+              key={i}
+              title={r.rationale}
+              className="relative overflow-hidden flex flex-col justify-between rounded-xl border border-white/10 bg-white/[0.03] p-3"
+            >
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <p className="text-white text-sm font-bold leading-tight">
+                  {r.role}
+                </p>
+                <span className="text-white/25 text-lg font-black leading-none flex-shrink-0">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              {r.rationale && (
+                <p className="text-white/50 text-[11px] leading-snug mt-2">
+                  {r.rationale}
+                </p>
+              )}
+              {r.fit_dimension && (
+                <span
+                  className="mt-3 self-start text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full"
+                  style={{
+                    color,
+                    background: `${color}22`,
+                    border: `1px solid ${color}55`
+                  }}
+                >
+                  {r.fit_dimension}-driven
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AIProfileReveal({
   profile,
   portfolioLink,
@@ -1642,19 +2128,15 @@ export function AIProfileReveal({
     summary,
     recruiter_highlights,
     notable_works,
-    dimension_ratings
+    dimension_ratings,
+    career_timeline,
+    career_trajectory
   } = profile;
 
   const displayTools = inferToolRowsFromProfile(profile);
   const axes = computeSkillAxes(profile);
   const heroScore = computeHeroScore(profile, axes);
-  const expIdx = EXPERIENCE_BUCKETS.findIndex(
-    (b) =>
-      b.toLowerCase() ===
-      String(work_experience || "")
-        .trim()
-        .toLowerCase()
-  );
+  const experienceYears = parseExperienceYears(work_experience);
   const verifiedCount = real_work_validation?.validated_count || 0;
   const toolCount = displayTools.length;
 
@@ -1702,7 +2184,10 @@ export function AIProfileReveal({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatTile label="Experience" value={work_experience || "—"} />
+        <StatTile
+          label="Experience"
+          value={fmtExperienceLabel(experienceYears)}
+        />
         <StatTile label="Verified Projects" value={verifiedCount} />
         <StatTile label="Tools Cited" value={toolCount} />
       </div>
@@ -1743,9 +2228,7 @@ export function AIProfileReveal({
       {summary && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3.5 flex items-center gap-3">
           <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
-          <p className="text-white/75 text-sm leading-snug">
-            {summary}
-          </p>
+          <p className="text-white/75 text-sm leading-snug">{summary}</p>
         </div>
       )}
 
@@ -1753,32 +2236,11 @@ export function AIProfileReveal({
 
       <NotableWorks works={notable_works} />
 
-      <div className="flex flex-col gap-2">
-        <p className="text-white/40 text-[11px] uppercase tracking-wide">
-          Experience
-        </p>
-        <div className="flex items-end gap-1.5">
-          {EXPERIENCE_BUCKETS.map((b, i) => (
-            <div key={b} className="flex-1 flex flex-col items-center gap-1.5">
-              <div
-                className="w-full h-1.5 rounded-full transition-colors"
-                style={
-                  expIdx !== -1 && i <= expIdx
-                    ? {
-                        background: `linear-gradient(90deg, ${YELLOW}55, ${YELLOW})`
-                      }
-                    : { background: TRACK }
-                }
-              />
-              <span
-                className={`text-[9px] whitespace-nowrap ${expIdx === i ? "text-evolve-yellow font-bold" : "text-white/30"}`}
-              >
-                {b}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ExperienceGauge years={experienceYears} />
+
+      <CareerGrowthChart timeline={career_timeline} />
+
+      <CareerTrajectory trajectory={career_trajectory} />
 
       <div className="grid md:grid-cols-2 gap-6 items-start rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <div className="flex flex-col gap-2">
