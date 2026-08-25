@@ -23,8 +23,8 @@ import { QUESTIONS } from "../pages/Onboarding/questions";
 // on main. On merges from development this line should conflict (development
 // keeps it true), which is the point: it forces a conscious choice instead of
 // silently shipping the test feature to production.
-// const ENABLE_PORTFOLIO_AI = false;
-const ENABLE_PORTFOLIO_AI = true;
+const ENABLE_PORTFOLIO_AI = false;
+// const ENABLE_PORTFOLIO_AI = true;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -399,7 +399,11 @@ function LinksEditor({ links, onAdd, onUpdate, onRemove }) {
             style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
           >
             {LINK_PLATFORMS.map((p) => (
-              <option key={p} value={p} style={{ backgroundColor: "#1c1c1f", color: "#fff" }}>
+              <option
+                key={p}
+                value={p}
+                style={{ backgroundColor: "#1c1c1f", color: "#fff" }}
+              >
                 {p}
               </option>
             ))}
@@ -965,7 +969,11 @@ function NotableWorks({ works }) {
         {list.map((w, i) => {
           const Tag = w.link ? "a" : "div";
           const tagProps = w.link
-            ? { href: withScheme(w.link), target: "_blank", rel: "noopener noreferrer" }
+            ? {
+                href: withScheme(w.link),
+                target: "_blank",
+                rel: "noopener noreferrer"
+              }
             : {};
           return (
             <Tag
@@ -974,18 +982,36 @@ function NotableWorks({ works }) {
               className={`flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 transition-colors ${w.link ? "hover:border-evolve-yellow/40" : ""}`}
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-white text-sm font-bold leading-snug">{w.title}</p>
+                <p className="text-white text-sm font-bold leading-snug">
+                  {w.title}
+                </p>
                 {w.link && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-evolve-yellow/70 flex-shrink-0 mt-0.5">
-                    <path d="M7 17L17 7M7 7h10v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-evolve-yellow/70 flex-shrink-0 mt-0.5"
+                  >
+                    <path
+                      d="M7 17L17 7M7 7h10v10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </div>
               {w.client && (
-                <p className="text-evolve-yellow/70 text-[11px] font-semibold">{w.client}</p>
+                <p className="text-evolve-yellow/70 text-[11px] font-semibold">
+                  {w.client}
+                </p>
               )}
               {w.summary && (
-                <p className="text-white/50 text-xs leading-relaxed">{w.summary}</p>
+                <p className="text-white/50 text-xs leading-relaxed">
+                  {w.summary}
+                </p>
               )}
             </Tag>
           );
@@ -1030,8 +1056,10 @@ function linksObjectToArray(links) {
   if (links.github) out.push({ platform: "github", url: links.github });
   if (links.behance) out.push({ platform: "behance", url: links.behance });
   if (links.dribbble) out.push({ platform: "dribbble", url: links.dribbble });
-  if (links.personal_website) out.push({ platform: "website", url: links.personal_website });
-  if (links.email) out.push({ platform: "email", url: `mailto:${links.email}` });
+  if (links.personal_website)
+    out.push({ platform: "website", url: links.personal_website });
+  if (links.email)
+    out.push({ platform: "email", url: `mailto:${links.email}` });
   for (const o of links.other || []) {
     if (o?.url) out.push({ platform: o.platform || "link", url: o.url });
   }
@@ -1083,16 +1111,38 @@ function ProfileLinksRow({
       {portfolio && (
         <LinkPill href={portfolio} label="Portfolio">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.8" />
+            <rect
+              x="3"
+              y="7"
+              width="18"
+              height="13"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <path
+              d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
           </svg>
         </LinkPill>
       )}
       {resume && (
         <LinkPill href={resume} label="Resume">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-            <path d="M9 13h6M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path
+              d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M9 13h6M9 17h6"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
           </svg>
         </LinkPill>
       )}
@@ -1415,7 +1465,8 @@ function PortfolioResumeSection({ user }) {
   const [socialLinks, setSocialLinks] = useState([]);
   const [savedSocialLinks, setSavedSocialLinks] = useState([]);
   const [savingLinks, setSavingLinks] = useState(false);
-  const linksDirty = JSON.stringify(socialLinks) !== JSON.stringify(savedSocialLinks);
+  const linksDirty =
+    JSON.stringify(socialLinks) !== JSON.stringify(savedSocialLinks);
 
   useEffect(() => {
     let cancelled = false;
@@ -1454,7 +1505,9 @@ function PortfolioResumeSection({ user }) {
     setSocialLinks((l) => [...l, { platform: LINK_PLATFORMS[0], url: "" }]);
   }
   function updateLinkRow(i, patch) {
-    setSocialLinks((l) => l.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    setSocialLinks((l) =>
+      l.map((row, idx) => (idx === i ? { ...row, ...patch } : row))
+    );
   }
   function removeLinkRow(i) {
     setSocialLinks((l) => l.filter((_, idx) => idx !== i));
