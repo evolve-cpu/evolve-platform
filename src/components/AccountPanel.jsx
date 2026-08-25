@@ -23,8 +23,8 @@ import { QUESTIONS } from "../pages/Onboarding/questions";
 // on main. On merges from development this line should conflict (development
 // keeps it true), which is the point: it forces a conscious choice instead of
 // silently shipping the test feature to production.
-const ENABLE_PORTFOLIO_AI = false;
-// const ENABLE_PORTFOLIO_AI = true;
+// const ENABLE_PORTFOLIO_AI = false;
+const ENABLE_PORTFOLIO_AI = true;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -601,7 +601,24 @@ function computeSkillAxes(profile) {
   ];
 }
 
-function computeHeroScore(axes) {
+// The headline "signal score" has to agree with the strong/growth map right
+// below it, so it's driven by the same dimension_ratings data (already
+// calibrated per-person by the model) rather than a fixed checklist that
+// includes bonus signals like "has a blog" — those are genuinely optional
+// for most working designers and shouldn't be able to drag a strong,
+// well-validated profile down to a middling-looking number. The old
+// axes-based calc is kept only as a fallback for profiles saved before
+// dimension_ratings existed.
+function computeHeroScore(profile, axes) {
+  const dims = (profile?.dimension_ratings || []).filter((r) => r?.dimension);
+  if (dims.length > 0) {
+    const avg =
+      dims.reduce(
+        (s, r) => s + (DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1),
+        0
+      ) / (dims.length * 4);
+    return Math.round(avg * 100);
+  }
   const avg = axes.reduce((s, a) => s + a.value, 0) / (axes.length * 3);
   return Math.round(avg * 100);
 }
@@ -679,12 +696,79 @@ function SkillRadarChart({ axes }) {
   );
 }
 
+const KNOWN_TOOL_NAMES = [
+  "Figma",
+  "FigJam",
+  "Sketch",
+  "Framer",
+  "Webflow",
+  "Adobe XD",
+  "Photoshop",
+  "Illustrator",
+  "InDesign",
+  "After Effects",
+  "Premiere Pro",
+  "Blender",
+  "Cinema 4D",
+  "Miro",
+  "Notion",
+  "Jira",
+  "Maze",
+  "Hotjar",
+  "Google Analytics",
+  "HTML",
+  "CSS",
+  "JavaScript",
+  "React",
+  "Spline",
+  "Canva",
+  "Procreate",
+  "Midjourney",
+  "ChatGPT"
+];
+
+function inferToolRowsFromProfile(profile) {
+  const explicit = [...(profile?.tool_proficiency || [])].filter((t) => t?.name);
+  const seen = new Set(explicit.map((t) => t.name.toLowerCase()));
+  const haystack = JSON.stringify({
+    skills: profile?.skills,
+    works: profile?.notable_works,
+    highlights: profile?.recruiter_highlights,
+    ai: profile?.ai_proficiency,
+    summary: profile?.summary
+  }).toLowerCase();
+
+  const inferred = [];
+  for (const name of KNOWN_TOOL_NAMES) {
+    const key = name.toLowerCase();
+    if (seen.has(key) || !haystack.includes(key)) continue;
+    inferred.push({ name, emphasis: 1, inferred: true });
+    seen.add(key);
+  }
+
+  for (const name of profile?.ai_proficiency?.tools || []) {
+    if (!name || seen.has(String(name).toLowerCase())) continue;
+    inferred.push({ name, emphasis: 1, inferred: true });
+    seen.add(String(name).toLowerCase());
+  }
+
+  return [...explicit, ...inferred];
+}
+
 function ToolBarChart({ tools }) {
   const rows = [...(tools || [])]
     .filter((t) => t?.name)
     .sort((a, b) => (b.emphasis || 0) - (a.emphasis || 0))
     .slice(0, 8);
-  if (!rows.length) return null;
+  if (!rows.length) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-black/10 p-4">
+        <p className="text-white/45 text-xs leading-snug">
+          No tool names were detected in the analyzed portfolio or resume.
+        </p>
+      </div>
+    );
+  }
   return (
     <div style={{ height: Math.max(rows.length * 34, 100) }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -804,17 +888,17 @@ function SignalEvidence({ label, badge, points }) {
         {badge}
       </div>
       {list.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {list.map((pt, i) => (
-            <li
+            <span
               key={i}
-              className="text-white/50 text-xs leading-snug flex gap-1.5"
+              title={pt}
+              className="max-w-full rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-white/55 text-[11px] leading-snug"
             >
-              <span className="text-evolve-yellow/60 flex-shrink-0">•</span>
-              <span>{pt}</span>
-            </li>
+              {pt}
+            </span>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -822,7 +906,7 @@ function SignalEvidence({ label, badge, points }) {
 
 function StatTile({ label, value }) {
   return (
-    <div className="flex flex-col gap-0.5 border border-[#2a2a2a] rounded-xl px-4 py-3">
+    <div className="flex flex-col gap-0.5 border border-[#2a2a2a] rounded-xl px-4 py-3 bg-white/[0.02]">
       <span className="text-white text-xl font-bold">{value}</span>
       <span className="text-white/40 text-[10px] uppercase tracking-wide">
         {label}
@@ -831,34 +915,81 @@ function StatTile({ label, value }) {
   );
 }
 
-function EvidenceList({ items }) {
-  const list = (items || []).filter((i) => i?.finding);
-  if (!list.length) return null;
+function SignalMetric({ label, value, max = 3, tone = YELLOW }) {
+  const safeValue = Math.max(0, Math.min(max, value || 0));
+  const pct = max > 0 ? (safeValue / max) * 100 : 0;
   return (
-    <ul className="flex flex-col gap-2">
-      {list.map((item, i) => (
-        <li key={i} className="text-sm leading-snug">
-          <span className="text-white/85">{item.finding}</span>
-          {item.evidence && (
-            <span className="block text-white/40 text-xs mt-0.5">
-              — {item.evidence}
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3 flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-white/65 text-xs font-semibold">{label}</span>
+        <span className="text-white/35 text-[10px] font-bold">
+          {safeValue}/{max}
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: TRACK }}>
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, background: tone }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {[1, 2, 3].map((n) => (
+          <span
+            key={n}
+            className="h-5 rounded-md border"
+            style={{
+              borderColor: n <= safeValue ? tone : "rgba(255,255,255,0.08)",
+              background: n <= safeValue ? `${tone}22` : "rgba(255,255,255,0.02)"
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
-function GapCategory({ label, items }) {
-  const list = (items || []).filter((i) => i?.finding);
+function FactStrip({ items }) {
+  const list = items.filter((item) => item.value && item.value !== "Not specified");
   if (!list.length) return null;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      {list.map((item) => (
+        <div
+          key={item.label}
+          className="rounded-xl border border-white/10 bg-white/[0.025] p-3 flex flex-col gap-2"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-white/35 text-[10px] uppercase tracking-wide">
+              {item.label}
+            </span>
+            <span
+              className="w-7 h-1 rounded-full"
+              style={{ background: item.tone || YELLOW }}
+            />
+          </div>
+          <p className="text-white/75 text-xs font-semibold leading-snug">
+            {item.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SignalMeterGrid({ profile, axes }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
-        {label}
+        Signal Meters
       </p>
-      <EvidenceList items={list} />
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      {axes.map((a) => (
+        <SignalMetric key={a.axis} label={a.axis} value={a.value} />
+      ))}
+      {profile?.ai_proficiency?.present && (
+        <SignalMetric label="AI" value={2} tone={STRONG_GREEN} />
+      )}
+      </div>
     </div>
   );
 }
@@ -871,65 +1002,93 @@ const DIMENSION_SCORE_LEVELS = {
   unclear: 1,
   weak: 1
 };
+const STRONG_GREEN = "#8DD57C";
+const GROWTH_AMBER = "#FFB14F";
 
-function DimensionRatings({ ratings }) {
-  const list = (ratings || []).filter((r) => r?.dimension);
-  if (!list.length) return null;
+function isStrongDimension(score) {
+  return (DIMENSION_SCORE_LEVELS[String(score || "").toLowerCase()] ?? 1) >= 3;
+}
+
+// the strong-zones/growth-zones map — the single place a strength or a
+// growth area shows up now, derived entirely from dimension_ratings and
+// color-coded instead of written as a critique sentence someone has to
+// weigh and verify against the portfolio itself.
+function ZoneCard({ tone, title, items }) {
+  if (!items.length) return null;
+  const strong = tone === "strong";
+  const color = strong ? STRONG_GREEN : GROWTH_AMBER;
   return (
-    <div className="flex flex-col gap-3">
-      {list.map((r, i) => (
-        <div key={i} className="flex flex-col gap-1">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-white/70 text-xs font-medium">
-              {r.dimension}
-            </span>
-            <span className="text-evolve-yellow text-[11px] font-semibold">
-              {r.score}
-            </span>
-          </div>
-          <div
-            className="w-full h-1.5 rounded-full overflow-hidden"
-            style={{ background: TRACK }}
-          >
+    <div
+      className="flex-1 min-w-[220px] flex flex-col gap-3 rounded-2xl border p-4"
+      style={{
+        borderColor: strong ? "rgba(141,213,124,0.28)" : "rgba(255,177,79,0.28)",
+        background: strong ? "rgba(141,213,124,0.06)" : "rgba(255,177,79,0.06)"
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{ background: color }}
+        />
+        <p
+          className="text-[11px] font-bold uppercase tracking-wide"
+          style={{ color }}
+        >
+          {title}
+        </p>
+      </div>
+      <div className="flex flex-col gap-3">
+        {items.map((r, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-white text-xs font-semibold">
+                {r.dimension}
+              </span>
+              <span className="text-white/40 text-[10px] font-semibold flex-shrink-0">
+                {r.score}
+              </span>
+            </div>
             <div
-              className="h-1.5 rounded-full"
-              style={{
-                width: `${((DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1) / 4) * 100}%`,
-                background: `linear-gradient(90deg, ${YELLOW}55, ${YELLOW})`
-              }}
-            />
+              className="w-full h-1 rounded-full overflow-hidden"
+              style={{ background: TRACK }}
+            >
+              <div
+                className="h-1 rounded-full"
+                style={{
+                  width: `${((DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1) / 4) * 100}%`,
+                  background: color
+                }}
+              />
+            </div>
+            {r.evidence && (
+              <p
+                title={r.evidence}
+                className="text-white/40 text-[11px] leading-snug"
+              >
+                {r.evidence}
+              </p>
+            )}
           </div>
-          {r.evidence && (
-            <span className="text-white/40 text-[11px] leading-snug">
-              {r.evidence}
-            </span>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
-function KeyGapCallout({ keyGap }) {
-  if (!keyGap?.issue) return null;
+function StrongGrowthZones({ ratings }) {
+  const list = (ratings || []).filter((r) => r?.dimension);
+  if (!list.length) return null;
+  const strong = list.filter((r) => isStrongDimension(r.score));
+  const growth = list.filter((r) => !isStrongDimension(r.score));
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/[0.03] p-4 flex flex-col gap-2">
-      <p className="text-white/40 text-[11px] font-bold uppercase tracking-wide">
-        What&rsquo;s holding this back most
+    <div className="flex flex-col gap-2">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Strong Zones &amp; Growth Areas
       </p>
-      {keyGap.whats_solid && (
-        <p className="text-white/60 text-sm leading-relaxed">
-          {keyGap.whats_solid}
-        </p>
-      )}
-      <p className="text-white text-base font-semibold leading-snug">
-        {keyGap.issue}
-      </p>
-      {keyGap.evidence && (
-        <p className="text-white/40 text-xs leading-snug">
-          — {keyGap.evidence}
-        </p>
-      )}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <ZoneCard tone="strong" title="Strong Zones" items={strong} />
+        <ZoneCard tone="growth" title="Growth Areas" items={growth} />
+      </div>
     </div>
   );
 }
@@ -938,18 +1097,24 @@ function RecruiterHighlights({ points }) {
   const list = (points || []).filter(Boolean);
   if (!list.length) return null;
   return (
-    <div className="rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.05] p-4 flex flex-col gap-2.5">
+    <div className="rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.05] p-4 flex flex-col gap-3">
       <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide">
         For Recruiters — at a glance
       </p>
-      <ul className="flex flex-col gap-1.5">
+      <div className="grid sm:grid-cols-2 gap-2">
         {list.map((pt, i) => (
-          <li key={i} className="text-white/85 text-sm leading-snug flex gap-2">
-            <span className="text-evolve-yellow flex-shrink-0">▸</span>
-            <span>{pt}</span>
-          </li>
+          <div
+            key={i}
+            title={pt}
+            className="flex items-center gap-2 rounded-xl border border-evolve-yellow/15 bg-black/15 px-3 py-2 min-w-0"
+          >
+            <span className="w-2 h-2 rounded-full bg-evolve-yellow flex-shrink-0" />
+            <span className="text-white/85 text-xs font-semibold leading-snug">
+              {pt}
+            </span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -963,9 +1128,9 @@ function NotableWorks({ works }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
-        Notable Work
+        Project Blocks
       </p>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid sm:grid-cols-3 gap-2">
         {list.map((w, i) => {
           const Tag = w.link ? "a" : "div";
           const tagProps = w.link
@@ -979,12 +1144,17 @@ function NotableWorks({ works }) {
             <Tag
               key={i}
               {...tagProps}
-              className={`flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 transition-colors ${w.link ? "hover:border-evolve-yellow/40" : ""}`}
+              title={[w.title, w.client, w.summary].filter(Boolean).join(" - ")}
+              className={`relative overflow-hidden flex flex-col justify-between rounded-xl border p-3 transition-colors ${
+                i % 5 === 0 ? "col-span-2" : ""
+              } ${
+                w.link
+                  ? "border-evolve-yellow/25 bg-evolve-yellow/[0.06] hover:border-evolve-yellow/60"
+                  : "border-white/10 bg-white/[0.03]"
+              }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-white text-sm font-bold leading-snug">
-                  {w.title}
-                </p>
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <p className="text-white text-sm font-bold leading-tight">{w.title}</p>
                 {w.link && (
                   <svg
                     width="12"
@@ -1003,16 +1173,33 @@ function NotableWorks({ works }) {
                   </svg>
                 )}
               </div>
-              {w.client && (
-                <p className="text-evolve-yellow/70 text-[11px] font-semibold">
-                  {w.client}
-                </p>
-              )}
               {w.summary && (
-                <p className="text-white/50 text-xs leading-relaxed">
+                <p className="text-white/50 text-[11px] leading-snug mt-2">
                   {w.summary}
                 </p>
               )}
+              <div className="flex items-end justify-between gap-2 mt-3">
+                <div className="min-w-0">
+                  <span className="text-evolve-yellow/80 text-[10px] font-bold uppercase tracking-wide">
+                    {w.client || "Self / Academic"}
+                  </span>
+                  <div className="grid grid-cols-3 gap-1 mt-2 w-20">
+                    {[0, 1, 2].map((n) => (
+                      <span
+                        key={n}
+                        className="h-1 rounded-full"
+                        style={{
+                          background:
+                            n <= (w.link ? 2 : 1) ? YELLOW : "rgba(255,255,255,0.12)"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <span className="text-white/25 text-2xl font-black leading-none">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
             </Tag>
           );
         })}
@@ -1041,6 +1228,232 @@ function CareerJourney({ journey }) {
 
 // small circular icon buttons for portfolio / resume / each social link —
 // what makes the shared AI profile a one-stop hub instead of just a summary.
+// design-craft skill tags (logo design, illustration, motion, etc.) — the
+// thing that used to be buried inside a gap/strength sentence and never
+// surfaced anywhere on its own. Read straight off profile.skills.
+const SKILL_LEVEL_DOTS = { Core: 3, Practiced: 2, Exposure: 1 };
+
+function SkillChips({ skills }) {
+  const list = (skills || []).filter((s) => s?.skill);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Design Skills
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {list.map((s, i) => (
+          <div
+            key={i}
+            title={s.evidence}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] pl-3 pr-2.5 py-1.5"
+          >
+            <span className="text-white text-xs font-semibold">{s.skill}</span>
+            <span className="flex items-center gap-0.5">
+              {[1, 2, 3].map((n) => (
+                <span
+                  key={n}
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{
+                    background:
+                      n <= (SKILL_LEVEL_DOTS[s.level] || 1) ? YELLOW : TRACK
+                  }}
+                />
+              ))}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RoleFitMap({ role, business, clarity }) {
+  const businessLevel = levelOf(business?.score);
+  const clarityLevel = levelOf(clarity?.score);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Role Fit Snapshot
+        </p>
+        <Tag>{role?.primary}</Tag>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-evolve-yellow/20 bg-evolve-yellow/[0.06] p-3">
+          <p className="text-white/35 text-[10px] uppercase tracking-wide">
+            Primary
+          </p>
+          <p className="text-white text-sm font-bold leading-tight mt-1">
+            {role?.primary || "Role unclear"}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+          <p className="text-white/35 text-[10px] uppercase tracking-wide">
+            Secondary
+          </p>
+          <p className="text-white/70 text-sm font-bold leading-tight mt-1">
+            {role?.secondary || "Not split"}
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
+        <SignalMetric label="Business framing" value={businessLevel} />
+        <SignalMetric label="Case-study clarity" value={clarityLevel} tone={STRONG_GREEN} />
+      </div>
+    </div>
+  );
+}
+
+function ProofDepthPanel({ links, projects, validated, tools }) {
+  const projectList = (projects || []).filter((w) => w?.title);
+  const linkedProjects = projectList.filter((w) => w.link).length;
+  const clientProjects = projectList.filter((w) => w.client).length;
+  const linkCount = mergeLinks([], linksObjectToArray(links)).length;
+  const checks = [
+    { label: "Named projects", active: projectList.length > 0, value: projectList.length },
+    { label: "Project links", active: linkedProjects > 0, value: linkedProjects },
+    { label: "Client proof", active: (validated || 0) > 0 || clientProjects > 0, value: validated || clientProjects },
+    { label: "Tools found", active: (tools || []).length > 0, value: (tools || []).length },
+    { label: "Contact links", active: linkCount > 0, value: linkCount }
+  ];
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Recruiter Evidence
+      </p>
+      <div className="flex flex-col gap-2">
+        {checks.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-xl border border-white/10 bg-black/10 px-3 py-2 flex items-center gap-3"
+          >
+            <span
+              className="w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style={{
+                borderColor: item.active ? `${YELLOW}88` : "rgba(255,255,255,0.12)",
+                background: item.active ? "rgba(255,208,7,0.12)" : "rgba(255,255,255,0.03)",
+                color: item.active ? YELLOW : "rgba(255,255,255,0.35)"
+              }}
+            >
+              {item.value}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/75 text-xs font-semibold">{item.label}</p>
+              <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: TRACK }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, (item.value / 5) * 100)}%`,
+                    background: item.active ? YELLOW : "rgba(255,255,255,0.15)"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InterviewFocus({ ratings, traits }) {
+  const growth = (ratings || [])
+    .filter((r) => r?.dimension && !isStrongDimension(r.score))
+    .slice(0, 3);
+  const extremes = (traits || [])
+    .filter((t) => t?.left_label && t?.right_label)
+    .slice(0, 2);
+  if (!growth.length && !extremes.length) return null;
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Interview Focus
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {growth.map((r, i) => (
+          <div key={`g-${i}`} className="rounded-xl border border-amber-300/20 bg-amber-300/[0.06] p-3">
+            <p className="text-amber-200/90 text-xs font-bold">{r.dimension}</p>
+            {r.evidence && (
+              <p className="text-white/50 text-[11px] leading-snug mt-1">
+                {r.evidence}
+              </p>
+            )}
+          </div>
+        ))}
+        {extremes.map((t, i) => {
+          const left = (t.score || 3) <= 3;
+          return (
+            <div key={`t-${i}`} className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <p className="text-white/70 text-xs font-bold">
+                {left ? t.left_label : t.right_label}
+              </p>
+              <p className="text-white/40 text-[11px] leading-snug mt-1">
+                {t.evidence}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// bipolar sliders for the tensions a review sentence usually smuggles in
+// ("focuses on visuals without showing research") — placed as an evidenced
+// score between two labeled poles instead of left as a sentence to parse.
+function PersonaTraitBar({ trait }) {
+  if (!trait?.left_label || !trait?.right_label) return null;
+  const score = Math.min(5, Math.max(1, trait.score || 3));
+  const pct = ((score - 1) / 4) * 100;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+        <span className={score <= 2 ? "text-evolve-yellow" : "text-white/40"}>
+          {trait.left_label}
+        </span>
+        <span className={score >= 4 ? "text-evolve-yellow" : "text-white/40"}>
+          {trait.right_label}
+        </span>
+      </div>
+      <div
+        className="relative w-full h-1.5 rounded-full"
+        style={{ background: TRACK }}
+      >
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full transition-[left] duration-500"
+          style={{ left: `calc(${pct}% - 7px)`, background: YELLOW }}
+        />
+      </div>
+      {trait.evidence && (
+        <p
+          title={trait.evidence}
+          className="text-white/40 text-[11px] leading-snug"
+        >
+          {trait.evidence}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PersonaTraits({ traits }) {
+  const list = (traits || []).filter((t) => t?.left_label && t?.right_label);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        How They Work
+      </p>
+      <div className="flex flex-col gap-4">
+        {list.map((t, i) => (
+          <PersonaTraitBar key={i} trait={t} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function withScheme(url) {
   return /^(https?:|mailto:)/.test(url) ? url : `https://${url}`;
 }
@@ -1077,6 +1490,46 @@ function mergeLinks(manual, extracted) {
     merged.push(l);
   }
   return merged;
+}
+
+const PLATFORM_LABELS = {
+  linkedin: "LinkedIn",
+  github: "GitHub",
+  behance: "Behance",
+  dribbble: "Dribbble",
+  website: "Website",
+  email: "Email",
+  youtube: "YouTube",
+  instagram: "Instagram",
+  twitter: "X / Twitter",
+  x: "X / Twitter",
+  "x / twitter": "X / Twitter",
+  medium: "Medium",
+  notion: "Notion"
+};
+
+function prettyPlatform(p) {
+  if (!p) return "Link";
+  const known = PLATFORM_LABELS[p.toLowerCase().trim()];
+  if (known) return known;
+  return p.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// text-labeled (not a bare initial) so every extracted link is legible on
+// sight — a single ambiguous letter reads as "did this even extract?".
+function SocialLinkPill({ platform, url }) {
+  if (!url) return null;
+  return (
+    <a
+      href={withScheme(url)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] pl-2.5 pr-3 py-1.5 text-white/70 text-[11px] font-semibold hover:text-evolve-yellow hover:border-evolve-yellow/40 transition-colors flex-shrink-0"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow/70 flex-shrink-0" />
+      {prettyPlatform(platform)}
+    </a>
+  );
 }
 
 function LinkPill({ href, label, children }) {
@@ -1147,9 +1600,7 @@ function ProfileLinksRow({
         </LinkPill>
       )}
       {links.map((l, i) => (
-        <LinkPill key={i} href={l.url} label={l.platform}>
-          {(l.platform || "?")[0].toUpperCase()}
-        </LinkPill>
+        <SocialLinkPill key={i} platform={l.platform} url={l.url} />
       ))}
     </div>
   );
@@ -1166,6 +1617,8 @@ export function AIProfileReveal({
   if (!profile) return null;
   const {
     role,
+    skills,
+    persona_traits,
     niche,
     domain,
     sector,
@@ -1189,14 +1642,12 @@ export function AIProfileReveal({
     summary,
     recruiter_highlights,
     notable_works,
-    strengths,
-    gaps,
-    dimension_ratings,
-    key_gap
+    dimension_ratings
   } = profile;
 
+  const displayTools = inferToolRowsFromProfile(profile);
   const axes = computeSkillAxes(profile);
-  const heroScore = computeHeroScore(axes);
+  const heroScore = computeHeroScore(profile, axes);
   const expIdx = EXPERIENCE_BUCKETS.findIndex(
     (b) =>
       b.toLowerCase() ===
@@ -1205,16 +1656,19 @@ export function AIProfileReveal({
         .toLowerCase()
   );
   const verifiedCount = real_work_validation?.validated_count || 0;
-  const toolCount = (tool_proficiency || []).length;
+  const toolCount = displayTools.length;
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl border border-evolve-yellow/25 p-6 sm:p-8 flex flex-col gap-8"
-      style={{
-        background:
-          "linear-gradient(160deg, rgba(255,208,7,0.06), rgba(255,255,255,0.015))"
-      }}
+      className="relative overflow-hidden rounded-3xl border border-white/10 p-6 sm:p-8 flex flex-col gap-8"
+      style={{ backgroundColor: "#18181b" }}
     >
+      <div
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{
+          background: `linear-gradient(90deg, ${YELLOW}, ${STRONG_GREEN})`
+        }}
+      />
       <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
         <HeroScoreRing score={heroScore} />
         <div className="flex flex-col gap-3 min-w-0">
@@ -1253,13 +1707,49 @@ export function AIProfileReveal({
         <StatTile label="Tools Cited" value={toolCount} />
       </div>
 
+      <FactStrip
+        items={[
+          { label: "Location", value: location, tone: STRONG_GREEN },
+          { label: "Preference", value: work_preference, tone: YELLOW },
+          { label: "Status", value: current_status, tone: GROWTH_AMBER },
+          { label: "Target Work", value: type_of_work_wanted, tone: YELLOW }
+        ]}
+      />
+
+      <SignalMeterGrid profile={profile} axes={axes} />
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <RoleFitMap
+          role={role}
+          business={understanding_of_business}
+          clarity={foundational_clarity}
+        />
+        <ProofDepthPanel
+          links={links}
+          projects={notable_works}
+          validated={real_work_validation?.validated_count}
+          tools={displayTools}
+        />
+      </div>
+
+      <StrongGrowthZones ratings={dimension_ratings} />
+
+      <SkillChips skills={skills} />
+
       <RecruiterHighlights points={recruiter_highlights} />
 
+      <PersonaTraits traits={persona_traits} />
+
       {summary && (
-        <blockquote className="border-l-2 border-evolve-yellow pl-4 text-white/80 text-base leading-relaxed italic">
-          &ldquo;{summary}&rdquo;
-        </blockquote>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3.5 flex items-center gap-3">
+          <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
+          <p className="text-white/75 text-sm leading-snug">
+            {summary}
+          </p>
+        </div>
       )}
+
+      <InterviewFocus ratings={dimension_ratings} traits={persona_traits} />
 
       <NotableWorks works={notable_works} />
 
@@ -1290,7 +1780,7 @@ export function AIProfileReveal({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 items-start">
+      <div className="grid md:grid-cols-2 gap-6 items-start rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <div className="flex flex-col gap-2">
           <p className="text-white/40 text-[11px] uppercase tracking-wide">
             Skill Signal
@@ -1337,12 +1827,12 @@ export function AIProfileReveal({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <div className="flex flex-col gap-2">
           <p className="text-white/40 text-[11px] uppercase tracking-wide">
             Tool Emphasis
           </p>
-          <ToolBarChart tools={tool_proficiency} />
+          <ToolBarChart tools={displayTools} />
           {ai_proficiency?.present && (
             <Tag>
               AI ·{" "}
@@ -1359,58 +1849,20 @@ export function AIProfileReveal({
             unvalidated={real_work_validation?.unvalidated_count}
           />
           {real_work_validation?.key_points?.length > 0 && (
-            <ul className="flex flex-col gap-1 mt-1">
+            <div className="flex flex-wrap gap-1.5 mt-1">
               {real_work_validation.key_points.map((pt, i) => (
-                <li
+                <span
                   key={i}
-                  className="text-white/50 text-xs leading-snug flex gap-1.5"
+                  title={pt}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-white/50 text-[11px] leading-none"
                 >
-                  <span className="text-evolve-yellow/60 flex-shrink-0">•</span>
-                  <span>{pt}</span>
-                </li>
+                  {pt}
+                </span>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </div>
-
-      {(dimension_ratings?.length > 0 ||
-        strengths?.length > 0 ||
-        gaps ||
-        key_gap) && (
-        <div className="flex flex-col gap-6 pt-4 border-t border-white/10">
-          <p className="text-white/40 text-[11px] uppercase tracking-wide">
-            Senior Design Review
-          </p>
-
-          <DimensionRatings ratings={dimension_ratings} />
-
-          {strengths?.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-white/40 text-[11px] uppercase tracking-wide">
-                What&rsquo;s working
-              </p>
-              <EvidenceList items={strengths} />
-            </div>
-          )}
-
-          {gaps && (
-            <div className="grid sm:grid-cols-3 gap-4">
-              <GapCategory
-                label="Portfolio & Case Studies"
-                items={gaps.portfolio_execution}
-              />
-              <GapCategory
-                label="Thinking & Process"
-                items={gaps.thinking_process}
-              />
-              <GapCategory label="Positioning" items={gaps.positioning} />
-            </div>
-          )}
-
-          <KeyGapCallout keyGap={key_gap} />
-        </div>
-      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
         {[

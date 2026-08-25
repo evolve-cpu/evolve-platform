@@ -30,6 +30,22 @@ const DB_HEADERS = {
 const MAX_IMAGES = 6;
 const MAX_TEXT_CHARS = 20000;
 
+type ExtractedProfile = {
+  portfolio?: {
+    pages?: Array<{
+      text?: string;
+      url?: string;
+      screenshot_urls?: string[];
+    }>;
+    note?: string;
+  };
+  resume?: {
+    source_url?: string;
+    text?: string;
+    note?: string;
+  };
+};
+
 /* ── Supabase REST helpers ───────────────────────────────────────────────── */
 
 async function dbUpdate(userId: string, payload: Record<string, unknown>): Promise<void> {
@@ -52,7 +68,7 @@ async function dbFetchExtracted(userId: string): Promise<Record<string, unknown>
 
 /* ── Gather raw text + screenshots already captured by extract-profile-data ── */
 
-function buildRawText(extracted: Record<string, any>): string {
+function buildRawText(extracted: ExtractedProfile): string {
   const parts: string[] = [];
   for (const p of extracted?.portfolio?.pages ?? []) {
     if (p.text) parts.push(`--- Portfolio page: ${p.url} ---\n${p.text}`);
@@ -63,7 +79,7 @@ function buildRawText(extracted: Record<string, any>): string {
   return parts.join("\n\n").slice(0, MAX_TEXT_CHARS);
 }
 
-function collectScreenshotUrls(extracted: Record<string, any>): string[] {
+function collectScreenshotUrls(extracted: ExtractedProfile): string[] {
   const urls: string[] = [];
   for (const p of extracted?.portfolio?.pages ?? []) {
     for (const u of p.screenshot_urls ?? []) urls.push(u);
@@ -89,35 +105,27 @@ async function imageToInlineData(url: string): Promise<{ mimeType: string; data:
    "Logic" column becomes both a schema-level description (guides the shape
    of the answer) and part of the system framing (guides the reasoning). ─── */
 
-const SYSTEM_PROMPT = `You are a senior design leader at Evolve — the kind of reviewer who has hired, mentored, and reviewed hundreds of designer portfolios — forming a structured, honest read of where this designer actually stands. This is an internal analysis, not feedback written for the candidate to read: your job is to reach an accurate judgment from the evidence, not to be encouraging or diplomatic.
+const SYSTEM_PROMPT = `You are a senior design leader at Evolve, building this designer's PROFILE — not writing a review of their portfolio, and not writing anyone's opinion of them. Nobody reading your output should come away needing to open the original portfolio/resume to check your work; the whole point is that they never have to. A review is a document of someone's opinions about another document — readers who hit an opinion instinctively want to go verify it against the source, which defeats the entire purpose. A profile is different in kind: it states, as data, who this person is and what they can do — the same way a recruiter's own mental model of a strong candidate is a set of tags, scores, and a clear read, not a paragraph of critique to be fact-checked. You have hired, mentored, and reviewed hundreds of designer portfolios, and you're using that judgment here for exactly one purpose: to convert dense, one-off portfolio prose into compact, structured, decisive signal — skill tags, trait scores, a strong-zones/growth-zones map — that stands on its own forever, independent of the portfolio that produced it and never phrased as "this reviewer thinks." This is internal analysis, not feedback written for the candidate to read: reach an accurate read from the evidence, don't be encouraging or diplomatic — but nothing you output should read as a critique, a take, or something-to-verify. It should read as fact about the candidate.
+
+The single biggest failure mode to avoid: a dense sentence that quietly encodes several distinct facts, left as one sentence instead of being pulled apart into structured fields. Example — "logo design showcases focus on visual deliverables without showing research or design iterations" is not one finding, it's at least three: (1) this person does logo design — a skill nobody had tagged, (2) their execution/production craft is strong, (3) their research/process depth is weak. Filed correctly: (1) becomes a skills entry, (2) and (3) become a persona_traits placement, and the strong/weak read of (2)/(3) also shows up as where "Execution Craft" and "Research Depth" land in dimension_ratings. Nowhere does this stay a sentence for someone to read and second-guess. Do this decomposition for every substantive observation before you finalize any field — there is no field in this schema for a standalone opinion sentence, so if you find yourself forming one, route it into skills, persona_traits, or dimension_ratings instead.
 
 Work in two disciplined passes:
 
-1. FACTS FIRST. Before judging anything, privately inventory what's actually true and checkable: how many case studies, whether each states a problem / shows research or user insight / shows the solution / states a result / includes a reflection, whether any stated result is a specific number vs a vague description vs missing, how many industries/domains the work covers, whether about/contact/resume/LinkedIn links actually work, whether the portfolio and resume agree with each other (same title, same key projects, no identically copy-pasted text, consistent dates), total years of experience and any unexplained gaps, whether case studies name real clients vs are purely self-initiated/academic, which tools are actually evidenced in the text (not just shown as a logo grid), which contact/social/profile URLs appear literally in the text (the portfolio pages you're given were rendered to markdown, so real hyperlink URLs are present in the source, not just link labels — read them out rather than inferring them), and which specific case studies have their own specific link (a live site, a case-study permalink, a Behance/Dribbble shot) versus none. No adjectives at this stage — just what's there.
+1. FACTS FIRST. Before judging anything, privately inventory what's actually true and checkable: how many case studies, whether each states a problem / shows research or user insight / shows the solution / states a result / includes a reflection, whether any stated result is a specific number vs a vague description vs missing, how many industries/domains the work covers, whether about/contact/resume/LinkedIn links actually work, whether the portfolio and resume agree with each other (same title, same key projects, no identically copy-pasted text, consistent dates), total years of experience and any unexplained gaps, whether case studies name real clients vs are purely self-initiated/academic, which tools are actually evidenced in the text (not just shown as a logo grid), the COMPLETE list of every contact/social/profile URL that appears literally anywhere in the text — resume header, portfolio footer, about/contact section — not just the first one or two you notice (the portfolio pages you're given were rendered to markdown, so real hyperlink URLs are present in the source, not just link labels — read them all out rather than inferring or truncating the list), and which specific case studies have their own specific link (a live site, a case-study permalink, a Behance/Dribbble shot) versus none. No adjectives at this stage — just what's there.
 
-2. JUDGMENT, disciplined and traceable. Every opinion you state — every strength, every gap, every rating — must be able to answer "how do you know that?" with a specific fact: a count, a yes/no, a quoted phrase, a named project. If you can't point to one, soften the language or drop the claim rather than stating it as settled. Never state a general impression ("good visual sense", "strong communicator") as a finding — always name the project or fact behind it.
+2. JUDGMENT, disciplined and traceable, but always landed as a placed score or tag, never as a sentence of commentary. Every skill tag, every trait placement, every dimension score must be able to answer "how do you know that?" with a specific fact: a count, a yes/no, a quoted phrase, a named project — held privately as your reasoning, distilled down to the tag/score itself in the output. If you can't point to a specific fact, don't include the tag or soften the score toward the uncertain middle rather than asserting it. Never let a general impression ("good visual sense", "strong communicator") stand in for a real skill or dimension.
 
-Follow this exact reasoning order for the judgment fields:
-- Step 1 (stage): Place the designer by stage using resume facts — years, titles, employment history. This changes what counts as a real gap: an early-stage gap is almost always a missing fundamental (problem framing, process); a senior gap is almost never that — it's usually about whether the portfolio makes the case for leadership, strategy, or scope. Judging a senior person on junior criteria, or a junior person on senior criteria, is the single easiest way to get this wrong.
-- Step 2 (strengths): Find genuine strengths. Each must point to a specific project, decision, or fact — never a general impression.
-- Step 3 (gaps): Find gaps, sorted into three areas — portfolio/case-study execution, thinking/process depth, and positioning/narrative. Diagnose what's wrong; do not propose fixes. Calibrate every gap to the stage from Step 1. Leave a category's array empty if there is genuinely nothing to flag there — don't invent a gap to fill it.
-- Step 4 (dimension_ratings): Rate 3-4 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage (e.g. first impression, depth of thinking/process or case-study depth for someone senior, how well it's presented/curated, clarity of positioning or how senior it reads).
-- Step 5 (key_gap): Before naming the single most important issue, state plainly what's already solid. Then isolate the ONE underlying problem actually holding this person back the most — never an equal-weight list of every issue found.
+Follow this exact reasoning order:
+- Step 1 (stage): Place the designer by stage using resume facts — years, titles, employment history. This changes what counts as a real strength or a real growth area: for an early-stage person a missing fundamental (problem framing, process) is a genuine growth area; for a senior person it almost never is — the real question is whether the portfolio makes the case for leadership, strategy, or scope. Judging a senior person on junior criteria, or a junior person on senior criteria, is the single easiest way to get this wrong.
+- Step 2 (skills): List every distinct design craft/deliverable type actually evidenced by the work itself — not software (that's tool_proficiency) but what kinds of things they've designed: logo/brand identity, illustration, packaging, editorial, motion, UI screens, design systems, UX research, service design, art direction, etc. A skill only counts if you can point to a project that demonstrates it. In a separate dedicated pass, also inventory software/tools from resume skills sections, project process text, captions, screenshots, and visible UI/prototype references; do not leave tool_proficiency empty when any actual tool name appears anywhere in the source.
+- Step 3 (persona_traits): Pick the 3-4 spectrum tensions that most usefully describe how this person works, and place them on each — e.g. execution/production craft vs. research/process depth, visual craft vs. strategic/business framing, fast-and-prolific vs. deep-and-iterative, solo maker vs. systems/team thinking. These are exactly the kind of thing a dense review sentence usually smuggles in ("focuses on visual deliverables without showing research") — surface it here as a placed, evidenced score instead of leaving it buried in a sentence.
+- Step 4 (dimension_ratings): This is the strong-zones/growth-zones map, and now the ONLY place a strength or a growth area gets stated — there is no separate strengths/gaps prose anywhere else in this schema. Rate 4-6 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage and their work (e.g. execution craft, research/process depth, business framing, presentation/curation, clarity of positioning, systems thinking, leadership scope for someone senior). Spread the scores honestly across the real range (Strong down to Weak) so the set actually reads as a map of strong vs. growing areas, not a wall of "Good."
 
 Ground every field in the actual evidence you were given (portfolio text, resume text, screenshots). Where the evidence is genuinely absent, say so plainly using the exact fallback language specified per field below — never guess or invent specifics like names, companies, or numbers that are not present in the material.
 
 URLs are a hard case of this rule: only output a URL (a social/profile link, a project link) if it appears verbatim in the text you were given. Never construct one from a handle, name, or platform guess (e.g. never turn "Jane on Dribbble" into a dribbble.com URL unless that exact URL is in the text). If no URL is present for something, output null/empty rather than a best guess.
 
-Write every "key_points"/"evidence" field as short, scannable fragments citing the specific thing you saw (a phrase, a project name, a metric) — not a generic restatement of the category.`;
-
-const EVIDENCE_ITEM = {
-  type: "OBJECT",
-  properties: {
-    finding: { type: "STRING", description: "The finding, stated plainly — one sentence." },
-    evidence: { type: "STRING", description: "The specific fact/project/quote that backs it up." },
-  },
-  required: ["finding", "evidence"],
-};
+Every "key_points"/"evidence" field is a short, scannable fragment citing the specific thing you saw (a phrase, a project name, a metric) — never a generic restatement of the category, and never more than 8 words. Treat the UI as an infographic: labels, counts, tags, scores, bars, and project blocks do the work. Avoid prose unless a field explicitly asks for a compact read.`;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -127,7 +135,7 @@ const RESPONSE_SCHEMA = {
       description: "Step 1 — place the designer by career stage from resume facts (years, titles, history) before judging anything else, since what counts as a real gap changes completely by stage.",
       properties: {
         level: { type: "STRING", enum: ["Early", "Developing", "Mid-level", "Senior"] },
-        reasoning: { type: "STRING", description: "One short sentence citing the specific fact (years, title, history) that places them at this stage." },
+        reasoning: { type: "STRING", description: "One compact fragment citing the specific fact (years, title, history) that places them at this stage. 8 words max." },
       },
       required: ["level", "reasoning"],
     },
@@ -139,6 +147,33 @@ const RESPONSE_SCHEMA = {
         secondary: { type: "STRING", nullable: true },
       },
       required: ["primary"],
+    },
+    skills: {
+      type: "ARRAY",
+      description: "Step 2 — every distinct design craft/deliverable type actually evidenced by the work itself (logo/brand identity, illustration, packaging, editorial, motion, UI screens, design systems, UX research, service design, art direction, etc.) — not software/tools, and not the same list as `role`/`niche`. This is what fixes a skill like 'logo design' being visible in the case studies but never surfaced anywhere else in the profile. 4-10 items, most-evidenced first.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          skill: { type: "STRING", description: "The craft/deliverable type, in plain language (e.g. 'Logo & Brand Identity', 'UX Research', 'Motion Design')." },
+          level: { type: "STRING", enum: ["Core", "Practiced", "Exposure"], description: "Core = central to multiple projects; Practiced = clearly done well at least once; Exposure = touched on but thin evidence." },
+          evidence: { type: "STRING", description: "The specific project/phrase this skill is drawn from. 8 words max." },
+        },
+        required: ["skill", "level", "evidence"],
+      },
+    },
+    persona_traits: {
+      type: "ARRAY",
+      description: "Step 3 — 3-4 spectrum tensions that most usefully describe how this person works, each placed with an evidenced score rather than left buried in a sentence (e.g. a case study that's all polished visuals with no visible process reads as execution-heavy/research-light — that placement belongs here, not just as a gap sentence). Pick whichever tensions are most revealing for this person; typical ones: execution/production craft vs. research/process depth, visual craft vs. strategic/business framing, fast-and-prolific vs. deep-and-iterative, solo maker vs. systems/team thinking.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          left_label: { type: "STRING", description: "The pole at score 1, e.g. 'Execution-led'." },
+          right_label: { type: "STRING", description: "The pole at score 5, e.g. 'Research-led'." },
+          score: { type: "INTEGER", description: "1-5 placement on the spectrum between left_label (1) and right_label (5). Use 3 only if the evidence genuinely shows both, not as a default when unsure." },
+          evidence: { type: "STRING", description: "The specific project/phrase that places them here. 8 words max." },
+        },
+        required: ["left_label", "right_label", "score", "evidence"],
+      },
     },
     niche: {
       type: "STRING",
@@ -165,7 +200,7 @@ const RESPONSE_SCHEMA = {
       description: "Scan case-study process sections for collaboration language ('worked closely with', 'led a team of X', 'solo project', 'cross-functional'). Tag each project Solo/Collaborative/Leadership.",
       properties: {
         mode: { type: "STRING", enum: ["Solo", "Collaborative", "Leadership", "Mixed"] },
-        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 short fragments citing the specific language/project found." },
+        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact chips citing the specific language/project found. 8 words max each." },
       },
       required: ["mode", "key_points"],
     },
@@ -174,7 +209,7 @@ const RESPONSE_SCHEMA = {
       description: "Whether case studies frame the problem in business terms (goals, KPIs, ROI) vs purely visual/UI framing.",
       properties: {
         score: { type: "STRING", enum: ["Strong", "Partial", "Absent"] },
-        key_points: { type: "ARRAY", items: { type: "STRING" } },
+        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact evidence chips. 8 words max each." },
       },
       required: ["score", "key_points"],
     },
@@ -183,7 +218,7 @@ const RESPONSE_SCHEMA = {
       description: "Whether each case study follows a legible problem → process → solution structure with visible reasoning, not just polished screens.",
       properties: {
         score: { type: "STRING", enum: ["High", "Medium", "Low"] },
-        key_points: { type: "ARRAY", items: { type: "STRING" } },
+        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact evidence chips. 8 words max each." },
       },
       required: ["score", "key_points"],
     },
@@ -192,7 +227,7 @@ const RESPONSE_SCHEMA = {
       description: "Evidence of active skill development: courses/certifications, a learning-focused case study, workshops, or visible skill progression across dated work.",
       properties: {
         present: { type: "BOOLEAN" },
-        key_points: { type: "ARRAY", items: { type: "STRING" } },
+        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact evidence chips. 8 words max each." },
       },
       required: ["present", "key_points"],
     },
@@ -207,14 +242,14 @@ const RESPONSE_SCHEMA = {
     },
     tool_proficiency: {
       type: "ARRAY",
-      description: "Tools with actual textual evidence in project descriptions (e.g. 'prototyped in Figma') — not just a logo grid.",
+      description: "Software/tools used to create the work. Search the entire source: resume skills, project process, project captions, portfolio UI text, screenshots, and AI-tool mentions. Include tool names from a tools/logo grid only when the tool name is readable or clearly stated; otherwise use project/process evidence. Do not leave empty if any real tool name appears anywhere.",
       items: {
         type: "OBJECT",
         properties: {
           name: { type: "STRING" },
           emphasis: {
             type: "INTEGER",
-            description: "How central this tool is to their process, based on textual evidence: 3 = repeated across multiple projects/central to their workflow, 2 = used and mentioned meaningfully, 1 = mentioned once or lightly.",
+            description: "How central this tool is to their process: 3 = repeated across multiple projects/central workflow, 2 = used meaningfully in project/resume evidence, 1 = appears once, in a readable tool list, or in screenshot evidence.",
           },
         },
         required: ["name", "emphasis"],
@@ -236,7 +271,7 @@ const RESPONSE_SCHEMA = {
       properties: {
         validated_count: { type: "INTEGER" },
         unvalidated_count: { type: "INTEGER" },
-        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "Name the actual client/company names found, if any." },
+        key_points: { type: "ARRAY", items: { type: "STRING" }, description: "Name actual client/company/project names found. 8 words max each." },
       },
       required: ["validated_count", "unvalidated_count", "key_points"],
     },
@@ -271,7 +306,7 @@ const RESPONSE_SCHEMA = {
     },
     links: {
       type: "OBJECT",
-      description: "Contact/profile/social URLs found verbatim in the portfolio or resume text — so a viewer can reach this person's real profiles without the designer having to type them in separately. Only fill a field if that exact URL is present in the source text; leave it null otherwise. Never construct a URL from a handle or platform name.",
+      description: "Contact/profile/social URLs found verbatim in the portfolio or resume text — so a viewer can reach this person's real profiles without the designer having to type them in separately. Before filling this in, do one dedicated full pass over the ENTIRE source text (resume header/contact block, portfolio footer, about/contact page, any social-icon row) purely to inventory every URL and handle mentioned — do not stop after finding the first one or two, resumes and portfolio footers routinely list four or more (LinkedIn, GitHub/Behance/Dribbble, a personal site, and often a YouTube/Twitter/Instagram handle too). Only fill a field if that exact URL is present in the source text; leave it null otherwise. Never construct a URL from a handle or platform name.",
       properties: {
         linkedin: { type: "STRING", nullable: true },
         github: { type: "STRING", nullable: true },
@@ -281,7 +316,7 @@ const RESPONSE_SCHEMA = {
         email: { type: "STRING", nullable: true },
         other: {
           type: "ARRAY",
-          description: "Any other named platform link found (X/Twitter, Instagram, YouTube, Medium, Notion, etc.) that doesn't fit the fields above.",
+          description: "Every other named platform link found (X/Twitter, Instagram, YouTube, Medium, Notion, Threads, TikTok, etc.) that doesn't fit the named fields above — this is a catch-all, not an afterthought, so include ALL of them, not just the first one found.",
           items: {
             type: "OBJECT",
             properties: {
@@ -296,12 +331,12 @@ const RESPONSE_SCHEMA = {
     },
     summary: {
       type: "STRING",
-      description: "3-4 sentences, written the way a senior design hiring lead would summarize this candidate to a hiring committee — direct, specific to the evidence, no generic praise.",
+      description: "One compact hiring read, 12-18 words max. It will be displayed as a visual callout, not a paragraph.",
     },
     recruiter_highlights: {
       type: "ARRAY",
       items: { type: "STRING" },
-      description: "3-5 short, specific, scannable bullets (5-12 words each) written for a recruiter skimming this profile in under a minute — the concrete reasons to shortlist this candidate. Cite specifics (a real project, a named client, a metric, a tool), never generic praise like 'strong communicator' or 'great eye for detail'. If the evidence is thin, say so plainly rather than padding — e.g. 'Limited portfolio depth — only 1 case study available'.",
+      description: "3-5 chip-sized shortlist signals, 3-8 words each. Cite specifics (project, client, metric, tool), never generic praise. If evidence is thin, say it plainly.",
     },
     notable_works: {
       type: "ARRAY",
@@ -312,57 +347,32 @@ const RESPONSE_SCHEMA = {
           title: { type: "STRING", description: "The project/case-study name or title, exactly as named in the source." },
           link: { type: "STRING", nullable: true, description: "The specific URL for this project, only if one appears in the text; null otherwise." },
           client: { type: "STRING", nullable: true, description: "Named client/company, only if stated; null if self-initiated, academic, or unnamed." },
-          summary: { type: "STRING", description: "One scannable sentence on what the project was and this person's role in it, drawn from the actual case-study text." },
+          summary: { type: "STRING", description: "A project-block caption, 6-10 words max, drawn from the actual case-study text." },
         },
         required: ["title", "link", "client", "summary"],
       },
     },
-    strengths: {
-      type: "ARRAY",
-      description: "Step 2 — genuine strengths. Each must point to a specific project, decision, or fact — never a general impression.",
-      items: EVIDENCE_ITEM,
-    },
-    gaps: {
-      type: "OBJECT",
-      description: "Step 3 — real gaps sorted into three areas, calibrated to the stage above. Diagnose only, don't propose fixes. Leave an array empty if that area genuinely has nothing to flag — don't invent a gap to fill it.",
-      properties: {
-        portfolio_execution: { type: "ARRAY", items: EVIDENCE_ITEM, description: "Problems with the portfolio/case studies themselves — execution, completeness, presentation." },
-        thinking_process: { type: "ARRAY", items: EVIDENCE_ITEM, description: "Problems with the thinking or process behind the work — reasoning, problem-framing, depth." },
-        positioning: { type: "ARRAY", items: EVIDENCE_ITEM, description: "Problems with how the person is positioning themselves — unclear direction/target role, narrative doesn't match the work." },
-      },
-      required: ["portfolio_execution", "thinking_process", "positioning"],
-    },
     dimension_ratings: {
       type: "ARRAY",
-      description: "Step 4 — rate 3-4 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone. Typical: first impression, depth of thinking/process (or case study depth if senior), presentation/curation, clarity of positioning (or how senior it reads, if senior).",
+      description: "Step 4 — the strong-zones/growth-zones map, and the only place a strength or a growth area gets stated anywhere in this profile. Rate 4-6 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage and work (e.g. execution craft, research/process depth, business framing, presentation/curation, clarity of positioning, systems thinking, leadership scope for someone senior). Spread scores honestly across the real range so the set reads as a genuine map of strong vs. growing areas, not a wall of one score.",
       items: {
         type: "OBJECT",
         properties: {
           dimension: { type: "STRING" },
           score: { type: "STRING", enum: ["Strong", "Good", "Partial", "Developing", "Unclear", "Weak"] },
-          evidence: { type: "STRING" },
+          evidence: { type: "STRING", description: "One compact evidence chip: phrase, project name, or fact. 8 words max." },
         },
         required: ["dimension", "score", "evidence"],
       },
     },
-    key_gap: {
-      type: "OBJECT",
-      description: "Step 5 — the one gap that matters most. First state plainly what's already solid, then isolate the single underlying issue actually holding this person back the most — never an equal-weight list of every issue found.",
-      properties: {
-        whats_solid: { type: "STRING", description: "1-2 sentences on what's already genuinely solid, before naming the issue." },
-        issue: { type: "STRING", description: "The one underlying problem, stated plainly in 1 sentence." },
-        evidence: { type: "STRING", description: "The specific fact that backs this up." },
-      },
-      required: ["whats_solid", "issue", "evidence"],
-    },
   },
   required: [
-    "stage", "role", "niche", "domain", "sector", "work_experience", "type_of_work_wanted",
-    "team_work_proficiency", "understanding_of_business", "foundational_clarity",
+    "stage", "role", "skills", "persona_traits", "niche", "domain", "sector", "work_experience",
+    "type_of_work_wanted", "team_work_proficiency", "understanding_of_business", "foundational_clarity",
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
     "salary_expectations", "current_status", "links", "summary", "recruiter_highlights",
-    "notable_works", "strengths", "gaps", "dimension_ratings", "key_gap",
+    "notable_works", "dimension_ratings",
   ],
 };
 
@@ -425,7 +435,7 @@ serve(async (req) => {
           contents: [{ role: "user", parts }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 8500,
+            maxOutputTokens: 8000,
             responseMimeType: "application/json",
             responseSchema: RESPONSE_SCHEMA,
           },
