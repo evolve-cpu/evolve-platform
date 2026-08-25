@@ -93,7 +93,7 @@ const SYSTEM_PROMPT = `You are a senior design leader at Evolve — the kind of 
 
 Work in two disciplined passes:
 
-1. FACTS FIRST. Before judging anything, privately inventory what's actually true and checkable: how many case studies, whether each states a problem / shows research or user insight / shows the solution / states a result / includes a reflection, whether any stated result is a specific number vs a vague description vs missing, how many industries/domains the work covers, whether about/contact/resume/LinkedIn links actually work, whether the portfolio and resume agree with each other (same title, same key projects, no identically copy-pasted text, consistent dates), total years of experience and any unexplained gaps, whether case studies name real clients vs are purely self-initiated/academic, and which tools are actually evidenced in the text (not just shown as a logo grid). No adjectives at this stage — just what's there.
+1. FACTS FIRST. Before judging anything, privately inventory what's actually true and checkable: how many case studies, whether each states a problem / shows research or user insight / shows the solution / states a result / includes a reflection, whether any stated result is a specific number vs a vague description vs missing, how many industries/domains the work covers, whether about/contact/resume/LinkedIn links actually work, whether the portfolio and resume agree with each other (same title, same key projects, no identically copy-pasted text, consistent dates), total years of experience and any unexplained gaps, whether case studies name real clients vs are purely self-initiated/academic, which tools are actually evidenced in the text (not just shown as a logo grid), which contact/social/profile URLs appear literally in the text (the portfolio pages you're given were rendered to markdown, so real hyperlink URLs are present in the source, not just link labels — read them out rather than inferring them), and which specific case studies have their own specific link (a live site, a case-study permalink, a Behance/Dribbble shot) versus none. No adjectives at this stage — just what's there.
 
 2. JUDGMENT, disciplined and traceable. Every opinion you state — every strength, every gap, every rating — must be able to answer "how do you know that?" with a specific fact: a count, a yes/no, a quoted phrase, a named project. If you can't point to one, soften the language or drop the claim rather than stating it as settled. Never state a general impression ("good visual sense", "strong communicator") as a finding — always name the project or fact behind it.
 
@@ -105,6 +105,8 @@ Follow this exact reasoning order for the judgment fields:
 - Step 5 (key_gap): Before naming the single most important issue, state plainly what's already solid. Then isolate the ONE underlying problem actually holding this person back the most — never an equal-weight list of every issue found.
 
 Ground every field in the actual evidence you were given (portfolio text, resume text, screenshots). Where the evidence is genuinely absent, say so plainly using the exact fallback language specified per field below — never guess or invent specifics like names, companies, or numbers that are not present in the material.
+
+URLs are a hard case of this rule: only output a URL (a social/profile link, a project link) if it appears verbatim in the text you were given. Never construct one from a handle, name, or platform guess (e.g. never turn "Jane on Dribbble" into a dribbble.com URL unless that exact URL is in the text). If no URL is present for something, output null/empty rather than a best guess.
 
 Write every "key_points"/"evidence" field as short, scannable fragments citing the specific thing you saw (a phrase, a project name, a metric) — not a generic restatement of the category.`;
 
@@ -267,6 +269,31 @@ const RESPONSE_SCHEMA = {
       type: "STRING",
       description: "Explicit status language ('currently at X', 'open to work', 'on notice period'). 'Not specified' if absent.",
     },
+    links: {
+      type: "OBJECT",
+      description: "Contact/profile/social URLs found verbatim in the portfolio or resume text — so a viewer can reach this person's real profiles without the designer having to type them in separately. Only fill a field if that exact URL is present in the source text; leave it null otherwise. Never construct a URL from a handle or platform name.",
+      properties: {
+        linkedin: { type: "STRING", nullable: true },
+        github: { type: "STRING", nullable: true },
+        behance: { type: "STRING", nullable: true },
+        dribbble: { type: "STRING", nullable: true },
+        personal_website: { type: "STRING", nullable: true, description: "A personal/portfolio domain distinct from the main portfolio_link already on file, if a different one is mentioned in the text (e.g. a blog or a separate case-study site)." },
+        email: { type: "STRING", nullable: true },
+        other: {
+          type: "ARRAY",
+          description: "Any other named platform link found (X/Twitter, Instagram, YouTube, Medium, Notion, etc.) that doesn't fit the fields above.",
+          items: {
+            type: "OBJECT",
+            properties: {
+              platform: { type: "STRING" },
+              url: { type: "STRING" },
+            },
+            required: ["platform", "url"],
+          },
+        },
+      },
+      required: ["linkedin", "github", "behance", "dribbble", "personal_website", "email", "other"],
+    },
     summary: {
       type: "STRING",
       description: "3-4 sentences, written the way a senior design hiring lead would summarize this candidate to a hiring committee — direct, specific to the evidence, no generic praise.",
@@ -275,6 +302,20 @@ const RESPONSE_SCHEMA = {
       type: "ARRAY",
       items: { type: "STRING" },
       description: "3-5 short, specific, scannable bullets (5-12 words each) written for a recruiter skimming this profile in under a minute — the concrete reasons to shortlist this candidate. Cite specifics (a real project, a named client, a metric, a tool), never generic praise like 'strong communicator' or 'great eye for detail'. If the evidence is thin, say so plainly rather than padding — e.g. 'Limited portfolio depth — only 1 case study available'.",
+    },
+    notable_works: {
+      type: "ARRAY",
+      description: "3-6 of the strongest, most representative case studies/projects found in the portfolio or resume, picked so a recruiter can click straight into the best evidence instead of hunting for it. Only include a project you can point to a specific name/title for in the source text. Only set `link` when a specific URL for that individual project (a case-study permalink, live site, or Behance/Dribbble shot) appears in the text — leave it null rather than pointing everything at the general portfolio_link. Empty array if the source has no individually-identifiable projects.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING", description: "The project/case-study name or title, exactly as named in the source." },
+          link: { type: "STRING", nullable: true, description: "The specific URL for this project, only if one appears in the text; null otherwise." },
+          client: { type: "STRING", nullable: true, description: "Named client/company, only if stated; null if self-initiated, academic, or unnamed." },
+          summary: { type: "STRING", description: "One scannable sentence on what the project was and this person's role in it, drawn from the actual case-study text." },
+        },
+        required: ["title", "link", "client", "summary"],
+      },
     },
     strengths: {
       type: "ARRAY",
@@ -320,8 +361,8 @@ const RESPONSE_SCHEMA = {
     "team_work_proficiency", "understanding_of_business", "foundational_clarity",
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
-    "salary_expectations", "current_status", "summary", "recruiter_highlights",
-    "strengths", "gaps", "dimension_ratings", "key_gap",
+    "salary_expectations", "current_status", "links", "summary", "recruiter_highlights",
+    "notable_works", "strengths", "gaps", "dimension_ratings", "key_gap",
   ],
 };
 
@@ -384,7 +425,7 @@ serve(async (req) => {
           contents: [{ role: "user", parts }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 7000,
+            maxOutputTokens: 8500,
             responseMimeType: "application/json",
             responseSchema: RESPONSE_SCHEMA,
           },

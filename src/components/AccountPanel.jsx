@@ -281,6 +281,20 @@ const PORTFOLIO_ACCEPTED_TYPES = ".pdf,.pptx,.ppt,.odp,.zip";
 const RESUME_ACCEPTED_TYPES = ".pdf,.doc,.docx";
 const MAX_FILE_MB = 10;
 
+// work/social links a designer might want on their one-stop shared profile —
+// same {platform, url} shape as organizations.social_links so both features
+// share one mental model (see InstituteInfoPanel / InstitutePublicPage).
+const LINK_PLATFORMS = [
+  "linkedin",
+  "behance",
+  "dribbble",
+  "github",
+  "website",
+  "x / twitter",
+  "instagram",
+  "youtube"
+];
+
 function SourceEditor({
   mode,
   setMode,
@@ -368,6 +382,50 @@ function ExistingSourceRow({ link, fileUrl, onChange }) {
         className="text-evolve-yellow text-xs font-semibold flex-shrink-0 hover:opacity-80"
       >
         Change
+      </button>
+    </div>
+  );
+}
+
+function LinksEditor({ links, onAdd, onUpdate, onRemove }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {links.map((l, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <select
+            value={l.platform}
+            onChange={(e) => onUpdate(i, { platform: e.target.value })}
+            className="text-xs text-white/70 font-semibold rounded-lg px-2.5 py-2.5 outline-none flex-shrink-0 w-[110px] border border-[#373737]"
+            style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+          >
+            {LINK_PLATFORMS.map((p) => (
+              <option key={p} value={p} style={{ backgroundColor: "#1c1c1f", color: "#fff" }}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <input
+            value={l.url}
+            onChange={(e) => onUpdate(i, { url: e.target.value })}
+            placeholder="paste link…"
+            className="flex-1 text-sm text-white outline-none border border-[#373737] rounded-xl px-3 py-2.5 transition-colors focus:border-evolve-yellow/60"
+            style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(i)}
+            className="text-white/30 hover:text-red-400 w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg hover:bg-white/[0.04]"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={onAdd}
+        className="text-evolve-yellow text-xs font-semibold w-fit hover:opacity-80"
+      >
+        + add link
       </button>
     </div>
   );
@@ -892,6 +950,51 @@ function RecruiterHighlights({ points }) {
   );
 }
 
+// AI-extracted case studies with (when the source actually gave one) their
+// own link — clickable proof, pulled straight from the resume/portfolio
+// text instead of asked of the user.
+function NotableWorks({ works }) {
+  const list = (works || []).filter((w) => w?.title);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Notable Work
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {list.map((w, i) => {
+          const Tag = w.link ? "a" : "div";
+          const tagProps = w.link
+            ? { href: withScheme(w.link), target: "_blank", rel: "noopener noreferrer" }
+            : {};
+          return (
+            <Tag
+              key={i}
+              {...tagProps}
+              className={`flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 transition-colors ${w.link ? "hover:border-evolve-yellow/40" : ""}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-white text-sm font-bold leading-snug">{w.title}</p>
+                {w.link && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-evolve-yellow/70 flex-shrink-0 mt-0.5">
+                    <path d="M7 17L17 7M7 7h10v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              {w.client && (
+                <p className="text-evolve-yellow/70 text-[11px] font-semibold">{w.client}</p>
+              )}
+              {w.summary && (
+                <p className="text-white/50 text-xs leading-relaxed">{w.summary}</p>
+              )}
+            </Tag>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function CareerJourney({ journey }) {
   if (!journey?.length) return null;
   return (
@@ -910,7 +1013,106 @@ function CareerJourney({ journey }) {
   );
 }
 
-export function AIProfileReveal({ profile }) {
+// small circular icon buttons for portfolio / resume / each social link —
+// what makes the shared AI profile a one-stop hub instead of just a summary.
+function withScheme(url) {
+  return /^(https?:|mailto:)/.test(url) ? url : `https://${url}`;
+}
+
+// the AI extracts these straight out of the resume/portfolio text (see
+// `links` in analyze-profile-data's schema) — turned into the same
+// {platform, url} shape as the user's manually-added social_links so both
+// sources render through one merged, deduped list below.
+function linksObjectToArray(links) {
+  if (!links) return [];
+  const out = [];
+  if (links.linkedin) out.push({ platform: "linkedin", url: links.linkedin });
+  if (links.github) out.push({ platform: "github", url: links.github });
+  if (links.behance) out.push({ platform: "behance", url: links.behance });
+  if (links.dribbble) out.push({ platform: "dribbble", url: links.dribbble });
+  if (links.personal_website) out.push({ platform: "website", url: links.personal_website });
+  if (links.email) out.push({ platform: "email", url: `mailto:${links.email}` });
+  for (const o of links.other || []) {
+    if (o?.url) out.push({ platform: o.platform || "link", url: o.url });
+  }
+  return out;
+}
+
+function mergeLinks(manual, extracted) {
+  const seen = new Set();
+  const merged = [];
+  for (const l of [...(manual || []), ...extracted]) {
+    if (!l?.url) continue;
+    const key = l.url.trim().toLowerCase().replace(/\/$/, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(l);
+  }
+  return merged;
+}
+
+function LinkPill({ href, label, children }) {
+  if (!href) return null;
+  return (
+    <a
+      href={withScheme(href)}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={label}
+      className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/60 hover:text-evolve-yellow hover:border-evolve-yellow/40 text-[11px] font-bold flex-shrink-0 transition-colors"
+    >
+      {children}
+    </a>
+  );
+}
+
+function ProfileLinksRow({
+  portfolioLink,
+  portfolioFileUrl,
+  resumeLink,
+  resumeFileUrl,
+  socialLinks,
+  extractedLinks
+}) {
+  const portfolio = portfolioLink || portfolioFileUrl;
+  const resume = resumeLink || resumeFileUrl;
+  const links = mergeLinks(socialLinks, linksObjectToArray(extractedLinks));
+  if (!portfolio && !resume && !links.length) return null;
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {portfolio && (
+        <LinkPill href={portfolio} label="Portfolio">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+        </LinkPill>
+      )}
+      {resume && (
+        <LinkPill href={resume} label="Resume">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M9 13h6M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </LinkPill>
+      )}
+      {links.map((l, i) => (
+        <LinkPill key={i} href={l.url} label={l.platform}>
+          {(l.platform || "?")[0].toUpperCase()}
+        </LinkPill>
+      ))}
+    </div>
+  );
+}
+
+export function AIProfileReveal({
+  profile,
+  portfolioLink,
+  portfolioFileUrl,
+  resumeLink,
+  resumeFileUrl,
+  socialLinks
+}) {
   if (!profile) return null;
   const {
     role,
@@ -933,8 +1135,10 @@ export function AIProfileReveal({ profile }) {
     work_preference,
     salary_expectations,
     current_status,
+    links,
     summary,
     recruiter_highlights,
+    notable_works,
     strengths,
     gaps,
     dimension_ratings,
@@ -982,6 +1186,14 @@ export function AIProfileReveal({ profile }) {
             <Tag>{sector}</Tag>
             {type_of_work_wanted && <Tag>wants: {type_of_work_wanted}</Tag>}
           </div>
+          <ProfileLinksRow
+            portfolioLink={portfolioLink}
+            portfolioFileUrl={portfolioFileUrl}
+            resumeLink={resumeLink}
+            resumeFileUrl={resumeFileUrl}
+            socialLinks={socialLinks}
+            extractedLinks={links}
+          />
         </div>
       </div>
 
@@ -998,6 +1210,8 @@ export function AIProfileReveal({ profile }) {
           &ldquo;{summary}&rdquo;
         </blockquote>
       )}
+
+      <NotableWorks works={notable_works} />
 
       <div className="flex flex-col gap-2">
         <p className="text-white/40 text-[11px] uppercase tracking-wide">
@@ -1198,13 +1412,18 @@ function PortfolioResumeSection({ user }) {
   const [publicToggling, setPublicToggling] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [savedSocialLinks, setSavedSocialLinks] = useState([]);
+  const [savingLinks, setSavingLinks] = useState(false);
+  const linksDirty = JSON.stringify(socialLinks) !== JSON.stringify(savedSocialLinks);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status, ai_profile, ai_profile_status, ai_profile_public, username"
+          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status, ai_profile, ai_profile_status, ai_profile_public, social_links, username"
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -1219,6 +1438,8 @@ function PortfolioResumeSection({ user }) {
         setAiProfile(data.ai_profile || null);
         setAnalyzeStatus(data.ai_profile_status || "none");
         setIsPublic(!!data.ai_profile_public);
+        setSocialLinks(data.social_links || []);
+        setSavedSocialLinks(data.social_links || []);
         setEditingPortfolio(!data.portfolio_link && !data.portfolio_file_url);
         setEditingResume(!data.resume_link && !data.resume_file_url);
       }
@@ -1228,6 +1449,29 @@ function PortfolioResumeSection({ user }) {
       cancelled = true;
     };
   }, [user.id]);
+
+  function addLinkRow() {
+    setSocialLinks((l) => [...l, { platform: LINK_PLATFORMS[0], url: "" }]);
+  }
+  function updateLinkRow(i, patch) {
+    setSocialLinks((l) => l.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  }
+  function removeLinkRow(i) {
+    setSocialLinks((l) => l.filter((_, idx) => idx !== i));
+  }
+  async function handleSaveLinks() {
+    setSavingLinks(true);
+    const cleaned = socialLinks.filter((l) => l.url.trim());
+    const { error } = await supabase
+      .from("profiles")
+      .update({ social_links: cleaned })
+      .eq("id", user.id);
+    if (!error) {
+      setSocialLinks(cleaned);
+      setSavedSocialLinks(cleaned);
+    }
+    setSavingLinks(false);
+  }
 
   async function handleTogglePublic() {
     setPublicToggling(true);
@@ -1464,6 +1708,32 @@ function PortfolioResumeSection({ user }) {
             )}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label className="text-white/40 text-xs">
+              Work &amp; social links
+            </label>
+            <p className="text-white/30 text-[11px] -mt-1">
+              LinkedIn, Behance, Dribbble, GitHub, your site — shown on your
+              shared profile alongside the AI summary.
+            </p>
+            <LinksEditor
+              links={socialLinks}
+              onAdd={addLinkRow}
+              onUpdate={updateLinkRow}
+              onRemove={removeLinkRow}
+            />
+            {linksDirty && (
+              <button
+                type="button"
+                onClick={handleSaveLinks}
+                disabled={savingLinks}
+                className="self-start bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2 disabled:opacity-40 hover:bg-white/10 active:opacity-80 transition-colors"
+              >
+                {savingLinks ? "Saving…" : "Save links"}
+              </button>
+            )}
+          </div>
+
           {errorMsg && <p className="text-red-400 text-xs">{errorMsg}</p>}
 
           <button
@@ -1549,7 +1819,14 @@ function PortfolioResumeSection({ user }) {
               )}
 
               {analyzeStatus === "done" && aiProfile && (
-                <AIProfileReveal profile={aiProfile} />
+                <AIProfileReveal
+                  profile={aiProfile}
+                  portfolioLink={portfolioLink}
+                  portfolioFileUrl={portfolioFileUrl}
+                  resumeLink={resumeLink}
+                  resumeFileUrl={resumeFileUrl}
+                  socialLinks={savedSocialLinks}
+                />
               )}
             </div>
           )}

@@ -885,7 +885,14 @@ export default function PublicProfile() {
 
             {card?.ai_profile && (
               <Section title="AI-built profile">
-                <AIProfileReveal profile={card.ai_profile} />
+                <AIProfileReveal
+                  profile={card.ai_profile}
+                  portfolioLink={card.portfolio_link}
+                  portfolioFileUrl={card.portfolio_file_url}
+                  resumeLink={card.resume_link}
+                  resumeFileUrl={card.resume_file_url}
+                  socialLinks={card.social_links}
+                />
               </Section>
             )}
             </>

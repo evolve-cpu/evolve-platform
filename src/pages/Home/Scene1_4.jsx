@@ -208,15 +208,31 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             ref={text2Ref}
             className="text-white font-extrabold text-center"
             style={{
-              fontSize: "3.5rem",
-              lineHeight: "4rem",
-              maxWidth: "62.5rem"
+              fontSize: "3.2rem",
+              lineHeight: "3.2rem",
+              maxWidth: "70rem"
               // opacity: 0
             }}
           >
             We’re here to change how you think, so you’ll never see the world,
             the same way again.
           </p>
+
+          <a
+            href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 inline-block text-white font-bold"
+            style={{
+              backgroundColor: "#000000",
+              borderRadius: "16px",
+              boxShadow: "0 4px 0 grey",
+              padding: "1rem 2rem",
+              fontSize: "1.1rem"
+            }}
+          >
+            Explore evolve community
+          </a>
         </div>
       )}
 
@@ -250,6 +266,22 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             We’re here to change how you think, so you’ll never see the world,
             the same way again.
           </p>
+
+          <a
+            href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-block text-white font-bold text-center"
+            style={{
+              backgroundColor: "#000000",
+              borderRadius: "16px",
+              boxShadow: "0 6px 0 #806804",
+              padding: "0.75rem 1.5rem",
+              fontSize: "0.95rem"
+            }}
+          >
+            Explore evolve community
+          </a>
         </div>
       )}
 
@@ -287,11 +319,19 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               alt="vector 2"
               className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
             />
-            <img
-              src={evolve_be_remarkable}
+            {/* <img
+              // src={evolve_be_remarkable}
+              src={evolve_text}
               alt="evolve be remarkable"
               className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-            />
+            /> */}
+            <span
+              // key={`label-${i}`}
+              className="flex-none font-paralucent  text-evolve-yellow md:text-7xl text-4xl"
+            >
+              {/* {marqueeLabel} — commented out for now, static text instead */}
+              Be Remarkable
+            </span>
             <img
               src={marquee_vector_1}
               alt="vector 1"
@@ -307,11 +347,18 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
               alt="vector 2"
               className={`w-auto flex-none ${isMobile ? "h-10" : "h-[5rem]"}`}
             />
-            <img
-              src={evolve_be_remarkable}
+            {/* <img
+              src={evolve_text}
               alt="evolve be remarkable"
               className={`w-auto flex-none ${isMobile ? "h-8" : "h-[4rem]"}`}
-            />
+            /> */}
+            <span
+              // key={`label-${i}`}
+              className="flex-none font-paralucent  text-evolve-yellow md:text-7xl text-4xl"
+            >
+              {/* {marqueeLabel} — commented out for now, static text instead */}
+              Be Remarkable
+            </span>
           </div>
         </div>
       </div>

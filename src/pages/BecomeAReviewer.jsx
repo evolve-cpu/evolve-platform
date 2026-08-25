@@ -277,10 +277,8 @@ function ReviewerFormFields(props) {
     setPhone,
     linkedin,
     setLinkedin,
-    designation,
-    setDesignation,
-    workplace,
-    setWorkplace,
+    designationWorkplace,
+    setDesignationWorkplace,
     experience,
     setExperience,
     stream,
@@ -336,22 +334,13 @@ function ReviewerFormFields(props) {
         placeholder="e.g. linkedin.com/in/yourname"
       />
       <TextField
-        label="Enter your designation"
-        value={designation}
-        onChange={(e) => setDesignation(e.target.value)}
-        onBlur={() => markTouched("designation")}
-        touched={touched.designation}
-        valid={validity.designation}
-        placeholder="e.g. Senior Product Designer"
-      />
-      <TextField
-        label="Workplace details (Company that you work for or your own practice)"
-        value={workplace}
-        onChange={(e) => setWorkplace(e.target.value)}
-        onBlur={() => markTouched("workplace")}
-        touched={touched.workplace}
-        valid={validity.workplace}
-        placeholder="e.g. Google / Independent / Studio name"
+        label="Enter your designation and workplace"
+        value={designationWorkplace}
+        onChange={(e) => setDesignationWorkplace(e.target.value)}
+        onBlur={() => markTouched("designationWorkplace")}
+        touched={touched.designationWorkplace}
+        valid={validity.designationWorkplace}
+        placeholder="e.g. Senior Product Designer, Google"
       />
       <SelectField
         label="How much experience do you have in industry?"
@@ -428,7 +417,7 @@ function ReviewerSuccessContent() {
         target="_blank"
         rel="noopener noreferrer"
         className="mt-3 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow hover:opacity-90 transition-opacity"
-        style={{ boxShadow: "4px 4px 0 0 #BF9C05" }}
+        style={{ boxShadow: "4px 4px 0 0 #806804" }}
       >
         Join evolve community
       </a>
@@ -447,8 +436,7 @@ export default function BecomeAReviewer() {
   const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
   const [linkedin, setLinkedin] = useState("");
-  const [designation, setDesignation] = useState("");
-  const [workplace, setWorkplace] = useState("");
+  const [designationWorkplace, setDesignationWorkplace] = useState("");
   const [experience, setExperience] = useState("");
   const [stream, setStream] = useState("");
   const [hiringExperience, setHiringExperience] = useState("");
@@ -471,8 +459,7 @@ export default function BecomeAReviewer() {
     email: EMAIL_RE.test(email.trim()),
     phone: isValidPhone(phone),
     linkedin: isValidUrl(linkedin),
-    designation: designation.trim().length > 1,
-    workplace: workplace.trim().length > 1,
+    designationWorkplace: designationWorkplace.trim().length > 1,
     experience: !!experience,
     stream: !!stream,
     hiringExperience: !!hiringExperience
@@ -487,8 +474,7 @@ export default function BecomeAReviewer() {
       email: true,
       phone: true,
       linkedin: true,
-      designation: true,
-      workplace: true,
+      designationWorkplace: true,
       experience: true,
       stream: true,
       hiringExperience: true
@@ -500,6 +486,9 @@ export default function BecomeAReviewer() {
     }
 
     setSubmitting(true);
+    const [designationPart, ...workplaceParts] = designationWorkplace
+      .trim()
+      .split(",");
     const payload = {
       user_id: user?.id || null,
       name: name.trim(),
@@ -507,8 +496,8 @@ export default function BecomeAReviewer() {
       country_code: countryCode,
       phone: phone.trim(),
       linkedin_url: linkedin.trim(),
-      designation: designation.trim(),
-      workplace: workplace.trim(),
+      designation: designationPart.trim(),
+      workplace: workplaceParts.join(",").trim(),
       experience,
       stream,
       hiring_experience: hiringExperience
@@ -553,10 +542,8 @@ export default function BecomeAReviewer() {
     setPhone,
     linkedin,
     setLinkedin,
-    designation,
-    setDesignation,
-    workplace,
-    setWorkplace,
+    designationWorkplace,
+    setDesignationWorkplace,
     experience,
     setExperience,
     stream,
