@@ -27,8 +27,8 @@ import { QUESTIONS } from "../pages/Onboarding/questions";
 // on main. On merges from development this line should conflict (development
 // keeps it true), which is the point: it forces a conscious choice instead of
 // silently shipping the test feature to production.
-const ENABLE_PORTFOLIO_AI = false;
-// const ENABLE_PORTFOLIO_AI = true;
+// const ENABLE_PORTFOLIO_AI = false;
+const ENABLE_PORTFOLIO_AI = true;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
