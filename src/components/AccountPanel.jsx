@@ -2422,7 +2422,7 @@ function PortfolioResumeSection({ user }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(
           "portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status, ai_profile, ai_profile_status, ai_profile_public, social_links, username"
@@ -2430,6 +2430,16 @@ function PortfolioResumeSection({ user }) {
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
+      // a schema mismatch (a column this query expects but the live DB
+      // doesn't have — e.g. a migration that was never applied) makes the
+      // whole select fail and data comes back null. Silently falling
+      // through to the empty useState defaults below made that look like
+      // "you have no portfolio/resume saved" instead of a real load error.
+      if (error) {
+        setErrorMsg(
+          `couldn't load your saved portfolio/resume — ${error.message || "unknown error"}`
+        );
+      }
       if (data) {
         setPortfolioLink(data.portfolio_link || "");
         setPortfolioFileUrl(data.portfolio_file_url || null);
@@ -2465,12 +2475,21 @@ function PortfolioResumeSection({ user }) {
   }
   async function handleSaveLinks() {
     setSavingLinks(true);
+    setErrorMsg("");
     const cleaned = socialLinks.filter((l) => l.url.trim());
-    const { error } = await supabase
+    // .select() catches an RLS-blocked update, which otherwise reports
+    // error === null with zero rows actually changed.
+    const { data: savedRows, error } = await supabase
       .from("profiles")
       .update({ social_links: cleaned })
-      .eq("id", user.id);
-    if (!error) {
+      .eq("id", user.id)
+      .select("id");
+    if (error || !savedRows || savedRows.length === 0) {
+      setErrorMsg(
+        error?.message ||
+          "your links didn't save — the update matched no rows (likely a permissions issue)."
+      );
+    } else {
       setSocialLinks(cleaned);
       setSavedSocialLinks(cleaned);
     }
@@ -2479,12 +2498,21 @@ function PortfolioResumeSection({ user }) {
 
   async function handleTogglePublic() {
     setPublicToggling(true);
+    setErrorMsg("");
     const next = !isPublic;
-    const { error } = await supabase
+    const { data: savedRows, error } = await supabase
       .from("profiles")
       .update({ ai_profile_public: next })
-      .eq("id", user.id);
-    if (!error) setIsPublic(next);
+      .eq("id", user.id)
+      .select("id");
+    if (error || !savedRows || savedRows.length === 0) {
+      setErrorMsg(
+        error?.message ||
+          "visibility didn't update — the change matched no rows (likely a permissions issue)."
+      );
+    } else {
+      setIsPublic(next);
+    }
     setPublicToggling(false);
   }
 
@@ -2589,7 +2617,39 @@ function PortfolioResumeSection({ user }) {
       }
 
       if (Object.keys(payload).length > 0) {
-        await supabase.from("profiles").update(payload).eq("id", user.id);
+        // .select() after the update is required to catch the classic RLS
+        // trap: an UPDATE blocked by a row-level-security policy matches
+        // zero rows and comes back with error === null — supabase-js only
+        // tells you something's wrong if you ask for the affected rows back.
+        // Without this, a blocked write looks identical to a successful one.
+        // Selecting the actual link columns back (not just id) also catches
+        // a subtler case: a row-matching update whose committed value still
+        // doesn't equal what was sent (a trigger/default silently reverting
+        // it), which .select("id") alone can't distinguish from success.
+        const { data: savedRows, error: saveErr } = await supabase
+          .from("profiles")
+          .update(payload)
+          .eq("id", user.id)
+          .select("id, portfolio_link, portfolio_file_url, resume_link, resume_file_url");
+        // eslint-disable-next-line no-console
+        console.log("[handleBuildProfile] sent:", payload, "db now has:", savedRows, "error:", saveErr);
+        if (saveErr) {
+          throw new Error(saveErr.message || "couldn't save your changes");
+        }
+        if (!savedRows || savedRows.length === 0) {
+          throw new Error(
+            "your changes didn't save — the update matched no rows (likely a permissions issue). Nothing was extracted from a new link."
+          );
+        }
+        const saved = savedRows[0];
+        if (
+          ("portfolio_link" in payload && saved.portfolio_link !== payload.portfolio_link) ||
+          ("resume_link" in payload && saved.resume_link !== payload.resume_link)
+        ) {
+          throw new Error(
+            `the database still shows the old link after saving (sent "${payload.portfolio_link ?? payload.resume_link}", db has "${saved.portfolio_link ?? saved.resume_link}") — check the console for the full comparison.`
+          );
+        }
         if ("portfolio_link" in payload) {
           setPortfolioLink(payload.portfolio_link || "");
           setPortfolioFileUrl(payload.portfolio_file_url || null);
@@ -2867,6 +2927,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
   const [usernameError, setUsernameError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   // fixed at mount — the questions already answered at onboarding, each
@@ -2940,6 +3001,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
     }
     setSaving(true);
     setUsernameError("");
+    setSaveError("");
 
     if (username !== (user?.username || "")) {
       if (!username.trim()) {
@@ -2969,7 +3031,22 @@ export function MyAccountPanel({ onBack, onSaved }) {
         : onboardingDraft[q.id];
     });
 
-    await supabase.from("profiles").update(payload).eq("id", user.id);
+    // .select() is required to catch an update blocked by a row-level-
+    // security policy — that fails silently (error === null, 0 rows
+    // affected) unless the affected rows are actually asked for back.
+    const { data: savedRows, error: saveErr } = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("id", user.id)
+      .select("id");
+    if (saveErr || !savedRows || savedRows.length === 0) {
+      setSaveError(
+        saveErr?.message ||
+          "your changes didn't save — the update matched no rows (likely a permissions issue)."
+      );
+      setSaving(false);
+      return;
+    }
     await refreshUser();
     setSaving(false);
     setSaved(true);
@@ -3118,6 +3195,8 @@ export function MyAccountPanel({ onBack, onSaved }) {
         )}
 
         {ENABLE_PORTFOLIO_AI && <PortfolioResumeSection user={user} />}
+
+        {saveError && <p className="text-red-400 text-xs">{saveError}</p>}
 
         <button
           type="button"
