@@ -152,6 +152,7 @@ async function captureViaJina(url: string, userId: string): Promise<{ screenshot
         "x-respond-with": "pageshot",
         "x-respond-timing": "media-idle",
         "x-timeout": "40",
+        "x-no-cache": "true",
       },
       signal: controller.signal,
     });
@@ -215,6 +216,10 @@ async function fetchRendered(url: string, linkBudget: number): Promise<{ ok: boo
         // text, fade-ins, lazy-mounted sections) has a chance to finish.
         // Ignored harmlessly if this isn't a header they respect.
         "X-Timeout": "15",
+        // r.jina.ai caches renders server-side per URL — without this, a
+        // page edited since the last time anyone submitted this exact URL
+        // (including us, a moment ago while testing) can come back stale.
+        "X-No-Cache": "true",
       },
       signal: controller.signal,
     });

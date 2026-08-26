@@ -468,7 +468,34 @@ function ClippedText({ text, rawLength, previewLen = 600 }) {
   );
 }
 
-function ExtractedProfilePreview({ data }) {
+// same-source check for the debug preview below — compares what this
+// extraction actually ran against (data.portfolio/resume.source_url, set
+// server-side to the exact link it fetched) to whatever's currently saved,
+// so a mismatch (stale preview from before the last edit, extraction that
+// silently didn't rerun, etc.) is visible instead of quietly misleading.
+function normalizeSource(url) {
+  return (url || "").trim().toLowerCase().replace(/\/$/, "");
+}
+
+function StaleSourceWarning({ label, extractedFrom, currentSource }) {
+  if (!extractedFrom || !currentSource) return null;
+  if (normalizeSource(extractedFrom) === normalizeSource(currentSource)) return null;
+  return (
+    <div className="rounded-lg border border-red-400/30 bg-red-400/[0.06] px-3 py-2 flex flex-col gap-1">
+      <p className="text-red-400 text-[11px] font-bold">
+        This preview doesn't match your current {label}
+      </p>
+      <p className="text-white/50 text-[11px] leading-snug">
+        Extracted from <span className="text-white/70 break-all">{extractedFrom}</span>,
+        but your saved {label} is now{" "}
+        <span className="text-white/70 break-all">{currentSource}</span>. Click
+        "Save & build profile" again to refresh it.
+      </p>
+    </div>
+  );
+}
+
+function ExtractedProfilePreview({ data, currentPortfolioSource, currentResumeSource }) {
   return (
     <div
       className="border border-[#373737] rounded-xl p-4 flex flex-col gap-4"
@@ -484,6 +511,11 @@ function ExtractedProfilePreview({ data }) {
       {data.portfolio && (
         <div className="flex flex-col gap-2">
           <p className="text-white text-xs font-semibold">Portfolio</p>
+          <StaleSourceWarning
+            label="portfolio link"
+            extractedFrom={data.portfolio.source_url}
+            currentSource={currentPortfolioSource}
+          />
           {data.portfolio.rendered_with && (
             <p className="text-white/30 text-[11px]">
               {data.portfolio.rendered_with}
@@ -535,6 +567,11 @@ function ExtractedProfilePreview({ data }) {
       {data.resume && (
         <div className="flex flex-col gap-2 border-t border-[#2a2a2a] pt-3">
           <p className="text-white text-xs font-semibold">Resume</p>
+          <StaleSourceWarning
+            label="resume"
+            extractedFrom={data.resume.source_url}
+            currentSource={currentResumeSource}
+          />
           <p className="text-white/50 text-[11px] truncate">
             {data.resume.source_url}
           </p>
@@ -2585,6 +2622,19 @@ function PortfolioResumeSection({ user }) {
       if (!res.ok) throw new Error(json?.error || "extraction failed");
       setExtractedProfile(json.extracted_profile);
       setExtractStatus("done");
+
+      // the just-extracted text supersedes whatever the AI profile was
+      // last built from — clear it (locally and in the DB) so the old
+      // analysis can't keep rendering, or keep sitting on the public
+      // share link, as if it still describes the new source. The person
+      // has to explicitly rebuild to get a profile that matches.
+      setAiProfile(null);
+      setAnalyzeStatus("none");
+      setAnalyzeError("");
+      await supabase
+        .from("profiles")
+        .update({ ai_profile: null, ai_profile_status: "none" })
+        .eq("id", user.id);
     } catch (err) {
       setErrorMsg(err.message || "something went wrong");
       setExtractStatus("failed");
@@ -2717,7 +2767,11 @@ function PortfolioResumeSection({ user }) {
           </button>
 
           {extractedProfile && extractStatus === "done" && (
-            <ExtractedProfilePreview data={extractedProfile} />
+            <ExtractedProfilePreview
+              data={extractedProfile}
+              currentPortfolioSource={portfolioLink || portfolioFileUrl}
+              currentResumeSource={resumeLink || resumeFileUrl}
+            />
           )}
           {extractStatus === "failed" && !errorMsg && (
             <p className="text-red-400 text-xs">
