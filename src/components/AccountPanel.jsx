@@ -479,15 +479,17 @@ function normalizeSource(url) {
 
 function StaleSourceWarning({ label, extractedFrom, currentSource }) {
   if (!extractedFrom || !currentSource) return null;
-  if (normalizeSource(extractedFrom) === normalizeSource(currentSource)) return null;
+  if (normalizeSource(extractedFrom) === normalizeSource(currentSource))
+    return null;
   return (
     <div className="rounded-lg border border-red-400/30 bg-red-400/[0.06] px-3 py-2 flex flex-col gap-1">
       <p className="text-red-400 text-[11px] font-bold">
         This preview doesn't match your current {label}
       </p>
       <p className="text-white/50 text-[11px] leading-snug">
-        Extracted from <span className="text-white/70 break-all">{extractedFrom}</span>,
-        but your saved {label} is now{" "}
+        Extracted from{" "}
+        <span className="text-white/70 break-all">{extractedFrom}</span>, but
+        your saved {label} is now{" "}
         <span className="text-white/70 break-all">{currentSource}</span>. Click
         "Save & build profile" again to refresh it.
       </p>
@@ -495,7 +497,11 @@ function StaleSourceWarning({ label, extractedFrom, currentSource }) {
   );
 }
 
-function ExtractedProfilePreview({ data, currentPortfolioSource, currentResumeSource }) {
+function ExtractedProfilePreview({
+  data,
+  currentPortfolioSource,
+  currentResumeSource
+}) {
   return (
     <div
       className="border border-[#373737] rounded-xl p-4 flex flex-col gap-4"
@@ -697,6 +703,17 @@ function HoverPanel({ trigger, children, className = "" }) {
     </div>
   );
 }
+
+// function nameFromPortfolioUrl(url) {
+//   if (!url) return null;
+//   try {
+//     const { pathname } = new URL(url);
+//     const name = pathname.split("/").pop();
+//     return name || null;
+//   } catch {
+//     return null;
+//   }
+// }
 
 // dark-styled recharts tooltip content, shared by every chart below instead
 // of recharts' default light tooltip box.
@@ -2139,6 +2156,7 @@ export function AIProfileReveal({
 }) {
   if (!profile) return null;
   const {
+    nameFromProfile,
     role,
     skills,
     persona_traits,
@@ -2167,7 +2185,8 @@ export function AIProfileReveal({
     notable_works,
     dimension_ratings,
     career_timeline,
-    career_trajectory
+    career_trajectory,
+    name
   } = profile;
 
   const displayTools = inferToolRowsFromProfile(profile);
@@ -2192,7 +2211,7 @@ export function AIProfileReveal({
         <HeroScoreRing score={heroScore} />
         <div className="flex flex-col gap-3 min-w-0">
           <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-[0.15em]">
-            AI-Built Profile
+            {name || "AI-Built Profile"}
           </p>
           <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">
             {role?.primary}
@@ -2630,9 +2649,18 @@ function PortfolioResumeSection({ user }) {
           .from("profiles")
           .update(payload)
           .eq("id", user.id)
-          .select("id, portfolio_link, portfolio_file_url, resume_link, resume_file_url");
+          .select(
+            "id, portfolio_link, portfolio_file_url, resume_link, resume_file_url"
+          );
         // eslint-disable-next-line no-console
-        console.log("[handleBuildProfile] sent:", payload, "db now has:", savedRows, "error:", saveErr);
+        console.log(
+          "[handleBuildProfile] sent:",
+          payload,
+          "db now has:",
+          savedRows,
+          "error:",
+          saveErr
+        );
         if (saveErr) {
           throw new Error(saveErr.message || "couldn't save your changes");
         }
@@ -2643,8 +2671,10 @@ function PortfolioResumeSection({ user }) {
         }
         const saved = savedRows[0];
         if (
-          ("portfolio_link" in payload && saved.portfolio_link !== payload.portfolio_link) ||
-          ("resume_link" in payload && saved.resume_link !== payload.resume_link)
+          ("portfolio_link" in payload &&
+            saved.portfolio_link !== payload.portfolio_link) ||
+          ("resume_link" in payload &&
+            saved.resume_link !== payload.resume_link)
         ) {
           throw new Error(
             `the database still shows the old link after saving (sent "${payload.portfolio_link ?? payload.resume_link}", db has "${saved.portfolio_link ?? saved.resume_link}") — check the console for the full comparison.`

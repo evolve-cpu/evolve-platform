@@ -131,6 +131,10 @@ Every "key_points"/"evidence" field is a short, scannable fragment citing the sp
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
   properties: {
+    name: {
+      type: "STRING",
+      description: "The candidate's full name, exactly as it appears in the resume header/contact block or the portfolio's own about/title text — never inferred from a filename, URL, or handle. Output an empty string if no name is stated verbatim anywhere in the source.",
+    },
     stage: {
       type: "OBJECT",
       description: "Step 1 — place the designer by career stage from resume facts (years, titles, history) before judging anything else, since what counts as a real gap changes completely by stage.",
@@ -408,7 +412,7 @@ const RESPONSE_SCHEMA = {
     },
   },
   required: [
-    "stage", "role", "skills", "persona_traits", "niche", "domain", "sector", "work_experience",
+    "name", "stage", "role", "skills", "persona_traits", "niche", "domain", "sector", "work_experience",
     "type_of_work_wanted", "team_work_proficiency", "understanding_of_business", "foundational_clarity",
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
