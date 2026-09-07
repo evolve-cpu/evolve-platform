@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../../supabaseClient";
 import AIReportModal from "./AIReportModal";
 import EvolveReviewsPanel from "./EvolveReviewsPanel";
+import MentorshipV2Tab from "./MentorshipV2Tab";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1599,7 +1600,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
       label: `m-profiles (${mentorshipProfilesData.length})`
     },
     { id: "sessions", label: "sessions" },
-    { id: "accelerator", label: "accelerator 1:1" }
+    { id: "accelerator", label: "accelerator 1:1" },
+    { id: "mentorship-v2", label: "mentorship (individual)" }
   ];
 
   // Anant tabs: faculty → students; uni_admin / evolve admin → students + faculty + college admin
@@ -2791,6 +2793,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             list/detail state.
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "evolve-reviews" && !isAnantAdmin && <EvolveReviewsPanel />}
+
+        {/* Individual mentorship (mentorship_enrollments etc.) — separate,
+            isolated flow from the batch tabs above. Self-contained, same
+            pattern as EvolveReviewsPanel. */}
+        {activeTab === "mentorship-v2" && !isAnantAdmin && <MentorshipV2Tab />}
 
         {/* ══════════════════════════════════════════════════════════════
             REVIEWS TAB (evolve non-Anant admin only)

@@ -241,3 +241,24 @@ textarea,
     @apply relative overflow-hidden rounded-lg transition-all duration-200;
   }
 }
+
+/* thin, subtle scrollbar for internally-scrolling panels (e.g. the
+   mentorship workspace's timeline column) — a plain rule since
+   ::-webkit-scrollbar isn't @apply-able */
+.slim-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.slim-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.slim-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}

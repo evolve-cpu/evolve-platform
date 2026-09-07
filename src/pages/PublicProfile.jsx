@@ -171,6 +171,18 @@ export default function PublicProfile() {
   const [activeProgramme, setActiveProgramme] = useState(
     location.state?.activeProgramme || null
   );
+  // once a pane has been opened, keep it mounted (just hidden via CSS)
+  // instead of unmounting it on every switch — so reopening a programme (or
+  // hopping back to it after visiting another tab) doesn't reset its
+  // internal state or re-trigger its data fetch from scratch.
+  const [visitedProgrammes, setVisitedProgrammes] = useState(() =>
+    new Set(location.state?.activeProgramme ? [location.state.activeProgramme] : [])
+  );
+  useEffect(() => {
+    if (activeProgramme && !visitedProgrammes.has(activeProgramme)) {
+      setVisitedProgrammes((prev) => new Set(prev).add(activeProgramme));
+    }
+  }, [activeProgramme, visitedProgrammes]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // the desktop collapse/expand toggle only shows up while hovering the
   // sidebar rail (or the button itself, since it straddles the rail's edge).
@@ -804,99 +816,127 @@ export default function PublicProfile() {
             activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
           }`}
         >
-          {activeProgramme === "portfolio-review" ? (
-            <PortfolioReviewProgramme
-              user={user}
-              onBack={() => setActiveProgramme(null)}
-            />
-          ) : activeProgramme === "mentorship" ? (
-            <MentorshipProgramme onBack={() => setActiveProgramme(null)} />
-          ) : activeProgramme === "account-menu" ? (
-            <AccountMenuList
-              onBack={() => setActiveProgramme(null)}
-              onSelect={(key) => setActiveProgramme(key)}
-              onLogOut={handleLogOut}
-              onDeleteAccount={() => setDeleteConfirmOpen(true)}
-            />
-          ) : activeProgramme === "account" ? (
-            <MyAccountPanel
-              onBack={() => setActiveProgramme("account-menu")}
-              onSaved={handleAccountSaved}
-            />
-          ) : activeProgramme === "invoice" ? (
-            <InvoicePanel onBack={() => setActiveProgramme("account-menu")} />
-          ) : showOwnerTools || card?.ai_profile ? (
-            <>
-            {showOwnerTools && (
-            <Section title="evolve programmes">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ProgramCard
-                  art={
-                    <img
-                      src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Portfolio_review_ci4ula.png"
-                      alt="Portfolio Review"
-                      className="w-full h-full object-cover"
-                    />
-                  }
-                  label="portfolio review"
-                  description="A live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
-                  onClick={() => openProgramme("portfolio-review")}
-                  progress={getPortfolioReviewProgress(evolveReview)}
-                  buttonLabel={
-                    evolveReview
-                      ? getPortfolioReviewProgress(evolveReview)?.step === 5
-                        ? "Apply again"
-                        : "Continue your review"
-                      : undefined
-                  }
-                />
-                <ProgramCard
-                  art={
-                    <img
-                      src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Mentorship_pawdce.png"
-                      alt="Mentorship"
-                      className="w-full h-full object-cover"
-                    />
-                  }
-                  label="mentorship"
-                  description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
-                  disabled
-                />
-              </div>
-              {/* mobile-only stand-in for the "evolve community" link that's
-                  hidden from the top nav on small screens — same
-                  destination, just living down here instead. */}
-              <a
-                href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
-              >
-                <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
-                Evolve community
-                <img
-                  src={right_arrow_icon}
-                  alt=""
-                  className="w-3.5 h-3.5 ml-auto flex-shrink-0"
-                />
-              </a>
-            </Section>
-            )}
+          {/* dashboard grid — the base pane, always mounted (not gated by
+              `visitedProgrammes`); hidden via CSS instead of unmounted
+              whenever another pane is open, same "keep it mounted" approach
+              as every pane below, so nothing here has to reload either. */}
+          <div className={activeProgramme ? "hidden" : "contents"}>
+            {(showOwnerTools || card?.ai_profile) && (
+              <>
+                {showOwnerTools && (
+                  <Section title="evolve programmes">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <ProgramCard
+                        art={
+                          <img
+                            src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Portfolio_review_ci4ula.png"
+                            alt="Portfolio Review"
+                            className="w-full h-full object-cover"
+                          />
+                        }
+                        label="portfolio review"
+                        description="A live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
+                        onClick={() => openProgramme("portfolio-review")}
+                        progress={getPortfolioReviewProgress(evolveReview)}
+                        buttonLabel={
+                          evolveReview
+                            ? getPortfolioReviewProgress(evolveReview)?.step === 5
+                              ? "Apply again"
+                              : "Continue your review"
+                            : undefined
+                        }
+                      />
+                      <ProgramCard
+                        art={
+                          <img
+                            src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Mentorship_pawdce.png"
+                            alt="Mentorship"
+                            className="w-full h-full object-cover"
+                          />
+                        }
+                        label="mentorship"
+                        description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
+                        onClick={() => openProgramme("mentorship")}
+                      />
+                    </div>
+                    {/* mobile-only stand-in for the "evolve community" link
+                        that's hidden from the top nav on small screens —
+                        same destination, just living down here instead. */}
+                    <a
+                      href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    >
+                      <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
+                      Evolve community
+                      <img
+                        src={right_arrow_icon}
+                        alt=""
+                        className="w-3.5 h-3.5 ml-auto flex-shrink-0"
+                      />
+                    </a>
+                  </Section>
+                )}
 
-            {card?.ai_profile && (
-              <Section title="AI-built profile">
-                <AIProfileReveal
-                  profile={card.ai_profile}
-                  portfolioLink={card.portfolio_link}
-                  portfolioFileUrl={card.portfolio_file_url}
-                  resumeLink={card.resume_link}
-                  resumeFileUrl={card.resume_file_url}
-                  socialLinks={card.social_links}
-                />
-              </Section>
+                {card?.ai_profile && (
+                  <Section title="AI-built profile">
+                    <AIProfileReveal
+                      profile={card.ai_profile}
+                      portfolioLink={card.portfolio_link}
+                      portfolioFileUrl={card.portfolio_file_url}
+                      resumeLink={card.resume_link}
+                      resumeFileUrl={card.resume_file_url}
+                      socialLinks={card.social_links}
+                    />
+                  </Section>
+                )}
+              </>
             )}
-            </>
-          ) : null}
+          </div>
+
+          {/* every other pane: mounted once first opened, then kept mounted
+              (just hidden) for the rest of the session — see
+              `visitedProgrammes` above. */}
+          {visitedProgrammes.has("portfolio-review") && (
+            <div className={activeProgramme === "portfolio-review" ? "contents" : "hidden"}>
+              <PortfolioReviewProgramme
+                user={user}
+                onBack={() => setActiveProgramme(null)}
+              />
+            </div>
+          )}
+          {visitedProgrammes.has("mentorship") && (
+            <div className={activeProgramme === "mentorship" ? "contents" : "hidden"}>
+              <MentorshipProgramme
+                user={user}
+                onBack={() => setActiveProgramme(null)}
+              />
+            </div>
+          )}
+          {visitedProgrammes.has("account-menu") && (
+            <div className={activeProgramme === "account-menu" ? "contents" : "hidden"}>
+              <AccountMenuList
+                onBack={() => setActiveProgramme(null)}
+                onSelect={(key) => setActiveProgramme(key)}
+                onLogOut={handleLogOut}
+                onDeleteAccount={() => setDeleteConfirmOpen(true)}
+              />
+            </div>
+          )}
+          {visitedProgrammes.has("account") && (
+            <div className={activeProgramme === "account" ? "contents" : "hidden"}>
+              <MyAccountPanel
+                onBack={() => setActiveProgramme("account-menu")}
+                onSaved={handleAccountSaved}
+              />
+            </div>
+          )}
+          {visitedProgrammes.has("invoice") && (
+            <div className={activeProgramme === "invoice" ? "contents" : "hidden"}>
+              <InvoicePanel onBack={() => setActiveProgramme("account-menu")} />
+            </div>
+          )}
         </main>
       </div>
     </div>
