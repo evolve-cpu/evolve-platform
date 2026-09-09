@@ -55,7 +55,7 @@ export default function MentorshipProgramme({ user, onBack }) {
     };
   }, [user?.id]);
 
-  async function advanceGrowthStageByOne() {
+  async function advanceGrowthStageByOne(heading, message) {
     const current = user?.growth_stage ?? 0;
     const currentStage = stageForProgress(current);
     const nextStage = Math.min(10, currentStage + 1);
@@ -67,12 +67,7 @@ export default function MentorshipProgramme({ user, onBack }) {
         .eq("id", user.id);
       await refreshUser();
     }
-    setGrowthModal({
-      progress: nextProgress,
-      heading: "You're one step closer 🌱",
-      message:
-        "Your mentorship is booked — one more stage down on your growth journey."
-    });
+    setGrowthModal({ progress: nextProgress, heading, message });
   }
 
   function handlePaymentSuccess(row) {
@@ -83,7 +78,21 @@ export default function MentorshipProgramme({ user, onBack }) {
 
   function handleGiftContinue() {
     setGiftOpen(false);
-    advanceGrowthStageByOne();
+    advanceGrowthStageByOne(
+      "You're one step closer 🌱",
+      "Your mentorship is booked — one more stage down on your growth journey."
+    );
+  }
+
+  // Session 5's feedback submitted — see MentorshipWorkspaceShell's
+  // handleGoToNext. The plan-differentiated version of this (core vs
+  // application_support) is a follow-up; for now every plan gets the same
+  // stage bump + copy.
+  function handleProgrammeComplete() {
+    advanceGrowthStageByOne(
+      "Look how far you've grown 🌱",
+      "You've completed all 5 mentorship sessions — one more stage down on your growth journey."
+    );
   }
 
   if (loadingEnrollment) {
@@ -97,7 +106,12 @@ export default function MentorshipProgramme({ user, onBack }) {
   return (
     <>
       {enrollment ? (
-        <MentorshipWorkspaceShell user={user} enrollment={enrollment} onBack={onBack} />
+        <MentorshipWorkspaceShell
+          user={user}
+          enrollment={enrollment}
+          onBack={onBack}
+          onProgrammeComplete={handleProgrammeComplete}
+        />
       ) : (
         <MentorshipLanding onBack={onBack} onSelectPlan={setPricingPlan} />
       )}

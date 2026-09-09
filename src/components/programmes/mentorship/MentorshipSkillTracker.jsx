@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "../../../supabaseClient";
-import { SKILL_CATEGORIES } from "./skillTrackerTaxonomy";
 
 function SkillDots({ value = 0, onChange }) {
   return (
@@ -23,14 +22,26 @@ function SkillDots({ value = 0, onChange }) {
 }
 
 /**
- * The "Foundation skill tracker" self-assessment — full-width, replaces the
- * center pane while open (see MentorshipSession1's "Fill up the skill
- * tracker" row). 8 categories × 46 skills, each rated 1-5 on current level
- * and goal level (see skillTrackerTaxonomy.js). Saves to
- * mentorship_skill_tracker; `submitted_at` is what gates Session 1's "Join
- * session" button.
+ * A skill-tracker self-assessment form — full-width, replaces the center
+ * pane while open. Generic over which tracker it is: Session 1's
+ * "Foundation skill tracker" (mentorship_skill_tracker, skillTrackerTaxonomy
+ * .js) and Session 2's "Stream skill tracker" (mentorship_stream_skill_
+ * tracker, streamSkillTrackerTaxonomy.js) both render through this same
+ * component, just with different `table`/`title`/`subtitle`/`categories`
+ * props — see MentorshipWorkspaceShell.jsx for how each is opened.
+ * `submitted_at` on the target table is what gates that session's "Join
+ * session" button / marks the tracker as done in "Your skill trackers".
  */
-export default function MentorshipSkillTracker({ user, initialRatings, onCancel, onSaved }) {
+export default function MentorshipSkillTracker({
+  user,
+  table,
+  title,
+  subtitle,
+  categories,
+  initialRatings,
+  onCancel,
+  onSaved
+}) {
   const [ratings, setRatings] = useState(initialRatings || {});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -48,7 +59,7 @@ export default function MentorshipSkillTracker({ user, initialRatings, onCancel,
     setError("");
     const submittedAt = new Date().toISOString();
     const { data, error: saveError } = await supabase
-      .from("mentorship_skill_tracker")
+      .from(table)
       .upsert(
         { user_id: user.id, ratings, submitted_at: submittedAt },
         { onConflict: "user_id" }
@@ -86,12 +97,9 @@ export default function MentorshipSkillTracker({ user, initialRatings, onCancel,
           className="text-white font-bold font-bricolage"
           style={{ fontSize: "clamp(22px,3.5vw,28px)", letterSpacing: "-0.02em" }}
         >
-          Foundation skill tracker
+          {title}
         </h1>
-        <p className="text-white/50 text-sm mt-2 max-w-xl">
-          Rate yourself honestly across the fundamentals — this helps your
-          mentor tailor session 1 to where you actually stand.
-        </p>
+        <p className="text-white/50 text-sm mt-2 max-w-xl">{subtitle}</p>
       </div>
 
       <div className="rounded-2xl border border-white/10 overflow-hidden">
@@ -100,7 +108,7 @@ export default function MentorshipSkillTracker({ user, initialRatings, onCancel,
           <span>current level</span>
           <span>goal level</span>
         </div>
-        {SKILL_CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <div key={cat.heading}>
             <p className="bg-evolve-yellow/10 text-evolve-yellow text-xs font-bold uppercase tracking-wide px-5 py-2.5">
               {cat.heading}

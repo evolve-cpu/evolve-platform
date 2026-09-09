@@ -1,38 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "../../../supabaseClient";
 
-const DAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-const JOIN_WINDOW_MINUTES = 15;
-
-// No admin-set session_datetime yet? Show a reasonable placeholder — the
-// next occurrence of the booked day/time — so the page isn't empty while
-// an admin hasn't attached the real Calendly-scheduled meeting yet.
-function nextOccurrence(preferredDay, preferredTime) {
-  const targetDow = DAY_INDEX[preferredDay];
-  if (targetDow === undefined) return null;
-  const [, hourStr, minStr, meridiem] = preferredTime.match(/(\d+):(\d+)\s*(AM|PM)/i) || [];
-  if (!hourStr) return null;
-  let hour = parseInt(hourStr, 10) % 12;
-  if (/pm/i.test(meridiem)) hour += 12;
-
-  const now = new Date();
-  const result = new Date(now);
-  result.setHours(hour, parseInt(minStr, 10), 0, 0);
-  let dayDiff = (targetDow - now.getDay() + 7) % 7;
-  if (dayDiff === 0 && result <= now) dayDiff = 7;
-  result.setDate(result.getDate() + dayDiff);
-  return result;
-}
-
-function fmtDateTime(d) {
-  if (!d) return null;
-  return {
-    date: d.toLocaleDateString("en-IN", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }),
-    time: d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true }) + " IST"
-  };
-}
-
-function DocRow({ icon, label, value, onClick }) {
+export function DocRow({ icon, label, value, onClick }) {
   return (
     <button
       type="button"
@@ -97,43 +66,20 @@ function DocEditModal({ title, placeholder, value, onSave, onClose }) {
 }
 
 const RESOURCES = [
-  { key: "skill-tracker", title: "Skill tracker sheet", desc: "Track where you stand, session by session", action: "skillTracker" },
   { key: "colour-theory", title: "Colour theory in movies", desc: "A quick watch on mood + palette" },
   { key: "ny-subway", title: "New York subway system", desc: "A case study in wayfinding design" },
   { key: "creative-confidence", title: "Creative confidence", desc: "The book worth the hype" }
 ];
 
 /**
- * Session 1 · Discover — reads mentorship_session_links (admin-set real
- * meeting time/link, see MentorshipV2Tab.jsx) with a computed fallback date
- * until an admin attaches one. "Join session" is gated on the skill
- * tracker being submitted AND being within 15 minutes of the real start
- * time — re-checked on an interval so it flips live without a refresh.
- * "My docs" reads/edits the same mentorship_intake row "Before we begin"
- * already collected, not a separate submission.
+ * "My docs" (portfolio/resume/walkthrough, editable inline against the
+ * shared mentorship_intake row) + the static resources list — shared by
+ * every per-slot page (MentorshipSessionPage.jsx, MentorshipCallPage.jsx,
+ * MentorshipAllRecordings.jsx) so this ~150-line block isn't duplicated
+ * three times.
  */
-export default function MentorshipSession1({ user, intake, skillDone, sessionLink, booking, onOpenSkillTracker, onIntakeUpdated }) {
-  const [now, setNow] = useState(() => Date.now());
-  const [editingField, setEditingField] = useState(null); // "resume" | "walkthrough" | "portfolio" | null
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(id);
-  }, []);
-
-  const realDatetime = sessionLink?.session_datetime ? new Date(sessionLink.session_datetime) : null;
-  const displayDatetime = realDatetime || (booking ? nextOccurrence(booking.preferred_day, booking.preferred_time) : null);
-  const fmt = fmtDateTime(displayDatetime);
-
-  const withinWindow =
-    realDatetime && now >= realDatetime.getTime() - JOIN_WINDOW_MINUTES * 60000 && now <= realDatetime.getTime() + 60 * 60000;
-  const hasLink = !!sessionLink?.join_link;
-  const joinEnabled = skillDone && hasLink && withinWindow;
-
-  let gateCaption = "";
-  if (!skillDone) gateCaption = "Complete the task above to unlock this session";
-  else if (!hasLink) gateCaption = "Your mentor will share the join link closer to the session";
-  else if (!withinWindow) gateCaption = "Button enables 15 mins before the session starts";
+export function MentorshipDocsAndResources({ user, intake, onIntakeUpdated }) {
+  const [editingField, setEditingField] = useState(null);
 
   async function saveIntakeField(field, value) {
     const { data, error } = await supabase
@@ -147,58 +93,7 @@ export default function MentorshipSession1({ user, intake, skillDone, sessionLin
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-6">
-      <span className="w-fit bg-evolve-yellow/10 text-evolve-yellow text-[11px] font-bold uppercase tracking-wide rounded-full px-3 py-1.5">
-        Upcoming session
-      </span>
-
-      <div>
-        <h1
-          className="text-white font-bold font-bricolage"
-          style={{ fontSize: "clamp(24px,4vw,32px)", letterSpacing: "-0.02em" }}
-        >
-          Session 1 · Discover
-        </h1>
-        <p className="text-white/50 text-sm mt-2 max-w-xl leading-relaxed">
-          Meet your mentor, understand how the program works, and start mapping your design skills through a
-          guided self-assessment sheet.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <p className="text-white font-bold text-sm">Before the call</p>
-        <DocRow
-          icon={
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M7 7h6M7 10.5h6M7 14h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          }
-          label="Fill up the skill tracker"
-          value={skillDone ? "Submitted" : ""}
-          onClick={onOpenSkillTracker}
-        />
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-6 flex flex-col items-center text-center gap-4">
-        <div>
-          <p className="text-white/30 text-xs">Happening on</p>
-          <p className="text-white font-bold text-lg mt-1">{fmt?.date || "To be scheduled"}</p>
-          {fmt && <p className="text-evolve-yellow font-bold text-sm mt-1">{fmt.time}</p>}
-        </div>
-        <button
-          disabled={!joinEnabled}
-          onClick={() => joinEnabled && window.open(sessionLink.join_link, "_blank", "noopener,noreferrer")}
-          className="w-full max-w-xs border border-white/20 text-white font-bold text-sm rounded-2xl py-3.5 flex items-center justify-center gap-2 disabled:opacity-40 active:opacity-80 transition-opacity"
-        >
-          Join session
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        {gateCaption && <p className="text-white/30 text-xs">{gateCaption}</p>}
-      </div>
-
+    <>
       <div className="flex flex-col gap-3">
         <p className="text-white font-bold text-sm">My docs</p>
         <DocRow
@@ -238,22 +133,22 @@ export default function MentorshipSession1({ user, intake, skillDone, sessionLin
         <p className="text-white font-bold text-sm mb-2">While you wait, here are some resources</p>
         <div className="flex flex-col divide-y divide-white/5">
           {RESOURCES.map((r) => (
-            <button
-              key={r.key}
-              type="button"
-              onClick={r.action === "skillTracker" ? onOpenSkillTracker : undefined}
-              className={`flex items-center gap-3 py-3.5 text-left ${r.action ? "cursor-pointer" : "cursor-default"}`}
-            >
+            <div key={r.key} className="flex items-center gap-3 py-3.5">
               <span className="w-4 h-4 text-evolve-yellow flex-shrink-0">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path d="M8 12l4-4M9 5l1-1a3 3 0 014 4l-1 1M11 15l-1 1a3 3 0 01-4-4l1-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  <path
+                    d="M8 12l4-4M9 5l1-1a3 3 0 014 4l-1 1M11 15l-1 1a3 3 0 01-4-4l1-1"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </span>
               <span>
                 <p className="text-white text-sm font-bold">{r.title}</p>
                 <p className="text-white/35 text-xs mt-0.5">{r.desc}</p>
               </span>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -285,6 +180,6 @@ export default function MentorshipSession1({ user, intake, skillDone, sessionLin
           onSave={(v) => saveIntakeField("portfolio_value", v)}
         />
       )}
-    </div>
+    </>
   );
 }

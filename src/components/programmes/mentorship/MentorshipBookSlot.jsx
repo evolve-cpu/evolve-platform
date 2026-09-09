@@ -54,7 +54,7 @@ function AllSetIcon() {
   );
 }
 
-function AllSetModal({ day, time, onContinue }) {
+function AllSetModal({ day, time, body, nextLabel, onContinue }) {
   return (
     <div className="fixed inset-0 z-[220] flex items-center justify-center md:px-6">
       <div className="absolute inset-0 bg-evolve-black/70 md:bg-evolve-black/85" />
@@ -65,32 +65,52 @@ function AllSetModal({ day, time, onContinue }) {
         <AllSetIcon />
         <div>
           <h3 className="text-white font-bold text-2xl font-bricolage">You're all set!</h3>
-          <p className="text-white/50 text-sm mt-3 leading-relaxed">
-            All 5 sessions are booked for <span className="text-white font-bold">{DAY_PLURAL[day]}</span> ·{" "}
-            <span className="text-white font-bold">{time}</span>, starting this week. We'll send reminders
-            before each one.
-          </p>
+          <p className="text-white/50 text-sm mt-3 leading-relaxed">{body(day, time)}</p>
         </div>
         <button
           onClick={onContinue}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80 mt-auto"
         >
-          Go to session 1 →
+          {nextLabel}
         </button>
       </div>
     </div>
   );
 }
 
+const WEEKLY_CONFIRMED_BODY = (day, time) => (
+  <>
+    All 5 sessions are booked for <span className="text-white font-bold">{DAY_PLURAL[day]}</span> ·{" "}
+    <span className="text-white font-bold">{time}</span>, starting this week. We'll send reminders before
+    each one.
+  </>
+);
+
 /**
- * "Book a slot" — a plain center-pane page (like "Before we begin"), not a
- * popup. Collects a day/time *preference*, not a live calendar booking —
- * the real meeting is scheduled manually by an admin afterward (see
- * mentorship_session_links / MentorshipV2Tab.jsx). Confirming inserts a
- * mentorship_bookings row and shows the responsive "You're all set!"
- * confirmation (modal on desktop, full-screen on mobile).
+ * A day/time preference picker — a plain center-pane page (like "Before we
+ * begin"), not a popup. Not a live calendar booking — the real meeting is
+ * scheduled manually by an admin afterward (see mentorship_session_links /
+ * MentorshipV2Tab.jsx). Confirming inserts a row and shows the responsive
+ * "You're all set!" confirmation (modal on desktop, full-screen on mobile).
+ *
+ * Serves two cases via props: the initial 5-session weekly booking
+ * (defaults below, writes to mentorship_bookings, one row per user) and a
+ * single job-application call's ad-hoc booking (MentorshipCallPage passes
+ * `table="mentorship_call_bookings"` + `slotNumber`, one row per user per
+ * call — see mentorship_call_bookings.sql).
  */
-export default function MentorshipBookSlot({ user, onBooked }) {
+export default function MentorshipBookSlot({
+  user,
+  onBooked,
+  table = "mentorship_bookings",
+  slotNumber,
+  pageHeading = "Book a slot",
+  pageSubtitle = "You'll be meeting Yagnesh Ahir for 5 consecutive sessions during your selected day and time.",
+  meetingTitle = "Weekly 1:1 with Yagnesh Ahir",
+  meetingMeta = "60 min · weekly · 5 sessions",
+  confirmedBody = WEEKLY_CONFIRMED_BODY,
+  nextLabel = "Go to session 1 →"
+}) {
   const [day, setDay] = useState("");
   const [time, setTime] = useState("");
   const [saving, setSaving] = useState(false);
@@ -101,12 +121,13 @@ export default function MentorshipBookSlot({ user, onBooked }) {
     if (!day || !time || !user?.id) return;
     setSaving(true);
     setError("");
+    const payload =
+      table === "mentorship_bookings"
+        ? { user_id: user.id, preferred_day: day, preferred_time: time }
+        : { user_id: user.id, session_number: slotNumber, preferred_day: day, preferred_time: time };
     const { data, error: saveError } = await supabase
-      .from("mentorship_bookings")
-      .upsert(
-        { user_id: user.id, preferred_day: day, preferred_time: time },
-        { onConflict: "user_id" }
-      )
+      .from(table)
+      .upsert(payload, { onConflict: table === "mentorship_bookings" ? "user_id" : "user_id,session_number" })
       .select()
       .single();
     setSaving(false);
@@ -124,21 +145,19 @@ export default function MentorshipBookSlot({ user, onBooked }) {
           className="text-white font-bold font-bricolage"
           style={{ fontSize: "clamp(24px,4vw,32px)", letterSpacing: "-0.02em" }}
         >
-          Book a slot
+          {pageHeading}
         </h1>
-        <p className="text-white/50 text-sm mt-2">
-          You'll be meeting Yagnesh Ahir for 5 consecutive sessions during your selected day and time.
-        </p>
+        <p className="text-white/50 text-sm mt-2">{pageSubtitle}</p>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-6 flex flex-col gap-6">
         <div>
           <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">evolve mentorship</p>
-          <h3 className="text-white font-bold text-xl mt-1">Weekly 1:1 with Yagnesh Ahir</h3>
+          <h3 className="text-white font-bold text-xl mt-1">{meetingTitle}</h3>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-white/50 text-sm">
             <span className="flex items-center gap-2">
               <CalendarIcon />
-              60 min · weekly · 5 sessions
+              {meetingMeta}
             </span>
             <span className="flex items-center gap-2">
               <VideoIcon />
@@ -193,6 +212,8 @@ export default function MentorshipBookSlot({ user, onBooked }) {
         <AllSetModal
           day={confirmed.preferred_day}
           time={confirmed.preferred_time}
+          body={confirmedBody}
+          nextLabel={nextLabel}
           onContinue={() => onBooked(confirmed)}
         />
       )}

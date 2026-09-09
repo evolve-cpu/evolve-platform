@@ -4,6 +4,14 @@ import { supabaseAdmin } from "../../supabaseAdminClient";
 const Y = "#FFD007";
 const inputStyle = { backgroundColor: "#0d0d0d", border: "1px solid #262626" };
 const labelStyle = { color: "#666" };
+const SESSION_NUMBERS = [1, 2, 3, 4, 5];
+const JOB_APPLICATION_SLOTS = [6, 7, 8, 9, 10, 11];
+
+function slotLabel(n) {
+  if (n <= 5) return `Session ${n}`;
+  const idx = n - 6;
+  return `Job application ${Math.floor(idx / 2) + 1} · Call ${(idx % 2) + 1}`;
+}
 
 function Field({ label, ...rest }) {
   return (
@@ -12,6 +20,17 @@ function Field({ label, ...rest }) {
         {label}
       </label>
       <input className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={inputStyle} {...rest} />
+    </div>
+  );
+}
+
+function TextAreaField({ label, ...rest }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+        {label}
+      </label>
+      <textarea className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-y" style={inputStyle} {...rest} />
     </div>
   );
 }
@@ -49,26 +68,43 @@ function fmtDt(dtStr) {
   );
 }
 
+function SkillTrackerCell({ label, tracker, expanded, onToggle }) {
+  return (
+    <div>
+      <p className="font-bold text-white mb-1">{label}</p>
+      {tracker?.submitted_at ? (
+        <button onClick={onToggle} className="underline" style={{ color: Y }}>
+          submitted — {expanded ? "hide" : "view"} ratings
+        </button>
+      ) : (
+        <p style={{ color: "#555" }}>not submitted</p>
+      )}
+    </div>
+  );
+}
+
 /**
- * Admin view for the new individual-mentorship flow (mentorship_enrollments
- * / mentorship_intake / mentorship_bookings / mentorship_skill_tracker /
- * mentorship_session_links) — entirely separate from the old batch flow's
- * tabs in this same dashboard. Self-contained, own supabaseAdmin fetches —
- * same pattern as EvolveReviewsPanel.jsx, wired into AdminDashboard.jsx's
- * tab list the same way.
+ * Admin view for the new individual-mentorship flow — entirely separate
+ * from the old batch flow's tabs in this same dashboard. Self-contained,
+ * own supabaseAdmin fetches — same pattern as EvolveReviewsPanel.jsx.
  *
- * Session 1's datetime + join link (the "calendly / booking link" for the
- * real, manually-scheduled meeting) is set here — mirrors the existing
- * AcceleratorTab's booking_link pattern, just against the new isolated
- * table instead of mentorship_accelerator_bonus.
+ * Per slot (1-5 sessions, plus 6-11 job-application calls for the
+ * application_support plan): datetime + join link (set before the call,
+ * mirrors AcceleratorTab's booking_link pattern) and recording_url +
+ * session_notes (set after the call happens) all live on the same
+ * mentorship_session_links row and are edited together here. Feedback
+ * (mentorship_session_feedback_v2) is read-only — that's the learner's own
+ * submission. For slots 6-11, the learner's own day/time preference
+ * (mentorship_call_bookings) is shown too, so the admin knows what to
+ * schedule before pasting the real link.
  */
 export default function MentorshipV2Tab() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState([]);
-  const [editingUserId, setEditingUserId] = useState(null);
-  const [form, setForm] = useState({ date: "", time: "21:00", join_link: "" });
+  const [editingKey, setEditingKey] = useState(null); // `${userId}:${sessionNumber}`
+  const [form, setForm] = useState({ date: "", time: "21:00", join_link: "", recording_url: "", session_notes: "" });
   const [saving, setSaving] = useState(false);
-  const [expandedSkills, setExpandedSkills] = useState(null);
+  const [expandedSkills, setExpandedSkills] = useState(null); // `${userId}:foundation` | `${userId}:stream`
 
   useEffect(() => {
     fetchData();
@@ -83,27 +119,45 @@ export default function MentorshipV2Tab() {
       .order("created_at", { ascending: false });
 
     const userIds = (enrollments || []).map((e) => e.user_id);
-    const [{ data: profiles }, { data: intake }, { data: bookings }, { data: skills }, { data: links }] =
-      userIds.length
-        ? await Promise.all([
-            supabaseAdmin.from("profiles").select("id, name, username, email").in("id", userIds),
-            supabaseAdmin.from("mentorship_intake").select("*").in("user_id", userIds),
-            supabaseAdmin.from("mentorship_bookings").select("*").in("user_id", userIds),
-            supabaseAdmin.from("mentorship_skill_tracker").select("*").in("user_id", userIds),
-            supabaseAdmin
-              .from("mentorship_session_links")
-              .select("*")
-              .in("user_id", userIds)
-              .eq("session_number", 1)
-          ])
-        : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+    const [
+      { data: profiles },
+      { data: intake },
+      { data: bookings },
+      { data: skillsFoundation },
+      { data: skillsStream },
+      { data: links },
+      { data: feedbacks },
+      { data: callBookings }
+    ] = userIds.length
+      ? await Promise.all([
+          supabaseAdmin.from("profiles").select("id, name, username, email").in("id", userIds),
+          supabaseAdmin.from("mentorship_intake").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_bookings").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_skill_tracker").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_stream_skill_tracker").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_session_links").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_session_feedback_v2").select("*").in("user_id", userIds),
+          supabaseAdmin.from("mentorship_call_bookings").select("*").in("user_id", userIds)
+        ])
+      : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
     const byUser = (list) => Object.fromEntries((list || []).map((r) => [r.user_id, r]));
+    const byUserThenSession = (list) => {
+      const out = {};
+      (list || []).forEach((r) => {
+        out[r.user_id] = out[r.user_id] || {};
+        out[r.user_id][r.session_number] = r;
+      });
+      return out;
+    };
     const profileById = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
     const intakeByUser = byUser(intake);
     const bookingByUser = byUser(bookings);
-    const skillByUser = byUser(skills);
-    const linkByUser = byUser(links);
+    const foundationByUser = byUser(skillsFoundation);
+    const streamByUser = byUser(skillsStream);
+    const linksByUser = byUserThenSession(links);
+    const feedbackByUser = byUserThenSession(feedbacks);
+    const callBookingByUser = byUserThenSession(callBookings);
 
     setRows(
       (enrollments || []).map((e) => ({
@@ -111,26 +165,37 @@ export default function MentorshipV2Tab() {
         profile: profileById[e.user_id],
         intake: intakeByUser[e.user_id],
         booking: bookingByUser[e.user_id],
-        skill: skillByUser[e.user_id],
-        link: linkByUser[e.user_id]
+        skillFoundation: foundationByUser[e.user_id],
+        skillStream: streamByUser[e.user_id],
+        links: linksByUser[e.user_id] || {},
+        feedbacks: feedbackByUser[e.user_id] || {},
+        callBookings: callBookingByUser[e.user_id] || {}
       }))
     );
     setLoading(false);
   }
 
-  function openEdit(row) {
-    const { date, time } = utcToIst(row.link?.session_datetime);
-    setForm({ date, time, join_link: row.link?.join_link || "" });
-    setEditingUserId(row.enrollment.user_id);
+  function openEdit(userId, sessionNumber, link) {
+    const { date, time } = utcToIst(link?.session_datetime);
+    setForm({
+      date,
+      time,
+      join_link: link?.join_link || "",
+      recording_url: link?.recording_url || "",
+      session_notes: link?.session_notes || ""
+    });
+    setEditingKey(`${userId}:${sessionNumber}`);
   }
 
-  async function handleSave(userId) {
+  async function handleSave(userId, sessionNumber) {
     setSaving(true);
     const payload = {
       user_id: userId,
-      session_number: 1,
+      session_number: sessionNumber,
       session_datetime: istToUtc(form.date, form.time),
-      join_link: form.join_link.trim() || null
+      join_link: form.join_link.trim() || null,
+      recording_url: form.recording_url.trim() || null,
+      session_notes: form.session_notes.trim() || null
     };
     const { data, error } = await supabaseAdmin
       .from("mentorship_session_links")
@@ -139,8 +204,12 @@ export default function MentorshipV2Tab() {
       .single();
     setSaving(false);
     if (error) return;
-    setRows((prev) => prev.map((r) => (r.enrollment.user_id === userId ? { ...r, link: data } : r)));
-    setEditingUserId(null);
+    setRows((prev) =>
+      prev.map((r) =>
+        r.enrollment.user_id === userId ? { ...r, links: { ...r.links, [sessionNumber]: data } } : r
+      )
+    );
+    setEditingKey(null);
   }
 
   if (loading) {
@@ -158,8 +227,9 @@ export default function MentorshipV2Tab() {
       )}
 
       {rows.map((row) => {
-        const { enrollment, profile, intake, booking, skill, link } = row;
-        const isEditing = editingUserId === enrollment.user_id;
+        const { enrollment, profile, intake, booking, skillFoundation, skillStream, links, feedbacks, callBookings } = row;
+        const uid = enrollment.user_id;
+        const slotNumbers = enrollment.plan === "application_support" ? [...SESSION_NUMBERS, ...JOB_APPLICATION_SLOTS] : SESSION_NUMBERS;
         return (
           <div
             key={enrollment.id}
@@ -181,7 +251,7 @@ export default function MentorshipV2Tab() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: "#aaa" }}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs" style={{ color: "#aaa" }}>
               <div>
                 <p className="font-bold text-white mb-1">Before we begin</p>
                 {intake ? (
@@ -205,25 +275,32 @@ export default function MentorshipV2Tab() {
                 )}
               </div>
 
-              <div>
-                <p className="font-bold text-white mb-1">Skill tracker</p>
-                {skill?.submitted_at ? (
-                  <button
-                    onClick={() => setExpandedSkills(expandedSkills === enrollment.user_id ? null : enrollment.user_id)}
-                    className="underline"
-                    style={{ color: Y }}
-                  >
-                    submitted — {expandedSkills === enrollment.user_id ? "hide" : "view"} ratings
-                  </button>
-                ) : (
-                  <p style={{ color: "#555" }}>not submitted</p>
-                )}
-              </div>
+              <SkillTrackerCell
+                label="Foundation skill tracker"
+                tracker={skillFoundation}
+                expanded={expandedSkills === `${uid}:foundation`}
+                onToggle={() => setExpandedSkills(expandedSkills === `${uid}:foundation` ? null : `${uid}:foundation`)}
+              />
+              <SkillTrackerCell
+                label="Stream skill tracker"
+                tracker={skillStream}
+                expanded={expandedSkills === `${uid}:stream`}
+                onToggle={() => setExpandedSkills(expandedSkills === `${uid}:stream` ? null : `${uid}:stream`)}
+              />
             </div>
 
-            {expandedSkills === enrollment.user_id && skill?.ratings && (
+            {expandedSkills === `${uid}:foundation` && skillFoundation?.ratings && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-[11px] rounded-lg p-3" style={{ backgroundColor: "#0d0d0d" }}>
-                {Object.entries(skill.ratings).map(([id, r]) => (
+                {Object.entries(skillFoundation.ratings).map(([id, r]) => (
+                  <p key={id} style={{ color: "#999" }}>
+                    {id}: <span className="text-white">{r.current || 0}</span>/<span style={{ color: Y }}>{r.goal || 0}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+            {expandedSkills === `${uid}:stream` && skillStream?.ratings && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-[11px] rounded-lg p-3" style={{ backgroundColor: "#0d0d0d" }}>
+                {Object.entries(skillStream.ratings).map(([id, r]) => (
                   <p key={id} style={{ color: "#999" }}>
                     {id}: <span className="text-white">{r.current || 0}</span>/<span style={{ color: Y }}>{r.goal || 0}</span>
                   </p>
@@ -231,55 +308,95 @@ export default function MentorshipV2Tab() {
               </div>
             )}
 
-            <div className="border-t pt-3" style={{ borderColor: "#1f1f1f" }}>
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-white">Session 1 meeting</p>
-                {!isEditing && (
-                  <button
-                    onClick={() => openEdit(row)}
-                    className="text-xs font-bold px-3 py-1.5 rounded-lg"
-                    style={{ border: `1px solid ${Y}`, color: Y }}
-                  >
-                    {link ? "edit" : "set link"}
-                  </button>
-                )}
-              </div>
-              {!isEditing && (
-                <p className="text-xs mt-1" style={{ color: "#888" }}>
-                  {fmtDt(link?.session_datetime)} · {link?.join_link || "no link set"}
-                </p>
-              )}
-              {isEditing && (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Field type="date" label="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
-                  <Field type="time" label="time (IST)" value={form.time} onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))} />
-                  <div className="md:col-span-3">
-                    <Field
-                      label="calendly / meeting link"
-                      value={form.join_link}
-                      placeholder="https://calendly.com/..."
-                      onChange={(e) => setForm((f) => ({ ...f, join_link: e.target.value }))}
-                    />
+            <div className="border-t pt-3 space-y-3" style={{ borderColor: "#1f1f1f" }}>
+              <p className="text-xs font-bold text-white">Sessions</p>
+              {slotNumbers.map((n) => {
+                const link = links[n];
+                const feedback = feedbacks[n];
+                const callBooking = callBookings[n];
+                const isEditing = editingKey === `${uid}:${n}`;
+                return (
+                  <div key={n} className="rounded-lg p-3" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-xs font-bold" style={{ color: Y }}>{slotLabel(n)}</p>
+                      {!isEditing && (
+                        <button
+                          onClick={() => openEdit(uid, n, link)}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                          style={{ border: `1px solid ${Y}`, color: Y }}
+                        >
+                          {link ? "edit" : "set up"}
+                        </button>
+                      )}
+                    </div>
+                    {!isEditing && (
+                      <div className="text-xs mt-1.5 space-y-0.5" style={{ color: "#888" }}>
+                        {n > 5 && (
+                          <p>learner picked: {callBooking ? `${callBooking.preferred_day} · ${callBooking.preferred_time}` : "not booked yet"}</p>
+                        )}
+                        <p>{fmtDt(link?.session_datetime)} · {link?.join_link || "no join link set"}</p>
+                        <p>recording: {link?.recording_url || "not uploaded"}</p>
+                        <p>
+                          feedback:{" "}
+                          {feedback
+                            ? feedback.attended
+                              ? `${feedback.rating}/5 — "${feedback.feedback_text}"`
+                              : "did not attend"
+                            : "not submitted yet"}
+                        </p>
+                      </div>
+                    )}
+                    {isEditing && (
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Field type="date" label="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+                        <Field type="time" label="time (IST)" value={form.time} onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))} />
+                        <div className="md:col-span-2">
+                          <Field
+                            label="calendly / meeting link"
+                            value={form.join_link}
+                            placeholder="https://calendly.com/..."
+                            onChange={(e) => setForm((f) => ({ ...f, join_link: e.target.value }))}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Field
+                            label="recording link (after the call)"
+                            value={form.recording_url}
+                            placeholder="https://drive.google.com/..."
+                            onChange={(e) => setForm((f) => ({ ...f, recording_url: e.target.value }))}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <TextAreaField
+                            label="session notes (shown to the learner)"
+                            rows={2}
+                            value={form.session_notes}
+                            placeholder="Good progress this session — ..."
+                            onChange={(e) => setForm((f) => ({ ...f, session_notes: e.target.value }))}
+                          />
+                        </div>
+                        <div className="md:col-span-2 flex gap-2">
+                          <button
+                            onClick={() => handleSave(uid, n)}
+                            disabled={saving}
+                            className="text-xs font-black px-4 py-2 rounded-lg"
+                            style={{ background: Y, color: "#111" }}
+                          >
+                            {saving ? "saving…" : "save"}
+                          </button>
+                          <button
+                            onClick={() => setEditingKey(null)}
+                            className="text-xs font-bold px-4 py-2 rounded-lg"
+                            style={{ border: "1px solid #333", color: "#aaa" }}
+                          >
+                            cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="md:col-span-3 flex gap-2">
-                    <button
-                      onClick={() => handleSave(enrollment.user_id)}
-                      disabled={saving}
-                      className="text-xs font-black px-4 py-2 rounded-lg"
-                      style={{ background: Y, color: "#111" }}
-                    >
-                      {saving ? "saving…" : "save"}
-                    </button>
-                    <button
-                      onClick={() => setEditingUserId(null)}
-                      className="text-xs font-bold px-4 py-2 rounded-lg"
-                      style={{ border: "1px solid #333", color: "#aaa" }}
-                    >
-                      cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
         );

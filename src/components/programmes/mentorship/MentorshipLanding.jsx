@@ -2,7 +2,9 @@ import { mentor_yagnesh } from "../../../assets/images/Mentorship";
 import ProcessSteps from "../ProcessSteps";
 import { PLANS, PLAN_ORDER } from "./plans";
 
-const PROCESS = [
+// Exported so the per-session workspace pages (MentorshipSessionPage.jsx)
+// can reuse the same 5 titles/descriptions instead of duplicating them.
+export const PROCESS = [
   {
     title: "Discover",
     body: "Meet your mentor, understand how the program works, and start mapping your design skills through a guided self-assessment sheet."

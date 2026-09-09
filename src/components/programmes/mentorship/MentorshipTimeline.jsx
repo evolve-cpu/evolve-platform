@@ -15,6 +15,12 @@ const CORE_STEPS = [
   "Session 5 · Apply"
 ];
 
+// "Before we begin" and "Book a slot" are one-time setup steps, not meant
+// to be redone once passed — unlike the sessions themselves, which stay
+// revisitable afterward (to review recordings/feedback). Session 1 is the
+// first index that's ever clickable again once you've moved past it.
+export const FIRST_REVISITABLE_INDEX = 2;
+
 const JOB_APPLICATION_GROUPS = [1, 2, 3].map((n) => ({
   heading: `Job application ${n}`,
   steps: ["Call 1", "Call 2"]
@@ -22,7 +28,10 @@ const JOB_APPLICATION_GROUPS = [1, 2, 3].map((n) => ({
 
 // Builds the flat row list a timeline renders — "step" rows count toward
 // the total, "group" rows are just section labels (like the growth map's
-// "seed" heading), never clickable/counted.
+// "seed" heading), never clickable/counted. Step index N+1 = slot N in
+// mentorship_session_links/feedback_v2 for both sessions (slots 1-5) and,
+// for application_support, job-application calls (slots 6-11) — see
+// slotToStepIndex below.
 export function buildTimeline(isApplicationSupport) {
   const rows = CORE_STEPS.map((label, i) => ({ type: "step", label, index: i }));
   let stepCount = CORE_STEPS.length;
@@ -38,12 +47,40 @@ export function buildTimeline(isApplicationSupport) {
   return { rows, totalSteps: stepCount };
 }
 
+// Slot numbers (1-5 sessions, 6-11 job-application calls) map 1:1 onto step
+// indices — see buildTimeline's comment.
+export function slotToStepIndex(slot) {
+  return slot + 1;
+}
+
 function AddOnRow() {
   return (
     <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-white/50 font-semibold">
       <span className="w-3.5 flex-shrink-0 text-center leading-none">+</span>
       Add-on calls
     </div>
+  );
+}
+
+function AllRecordingsRow({ active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-left transition-colors ${
+        active
+          ? "bg-evolve-yellow/10 text-evolve-yellow font-bold"
+          : "text-white/60 font-semibold hover:bg-white/[0.04] hover:text-white"
+      }`}
+    >
+      <span className="w-3.5 flex justify-center flex-shrink-0">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M8.5 8l4 2-4 2V8z" fill="currentColor" />
+        </svg>
+      </span>
+      All recordings
+    </button>
   );
 }
 
@@ -56,7 +93,7 @@ function LockIcon() {
   );
 }
 
-function TimelineRows({ rows, currentIndex, onSelectStep }) {
+function TimelineRows({ rows, currentIndex, activeIndex, onSelectStep, showAllRecordings, allRecordingsActive, onOpenAllRecordings }) {
   return (
     <div className="flex flex-col gap-0.5">
       {rows.map((row) => {
@@ -70,23 +107,26 @@ function TimelineRows({ rows, currentIndex, onSelectStep }) {
             </p>
           );
         }
-        const isCurrent = row.index === currentIndex;
+        const isActive = row.index === activeIndex;
         const reached = row.index <= currentIndex;
-        const Tag = reached && !isCurrent && onSelectStep ? "button" : "div";
+        const canRevisit = reached && !isActive && onSelectStep && row.index >= FIRST_REVISITABLE_INDEX;
+        const Tag = canRevisit ? "button" : "div";
         return (
           <Tag
             key={row.label}
             type={Tag === "button" ? "button" : undefined}
             onClick={Tag === "button" ? () => onSelectStep(row.index) : undefined}
             className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-left ${
-              isCurrent
+              isActive
                 ? "bg-evolve-yellow/10 text-evolve-yellow font-bold"
-                : reached
+                : canRevisit
                   ? "text-white/60 font-semibold hover:bg-white/[0.04] hover:text-white transition-colors"
-                  : "text-white/35 font-semibold"
+                  : reached
+                    ? "text-white/50 font-semibold"
+                    : "text-white/35 font-semibold"
             }`}
           >
-            {isCurrent ? (
+            {isActive ? (
               <span className="w-3.5 flex justify-center flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow flex-shrink-0" />
               </span>
@@ -103,6 +143,7 @@ function TimelineRows({ rows, currentIndex, onSelectStep }) {
           </Tag>
         );
       })}
+      {showAllRecordings && <AllRecordingsRow active={allRecordingsActive} onClick={onOpenAllRecordings} />}
       <AddOnRow />
     </div>
   );
@@ -113,15 +154,37 @@ function TimelineRows({ rows, currentIndex, onSelectStep }) {
  * (parent row controls the top offset it sits below) with its own
  * max-height/scroll so a long step list (application_support's job-
  * application calls) scrolls independently of the page.
+ *
+ * `currentIndex` is true progress (what's unlocked/revisitable) — separate
+ * from `activeIndex`, which row is highlighted right now. They diverge
+ * whenever you revisit an earlier, already-completed row (e.g. jumping
+ * back to Session 1 while progress is at Session 2): the highlight should
+ * follow what's on screen, not silently snap back to true progress.
  */
-export function MentorshipTimelineDesktop({ plan, currentIndex = 0, onSelectStep }) {
+export function MentorshipTimelineDesktop({
+  plan,
+  currentIndex = 0,
+  activeIndex,
+  onSelectStep,
+  showAllRecordings,
+  allRecordingsActive,
+  onOpenAllRecordings
+}) {
   const { rows } = buildTimeline(plan === "application_support");
   return (
     <div className="hidden lg:flex lg:w-[240px] flex-shrink-0 flex-col gap-1 py-1 lg:sticky lg:top-32 lg:self-start lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto slim-scrollbar">
       <p className="text-white/25 text-[10px] font-bold uppercase tracking-wide px-3 pb-2">
         your mentorship
       </p>
-      <TimelineRows rows={rows} currentIndex={currentIndex} onSelectStep={onSelectStep} />
+      <TimelineRows
+        rows={rows}
+        currentIndex={currentIndex}
+        activeIndex={activeIndex ?? currentIndex}
+        onSelectStep={onSelectStep}
+        showAllRecordings={showAllRecordings}
+        allRecordingsActive={allRecordingsActive}
+        onOpenAllRecordings={onOpenAllRecordings}
+      />
     </div>
   );
 }
@@ -130,12 +193,24 @@ export function MentorshipTimelineDesktop({ plan, currentIndex = 0, onSelectStep
  * Mobile "Step N of M" accordion — meant to live inside the same sticky
  * header block as the "back to programmes" button (see
  * MentorshipWorkspaceShell) so both stay pinned together while the form
- * scrolls underneath.
+ * scrolls underneath. Labelled/percented off `activeIndex` (what's on
+ * screen), same reasoning as the desktop column above.
  */
-export function MentorshipTimelineMobile({ plan, currentIndex = 0, onSelectStep }) {
+export function MentorshipTimelineMobile({
+  plan,
+  currentIndex = 0,
+  activeIndex,
+  onSelectStep,
+  showAllRecordings,
+  allRecordingsActive,
+  onOpenAllRecordings
+}) {
   const { rows, totalSteps } = buildTimeline(plan === "application_support");
-  const currentLabel = rows.find((r) => r.type === "step" && r.index === currentIndex)?.label || "";
-  const percent = totalSteps ? Math.round((currentIndex / totalSteps) * 100) : 0;
+  const effectiveActive = activeIndex ?? currentIndex;
+  const activeLabel = allRecordingsActive
+    ? "All recordings"
+    : rows.find((r) => r.type === "step" && r.index === effectiveActive)?.label || "";
+  const percent = totalSteps ? Math.round((Math.max(effectiveActive, 0) / totalSteps) * 100) : 0;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -151,7 +226,7 @@ export function MentorshipTimelineMobile({ plan, currentIndex = 0, onSelectStep 
               your mentorship
             </p>
             <p className="text-white text-sm font-bold mt-0.5">
-              Step {currentIndex} of {totalSteps} · {currentLabel}
+              {allRecordingsActive ? activeLabel : `Step ${effectiveActive} of ${totalSteps} · ${activeLabel}`}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -185,9 +260,16 @@ export function MentorshipTimelineMobile({ plan, currentIndex = 0, onSelectStep 
           <TimelineRows
             rows={rows}
             currentIndex={currentIndex}
+            activeIndex={effectiveActive}
             onSelectStep={(i) => {
               setMobileOpen(false);
               onSelectStep?.(i);
+            }}
+            showAllRecordings={showAllRecordings}
+            allRecordingsActive={allRecordingsActive}
+            onOpenAllRecordings={() => {
+              setMobileOpen(false);
+              onOpenAllRecordings?.();
             }}
           />
         </div>
