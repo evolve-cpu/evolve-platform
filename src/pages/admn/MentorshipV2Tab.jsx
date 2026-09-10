@@ -105,6 +105,7 @@ export default function MentorshipV2Tab() {
   const [form, setForm] = useState({ date: "", time: "21:00", join_link: "", recording_url: "", session_notes: "" });
   const [saving, setSaving] = useState(false);
   const [expandedSkills, setExpandedSkills] = useState(null); // `${userId}:foundation` | `${userId}:stream`
+  const [expandedUserId, setExpandedUserId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -230,27 +231,55 @@ export default function MentorshipV2Tab() {
         const { enrollment, profile, intake, booking, skillFoundation, skillStream, links, feedbacks, callBookings } = row;
         const uid = enrollment.user_id;
         const slotNumbers = enrollment.plan === "application_support" ? [...SESSION_NUMBERS, ...JOB_APPLICATION_SLOTS] : SESSION_NUMBERS;
+        const isExpanded = expandedUserId === uid;
+        const completedCount = slotNumbers.filter((n) => feedbacks[n]).length;
         return (
           <div
             key={enrollment.id}
-            className="rounded-xl p-4 space-y-3"
+            className="rounded-xl overflow-hidden"
             style={{ backgroundColor: "#111", border: "1px solid #1f1f1f" }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-sm font-bold text-white">
-                  {profile?.name || "—"} <span style={{ color: "#666" }}>@{profile?.username || "—"}</span>
-                </p>
-                <p className="text-xs" style={{ color: "#888" }}>{profile?.email}</p>
+            <button
+              type="button"
+              onClick={() => setExpandedUserId(isExpanded ? null : uid)}
+              className="w-full flex flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="flex-shrink-0 transition-transform"
+                  style={{ color: "#666", transform: isExpanded ? "rotate(90deg)" : "none" }}
+                >
+                  <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
+                    {profile?.name || "—"} <span style={{ color: "#666" }}>@{profile?.username || "—"}</span>
+                  </p>
+                  <p className="text-xs truncate" style={{ color: "#888" }}>
+                    {profile?.email}
+                    {enrollment.phone ? ` · ${enrollment.phone}` : ""}
+                  </p>
+                </div>
               </div>
-              <span
-                className="text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full"
-                style={{ color: Y, border: `1px solid ${Y}55` }}
-              >
-                {enrollment.plan}
-              </span>
-            </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-xs" style={{ color: "#666" }}>
+                  {completedCount}/{slotNumbers.length} done
+                </span>
+                <span
+                  className="text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full"
+                  style={{ color: Y, border: `1px solid ${Y}55` }}
+                >
+                  {enrollment.plan}
+                </span>
+              </div>
+            </button>
 
+            {isExpanded && (
+              <div className="p-4 pt-0 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs" style={{ color: "#aaa" }}>
               <div>
                 <p className="font-bold text-white mb-1">Before we begin</p>
@@ -398,6 +427,8 @@ export default function MentorshipV2Tab() {
                 );
               })}
             </div>
+              </div>
+            )}
           </div>
         );
       })}
