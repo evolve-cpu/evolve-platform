@@ -431,9 +431,31 @@ export default function PublicProfile() {
     setEvolveReview(data || null);
   }, [isOwner, user]);
 
+  // drives the Mentorship card's "Continue program" vs "Explore program"
+  // label — same re-check-on-return pattern as loadEvolveReview above.
+  const [mentorshipEnrollment, setMentorshipEnrollment] = useState(null);
+  const loadMentorshipEnrollment = useCallback(async () => {
+    if (!isOwner || !user) {
+      setMentorshipEnrollment(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("mentorship_enrollments")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "success")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setMentorshipEnrollment(data || null);
+  }, [isOwner, user]);
+
   useEffect(() => {
-    if (!activeProgramme) loadEvolveReview();
-  }, [activeProgramme, loadEvolveReview]);
+    if (!activeProgramme) {
+      loadEvolveReview();
+      loadMentorshipEnrollment();
+    }
+  }, [activeProgramme, loadEvolveReview, loadMentorshipEnrollment]);
 
   if (loading) {
     return (
@@ -857,6 +879,7 @@ export default function PublicProfile() {
                         label="mentorship"
                         description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
                         onClick={() => openProgramme("mentorship")}
+                        buttonLabel={mentorshipEnrollment ? "Continue program" : undefined}
                       />
                     </div>
                     {/* mobile-only stand-in for the "evolve community" link

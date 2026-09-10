@@ -11,7 +11,7 @@ export default function ProcessSteps({ steps, prefix = true }) {
         >
           <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-evolve-yellow" />
           <p className="text-evolve-yellow font-bold text-sm font-bricolage">
-            {prefix ? `step ${i + 1} — ${s.title}` : s.title}
+            {prefix ? `Step ${i + 1} — ${s.title}` : s.title}
           </p>
           <p className="text-white/40 text-sm mt-1 leading-relaxed">{s.body}</p>
         </div>

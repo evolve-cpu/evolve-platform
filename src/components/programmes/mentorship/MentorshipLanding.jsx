@@ -1,4 +1,5 @@
 import { mentor_yagnesh } from "../../../assets/images/Mentorship";
+import { right_arrow_icon } from "../../../assets/images/Nav";
 import ProcessSteps from "../ProcessSteps";
 import { PLANS, PLAN_ORDER } from "./plans";
 
@@ -125,7 +126,9 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
         </div>
         <button
           onClick={() =>
-            document.getElementById("mt-pricing")?.scrollIntoView({ behavior: "smooth" })
+            document
+              .getElementById("mt-pricing")
+              ?.scrollIntoView({ behavior: "smooth" })
           }
           className="mt-6 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:opacity-80"
         >
@@ -139,16 +142,16 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
           what this solves
         </p>
         <div
-          className="rounded-2xl border border-white/10 px-6 py-5 flex flex-col gap-3"
+          className="rounded-2xl border bg-white/[0.03] border-white/10 px-6 py-5 flex flex-col gap-3"
           style={{
-            background: "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)",
+            // background: "linear-gradient(90deg, rgba(255,208,7,0.05), transparent 60%)",
             borderLeft: "3px solid #FFD007"
           }}
         >
           <p className="text-white font-semibold text-sm leading-relaxed">
-            Most designers don't know how to design — they're better knowing
-            the amount of work or how to get a job than how to position
-            themselves for it.
+            Most designers don't know how to design — they're better knowing the
+            amount of work or how to get a job than how to position themselves
+            for it.
           </p>
           <p className="text-white/60 text-sm leading-relaxed">
             This program helps you get started and apply with clarity — five
@@ -166,8 +169,8 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
           A structured mentorship
         </h2>
         <p className="text-white/50 text-sm leading-relaxed mb-8 max-w-xl">
-          Built around one idea: guidance from someone who actually makes
-          hiring and design decisions, delivered one step at a time.
+          Built around one idea: guidance from someone who actually makes hiring
+          and design decisions, delivered one step at a time.
         </p>
         <ProcessSteps steps={PROCESS} prefix />
       </div>
@@ -197,13 +200,28 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
               byStadium · Visiting Faculty, NID
             </p>
             <p className="text-white/40 text-sm leading-relaxed">
-              With 18+ years of experience across more than 20 domains,
-              Yagnesh builds intuitive, user-friendly experiences for SaaS
-              companies. He runs Paperclip Design, a design studio in
-              Ahmedabad — where he also sits on the other side of the table,
-              hiring designers and building teams. He's mentored 100+
-              designers so far.
+              With 18+ years of experience across more than 20 domains, Yagnesh
+              builds intuitive, user-friendly experiences for SaaS companies. He
+              runs Paperclip Design, a design studio in Ahmedabad — where he
+              also sits on the other side of the table, hiring designers and
+              building teams. He's mentored 100+ designers so far.
             </p>
+            <a
+              href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-2 w-fit text-white text-xs font-bold rounded-full border border-white/15 px-4 py-2 hover:bg-white/[0.06] transition-colors"
+            >
+              View LinkedIn
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.61 0 4.28 2.38 4.28 5.47v6.27zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45z" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>
@@ -222,9 +240,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
               <p className="text-white/70 text-sm leading-relaxed">
                 "{t.quote}"
               </p>
-              <p className="text-evolve-yellow text-xs font-bold">
-                — {t.role}
-              </p>
+              <p className="text-evolve-yellow text-xs font-bold">— {t.role}</p>
             </div>
           ))}
         </div>
@@ -244,28 +260,28 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
             return (
               <div
                 key={p.key}
-                className="relative rounded-2xl border px-6 py-6 flex flex-col gap-3"
+                className={`relative rounded-3xl border px-8 py-8 flex flex-col gap-3 bg-white/[0.04] ${
+                  p.featured ? "order-1 md:order-2" : "order-2 md:order-1"
+                }`}
                 style={
                   p.featured
                     ? {
-                        borderColor: "#FFD007",
-                        background:
-                          "linear-gradient(180deg, rgba(255,208,7,0.06), transparent 55%)"
+                        borderColor: "#FFD007"
+                        // background:
+                        //   "linear-gradient(180deg, rgba(255,208,7,0.06), transparent 55%)"
                       }
                     : { borderColor: "rgba(255,255,255,0.1)" }
                 }
               >
                 {p.badge && (
-                  <span className="absolute top-5 right-5 text-[10px] font-bold uppercase tracking-wide text-evolve-yellow border border-evolve-yellow/50 rounded-full px-2.5 py-1">
+                  <span className="absolute -top-4 md:-top-5 left-[25%] md:left-[15%] -translate-x-1/2 text-[12px] md:text-[14px] font-bold bg-evolve-yellow text-evolve-black border-[4px] border-evolve-black rounded-full px-4 py-1 whitespace-nowrap">
                     {p.badge}
                   </span>
                 )}
                 <p className="text-white/40 text-xs uppercase tracking-wide font-semibold">
                   {p.label}
                 </p>
-                <span className="text-white font-bold text-3xl">
-                  {p.price}
-                </span>
+                <span className="text-white font-bold text-3xl">{p.price}</span>
                 <p className="text-white/30 text-xs">{p.tagline}</p>
                 <p className="text-white/50 text-sm">{p.desc}</p>
                 <ul className="flex flex-col gap-1.5 mt-1">
@@ -327,11 +343,14 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
         </div>
         <button
           onClick={() =>
-            document.getElementById("mt-pricing")?.scrollIntoView({ behavior: "smooth" })
+            document
+              .getElementById("mt-pricing")
+              ?.scrollIntoView({ behavior: "smooth" })
           }
-          className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 flex-shrink-0"
+          className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 flex-shrink-0 flex items-center gap-2"
         >
-          Get started →
+          Get started
+          <img src={right_arrow_icon} alt="" className="w-4 h-4" />
         </button>
       </div>
     </div>
