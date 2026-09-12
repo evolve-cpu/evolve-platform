@@ -4,6 +4,7 @@ import { supabase } from "../../supabaseClient";
 import AIReportModal from "./AIReportModal";
 import EvolveReviewsPanel from "./EvolveReviewsPanel";
 import MentorshipV2Tab from "./MentorshipV2Tab";
+import EventsTab from "./EventsTab";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1601,7 +1602,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     },
     { id: "sessions", label: "sessions" },
     { id: "accelerator", label: "accelerator 1:1" },
-    { id: "mentorship-v2", label: "mentorship (individual)" }
+    { id: "mentorship-v2", label: "mentorship (individual)" },
+    { id: "events", label: "events" }
   ];
 
   // Anant tabs: faculty → students; uni_admin / evolve admin → students + faculty + college admin
@@ -2798,6 +2800,11 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             isolated flow from the batch tabs above. Self-contained, same
             pattern as EvolveReviewsPanel. */}
         {activeTab === "mentorship-v2" && !isAnantAdmin && <MentorshipV2Tab />}
+
+        {/* Evolve Events — in-house replacement for Luma-managed webinars.
+            Phase 1: admin create/edit/publish + registrants view. Self-contained,
+            same pattern as MentorshipV2Tab. */}
+        {activeTab === "events" && !isAnantAdmin && <EventsTab />}
 
         {/* ══════════════════════════════════════════════════════════════
             REVIEWS TAB (evolve non-Anant admin only)
