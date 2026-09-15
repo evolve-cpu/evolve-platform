@@ -1048,6 +1048,7 @@ import { useAuth } from "./hooks/useAuth";
 // Lazy load non-critical routes
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Webinars = lazy(() => import("./pages/Webinars.jsx"));
+const EventDetail = lazy(() => import("./pages/EventDetail.jsx"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const Community = lazy(() => import("./pages/Community.jsx"));
 const PortfolioReview = lazy(() => import("./pages/PortfolioReview.jsx"));
@@ -1170,7 +1171,9 @@ const AppLayout = () => {
       path.startsWith("/institute/") ||
       path.startsWith("/space/") ||
       path.startsWith("/mentorship-session") ||
-      path.startsWith("/evolve-in-person");
+      path.startsWith("/evolve-in-person") ||
+      path.startsWith("/events") ||
+      path.startsWith("/profile/");
     if (exempt) return;
 
     // always land on the profile page once onboarding finishes — not back on
@@ -1693,6 +1696,7 @@ const AppLayout = () => {
             />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/webinars" element={<Webinars />} />
+            <Route path="/events/:slug" element={<EventDetail />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
             <Route path="/portfolio-review" element={<PortfolioReview />} />

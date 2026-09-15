@@ -4,6 +4,28 @@ import { supabaseAdmin } from "../../supabaseAdminClient";
 const Y = "#FFD007";
 const inputStyle = { backgroundColor: "#0d0d0d", border: "1px solid #262626" };
 const labelStyle = { color: "#666" };
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+async function callEventsNotify(body) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/events-notify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "request failed");
+  return data;
+}
+
+// best-effort — publishing shouldn't fail if the calendar sync hiccups
+function syncCalendar(eventId) {
+  callEventsNotify({ mode: "sync_calendar", event_id: eventId }).catch(() => {});
+}
 
 const STATUS_COLOR = {
   draft: "#888",
@@ -16,7 +38,7 @@ const EMPTY_FORM = {
   title: "",
   slug: "",
   description: "",
-  agenda: [""],
+  questionCategories: [{ name: "", questions: [""] }],
   date: "",
   time: "19:00",
   durationMinutes: "60",
@@ -152,14 +174,39 @@ function ImageField({ label, value, onUploaded, pathPrefix }) {
 }
 
 function EventForm({ form, setForm, onSave, onCancel, saving }) {
-  function updateAgenda(i, value) {
-    setForm((f) => ({ ...f, agenda: f.agenda.map((a, idx) => (idx === i ? value : a)) }));
+  function updateCategoryName(ci, name) {
+    setForm((f) => ({
+      ...f,
+      questionCategories: f.questionCategories.map((c, idx) => (idx === ci ? { ...c, name } : c))
+    }));
   }
-  function addAgendaRow() {
-    setForm((f) => ({ ...f, agenda: [...f.agenda, ""] }));
+  function addCategory() {
+    setForm((f) => ({ ...f, questionCategories: [...f.questionCategories, { name: "", questions: [""] }] }));
   }
-  function removeAgendaRow(i) {
-    setForm((f) => ({ ...f, agenda: f.agenda.filter((_, idx) => idx !== i) }));
+  function removeCategory(ci) {
+    setForm((f) => ({ ...f, questionCategories: f.questionCategories.filter((_, idx) => idx !== ci) }));
+  }
+  function updateQuestion(ci, qi, value) {
+    setForm((f) => ({
+      ...f,
+      questionCategories: f.questionCategories.map((c, idx) =>
+        idx === ci ? { ...c, questions: c.questions.map((q, qidx) => (qidx === qi ? value : q)) } : c
+      )
+    }));
+  }
+  function addQuestion(ci) {
+    setForm((f) => ({
+      ...f,
+      questionCategories: f.questionCategories.map((c, idx) => (idx === ci ? { ...c, questions: [...c.questions, ""] } : c))
+    }));
+  }
+  function removeQuestion(ci, qi) {
+    setForm((f) => ({
+      ...f,
+      questionCategories: f.questionCategories.map((c, idx) =>
+        idx === ci ? { ...c, questions: c.questions.filter((_, qidx) => qidx !== qi) } : c
+      )
+    }));
   }
 
   return (
@@ -189,35 +236,66 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
 
       <div className="md:col-span-2">
         <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
-          agenda / what will be covered
+          question categories / what will be covered
         </label>
-        <div className="space-y-2">
-          {form.agenda.map((item, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
-                style={inputStyle}
-                value={item}
-                placeholder={`Topic ${i + 1}`}
-                onChange={(e) => updateAgenda(i, e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeAgendaRow(i)}
-                className="text-xs font-bold px-3 rounded-lg"
-                style={{ border: "1px solid #333", color: "#aaa" }}
-              >
-                remove
-              </button>
+        <div className="space-y-3">
+          {form.questionCategories.map((cat, ci) => (
+            <div key={ci} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
+                  style={inputStyle}
+                  value={cat.name}
+                  placeholder={`Category ${ci + 1} (e.g. "Decoding feedback & surviving stakeholders")`}
+                  onChange={(e) => updateCategoryName(ci, e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCategory(ci)}
+                  className="text-xs font-bold px-3 rounded-lg"
+                  style={{ border: "1px solid #333", color: "#aaa" }}
+                >
+                  remove category
+                </button>
+              </div>
+              <div className="pl-3 space-y-2">
+                {cat.questions.map((q, qi) => (
+                  <div key={qi} className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                      style={inputStyle}
+                      value={q}
+                      placeholder={`Sample question ${qi + 1}`}
+                      onChange={(e) => updateQuestion(ci, qi, e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(ci, qi)}
+                      className="text-xs font-bold px-3 rounded-lg"
+                      style={{ border: "1px solid #333", color: "#aaa" }}
+                    >
+                      remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addQuestion(ci)}
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                  style={{ border: "1px solid #333", color: "#aaa" }}
+                >
+                  + add question
+                </button>
+              </div>
             </div>
           ))}
           <button
             type="button"
-            onClick={addAgendaRow}
+            onClick={addCategory}
             className="text-xs font-bold px-3 py-1.5 rounded-lg"
             style={{ border: `1px solid ${Y}`, color: Y }}
           >
-            + add topic
+            + add category
           </button>
         </div>
       </div>
@@ -319,7 +397,9 @@ function eventToForm(event) {
     slug: event.slug || "",
     _slugTouched: true,
     description: event.description || "",
-    agenda: event.agenda?.length ? event.agenda : [""],
+    questionCategories: event.question_categories?.length
+      ? event.question_categories.map((c) => ({ name: c.name || "", questions: c.questions?.length ? c.questions : [""] }))
+      : [{ name: "", questions: [""] }],
     date,
     time,
     durationMinutes: String(durationMinutes),
@@ -341,7 +421,9 @@ function formToPayload(form, status) {
     title: form.title.trim(),
     slug: slugify(form.slug || form.title),
     description: form.description.trim() || null,
-    agenda: form.agenda.map((a) => a.trim()).filter(Boolean),
+    question_categories: form.questionCategories
+      .map((c) => ({ name: c.name.trim(), questions: c.questions.map((q) => q.trim()).filter(Boolean) }))
+      .filter((c) => c.name),
     start_time,
     end_time,
     speaker_name: form.speaker_name.trim() || null,
@@ -365,6 +447,10 @@ export default function EventsTab() {
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [inviteForm, setInviteForm] = useState({ email: "", name: "" });
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSuccess, setInviteSuccess] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -379,7 +465,7 @@ export default function EventsTab() {
       ? await supabaseAdmin.from("event_registrations").select("*").in("event_id", eventIds)
       : { data: [] };
 
-    const userIds = [...new Set((registrations || []).map((r) => r.user_id))];
+    const userIds = [...new Set((registrations || []).map((r) => r.user_id).filter(Boolean))];
     const { data: profiles } = userIds.length
       ? await supabaseAdmin.from("profiles").select("id, name, username, email").in("id", userIds)
       : { data: [] };
@@ -409,6 +495,7 @@ export default function EventsTab() {
     setEvents((prev) => [data, ...prev]);
     setCreating(false);
     setCreateForm(EMPTY_FORM);
+    if (data.status === "published") syncCalendar(data.id);
   }
 
   function openEdit(event) {
@@ -428,6 +515,7 @@ export default function EventsTab() {
     }
     setEvents((prev) => prev.map((e) => (e.id === event.id ? data : e)));
     setEditForm(null);
+    if (data.status === "published") syncCalendar(data.id);
   }
 
   async function handleCancelEvent(event) {
@@ -443,6 +531,23 @@ export default function EventsTab() {
       return;
     }
     setEvents((prev) => prev.map((e) => (e.id === event.id ? data : e)));
+  }
+
+  async function handleInvite(event) {
+    if (!inviteForm.email.trim()) return;
+    setInviting(true);
+    setInviteError("");
+    setInviteSuccess("");
+    try {
+      await callEventsNotify({ mode: "invite", event_id: event.id, email: inviteForm.email.trim(), name: inviteForm.name.trim() });
+      setInviteSuccess(`Invited ${inviteForm.email.trim()}`);
+      setInviteForm({ email: "", name: "" });
+      await fetchData();
+    } catch (err) {
+      setInviteError(err.message);
+    } finally {
+      setInviting(false);
+    }
   }
 
   function copyLink(event) {
@@ -578,12 +683,19 @@ export default function EventsTab() {
                       <div>
                         <p className="font-bold text-white mb-1">Session</p>
                         <p>{event.description || "no description"}</p>
-                        {event.agenda?.length > 0 && (
-                          <ul className="list-disc list-inside mt-1">
-                            {event.agenda.map((a, i) => (
-                              <li key={i}>{a}</li>
+                        {event.question_categories?.length > 0 && (
+                          <div className="mt-1 space-y-1">
+                            {event.question_categories.map((cat, i) => (
+                              <div key={i}>
+                                <p className="font-bold" style={{ color: Y }}>{cat.name}</p>
+                                <ul className="list-disc list-inside">
+                                  {cat.questions?.map((q, qi) => (
+                                    <li key={qi}>{q}</li>
+                                  ))}
+                                </ul>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         )}
                       </div>
                       <div>
@@ -595,6 +707,36 @@ export default function EventsTab() {
                       </div>
                     </div>
 
+                    <div className="border-t pt-3 space-y-2" style={{ borderColor: "#1f1f1f" }}>
+                      <p className="text-xs font-bold text-white">Invite someone directly</p>
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          className="rounded-lg px-3 py-2 text-sm text-white outline-none flex-1 min-w-[160px]"
+                          style={inputStyle}
+                          placeholder="email"
+                          value={inviteForm.email}
+                          onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
+                        />
+                        <input
+                          className="rounded-lg px-3 py-2 text-sm text-white outline-none flex-1 min-w-[140px]"
+                          style={inputStyle}
+                          placeholder="name (optional)"
+                          value={inviteForm.name}
+                          onChange={(e) => setInviteForm((f) => ({ ...f, name: e.target.value }))}
+                        />
+                        <button
+                          onClick={() => handleInvite(event)}
+                          disabled={inviting}
+                          className="text-xs font-bold px-4 py-2 rounded-lg"
+                          style={{ background: Y, color: "#111" }}
+                        >
+                          {inviting ? "inviting…" : "invite"}
+                        </button>
+                      </div>
+                      {inviteError && <p className="text-xs" style={{ color: "#ef4444" }}>{inviteError}</p>}
+                      {inviteSuccess && <p className="text-xs" style={{ color: "#22c55e" }}>{inviteSuccess}</p>}
+                    </div>
+
                     <div className="border-t pt-3" style={{ borderColor: "#1f1f1f" }}>
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-xs font-bold text-white">Registrants ({registrants.length})</p>
@@ -603,11 +745,15 @@ export default function EventsTab() {
                             downloadCSV(
                               `${event.slug}-registrants.csv`,
                               registrants.map((r) => ({
-                                name: r.profile?.name || "",
+                                name: r.profile?.name || r.invitee_name || "",
                                 username: r.profile?.username || "",
-                                email: r.profile?.email || "",
+                                email: r.profile?.email || r.invitee_email || "",
                                 registered_at: r.registered_at,
-                                status: r.status
+                                status: r.status,
+                                source: r.source,
+                                question_category: r.question_category || "",
+                                question_text: r.question_text || "",
+                                question_anonymous: r.question_anonymous
                               }))
                             )
                           }
@@ -623,9 +769,28 @@ export default function EventsTab() {
                       ) : (
                         <div className="space-y-1 text-xs" style={{ color: "#aaa" }}>
                           {registrants.map((r) => (
-                            <p key={r.id}>
-                              {r.profile?.name || "—"} ({r.profile?.email || "—"}) · {fmtDt(r.registered_at)}
-                            </p>
+                            <div key={r.id}>
+                              <p>
+                                {r.profile?.name || r.invitee_name || "—"} ({r.profile?.email || r.invitee_email || "—"}) ·{" "}
+                                {fmtDt(r.registered_at)}
+                                {r.source === "admin_invite" && (
+                                  <span className="ml-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: Y }}>
+                                    invited
+                                  </span>
+                                )}
+                                {!r.calendar_synced && (
+                                  <span className="ml-2 text-[10px]" style={{ color: "#666" }}>
+                                    (calendar/email pending)
+                                  </span>
+                                )}
+                              </p>
+                              {r.question_text && (
+                                <p style={{ color: "#888" }}>
+                                  {r.question_anonymous ? "anonymous" : "asked"}
+                                  {r.question_category ? ` · ${r.question_category}` : ""}: "{r.question_text}"
+                                </p>
+                              )}
+                            </div>
                           ))}
                         </div>
                       )}

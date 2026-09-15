@@ -659,24 +659,19 @@ export const mentorship = {
 // ─────────────────────────────────────────────
 export const webinars = {
   seo: {
-    title: "Design sessions — webinars, workshops & live events by evolve",
+    title: "Evolve Events — live sessions, AMAs & webinars by evolve",
     description:
-      "From live webinars to hands-on workshops and informal design meetups — evolve sessions are where learning gets real. Online and offline, for every stage of your design journey."
+      "Learn from people who've been there, done that, and have the work to prove it. Register for evolve's live sessions and AMAs, straight from the site."
   },
 
   hero: {
-    heading: "evolve\nwebinars"
+    heading: "evolve\nevents",
     // Desktop subtext (two lines)
-    // subtextDesktop:
-    //   "Learn from people who've been there,\ndone that, and have the work to prove it."
+    subtextDesktop:
+      "learn from people who've been there,\ndone that, and have the work to prove it.",
     // Mobile subtext (single line)
-    // subtextMobile:
-    //   "Learn from people who've been there, done that, and have the work to prove it."
-  },
-
-  upcomingWebinar: {
-    // Replace "#" with the registration link when ready
-    registrationUrl: "#"
+    subtextMobile:
+      "learn from people who've been there, done that, and have the work to prove it."
   },
 
   pastSection: {
