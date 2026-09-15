@@ -1283,13 +1283,14 @@ const AppLayout = () => {
     "/for-institutes/portfolio-review-programme",
     "/for-institutes/find-your-niche-programme"
   ];
+  const isEventDetailRoute = /^\/events\/[^/]+\/?$/.test(location.pathname);
   const shouldShowFooter =
     !hideFooterRoutes.includes(location.pathname) &&
     !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/") &&
     !location.pathname.startsWith("/institute/") &&
     !location.pathname.startsWith("/invite/") &&
-    !location.pathname.startsWith("/events/");
+    !isEventDetailRoute;
 
   // Global landing gets the "global" footer (designers / institutions /
   // corporates nav) instead of the designer-flow footer.
@@ -1654,7 +1655,7 @@ const AppLayout = () => {
       >
         <Navigation
           showNavbar={showNavbar}
-          dark={location.pathname.startsWith("/events/")}
+          dark={isEventDetailRoute}
           onLogoClick={() => {
             if (location.pathname === "/designers") {
               window.dispatchEvent(new CustomEvent("scrollToScene1_1"));

@@ -1002,20 +1002,25 @@ function UpcomingEventsSection({ events }) {
         Upcoming Event
       </h2>
 
-      <div className="relative w-full max-w-5xl flex items-center gap-3 md:gap-6">
+      <div className="relative w-full max-w-6xl flex items-center gap-3 md:gap-6">
         {events.length > 1 && (
           <button
             onClick={() => setIndex((i) => Math.max(0, i - 1))}
             disabled={index === 0}
             aria-label="previous event"
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-white flex items-center justify-center font-bold text-evolve-pink disabled:opacity-30"
+            className="hidden md:flex flex-shrink-0 items-center justify-center disabled:opacity-30"
           >
-            ‹
+            <img
+              src={right_arrow_icon}
+              alt=""
+              className="h-8 w-8 rotate-180"
+              style={{ filter: "invert(1)" }}
+            />
           </button>
         )}
 
         <div className="relative flex-1 bg-evolve-yellow rounded-[40px] md:rounded-[64px] p-8 md:p-14 min-h-[460px] md:min-h-[490px] flex flex-col justify-center overflow-hidden">
-          <div className="relative z-10 max-w-full md:max-w-[55%] pb-52 md:pb-0 flex flex-col items-center text-center md:items-start md:text-left">
+          <div className="relative z-10 max-w-full md:max-w-[65%] pb-52 md:pb-0 flex flex-col items-center text-center md:items-start md:text-left">
             <span className="inline-block bg-black text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3">
               {event.event_type || "Webinar"}
             </span>
@@ -1077,15 +1082,20 @@ function UpcomingEventsSection({ events }) {
             onClick={() => setIndex((i) => Math.min(events.length - 1, i + 1))}
             disabled={index === events.length - 1}
             aria-label="next event"
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-white flex items-center justify-center font-bold text-evolve-pink disabled:opacity-30"
+            className="hidden md:flex flex-shrink-0 items-center justify-center disabled:opacity-30"
           >
-            ›
+            <img
+              src={right_arrow_icon}
+              alt=""
+              className="h-8 w-8"
+              style={{ filter: "invert(1)" }}
+            />
           </button>
         )}
       </div>
 
       {events.length > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="hidden md:flex justify-center gap-2 mt-6">
           {events.map((_, i) => (
             <button
               key={i}
@@ -1094,6 +1104,47 @@ function UpcomingEventsSection({ events }) {
               className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/40"}`}
             />
           ))}
+        </div>
+      )}
+
+      {events.length > 1 && (
+        <div className="w-full max-w-6xl flex md:hidden items-center justify-between mt-6">
+          <button
+            onClick={() => setIndex((i) => Math.max(0, i - 1))}
+            disabled={index === 0}
+            aria-label="previous event"
+            className="flex-shrink-0 disabled:opacity-30"
+          >
+            <img
+              src={right_arrow_icon}
+              alt=""
+              className="h-6 w-6 rotate-180"
+              style={{ filter: "invert(1)" }}
+            />
+          </button>
+          <div className="flex gap-2">
+            {events.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                aria-label={`go to event ${i + 1}`}
+                className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/40"}`}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => setIndex((i) => Math.min(events.length - 1, i + 1))}
+            disabled={index === events.length - 1}
+            aria-label="next event"
+            className="flex-shrink-0 disabled:opacity-30"
+          >
+            <img
+              src={right_arrow_icon}
+              alt=""
+              className="h-6 w-6"
+              style={{ filter: "invert(1)" }}
+            />
+          </button>
         </div>
       )}
     </section>
@@ -1268,7 +1319,7 @@ const Webinars = () => {
             </div>
 
             {/* Texts inside barfi */}
-            <div className="absolute top-[4vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
+            <div className="absolute top-[8vh] md:top-[0vh] inset-x-0 z-30 flex justify-center">
               <div className="w-[80%] text-center pt-16 px-6">
                 <h1
                   className="text-evolve-pink font-extrabold"
