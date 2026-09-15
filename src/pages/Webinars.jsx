@@ -1002,7 +1002,7 @@ function UpcomingEventsSection({ events }) {
         Upcoming Event
       </h2>
 
-      <div className="relative w-full max-w-6xl flex items-center gap-3 md:gap-6">
+      <div className="relative w-full max-w-7xl flex items-center gap-3 md:gap-6">
         {events.length > 1 && (
           <button
             onClick={() => setIndex((i) => Math.max(0, i - 1))}
@@ -1019,7 +1019,7 @@ function UpcomingEventsSection({ events }) {
           </button>
         )}
 
-        <div className="relative flex-1 bg-evolve-yellow rounded-[40px] md:rounded-[64px] p-8 md:p-14 min-h-[460px] md:min-h-[490px] flex flex-col justify-center overflow-hidden">
+        <div className="relative flex-1 bg-evolve-yellow rounded-[100px] md:rounded-[100px] p-8 md:p-14 min-h-[460px] md:min-h-[490px] flex flex-col justify-center overflow-hidden">
           <div className="relative z-10 max-w-full md:max-w-[65%] pb-52 md:pb-0 flex flex-col items-center text-center md:items-start md:text-left">
             <span className="inline-block bg-black text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3">
               {event.event_type || "Webinar"}
