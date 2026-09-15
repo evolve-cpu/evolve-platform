@@ -143,9 +143,9 @@ const CARD_DATA = {
     logo: mentorship_logo,
     imageWidth: "72%"
   },
-  webinar: {
-    title: "webinar",
-    desc: "expert-led sessions. learn, engage, and grow.",
+  event: {
+    title: "events",
+    desc: "Interactive live sessions to learn, connect, and co-create.",
     logo: webinar_logo,
     imageWidth: "60%"
   }
@@ -1340,7 +1340,7 @@ const SceneNew = React.forwardRef((props, ref) => {
   const cardLinks = {
     1: "/community",
     2: "/mentorship",
-    3: "/webinars"
+    3: "/events"
   };
 
   // Card click handlers
@@ -1614,7 +1614,7 @@ const SceneNew = React.forwardRef((props, ref) => {
             />
             <OvalFullCard
               ref={oval3Ref}
-              card="webinar"
+              card="events"
               onClick={() => handleCardClick(3)}
               style={{ width: "330px", opacity: 0 }}
             />
@@ -1676,7 +1676,7 @@ const SceneNew = React.forwardRef((props, ref) => {
 
               <OvalFullCard
                 ref={oval3Ref}
-                card="webinar"
+                card="events"
                 onClick={() => handleCardClick(3)}
                 style={{
                   position: "absolute",

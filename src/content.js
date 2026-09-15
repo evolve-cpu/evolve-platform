@@ -531,23 +531,23 @@ export const mentorship = {
   faqs: [
     {
       q: "Who is this for?",
-      a: "Created for anyone starting out in design, transitioning into the field, or building toward more advanced roles."
+      a: "Design majors, recent grads, career switchers, and mid-level designers,  anyone feeling a sense of unclarity about their design career."
     },
     {
       q: "How long does the mentorship run?",
-      a: "5 sessions of ~60 minutes each, spread across 2–3 months. The pace is deliberate — space between sessions matters."
+      a: "5 weeks, one 60-minute session every Thursday at 9:30 PM IST. Sessions build on each other, so they run in sequence rather than on-demand."
     },
     {
       q: "What do I walk away with?",
-      a: "A targeted resume, a structured portfolio, a shortlist of real companies and roles, and interview preparation specific to your goals."
+      a: "A reworked resume and portfolio, a targeted shortlist of companies and roles that fit you, and a clear strategy for how to apply and interview with confidence."
     },
     {
       q: "What happens after the sessions end?",
-      a: "Support doesn't stop. You'll have ongoing access as you apply. We stay in your corner until you land."
+      a: "You keep applying with the plan and materials you've built. Yagnesh stays reachable for quick questions as you go through interviews."
     },
     {
       q: "Do I need prior design experience?",
-      a: "No. Freshers are preferred. if you're serious about a design career and willing to put in the work, that's enough to start."
+      a: "No. The programme adapts to where you're starting from whether you have zero experience or a few years behind you."
     }
     // Commented out for now — may bring back later
     // {
@@ -590,9 +590,9 @@ export const mentorship = {
   framework: {
     sectionLabel: "Our framework",
     // The "X stages / Y sessions" heading — spots count is dynamic (from DB), keep the rest here
-    stagesLine: "4 stages.",
-    sessionsLine: "5 sessions.",
-    sessionTime: "Every thursday 9.30pm IST",
+    stagesLine: "5 sessions.",
+    sessionsLine: "1 Direction",
+    sessionTime: "Thursday 9.30 - 10.30pm IST",
 
     // Desktop version — longer body copy
     stagesDesktop: [

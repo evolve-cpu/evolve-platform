@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { path: "/", label: "home" },
   { path: "/community", label: "community" },
   { path: "/mentorship", label: "mentorship" },
-  { path: "/webinars", label: "webinars" },
+  { path: "/events", label: "events" },
   { path: "/contact", label: "contact us", isModal: true }
 ];
 

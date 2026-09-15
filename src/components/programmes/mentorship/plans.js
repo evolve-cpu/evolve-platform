@@ -19,7 +19,7 @@ export const PLANS = {
   },
   application_support: {
     key: "application_support",
-    label: "Mentorship + application support",
+    label: "Mentorship + Job Assistance",
     price: "₹15,000",
     tagline: "One-time · 5 sessions + 6 application calls",
     desc: "Everything in core mentorship, plus 6 extra calls — 2 per job application — so you're not applying alone.",

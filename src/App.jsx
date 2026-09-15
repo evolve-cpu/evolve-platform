@@ -1031,7 +1031,15 @@
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  useParams,
+  Navigate
+} from "react-router-dom";
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
@@ -1068,10 +1076,14 @@ const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
 const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
-const ProgrammePortfolioReview = lazy(() => import("./pages/ProgrammePortfolioReview"));
+const ProgrammePortfolioReview = lazy(
+  () => import("./pages/ProgrammePortfolioReview")
+);
 const ProgrammeMentorship = lazy(() => import("./pages/ProgrammeMentorship"));
 const InstitutePublicPage = lazy(() => import("./pages/InstitutePublicPage"));
-const InstituteSettingsPage = lazy(() => import("./pages/InstituteSettingsPage"));
+const InstituteSettingsPage = lazy(
+  () => import("./pages/InstituteSettingsPage")
+);
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const Institutions = lazy(() => import("./pages/Institutions"));
 const Corporates = lazy(() => import("./pages/Corporates"));
@@ -1276,7 +1288,8 @@ const AppLayout = () => {
     !location.pathname.startsWith("/profile/") &&
     !location.pathname.startsWith("/space/") &&
     !location.pathname.startsWith("/institute/") &&
-    !location.pathname.startsWith("/invite/");
+    !location.pathname.startsWith("/invite/") &&
+    !location.pathname.startsWith("/events/");
 
   // Global landing gets the "global" footer (designers / institutions /
   // corporates nav) instead of the designer-flow footer.
@@ -1641,6 +1654,7 @@ const AppLayout = () => {
       >
         <Navigation
           showNavbar={showNavbar}
+          dark={location.pathname.startsWith("/events/")}
           onLogoClick={() => {
             if (location.pathname === "/designers") {
               window.dispatchEvent(new CustomEvent("scrollToScene1_1"));
@@ -1695,7 +1709,7 @@ const AppLayout = () => {
               element={<CollegeRealityCheck />}
             />
             <Route path="/about" element={<AboutUs />} />
-            <Route path="/webinars" element={<Webinars />} />
+            <Route path="/events" element={<Webinars />} />
             <Route path="/events/:slug" element={<EventDetail />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/community" element={<Community />} />
@@ -1736,11 +1750,20 @@ const AppLayout = () => {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
-            <Route path="/programmes/portfolio-review" element={<ProgrammePortfolioReview />} />
-            <Route path="/programmes/mentorship" element={<ProgrammeMentorship />} />
+            <Route
+              path="/programmes/portfolio-review"
+              element={<ProgrammePortfolioReview />}
+            />
+            <Route
+              path="/programmes/mentorship"
+              element={<ProgrammeMentorship />}
+            />
             <Route path="/space/:slug" element={<SpaceRedirect />} />
             <Route path="/institute/:slug" element={<InstitutePublicPage />} />
-            <Route path="/institute/:slug/settings" element={<InstituteSettingsPage />} />
+            <Route
+              path="/institute/:slug/settings"
+              element={<InstituteSettingsPage />}
+            />
             <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/payment" element={<Payment />} />
             <Route

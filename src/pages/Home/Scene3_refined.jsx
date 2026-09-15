@@ -29,12 +29,12 @@ const CARDS = [
     link: "/mentorship"
   },
   {
-    id: "webinar",
-    title: "Webinar",
-    desc: "Expert-led sessions. learn, engage, and grow.",
+    id: "events",
+    title: "Event",
+    desc: "Interactive live sessions to learn, connect, and co-create.",
     logo: webinar_logo,
     imageWidth: "60%",
-    link: "/webinars"
+    link: "/events"
   }
 ];
 

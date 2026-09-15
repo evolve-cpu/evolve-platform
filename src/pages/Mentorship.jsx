@@ -18,26 +18,25 @@ import {
   // get_started_button_hover
   explore_plans,
   // right_ribbon,
-  impact_thing,
-  impact_thing_mobile,
   right_eye_ribbon,
   left_eye_ribbon,
   right_eye_ribbon_mobile,
   left_eye_ribbon_mobile,
-  mentorship_vector,
-  mentorship_vector_mobile,
-  apply_to_mentorship,
   chinmayImg,
   jonImg,
   anishImg,
   pradyumnaImg,
   explore_mentorship,
-  join_the_waitlist
+  join_the_waitlist,
+  eye_pricing,
+  pricing_bg,
+  pricing_bg_mobile
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
 import { supabase } from "../supabaseClient";
 import { mentorship as COPY } from "../content";
+import { PLANS } from "../components/programmes/mentorship/plans";
 import {
   trackCtaClick,
   trackPlanSelected,
@@ -606,7 +605,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                 }`}
               >
                 {/* {marqueeLabel} — commented out for now, static text instead */}
-                Coming Soon
+                100+ Designers Mentored
               </span>
               <img
                 key={`icon-b-${i}`}
@@ -621,7 +620,7 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
                 }`}
               >
                 {/* {spotsText} — commented out for now, static text instead */}
-                Coming Soon
+                100+ Designers Mentored
               </span>
             </>
           ))}
@@ -632,26 +631,145 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
 };
 
 /* ─────────────────────────────────────────────
-   GetStartedButton — shared hover button
+   GetStartedCta — shared black pill CTA with an
+   evolve-yellow label + arrow (hero, pricing
+   boxes, and the closing "why we built this"
+   section all funnel through this one button)
 ───────────────────────────────────────────── */
-const GetStartedButton = ({ onClick }) => {
-  const [hover, setHover] = useState(false);
-  return (
-    <img
-      // src={hover ? get_started_button_hover : get_started_button}
-      src={apply_to_mentorship}
-      alt="get started"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onClick={onClick}
-      className="cursor-pointer transition-opacity duration-150"
-      style={{
-        width: "clamp(200px, 22vw, 320px)",
-        marginTop: "clamp(24px, 3vh, 48px)"
-      }}
-    />
-  );
-};
+const GetStartedCta = ({ onClick, className = "" }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`inline-flex items-center gap-2 bg-black text-evolve-yellow font-bold rounded-xl cursor-pointer transition-opacity duration-150 hover:opacity-90 active:opacity-80 ${className}`}
+    style={{
+      padding: "14px 28px",
+      fontSize: "clamp(14px, 1.4vw, 16px)",
+      boxShadow: "4px 4px 0 0 #806804"
+    }}
+  >
+    Get Started
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M5 12H19"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 5L19 12L12 19"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </button>
+);
+
+/* ─────────────────────────────────────────────
+   PricingBox — new pricing section card
+   (price + feature copy sourced from the in-profile
+   mentorship plans — see
+   components/programmes/mentorship/plans.js —
+   title/badge/gift-line are marketing-page-only copy)
+───────────────────────────────────────────── */
+const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
+  <div
+    className="relative flex flex-col justify-between text-left bg-evolve-yellow rounded-3xl border-2 border-black flex-1 w-full md:w-auto"
+    style={{
+      maxWidth: "480px",
+      padding: "clamp(32px, 4vw, 48px) clamp(28px, 3vw, 40px)",
+      boxShadow: "8px 8px 0 0 #000000"
+    }}
+  >
+    {badge && (
+      <span
+        className="absolute bg-evolve-pink text-evolve-yellow border-[4px] border-evolve-yellow font-extrabold rounded-full inline-block"
+        style={{
+          fontSize: "clamp(14px, 1.5vw, 18px)",
+          padding: "8px 20px",
+          top: "-20px",
+          left: "clamp(28px, 3vw, 40px)"
+        }}
+      >
+        {badge}
+      </span>
+    )}
+    <div>
+      <p
+        className="font-extrabold text-black"
+        style={{
+          fontSize: "clamp(20px, 2vw, 26px)",
+          letterSpacing: "-0.02em"
+        }}
+      >
+        {title}
+      </p>
+      <p
+        className="font-bold"
+        style={{
+          color: "#DF0586",
+          fontSize: "clamp(13px, 1.3vw, 16px)",
+          marginTop: "6px"
+        }}
+      >
+        + Surprise Gift Worth ₹5,000 Inside!
+      </p>
+      <p
+        className="font-extrabold text-black"
+        style={{
+          fontSize: "clamp(40px, 5vw, 64px)",
+          letterSpacing: "-0.02em",
+          lineHeight: "1",
+          marginTop: "clamp(14px, 2vh, 22px)"
+        }}
+      >
+        {price}
+      </p>
+      <div
+        className="w-full"
+        style={{
+          height: "1px",
+          backgroundColor: "rgba(0,0,0,0.35)",
+          margin: "clamp(20px, 2.5vh, 28px) 0"
+        }}
+      />
+      <p
+        className="font-extrabold text-black"
+        style={{ fontSize: "clamp(15px, 1.5vw, 18px)" }}
+      >
+        What's Included
+      </p>
+      <ul
+        className="text-black"
+        style={{
+          fontSize: "clamp(13px, 1.3vw, 15px)",
+          lineHeight: "1.7",
+          marginTop: "clamp(10px, 1.5vh, 16px)"
+        }}
+      >
+        {features.map((feature, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span
+              aria-hidden="true"
+              className="flex-shrink-0 rounded-full bg-black inline-block"
+              style={{ width: "5px", height: "5px", marginTop: "9px" }}
+            />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <GetStartedCta onClick={onGetStarted} className="self-start mt-8" />
+  </div>
+);
 
 /* ─────────────────────────────────────────────
    Main Mentorship page
@@ -783,6 +901,28 @@ const Mentorship = () => {
   const starterFeatures = COPY.pricing.starterFeatures;
   const acceleratorFeatures = COPY.pricing.acceleratorFeatures;
 
+  // "Get started" everywhere on this page (hero + pricing boxes) funnels into
+  // the same place: sign in (if needed) → finish onboarding (if needed) →
+  // land on the mentorship card inside the profile page. The sessionStorage
+  // flag survives the sign-in/onboarding redirects (which always land plain
+  // on /profile/:username, see Onboarding.jsx) so PublicProfile can still
+  // open the mentorship pane once the user actually gets there.
+  const handleGetStarted = (source) => {
+    trackCtaClick("get_started", source);
+    sessionStorage.setItem("open_mentorship_card", "1");
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
+    if (!user.onboarding_completed) {
+      navigate("/onboarding");
+      return;
+    }
+    navigate(`/profile/${user.username}`, {
+      state: { activeProgramme: "mentorship" }
+    });
+  };
+
   return (
     <div className="bg-evolve-yellow">
       <SEO
@@ -866,16 +1006,7 @@ const Mentorship = () => {
                 >
                   Coming Soon <span aria-hidden="true">→</span>
                 </button> */}
-                <p
-                  className="font-extrabold text-black"
-                  style={{
-                    fontSize: isMobile ? "18px" : "22px",
-                    letterSpacing: "-0.02em"
-                  }}
-                >
-                  Coming Soon
-                  {/* → */}
-                </p>
+                <GetStartedCta onClick={() => handleGetStarted("hero")} />
                 {/* limited seats note not needed for now
                 <p className="text-black text-sm font-semibold">
                   {COPY.limitedSeatsNote}
@@ -973,7 +1104,7 @@ const Mentorship = () => {
                     className={`flex-none font-paralucent  text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {marqueeLabel} — commented out for now, static text instead */}
-                    Coming Soon
+                    100+ Designers Mentored
                   </span>
                   <img
                     key={`icon-b-${i}`}
@@ -986,7 +1117,7 @@ const Mentorship = () => {
                     className={`flex-none font-paralucent  text-evolve-yellow ${isMobile ? "text-4xl" : "text-5xl"}`}
                   >
                     {/* {spotsText} — commented out for now, static text instead */}
-                    Coming Soon
+                    100+ Designers Mentored
                   </span>
                 </>
               ))}
@@ -1687,224 +1818,65 @@ const Mentorship = () => {
           </div>
         </section>
       )}
-      {/* ================= SECTION 7 — IMPACT ================= */}
-      {/* Desktop */}
-      <div className="hidden md:block w-full">
-        <img src={impact_thing} alt="impact" className="w-full h-auto block" />
-      </div>
-      {/* Mobile */}
-      <div className="block md:hidden w-full">
-        <img
-          src={impact_thing_mobile}
-          alt="impact"
-          className="w-full h-auto block"
-        />
-      </div>
 
-      {/* ================= SECTION 8 — WHY WE BUILT THIS (Desktop) ================= */}
-      <section className="hidden md:flex relative min-h-screen bg-evolve-yellow overflow-hidden flex-col items-center">
-        {/* Content — centered top */}
+      {/* ================= SECTION 6B — PRICING (NEW) ================= */}
+      <section className="relative overflow-hidden">
+        <img
+          src={pricing_bg}
+          alt=""
+          className="hidden md:block absolute inset-0 w-full h-full object-cover z-0"
+        />
+        <img
+          src={pricing_bg_mobile}
+          alt=""
+          className="block md:hidden absolute inset-0 w-full h-full object-cover z-0"
+        />
+        <img
+          src={eye_pricing}
+          alt=""
+          className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-[150px] md:w-[220px]"
+        />
         <div
-          className="relative z-10 flex flex-col items-center text-center"
-          style={{
-            paddingTop: "clamp(64px, 8vh, 120px)",
-            paddingLeft: "clamp(32px, 6vw, 120px)",
-            paddingRight: "clamp(32px, 6vw, 120px)"
-          }}
+          className="relative z-10 flex flex-col items-center"
+          style={{ paddingTop: "clamp(56px, 10vh, 110px)" }}
         >
-          {/* Heading */}
-          <h2
-            className="font-extrabold text-evolve-pink"
+          {/* <h2
+            className="text-white font-extrabold text-center px-6"
             style={{
-              fontSize: "clamp(56px, 7vw, 96px)",
-              lineHeight: "1",
-              letterSpacing: "-3%"
+              fontSize: "clamp(32px, 5vw, 64px)",
+              letterSpacing: "-0.02em"
             }}
           >
-            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
-          </h2>
-
-          {/* Sub heading */}
-          <p
-            className="font-normal text-evolve-pink mt-6"
+            {COPY.pricing.sectionHeading}
+          </h2> */}
+          <div
+            className="flex flex-col md:gap-14 gap-10 md:flex-row items-center md:items-stretch md:mt-10 justify-center w-full"
             style={{
-              fontSize: "clamp(28px, 3.2vw, 48px)",
-              lineHeight: "1.15",
-              letterSpacing: "-3%",
-              maxWidth: "80vw"
+              // gap: "clamp(24px, 4vw, 48px)",
+              padding:
+                "clamp(32px, 5vh, 64px) clamp(20px, 5vw, 80px) clamp(56px, 8vh, 100px)"
             }}
           >
-            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
-          </p>
-
-          {/* Body text */}
-          <p
-            className="font-normal text-black mt-6"
-            style={{
-              fontSize: "clamp(18px, 2.2vw, 32px)",
-              lineHeight: "1.45",
-              letterSpacing: "-0.3px",
-              maxWidth: "70vw"
-            }}
-          >
-            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
-          </p>
-
-          {/* Explore plans / session button */}
-          {hasPaid ? (
-            <button
-              onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
-              style={{
-                backgroundColor: "#000",
-                boxShadow: "4px 4px 0 0 #BF9C05"
-              }}
-            >
-              my mentorship session
-            </button>
-          ) : (
-            /* explore_plans button not needed for now — changed to text
-            <img
-              src={explore_plans}
-              alt="explore plans"
-              onClick={() => scrollTo(section6Ref)}
-              className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
-              style={{ width: "clamp(200px, 22vw, 320px)" }}
-            /> */
-            <p
-              className="font-extrabold text-black mt-8"
-              style={{
-                fontSize: "clamp(18px, 2vw, 28px)",
-                letterSpacing: "-0.02em"
-              }}
-            >
-              Coming Soon
-              {/* → */}
-            </p>
-          )}
+            <PricingBox
+              title="Core Mentorship"
+              price={PLANS.core.price}
+              features={PLANS.core.features}
+              onGetStarted={() => handleGetStarted("pricing_core")}
+            />
+            <PricingBox
+              title="Mentorship + Job Assistance"
+              badge="Most Support"
+              price={PLANS.application_support.price}
+              features={PLANS.application_support.features}
+              onGetStarted={() =>
+                handleGetStarted("pricing_application_support")
+              }
+            />
+          </div>
         </div>
-
-        {/* Ribbons — bottom corners */}
-        <img
-          src={right_eye_ribbon}
-          alt=""
-          className="absolute bottom-[6rem] right-0 z-10 w-[45%]"
-          // style={{ height: "clamp(200px, 30vh, 420px)" }}
-        />
-        <img
-          src={left_eye_ribbon}
-          alt=""
-          className="absolute bottom-[4rem] left-0 z-20 w-[45%]"
-          // style={{ height: "clamp(200px, 30vh, 420px)" }}
-        />
-        <MarqueeStrip
-          key={marqueeLabel}
-          isMobile={false}
-          spotsText={spotsText}
-          marqueeLabel={marqueeLabel}
-        />
       </section>
 
-      {/* ================= SECTION 8 — WHY WE BUILT THIS (Mobile) ================= */}
-      <section className="block md:hidden relative bg-evolve-yellow overflow-hidden min-h-screen">
-        {/* Content */}
-        <div
-          className="relative z-30 flex flex-col items-center text-center px-5"
-          style={{ paddingTop: "clamp(48px, 10vh, 80px)" }}
-        >
-          {/* Heading */}
-          <h2
-            className="font-extrabold text-evolve-pink"
-            style={{
-              fontSize: "clamp(36px, 10vw, 52px)",
-              lineHeight: "1.05",
-              letterSpacing: "-0.03em"
-            }}
-          >
-            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
-          </h2>
-
-          {/* Sub heading */}
-          <p
-            className="font-normal text-evolve-pink mt-4"
-            style={{
-              fontSize: "clamp(22px, 6vw, 32px)",
-              lineHeight: "1.2",
-              letterSpacing: "-0.03em"
-            }}
-          >
-            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
-          </p>
-
-          {/* Body text */}
-          <p
-            className="font-normal text-black mt-4"
-            style={{
-              fontSize: "clamp(16px, 4.5vw, 22px)",
-              lineHeight: "1.5",
-              letterSpacing: "-0.2px",
-              maxWidth: "86vw"
-            }}
-          >
-            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
-          </p>
-
-          {/* Explore plans / session button */}
-          {hasPaid ? (
-            <button
-              onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
-              style={{
-                backgroundColor: "#000",
-                boxShadow: "4px 4px 0 0 #BF9C05"
-              }}
-            >
-              my mentorship session
-            </button>
-          ) : (
-            /* explore_plans button not needed for now — changed to text
-            <img
-              src={explore_plans}
-              alt="explore plans"
-              onClick={() => scrollTo(section6Ref)}
-              className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
-              style={{ width: "clamp(180px, 55vw, 260px)" }}
-            /> */
-            <p
-              className="font-extrabold text-black mt-6"
-              style={{
-                fontSize: "clamp(16px, 4.5vw, 22px)",
-                letterSpacing: "-0.02em"
-              }}
-            >
-              Coming Soon
-              {/* → */}
-            </p>
-          )}
-        </div>
-
-        {/* Ribbons — bottom corners, mobile variants */}
-        <img
-          src={right_eye_ribbon_mobile}
-          alt=""
-          className="absolute bottom-[4rem] right-0 z-20 w-full"
-          // style={{ height: "clamp(140px, 28vw, 220px)" }}
-        />
-        <img
-          src={left_eye_ribbon_mobile}
-          alt=""
-          className="absolute bottom-[4rem] left-0 z-10 w-auto"
-          // style={{ height: "clamp(140px, 28vw, 220px)" }}
-        />
-        <MarqueeStrip
-          key={marqueeLabel}
-          isMobile={true}
-          spotsText={spotsText}
-          marqueeLabel={marqueeLabel}
-        />
-      </section>
-
-      {/* ================= SECTION 9 — FAQ (Desktop) ================= */}
+      {/* ================= SECTION 7 — FAQ (Desktop) ================= */}
       <section className="hidden md:flex bg-evolve-yellow min-h-screen">
         {/* Left 35% — heading */}
         <div
@@ -2023,7 +1995,7 @@ const Mentorship = () => {
         </div>
       </section>
 
-      {/* ================= SECTION 9 — FAQ (Mobile) ================= */}
+      {/* ================= SECTION 7 — FAQ (Mobile) ================= */}
       <section
         className="block md:hidden bg-evolve-yellow"
         style={{
@@ -2123,72 +2095,60 @@ const Mentorship = () => {
         </div>
       </section>
 
-      {/* ================= SECTION 10 — CLOSING CTA (Desktop) ================= */}
-      <section className="hidden md:flex relative bg-evolve-lavender-indigo overflow-hidden flex-col items-center justify-center min-h-screen">
-        {/* Content — vertically & horizontally centered */}
+      {/* ================= SECTION 8 — WHY WE BUILT THIS (Desktop) ================= */}
+      <section className="hidden md:flex relative min-h-screen bg-evolve-yellow overflow-hidden flex-col items-center">
+        {/* Content — centered top */}
         <div
-          className="relative z-10 flex flex-col items-center text-center max-w-[50%] px-8"
-          style={{ paddingBottom: "clamp(120px, 18vh, 200px)" }}
+          className="relative z-10 flex flex-col items-center text-center"
+          style={{
+            paddingTop: "clamp(64px, 8vh, 120px)",
+            paddingLeft: "clamp(32px, 6vw, 120px)",
+            paddingRight: "clamp(32px, 6vw, 120px)"
+          }}
         >
-          {/* Batch heading — not needed for now, tagline is the heading
+          {/* Heading */}
           <h2
-            className="font-extrabold text-evolve-yellow"
+            className="font-extrabold text-evolve-pink"
             style={{
-              fontSize: "clamp(72px, 6vw, 128px)",
-              lineHeight: "0.9",
-              letterSpacing: "-0.03em"
+              fontSize: "clamp(56px, 7vw, 96px)",
+              lineHeight: "1",
+              letterSpacing: "-3%"
             }}
           >
-            {marqueeLabel}
+            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
           </h2>
-          */}
 
-          {/* Limited seats — not needed for now
+          {/* Sub heading */}
           <p
-            className="font-normal text-white"
+            className="font-normal text-evolve-pink mt-6"
             style={{
-              fontSize: "clamp(28px, 3vw, 48px)",
-              letterSpacing: "-3px",
-              marginTop: "clamp(16px, 2vh, 28px)"
+              fontSize: "clamp(28px, 3.2vw, 48px)",
+              lineHeight: "1.15",
+              letterSpacing: "-3%",
+              maxWidth: "80vw"
             }}
           >
-            {spotsText}
+            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
           </p>
-          */}
 
-          {/* Applications close */}
-          {/* {!allBatchesFull && (
-            <p
-              className="font-extrabold text-white"
-              style={{
-                fontSize: "clamp(28px, 3vw, 48px)",
-                letterSpacing: "-0.5px",
-                marginTop: "clamp(32px, 4vh, 56px)",
-                lineHeight: "1.1"
-              }}
-            >
-              {`applications close on ${closeLabel}`}
-            </p>
-          )} */}
-
-          {/* Tagline promoted to heading — body removed for now */}
-          <h2
-            className="font-extrabold text-evolve-yellow"
+          {/* Body text */}
+          <p
+            className="font-normal text-black mt-6"
             style={{
-              fontSize: "clamp(40px, 4.5vw, 80px)",
-              lineHeight: "1.05",
-              letterSpacing: "-0.03em",
-              maxWidth: "60ch"
+              fontSize: "clamp(18px, 2.2vw, 32px)",
+              lineHeight: "1.45",
+              letterSpacing: "-0.3px",
+              maxWidth: "70vw"
             }}
           >
-            {renderWithBreaks(COPY.closingCta.tagline)}
-          </h2>
+            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
+          </p>
 
-          {/* CTA button */}
+          {/* Explore plans / session button */}
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl mt-6"
+              className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -2197,95 +2157,91 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            /* GetStartedButton not needed for now — changed to text
-            <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
-            <p
-              className="font-extrabold text-white mt-8"
-              style={{
-                fontSize: "clamp(18px, 2vw, 28px)",
-                letterSpacing: "-0.02em"
-              }}
-            >
-              Coming Soon
-              {/* → */}
-            </p>
+            /* explore_plans button not needed for now — changed to text
+            <img
+              src={explore_plans}
+              alt="explore plans"
+              onClick={() => scrollTo(section6Ref)}
+              className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
+              style={{ width: "clamp(200px, 22vw, 320px)" }}
+            /> */
+            <GetStartedCta
+              onClick={() => handleGetStarted("why_we_built_this")}
+              className="mt-8"
+            />
           )}
         </div>
 
-        {/* Bottom vector — full width */}
+        {/* Ribbons — bottom corners */}
         <img
-          src={mentorship_vector}
+          src={right_eye_ribbon}
           alt=""
-          className="absolute -bottom-[3rem] left-0 w-full z-0 block"
+          className="absolute bottom-[6rem] right-0 z-10 w-[45%]"
+          // style={{ height: "clamp(200px, 30vh, 420px)" }}
+        />
+        <img
+          src={left_eye_ribbon}
+          alt=""
+          className="absolute bottom-[4rem] left-0 z-20 w-[45%]"
+          // style={{ height: "clamp(200px, 30vh, 420px)" }}
+        />
+        <MarqueeStrip
+          key={marqueeLabel}
+          isMobile={false}
+          spotsText={spotsText}
+          marqueeLabel={marqueeLabel}
         />
       </section>
 
-      {/* ================= SECTION 10 — CLOSING CTA (Mobile) ================= */}
-      <section className="flex md:hidden relative bg-evolve-lavender-indigo overflow-hidden min-h-screen flex-col items-center justify-center">
+      {/* ================= SECTION 8 — WHY WE BUILT THIS (Mobile) ================= */}
+      <section className="block md:hidden relative bg-evolve-yellow overflow-hidden min-h-screen">
+        {/* Content */}
         <div
-          className="relative z-10 flex flex-col items-center text-center px-5"
-          style={{ paddingBottom: "clamp(100px, 32vw, 160px)" }}
+          className="relative z-30 flex flex-col items-center text-center px-5"
+          style={{ paddingTop: "clamp(48px, 10vh, 80px)" }}
         >
-          {/* Batch heading — not needed for now, tagline is the heading
+          {/* Heading */}
           <h2
-            className="font-extrabold text-evolve-yellow"
+            className="font-extrabold text-evolve-pink"
             style={{
-              fontSize: "clamp(44px, 12vw, 64px)",
+              fontSize: "clamp(36px, 10vw, 52px)",
               lineHeight: "1.05",
               letterSpacing: "-0.03em"
             }}
           >
-            {marqueeLabel}
+            {renderWithBreaks(COPY.whyWeBuiltThis.heading)}
           </h2>
-          */}
 
-          {/* Limited seats — not needed for now
+          {/* Sub heading */}
           <p
-            className="font-normal text-white"
+            className="font-normal text-evolve-pink mt-4"
             style={{
-              fontSize: "clamp(20px, 5.5vw, 28px)",
-              letterSpacing: "-1px",
-              marginTop: "clamp(10px, 3vw, 18px)"
+              fontSize: "clamp(22px, 6vw, 32px)",
+              lineHeight: "1.2",
+              letterSpacing: "-0.03em"
             }}
           >
-            {spotsText}
+            {renderWithBreaks(COPY.whyWeBuiltThis.subheading)}
           </p>
-          */}
 
-          {/* Applications close — not needed for now
-          {!allBatchesFull && (
-            <p
-              className="font-extrabold text-white"
-              style={{
-                fontSize: "clamp(20px, 5.5vw, 28px)",
-                letterSpacing: "-0.5px",
-                marginTop: "clamp(20px, 6vw, 36px)",
-                lineHeight: "1.15"
-              }}
-            >
-              {`applications close on ${closeLabel}`}
-            </p>
-          )}
-          */}
-
-          {/* Tagline promoted to heading — body removed for now */}
-          <h2
-            className="font-extrabold text-evolve-yellow"
+          {/* Body text */}
+          <p
+            className="font-normal text-black mt-4"
             style={{
-              fontSize: "clamp(32px, 9vw, 52px)",
-              lineHeight: "1.05",
-              letterSpacing: "-0.03em",
-              maxWidth: "36ch"
+              fontSize: "clamp(16px, 4.5vw, 22px)",
+              lineHeight: "1.5",
+              letterSpacing: "-0.2px",
+              maxWidth: "86vw"
             }}
           >
-            {renderWithBreaks(COPY.closingCta.tagline)}
-          </h2>
+            {renderWithBreaks(COPY.whyWeBuiltThis.body)}
+          </p>
 
-          {/* CTA button */}
+          {/* Explore plans / session button */}
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl"
+              className="font-extrabold text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -2294,26 +2250,39 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            /* GetStartedButton not needed for now — changed to text
-            <GetStartedButton onClick={() => scrollTo(section6Ref)} /> */
-            <p
-              className="font-extrabold text-white mt-6"
-              style={{
-                fontSize: "clamp(16px, 4.5vw, 22px)",
-                letterSpacing: "-0.02em"
-              }}
-            >
-              Coming Soon
-              {/* → */}
-            </p>
+            /* explore_plans button not needed for now — changed to text
+            <img
+              src={explore_plans}
+              alt="explore plans"
+              onClick={() => scrollTo(section6Ref)}
+              className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
+              style={{ width: "clamp(180px, 55vw, 260px)" }}
+            /> */
+            <GetStartedCta
+              onClick={() => handleGetStarted("why_we_built_this")}
+              className="mt-6"
+            />
           )}
         </div>
 
-        {/* Bottom vector — full width */}
+        {/* Ribbons — bottom corners, mobile variants */}
         <img
-          src={mentorship_vector_mobile}
+          src={right_eye_ribbon_mobile}
           alt=""
-          className="absolute bottom-0 left-0 w-full z-0 block"
+          className="absolute bottom-[4rem] right-0 z-20 w-full"
+          // style={{ height: "clamp(140px, 28vw, 220px)" }}
+        />
+        <img
+          src={left_eye_ribbon_mobile}
+          alt=""
+          className="absolute bottom-[4rem] left-0 z-10 w-auto"
+          // style={{ height: "clamp(140px, 28vw, 220px)" }}
+        />
+        <MarqueeStrip
+          key={marqueeLabel}
+          isMobile={true}
+          spotsText={spotsText}
+          marqueeLabel={marqueeLabel}
         />
       </section>
     </div>

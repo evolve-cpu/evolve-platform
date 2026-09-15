@@ -38,7 +38,12 @@ const MIXED_BR = 16;
 const NAVBAR_SCROLL_HIDE = true;
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
+const Navigation = ({
+  onContactClick,
+  showNavbar = true,
+  onLogoClick,
+  dark = false
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -118,7 +123,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
     { path: "/community", label: "Community" },
     { path: "/portfolio-review", label: "Portfolio Review" },
     { path: "/mentorship", label: "Mentorship" },
-    { path: "/webinars", label: "Webinars" },
+    { path: "/events", label: "Events" },
     { path: "/contact", label: "Contact Us", isModal: true }
   ];
 
@@ -411,7 +416,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
       >
         <div
           ref={outerRef}
-          className="w-full border-2 border-black bg-transparent"
+          className={`w-full border-2 bg-transparent ${dark ? "border-white/10" : "border-black"}`}
           style={{
             borderBottomLeftRadius: MIXED_BL,
             borderBottomRightRadius: MIXED_BR
@@ -426,10 +431,12 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
             }}
           >
             <div
-              className="bg-evolve-yellow w-full flex items-center justify-between px-4 md:px-8"
+              className={`w-full flex items-center justify-between px-4 md:px-8 ${dark ? "bg-evolve-black" : "bg-evolve-yellow"}`}
               style={{
                 height: "56px",
-                boxShadow: `inset 6px 6px 0 rgba(0,0,0,0.15), inset 6px 6px 0 rgba(0,0,0,0.15)`
+                boxShadow: dark
+                  ? "none"
+                  : `inset 6px 6px 0 rgba(0,0,0,0.15), inset 6px 6px 0 rgba(0,0,0,0.15)`
               }}
             >
               {/* MENU BUTTON */}
@@ -443,6 +450,7 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   src={menuOpen ? cross_line_pink : three_wavy_lines}
                   alt="menu"
                   className="h-5 w-auto md:h-6"
+                  style={{ filter: dark && !menuOpen ? "invert(1)" : "none" }}
                 />
               </button>
 
@@ -455,11 +463,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                   src={evolve_logo_mobile}
                   alt="evolve logo"
                   className="h-7 w-auto md:hidden"
+                  style={{ filter: dark ? "invert(1)" : "none" }}
                 />
                 <img
                   src={evolve_logo}
                   alt="evolve logo"
                   className="hidden md:block h-7 w-auto"
+                  style={{ filter: dark ? "invert(1)" : "none" }}
                 />
               </div>
 
@@ -481,11 +491,13 @@ const Navigation = ({ onContactClick, showNavbar = true, onLogoClick }) => {
                     if (!accountOpen) openAccountModal();
                     else setAccountOpen(false);
                   }}
-                  className="text-black font-extrabold text-[16px] md:text-[20px] flex items-center gap-2"
+                  className={`font-extrabold text-[16px] md:text-[20px] flex items-center gap-2 ${dark ? "text-white" : "text-black"}`}
                 >
                   {authLoading ? (
                     <>
-                      <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+                      <span
+                        className={`animate-spin h-4 w-4 border-2 border-t-transparent rounded-full ${dark ? "border-white" : "border-black"}`}
+                      />
                       <span>loading…</span>
                     </>
                   ) : user ? (

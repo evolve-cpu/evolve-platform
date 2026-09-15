@@ -237,16 +237,30 @@ export default function PublicProfile() {
   // it's a compact "stage N" summary bar instead of the full profile panel.
   // Initialized from router state so a redirect after a username change
   // (see handleAccountSaved) can land back on the same panel instead of the
-  // dashboard default.
+  // dashboard default. Falls back to the "open_mentorship_card" sessionStorage
+  // flag — set by the /mentorship marketing page's "get started" CTA before
+  // it sends the visitor through sign-in/onboarding, which always land back
+  // on a plain /profile/:username with no router state (see Onboarding.jsx),
+  // so the flag is what lets us still open the mentorship pane once they land.
+  const hadMentorshipRedirectFlag =
+    typeof window !== "undefined" &&
+    sessionStorage.getItem("open_mentorship_card") === "1";
   const [activeProgramme, setActiveProgramme] = useState(
-    location.state?.activeProgramme || null
+    location.state?.activeProgramme ||
+      (hadMentorshipRedirectFlag ? "mentorship" : null)
   );
   // once a pane has been opened, keep it mounted (just hidden via CSS)
   // instead of unmounting it on every switch — so reopening a programme (or
   // hopping back to it after visiting another tab) doesn't reset its
   // internal state or re-trigger its data fetch from scratch.
   const [visitedProgrammes, setVisitedProgrammes] = useState(() =>
-    new Set(location.state?.activeProgramme ? [location.state.activeProgramme] : [])
+    new Set(
+      location.state?.activeProgramme
+        ? [location.state.activeProgramme]
+        : hadMentorshipRedirectFlag
+          ? ["mentorship"]
+          : []
+    )
   );
   useEffect(() => {
     if (activeProgramme && !visitedProgrammes.has(activeProgramme)) {
@@ -262,12 +276,21 @@ export default function PublicProfile() {
   // reusing the desktop "expand the whole panel" toggle.
   const [mobileGrowthOpen, setMobileGrowthOpen] = useState(false);
 
+  // consume the redirect flag once — it should only open the pane for the
+  // page load it was set for, not linger across future visits.
+  useEffect(() => {
+    if (hadMentorshipRedirectFlag) {
+      sessionStorage.removeItem("open_mentorship_card");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // default collapsed on mobile (short summary) / expanded on desktop —
   // checked once on mount only, so it doesn't fight a user's own toggle
   // afterward as the window resizes.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (location.state?.activeProgramme) {
+    if (location.state?.activeProgramme || hadMentorshipRedirectFlag) {
       setSidebarCollapsed(true);
     } else {
       setSidebarCollapsed(!window.matchMedia("(min-width: 768px)").matches);

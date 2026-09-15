@@ -47,6 +47,9 @@ import outcomes_portfolio from "./outcomes_portfolio.svg";
 import outcomes_portfolio_mobile from "./outcomes_portfolio_mobile.svg";
 import outcomes_mentorship_ins_mobile from "./outcomes_mentorship_ins_mobile.svg";
 import outcomes_mentorship_ins from "./outcomes_mentorship_ins.svg";
+import eye_pricing from "./eye_pricing.svg";
+import pricing_bg from "./pricing_bg.svg";
+import pricing_bg_mobile from "./pricing_bg_mobile.svg";
 
 export {
   hero_mentorship,
@@ -97,5 +100,8 @@ export {
   left_eye_ribbon_1,
   right_eye_ribbon_1,
   outcomes_mentorship_ins_mobile,
-  outcomes_mentorship_ins
+  outcomes_mentorship_ins,
+  eye_pricing,
+  pricing_bg,
+  pricing_bg_mobile
 };

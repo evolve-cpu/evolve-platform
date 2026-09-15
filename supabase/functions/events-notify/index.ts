@@ -15,13 +15,30 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *     same service account as GOOGLE_SHEETS_CLIENT_EMAIL)
  *   GOOGLE_CALENDAR_PRIVATE_KEY  — service account private key, PEM format
  *   GOOGLE_CALENDAR_ID           — target calendar's ID (Settings ->
- *     "Integrate calendar" -> Calendar ID); must be shared with the
- *     service account above, "Make changes to events" permission
+ *     "Integrate calendar" -> Calendar ID)
+ *   GOOGLE_WORKSPACE_IMPERSONATE_EMAIL — a real Workspace user the service
+ *     account impersonates via domain-wide delegation (Google flatly
+ *     refuses to let a bare service account invite attendees, regardless
+ *     of calendar-sharing permissions — this is the only way around that;
+ *     see setup notes below). Usually the same user who owns
+ *     GOOGLE_CALENDAR_ID.
  *   BREVO_API_KEY — same value as the Vercel env var of the same name;
  *     duplicated here since Edge Functions can't read Vercel's env
  *
  * SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are auto-provided by Supabase,
  * no `secrets set` needed (same as get-recording-url).
+ *
+ * Domain-wide delegation one-time setup (required for attendee invites):
+ *   1. Cloud Console -> service account -> Details -> Advanced settings ->
+ *      enable "Domain-wide delegation" -> note the numeric Client ID shown.
+ *   2. admin.google.com (super admin) -> Security -> Access and data
+ *      control -> API controls -> Domain-wide delegation -> Add new ->
+ *      paste that Client ID, scope "https://www.googleapis.com/auth/calendar"
+ *      -> Authorize.
+ *   3. Set GOOGLE_WORKSPACE_IMPERSONATE_EMAIL to the Workspace user to
+ *      impersonate. The explicit calendar-sharing entry for the service
+ *      account (from before this was added) is no longer needed once
+ *      impersonating that calendar's own owner, but leaving it doesn't hurt.
  *
  * Request body: { mode: "sync_calendar", event_id }
  *             | { mode: "notify", registration_id }
@@ -31,6 +48,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const CLIENT_EMAIL = Deno.env.get("GOOGLE_CALENDAR_CLIENT_EMAIL") ?? "";
 const PRIVATE_KEY_PEM = (Deno.env.get("GOOGLE_CALENDAR_PRIVATE_KEY") ?? "").replace(/\\n/g, "\n");
 const CALENDAR_ID = Deno.env.get("GOOGLE_CALENDAR_ID") ?? "";
+const IMPERSONATE_EMAIL = Deno.env.get("GOOGLE_WORKSPACE_IMPERSONATE_EMAIL") ?? "";
 const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY") ?? "";
 
 const corsHeaders = {
@@ -62,13 +80,16 @@ async function getAccessToken() {
   }
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
-  const claims = {
+  const claims: Record<string, unknown> = {
     iss: CLIENT_EMAIL,
     scope: "https://www.googleapis.com/auth/calendar",
     aud: "https://oauth2.googleapis.com/token",
     iat: now,
     exp: now + 3600
   };
+  // domain-wide delegation: impersonate a real Workspace user, since Google
+  // refuses to let a bare service account invite attendees to an event
+  if (IMPERSONATE_EMAIL) claims.sub = IMPERSONATE_EMAIL;
   const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claims))}`;
   const key = await crypto.subtle.importKey(
     "pkcs8",

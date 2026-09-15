@@ -57,7 +57,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
           { path: "/portfolio-review", label: "Portfolio Review" },
           { path: "/mentorship", label: "Mentorship" },
           // { path: "/evolve-in-person", label: "evolve in-person" },
-          { path: "/webinars", label: "Webinars" },
+          { path: "/events", label: "Events" },
           // { label: "contact us", path: "/contact" }
           { path: "/contact", label: "Contact Us", isModal: true }
           // {

@@ -34,9 +34,12 @@ const STATUS_COLOR = {
   completed: "#22c55e"
 };
 
+const EVENT_TYPES = ["AMA", "Webinar", "Workshop", "Panel Discussion"];
+
 const EMPTY_FORM = {
   title: "",
   slug: "",
+  event_type: EVENT_TYPES[0],
   description: "",
   questionCategories: [{ name: "", questions: [""] }],
   date: "",
@@ -115,6 +118,23 @@ function Field({ label, ...rest }) {
         {label}
       </label>
       <input className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={inputStyle} {...rest} />
+    </div>
+  );
+}
+
+function SelectField({ label, options, ...rest }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+        {label}
+      </label>
+      <select className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={inputStyle} {...rest}>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -223,6 +243,13 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
         label="slug (public URL: /events/...)"
         value={form.slug}
         onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value), _slugTouched: true }))}
+      />
+
+      <SelectField
+        label="event type"
+        options={EVENT_TYPES}
+        value={form.event_type}
+        onChange={(e) => setForm((f) => ({ ...f, event_type: e.target.value }))}
       />
 
       <div className="md:col-span-2">
@@ -396,6 +423,7 @@ function eventToForm(event) {
     title: event.title || "",
     slug: event.slug || "",
     _slugTouched: true,
+    event_type: EVENT_TYPES.includes(event.event_type) ? event.event_type : EVENT_TYPES[0],
     description: event.description || "",
     questionCategories: event.question_categories?.length
       ? event.question_categories.map((c) => ({ name: c.name || "", questions: c.questions?.length ? c.questions : [""] }))
@@ -420,6 +448,7 @@ function formToPayload(form, status) {
   return {
     title: form.title.trim(),
     slug: slugify(form.slug || form.title),
+    event_type: form.event_type || EVENT_TYPES[0],
     description: form.description.trim() || null,
     question_categories: form.questionCategories
       .map((c) => ({ name: c.name.trim(), questions: c.questions.map((q) => q.trim()).filter(Boolean) }))
