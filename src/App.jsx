@@ -1040,7 +1040,7 @@ import {
   useParams,
   Navigate
 } from "react-router-dom";
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense, Component } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 // Eager load only the global landing + Home page (critical)
@@ -1141,6 +1141,44 @@ const getDeviceType = () => {
 };
 
 const isLandscape = () => window.innerWidth > window.innerHeight;
+
+// Catches a lazy-route chunk failing to load (flaky mobile networks are the
+// usual trigger — the click "works" in that the URL changes, but the page
+// stays blank since the dynamic import() rejected with no retry). One
+// auto-reload re-fetches the chunk fresh; the sessionStorage guard stops a
+// genuinely broken chunk from reload-looping forever.
+class RouteErrorBoundary extends Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    const isChunkError =
+      /dynamically imported module|Importing a module script failed|ChunkLoadError|Loading chunk/i.test(
+        error?.message || ""
+      );
+    if (isChunkError && !sessionStorage.getItem("chunk_reload_attempted")) {
+      sessionStorage.setItem("chunk_reload_attempted", "1");
+      window.location.reload();
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-evolve-black text-white px-6 text-center">
+          <p className="text-sm text-white/60">Something went wrong loading this page.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-evolve-yellow text-evolve-black font-extrabold text-sm px-5 py-2.5 rounded-lg"
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 /* ------------------------------ Inner Layout ------------------------------ */
 const AppLayout = () => {
@@ -1333,6 +1371,12 @@ const AppLayout = () => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
+  }, []);
+
+  // App mounted fine — clear the one-shot chunk-reload guard so a later,
+  // genuinely new chunk-load failure can still trigger one auto-reload.
+  useEffect(() => {
+    sessionStorage.removeItem("chunk_reload_attempted");
   }, []);
 
   // Set navbar visibility based on route
@@ -1664,6 +1708,7 @@ const AppLayout = () => {
           onContactClick={() => setIsContactModalOpen(true)}
         />
 
+        <RouteErrorBoundary>
         <Suspense fallback={<LoadingScreen progress={50} />}>
           <Routes>
             <Route path="/admin" element={<AdminLogin />} />
@@ -1783,6 +1828,7 @@ const AppLayout = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </RouteErrorBoundary>
 
         {shouldShowFooter &&
           !(location.pathname === "/designers" && isHomeIntroActive) && (

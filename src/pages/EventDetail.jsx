@@ -312,6 +312,10 @@ export default function EventDetail() {
   function handleBookSpot() {
     if (!user) {
       sessionStorage.setItem(PENDING_KEY, slug);
+      // location.state alone doesn't survive the full-page redirect round trip
+      // for Google/LinkedIn OAuth sign-in, so also persist it the same way
+      // PortfolioReviewForm.jsx does for its own deep-link-back-after-signin flow.
+      sessionStorage.setItem("signin_from", `/events/${slug}`);
       navigate("/signin", { state: { from: `/events/${slug}` } });
       return;
     }
