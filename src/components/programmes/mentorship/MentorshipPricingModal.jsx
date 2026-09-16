@@ -138,7 +138,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
         amount: String(amount),
         currency,
         name: "evolve design",
-        description: `Mentorship — ${planInfo.label}`,
+        description: planInfo.label,
         order_id,
         prefill: {
           name: user?.name || "",
@@ -305,7 +305,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
         )}
 
         {step === "success" && (
-          <div className="flex flex-col items-center gap-4 text-center py-2">
+          <div className="flex flex-col items-center gap-4 text-center py-2 flex-1 justify-center">
             <div className="w-16 h-16 rounded-full border-4 border-green-400 flex items-center justify-center">
               <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
                 <path

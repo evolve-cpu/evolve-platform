@@ -139,8 +139,12 @@ export default function MentorshipWorkspaceShell({ user, enrollment, onBack, onP
   let currentSlot = 1;
   while (currentSlot < finalSlot && feedbacks[currentSlot]) currentSlot += 1;
 
-  const currentIndex = booking ? slotToStepIndex(currentSlot) : intake ? 1 : 0;
-  const defaultView = currentIndex === 0 ? "intake" : currentIndex === 1 ? "bookSlot" : `${currentSlot <= 5 ? "session" : "call"}:${currentSlot}`;
+  // "Book a slot" comes before "Before we begin" — intake is optional
+  // (see MentorshipIntakeForm), so it no longer gates booking a slot; it
+  // just needs a saved row (even with every field left blank) before the
+  // learner reaches session 1.
+  const currentIndex = !booking ? 0 : !intake ? 1 : slotToStepIndex(currentSlot);
+  const defaultView = currentIndex === 0 ? "bookSlot" : currentIndex === 1 ? "intake" : `${currentSlot <= 5 ? "session" : "call"}:${currentSlot}`;
   const view = manualView || defaultView;
 
   const activeIndex =
@@ -248,6 +252,15 @@ export default function MentorshipWorkspaceShell({ user, enrollment, onBack, onP
         />
         <div className="hidden lg:block w-px self-stretch bg-white/10 mx-6 flex-shrink-0" />
 
+        {view === "bookSlot" && (
+          <MentorshipBookSlot
+            user={user}
+            onBooked={(row) => {
+              setBooking(row);
+              setManualView(null);
+            }}
+          />
+        )}
         {view === "intake" && (
           <MentorshipIntakeForm
             user={user}
@@ -255,15 +268,6 @@ export default function MentorshipWorkspaceShell({ user, enrollment, onBack, onP
             initialIntake={intake}
             onSaved={(row) => {
               setIntake(row);
-              setManualView(null);
-            }}
-          />
-        )}
-        {view === "bookSlot" && (
-          <MentorshipBookSlot
-            user={user}
-            onBooked={(row) => {
-              setBooking(row);
               setManualView(null);
             }}
           />

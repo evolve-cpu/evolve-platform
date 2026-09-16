@@ -6,8 +6,8 @@ import { useState } from "react";
 // calls" sits outside the step count on both plans since it isn't a
 // sequential stage — it's a standing option to book extra paid calls.
 const CORE_STEPS = [
-  "Before we begin",
   "Book a slot",
+  "Before we begin",
   "Session 1 · Discover",
   "Session 2 · Analyse",
   "Session 3 · Identify & build",

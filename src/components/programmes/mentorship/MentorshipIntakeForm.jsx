@@ -28,10 +28,18 @@ function UploadIcon() {
  * Storage bucket wired yet) — good enough to unblock the "link" path,
  * which is the one most people will use.
  *
+ * Every field here is optional — this step comes after "Book a slot" now,
+ * and gating session 1 on a fully-filled intake caused drop-off before
+ * anyone even reached their first call. Continue always saves (even an
+ * all-blank row) so the learner can move on immediately and fill these in
+ * later — before session 1, between sessions, or any time via "My docs" on
+ * each session page (MentorshipDocsAndResources), which edits this same
+ * mentorship_intake row.
+ *
  * `initialIntake` is passed down by MentorshipWorkspaceShell (which owns
  * the single fetch of this row, since it also needs it to decide which
  * step to render) rather than fetched again here. `onSaved` reports the
- * saved row back up so the shell can unlock "Book a slot".
+ * saved row back up so the shell can move on to session 1.
  */
 export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake, onSaved }) {
   const [portfolioMode, setPortfolioMode] = useState(initialIntake?.portfolio_mode || "link");
@@ -58,13 +66,8 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
     markDirty();
   }
 
-  const portfolioFilled =
-    portfolioMode === "file" ? !!portfolioFileName : portfolioLink.trim().length > 0;
-  const canContinue =
-    portfolioFilled && resumeLink.trim().length > 0 && walkthroughLink.trim().length > 0;
-
   async function handleContinue() {
-    if (!canContinue || !user?.id) return;
+    if (!user?.id) return;
     setStatus("saving");
     const { data, error } = await supabase
       .from("mentorship_intake")
@@ -98,7 +101,8 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
         </h1>
         <p className="text-white/50 text-sm mt-2">
           Tell us your expectations from this mentorship. This helps us
-          personalise your experience.
+          personalise your experience — everything below is optional, add
+          what you can now and fill in the rest before any session.
         </p>
       </div>
 
@@ -106,7 +110,8 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
         {/* portfolio */}
         <div className="flex flex-col gap-3">
           <label className="text-white text-sm font-bold">
-            Submit your portfolio <span className="text-evolve-pink">*</span>
+            Submit your portfolio{" "}
+            <span className="text-white/30 font-normal">(optional)</span>
           </label>
           <div className="flex gap-2 w-fit rounded-xl border border-white/10 p-1">
             <button
@@ -190,7 +195,8 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
         {/* resume */}
         <div className="flex flex-col gap-2 pt-6">
           <label className="text-white text-sm font-bold">
-            Submit your resume <span className="text-evolve-pink">*</span>
+            Submit your resume{" "}
+            <span className="text-white/30 font-normal">(optional)</span>
           </label>
           <p className="text-white/40 text-xs -mt-1">
             Paste a link to your resume — Google Drive, Dropbox, or similar.
@@ -211,7 +217,8 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
         {/* walkthrough */}
         <div className="flex flex-col gap-2 pt-6">
           <label className="text-white text-sm font-bold">
-            Your walkthrough recording <span className="text-evolve-pink">*</span>
+            Your walkthrough recording{" "}
+            <span className="text-white/30 font-normal">(optional)</span>
           </label>
           <p className="text-white/40 text-xs -mt-1">
             No face cam needed, just walk us through your work. Record with{" "}
@@ -283,7 +290,7 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
       <button
         type="button"
         onClick={handleContinue}
-        disabled={!canContinue || status === "saving"}
+        disabled={status === "saving"}
         className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
       >
         {status === "saving" ? "Saving…" : status === "saved" ? "Saved ✓" : "Continue"}

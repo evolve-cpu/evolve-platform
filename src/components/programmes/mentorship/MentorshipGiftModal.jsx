@@ -25,30 +25,32 @@ export default function MentorshipGiftModal({ user, onContinue }) {
             className="text-evolve-yellow font-extrabold leading-tight"
             style={{ fontSize: "clamp(28px,7vw,40px)", letterSpacing: "-0.02em" }}
           >
-            welcome to evolve
+            You're in the mentorship
             <span style={{ color: "rgba(223,5,134,1)" }}>
-              {firstName ? ` ${firstName}` : ""}!
+              {firstName ? `, ${firstName}` : ""}!
             </span>
           </p>
-          <p className="text-white/60 text-sm">here is a gift for you!</p>
+          <p className="text-white/60 text-sm">Here is a gift for you!</p>
         </div>
         <img src={surprise_box} alt="gift" className="w-52 h-52 object-contain" />
         <button
           onClick={() => setStep("gift2")}
           className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-base rounded-2xl py-4 active:opacity-80"
         >
-          claim your gift!
+          Claim your gift!
         </button>
       </div>
 
-      {/* gift2 overlay */}
+      {/* gift2 overlay — full-screen on mobile (fills the whole viewport,
+          no rounded corners/backdrop gap), a floating centered card on
+          desktop */}
       {step === "gift2" && (
         <div
-          className="fixed inset-0 z-[230] flex items-center justify-center px-6 py-8"
+          className="fixed inset-0 z-[230] flex items-center justify-center md:px-6 md:py-8"
           style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
         >
           <div
-            className="relative w-full max-w-xs rounded-3xl overflow-hidden flex flex-col items-center py-10 px-6 gap-4"
+            className="relative w-full h-full md:h-auto md:max-w-xs rounded-none md:rounded-3xl overflow-y-auto flex flex-col items-center justify-center py-10 px-6 gap-4"
             style={{ backgroundColor: "rgba(255,208,7,1)" }}
           >
             <div className="relative z-10 flex flex-col items-center gap-3 text-center">
@@ -56,14 +58,14 @@ export default function MentorshipGiftModal({ user, onContinue }) {
                 className="font-extrabold text-2xl leading-tight"
                 style={{ color: "rgba(223,5,134,1)" }}
               >
-                be AI ready!!
+                Be AI ready!!
               </p>
               <p className="text-evolve-black/80 text-sm max-w-[26ch] leading-relaxed">
-                we'll also show you how to stay visible as ai increasingly
-                filters who gets seen
+                We'll also show you how to stay visible as AI increasingly
+                filters who gets seen.
               </p>
               <p className="font-extrabold text-evolve-black text-4xl mt-1">
-                free!
+                Free!
               </p>
               <p className="text-evolve-black/45 text-sm line-through">
                 ₹ 5,000
@@ -78,7 +80,7 @@ export default function MentorshipGiftModal({ user, onContinue }) {
               onClick={onContinue}
               className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
             >
-              claim your gift!
+              Claim your gift!
             </button>
           </div>
         </div>
