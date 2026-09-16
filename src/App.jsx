@@ -1282,7 +1282,8 @@ const AppLayout = () => {
       path.startsWith("/space/") ||
       path.startsWith("/mentorship-session") ||
       path.startsWith("/evolve-in-person") ||
-      path.startsWith("/profile/");
+      path.startsWith("/profile/") ||
+      path.startsWith("/events/");
     if (exempt) return;
 
     navigate(`/profile/${user.username}`, { replace: true });
