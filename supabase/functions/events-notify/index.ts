@@ -43,6 +43,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * Request body: { mode: "sync_calendar", event_id }
  *             | { mode: "notify", registration_id }
  *             | { mode: "invite", event_id, email, name }
+ *             | { mode: "send_reminder", registration_id }
  */
 
 const CLIENT_EMAIL = Deno.env.get("GOOGLE_CALENDAR_CLIENT_EMAIL") ?? "";
@@ -188,23 +189,42 @@ async function addAttendee(calendarEventId: string, email: string) {
 }
 
 /* ── Email ────────────────────────────────────────────────────────────── */
-async function sendConfirmationEmail(toEmail: string, toName: string, event: any) {
-  if (!BREVO_API_KEY) return;
-  const when = new Date(event.start_time).toLocaleString("en-IN", {
+function formatEventDateTime(startTimeIso: string) {
+  const d = new Date(startTimeIso);
+  const dateLine = d.toLocaleDateString("en-IN", {
     timeZone: "Asia/Kolkata",
     weekday: "long",
     day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
+    month: "long"
   });
+  const time = d
+    .toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true })
+    .replace(/(am|pm)/i, (m) => m.toUpperCase());
+  const hourIST = Number(d.toLocaleString("en-US", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }));
+  return { dateLine, time, hourIST };
+}
+
+// Admin uploads the cover image as 1:1 (see EventsTab.jsx) — rendered square here too.
+function coverImageHtml(event: any) {
+  if (!event.cover_image_url) return "";
+  return `<img src="${event.cover_image_url}" width="480" height="480" alt="" style="width:100%;max-width:480px;height:auto;display:block;border-radius:12px;margin-bottom:24px;" />`;
+}
+
+function speakerLineHtml(event: any) {
+  if (!event.speaker_name) return "";
+  return `<p>Join ${event.speaker_name} for a conversation on ${event.description || event.title}.</p>`;
+}
+
+async function sendConfirmationEmail(toEmail: string, toName: string, event: any) {
+  if (!BREVO_API_KEY) return;
+  const { dateLine, time } = formatEventDateTime(event.start_time);
   const html = `
+    ${coverImageHtml(event)}
     <p>Hi ${toName || "there"},</p>
-    <p>You're registered for <strong>${event.title}</strong>.</p>
-    <p>${when} IST</p>
-    ${event.speaker_name ? `<p>Hosted by ${event.speaker_name}${event.speaker_title ? `, ${event.speaker_title}` : ""}</p>` : ""}
-    <p>This event has been added to your calendar — check your inbox for the calendar invite.</p>
+    <p>You've successfully registered for <strong>${event.title}</strong>. We're looking forward to having you with us!</p>
+    <p>${dateLine} · ${time} IST</p>
+    ${speakerLineHtml(event)}
+    <p>We've also added the event to your calendar, so you're all set. You'll find the calendar invite in your inbox.</p>
     <p>See you there!<br/>Team evolve</p>
   `;
   const r = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -213,7 +233,38 @@ async function sendConfirmationEmail(toEmail: string, toName: string, event: any
     body: JSON.stringify({
       sender: { name: "evolve", email: "noreply@evolvedesign.academy" },
       to: [{ email: toEmail, name: toName || undefined }],
-      subject: `You're registered: ${event.title}`,
+      subject: `You've successfully registered for ${event.title}`,
+      htmlContent: html
+    })
+  });
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error(`Brevo error: ${err}`);
+  }
+}
+
+// Same-day nudge — sent close to start_time by whatever calls mode "send_reminder"
+// (a cron job or admin action; not scheduled by this function itself).
+async function sendReminderEmail(toEmail: string, toName: string, event: any) {
+  if (!BREVO_API_KEY) return;
+  const { time, hourIST } = formatEventDateTime(event.start_time);
+  const timeWord = hourIST >= 17 || hourIST < 4 ? "tonight" : "today";
+  const html = `
+    ${coverImageHtml(event)}
+    <p>Hi ${toName || "there"},</p>
+    <p>A quick reminder - <strong>${event.title}</strong> is happening today!</p>
+    <p>Today · ${time} IST</p>
+    ${speakerLineHtml(event)}
+    <p>Your calendar invite has all the details you'll need to join.</p>
+    <p>Looking forward to seeing you ${timeWord}!<br/>Team evolve</p>
+  `;
+  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { name: "evolve", email: "noreply@evolvedesign.academy" },
+      to: [{ email: toEmail, name: toName || undefined }],
+      subject: `See you ${timeWord}: ${event.title}`,
       htmlContent: html
     })
   });
@@ -260,6 +311,30 @@ async function handleNotify(registration_id: string) {
   if (eventErr || !event) throw new Error("event not found");
 
   await notifyRegistration(registration, event);
+  return { ok: true };
+}
+
+async function handleSendReminder(registration_id: string) {
+  const { data: registration, error } = await admin
+    .from("event_registrations")
+    .select("*")
+    .eq("id", registration_id)
+    .single();
+  if (error || !registration) throw new Error("registration not found");
+
+  const { data: event, error: eventErr } = await admin.from("events").select("*").eq("id", registration.event_id).single();
+  if (eventErr || !event) throw new Error("event not found");
+
+  let email = registration.invitee_email as string | null;
+  let name = registration.invitee_name as string | null;
+  if (registration.user_id) {
+    const { data: profile } = await admin.from("profiles").select("name, email").eq("id", registration.user_id).maybeSingle();
+    email = profile?.email ?? email;
+    name = profile?.name ?? name;
+  }
+  if (!email) throw new Error("registration has no email to notify");
+
+  await sendReminderEmail(email, name || "", event);
   return { ok: true };
 }
 
@@ -312,6 +387,7 @@ serve(async (req) => {
     if (body.mode === "sync_calendar") result = await handleSyncCalendar(body.event_id);
     else if (body.mode === "notify") result = await handleNotify(body.registration_id);
     else if (body.mode === "invite") result = await handleInvite(body.event_id, body.email, body.name);
+    else if (body.mode === "send_reminder") result = await handleSendReminder(body.registration_id);
     else throw new Error("unknown mode");
 
     return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });

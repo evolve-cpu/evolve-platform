@@ -414,7 +414,7 @@ export default function EventDetail() {
               <img
                 src={event.cover_image_url}
                 alt=""
-                className="w-full h-40 object-cover"
+                className="w-full aspect-square object-cover"
               />
             )}
             <div className="p-4">
