@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { supabase } from "../../../supabaseClient";
 
-function SkillDots({ value = 0, onChange }) {
+function SkillDots({ value = 0, onChange, size = "sm" }) {
+  const dotClass = size === "lg" ? "w-8 h-8" : "w-4 h-4";
   return (
-    <div className="flex gap-1.5">
+    <div className={`flex ${size === "lg" ? "gap-3" : "gap-1.5"}`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
           type="button"
           onClick={() => onChange(n === value ? 0 : n)}
           aria-label={`rate ${n}`}
-          className={`w-4 h-4 rounded-full border transition-colors ${
+          className={`${dotClass} rounded-full border transition-colors ${
             n <= value
               ? "bg-evolve-yellow border-evolve-yellow"
               : "border-white/25 hover:border-white/50"
@@ -19,6 +20,11 @@ function SkillDots({ value = 0, onChange }) {
       ))}
     </div>
   );
+}
+
+function isSkillRated(ratings, skillId) {
+  const r = ratings[skillId];
+  return !!(r?.current && r?.goal);
 }
 
 /**
@@ -45,6 +51,11 @@ export default function MentorshipSkillTracker({
   const [ratings, setRatings] = useState(initialRatings || {});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Mobile-only: which category is showing (desktop renders every category
+  // in one long list, so this is unused there). Kept at the top level
+  // rather than inside a mobile-only child so Back/Next can live in the
+  // shared sticky action bar without prop-drilling a separate component.
+  const [categoryIndex, setCategoryIndex] = useState(0);
 
   function setRating(skillId, field, value) {
     setRatings((prev) => ({
@@ -72,6 +83,33 @@ export default function MentorshipSkillTracker({
       return;
     }
     onSaved(data);
+  }
+
+  const totalSkills = categories.reduce((sum, cat) => sum + cat.skills.length, 0);
+  const ratedSkillsCount = categories.reduce(
+    (sum, cat) => sum + cat.skills.filter((s) => isSkillRated(ratings, s.id)).length,
+    0
+  );
+  const percentRated = totalSkills ? Math.round((ratedSkillsCount / totalSkills) * 100) : 0;
+
+  const activeCategory = categories[categoryIndex];
+  const isLastCategory = categoryIndex === categories.length - 1;
+  const activeCategoryComplete = activeCategory.skills.every((s) => isSkillRated(ratings, s.id));
+
+  function handleMobileBack() {
+    if (categoryIndex === 0) {
+      onCancel();
+    } else {
+      setCategoryIndex((i) => i - 1);
+    }
+  }
+
+  function handleMobileNext() {
+    if (isLastCategory) {
+      handleSave();
+    } else {
+      setCategoryIndex((i) => i + 1);
+    }
   }
 
   return (
@@ -102,8 +140,9 @@ export default function MentorshipSkillTracker({
         <p className="text-white/50 text-sm mt-2 max-w-xl">{subtitle}</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 overflow-hidden">
-        <div className="hidden md:grid grid-cols-[1fr_140px_140px] gap-4 px-5 py-3 bg-white/[0.03] text-white/40 text-[10px] font-bold uppercase tracking-wide">
+      {/* ── DESKTOP: every category in one long list ────────────────────── */}
+      <div className="hidden md:block rounded-2xl border border-white/10 overflow-hidden">
+        <div className="grid grid-cols-[1fr_140px_140px] gap-4 px-5 py-3 bg-white/[0.03] text-white/40 text-[10px] font-bold uppercase tracking-wide">
           <span>skill</span>
           <span>current level</span>
           <span>goal level</span>
@@ -116,36 +155,73 @@ export default function MentorshipSkillTracker({
             {cat.skills.map((skill) => (
               <div
                 key={skill.id}
-                className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px] gap-2 md:gap-4 px-5 py-3 border-t border-white/5 md:items-center"
+                className="grid grid-cols-[1fr_140px_140px] gap-4 px-5 py-3 border-t border-white/5 items-center"
               >
                 <span className="text-white/70 text-sm">{skill.label}</span>
-                <div className="flex md:block items-center gap-2">
-                  <span className="md:hidden text-white/30 text-[10px] uppercase tracking-wide w-16 flex-shrink-0">
-                    current
-                  </span>
-                  <SkillDots
-                    value={ratings[skill.id]?.current || 0}
-                    onChange={(v) => setRating(skill.id, "current", v)}
-                  />
-                </div>
-                <div className="flex md:block items-center gap-2">
-                  <span className="md:hidden text-white/30 text-[10px] uppercase tracking-wide w-16 flex-shrink-0">
-                    goal
-                  </span>
-                  <SkillDots
-                    value={ratings[skill.id]?.goal || 0}
-                    onChange={(v) => setRating(skill.id, "goal", v)}
-                  />
-                </div>
+                <SkillDots
+                  value={ratings[skill.id]?.current || 0}
+                  onChange={(v) => setRating(skill.id, "current", v)}
+                />
+                <SkillDots
+                  value={ratings[skill.id]?.goal || 0}
+                  onChange={(v) => setRating(skill.id, "goal", v)}
+                />
               </div>
             ))}
           </div>
         ))}
       </div>
 
+      {/* ── MOBILE: one category at a time, paged via the sticky bar below ── */}
+      <div className="md:hidden flex flex-col gap-5">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-white/40 text-[10px] font-bold uppercase tracking-wide">
+              Category {categoryIndex + 1} of {categories.length}
+            </p>
+            <p className="text-evolve-yellow text-xs font-bold flex-shrink-0">
+              {percentRated}% rated
+            </p>
+          </div>
+          <h2 className="text-white font-bold text-lg mt-1">
+            {activeCategory.heading}
+          </h2>
+          <div className="h-px bg-white/10 mt-3" />
+        </div>
+
+        <div className="rounded-2xl border border-white/10 divide-y divide-white/5">
+          {activeCategory.skills.map((skill) => (
+            <div key={skill.id} className="px-5 py-5 flex flex-col gap-4">
+              <p className="text-white font-bold text-sm">{skill.label}</p>
+              <div className="flex flex-col gap-2.5">
+                <span className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
+                  Current level
+                </span>
+                <SkillDots
+                  size="lg"
+                  value={ratings[skill.id]?.current || 0}
+                  onChange={(v) => setRating(skill.id, "current", v)}
+                />
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <span className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
+                  Goal level
+                </span>
+                <SkillDots
+                  size="lg"
+                  value={ratings[skill.id]?.goal || 0}
+                  onChange={(v) => setRating(skill.id, "goal", v)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
-      <div className="sticky bottom-0 -mx-6 md:-mx-8 border-t border-white/10 bg-[#161618]/95 backdrop-blur px-6 md:px-8 py-4 flex items-center justify-end gap-3">
+      {/* ── DESKTOP sticky action bar ─────────────────────────────────────── */}
+      <div className="hidden md:flex sticky bottom-0 -mx-6 md:-mx-8 border-t border-white/10 bg-[#161618]/95 backdrop-blur px-6 md:px-8 py-4 items-center justify-end gap-3">
         <button
           onClick={onCancel}
           className="border border-white/20 text-white font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 transition-opacity"
@@ -159,6 +235,40 @@ export default function MentorshipSkillTracker({
         >
           {saving ? "Saving…" : "Save skill tracker"}
         </button>
+      </div>
+
+      {/* ── MOBILE sticky pager bar — back / next category / progress dots ── */}
+      <div className="md:hidden sticky bottom-0 -mx-6 border-t border-white/10 bg-[#161618]/95 backdrop-blur px-6 py-4 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleMobileBack}
+            className="flex-1 border border-white/20 text-white font-bold text-sm rounded-2xl py-3 active:opacity-80 transition-opacity"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleMobileNext}
+            disabled={!activeCategoryComplete || saving}
+            className="flex-1 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3 disabled:opacity-40 active:opacity-80 transition-opacity"
+          >
+            {isLastCategory ? (saving ? "Saving…" : "Save skill tracker") : "Next category"}
+          </button>
+        </div>
+        {!activeCategoryComplete && (
+          <p className="text-white/30 text-xs text-center">
+            Rate every skill above (current + goal) to continue
+          </p>
+        )}
+        <div className="flex items-center justify-center gap-1.5">
+          {categories.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${
+                i === categoryIndex ? "w-5 bg-evolve-yellow" : "w-1.5 bg-white/20"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
