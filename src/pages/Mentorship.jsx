@@ -18,10 +18,6 @@ import {
   // get_started_button_hover
   explore_plans,
   // right_ribbon,
-  right_eye_ribbon,
-  left_eye_ribbon,
-  right_eye_ribbon_mobile,
-  left_eye_ribbon_mobile,
   chinmayImg,
   jonImg,
   anishImg,
@@ -30,7 +26,9 @@ import {
   join_the_waitlist,
   eye_pricing,
   pricing_bg,
-  pricing_bg_mobile
+  pricing_bg_mobile,
+  mentorship_vector_mobile,
+  mentorship_vector
 } from "../assets/images/Mentorship";
 import { right_ribbon } from "../assets/images/Home";
 import { marquee_vector_2 } from "../assets/images/Nav";
@@ -2096,19 +2094,20 @@ const Mentorship = () => {
       </section>
 
       {/* ================= SECTION 8 — WHY WE BUILT THIS (Desktop) ================= */}
-      <section className="hidden md:flex relative min-h-screen bg-evolve-yellow overflow-hidden flex-col items-center">
+      <section className="hidden md:flex relative min-h-screen bg-evolve-lavender-indigo overflow-hidden flex-col items-center">
         {/* Content — centered top */}
         <div
           className="relative z-10 flex flex-col items-center text-center"
           style={{
             paddingTop: "clamp(64px, 8vh, 120px)",
             paddingLeft: "clamp(32px, 6vw, 120px)",
-            paddingRight: "clamp(32px, 6vw, 120px)"
+            paddingRight: "clamp(32px, 6vw, 120px)",
+            paddingBottom: "clamp(180px, 24vh, 280px)"
           }}
         >
           {/* Heading */}
           <h2
-            className="font-extrabold text-evolve-pink"
+            className="font-extrabold text-white"
             style={{
               fontSize: "clamp(56px, 7vw, 96px)",
               lineHeight: "1",
@@ -2120,7 +2119,7 @@ const Mentorship = () => {
 
           {/* Sub heading */}
           <p
-            className="font-normal text-evolve-pink mt-6"
+            className="font-normal text-white mt-6"
             style={{
               fontSize: "clamp(28px, 3.2vw, 48px)",
               lineHeight: "1.15",
@@ -2133,12 +2132,12 @@ const Mentorship = () => {
 
           {/* Body text */}
           <p
-            className="font-normal text-black mt-6"
+            className="font-normal text-white mt-6"
             style={{
               fontSize: "clamp(18px, 2.2vw, 32px)",
-              lineHeight: "1.45",
+              lineHeight: "1",
               letterSpacing: "-0.3px",
-              maxWidth: "70vw"
+              maxWidth: "55vw"
             }}
           >
             {renderWithBreaks(COPY.whyWeBuiltThis.body)}
@@ -2157,14 +2156,6 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            /* explore_plans button not needed for now — changed to text
-            <img
-              src={explore_plans}
-              alt="explore plans"
-              onClick={() => scrollTo(section6Ref)}
-              className="cursor-pointer mt-8 transition-opacity duration-150 hover:opacity-80"
-              style={{ width: "clamp(200px, 22vw, 320px)" }}
-            /> */
             <GetStartedCta
               onClick={() => handleGetStarted("why_we_built_this")}
               className="mt-8"
@@ -2172,37 +2163,27 @@ const Mentorship = () => {
           )}
         </div>
 
-        {/* Ribbons — bottom corners */}
+        {/* Bottom vector — full width */}
         <img
-          src={right_eye_ribbon}
+          src={mentorship_vector}
           alt=""
-          className="absolute bottom-[6rem] right-0 z-10 w-[45%]"
-          // style={{ height: "clamp(200px, 30vh, 420px)" }}
-        />
-        <img
-          src={left_eye_ribbon}
-          alt=""
-          className="absolute bottom-[4rem] left-0 z-20 w-[45%]"
-          // style={{ height: "clamp(200px, 30vh, 420px)" }}
-        />
-        <MarqueeStrip
-          key={marqueeLabel}
-          isMobile={false}
-          spotsText={spotsText}
-          marqueeLabel={marqueeLabel}
+          className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
 
       {/* ================= SECTION 8 — WHY WE BUILT THIS (Mobile) ================= */}
-      <section className="block md:hidden relative bg-evolve-yellow overflow-hidden min-h-screen">
+      <section className="block md:hidden relative bg-evolve-lavender-indigo overflow-hidden min-h-screen">
         {/* Content */}
         <div
           className="relative z-30 flex flex-col items-center text-center px-5"
-          style={{ paddingTop: "clamp(48px, 10vh, 80px)" }}
+          style={{
+            paddingTop: "clamp(48px, 10vh, 80px)",
+            paddingBottom: "clamp(140px, 30vw, 220px)"
+          }}
         >
           {/* Heading */}
           <h2
-            className="font-extrabold text-evolve-pink"
+            className="font-extrabold text-white"
             style={{
               fontSize: "clamp(36px, 10vw, 52px)",
               lineHeight: "1.05",
@@ -2214,7 +2195,7 @@ const Mentorship = () => {
 
           {/* Sub heading */}
           <p
-            className="font-normal text-evolve-pink mt-4"
+            className="font-normal text-white mt-6"
             style={{
               fontSize: "clamp(22px, 6vw, 32px)",
               lineHeight: "1.2",
@@ -2226,7 +2207,7 @@ const Mentorship = () => {
 
           {/* Body text */}
           <p
-            className="font-normal text-black mt-4"
+            className="font-normal text-white mt-6"
             style={{
               fontSize: "clamp(16px, 4.5vw, 22px)",
               lineHeight: "1.5",
@@ -2241,7 +2222,7 @@ const Mentorship = () => {
           {hasPaid ? (
             <button
               onClick={() => navigate("/mentorship-session")}
-              className="font-extrabold text-white cursor-pointer mt-6 px-7 py-4 rounded-2xl"
+              className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
               style={{
                 backgroundColor: "#000",
                 boxShadow: "4px 4px 0 0 #BF9C05"
@@ -2250,39 +2231,18 @@ const Mentorship = () => {
               my mentorship session
             </button>
           ) : (
-            /* explore_plans button not needed for now — changed to text
-            <img
-              src={explore_plans}
-              alt="explore plans"
-              onClick={() => scrollTo(section6Ref)}
-              className="cursor-pointer mt-6 transition-opacity duration-150 active:opacity-70"
-              style={{ width: "clamp(180px, 55vw, 260px)" }}
-            /> */
             <GetStartedCta
               onClick={() => handleGetStarted("why_we_built_this")}
-              className="mt-6"
+              className="mt-[3rem]"
             />
           )}
         </div>
 
-        {/* Ribbons — bottom corners, mobile variants */}
+        {/* Bottom vector — full width */}
         <img
-          src={right_eye_ribbon_mobile}
+          src={mentorship_vector_mobile}
           alt=""
-          className="absolute bottom-[4rem] right-0 z-20 w-full"
-          // style={{ height: "clamp(140px, 28vw, 220px)" }}
-        />
-        <img
-          src={left_eye_ribbon_mobile}
-          alt=""
-          className="absolute bottom-[4rem] left-0 z-10 w-auto"
-          // style={{ height: "clamp(140px, 28vw, 220px)" }}
-        />
-        <MarqueeStrip
-          key={marqueeLabel}
-          isMobile={true}
-          spotsText={spotsText}
-          marqueeLabel={marqueeLabel}
+          className="absolute bottom-0 left-0 w-full z-0 block"
         />
       </section>
     </div>
