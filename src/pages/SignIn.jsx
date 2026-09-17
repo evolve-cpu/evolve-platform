@@ -127,7 +127,8 @@ function getSignInFrom(location) {
 /* ══════════════════════════════════════════════════════════════════════════════
    SignIn page
 ══════════════════════════════════════════════════════════════════════════════ */
-export default function SignIn() {
+export default function SignIn({ onClose } = {}) {
+  const embedded = !!onClose;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -307,7 +308,7 @@ export default function SignIn() {
   }
 
   function goBack() {
-    if (step === "options") return navigate(-1);
+    if (step === "options") return embedded ? onClose() : navigate(-1);
     if (step === "email-form") return setStep("options");
     if (step === "otp") return setStep("email-form");
   }
@@ -321,24 +322,21 @@ export default function SignIn() {
   /* ═══════════════════════════════════════════════════════════════════════════
      RENDER
   ═══════════════════════════════════════════════════════════════════════════ */
-  return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "#161618" }}
-    >
-      <BlackNav onLogoClick={() => navigate("/")} />
-
+  const content = (
+    <>
       {/* OPTIONS */}
       {step === "options" && (
         <div className="flex flex-col lg:flex-row flex-1">
-          {/* left brand panel — tablet landscape + desktop only */}
-          <div className="hidden lg:flex lg:w-[40%] xl:w-[44%] flex-shrink-0 bg-[#161616]">
-            <img
-              src={signin_left_pannel}
-              alt="evolve — grow your design career in public."
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {/* left brand panel — tablet landscape + desktop only, page mode only (no room in a modal) */}
+          {!embedded && (
+            <div className="hidden lg:flex lg:w-[40%] xl:w-[44%] flex-shrink-0 bg-[#161616]">
+              <img
+                src={signin_left_pannel}
+                alt="evolve — grow your design career in public."
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           {/* form panel — vertically + horizontally centered on mobile/tablet-portrait */}
           <div className="flex flex-col flex-1 items-center justify-center px-6 py-10">
@@ -578,6 +576,28 @@ export default function SignIn() {
           progress={progress}
         />
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="relative flex flex-col">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 z-10 text-white/50 hover:text-white text-2xl leading-none"
+          aria-label="close"
+        >
+          ×
+        </button>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#161618" }}>
+      <BlackNav onLogoClick={() => navigate("/")} />
+      {content}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { findFreeSlug } from "../lib/slug";
 import SEO from "../components/SEO";
+import SignIn from "./SignIn";
 
 const WHATSAPP_COMMUNITY_URL =
   "https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4";
@@ -262,6 +263,7 @@ export default function EventDetail() {
   const [myRegistration, setMyRegistration] = useState(null);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -269,6 +271,12 @@ export default function EventDetail() {
     fetchEvent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, user?.id]);
+
+  // Signed in (any method) while the sign-in modal was open — close it and
+  // let the booking flow continue on this same page.
+  useEffect(() => {
+    if (user) setShowSignInModal(false);
+  }, [user]);
 
   async function fetchEvent() {
     setLoading(true);
@@ -316,7 +324,13 @@ export default function EventDetail() {
       // for Google/LinkedIn OAuth sign-in, so also persist it the same way
       // PortfolioReviewForm.jsx does for its own deep-link-back-after-signin flow.
       sessionStorage.setItem("signin_from", `/events/${slug}`);
-      navigate("/signin", { state: { from: `/events/${slug}` } });
+      // Desktop: sign in without leaving the event page (modal). Mobile: the
+      // full /signin page has more room to breathe, so keep the normal nav.
+      if (window.innerWidth >= 768) {
+        setShowSignInModal(true);
+      } else {
+        navigate("/signin", { state: { from: `/events/${slug}` } });
+      }
       return;
     }
     if (myRegistration) {
@@ -529,6 +543,22 @@ export default function EventDetail() {
           onClose={() => setShowTicketModal(false)}
         />
       )}
+      {showSignInModal &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm"
+              onClick={() => setShowSignInModal(false)}
+            />
+            <div
+              className="fixed z-[9991] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl"
+              style={{ backgroundColor: "#161618" }}
+            >
+              <SignIn onClose={() => setShowSignInModal(false)} />
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 }
