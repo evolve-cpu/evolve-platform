@@ -49,6 +49,7 @@ const EMPTY_FORM = {
   speaker_title: "",
   speaker_bio: "",
   speaker_photo_url: "",
+  speaker_socials: [""],
   cover_image_url: "",
   join_link: "",
   capacity: ""
@@ -229,6 +230,16 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
     }));
   }
 
+  function updateSocial(i, value) {
+    setForm((f) => ({ ...f, speaker_socials: f.speaker_socials.map((s, idx) => (idx === i ? value : s)) }));
+  }
+  function addSocial() {
+    setForm((f) => ({ ...f, speaker_socials: [...f.speaker_socials, ""] }));
+  }
+  function removeSocial(i) {
+    setForm((f) => ({ ...f, speaker_socials: f.speaker_socials.filter((_, idx) => idx !== i) }));
+  }
+
   return (
     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
       <Field
@@ -376,6 +387,41 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
       />
 
       <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          speaker social links (linkedin, instagram, etc. — platform is auto-detected)
+        </label>
+        <div className="space-y-2">
+          {form.speaker_socials.map((url, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={url}
+                placeholder="https://linkedin.com/in/..."
+                onChange={(e) => updateSocial(i, e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => removeSocial(i)}
+                className="text-xs font-bold px-3 rounded-lg"
+                style={{ border: "1px solid #333", color: "#aaa" }}
+              >
+                remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addSocial}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg"
+            style={{ border: `1px solid ${Y}`, color: Y }}
+          >
+            + add social link
+          </button>
+        </div>
+      </div>
+
+      <div className="md:col-span-2">
         <Field
           label="join link (Zoom / Google Meet)"
           value={form.join_link}
@@ -435,6 +481,7 @@ function eventToForm(event) {
     speaker_title: event.speaker_title || "",
     speaker_bio: event.speaker_bio || "",
     speaker_photo_url: event.speaker_photo_url || "",
+    speaker_socials: event.speaker_socials?.length ? event.speaker_socials : [""],
     cover_image_url: event.cover_image_url || "",
     join_link: event.join_link || "",
     capacity: event.capacity ?? ""
@@ -459,6 +506,7 @@ function formToPayload(form, status) {
     speaker_title: form.speaker_title.trim() || null,
     speaker_bio: form.speaker_bio.trim() || null,
     speaker_photo_url: form.speaker_photo_url || null,
+    speaker_socials: form.speaker_socials.map((s) => s.trim()).filter(Boolean),
     cover_image_url: form.cover_image_url || null,
     join_link: form.join_link.trim() || null,
     capacity: form.capacity === "" ? null : parseInt(form.capacity, 10),

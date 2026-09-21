@@ -46,6 +46,41 @@ function fmtDateTime(dtStr) {
   return `${date} · ${time} IST`;
 }
 
+// Platform is detected from the URL itself — nothing to keep in sync in the
+// database beyond the raw link (see EventsTab.jsx's "speaker social links").
+const SOCIAL_MATCHERS = [
+  { key: "linkedin", test: /linkedin\.com/i },
+  { key: "instagram", test: /instagram\.com/i },
+  { key: "twitter", test: /twitter\.com|x\.com/i },
+  { key: "youtube", test: /youtube\.com|youtu\.be/i },
+  { key: "behance", test: /behance\.net/i },
+  { key: "dribbble", test: /dribbble\.com/i },
+  { key: "github", test: /github\.com/i }
+];
+
+function detectPlatform(url) {
+  return SOCIAL_MATCHERS.find((m) => m.test.test(url))?.key || "website";
+}
+
+const SOCIAL_ICON_PATHS = {
+  linkedin: "M6.94 8.5H3.56V20h3.38V8.5ZM5.25 3.5a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92ZM20.44 20h-3.37v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3.37V8.5h3.24v1.57h.05c.45-.86 1.56-1.77 3.2-1.77 3.42 0 4.05 2.25 4.05 5.18V20Z",
+  instagram: "M12 8.7a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6Zm0 1.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.6-3.9a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1ZM12 4.9c2.4 0 2.68.01 3.63.05.94.05 1.58.2 2.14.42.58.23 1.07.53 1.55 1.02.49.48.79.97 1.02 1.55.22.56.37 1.2.42 2.14.04.95.05 1.23.05 3.63s-.01 2.68-.05 3.63c-.05.94-.2 1.58-.42 2.14-.23.58-.53 1.07-1.02 1.55-.48.49-.97.79-1.55 1.02-.56.22-1.2.37-2.14.42-.95.04-1.23.05-3.63.05s-2.68-.01-3.63-.05c-.94-.05-1.58-.2-2.14-.42a4.17 4.17 0 0 1-1.55-1.02 4.17 4.17 0 0 1-1.02-1.55c-.22-.56-.37-1.2-.42-2.14C4.19 14.68 4.18 14.4 4.18 12s.01-2.68.05-3.63c.05-.94.2-1.58.42-2.14.23-.58.53-1.07 1.02-1.55.48-.49.97-.79 1.55-1.02.56-.22 1.2-.37 2.14-.42.95-.04 1.23-.05 3.64-.05Z",
+  twitter: "M18.24 3H21l-6.3 7.2L22.1 21h-6.3l-4.94-6.46L5.1 21H2.3l6.74-7.7L1.9 3h6.46l4.47 5.9L18.24 3Zm-1.1 16.2h1.74L7.94 4.7H6.08l11.06 14.5Z",
+  youtube: "M22 12s0-3.3-.42-4.9a2.78 2.78 0 0 0-1.96-1.96C18.02 4.7 12 4.7 12 4.7s-6.02 0-7.62.44a2.78 2.78 0 0 0-1.96 1.96C2 8.7 2 12 2 12s0 3.3.42 4.9c.24.9 1 1.66 1.96 1.9C6 19.3 12 19.3 12 19.3s6.02 0 7.62-.5a2.78 2.78 0 0 0 1.96-1.9C22 15.3 22 12 22 12ZM10 15.3V8.7l5.5 3.3-5.5 3.3Z",
+  behance: "M8.85 12.7a2.53 2.53 0 0 0 1.4-2.42c0-1.86-1.3-2.78-3.3-2.78H2v10.9h5.2c2.1 0 3.85-1 3.85-3.1 0-1.3-.63-2.2-2.2-2.6ZM4.3 9.2h2.1c.9 0 1.6.3 1.6 1.15 0 .8-.6 1.2-1.5 1.2H4.3V9.2Zm2.4 7.4H4.3v-2.7h2.5c1 0 1.7.4 1.7 1.35 0 .95-.7 1.35-1.8 1.35Zm10.9-9.75h-4.2v1.1h4.2v-1.1ZM22 14c0-2.7-1.5-4.8-4.35-4.8-2.7 0-4.5 1.9-4.5 4.55 0 2.7 1.7 4.5 4.6 4.5 1.9 0 3.3-.8 4-2.3l-1.85-.6c-.35.7-.95 1.1-2.05 1.1-1.3 0-2.15-.75-2.3-2.05h6.4c.02-.15.05-.3.05-.4Zm-6.4-1c.2-1.15 1-1.8 2.1-1.8 1.1 0 1.85.7 1.95 1.8h-4.05Z",
+  dribbble: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.6 4.6a8.3 8.3 0 0 1 1.85 5.1c-.27-.06-2.95-.6-5.65-.26-.06-.14-.11-.29-.17-.44-.17-.4-.35-.8-.55-1.19 2.95-1.2 4.3-2.93 4.52-3.21ZM12 3.75c1.9 0 3.65.68 5.01 1.8-.19.27-1.4 1.85-4.25 2.94a29 29 0 0 0-3.36-4.42A8.3 8.3 0 0 1 12 3.75Zm-3.9 1.03A28 28 0 0 1 11.4 9.1c-3.4.9-6.4.86-6.72.85a8.35 8.35 0 0 1 3.42-5.17ZM3.75 12v-.24c.3.01 3.83.05 7.47-1.03.21.4.4.82.58 1.23-.1.03-.19.05-.29.09-3.75 1.21-5.75 4.53-5.92 4.81A8.28 8.28 0 0 1 3.75 12Zm8.25 8.25a8.28 8.28 0 0 1-4.9-1.6c.13-.28 1.63-3.24 5.72-4.65.02 0 .03-.01.05-.02a30 30 0 0 1 1.5 5.86 8.28 8.28 0 0 1-2.37.41Zm3.83-1.07a31.4 31.4 0 0 0-1.4-5.53c2.5-.4 4.7.25 4.97.34a8.32 8.32 0 0 1-3.57 5.19Z",
+  github: "M12 2a10 10 0 0 0-3.16 19.5c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.93.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z",
+  website: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c-1.66 0-3-4-3-9s1.34-9 3-9m0 18c1.66 0 3-4 3-9s-1.34-9-3-9m-9 9h18"
+};
+
+function SocialIcon({ platform, className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d={SOCIAL_ICON_PATHS[platform]} stroke={platform === "website" ? "currentColor" : "none"} strokeWidth="1.5" fill={platform === "website" ? "none" : "currentColor"} />
+    </svg>
+  );
+}
+
 function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
   const [category, setCategory] = useState("");
   const [question, setQuestion] = useState("");
@@ -456,6 +491,22 @@ export default function EventDetail() {
                 <p className="text-white/60 text-xs mt-3 leading-relaxed">
                   {event.speaker_bio}
                 </p>
+              )}
+              {event.speaker_socials?.length > 0 && (
+                <div className="flex items-center gap-3 mt-3">
+                  {event.speaker_socials.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/50 hover:text-evolve-yellow transition-colors"
+                      aria-label={detectPlatform(url)}
+                    >
+                      <SocialIcon platform={detectPlatform(url)} className="w-4 h-4" />
+                    </a>
+                  ))}
+                </div>
               )}
             </div>
           )}

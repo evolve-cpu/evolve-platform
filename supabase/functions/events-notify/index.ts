@@ -207,7 +207,8 @@ function formatEventDateTime(startTimeIso: string) {
 // Admin uploads the cover image as 1:1 (see EventsTab.jsx) — rendered square here too.
 function coverImageHtml(event: any) {
   if (!event.cover_image_url) return "";
-  return `<img src="${event.cover_image_url}" width="480" height="480" alt="" style="width:100%;max-width:480px;height:auto;display:block;border-radius:12px;margin-bottom:24px;" />`;
+  // return `<img src="${event.cover_image_url}" width="480" height="480" alt="" style="width:100%;max-width:480px;height:auto;display:block;border-radius:12px;margin-bottom:24px;" />`;
+    return `<img src="${event.cover_image_url}" width="320" height="320" alt="" style="width:100%;max-width:320px;height:auto;display:block;border-radius:12px;margin-bottom:20px;" />`;
 }
 
 function speakerLineHtml(event: any) {
