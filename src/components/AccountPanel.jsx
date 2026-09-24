@@ -2217,8 +2217,7 @@ export function AIProfileReveal({
     notable_works,
     dimension_ratings,
     career_timeline,
-    career_trajectory,
-    name
+    career_trajectory
   } = profile;
 
   const displayTools = inferToolRowsFromProfile(profile);
@@ -2252,9 +2251,6 @@ export function AIProfileReveal({
       <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
         <HeroScoreRing score={heroScore} onClick={() => setScoreDetailOpen(true)} />
         <div className="flex flex-col gap-3 min-w-0">
-          <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-[0.15em]">
-            {name || "AI-Built Profile"}
-          </p>
           <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">
             {role?.primary}
             {role?.secondary && (
@@ -2330,15 +2326,15 @@ export function AIProfileReveal({
       <SignalEvidence ... /> (x5) + CareerJourney
       */}
 
-      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
-        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col items-center gap-3">
+        <p className="self-start text-white/40 text-[11px] uppercase tracking-wide">
           Competency Matrix
         </p>
         <CompetencyMatrix axes={competencyAxes} />
       </div>
 
-      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
-        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col items-center gap-3">
+        <p className="self-start text-white/40 text-[11px] uppercase tracking-wide">
           Skill Profile
         </p>
         <SkillDonut categories={skillCategories} />
@@ -2400,13 +2396,21 @@ export function AIProfileReveal({
             : "Averaged from this profile's five core growth signals (business, clarity, leadership, learning, community)."}
         </p>
         {ratedDimensions.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {ratedDimensions.map((r, i) => (
-              <div key={i} className="flex items-center justify-between gap-2">
-                <span className="text-white/75 text-xs font-semibold">{r.dimension}</span>
-                <span className="text-white/40 text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
-                  {r.score}
-                </span>
+              <div
+                key={i}
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 flex flex-col gap-1"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-white/75 text-xs font-semibold">{r.dimension}</span>
+                  <span className="text-white/40 text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
+                    {r.score}
+                  </span>
+                </div>
+                {r.evidence && (
+                  <p className="text-white/50 text-[11px] leading-snug">{r.evidence}</p>
+                )}
               </div>
             ))}
           </div>
@@ -2881,29 +2885,47 @@ export function ProfileTabPane({ user, onGoToEvents }) {
           desktop for the owner (see PublicProfile.jsx), so this is now the
           only place avatar/name/college render above md. Mobile keeps its
           own compact header in the sidebar's mobile-only block. */}
-      <div className="hidden md:flex items-center gap-4">
-        <div className="relative w-16 h-16 flex-shrink-0">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xl font-bold">
-            {user?.avatar_url ? (
-              <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              (user?.name || "?")[0].toUpperCase()
-            )}
+      <div className="hidden md:flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="relative w-16 h-16 flex-shrink-0">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xl font-bold">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  (user?.name || "?")[0].toUpperCase()
+                )}
+              </div>
+              {isTrialActive(user?.trial_ends_at) && (
+                <TrialClockBadge size={18} className="absolute bottom-0 right-0" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-white font-bold text-xl truncate">
+                {user?.name || "evolve designer"}
+              </h1>
+              <p className="text-white/40 text-xs mt-0.5">
+                @{user?.username}
+                {academicLine && ` · ${academicLine}`}
+                {user?.school_name && ` · ${user.school_name}`}
+              </p>
+            </div>
           </div>
-          {isTrialActive(user?.trial_ends_at) && (
-            <TrialClockBadge size={18} className="absolute bottom-0 right-0" />
+          {ENABLE_PORTFOLIO_AI && aiProfile && (
+            <button
+              type="button"
+              onClick={() => setVerifyNoticeOpen((v) => !v)}
+              className="flex-shrink-0 bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2.5 hover:bg-white/10 active:opacity-80 transition-colors"
+            >
+              Get evolve verified
+            </button>
           )}
         </div>
-        <div className="min-w-0">
-          <h1 className="text-white font-bold text-xl truncate">
-            {user?.name || "evolve designer"}
-          </h1>
-          <p className="text-white/40 text-xs mt-0.5">
-            @{user?.username}
-            {academicLine && ` · ${academicLine}`}
-            {user?.school_name && ` · ${user.school_name}`}
+        {ENABLE_PORTFOLIO_AI && aiProfile && verifyNoticeOpen && (
+          <p className="text-white/50 text-xs">
+            Verification calls are launching soon — we'll email you when you can book a slot.
           </p>
-        </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-4">
@@ -2939,7 +2961,7 @@ export function ProfileTabPane({ user, onGoToEvents }) {
 
       {ENABLE_PORTFOLIO_AI && (aiProfile ? (
         <>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3">
+          <div className="md:hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-white font-bold text-sm">Get evolve verified</p>

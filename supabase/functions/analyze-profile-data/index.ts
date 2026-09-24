@@ -391,15 +391,23 @@ const RESPONSE_SCHEMA = {
     },
     competency_matrix: {
       type: "ARRAY",
-      description: "Step 6 — a fixed five-point competency map for a pentagon/radar info-graphic. Exactly these five axes, in this order, each scored from the same evidence as the corresponding snapshot field: 'Design Core' (foundational_clarity), 'Collaboration' (team_work_proficiency), 'Business Understanding' (understanding_of_business), 'Leadership' (leadership scope within team_work_proficiency / dimension_ratings), 'Continuous Learning' (learning). This is a click-to-expand UI: keep evidence short since it only shows once a vertex is opened.",
+      description: "Step 6 — a fixed five-point competency map for a pentagon/radar info-graphic. Exactly these five axes, in this order, each scored from the same evidence as the corresponding snapshot field: 'Design Core' (foundational_clarity), 'Collaboration' (team_work_proficiency), 'Business Understanding' (understanding_of_business), 'Leadership' (leadership scope within team_work_proficiency / dimension_ratings), 'Continuous Learning' (learning). This is a click-to-expand UI: the vertex itself only shows the score, but the panel it opens is the one place this profile explains its reasoning in full, so give it real substance — don't hold back detail to keep the chart tidy.",
       items: {
         type: "OBJECT",
         properties: {
           axis: { type: "STRING", enum: ["Design Core", "Collaboration", "Business Understanding", "Leadership", "Continuous Learning"] },
           score: { type: "INTEGER", description: "0-4." },
-          evidence: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact chips. 8 words max each." },
+          reasoning: {
+            type: "STRING",
+            description: "2-3 sentences, written directly to the person, explaining why this axis landed at this score: what's genuinely present in their work, and — unless the score is a 4 — what's missing or thin that would need to show up for the score to go higher. Specific to their actual work, never generic filler like 'shows good potential'.",
+          },
+          evidence: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+            description: "2-4 concrete, specific facts that back up the score — a named project, a stated responsibility, a tool, a quantified outcome. Up to 14 words each. Every score above 0 needs at least 2 of these; thin evidence is a sign the score itself is too generous.",
+          },
         },
-        required: ["axis", "score", "evidence"],
+        required: ["axis", "score", "reasoning", "evidence"],
       },
     },
     dimension_ratings: {

@@ -154,76 +154,6 @@ function ProgramCard({
   );
 }
 
-// Registered events for the profile owner — self-contained fetch, same
-// "own small piece, own data" approach as the rest of this dashboard grid.
-// Reads event_registrations joined to events for the current user only
-// (RLS: auth.uid() = user_id), so this never runs for a visitor viewing
-// someone else's profile.
-function MyEventsSection({ userId }) {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const { data: registrations } = await supabase
-        .from("event_registrations")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("status", "registered");
-      const eventIds = (registrations || []).map((r) => r.event_id);
-      const { data: events } = eventIds.length
-        ? await supabase.from("events").select("*").in("id", eventIds)
-        : { data: [] };
-      const eventById = Object.fromEntries((events || []).map((e) => [e.id, e]));
-      if (!cancelled) {
-        setRows(
-          (registrations || [])
-            .map((r) => eventById[r.event_id])
-            .filter(Boolean)
-            .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
-        );
-        setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  if (loading || rows.length === 0) return null;
-
-  return (
-    <Section title="your events">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        {rows.map((event) => (
-          <Link
-            key={event.id}
-            to={`/events/${event.slug}`}
-            className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-white/20 transition-colors"
-          >
-            {event.cover_image_url && (
-              <img src={event.cover_image_url} alt="" className="w-full h-24 object-cover" />
-            )}
-            <div className="p-3">
-              <p className="text-white text-sm font-bold truncate">{event.title}</p>
-              <p className="text-white/40 text-xs mt-0.5">
-                {new Date(event.start_time).toLocaleDateString("en-IN", {
-                  timeZone: "Asia/Kolkata",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric"
-                })}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
 // The Events tab pane — browsing published events from inside the platform
 // itself instead of sending the owner out to the marketing site's /events
 // page. Booking/tickets stay on the existing /events/:slug (EventDetail.jsx)
@@ -1372,8 +1302,6 @@ export default function PublicProfile() {
                   </Section>
                 )
               )}
-
-              {isOwner && <MyEventsSection userId={user.id} />}
             </div>
 
             {showOwnerTools && (

@@ -195,19 +195,25 @@ export function CompetencyMatrix({ axes }) {
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              {(active.evidence || []).filter(Boolean).map((pt, i) => (
-                <p
-                  key={i}
-                  className="text-white/70 text-xs leading-snug rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
-                >
-                  {pt}
-                </p>
-              ))}
-              {!(active.evidence || []).filter(Boolean).length && (
-                <p className="text-white/40 text-xs">No specific evidence recorded for this axis.</p>
-              )}
-            </div>
+            {active.reasoning && (
+              <p className="text-white/70 text-xs leading-relaxed">{active.reasoning}</p>
+            )}
+            {(active.evidence || []).filter(Boolean).length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-white/40 text-[10px] uppercase tracking-wide">Evidence</p>
+                {(active.evidence || []).filter(Boolean).map((pt, i) => (
+                  <p
+                    key={i}
+                    className="text-white/70 text-xs leading-snug rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
+                  >
+                    {pt}
+                  </p>
+                ))}
+              </div>
+            )}
+            {!active.reasoning && !(active.evidence || []).filter(Boolean).length && (
+              <p className="text-white/40 text-xs">No specific evidence recorded for this axis.</p>
+            )}
           </>
         )}
       </DetailPanel>
@@ -226,7 +232,7 @@ export function SkillDonut({ categories }) {
   const active = activeIndex != null ? list[activeIndex] : null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-5">
+    <div className="flex flex-col items-center gap-5">
       <div className="relative w-40 h-40 flex-shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -256,7 +262,7 @@ export function SkillDonut({ categories }) {
           <span className="text-white/35 text-[9px] uppercase tracking-wide">categories</span>
         </div>
       </div>
-      <div className="flex flex-col gap-1.5 w-full min-w-0">
+      <div className="flex flex-col gap-1.5 w-full max-w-xs min-w-0">
         {list.map((c, i) => (
           <button
             type="button"
