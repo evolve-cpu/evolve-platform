@@ -347,6 +347,245 @@ function EventsTabPane() {
   );
 }
 
+// Desktop-only "my profile" / "grow" switcher — replaces AppTabNav's pill
+// row in the header on this page; mobile keeps the bottom AppTabNav as its
+// only tab switcher, so this never renders below the md breakpoint.
+function DesktopProfileTabs({ activeTab, onTabChange }) {
+  const tabs = [
+    { key: "profile", label: "my profile" },
+    { key: "grow", label: "grow" }
+  ];
+  return (
+    <div className="hidden md:flex items-center gap-6 border-b border-white/10 mb-2">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onTabChange(t.key)}
+          className={`pb-3 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
+            activeTab === t.key
+              ? "text-white border-evolve-yellow"
+              : "text-white/40 border-transparent hover:text-white/70"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Persistent "N days left" banner — desktop only. Separate from TrialSheet
+// (the one-time "trial started" modal): that fires once on first visit, this
+// stays put as a page banner for the rest of the trial. No billing/upgrade
+// flow exists yet, so "Upgrade" just surfaces a short inline notice instead
+// of linking anywhere real.
+function TrialBar({ daysLeft }) {
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  return (
+    <div
+      className="hidden md:flex items-center justify-between gap-4 px-8 py-3 border-b border-white/10"
+      style={{ backgroundColor: "rgba(255,208,7,0.05)" }}
+    >
+      <div className="flex items-center gap-2.5">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-evolve-yellow flex-shrink-0">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <p className="text-white/70 text-xs">
+          <span className="font-bold text-white">{daysLeft ?? 14} days left</span> in your
+          free trial — my profile and grow are on the house for now.
+        </p>
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {noticeOpen && (
+          <span className="text-white/40 text-[11px]">upgrade plans are launching soon</span>
+        )}
+        <button
+          type="button"
+          onClick={() => setNoticeOpen(true)}
+          className="border border-evolve-yellow/50 text-evolve-yellow text-xs font-bold rounded-full px-4 py-1.5 hover:bg-evolve-yellow/10 transition-colors"
+        >
+          Upgrade
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const EVENTS_RAIL_COLORS = ["#A35BFB", "#DF0586", "#01F1D9", "#FFB14F"];
+
+// Desktop-only right rail — replaces the sidebar's old spot with upcoming
+// events instead of identity (identity moved into ProfileTabPane's header).
+// Collapsible via the chevron pinned to its left edge, same interaction
+// pattern the old sidebar's collapse toggle used.
+function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [goingCount, setGoingCount] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("*")
+        .eq("status", "published")
+        .gte("start_time", new Date().toISOString())
+        .order("start_time", { ascending: true })
+        .limit(5);
+      if (cancelled) return;
+      setEvents(data || []);
+      setLoading(false);
+      if (data?.[0]) {
+        const { count } = await supabase
+          .from("event_registrations")
+          .select("id", { count: "exact", head: true })
+          .eq("event_id", data[0].id)
+          .eq("status", "registered");
+        if (!cancelled) setGoingCount(count ?? 0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  }
+  function fmtTime(iso) {
+    return new Date(iso).toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  if (collapsed) {
+    return (
+      <div className="hidden md:flex flex-col items-center pt-8 px-3 flex-shrink-0">
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          title="show events"
+          className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" style={{ transform: "scaleX(-1)" }}>
+            <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  const [featured, ...rest] = events;
+
+  return (
+    <div className="hidden md:flex md:w-[340px] flex-shrink-0 flex-col gap-4 border-l border-white/10 px-6 py-8 relative">
+      <button
+        type="button"
+        onClick={onToggleCollapsed}
+        title="hide events"
+        className="absolute -left-3.5 top-8 w-7 h-7 rounded-full bg-evolve-black border border-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+      >
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+          <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <p className="text-white/40 text-xs font-bold uppercase tracking-wide">Events</p>
+
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spinner size={22} />
+        </div>
+      ) : !featured ? (
+        <p className="text-white/40 text-xs">No upcoming events right now.</p>
+      ) : (
+        <>
+          <Link
+            to={`/events/${featured.slug}`}
+            className="rounded-2xl overflow-hidden border border-white/10 relative hover:border-white/20 transition-colors"
+          >
+            <div className="aspect-[4/3]">
+              {featured.cover_image_url ? (
+                <img src={featured.cover_image_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-evolve-yellow" />
+              )}
+            </div>
+            {featured.event_type && (
+              <span className="absolute top-3 left-3 bg-white text-black text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                {featured.event_type}
+              </span>
+            )}
+          </Link>
+          <div className="flex flex-col gap-1 -mt-1">
+            <p className="text-white font-bold text-sm leading-snug">{featured.title}</p>
+            {featured.speaker_name && (
+              <p className="text-white/40 text-xs">
+                {featured.speaker_name}
+                {featured.speaker_title ? ` · ${featured.speaker_title}` : ""}
+              </p>
+            )}
+            <p className="text-white/50 text-xs mt-1">
+              {fmtDate(featured.start_time)} · {fmtTime(featured.start_time)}
+            </p>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            {goingCount !== null && (
+              <span className="text-white/40 text-xs">{goingCount} going</span>
+            )}
+            <Link
+              to={`/events/${featured.slug}`}
+              className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
+            >
+              View Event
+            </Link>
+          </div>
+
+          {rest.length > 0 && (
+            <div className="flex flex-col mt-2">
+              {rest.map((event, i) => (
+                <Link
+                  key={event.id}
+                  to={`/events/${event.slug}`}
+                  className="flex items-start gap-3 py-3 border-t border-white/10 hover:opacity-80 transition-opacity"
+                >
+                  <span
+                    className="w-9 h-9 rounded-lg flex-shrink-0"
+                    style={{ backgroundColor: EVENTS_RAIL_COLORS[i % EVENTS_RAIL_COLORS.length] }}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-white text-xs font-bold truncate">{event.title}</p>
+                    <p className="text-white/40 text-[11px] mt-0.5">
+                      {fmtDate(event.start_time)} · {fmtTime(event.start_time)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={onGoToEvents}
+            className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide self-start mt-1 hover:opacity-80"
+          >
+            View all
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ─── page ───────────────────────────────────────────────────────────────── */
 export default function PublicProfile() {
   const { username } = useParams();
@@ -406,6 +645,9 @@ export default function PublicProfile() {
   }
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // desktop-only right rail (upcoming events) — replaces the identity
+  // sidebar's spot for the owner's own dashboard, see EventsRailPanel.
+  const [eventsRailCollapsed, setEventsRailCollapsed] = useState(false);
   // the desktop collapse/expand toggle only shows up while hovering the
   // sidebar rail (or the button itself, since it straddles the rail's edge).
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -761,9 +1003,6 @@ export default function PublicProfile() {
             className="hidden md:block h-6 w-auto"
           />
         </Link>
-        {isOwner && (
-          <AppTabNav variant="desktop" activeTab={activeTab} onTabChange={handleTabChange} />
-        )}
         <div className="flex items-center gap-2.5">
           <a
             href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
@@ -875,6 +1114,10 @@ export default function PublicProfile() {
         </div>
       </div>
 
+      {isOwner && !activeProgramme && isTrialActive(user.trial_ends_at) && (
+        <TrialBar daysLeft={trialDaysLeft(user.trial_ends_at)} />
+      )}
+
       {showTrialSheet && (
         <TrialSheet
           daysLeft={trialDaysLeft(user.trial_ends_at)}
@@ -963,7 +1206,11 @@ export default function PublicProfile() {
         <aside
           onMouseEnter={() => setSidebarHovered(true)}
           onMouseLeave={() => setSidebarHovered(false)}
-          className={`w-full ${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 flex-shrink-0 flex flex-col md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)] transition-[width] duration-200`}
+          className={`w-full ${
+            isOwner
+              ? "md:hidden"
+              : `${sidebarCollapsed ? "md:w-[84px]" : "md:w-[300px]"} md:border-r border-white/10 md:sticky md:top-16 md:self-start md:min-h-[calc(100vh-4rem)]`
+          } flex-shrink-0 flex flex-col transition-[width] duration-200`}
         >
           {/* ── mobile: compact growth-stage card, dashboard view only —
               on every other pane (account, invoice, an opened programme,
@@ -974,9 +1221,9 @@ export default function PublicProfile() {
           {/* growth feature (mascot / stage badge / growth map) disabled —
               see renderGrowthMap() above and GrowthMascot import; kept in
               code, not deleted, per product decision to drop it for now.
-              Identity (name/username) still shows so the sidebar isn't bare
-              while My Profile's new header (avatar/name/college/trial badge)
-              is being built out separately. */}
+              Identity (name/username) still shows here on mobile — desktop's
+              copy of this now lives in ProfileTabPane's own header instead
+              (see the block below, which is visitor-view only). */}
           {!activeProgramme && (
             <div className="md:hidden flex flex-col border-b border-white/10">
               <div className="flex items-center gap-3 px-5 py-4 w-full text-left">
@@ -1002,8 +1249,11 @@ export default function PublicProfile() {
             </div>
           )}
 
-          {/* ── desktop: full panel — hidden entirely while collapsed. ── */}
-          {!sidebarCollapsed && (
+          {/* ── desktop: full panel — owner-only page uses the new
+              no-sidebar layout instead (identity moved into ProfileTabPane's
+              header), so this only ever renders for a visitor viewing
+              someone else's profile. Hidden entirely while collapsed. ── */}
+          {!isOwner && !sidebarCollapsed && (
             <div className="hidden md:flex md:flex-col gap-5 px-6 py-8">
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="relative w-20 h-20 flex-shrink-0">
@@ -1037,33 +1287,35 @@ export default function PublicProfile() {
             only spans its own box height, so an absolutely-positioned
             button anchored to its bottom edge scrolls out of view on long
             pages instead of tracking the viewport. */}
-        <button
-          type="button"
-          onClick={() => setSidebarCollapsed((v) => !v)}
-          onMouseEnter={() => setSidebarHovered(true)}
-          onMouseLeave={() => setSidebarHovered(false)}
-          title={sidebarCollapsed ? "expand panel" : "collapse panel"}
-          className={`hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white fixed bottom-5 z-50 transition-opacity duration-150 ${
-            sidebarHovered ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-          style={{ left: sidebarCollapsed ? 68 : 284 }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 20 20"
-            fill="none"
-            style={{ transform: sidebarCollapsed ? "none" : "scaleX(-1)" }}
+        {!isOwner && (
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            onMouseEnter={() => setSidebarHovered(true)}
+            onMouseLeave={() => setSidebarHovered(false)}
+            title={sidebarCollapsed ? "expand panel" : "collapse panel"}
+            className={`hidden md:flex w-8 h-8 rounded-lg bg-evolve-black border border-white/10 items-center justify-center text-white fixed bottom-5 z-50 transition-opacity duration-150 ${
+              sidebarHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            style={{ left: sidebarCollapsed ? 68 : 284 }}
           >
-            <path
-              d="M7.5 5L12.5 10L7.5 15"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 20 20"
+              fill="none"
+              style={{ transform: sidebarCollapsed ? "none" : "scaleX(-1)" }}
+            >
+              <path
+                d="M7.5 5L12.5 10L7.5 15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
 
         {/* main content — flows in the same single page scroll as
             everything else; the sticky top bar and sidebar stay in place
@@ -1076,6 +1328,10 @@ export default function PublicProfile() {
             activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
           } ${!activeProgramme && isOwner ? "pb-24 md:pb-8" : ""}`}
         >
+          {isOwner && !activeProgramme && (
+            <DesktopProfileTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          )}
+
           {/* dashboard grid — the base pane, always mounted (not gated by
               `visitedProgrammes`); hidden via CSS instead of unmounted
               whenever another pane is open, same "keep it mounted" approach
@@ -1238,6 +1494,16 @@ export default function PublicProfile() {
             </div>
           )}
         </main>
+
+        {isOwner &&
+          !activeProgramme &&
+          (activeTab === "profile" || activeTab === "grow") && (
+            <EventsRailPanel
+              collapsed={eventsRailCollapsed}
+              onToggleCollapsed={() => setEventsRailCollapsed((v) => !v)}
+              onGoToEvents={() => handleTabChange("events")}
+            />
+          )}
       </div>
 
       {isOwner && !activeProgramme && (

@@ -44,6 +44,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *             | { mode: "notify", registration_id }
  *             | { mode: "invite", event_id, email, name }
  *             | { mode: "send_reminder", registration_id }
+ *             | { mode: "send_due_reminders" }
+ *
+ * "send_due_reminders" is the cron-invoked mode (see
+ * supabase/migrations/event_reminder_scheduling.sql for the Supabase
+ * Cron job that calls it every 15 minutes): it finds every published
+ * event starting within the next 9 hours and emails the reminder to
+ * any registration that doesn't have one yet, tracked via
+ * event_registrations.reminder_sent_at. Re-running it is always safe —
+ * it only ever sends to registrations where that column is still null.
  */
 
 const CLIENT_EMAIL = Deno.env.get("GOOGLE_CALENDAR_CLIENT_EMAIL") ?? "";
@@ -336,7 +345,56 @@ async function handleSendReminder(registration_id: string) {
   if (!email) throw new Error("registration has no email to notify");
 
   await sendReminderEmail(email, name || "", event);
+  await admin.from("event_registrations").update({ reminder_sent_at: new Date().toISOString() }).eq("id", registration.id);
   return { ok: true };
+}
+
+// Cron-invoked (see file header) — catches up any registration that's
+// within 9h of its event's start and hasn't been reminded yet, rather
+// than requiring the cron tick to land exactly on the 9h mark. That
+// also covers someone registering after the 9h mark has already passed.
+async function handleSendDueReminders() {
+  const nineHoursOut = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString();
+
+  const { data: events, error } = await admin
+    .from("events")
+    .select("*")
+    .eq("status", "published")
+    .gt("start_time", new Date().toISOString())
+    .lte("start_time", nineHoursOut);
+  if (error) throw new Error(error.message);
+  if (!events?.length) return { ok: true, remindersSent: 0 };
+
+  let remindersSent = 0;
+  for (const event of events) {
+    const { data: registrations, error: regErr } = await admin
+      .from("event_registrations")
+      .select("*")
+      .eq("event_id", event.id)
+      .eq("status", "registered")
+      .is("reminder_sent_at", null);
+    if (regErr || !registrations?.length) continue;
+
+    for (const registration of registrations) {
+      let email = registration.invitee_email as string | null;
+      let name = registration.invitee_name as string | null;
+      if (registration.user_id) {
+        const { data: profile } = await admin.from("profiles").select("name, email").eq("id", registration.user_id).maybeSingle();
+        email = profile?.email ?? email;
+        name = profile?.name ?? name;
+      }
+      if (!email) continue;
+
+      try {
+        await sendReminderEmail(email, name || "", event);
+        await admin.from("event_registrations").update({ reminder_sent_at: new Date().toISOString() }).eq("id", registration.id);
+        remindersSent++;
+      } catch (err) {
+        console.error(`send_due_reminders: failed for registration ${registration.id}:`, err.message);
+      }
+    }
+  }
+  return { ok: true, remindersSent };
 }
 
 async function handleInvite(event_id: string, email: string, name: string) {
@@ -389,6 +447,7 @@ serve(async (req) => {
     else if (body.mode === "notify") result = await handleNotify(body.registration_id);
     else if (body.mode === "invite") result = await handleInvite(body.event_id, body.email, body.name);
     else if (body.mode === "send_reminder") result = await handleSendReminder(body.registration_id);
+    else if (body.mode === "send_due_reminders") result = await handleSendDueReminders();
     else throw new Error("unknown mode");
 
     return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });

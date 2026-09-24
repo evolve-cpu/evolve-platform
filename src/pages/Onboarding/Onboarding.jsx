@@ -542,7 +542,12 @@ export default function Onboarding() {
       />
     );
   } else if (step === "role-choice") {
-    content = <RoleChoiceStep onSelect={handleRoleChoice} />;
+    content = (
+      <RoleChoiceStep
+        onSelect={handleRoleChoice}
+        onBack={() => navigate("/signin", { replace: true })}
+      />
+    );
   } else if (step === "student-details") {
     content = (
       <StudentOnboarding

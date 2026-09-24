@@ -22,6 +22,8 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { slugify } from "../lib/slug";
 import { QUESTIONS } from "../pages/Onboarding/questions";
+import { isTrialActive } from "../lib/trial";
+import { TrialClockBadge } from "./TrialBadge";
 import {
   CompetencyMatrix,
   SkillDonut,
@@ -2871,8 +2873,39 @@ export function ProfileTabPane({ user, onGoToEvents }) {
     0
   );
 
+  const academicLine = [user?.program, user?.standard].filter(Boolean).join(", ");
+
   return (
     <div className="flex flex-col gap-6">
+      {/* desktop identity header — the old page sidebar no longer shows on
+          desktop for the owner (see PublicProfile.jsx), so this is now the
+          only place avatar/name/college render above md. Mobile keeps its
+          own compact header in the sidebar's mobile-only block. */}
+      <div className="hidden md:flex items-center gap-4">
+        <div className="relative w-16 h-16 flex-shrink-0">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xl font-bold">
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              (user?.name || "?")[0].toUpperCase()
+            )}
+          </div>
+          {isTrialActive(user?.trial_ends_at) && (
+            <TrialClockBadge size={18} className="absolute bottom-0 right-0" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-white font-bold text-xl truncate">
+            {user?.name || "evolve designer"}
+          </h1>
+          <p className="text-white/40 text-xs mt-0.5">
+            @{user?.username}
+            {academicLine && ` · ${academicLine}`}
+            {user?.school_name && ` · ${user.school_name}`}
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-white font-bold text-sm">Evolve participation</p>

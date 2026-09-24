@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { right_arrow_icon } from "../../assets/images/Nav";
+import OnboardingProgressBar from "./OnboardingProgressBar";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -11,6 +13,37 @@ const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th", "5th"];
 const inputClass =
   "w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60";
 const inputStyle = { backgroundColor: "rgba(255,255,255,0.03)" };
+
+// Fills the details form with example values instead of running a real
+// upload + verify-student-id call — handy for demos/local testing without a
+// real ID photo (and a fallback while that edge function's Gemini dependency
+// is flaky).
+const SAMPLE_STUDENT_ID = {
+  college_name: "MIT Institute of Design",
+  year: "3rd",
+  program: "B.Des",
+  stream: "Communication Design"
+};
+
+function IdCardIcon({ className }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="8.5" cy="11" r="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M5.5 15.5c.6-1.4 1.8-2 3-2s2.4.6 3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M14 10h5M14 13h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LockIcon({ className }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="5" y="10.5" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 10.5V8a4 4 0 018 0v2.5" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
 
 async function uploadStudentId(userId, file) {
   const ext = file.name.split(".").pop();
@@ -46,6 +79,10 @@ async function callVerifyStudentId(userId, storagePath) {
  *   unclear read, or blank via the manual-entry link. Every path funnels
  *   into this one form so there's always a final, editable confirmation
  *   step before anything is saved.
+ *
+ * Picking a file only stages it (shows the filename) — the actual upload +
+ * verify-student-id call happens on "Continue", not on file selection, so
+ * the person can see what they picked before committing to it.
  */
 export default function StudentOnboarding({ user, onBack, onComplete }) {
   const [phase, setPhase] = useState("upload");
@@ -69,7 +106,18 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
     setPhase("details");
   }
 
-  async function handleFileChange(e) {
+  function handleUseSampleId() {
+    setUploadError("");
+    setCollegeName(SAMPLE_STUDENT_ID.college_name);
+    setYear(SAMPLE_STUDENT_ID.year);
+    setProgram(SAMPLE_STUDENT_ID.program);
+    setStream(SAMPLE_STUDENT_ID.stream);
+    setVerificationStatus("manual");
+    setBanner({ tone: "warning", text: "Sample details — demo only, feel free to edit." });
+    setPhase("details");
+  }
+
+  function handleFileChange(e) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
@@ -79,9 +127,13 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
     }
     setUploadError("");
     setFile(f);
+  }
+
+  async function handleContinueUpload() {
+    if (!file || uploading) return;
     setUploading(true);
     try {
-      const path = await uploadStudentId(user.id, f);
+      const path = await uploadStudentId(user.id, file);
       const result = await callVerifyStudentId(user.id, path);
       if (result.is_clear) {
         setCollegeName(result.college_name || "");
@@ -133,7 +185,11 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
         className="min-h-screen flex flex-col items-center justify-center px-6 py-16"
         style={{ backgroundColor: "#161618" }}
       >
-        <div className="w-full max-w-md mx-auto flex flex-col gap-5">
+        <div
+          className="w-full max-w-md mx-auto rounded-3xl border border-[#373737] p-6 sm:p-8 flex flex-col gap-5"
+          style={{ backgroundColor: "#1c1c1f" }}
+        >
+          <OnboardingProgressBar step={3} total={3} />
           <button
             onClick={() => setPhase("upload")}
             className="self-start text-white/40 text-xs font-semibold hover:text-white/70 transition-colors"
@@ -217,9 +273,14 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
           <button
             onClick={handleSubmitDetails}
             disabled={submitting}
-            className="bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
+            className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
           >
-            {submitting ? "Saving…" : "Continue →"}
+            {submitting ? "Saving…" : (
+              <>
+                Continue
+                <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -231,7 +292,11 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
       className="min-h-screen flex flex-col items-center justify-center px-6 py-16"
       style={{ backgroundColor: "#161618" }}
     >
-      <div className="w-full max-w-md mx-auto flex flex-col gap-5">
+      <div
+        className="w-full max-w-md mx-auto rounded-3xl border border-[#373737] p-6 sm:p-8 flex flex-col gap-5"
+        style={{ backgroundColor: "#1c1c1f" }}
+      >
+        <OnboardingProgressBar step={2} total={3} />
         {onBack && (
           <button
             onClick={onBack}
@@ -240,12 +305,18 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
             ← Back
           </button>
         )}
-        <h1 className="text-white font-bold text-2xl leading-tight">
-          Tell us about yourself
-        </h1>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-white font-bold text-2xl leading-tight">
+            You're a student — nice.
+          </h1>
+          <p className="text-white/50 text-sm">
+            Upload your college ID and we'll read your college, year and
+            program from it. Nothing else to fill in.
+          </p>
+        </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-white/40 text-xs">Name</label>
+          <label className="text-white/40 text-xs">Full name</label>
           <input
             type="text"
             value={name}
@@ -257,25 +328,45 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-white/40 text-xs">Email</label>
-          <input
-            type="email"
-            value={user.email || ""}
-            disabled
-            className="w-full text-sm text-white/40 outline-none border border-[#373737] rounded-xl px-4 py-3 cursor-not-allowed"
-            style={inputStyle}
-          />
+          <div className="relative">
+            <input
+              type="email"
+              value={user.email || ""}
+              disabled
+              className="w-full text-sm text-white/40 outline-none border border-[#373737] rounded-xl pl-4 pr-10 py-3 cursor-not-allowed"
+              style={inputStyle}
+            />
+            <LockIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+          </div>
+          <p className="text-white/30 text-[11px]">
+            From your sign-in, so it can't be changed here.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-white/40 text-xs">Upload your college ID card</label>
-          <input
-            type="file"
-            accept={ID_ACCEPTED_TYPES}
-            onChange={handleFileChange}
-            disabled={uploading}
-            className="w-full text-xs text-white/60 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-[#373737] file:bg-transparent file:text-white/70 file:text-xs disabled:opacity-40"
-          />
-          {file && !uploading && <p className="text-white/40 text-xs mt-1">{file.name}</p>}
+          <label className="text-white/40 text-xs">College ID</label>
+          <label
+            className="flex items-center gap-3 border border-dashed border-[#373737] rounded-xl px-4 py-3.5 cursor-pointer hover:border-white/25 transition-colors"
+            style={inputStyle}
+          >
+            <IdCardIcon className="text-white/40 flex-shrink-0" />
+            <span className="flex-1 min-w-0">
+              <span className="block text-white text-sm font-semibold truncate">
+                {file ? file.name : "Photo or PDF, front side"}
+              </span>
+              <span className="block text-white/30 text-[11px]">Up to {MAX_FILE_MB} MB</span>
+            </span>
+            <span className="flex-shrink-0 text-white text-xs font-semibold rounded-lg border border-[#373737] px-3 py-2 hover:bg-white/5 transition-colors">
+              Choose file
+            </span>
+            <input
+              type="file"
+              accept={ID_ACCEPTED_TYPES}
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
           {uploading && <p className="text-evolve-yellow text-xs mt-1">reading your ID…</p>}
           {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
         </div>
@@ -285,6 +376,26 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
           className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
         >
           Prefer to type it in? Enter details manually
+        </button>
+
+        <button
+          onClick={handleContinueUpload}
+          disabled={!file || uploading}
+          className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
+        >
+          {uploading ? "Reading your ID…" : (
+            <>
+              Continue
+              <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={handleUseSampleId}
+          className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
+        >
+          Use a sample student ID (demo)
         </button>
       </div>
     </div>
