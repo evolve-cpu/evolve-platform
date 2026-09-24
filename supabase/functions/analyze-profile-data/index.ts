@@ -120,7 +120,8 @@ Follow this exact reasoning order:
 - Step 2 (skills): List every distinct design craft/deliverable type actually evidenced by the work itself — not software (that's tool_proficiency) but what kinds of things they've designed: logo/brand identity, illustration, packaging, editorial, motion, UI screens, design systems, UX research, service design, art direction, etc. A skill only counts if you can point to a project that demonstrates it. In a separate dedicated pass, also inventory software/tools from resume skills sections, project process text, captions, screenshots, and visible UI/prototype references; do not leave tool_proficiency empty when any actual tool name appears anywhere in the source.
 - Step 3 (persona_traits): Pick the 3-4 spectrum tensions that most usefully describe how this person works, and place them on each — e.g. execution/production craft vs. research/process depth, visual craft vs. strategic/business framing, fast-and-prolific vs. deep-and-iterative, solo maker vs. systems/team thinking. These are exactly the kind of thing a dense review sentence usually smuggles in ("focuses on visual deliverables without showing research") — surface it here as a placed, evidenced score instead of leaving it buried in a sentence.
 - Step 4 (dimension_ratings): This is the strong-zones/growth-zones map, and now the ONLY place a strength or a growth area gets stated — there is no separate strengths/gaps prose anywhere else in this schema. Rate 4-6 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage and their work (e.g. execution craft, research/process depth, business framing, presentation/curation, clarity of positioning, systems thinking, leadership scope for someone senior). Spread the scores honestly across the real range (Strong down to Weak) so the set actually reads as a map of strong vs. growing areas, not a wall of "Good."
-- Step 5 (career_timeline + career_trajectory): Only after the snapshot above is settled, check whether the resume actually supports sequencing it year by year (dated roles, dated projects, explicit tenure/promotion language). If it does, reconstruct career_timeline: one entry per relative career year, each of the five growth axes rated the same way as the snapshot, and a highlight only on years where something concrete actually changed. If the resume is too sparse for real year-level sequencing, output an empty array — a flat or invented timeline is worse than no timeline. Then read career_trajectory forward from whatever trend actually exists (the timeline's shape if you built one, otherwise the snapshot dimension_ratings/persona_traits/stage): which axis is accelerating, which has plateaued, and what that concretely implies about where this person is headed over the next ~5 years — always tied to a specific dimension/fact, never generic advice.
+- Step 5 (career_timeline + career_trajectory): Only after the snapshot above is settled, build career_timeline from whatever history the resume actually lists — most resumes already give you this for free as a reverse-chronological list of roles and education, even without exact month/day dates. One entry per role or academic stage actually found (not a rigid one-per-calendar-year grid, and not padded with filler years nothing happened in): year_index counting up from 1 in chronological order, calendar_year filled whenever a year is stated outright or safely derivable (e.g. from "3 years at X" plus a later stated/current year, or from work_experience plus the current date) and left null only when truly no year signal exists anywhere, category tagged Academics vs. Work Experience, the same five growth axes rated as the snapshot, and a highlight only on entries where something concrete actually changed (a promotion, a new role, a scope change). Approximate/relative sequencing built from real resume facts is expected and fine — what's not fine is inventing a company, title, or year that isn't in the source. Output an empty array only when there is genuinely no discernible professional or academic history at all (no resume, or a resume listing zero roles/education) — do not leave it empty just because dates aren't precise; that's the single most common way this field goes wrong. Then read career_trajectory forward from whatever trend actually exists (the timeline's shape if you built one, otherwise the snapshot dimension_ratings/persona_traits/stage): which axis is accelerating, which has plateaued, and what that concretely implies about where this person is headed over the next ~5 years — always tied to a specific dimension/fact, never generic advice.
+- Step 6 (competency_matrix, skill_profile, technical/soft/interpersonal skills): These render as info-graphics, not prose, so build them directly instead of leaving the UI to infer them from other fields. competency_matrix is a fixed five-point map — Design Core, Collaboration, Business Understanding, Leadership, Continuous Learning — scored 0-4 from the same evidence as foundational_clarity/team_work_proficiency/understanding_of_business/learning, each with up to 3 short evidence chips (this is what a click-to-expand pentagon vertex shows). skill_profile groups the craft skills you already found in Step 2 into 3-6 named categories (e.g. "Brand & Identity", "UI/UX", "Motion") that sum to ~100%, each carrying its own subskills/tools/domain/sector detail (this is what a click-to-expand donut segment shows) — do not invent categories the work doesn't support; fold a thin category into a bigger one rather than padding it out. technical_skills/soft_skills/interpersonal_skills are three short, separate name-only lists (no evidence, no scores) — technical = tools/craft techniques, soft = individual work-style traits (time management, adaptability), interpersonal = traits that only show up around other people (communication, mentoring, stakeholder handling) — each inferred from the same evidence already gathered, not re-researched.
 
 Ground every field in the actual evidence you were given (portfolio text, resume text, screenshots). Where the evidence is genuinely absent, say so plainly using the exact fallback language specified per field below — never guess or invent specifics like names, companies, or numbers that are not present in the material.
 
@@ -164,6 +165,37 @@ const RESPONSE_SCHEMA = {
           evidence: { type: "STRING", description: "The specific project/phrase this skill is drawn from. 8 words max." },
         },
         required: ["skill", "level", "evidence"],
+      },
+    },
+    technical_skills: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+      description: "Step 6 — plain names only, no evidence/scores: tools and craft techniques (e.g. 'Figma', 'Design Systems', 'Prototyping'). 3-8 items.",
+    },
+    soft_skills: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+      description: "Step 6 — plain names only: individual work-style traits evidenced by how they work (e.g. 'Time Management', 'Adaptability', 'Self-direction'). 3-6 items.",
+    },
+    interpersonal_skills: {
+      type: "ARRAY",
+      items: { type: "STRING" },
+      description: "Step 6 — plain names only: traits that only show up around other people (e.g. 'Communication', 'Mentoring', 'Stakeholder Management'). 3-6 items.",
+    },
+    skill_profile: {
+      type: "ARRAY",
+      description: "Step 6 — the craft skills from `skills` grouped into 3-6 named categories that sum to ~100%, for a donut breakdown. Fold a thin category into a bigger one rather than padding it out with invented categories.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          category: { type: "STRING", description: "e.g. 'Brand & Identity', 'UI/UX', 'Motion'." },
+          pct: { type: "INTEGER", description: "Share of this category, 1-100. All categories together should sum to ~100." },
+          subskills: { type: "ARRAY", items: { type: "STRING" }, description: "2-5 specific skills inside this category. Name only." },
+          tools: { type: "ARRAY", items: { type: "STRING" }, description: "Tools used for this category, if evidenced. Empty array otherwise." },
+          domain: { type: "STRING", description: "Industry/sector this category's work was done in, if evidenced; 'Not specified' otherwise." },
+          sector: { type: "STRING", description: "B2B/B2C/B2B2C/D2C for this category's work, if evidenced; 'Not specified' otherwise." },
+        },
+        required: ["category", "pct", "subskills", "tools", "domain", "sector"],
       },
     },
     persona_traits: {
@@ -357,6 +389,19 @@ const RESPONSE_SCHEMA = {
         required: ["title", "link", "client", "summary"],
       },
     },
+    competency_matrix: {
+      type: "ARRAY",
+      description: "Step 6 — a fixed five-point competency map for a pentagon/radar info-graphic. Exactly these five axes, in this order, each scored from the same evidence as the corresponding snapshot field: 'Design Core' (foundational_clarity), 'Collaboration' (team_work_proficiency), 'Business Understanding' (understanding_of_business), 'Leadership' (leadership scope within team_work_proficiency / dimension_ratings), 'Continuous Learning' (learning). This is a click-to-expand UI: keep evidence short since it only shows once a vertex is opened.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          axis: { type: "STRING", enum: ["Design Core", "Collaboration", "Business Understanding", "Leadership", "Continuous Learning"] },
+          score: { type: "INTEGER", description: "0-4." },
+          evidence: { type: "ARRAY", items: { type: "STRING" }, description: "1-3 compact chips. 8 words max each." },
+        },
+        required: ["axis", "score", "evidence"],
+      },
+    },
     dimension_ratings: {
       type: "ARRAY",
       description: "Step 4 — the strong-zones/growth-zones map, and the only place a strength or a growth area gets stated anywhere in this profile. Rate 4-6 dimensions that are actually the real question for THIS person, not a fixed list applied identically to everyone — pick whichever framing fits their stage and work (e.g. execution craft, research/process depth, business framing, presentation/curation, clarity of positioning, systems thinking, leadership scope for someone senior). Spread scores honestly across the real range so the set reads as a genuine map of strong vs. growing areas, not a wall of one score.",
@@ -372,13 +417,14 @@ const RESPONSE_SCHEMA = {
     },
     career_timeline: {
       type: "ARRAY",
-      description: "Step 5 — a year-by-year reconstruction of this person's growth, ONLY when the resume/portfolio actually supports year-level sequencing (dated roles, dated projects, explicit 'promoted after X years' language). One entry per relative career year, starting at year_index 1 for their first professional year, sequential with no gaps. Each year rates the same five growth axes used elsewhere in this profile (business framing, foundational clarity/craft, leadership/team scope, active learning, community contribution) so a viewer can see exactly where an inflection point happened and read why. Output an empty array rather than inventing a timeline when the source doesn't support it — this is exactly the kind of specific, checkable fact this whole profile is built on, never a guess.",
+      description: "Step 5 — a reconstruction of this person's professional (and, where relevant, academic) history for a spiral timeline UI, built from whatever the resume actually lists — most resumes already give this for free as a reverse-chronological list of roles/education. One entry per role or academic stage actually found, starting at year_index 1 for the earliest and increasing sequentially — not a rigid one-per-calendar-year grid, and not padded with filler entries for years nothing happened. Each entry rates the same five growth axes used elsewhere in this profile (business framing, foundational clarity/craft, leadership/team scope, active learning, community contribution) so a viewer can see exactly where an inflection point happened and read why. Approximate/relative sequencing from real resume facts (e.g. inferring a year from '3 years at X' plus a later stated year, or from work_experience plus the current date) is expected and fine. Output an empty array only when there is genuinely no discernible professional or academic history at all — never merely because exact dates are missing, and never invent a company, title, or year that isn't grounded in the source.",
       items: {
         type: "OBJECT",
         properties: {
-          year_index: { type: "INTEGER", description: "1 = first professional year, increasing sequentially." },
-          calendar_year: { type: "STRING", nullable: true, description: "Explicit calendar year (e.g. '2022'), only if evidenced; null otherwise." },
-          title: { type: "STRING", nullable: true, description: "Job title/role held that year, if evidenced; null otherwise." },
+          year_index: { type: "INTEGER", description: "1 = earliest entry, increasing sequentially." },
+          calendar_year: { type: "STRING", nullable: true, description: "Calendar year (e.g. '2022'), stated outright or safely derived from resume facts (total experience, a later stated year, the current date). Null only when truly no year signal exists anywhere for this entry." },
+          title: { type: "STRING", nullable: true, description: "Job title/role or academic stage held then, if evidenced; null otherwise." },
+          category: { type: "STRING", enum: ["Academics", "Work Experience"], description: "Whether this year was primarily academic (school/college) or professional work — for a two-color spiral timeline." },
           business: { type: "INTEGER", description: "0-3, same scale as understanding_of_business." },
           clarity: { type: "INTEGER", description: "0-3, same scale as foundational_clarity." },
           leadership: { type: "INTEGER", description: "0-3, same scale as team_work_proficiency." },
@@ -386,7 +432,7 @@ const RESPONSE_SCHEMA = {
           community: { type: "INTEGER", description: "0-3, same scale as contributing_back." },
           highlight: { type: "STRING", description: "The concrete driver of any jump that year — a promotion, expanded leadership scope, a notable project, a certification, speaking/community activity. Empty string if nothing notable that year. 10 words max." },
         },
-        required: ["year_index", "calendar_year", "title", "business", "clarity", "leadership", "learning", "community", "highlight"],
+        required: ["year_index", "calendar_year", "title", "category", "business", "clarity", "leadership", "learning", "community", "highlight"],
       },
     },
     career_trajectory: {
@@ -412,12 +458,13 @@ const RESPONSE_SCHEMA = {
     },
   },
   required: [
-    "name", "stage", "role", "skills", "persona_traits", "niche", "domain", "sector", "work_experience",
+    "name", "stage", "role", "skills", "technical_skills", "soft_skills", "interpersonal_skills",
+    "skill_profile", "persona_traits", "niche", "domain", "sector", "work_experience",
     "type_of_work_wanted", "team_work_proficiency", "understanding_of_business", "foundational_clarity",
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
     "salary_expectations", "current_status", "links", "summary", "recruiter_highlights",
-    "notable_works", "dimension_ratings", "career_timeline", "career_trajectory",
+    "notable_works", "competency_matrix", "dimension_ratings", "career_timeline", "career_trajectory",
   ],
 };
 
@@ -471,7 +518,7 @@ serve(async (req) => {
     ];
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -9,7 +9,7 @@ import {
   isActiveQuestion,
   nextQuestionIndex
 } from "./questions";
-import GrowthMascot from "../../components/GrowthMascot";
+// import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 import {
   evolve_yellow_logo,
   evolve_yellow_with_name
@@ -88,7 +88,7 @@ function LiveProfileCard({ profile }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col gap-1 sticky top-24 max-h-[calc(100vh-140px)] overflow-y-auto">
       <div className="flex items-center gap-3 pb-4 mb-3 border-b border-white/10">
-        <GrowthMascot progress={5} size={40} />
+        {/* <GrowthMascot progress={5} size={40} /> */}
         <div>
           <p className="text-white font-bold text-sm">
             {profile.name || "your profile"}

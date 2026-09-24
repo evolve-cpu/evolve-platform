@@ -147,9 +147,13 @@ export function AuthProvider({ children }) {
       school_name:             profile.school_name ?? null,
       standard:                profile.standard ?? null,
       stream:                  profile.stream ?? null,
+      role:                    profile.role ?? null,
+      program:                 profile.program ?? null,
+      student_id_verification_status: profile.student_id_verification_status ?? "none",
       onboarding_completed:    profile.onboarding_completed ?? false,
       onboarding_completed_at: profile.onboarding_completed_at ?? null,
-      growth_stage:            profile.growth_stage ?? 0
+      growth_stage:            profile.growth_stage ?? 0,
+      trial_ends_at:           profile.trial_ends_at ?? null
     };
   }
 

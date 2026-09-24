@@ -34,7 +34,11 @@ import InstituteAdminProfileStep from "./InstituteAdminProfileStep";
 import InstituteSpaceStep from "./InstituteSpaceStep";
 import ChatOnboarding from "./ChatOnboarding";
 import TeamSetupStep from "./TeamSetupStep";
-import SeedPlantedModal from "./SeedPlantedModal";
+// Seed-planted growth-feature screen disabled — see handlePlantedContinue's
+// auto-skip effect below. Kept for a possible future re-enable, not deleted.
+// import SeedPlantedModal from "./SeedPlantedModal";
+import RoleChoiceStep from "./RoleChoiceStep";
+import StudentOnboarding from "./StudentOnboarding";
 
 // Shown while handleConfirm's writes are in flight, right after the chat
 // (or team-setup) finishes — between that and the seed-planted screen.
@@ -116,13 +120,15 @@ export default function Onboarding() {
   // default — there's no "myself vs for my team" choice to click through.
   const fromInstitution = !!location.state?.fromInstitution;
 
-  const [step, setStep] = useState(fromInstitution ? "org-type" : "chat");
+  const [step, setStep] = useState(fromInstitution ? "org-type" : "role-choice");
   // org-type | inst-profile | inst-space | submitting-inst
-  // | chat | team-setup | submitting | planted | submit-error
+  // | role-choice | student-details | chat | team-setup | submitting | planted | submit-error
   const [spaceType, setSpaceType] = useState(
     fromInstitution ? "team" : "individual"
   );
   const [orgType, setOrgType] = useState(null);
+  const [role, setRole] = useState(null);
+  const [studentDraft, setStudentDraft] = useState(null);
   const [chatProfile, setChatProfile] = useState(null);
   const [plantedNav, setPlantedNav] = useState(null);
   const [orgDraft, setOrgDraft] = useState(null);
@@ -133,6 +139,60 @@ export default function Onboarding() {
   function handleOrgType(value) {
     setOrgType(value);
     setStep(value === "institute" ? "inst-profile" : "chat");
+  }
+
+  // Student is the only fully-built path right now — Working Professional
+  // renders disabled in RoleChoiceStep, so this only ever fires with "student".
+  function handleRoleChoice(value) {
+    setRole(value);
+    setStep("student-details");
+  }
+
+  async function handleStudentComplete(details) {
+    if (!user) return;
+    setStudentDraft(details);
+    setStep("submitting");
+    setError("");
+    try {
+      const username =
+        user.username ||
+        (await findFreeSlug(
+          supabase,
+          "profile_cards",
+          "username",
+          details.name || user.name || user.email
+        ));
+
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({
+          username,
+          name: details.name,
+          role: "student",
+          persona: "Design school student",
+          school_name: details.college_name,
+          standard: details.year,
+          program: details.program,
+          stream: details.stream,
+          student_id_verification_status: details.verificationStatus,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+          growth_stage: 10
+        })
+        .eq("id", user.id);
+
+      if (profileErr) throw profileErr;
+
+      await refreshUser();
+      setPlantedNav({ path: `/profile/${username}` });
+      setStep("planted");
+    } catch (e) {
+      setError(
+        e.message ||
+          "something went wrong saving your profile. please try again."
+      );
+      setStep("submit-error");
+    }
   }
 
   function handleInstProfile(draft) {
@@ -396,6 +456,13 @@ export default function Onboarding() {
     navigate(plantedNav.path, { replace: true, state: plantedNav.state });
   }
 
+  // Growth feature (seed-planted screen) disabled — skip straight through
+  // instead of showing it. Not deleted: see the commented SeedPlantedModal
+  // import/usage above and below.
+  useEffect(() => {
+    if (step === "planted") handlePlantedContinue();
+  }, [step, plantedNav]);
+
   if (authLoading || !user) {
     return (
       <div
@@ -474,6 +541,16 @@ export default function Onboarding() {
         error={error}
       />
     );
+  } else if (step === "role-choice") {
+    content = <RoleChoiceStep onSelect={handleRoleChoice} />;
+  } else if (step === "student-details") {
+    content = (
+      <StudentOnboarding
+        user={user}
+        onBack={() => setStep("role-choice")}
+        onComplete={handleStudentComplete}
+      />
+    );
   } else if (step === "chat") {
     content = (
       <ChatOnboarding
@@ -497,12 +574,15 @@ export default function Onboarding() {
   } else if (step === "submitting") {
     content = <PlantingLoader />;
   } else if (step === "planted") {
-    content = (
-      <SeedPlantedModal
-        onContinue={handlePlantedContinue}
-        spaceName={orgDraft?.name}
-      />
-    );
+    // growth feature disabled — the effect above navigates away immediately,
+    // this is just what's on screen for that one tick.
+    content = <PlantingLoader />;
+    // content = (
+    //   <SeedPlantedModal
+    //     onContinue={handlePlantedContinue}
+    //     spaceName={orgDraft?.name}
+    //   />
+    // );
   } else if (step === "submit-error") {
     content = (
       <div
@@ -512,7 +592,11 @@ export default function Onboarding() {
         <p className="text-white font-bold text-lg">Something went wrong</p>
         <p className="text-white/50 text-sm max-w-xs">{error}</p>
         <button
-          onClick={() => handleConfirm(chatProfile, orgDraft)}
+          onClick={() =>
+            role === "student"
+              ? handleStudentComplete(studentDraft)
+              : handleConfirm(chatProfile, orgDraft)
+          }
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:opacity-80 transition-opacity"
         >
           Try again →

@@ -22,13 +22,20 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { slugify } from "../lib/slug";
 import { QUESTIONS } from "../pages/Onboarding/questions";
+import {
+  CompetencyMatrix,
+  SkillDonut,
+  SkillChipGroups,
+  SpiralTimeline,
+  DetailPanel
+} from "./profile/ProfileInfographics";
 
 // Portfolio & Resume / AI-profile tab is still in testing — keep this false
 // on main. On merges from development this line should conflict (development
 // keeps it true), which is the point: it forces a conscious choice instead of
 // silently shipping the test feature to production.
-const ENABLE_PORTFOLIO_AI = false;
-// const ENABLE_PORTFOLIO_AI = true;
+// const ENABLE_PORTFOLIO_AI = false;
+const ENABLE_PORTFOLIO_AI = true;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -363,30 +370,6 @@ function SourceEditor({
           {file && <p className="text-white/40 text-xs mt-1.5">{file.name}</p>}
         </div>
       )}
-    </div>
-  );
-}
-
-function ExistingSourceRow({ link, fileUrl, onChange }) {
-  const value = link || fileUrl;
-  const isFile = !!fileUrl && !link;
-  return (
-    <div className="flex items-center justify-between gap-3 border border-[#373737] rounded-xl px-4 py-3">
-      <a
-        href={value}
-        target="_blank"
-        rel="noreferrer"
-        className="text-white text-sm truncate hover:text-evolve-yellow transition-colors min-w-0"
-      >
-        {isFile ? "uploaded file" : value}
-      </a>
-      <button
-        type="button"
-        onClick={onChange}
-        className="text-evolve-yellow text-xs font-semibold flex-shrink-0 hover:opacity-80"
-      >
-        Change
-      </button>
     </div>
   );
 }
@@ -753,13 +736,21 @@ function ChartTooltip({ active, payload, label, formatter }) {
 }
 
 /* Hand-drawn ring (not a chart-library radial) so the score can sit
-   centered inside it — a simple stroked circle, no illustrative path data. */
-function HeroScoreRing({ score }) {
+   centered inside it — a simple stroked circle, no illustrative path data.
+   Score is shown out of 10 and is clickable — it opens an explanation of
+   what it's built from instead of just sitting there as a bare number. */
+function HeroScoreRing({ score, onClick }) {
   const r = 54,
     c = 2 * Math.PI * r;
   const offset = c - (score / 100) * c;
+  const scoreOf10 = Math.round(score / 10);
   return (
-    <div className="relative w-36 h-36 flex-shrink-0">
+    <div
+      className="relative w-36 h-36 flex-shrink-0 cursor-pointer"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+    >
       <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
         <circle
           cx="60"
@@ -783,7 +774,10 @@ function HeroScoreRing({ score }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-white text-3xl font-bold">{score}</span>
+        <span className="text-white text-3xl font-bold">
+          {scoreOf10}
+          <span className="text-white/40 text-lg font-semibold">/10</span>
+        </span>
         <span className="text-white/40 text-[10px] uppercase tracking-wide">
           Signal score
         </span>
@@ -1175,6 +1169,36 @@ function axisEvidenceMap(profile) {
     Learning: profile?.learning?.key_points,
     Community: profile?.contributing_back?.types
   };
+}
+
+// Fallback for profiles saved before competency_matrix/skill_profile/
+// technical-soft-interpersonal skills existed on the schema — degrades to
+// something reasonable from the older fields instead of rendering empty.
+function deriveCompetencyMatrix(profile, axes) {
+  const evidence = axisEvidenceMap(profile);
+  const byAxis = Object.fromEntries(axes.map((a) => [a.axis, a.value]));
+  return [
+    { axis: "Design Core", score: byAxis.Clarity ?? 0, evidence: evidence.Clarity || [] },
+    { axis: "Collaboration", score: byAxis.Leadership ?? 0, evidence: evidence.Leadership || [] },
+    { axis: "Business Understanding", score: byAxis.Business ?? 0, evidence: evidence.Business || [] },
+    { axis: "Leadership", score: byAxis.Leadership ?? 0, evidence: evidence.Leadership || [] },
+    { axis: "Continuous Learning", score: byAxis.Learning ?? 0, evidence: evidence.Learning || [] }
+  ];
+}
+
+function deriveSkillProfile(profile) {
+  const skills = (profile?.skills || []).filter((s) => s?.skill);
+  if (!skills.length) return [];
+  return [
+    {
+      category: "Design Skills",
+      pct: 100,
+      subskills: skills.map((s) => s.skill),
+      tools: (profile?.tool_proficiency || []).map((t) => t?.name).filter(Boolean),
+      domain: profile?.domain || "Not specified",
+      sector: profile?.sector || "Not specified"
+    }
+  ];
 }
 
 function SignalMeterGrid({ profile, axes }) {
@@ -2154,11 +2178,17 @@ export function AIProfileReveal({
   resumeFileUrl,
   socialLinks
 }) {
+  const [scoreDetailOpen, setScoreDetailOpen] = useState(false);
   if (!profile) return null;
   const {
     nameFromProfile,
     role,
     skills,
+    technical_skills,
+    soft_skills,
+    interpersonal_skills,
+    skill_profile,
+    competency_matrix,
     persona_traits,
     niche,
     domain,
@@ -2196,11 +2226,21 @@ export function AIProfileReveal({
   const verifiedCount = real_work_validation?.validated_count || 0;
   const toolCount = displayTools.length;
 
+  const competencyAxes = competency_matrix?.length
+    ? competency_matrix
+    : deriveCompetencyMatrix(profile, axes);
+  const skillCategories = skill_profile?.length ? skill_profile : deriveSkillProfile(profile);
+  const technicalSkills = technical_skills?.length
+    ? technical_skills
+    : skills?.map((s) => s?.skill).filter(Boolean) || [];
+  const timelineEntries = (career_timeline || []).map((e) => ({
+    ...e,
+    category: e.category || "Work Experience"
+  }));
+  const ratedDimensions = (dimension_ratings || []).filter((r) => r?.dimension);
+
   return (
-    <div
-      className="relative overflow-hidden rounded-3xl border border-white/10 p-6 sm:p-8 flex flex-col gap-8"
-      style={{ backgroundColor: "#18181b" }}
-    >
+    <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col gap-8">
       <div
         className="absolute top-0 left-0 right-0 h-1"
         style={{
@@ -2208,7 +2248,7 @@ export function AIProfileReveal({
         }}
       />
       <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
-        <HeroScoreRing score={heroScore} />
+        <HeroScoreRing score={heroScore} onClick={() => setScoreDetailOpen(true)} />
         <div className="flex flex-col gap-3 min-w-0">
           <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-[0.15em]">
             {name || "AI-Built Profile"}
@@ -2257,224 +2297,388 @@ export function AIProfileReveal({
         ]}
       />
 
+      {/* Simplified per product decision — the AI profile was showing too
+          much (signal meters, role-fit/proof-depth panels, strong/growth
+          zones, recruiter highlights, persona traits, interview focus,
+          notable works, experience gauge, career trajectory, tool bar
+          chart, the full signal-evidence grid, a duplicate fact grid).
+          Kept: header, quick stats, facts, the competency matrix, skill
+          profile donut, skill chip groups, the spiral timeline, validation
+          donut, and the summary line — matching the smaller info-graphic
+          set from the mock. None of this is deleted, just not rendered —
+          see below. (SkillRadarChart/SkillChips/CareerGrowthChart were the
+          pre-redesign competency/skills/timeline components — replaced by
+          CompetencyMatrix/SkillDonut+SkillChipGroups/SpiralTimeline in
+          ./profile/ProfileInfographics, each with a click-to-open right
+          side detail panel; the old ones are kept below, unused, for the
+          same reason as everything else in this block.)
       <SignalMeterGrid profile={profile} axes={axes} />
-
       <div className="grid md:grid-cols-2 gap-4">
-        <RoleFitMap
-          role={role}
-          business={understanding_of_business}
-          clarity={foundational_clarity}
-        />
-        <ProofDepthPanel
-          links={links}
-          projects={notable_works}
-          validated={real_work_validation?.validated_count}
-          tools={displayTools}
-        />
+        <RoleFitMap role={role} business={understanding_of_business} clarity={foundational_clarity} />
+        <ProofDepthPanel links={links} projects={notable_works} validated={real_work_validation?.validated_count} tools={displayTools} />
+      </div>
+      <StrongGrowthZones ratings={dimension_ratings} />
+      <RecruiterHighlights points={recruiter_highlights} />
+      <PersonaTraits traits={persona_traits} />
+      <InterviewFocus ratings={dimension_ratings} traits={persona_traits} />
+      <NotableWorks works={notable_works} />
+      <ExperienceGauge years={experienceYears} />
+      <CareerTrajectory trajectory={career_trajectory} />
+      <ToolBarChart tools={displayTools} />
+      <SignalEvidence ... /> (x5) + CareerJourney
+      */}
+
+      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Competency Matrix
+        </p>
+        <CompetencyMatrix axes={competencyAxes} />
       </div>
 
-      <StrongGrowthZones ratings={dimension_ratings} />
+      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Skill Profile
+        </p>
+        <SkillDonut categories={skillCategories} />
+      </div>
 
-      <SkillChips skills={skills} />
-
-      <RecruiterHighlights points={recruiter_highlights} />
-
-      <PersonaTraits traits={persona_traits} />
+      <SkillChipGroups
+        technical={technicalSkills}
+        soft={soft_skills}
+        interpersonal={interpersonal_skills}
+      />
 
       {summary && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3.5 flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-5 border-t border-white/10">
           <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
           <p className="text-white/75 text-sm leading-snug">{summary}</p>
         </div>
       )}
 
-      <InterviewFocus ratings={dimension_ratings} traits={persona_traits} />
-
-      <NotableWorks works={notable_works} />
-
-      <ExperienceGauge years={experienceYears} />
-
-      <CareerGrowthChart timeline={career_timeline} />
-
-      <CareerTrajectory trajectory={career_trajectory} />
-
-      <div className="grid md:grid-cols-2 gap-6 items-start rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-        <div className="flex flex-col gap-2">
-          <p className="text-white/40 text-[11px] uppercase tracking-wide">
-            Skill Signal
-          </p>
-          <SkillRadarChart axes={axes} />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <SignalEvidence
-            label="Team Work"
-            badge={<Tag>{team_work_proficiency?.mode}</Tag>}
-            points={team_work_proficiency?.key_points}
-          />
-          <SignalEvidence
-            label="Business"
-            badge={<Tag>{understanding_of_business?.score}</Tag>}
-            points={understanding_of_business?.key_points}
-          />
-          <SignalEvidence
-            label="Clarity"
-            badge={<Tag>{foundational_clarity?.score}</Tag>}
-            points={foundational_clarity?.key_points}
-          />
-          <SignalEvidence
-            label="Learning"
-            badge={<Tag>{learning?.present ? "Active" : "Not evident"}</Tag>}
-            points={learning?.key_points}
-          />
-          <SignalEvidence
-            label="Community"
-            badge={
-              <Tag>{contributing_back?.present ? "Yes" : "Not evident"}</Tag>
-            }
-            points={contributing_back?.types}
-          />
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <p className="text-white/40 text-[11px] uppercase tracking-wide">
-                Career Switch
-              </p>
-              <Tag>{career_switching?.detected ? "Detected" : "None"}</Tag>
-            </div>
-            <CareerJourney journey={career_switching?.journey} />
-          </div>
-        </div>
+      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Career Timeline
+        </p>
+        <SpiralTimeline entries={timelineEntries} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-        <div className="flex flex-col gap-2">
-          <p className="text-white/40 text-[11px] uppercase tracking-wide">
-            Tool Emphasis
-          </p>
-          <ToolBarChart tools={displayTools} />
-          {ai_proficiency?.present && (
-            <Tag>
-              AI ·{" "}
-              {(ai_proficiency.tools || []).join(", ") || ai_proficiency.mode}
-            </Tag>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <p className="text-white/40 text-[11px] uppercase tracking-wide">
-            Real Work Validation
-          </p>
-          <ValidationDonut
-            validated={real_work_validation?.validated_count}
-            unvalidated={real_work_validation?.unvalidated_count}
-          />
-          {real_work_validation?.key_points?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {real_work_validation.key_points.map((pt, i) => (
-                <span
-                  key={i}
-                  title={pt}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-white/50 text-[11px] leading-none"
-                >
-                  {pt}
+      <div className="flex flex-col gap-2 pt-5 border-t border-white/10">
+        <p className="text-white/40 text-[11px] uppercase tracking-wide">
+          Real Work Validation
+        </p>
+        <ValidationDonut
+          validated={real_work_validation?.validated_count}
+          unvalidated={real_work_validation?.unvalidated_count}
+        />
+        {real_work_validation?.key_points?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {real_work_validation.key_points.map((pt, i) => (
+              <span
+                key={i}
+                title={pt}
+                className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-white/50 text-[11px] leading-none"
+              >
+                {pt}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <DetailPanel
+        open={scoreDetailOpen}
+        onClose={() => setScoreDetailOpen(false)}
+        eyebrow="Signal Score"
+        title={`${Math.round(heroScore / 10)}/10`}
+        accent={YELLOW}
+      >
+        <p className="text-white/60 text-xs leading-relaxed">
+          {ratedDimensions.length > 0
+            ? `Averaged from ${ratedDimensions.length} rated dimension${ratedDimensions.length === 1 ? "" : "s"} on this profile.`
+            : "Averaged from this profile's five core growth signals (business, clarity, leadership, learning, community)."}
+        </p>
+        {ratedDimensions.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {ratedDimensions.map((r, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <span className="text-white/75 text-xs font-semibold">{r.dimension}</span>
+                <span className="text-white/40 text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
+                  {r.score}
                 </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-        {[
-          ["Location", location],
-          ["Work Preference", work_preference],
-          ["Current Status", current_status],
-          ["Salary", salary_expectations]
-        ].map(([label, val]) => (
-          <div key={label}>
-            <p className="text-white/30 text-[10px] uppercase tracking-wide mb-1">
-              {label}
-            </p>
-            <p className="text-white/60 text-xs">{val || "Not specified"}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+      </DetailPanel>
+    </div>
+  );
+}
+
+const PROFILE_BUILD_MESSAGES = [
+  "Reading your resume and portfolio…",
+  "Finding your projects…",
+  "Building your timeline…",
+  "Plotting your strengths…"
+];
+
+const PARTICIPATION_CATEGORIES = [
+  { key: "webinars", label: "Webinars" },
+  { key: "amas", label: "AMAs" },
+  { key: "community", label: "Community activities" },
+  { key: "quizzes", label: "Quizzes" },
+  { key: "resources", label: "Resources" }
+];
+
+function ParticipationTile({ label, value }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-white/[0.02] px-2 py-3.5 text-center">
+      <span className="text-white text-lg font-bold">{value}</span>
+      <span className="text-white/40 text-[9px] uppercase tracking-wide leading-tight">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function BuildingSpinner() {
+  return (
+    <div className="relative w-14 h-14 flex-shrink-0">
+      <div className="absolute inset-0 rounded-full border-2 border-white/10" />
+      <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-evolve-yellow animate-spin" />
+    </div>
+  );
+}
+
+function GhostRadarIllustration() {
+  return (
+    <svg width="88" height="88" viewBox="0 0 100 100" fill="none" className="opacity-50">
+      <polygon
+        points="50,8 90,38 75,88 25,88 10,38"
+        stroke="#FFD007"
+        strokeWidth="1.5"
+        strokeDasharray="4 4"
+      />
+      <polygon
+        points="50,28 72,44 63,72 37,72 28,44"
+        stroke="#FFD007"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.6"
+      />
+    </svg>
+  );
+}
+
+// The upload sheet is shared by both the empty state's "Upload resume or
+// portfolio" CTA and the populated state's "Update resume or portfolio"
+// link — same fields, same single "Build my profile" action either way.
+function ProfileUploadSheet({
+  portfolioMode,
+  setPortfolioMode,
+  portfolioLink,
+  setPortfolioLink,
+  portfolioFile,
+  setPortfolioFile,
+  resumeMode,
+  setResumeMode,
+  resumeLink,
+  setResumeLink,
+  resumeFile,
+  setResumeFile,
+  canBuild,
+  building,
+  buildStep,
+  errorMsg,
+  onClose,
+  onSubmit
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  function handleClose() {
+    if (building) return;
+    setVisible(false);
+    setTimeout(onClose, 220);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end md:items-center md:justify-center">
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
+        style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        onClick={handleClose}
+      />
+      <div
+        className={`relative w-full md:max-w-md max-h-[88vh] overflow-y-auto rounded-t-3xl md:rounded-3xl border border-[#373737] p-6 pb-8 md:pb-6 flex flex-col gap-5 transition-transform duration-300 ${
+          visible ? "translate-y-0" : "translate-y-full md:translate-y-8"
+        }`}
+        style={{ backgroundColor: "#1c1c1f" }}
+      >
+        <div className="w-10 h-1 rounded-full bg-white/15 md:hidden mx-auto" />
+
+        {building ? (
+          <div className="flex flex-col items-center text-center gap-4 py-10">
+            <BuildingSpinner />
+            <p className="text-white font-semibold text-sm">
+              {buildStep || "Building your profile…"}
+            </p>
+            <p className="text-white/30 text-xs">
+              This usually takes under a minute.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <h3 className="text-white font-bold text-lg">
+                Upload resume or portfolio
+              </h3>
+              <p className="text-white/40 text-xs mt-1">
+                We'll build your AI profile from whatever you give us — one is
+                enough, both is better.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-white/40 text-xs">Portfolio</label>
+              <SourceEditor
+                mode={portfolioMode}
+                setMode={setPortfolioMode}
+                linkValue={portfolioLink}
+                setLinkValue={setPortfolioLink}
+                file={portfolioFile}
+                setFile={setPortfolioFile}
+                accept={PORTFOLIO_ACCEPTED_TYPES}
+                placeholder="https://your-portfolio.com"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-white/40 text-xs">Resume</label>
+              <SourceEditor
+                mode={resumeMode}
+                setMode={setResumeMode}
+                linkValue={resumeLink}
+                setLinkValue={setResumeLink}
+                file={resumeFile}
+                setFile={setResumeFile}
+                accept={RESUME_ACCEPTED_TYPES}
+                placeholder="https://drive.google.com/..."
+              />
+            </div>
+
+            {errorMsg && <p className="text-red-400 text-xs">{errorMsg}</p>}
+
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={!canBuild}
+              className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-sm rounded-2xl px-6 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+            >
+              Build my profile
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function PortfolioResumeSection({ user }) {
+/* ── "My Profile" tab — starts empty (participation at zero, a "populate
+   your profile" prompt); uploading a resume/portfolio runs extraction + AI
+   analysis in one chained action and reveals the full AI-built profile
+   (participation stats, a verification card, and AIProfileReveal's radar/
+   donut/timeline) in place. Previously this lived inside MyAccountPanel
+   behind the avatar menu — moved here so it's the tab's own first-class
+   content instead of something buried in account settings. ── */
+export function ProfileTabPane({ user, onGoToEvents }) {
   const [loaded, setLoaded] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const [portfolioLink, setPortfolioLink] = useState("");
   const [portfolioFileUrl, setPortfolioFileUrl] = useState(null);
   const [portfolioFile, setPortfolioFile] = useState(null);
   const [portfolioMode, setPortfolioMode] = useState("link");
-  const [editingPortfolio, setEditingPortfolio] = useState(false);
 
   const [resumeLink, setResumeLink] = useState("");
   const [resumeFileUrl, setResumeFileUrl] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeMode, setResumeMode] = useState("link");
-  const [editingResume, setEditingResume] = useState(false);
 
-  const [saving, setSaving] = useState(false);
-  const [extracting, setExtracting] = useState(false);
-  const [extractStatus, setExtractStatus] = useState("none");
-  const [extractedProfile, setExtractedProfile] = useState(null);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeStatus, setAnalyzeStatus] = useState("none");
   const [aiProfile, setAiProfile] = useState(null);
-  const [analyzeError, setAnalyzeError] = useState("");
-
-  const [isPublic, setIsPublic] = useState(false);
-  const [publicToggling, setPublicToggling] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-
   const [socialLinks, setSocialLinks] = useState([]);
   const [savedSocialLinks, setSavedSocialLinks] = useState([]);
   const [savingLinks, setSavingLinks] = useState(false);
   const linksDirty =
     JSON.stringify(socialLinks) !== JSON.stringify(savedSocialLinks);
+  const [isPublic, setIsPublic] = useState(false);
+  const [publicToggling, setPublicToggling] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [building, setBuilding] = useState(false);
+  const [buildStep, setBuildStep] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const [verifyNoticeOpen, setVerifyNoticeOpen] = useState(false);
+
+  const [participation, setParticipation] = useState({
+    webinars: 0,
+    amas: 0,
+    community: 0,
+    quizzes: 0,
+    resources: 0
+  });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select(
-          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, extracted_profile, extracted_profile_status, ai_profile, ai_profile_status, ai_profile_public, social_links, username"
+          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, ai_profile, ai_profile_public, social_links, username"
         )
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
-      // a schema mismatch (a column this query expects but the live DB
-      // doesn't have — e.g. a migration that was never applied) makes the
-      // whole select fail and data comes back null. Silently falling
-      // through to the empty useState defaults below made that look like
-      // "you have no portfolio/resume saved" instead of a real load error.
-      if (error) {
-        setErrorMsg(
-          `couldn't load your saved portfolio/resume — ${error.message || "unknown error"}`
-        );
-      }
       if (data) {
         setPortfolioLink(data.portfolio_link || "");
         setPortfolioFileUrl(data.portfolio_file_url || null);
         setResumeLink(data.resume_link || "");
         setResumeFileUrl(data.resume_file_url || null);
-        setExtractedProfile(data.extracted_profile || null);
-        setExtractStatus(data.extracted_profile_status || "none");
         setAiProfile(data.ai_profile || null);
-        setAnalyzeStatus(data.ai_profile_status || "none");
-        setIsPublic(!!data.ai_profile_public);
         setSocialLinks(data.social_links || []);
         setSavedSocialLinks(data.social_links || []);
-        setEditingPortfolio(!data.portfolio_link && !data.portfolio_file_url);
-        setEditingResume(!data.resume_link && !data.resume_file_url);
+        setIsPublic(!!data.ai_profile_public);
       }
       setLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
+
+  // Real counts where we actually track them (event registrations, split by
+  // events.event_type); community activities/quizzes/resources have no
+  // participation tracking yet, so they stay at zero until that exists —
+  // better an honest zero than a fabricated number.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: registrations } = await supabase
+        .from("event_registrations")
+        .select("event_id")
+        .eq("user_id", user.id)
+        .eq("status", "registered");
+      const eventIds = (registrations || []).map((r) => r.event_id);
+      const { data: events } = eventIds.length
+        ? await supabase.from("events").select("id, event_type").in("id", eventIds)
+        : { data: [] };
+      if (cancelled) return;
+      const amas = (events || []).filter((e) => e.event_type === "AMA").length;
+      const webinars = (events || []).length - amas;
+      setParticipation((p) => ({ ...p, webinars, amas }));
     })();
     return () => {
       cancelled = true;
@@ -2496,8 +2700,6 @@ function PortfolioResumeSection({ user }) {
     setSavingLinks(true);
     setErrorMsg("");
     const cleaned = socialLinks.filter((l) => l.url.trim());
-    // .select() catches an RLS-blocked update, which otherwise reports
-    // error === null with zero rows actually changed.
     const { data: savedRows, error } = await supabase
       .from("profiles")
       .update({ social_links: cleaned })
@@ -2547,35 +2749,6 @@ function PortfolioResumeSection({ user }) {
     });
   }
 
-  async function handleAnalyze() {
-    setAnalyzeError("");
-    setAnalyzing(true);
-    setAnalyzeStatus("pending");
-    try {
-      const res = await fetch(
-        `${SUPABASE_URL}/functions/v1/analyze-profile-data`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            apikey: SUPABASE_ANON_KEY
-          },
-          body: JSON.stringify({ user_id: user.id })
-        }
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "AI analysis failed");
-      setAiProfile(json.ai_profile);
-      setAnalyzeStatus("done");
-    } catch (err) {
-      setAnalyzeError(err.message || "AI analysis failed");
-      setAnalyzeStatus("failed");
-    } finally {
-      setAnalyzing(false);
-    }
-  }
-
   async function uploadFile(file, prefix) {
     const ext = file.name.split(".").pop();
     const path = `${user.id}/${prefix}-${Date.now()}.${ext}`;
@@ -2583,22 +2756,14 @@ function PortfolioResumeSection({ user }) {
       .from("portfolio-files")
       .upload(path, file, { upsert: true });
     if (uploadErr) throw new Error(uploadErr.message);
-    const { data } = supabase.storage
-      .from("portfolio-files")
-      .getPublicUrl(path);
+    const { data } = supabase.storage.from("portfolio-files").getPublicUrl(path);
     return data?.publicUrl || null;
   }
 
-  const hasPortfolioValue = editingPortfolio
-    ? portfolioMode === "link"
-      ? !!portfolioLink.trim()
-      : !!portfolioFile
-    : !!(portfolioLink || portfolioFileUrl);
-  const hasResumeValue = editingResume
-    ? resumeMode === "link"
-      ? !!resumeLink.trim()
-      : !!resumeFile
-    : !!(resumeLink || resumeFileUrl);
+  const hasPortfolioValue =
+    portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFile;
+  const hasResumeValue =
+    resumeMode === "link" ? !!resumeLink.trim() : !!resumeFile;
   const canBuild = hasPortfolioValue || hasResumeValue;
 
   async function handleBuildProfile() {
@@ -2608,43 +2773,35 @@ function PortfolioResumeSection({ user }) {
       return;
     }
 
-    setSaving(true);
+    setBuilding(true);
+    let step = 0;
+    setBuildStep(PROFILE_BUILD_MESSAGES[0]);
+    const cycle = setInterval(() => {
+      step = (step + 1) % PROFILE_BUILD_MESSAGES.length;
+      setBuildStep(PROFILE_BUILD_MESSAGES[step]);
+    }, 1800);
+
     try {
       const payload = {};
-
-      if (editingPortfolio) {
-        if (portfolioMode === "link" && portfolioLink.trim()) {
-          payload.portfolio_link = portfolioLink.trim();
-          payload.portfolio_file_url = null;
-        } else if (portfolioMode === "file" && portfolioFile) {
-          payload.portfolio_file_url = await uploadFile(
-            portfolioFile,
-            "portfolio"
-          );
-          payload.portfolio_link = null;
-        }
+      if (portfolioMode === "link" && portfolioLink.trim()) {
+        payload.portfolio_link = portfolioLink.trim();
+        payload.portfolio_file_url = null;
+      } else if (portfolioMode === "file" && portfolioFile) {
+        payload.portfolio_file_url = await uploadFile(portfolioFile, "portfolio");
+        payload.portfolio_link = null;
       }
-
-      if (editingResume) {
-        if (resumeMode === "link" && resumeLink.trim()) {
-          payload.resume_link = resumeLink.trim();
-          payload.resume_file_url = null;
-        } else if (resumeMode === "file" && resumeFile) {
-          payload.resume_file_url = await uploadFile(resumeFile, "resume");
-          payload.resume_link = null;
-        }
+      if (resumeMode === "link" && resumeLink.trim()) {
+        payload.resume_link = resumeLink.trim();
+        payload.resume_file_url = null;
+      } else if (resumeMode === "file" && resumeFile) {
+        payload.resume_file_url = await uploadFile(resumeFile, "resume");
+        payload.resume_link = null;
       }
 
       if (Object.keys(payload).length > 0) {
         // .select() after the update is required to catch the classic RLS
         // trap: an UPDATE blocked by a row-level-security policy matches
-        // zero rows and comes back with error === null — supabase-js only
-        // tells you something's wrong if you ask for the affected rows back.
-        // Without this, a blocked write looks identical to a successful one.
-        // Selecting the actual link columns back (not just id) also catches
-        // a subtler case: a row-matching update whose committed value still
-        // doesn't equal what was sent (a trigger/default silently reverting
-        // it), which .select("id") alone can't distinguish from success.
+        // zero rows and comes back with error === null.
         const { data: savedRows, error: saveErr } = await supabase
           .from("profiles")
           .update(payload)
@@ -2652,51 +2809,22 @@ function PortfolioResumeSection({ user }) {
           .select(
             "id, portfolio_link, portfolio_file_url, resume_link, resume_file_url"
           );
-        // eslint-disable-next-line no-console
-        console.log(
-          "[handleBuildProfile] sent:",
-          payload,
-          "db now has:",
-          savedRows,
-          "error:",
-          saveErr
-        );
         if (saveErr) {
           throw new Error(saveErr.message || "couldn't save your changes");
         }
         if (!savedRows || savedRows.length === 0) {
           throw new Error(
-            "your changes didn't save — the update matched no rows (likely a permissions issue). Nothing was extracted from a new link."
+            "your changes didn't save — the update matched no rows (likely a permissions issue)."
           );
         }
         const saved = savedRows[0];
-        if (
-          ("portfolio_link" in payload &&
-            saved.portfolio_link !== payload.portfolio_link) ||
-          ("resume_link" in payload &&
-            saved.resume_link !== payload.resume_link)
-        ) {
-          throw new Error(
-            `the database still shows the old link after saving (sent "${payload.portfolio_link ?? payload.resume_link}", db has "${saved.portfolio_link ?? saved.resume_link}") — check the console for the full comparison.`
-          );
-        }
-        if ("portfolio_link" in payload) {
-          setPortfolioLink(payload.portfolio_link || "");
-          setPortfolioFileUrl(payload.portfolio_file_url || null);
-        }
-        if ("resume_link" in payload) {
-          setResumeLink(payload.resume_link || "");
-          setResumeFileUrl(payload.resume_file_url || null);
-        }
+        setPortfolioLink(saved.portfolio_link || "");
+        setPortfolioFileUrl(saved.portfolio_file_url || null);
+        setResumeLink(saved.resume_link || "");
+        setResumeFileUrl(saved.resume_file_url || null);
       }
 
-      setEditingPortfolio(false);
-      setEditingResume(false);
-      setSaving(false);
-
-      setExtracting(true);
-      setExtractStatus("pending");
-      const res = await fetch(
+      const extractRes = await fetch(
         `${SUPABASE_URL}/functions/v1/extract-profile-data`,
         {
           method: "POST",
@@ -2708,120 +2836,142 @@ function PortfolioResumeSection({ user }) {
           body: JSON.stringify({ user_id: user.id })
         }
       );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "extraction failed");
-      setExtractedProfile(json.extracted_profile);
-      setExtractStatus("done");
+      const extractJson = await extractRes.json();
+      if (!extractRes.ok) throw new Error(extractJson?.error || "extraction failed");
 
-      // the just-extracted text supersedes whatever the AI profile was
-      // last built from — clear it (locally and in the DB) so the old
-      // analysis can't keep rendering, or keep sitting on the public
-      // share link, as if it still describes the new source. The person
-      // has to explicitly rebuild to get a profile that matches.
-      setAiProfile(null);
-      setAnalyzeStatus("none");
-      setAnalyzeError("");
-      await supabase
-        .from("profiles")
-        .update({ ai_profile: null, ai_profile_status: "none" })
-        .eq("id", user.id);
+      const analyzeRes = await fetch(
+        `${SUPABASE_URL}/functions/v1/analyze-profile-data`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ user_id: user.id })
+        }
+      );
+      const analyzeJson = await analyzeRes.json();
+      if (!analyzeRes.ok) throw new Error(analyzeJson?.error || "AI analysis failed");
+
+      setAiProfile(analyzeJson.ai_profile);
+      setUploadOpen(false);
     } catch (err) {
       setErrorMsg(err.message || "something went wrong");
-      setExtractStatus("failed");
     } finally {
-      setSaving(false);
-      setExtracting(false);
+      clearInterval(cycle);
+      setBuilding(false);
     }
   }
 
   if (!loaded) return null;
 
+  const participationTotal = PARTICIPATION_CATEGORIES.reduce(
+    (sum, c) => sum + (participation[c.key] || 0),
+    0
+  );
+
   return (
-    <div className="border border-evolve-yellow/20 rounded-2xl overflow-hidden md:w-[135%]">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-4 py-3.5 text-left"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-evolve-yellow flex-shrink-0" />
-        <span className="text-white text-sm font-bold flex-1">
-          Portfolio &amp; Resume
-        </span>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 20 20"
-          fill="none"
-          className={`text-evolve-yellow/70 transition-transform ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            d="M5 7.5L10 12.5L15 7.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+    <div className="flex flex-col gap-6">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <p className="text-white font-bold text-sm">Evolve participation</p>
+          {participationTotal > 0 && (
+            <span className="text-white/40 text-xs">{participationTotal} total</span>
+          )}
+        </div>
+        {participationTotal === 0 ? (
+          <div className="flex flex-col items-center text-center gap-3 py-6">
+            <p className="text-white font-semibold text-sm">Nothing here yet</p>
+            <p className="text-white/40 text-xs max-w-[240px]">
+              Join a webinar, try a quiz or jump into the community and it'll
+              show up here.
+            </p>
+            <button
+              type="button"
+              onClick={onGoToEvents}
+              className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-xl px-5 py-2.5 active:opacity-80 transition-opacity"
+            >
+              Get started
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {PARTICIPATION_CATEGORIES.map((c) => (
+              <ParticipationTile key={c.key} label={c.label} value={participation[c.key] || 0} />
+            ))}
+          </div>
+        )}
+      </div>
 
-      {open && (
-        <div className="flex flex-col gap-6 px-4 pb-5">
-          <p className="text-white/40 text-xs -mt-1">
-            Give us your portfolio and resume once — we'll build a profile from
-            them so you don't have to keep sharing either separately.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-white/40 text-xs">Portfolio</label>
-            {!editingPortfolio && (portfolioLink || portfolioFileUrl) ? (
-              <ExistingSourceRow
-                link={portfolioLink}
-                fileUrl={portfolioFileUrl}
-                onChange={() => setEditingPortfolio(true)}
-              />
-            ) : (
-              <SourceEditor
-                mode={portfolioMode}
-                setMode={setPortfolioMode}
-                linkValue={portfolioLink}
-                setLinkValue={setPortfolioLink}
-                file={portfolioFile}
-                setFile={setPortfolioFile}
-                accept={PORTFOLIO_ACCEPTED_TYPES}
-                placeholder="https://your-portfolio.com"
-              />
+      {ENABLE_PORTFOLIO_AI && (aiProfile ? (
+        <>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-white font-bold text-sm">Get evolve verified</p>
+                <p className="text-white/40 text-xs mt-1 max-w-[260px]">
+                  A quick call with an evolve reviewer to verify your real work
+                  and earn a verified badge on your profile.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVerifyNoticeOpen((v) => !v)}
+                className="flex-shrink-0 bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2.5 hover:bg-white/10 active:opacity-80 transition-colors"
+              >
+                Start verification
+              </button>
+            </div>
+            {verifyNoticeOpen && (
+              <p className="text-white/50 text-xs border-t border-white/10 pt-3">
+                Verification calls are launching soon — we'll email you when you
+                can book a slot.
+              </p>
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-white/40 text-xs">Resume</label>
-            {!editingResume && (resumeLink || resumeFileUrl) ? (
-              <ExistingSourceRow
-                link={resumeLink}
-                fileUrl={resumeFileUrl}
-                onChange={() => setEditingResume(true)}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#2a2a2a] bg-white/[0.02] px-4 py-3.5">
+            <div>
+              <p className="text-white text-sm font-semibold">Share with recruiters</p>
+              <p className="text-white/40 text-xs mt-0.5">
+                Publishes a read-only link to this AI profile — no login required
+                to view.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleTogglePublic}
+              disabled={publicToggling}
+              className={`flex-shrink-0 w-11 h-6 rounded-full transition-colors relative disabled:opacity-40 ${isPublic ? "bg-evolve-yellow" : "bg-white/15"}`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${isPublic ? "left-[22px]" : "left-0.5"}`}
               />
-            ) : (
-              <SourceEditor
-                mode={resumeMode}
-                setMode={setResumeMode}
-                linkValue={resumeLink}
-                setLinkValue={setResumeLink}
-                file={resumeFile}
-                setFile={setResumeFile}
-                accept={RESUME_ACCEPTED_TYPES}
-                placeholder="https://drive.google.com/..."
-              />
-            )}
+            </button>
           </div>
+          {isPublic && shareUrl && (
+            <div className="flex items-center gap-2 -mt-3">
+              <input
+                readOnly
+                value={shareUrl}
+                className="flex-1 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-lg px-3 py-2 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="text-evolve-yellow text-xs font-semibold px-3 py-2 rounded-lg border border-evolve-yellow/40 hover:bg-evolve-yellow/10 flex-shrink-0"
+              >
+                {linkCopied ? "Copied ✓" : "Copy"}
+              </button>
+            </div>
+          )}
 
-          <div className="flex flex-col gap-2">
-            <label className="text-white/40 text-xs">
-              Work &amp; social links
-            </label>
+          <div className="rounded-2xl border border-[#2a2a2a] bg-white/[0.02] p-4 flex flex-col gap-2">
+            <label className="text-white/40 text-xs">Work &amp; social links</label>
             <p className="text-white/30 text-[11px] -mt-1">
               LinkedIn, Behance, Dribbble, GitHub, your site — shown on your
-              shared profile alongside the AI summary.
+              profile alongside the AI summary.
             </p>
             <LinksEditor
               links={socialLinks}
@@ -2841,107 +2991,69 @@ function PortfolioResumeSection({ user }) {
             )}
           </div>
 
-          {errorMsg && <p className="text-red-400 text-xs">{errorMsg}</p>}
+          <AIProfileReveal
+            profile={aiProfile}
+            portfolioLink={portfolioLink}
+            portfolioFileUrl={portfolioFileUrl}
+            resumeLink={resumeLink}
+            resumeFileUrl={resumeFileUrl}
+            socialLinks={savedSocialLinks}
+          />
+
+          {errorMsg && !uploadOpen && (
+            <p className="text-red-400 text-xs">{errorMsg}</p>
+          )}
 
           <button
             type="button"
-            onClick={handleBuildProfile}
-            disabled={saving || extracting || !canBuild}
-            className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-xl px-5 py-2.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+            onClick={() => setUploadOpen(true)}
+            className="self-start text-evolve-yellow text-xs font-semibold hover:opacity-80"
           >
-            {saving
-              ? "Saving…"
-              : extracting
-                ? "Building profile…"
-                : "Save & build profile"}
+            Update resume or portfolio
           </button>
-
-          {extractedProfile && extractStatus === "done" && (
-            <ExtractedProfilePreview
-              data={extractedProfile}
-              currentPortfolioSource={portfolioLink || portfolioFileUrl}
-              currentResumeSource={resumeLink || resumeFileUrl}
-            />
-          )}
-          {extractStatus === "failed" && !errorMsg && (
-            <p className="text-red-400 text-xs">
-              extraction failed — try again in a moment.
-            </p>
-          )}
-
-          {extractStatus === "done" && (
-            <div className="flex flex-col gap-4">
-              <button
-                type="button"
-                onClick={handleAnalyze}
-                disabled={analyzing}
-                className="self-start bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-5 py-2.5 disabled:opacity-40 hover:bg-white/10 active:opacity-80 transition-colors"
-              >
-                {analyzing
-                  ? "Building AI profile…"
-                  : aiProfile
-                    ? "Rebuild AI profile"
-                    : "✨ Build AI profile"}
-              </button>
-              {analyzeError && (
-                <p className="text-red-400 text-xs">{analyzeError}</p>
-              )}
-
-              {aiProfile && (
-                <div className="flex flex-col gap-2 border border-[#2a2a2a] rounded-xl p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-white text-sm font-semibold">
-                        Share with recruiters
-                      </p>
-                      <p className="text-white/40 text-xs mt-0.5">
-                        Publishes a read-only link to this AI profile — no login
-                        required to view.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleTogglePublic}
-                      disabled={publicToggling}
-                      className={`flex-shrink-0 w-11 h-6 rounded-full transition-colors relative disabled:opacity-40 ${isPublic ? "bg-evolve-yellow" : "bg-white/15"}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${isPublic ? "left-[22px]" : "left-0.5"}`}
-                      />
-                    </button>
-                  </div>
-                  {isPublic && shareUrl && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <input
-                        readOnly
-                        value={shareUrl}
-                        className="flex-1 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-lg px-3 py-2 outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCopyLink}
-                        className="text-evolve-yellow text-xs font-semibold px-3 py-2 rounded-lg border border-evolve-yellow/40 hover:bg-evolve-yellow/10 flex-shrink-0"
-                      >
-                        {linkCopied ? "Copied ✓" : "Copy"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {analyzeStatus === "done" && aiProfile && (
-                <AIProfileReveal
-                  profile={aiProfile}
-                  portfolioLink={portfolioLink}
-                  portfolioFileUrl={portfolioFileUrl}
-                  resumeLink={resumeLink}
-                  resumeFileUrl={resumeFileUrl}
-                  socialLinks={savedSocialLinks}
-                />
-              )}
-            </div>
+        </>
+      ) : (
+        <div className="rounded-2xl border border-evolve-yellow/20 bg-evolve-yellow/[0.03] p-6 flex flex-col items-center text-center gap-3">
+          <GhostRadarIllustration />
+          <p className="text-white font-bold text-base">Populate your profile</p>
+          <p className="text-white/40 text-xs max-w-[280px]">
+            Upload your resume or portfolio and we'll build an AI profile —
+            competency radar, skill breakdown and a timeline of your work.
+          </p>
+          <button
+            type="button"
+            onClick={() => setUploadOpen(true)}
+            className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 transition-opacity"
+          >
+            Upload resume or portfolio
+          </button>
+          {errorMsg && !uploadOpen && (
+            <p className="text-red-400 text-xs">{errorMsg}</p>
           )}
         </div>
+      ))}
+
+      {ENABLE_PORTFOLIO_AI && uploadOpen && (
+        <ProfileUploadSheet
+          portfolioMode={portfolioMode}
+          setPortfolioMode={setPortfolioMode}
+          portfolioLink={portfolioLink}
+          setPortfolioLink={setPortfolioLink}
+          portfolioFile={portfolioFile}
+          setPortfolioFile={setPortfolioFile}
+          resumeMode={resumeMode}
+          setResumeMode={setResumeMode}
+          resumeLink={resumeLink}
+          setResumeLink={setResumeLink}
+          resumeFile={resumeFile}
+          setResumeFile={setResumeFile}
+          canBuild={canBuild}
+          building={building}
+          buildStep={buildStep}
+          errorMsg={errorMsg}
+          onClose={() => setUploadOpen(false)}
+          onSubmit={handleBuildProfile}
+        />
       )}
     </div>
   );
@@ -3223,8 +3335,6 @@ export function MyAccountPanel({ onBack, onSaved }) {
             )}
           </div>
         )}
-
-        {ENABLE_PORTFOLIO_AI && <PortfolioResumeSection user={user} />}
 
         {saveError && <p className="text-red-400 text-xs">{saveError}</p>}
 

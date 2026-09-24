@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import GrowthMascot from "../components/GrowthMascot";
+import Spinner from "../components/Spinner";
+// import GrowthMascot from "../components/GrowthMascot"; // growth feature disabled
 import OrgLogoBox from "../components/OrgLogoBox";
 import InstituteInfoPanel from "../components/InstituteInfoPanel";
 import InstituteSettingsPanel from "../components/InstituteSettingsPanel";
@@ -1117,7 +1118,7 @@ export default function InstitutePublicPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#131313" }}>
-        <GrowthMascot progress={10} size={56} />
+        <Spinner size={56} />
       </div>
     );
   }

@@ -9,7 +9,7 @@ import {
 } from "../auth/signInLogic";
 import { useAuth } from "../hooks/useAuth";
 import BlackNav from "../components/BlackNav";
-import GrowthMascot from "../components/GrowthMascot";
+// import GrowthMascot from "../components/GrowthMascot"; // growth feature disabled
 import { evolve_cube } from "../assets/images/Home";
 import { signin_left_pannel } from "../assets/images/Nav";
 

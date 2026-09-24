@@ -7,7 +7,7 @@ import {
   getReviewerForStream
 } from "../../lib/reviewerRouting";
 import { DISCIPLINE_VALUES } from "../../pages/Onboarding/questions";
-import GrowthStageModal from "../GrowthStageModal";
+// import GrowthStageModal from "../GrowthStageModal"; // growth feature disabled
 import { right_arrow_icon } from "../../assets/images/Nav";
 
 // year options mirror the "standard" onboarding question exactly (see
@@ -1568,12 +1568,13 @@ export default function PortfolioReviewFlow({
         </div>
       </div>
 
+      {/* growth feature disabled
       {growthModal && (
         <GrowthStageModal
           {...growthModal}
           onContinue={() => setGrowthModal(null)}
         />
-      )}
+      )} */}
     </div>
   );
 }

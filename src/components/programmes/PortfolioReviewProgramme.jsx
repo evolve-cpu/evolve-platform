@@ -935,7 +935,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import ProcessSteps from "./ProcessSteps";
 import PortfolioReviewFlow from "./PortfolioReviewFlow";
-import GrowthStageModal from "../GrowthStageModal";
+// import GrowthStageModal from "../GrowthStageModal"; // growth feature disabled
 import { REVIEWERS } from "../../lib/reviewerRouting";
 
 // growth_stage (0-100) reached once a Portfolio Review payment unlocks the
@@ -1537,12 +1537,13 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
             onSuccess={handleBookingSuccess}
           />
         )}
+        {/* growth feature disabled
         {growthModal && (
           <GrowthStageModal
             {...growthModal}
             onContinue={() => setGrowthModal(null)}
           />
-        )}
+        )} */}
       </>
     );
   }
@@ -1835,12 +1836,13 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           onSuccess={handleBookingSuccess}
         />
       )}
+      {/* growth feature disabled
       {growthModal && (
         <GrowthStageModal
           {...growthModal}
           onContinue={() => setGrowthModal(null)}
         />
-      )}
+      )} */}
     </div>
   );
 }

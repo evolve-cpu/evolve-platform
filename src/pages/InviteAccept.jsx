@@ -4,7 +4,8 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { findFreeSlug } from "../lib/slug";
 import AuthModal from "../components/AuthModal";
-import GrowthMascot from "../components/GrowthMascot";
+import Spinner from "../components/Spinner";
+// import GrowthMascot from "../components/GrowthMascot"; // growth feature disabled
 
 const ROLE_COPY = {
   student: { pill: "🎓 student", title: "you're invited as a student." },
@@ -139,7 +140,7 @@ export default function InviteAccept() {
   if (phase === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#161618" }}>
-        <GrowthMascot progress={10} size={56} />
+        <Spinner size={56} />
       </div>
     );
   }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { stageForProgress } from "../../lib/growthStage";
-import GrowthStageModal from "../GrowthStageModal";
+// import GrowthStageModal from "../GrowthStageModal"; // growth feature disabled
 import Spinner from "../Spinner";
 import MentorshipLanding from "./mentorship/MentorshipLanding";
 import MentorshipPricingModal from "./mentorship/MentorshipPricingModal";
@@ -129,12 +129,13 @@ export default function MentorshipProgramme({ user, onBack }) {
         <MentorshipGiftModal user={user} onContinue={handleGiftContinue} />
       )}
 
+      {/* growth feature disabled
       {growthModal && (
         <GrowthStageModal
           {...growthModal}
           onContinue={() => setGrowthModal(null)}
         />
-      )}
+      )} */}
     </>
   );
 }

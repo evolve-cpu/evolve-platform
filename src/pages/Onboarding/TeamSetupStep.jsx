@@ -1,5 +1,5 @@
 import { useState } from "react";
-import GrowthMascot from "../../components/GrowthMascot";
+// import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 
 const ORG_TYPES = [
   { value: "institute", emoji: "🎓", title: "Design institute", sub: "A college, school, or bootcamp" },
@@ -15,7 +15,7 @@ export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16" style={{ backgroundColor: "#161618" }}>
       <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-6 text-center">
-        <GrowthMascot progress={12} size={64} />
+        {/* <GrowthMascot progress={12} size={64} /> */}
 
         <p className="text-evolve-lavender-indigo text-xs font-bold tracking-widest uppercase">
           account setup · step 2 of 2

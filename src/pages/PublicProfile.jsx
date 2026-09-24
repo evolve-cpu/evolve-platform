@@ -2,12 +2,16 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import GrowthMascot from "../components/GrowthMascot";
+// import GrowthMascot from "../components/GrowthMascot"; // growth feature disabled
 import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel, STAGE_LABELS } from "../lib/growthStage";
 import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
+import { isTrialActive, trialDaysLeft } from "../lib/trial";
+import TrialSheet from "../components/TrialSheet";
+import { TrialClockBadge } from "../components/TrialBadge";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
+import AppTabNav from "../components/AppTabNav";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -16,7 +20,8 @@ import {
   InvoiceIcon,
   LogOutIcon,
   TrashIcon,
-  AIProfileReveal
+  AIProfileReveal,
+  ProfileTabPane
 } from "../components/AccountPanel";
 import {
   evolve_yellow_logo,
@@ -219,6 +224,129 @@ function MyEventsSection({ userId }) {
   );
 }
 
+// The Events tab pane — browsing published events from inside the platform
+// itself instead of sending the owner out to the marketing site's /events
+// page. Booking/tickets stay on the existing /events/:slug (EventDetail.jsx)
+// flow rather than duplicating that logic here; this is just the in-platform
+// entry point into it.
+function EventsTabPane() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("upcoming");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .order("start_time", { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) {
+          setEvents(data || []);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const now = Date.now();
+  const q = search.trim().toLowerCase();
+  const filtered = events
+    .filter((e) =>
+      filter === "upcoming"
+        ? new Date(e.start_time).getTime() >= now
+        : new Date(e.start_time).getTime() < now
+    )
+    .filter((e) => !q || e.title?.toLowerCase().includes(q))
+    .sort((a, b) =>
+      filter === "upcoming"
+        ? new Date(a.start_time) - new Date(b.start_time)
+        : new Date(b.start_time) - new Date(a.start_time)
+    );
+
+  return (
+    <Section
+      title="events"
+      action={
+        <div className="flex items-center gap-1 rounded-full border border-white/10 p-0.5">
+          {["upcoming", "past"].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`text-[11px] font-semibold capitalize rounded-full px-3 py-1 transition-colors ${
+                filter === f
+                  ? "bg-evolve-yellow text-evolve-black"
+                  : "text-white/50 hover:text-white"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="search events…"
+        className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-2.5 transition-colors focus:border-evolve-yellow/60"
+        style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+      />
+
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spinner size={28} />
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-white/40 text-sm py-10 text-center">
+          {filter === "upcoming"
+            ? "No upcoming events right now — check back soon."
+            : "No past events yet."}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filtered.map((event) => (
+            <Link
+              key={event.id}
+              to={`/events/${event.slug}`}
+              className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-white/20 transition-colors flex flex-col"
+            >
+              {event.cover_image_url && (
+                <img
+                  src={event.cover_image_url}
+                  alt=""
+                  className="w-full h-32 object-cover"
+                />
+              )}
+              <div className="p-3.5 flex flex-col gap-1">
+                <span className="text-evolve-yellow text-[10px] font-bold uppercase tracking-wide">
+                  {event.event_type || "event"}
+                </span>
+                <p className="text-white text-sm font-bold leading-snug">
+                  {event.title}
+                </p>
+                <p className="text-white/40 text-xs">
+                  {new Date(event.start_time).toLocaleDateString("en-IN", {
+                    timeZone: "Asia/Kolkata",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                  })}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
 /* ─── page ───────────────────────────────────────────────────────────────── */
 export default function PublicProfile() {
   const { username } = useParams();
@@ -267,6 +395,16 @@ export default function PublicProfile() {
       setVisitedProgrammes((prev) => new Set(prev).add(activeProgramme));
     }
   }, [activeProgramme, visitedProgrammes]);
+  // which top-level section of the dashboard is showing when no programme
+  // pane is open — independent of `activeProgramme` above, which still
+  // handles portfolio-review/mentorship/account/etc. exactly as before.
+  const [activeTab, setActiveTab] = useState("profile");
+
+  function handleTabChange(tab) {
+    setActiveProgramme(null);
+    setActiveTab(tab);
+  }
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // the desktop collapse/expand toggle only shows up while hovering the
   // sidebar rail (or the button itself, since it straddles the rail's edge).
@@ -284,6 +422,28 @@ export default function PublicProfile() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 14-day free trial: shown once, the first time the owner lands on their
+  // own platform page with an active trial. "Seen" is tracked in
+  // localStorage (per user) rather than a DB write — losing that flag (new
+  // device, cleared storage) just means the sheet shows again, which is a
+  // harmless replay, not a bug worth a round trip for.
+  const [showTrialSheet, setShowTrialSheet] = useState(false);
+  useEffect(() => {
+    if (!isOwner || !user?.id) return;
+    if (!isTrialActive(user.trial_ends_at)) return;
+    const key = `evolve_trial_sheet_seen_${user.id}`;
+    if (typeof window !== "undefined" && !localStorage.getItem(key)) {
+      setShowTrialSheet(true);
+    }
+  }, [isOwner, user?.id, user?.trial_ends_at]);
+
+  function dismissTrialSheet() {
+    setShowTrialSheet(false);
+    if (user?.id) {
+      localStorage.setItem(`evolve_trial_sheet_seen_${user.id}`, "1");
+    }
+  }
 
   // default collapsed on mobile (short summary) / expanded on desktop —
   // checked once on mount only, so it doesn't fight a user's own toggle
@@ -601,6 +761,9 @@ export default function PublicProfile() {
             className="hidden md:block h-6 w-auto"
           />
         </Link>
+        {isOwner && (
+          <AppTabNav variant="desktop" activeTab={activeTab} onTabChange={handleTabChange} />
+        )}
         <div className="flex items-center gap-2.5">
           <a
             href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
@@ -651,6 +814,9 @@ export default function PublicProfile() {
                   (user.name || "?")[0].toUpperCase()
                 )}
               </button>
+              {isOwner && isTrialActive(user.trial_ends_at) && (
+                <TrialClockBadge size={14} className="absolute -bottom-0.5 -right-0.5" />
+              )}
 
               {accountMenuOpen && (
                 <div className="hidden md:flex flex-col gap-1 absolute right-0 top-11 w-56 rounded-2xl bg-[#1c1c1f] border border-[#373737] p-1.5 z-50">
@@ -708,6 +874,13 @@ export default function PublicProfile() {
           )}
         </div>
       </div>
+
+      {showTrialSheet && (
+        <TrialSheet
+          daysLeft={trialDaysLeft(user.trial_ends_at)}
+          onClose={dismissTrialSheet}
+        />
+      )}
 
       {deleteConfirmOpen && (
         <div
@@ -798,65 +971,53 @@ export default function PublicProfile() {
               starts right under the top nav instead. Its own accordion
               reveals the stage list in place; it doesn't reuse the
               desktop "expand the whole panel" toggle. ── */}
+          {/* growth feature (mascot / stage badge / growth map) disabled —
+              see renderGrowthMap() above and GrowthMascot import; kept in
+              code, not deleted, per product decision to drop it for now.
+              Identity (name/username) still shows so the sidebar isn't bare
+              while My Profile's new header (avatar/name/college/trial badge)
+              is being built out separately. */}
           {!activeProgramme && (
             <div className="md:hidden flex flex-col border-b border-white/10">
-              <button
-                type="button"
-                onClick={() => setMobileGrowthOpen((v) => !v)}
-                className="flex items-center gap-3 px-5 py-4 w-full text-left"
-              >
-                <GrowthMascot progress={card.growth_stage ?? 0} size={48} />
+              <div className="flex items-center gap-3 px-5 py-4 w-full text-left">
+                <div className="relative w-12 h-12 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-sm font-bold">
+                    {card.avatar_url ? (
+                      <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (card.name || "?")[0].toUpperCase()
+                    )}
+                  </div>
+                  {isOwner && isTrialActive(card.trial_ends_at) && (
+                    <TrialClockBadge size={16} className="absolute -bottom-0.5 -right-0.5" />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm truncate">
                     {card.name || "evolve designer"}
                   </p>
                   <p className="text-white/40 text-xs mt-0.5">@{username}</p>
-                  <p className="text-evolve-inchworm text-xs font-bold mt-1.5 capitalize">
-                    Stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
-                    {stageLabel(card.growth_stage ?? 0)}
-                  </p>
-                  <p className="text-white/40 text-[11px] mt-0.5 leading-snug">
-                    {GROWTH_ENCOURAGEMENT[stageLabel(card.growth_stage ?? 0)]}
-                  </p>
                 </div>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className={`flex-shrink-0 text-white/40 transition-transform ${
-                    mobileGrowthOpen ? "rotate-180" : ""
-                  }`}
-                >
-                  <path
-                    d="M5 7.5L10 12.5L15 7.5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {mobileGrowthOpen && (
-                <div className="px-5 pb-5">{renderGrowthMap()}</div>
-              )}
+              </div>
             </div>
           )}
 
-          {/* ── desktop: collapsed icon rail — just the mascot near the top ── */}
-          {sidebarCollapsed && (
-            <div className="hidden md:flex flex-col items-center pt-6">
-              <GrowthMascot progress={card.growth_stage ?? 0} size={40} />
-            </div>
-          )}
-
-          {/* ── desktop: full panel — hidden entirely while collapsed.
-              mobile never reaches this now (see the dashboard-only growth
-              card above); it's desktop-only in practice. ── */}
+          {/* ── desktop: full panel — hidden entirely while collapsed. ── */}
           {!sidebarCollapsed && (
             <div className="hidden md:flex md:flex-col gap-5 px-6 py-8">
               <div className="flex flex-col items-center gap-3 text-center">
-                <GrowthMascot progress={card.growth_stage ?? 0} size={140} />
+                <div className="relative w-20 h-20 flex-shrink-0">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-2xl font-bold">
+                    {card.avatar_url ? (
+                      <img src={card.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (card.name || "?")[0].toUpperCase()
+                    )}
+                  </div>
+                  {isOwner && isTrialActive(card.trial_ends_at) && (
+                    <TrialClockBadge size={22} className="absolute bottom-0 right-0" />
+                  )}
+                </div>
                 <div>
                   <h1 className="text-white font-bold text-lg">
                     {card.name || "evolve designer"}
@@ -864,22 +1025,6 @@ export default function PublicProfile() {
                   <p className="text-white/40 text-xs mt-0.5">@{username}</p>
                 </div>
               </div>
-
-              <div className="border-t border-white/10" />
-
-              <div className="flex flex-col items-center text-center gap-1">
-                <p className="text-evolve-inchworm text-sm font-bold capitalize">
-                  Stage {stageForProgress(card.growth_stage ?? 0)} ·{" "}
-                  {stageLabel(card.growth_stage ?? 0)}
-                </p>
-                <p className="text-white/40 text-xs">
-                  {GROWTH_ENCOURAGEMENT[stageLabel(card.growth_stage ?? 0)]}
-                </p>
-              </div>
-
-              <div className="border-t border-white/10" />
-
-              {renderGrowthMap()}
             </div>
           )}
         </aside>
@@ -929,87 +1074,36 @@ export default function PublicProfile() {
         <main
           className={`flex-1 px-6 md:px-8 pt-8 flex flex-col gap-8 ${
             activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
-          }`}
+          } ${!activeProgramme && isOwner ? "pb-24 md:pb-8" : ""}`}
         >
           {/* dashboard grid — the base pane, always mounted (not gated by
               `visitedProgrammes`); hidden via CSS instead of unmounted
               whenever another pane is open, same "keep it mounted" approach
-              as every pane below, so nothing here has to reload either. */}
+              as every pane below, so nothing here has to reload either.
+              Split into activeTab sections: "profile" (identity/growth/AI
+              profile), "grow" (the programmes grid), "community" (coming
+              soon) — independent of the activeProgramme pane swap above. */}
           <div className={activeProgramme ? "hidden" : "contents"}>
-            {isOwner && !user.onboarding_completed && (
-              <button
-                onClick={() => navigate("/onboarding", { state: { completeProfile: true } })}
-                className="w-full text-left rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-4 py-3 flex flex-col gap-0.5 hover:bg-evolve-yellow/[0.1] transition-colors"
-              >
-                <span className="text-evolve-yellow text-xs font-bold">complete your profile →</span>
-                <span className="text-white/40 text-[11px] leading-relaxed">
-                  a few quick questions to personalise your evolve experience.
-                </span>
-              </button>
-            )}
+            <div className={activeTab === "profile" ? "contents" : "hidden"}>
+              {isOwner && !user.onboarding_completed && (
+                <button
+                  onClick={() => navigate("/onboarding", { state: { completeProfile: true } })}
+                  className="w-full text-left rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-4 py-3 flex flex-col gap-0.5 hover:bg-evolve-yellow/[0.1] transition-colors"
+                >
+                  <span className="text-evolve-yellow text-xs font-bold">complete your profile →</span>
+                  <span className="text-white/40 text-[11px] leading-relaxed">
+                    a few quick questions to personalise your evolve experience.
+                  </span>
+                </button>
+              )}
 
-            {isOwner && <MyEventsSection userId={user.id} />}
-
-            {(showOwnerTools || card?.ai_profile) && (
-              <>
-                {showOwnerTools && (
-                  <Section title="evolve programmes">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <ProgramCard
-                        art={
-                          <img
-                            src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Portfolio_review_ci4ula.png"
-                            alt="Portfolio Review"
-                            className="w-full h-full object-cover"
-                          />
-                        }
-                        label="portfolio review"
-                        description="A live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
-                        onClick={() => openProgramme("portfolio-review")}
-                        progress={getPortfolioReviewProgress(evolveReview)}
-                        buttonLabel={
-                          evolveReview
-                            ? getPortfolioReviewProgress(evolveReview)?.step === 5
-                              ? "Apply again"
-                              : "Continue your review"
-                            : undefined
-                        }
-                      />
-                      <ProgramCard
-                        art={
-                          <img
-                            src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Mentorship_pawdce.png"
-                            alt="Mentorship"
-                            className="w-full h-full object-cover"
-                          />
-                        }
-                        label="mentorship"
-                        description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
-                        onClick={() => openProgramme("mentorship")}
-                        buttonLabel={mentorshipEnrollment ? "Continue program" : undefined}
-                      />
-                    </div>
-                    {/* mobile-only stand-in for the "evolve community" link
-                        that's hidden from the top nav on small screens —
-                        same destination, just living down here instead. */}
-                    <a
-                      href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
-                    >
-                      <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
-                      Evolve community
-                      <img
-                        src={right_arrow_icon}
-                        alt=""
-                        className="w-3.5 h-3.5 ml-auto flex-shrink-0"
-                      />
-                    </a>
-                  </Section>
-                )}
-
-                {card?.ai_profile && (
+              {isOwner ? (
+                <ProfileTabPane
+                  user={user}
+                  onGoToEvents={() => handleTabChange("events")}
+                />
+              ) : (
+                card?.ai_profile && (
                   <Section title="AI-built profile">
                     <AIProfileReveal
                       profile={card.ai_profile}
@@ -1020,8 +1114,84 @@ export default function PublicProfile() {
                       socialLinks={card.social_links}
                     />
                   </Section>
-                )}
-              </>
+                )
+              )}
+
+              {isOwner && <MyEventsSection userId={user.id} />}
+            </div>
+
+            {showOwnerTools && (
+              <div className={activeTab === "grow" ? "contents" : "hidden"}>
+                <Section title="evolve programmes">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ProgramCard
+                      art={
+                        <img
+                          src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Portfolio_review_ci4ula.png"
+                          alt="Portfolio Review"
+                          className="w-full h-full object-cover"
+                        />
+                      }
+                      label="portfolio review"
+                      description="A live 1:1 review of your portfolio with a working industry reviewer, plus a written report."
+                      onClick={() => openProgramme("portfolio-review")}
+                      progress={getPortfolioReviewProgress(evolveReview)}
+                      buttonLabel={
+                        evolveReview
+                          ? getPortfolioReviewProgress(evolveReview)?.step === 5
+                            ? "Apply again"
+                            : "Continue your review"
+                          : undefined
+                      }
+                    />
+                    <ProgramCard
+                      art={
+                        <img
+                          src="https://res.cloudinary.com/diuswhkzn/image/upload/v1786435747/Mentorship_pawdce.png"
+                          alt="Mentorship"
+                          className="w-full h-full object-cover"
+                        />
+                      }
+                      label="mentorship"
+                      description="Personalised 1:1 mentorship to define your design career — someone in your corner until you land."
+                      onClick={() => openProgramme("mentorship")}
+                      buttonLabel={mentorshipEnrollment ? "Continue program" : undefined}
+                    />
+                  </div>
+                  {/* mobile-only stand-in for the "evolve community" link
+                      that's hidden from the top nav on small screens —
+                      same destination, just living down here instead. */}
+                  <a
+                    href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  >
+                    <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
+                    Evolve community
+                    <img
+                      src={right_arrow_icon}
+                      alt=""
+                      className="w-3.5 h-3.5 ml-auto flex-shrink-0"
+                    />
+                  </a>
+                </Section>
+              </div>
+            )}
+
+            {activeTab === "events" && (
+              <div className="contents">
+                <EventsTabPane />
+              </div>
+            )}
+
+            {activeTab === "community" && (
+              <div className="flex flex-col items-center justify-center text-center gap-2 py-20">
+                <p className="text-white font-bold text-lg">Community is coming soon</p>
+                <p className="text-white/40 text-sm max-w-xs">
+                  We're building a space to connect with other designers on evolve. Check back soon.
+                </p>
+              </div>
             )}
           </div>
 
@@ -1069,6 +1239,10 @@ export default function PublicProfile() {
           )}
         </main>
       </div>
+
+      {isOwner && !activeProgramme && (
+        <AppTabNav variant="mobile" activeTab={activeTab} onTabChange={handleTabChange} />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import GrowthMascot from "../../components/GrowthMascot";
+// import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 
 const ORG_TYPES = [
   {

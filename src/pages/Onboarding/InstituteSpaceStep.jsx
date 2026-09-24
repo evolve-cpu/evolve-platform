@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import GrowthMascot from "../../components/GrowthMascot";
+// import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 
 const MEMBER_OPTIONS = ["1–10", "11–25", "26–50", "51–100", "100+"];
 const MODE_OPTIONS = ["online", "offline (in-person)", "hybrid"];
@@ -314,7 +314,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
 
         {phase === "building" && (
           <div className="w-full flex flex-col items-center gap-5 py-10">
-            <GrowthMascot progress={20 + progressStep * 25} size={56} />
+            {/* <GrowthMascot progress={20 + progressStep * 25} size={56} /> */}
             <p className="text-white font-semibold text-sm">{progressLabel}</p>
             <div className="w-full max-w-[220px] h-1.5 rounded-full bg-white/10 overflow-hidden">
               <div
