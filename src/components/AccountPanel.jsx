@@ -10,8 +10,6 @@ import {
   YAxis,
   Cell,
   LabelList,
-  PieChart,
-  Pie,
   LineChart,
   Line,
   CartesianGrid,
@@ -28,9 +26,9 @@ import {
   CompetencyMatrix,
   SkillDonut,
   SkillChipGroups,
-  SpiralTimeline,
-  DetailPanel
+  SpiralTimeline
 } from "./profile/ProfileInfographics";
+import { VerifyCard, VerifyFlowModal } from "./profile/VerifyFlow";
 
 // Portfolio & Resume / AI-profile tab is still in testing — keep this false
 // on main. On merges from development this line should conflict (development
@@ -294,20 +292,6 @@ const PORTFOLIO_ACCEPTED_TYPES = ".pdf,.pptx,.ppt,.odp,.zip";
 const RESUME_ACCEPTED_TYPES = ".pdf,.doc,.docx";
 const MAX_FILE_MB = 10;
 
-// work/social links a designer might want on their one-stop shared profile —
-// same {platform, url} shape as organizations.social_links so both features
-// share one mental model (see InstituteInfoPanel / InstitutePublicPage).
-const LINK_PLATFORMS = [
-  "linkedin",
-  "behance",
-  "dribbble",
-  "github",
-  "website",
-  "x / twitter",
-  "instagram",
-  "youtube"
-];
-
 function SourceEditor({
   mode,
   setMode,
@@ -372,54 +356,6 @@ function SourceEditor({
           {file && <p className="text-white/40 text-xs mt-1.5">{file.name}</p>}
         </div>
       )}
-    </div>
-  );
-}
-
-function LinksEditor({ links, onAdd, onUpdate, onRemove }) {
-  return (
-    <div className="flex flex-col gap-2">
-      {links.map((l, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <select
-            value={l.platform}
-            onChange={(e) => onUpdate(i, { platform: e.target.value })}
-            className="text-xs text-white/70 font-semibold rounded-lg px-2.5 py-2.5 outline-none flex-shrink-0 w-[110px] border border-[#373737]"
-            style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-          >
-            {LINK_PLATFORMS.map((p) => (
-              <option
-                key={p}
-                value={p}
-                style={{ backgroundColor: "#1c1c1f", color: "#fff" }}
-              >
-                {p}
-              </option>
-            ))}
-          </select>
-          <input
-            value={l.url}
-            onChange={(e) => onUpdate(i, { url: e.target.value })}
-            placeholder="paste link…"
-            className="flex-1 text-sm text-white outline-none border border-[#373737] rounded-xl px-3 py-2.5 transition-colors focus:border-evolve-yellow/60"
-            style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-          />
-          <button
-            type="button"
-            onClick={() => onRemove(i)}
-            className="text-white/30 hover:text-red-400 w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg hover:bg-white/[0.04]"
-          >
-            ×
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={onAdd}
-        className="text-evolve-yellow text-xs font-semibold w-fit hover:opacity-80"
-      >
-        + add link
-      </button>
     </div>
   );
 }
@@ -625,31 +561,6 @@ function computeSkillAxes(profile) {
   ];
 }
 
-// The headline "signal score" has to agree with the strong/growth map right
-// below it, so it's driven by the same dimension_ratings data (already
-// calibrated per-person by the model) rather than a fixed checklist that
-// includes bonus signals like "has a blog" — those are genuinely optional
-// for most working designers and shouldn't be able to drag a strong,
-// well-validated profile down to a middling-looking number. The old
-// axes-based calc is kept only as a fallback for profiles saved before
-// dimension_ratings existed.
-function computeHeroScore(profile, axes) {
-  const dims = (profile?.dimension_ratings || []).filter((r) => r?.dimension);
-  if (dims.length > 0) {
-    const avg =
-      dims.reduce(
-        (s, r) =>
-          s +
-          (DIMENSION_SCORE_LEVELS[String(r.score || "").toLowerCase()] ?? 1),
-        0
-      ) /
-      (dims.length * 4);
-    return Math.round(avg * 100);
-  }
-  const avg = axes.reduce((s, a) => s + a.value, 0) / (axes.length * 3);
-  return Math.round(avg * 100);
-}
-
 function Tag({ children }) {
   if (!children) return null;
   return (
@@ -732,57 +643,6 @@ function ChartTooltip({ active, payload, label, formatter }) {
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-/* Hand-drawn ring (not a chart-library radial) so the score can sit
-   centered inside it — a simple stroked circle, no illustrative path data.
-   Score is shown out of 10 and is clickable — it opens an explanation of
-   what it's built from instead of just sitting there as a bare number. */
-function HeroScoreRing({ score, onClick }) {
-  const r = 54,
-    c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
-  const scoreOf10 = Math.round(score / 10);
-  return (
-    <div
-      className="relative w-36 h-36 flex-shrink-0 cursor-pointer"
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-    >
-      <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-        <circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke={TRACK}
-          strokeWidth="10"
-        />
-        <circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke={YELLOW}
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 900ms ease-out" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-white text-3xl font-bold">
-          {scoreOf10}
-          <span className="text-white/40 text-lg font-semibold">/10</span>
-        </span>
-        <span className="text-white/40 text-[10px] uppercase tracking-wide">
-          Signal score
-        </span>
       </div>
     </div>
   );
@@ -960,79 +820,6 @@ function ToolBarChart({ tools }) {
   );
 }
 
-function ValidationDonut({ validated, unvalidated }) {
-  const v = validated || 0,
-    u = unvalidated || 0,
-    total = v + u;
-  const pct = total > 0 ? Math.round((v / total) * 100) : 0;
-  const data =
-    total > 0
-      ? [
-          { name: "verified", value: v },
-          { name: "self-initiated", value: u }
-        ]
-      : [{ name: "none", value: 1 }];
-  return (
-    <div className="flex items-center gap-4">
-      <div className="relative w-24 h-24 flex-shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              innerRadius={32}
-              outerRadius={44}
-              startAngle={90}
-              endAngle={-270}
-              stroke="none"
-              isAnimationActive
-            >
-              {total > 0 ? (
-                <>
-                  <Cell fill={YELLOW} />
-                  <Cell fill={TRACK} />
-                </>
-              ) : (
-                <Cell fill={TRACK} />
-              )}
-            </Pie>
-            {total > 0 && (
-              <Tooltip
-                content={
-                  <ChartTooltip
-                    formatter={(p) => ({
-                      label:
-                        p.name === "verified" ? "Verified" : "Self-initiated",
-                      value: `${p.value} (${Math.round((p.value / total) * 100)}%)`
-                    })}
-                  />
-                }
-              />
-            )}
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white text-sm font-bold">
-            {total > 0 ? `${pct}%` : "—"}
-          </span>
-        </div>
-      </div>
-      <p className="text-white/50 text-xs leading-relaxed">
-        {total > 0 ? (
-          <>
-            <span className="text-white font-semibold">{v}</span> verified
-            project{v === 1 ? "" : "s"} tied to named clients,{" "}
-            <span className="text-white font-semibold">{u}</span>{" "}
-            self-initiated.
-          </>
-        ) : (
-          "No project ties detected."
-        )}
-      </p>
-    </div>
-  );
-}
-
 function SignalEvidence({ label, badge, points }) {
   const list = Array.isArray(points)
     ? points.filter(Boolean)
@@ -1180,11 +967,31 @@ function deriveCompetencyMatrix(profile, axes) {
   const evidence = axisEvidenceMap(profile);
   const byAxis = Object.fromEntries(axes.map((a) => [a.axis, a.value]));
   return [
-    { axis: "Design Core", score: byAxis.Clarity ?? 0, evidence: evidence.Clarity || [] },
-    { axis: "Collaboration", score: byAxis.Leadership ?? 0, evidence: evidence.Leadership || [] },
-    { axis: "Business Understanding", score: byAxis.Business ?? 0, evidence: evidence.Business || [] },
-    { axis: "Leadership", score: byAxis.Leadership ?? 0, evidence: evidence.Leadership || [] },
-    { axis: "Continuous Learning", score: byAxis.Learning ?? 0, evidence: evidence.Learning || [] }
+    {
+      axis: "Design Core",
+      score: byAxis.Clarity ?? 0,
+      evidence: evidence.Clarity || []
+    },
+    {
+      axis: "Collaboration",
+      score: byAxis.Leadership ?? 0,
+      evidence: evidence.Leadership || []
+    },
+    {
+      axis: "Business Understanding",
+      score: byAxis.Business ?? 0,
+      evidence: evidence.Business || []
+    },
+    {
+      axis: "Leadership",
+      score: byAxis.Leadership ?? 0,
+      evidence: evidence.Leadership || []
+    },
+    {
+      axis: "Continuous Learning",
+      score: byAxis.Learning ?? 0,
+      evidence: evidence.Learning || []
+    }
   ];
 }
 
@@ -1196,7 +1003,9 @@ function deriveSkillProfile(profile) {
       category: "Design Skills",
       pct: 100,
       subskills: skills.map((s) => s.skill),
-      tools: (profile?.tool_proficiency || []).map((t) => t?.name).filter(Boolean),
+      tools: (profile?.tool_proficiency || [])
+        .map((t) => t?.name)
+        .filter(Boolean),
       domain: profile?.domain || "Not specified",
       sector: profile?.sector || "Not specified"
     }
@@ -1458,6 +1267,48 @@ function NotableWorks({ works }) {
             </Tag>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// Quotes pulled verbatim from the resume/portfolio (references section,
+// a client quote embedded in a case study, a pasted-in recommendation) —
+// only rendered when the analysis actually found one, never fabricated.
+function Testimonials({ items }) {
+  const list = (items || []).filter((t) => t?.quote);
+  if (!list.length) return null;
+  return (
+    <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
+      <p className="text-white/40 text-[11px] uppercase tracking-wide">
+        Testimonials
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {list.map((t, i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3"
+          >
+            <p className="text-white/80 text-sm leading-snug">
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {(t.author || "?")[0].toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="text-white text-xs font-semibold truncate">
+                  {t.author || "Anonymous"}
+                </p>
+                {(t.role || t.source) && (
+                  <p className="text-white/40 text-[11px] truncate">
+                    {[t.role, t.source].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2180,7 +2031,6 @@ export function AIProfileReveal({
   resumeFileUrl,
   socialLinks
 }) {
-  const [scoreDetailOpen, setScoreDetailOpen] = useState(false);
   if (!profile) return null;
   const {
     nameFromProfile,
@@ -2197,7 +2047,6 @@ export function AIProfileReveal({
     sector,
     stage,
     work_experience,
-    type_of_work_wanted,
     team_work_proficiency,
     understanding_of_business,
     foundational_clarity,
@@ -2210,11 +2059,11 @@ export function AIProfileReveal({
     location,
     work_preference,
     salary_expectations,
-    current_status,
     links,
     summary,
     recruiter_highlights,
     notable_works,
+    testimonials,
     dimension_ratings,
     career_timeline,
     career_trajectory
@@ -2222,7 +2071,6 @@ export function AIProfileReveal({
 
   const displayTools = inferToolRowsFromProfile(profile);
   const axes = computeSkillAxes(profile);
-  const heroScore = computeHeroScore(profile, axes);
   const experienceYears = parseExperienceYears(work_experience);
   const verifiedCount = real_work_validation?.validated_count || 0;
   const toolCount = displayTools.length;
@@ -2230,7 +2078,9 @@ export function AIProfileReveal({
   const competencyAxes = competency_matrix?.length
     ? competency_matrix
     : deriveCompetencyMatrix(profile, axes);
-  const skillCategories = skill_profile?.length ? skill_profile : deriveSkillProfile(profile);
+  const skillCategories = skill_profile?.length
+    ? skill_profile
+    : deriveSkillProfile(profile);
   const technicalSkills = technical_skills?.length
     ? technical_skills
     : skills?.map((s) => s?.skill).filter(Boolean) || [];
@@ -2238,7 +2088,6 @@ export function AIProfileReveal({
     ...e,
     category: e.category || "Work Experience"
   }));
-  const ratedDimensions = (dimension_ratings || []).filter((r) => r?.dimension);
 
   return (
     <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col gap-8">
@@ -2248,33 +2097,23 @@ export function AIProfileReveal({
           background: `linear-gradient(90deg, ${YELLOW}, ${STRONG_GREEN})`
         }}
       />
-      <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
-        <HeroScoreRing score={heroScore} onClick={() => setScoreDetailOpen(true)} />
-        <div className="flex flex-col gap-3 min-w-0">
-          <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">
-            {role?.primary}
-            {role?.secondary && (
-              <span className="text-white/40"> · {role.secondary}</span>
-            )}
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {stage?.level && <Tag>{stage.level}</Tag>}
-            {niche && niche.toLowerCase() !== "not specified" && (
-              <Tag>{niche}</Tag>
-            )}
-            <Tag>{domain}</Tag>
-            <Tag>{sector}</Tag>
-            {type_of_work_wanted && <Tag>wants: {type_of_work_wanted}</Tag>}
-          </div>
-          <ProfileLinksRow
-            portfolioLink={portfolioLink}
-            portfolioFileUrl={portfolioFileUrl}
-            resumeLink={resumeLink}
-            resumeFileUrl={resumeFileUrl}
-            socialLinks={socialLinks}
-            extractedLinks={links}
-          />
+      <div className="flex flex-col gap-3 min-w-0">
+        <div className="flex flex-wrap gap-2">
+          {stage?.level && <Tag>{stage.level}</Tag>}
+          {niche && niche.toLowerCase() !== "not specified" && (
+            <Tag>{niche}</Tag>
+          )}
+          <Tag>{domain}</Tag>
+          <Tag>{sector}</Tag>
         </div>
+        <ProfileLinksRow
+          portfolioLink={portfolioLink}
+          portfolioFileUrl={portfolioFileUrl}
+          resumeLink={resumeLink}
+          resumeFileUrl={resumeFileUrl}
+          socialLinks={socialLinks}
+          extractedLinks={links}
+        />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -2289,24 +2128,29 @@ export function AIProfileReveal({
       <FactStrip
         items={[
           { label: "Location", value: location, tone: STRONG_GREEN },
-          { label: "Preference", value: work_preference, tone: YELLOW },
-          { label: "Status", value: current_status, tone: GROWTH_AMBER },
-          { label: "Target Work", value: type_of_work_wanted, tone: YELLOW }
+          { label: "Preference", value: work_preference, tone: YELLOW }
         ]}
       />
+      {summary && (
+        <div className="flex items-center gap-3 pt-5 border-t border-white/10">
+          <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
+          <p className="text-white/75 text-sm leading-snug">{summary}</p>
+        </div>
+      )}
 
       {/* Simplified per product decision — the AI profile was showing too
           much (signal meters, role-fit/proof-depth panels, strong/growth
           zones, recruiter highlights, persona traits, interview focus,
-          notable works, experience gauge, career trajectory, tool bar
-          chart, the full signal-evidence grid, a duplicate fact grid).
-          Kept: header, quick stats, facts, the competency matrix, skill
-          profile donut, skill chip groups, the spiral timeline, validation
-          donut, and the summary line — matching the smaller info-graphic
-          set from the mock. None of this is deleted, just not rendered —
-          see below. (SkillRadarChart/SkillChips/CareerGrowthChart were the
-          pre-redesign competency/skills/timeline components — replaced by
-          CompetencyMatrix/SkillDonut+SkillChipGroups/SpiralTimeline in
+          notable works, experience gauge, tool bar chart, the full
+          signal-evidence grid, a duplicate fact grid, "real work
+          validation"/signal score). Kept: header, quick stats, facts, the
+          competency matrix, skill profile donut, skill chip groups, the
+          spiral timeline, testimonials (when the source has any), career
+          trajectory, and the summary line. None of what's listed below is
+          deleted, just not rendered — see below. (SkillRadarChart/
+          SkillChips/CareerGrowthChart were the pre-redesign competency/
+          skills/timeline components — replaced by CompetencyMatrix/
+          SkillDonut+SkillChipGroups/SpiralTimeline in
           ./profile/ProfileInfographics, each with a click-to-open right
           side detail panel; the old ones are kept below, unused, for the
           same reason as everything else in this block.)
@@ -2321,7 +2165,6 @@ export function AIProfileReveal({
       <InterviewFocus ratings={dimension_ratings} traits={persona_traits} />
       <NotableWorks works={notable_works} />
       <ExperienceGauge years={experienceYears} />
-      <CareerTrajectory trajectory={career_trajectory} />
       <ToolBarChart tools={displayTools} />
       <SignalEvidence ... /> (x5) + CareerJourney
       */}
@@ -2346,13 +2189,6 @@ export function AIProfileReveal({
         interpersonal={interpersonal_skills}
       />
 
-      {summary && (
-        <div className="flex items-center gap-3 pt-5 border-t border-white/10">
-          <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
-          <p className="text-white/75 text-sm leading-snug">{summary}</p>
-        </div>
-      )}
-
       <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
         <p className="text-white/40 text-[11px] uppercase tracking-wide">
           Career Timeline
@@ -2360,62 +2196,12 @@ export function AIProfileReveal({
         <SpiralTimeline entries={timelineEntries} />
       </div>
 
-      <div className="flex flex-col gap-2 pt-5 border-t border-white/10">
-        <p className="text-white/40 text-[11px] uppercase tracking-wide">
-          Real Work Validation
-        </p>
-        <ValidationDonut
-          validated={real_work_validation?.validated_count}
-          unvalidated={real_work_validation?.unvalidated_count}
-        />
-        {real_work_validation?.key_points?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1">
-            {real_work_validation.key_points.map((pt, i) => (
-              <span
-                key={i}
-                title={pt}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-white/50 text-[11px] leading-none"
-              >
-                {pt}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <DetailPanel
-        open={scoreDetailOpen}
-        onClose={() => setScoreDetailOpen(false)}
-        eyebrow="Signal Score"
-        title={`${Math.round(heroScore / 10)}/10`}
-        accent={YELLOW}
-      >
-        <p className="text-white/60 text-xs leading-relaxed">
-          {ratedDimensions.length > 0
-            ? `Averaged from ${ratedDimensions.length} rated dimension${ratedDimensions.length === 1 ? "" : "s"} on this profile.`
-            : "Averaged from this profile's five core growth signals (business, clarity, leadership, learning, community)."}
-        </p>
-        {ratedDimensions.length > 0 && (
-          <div className="flex flex-col gap-2.5">
-            {ratedDimensions.map((r, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 flex flex-col gap-1"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-white/75 text-xs font-semibold">{r.dimension}</span>
-                  <span className="text-white/40 text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
-                    {r.score}
-                  </span>
-                </div>
-                {r.evidence && (
-                  <p className="text-white/50 text-[11px] leading-snug">{r.evidence}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </DetailPanel>
+      {career_trajectory?.projected_roles?.length > 0 && (
+        <div className="pt-5 border-t border-white/10">
+          <CareerTrajectory trajectory={career_trajectory} />
+        </div>
+      )}
+      <Testimonials items={testimonials} />
     </div>
   );
 }
@@ -2457,7 +2243,13 @@ function BuildingSpinner() {
 
 function GhostRadarIllustration() {
   return (
-    <svg width="88" height="88" viewBox="0 0 100 100" fill="none" className="opacity-50">
+    <svg
+      width="88"
+      height="88"
+      viewBox="0 0 100 100"
+      fill="none"
+      className="opacity-50"
+    >
       <polygon
         points="50,8 90,38 75,88 25,88 10,38"
         stroke="#FFD007"
@@ -2613,21 +2405,23 @@ export function ProfileTabPane({ user, onGoToEvents }) {
   const [resumeMode, setResumeMode] = useState("link");
 
   const [aiProfile, setAiProfile] = useState(null);
-  const [socialLinks, setSocialLinks] = useState([]);
   const [savedSocialLinks, setSavedSocialLinks] = useState([]);
-  const [savingLinks, setSavingLinks] = useState(false);
-  const linksDirty =
-    JSON.stringify(socialLinks) !== JSON.stringify(savedSocialLinks);
-  const [isPublic, setIsPublic] = useState(false);
-  const [publicToggling, setPublicToggling] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [building, setBuilding] = useState(false);
   const [buildStep, setBuildStep] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [verifyNoticeOpen, setVerifyNoticeOpen] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [verificationSlot, setVerificationSlot] = useState(null);
+  const [verificationSlotId, setVerificationSlotId] = useState(null);
+  const [verificationMeetLink, setVerificationMeetLink] = useState(null);
+  const [verificationNotes, setVerificationNotes] = useState(null);
+  const [isPublic, setIsPublic] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [verifyFlowOpen, setVerifyFlowOpen] = useState(false);
+  const [verifyRescheduling, setVerifyRescheduling] = useState(false);
 
   const [participation, setParticipation] = useState({
     webinars: 0,
@@ -2643,7 +2437,7 @@ export function ProfileTabPane({ user, onGoToEvents }) {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, ai_profile, ai_profile_public, social_links, username"
+          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, ai_profile, social_links, username, ai_profile_public, verification_status, verification_slot_id, verification_meet_link, verification_notes, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -2654,9 +2448,13 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         setResumeLink(data.resume_link || "");
         setResumeFileUrl(data.resume_file_url || null);
         setAiProfile(data.ai_profile || null);
-        setSocialLinks(data.social_links || []);
         setSavedSocialLinks(data.social_links || []);
         setIsPublic(!!data.ai_profile_public);
+        setVerificationStatus(data.verification_status || null);
+        setVerificationSlotId(data.verification_slot_id || null);
+        setVerificationSlot(data.verification_slots || null);
+        setVerificationMeetLink(data.verification_meet_link || null);
+        setVerificationNotes(data.verification_notes || null);
       }
       setLoaded(true);
     })();
@@ -2679,7 +2477,10 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         .eq("status", "registered");
       const eventIds = (registrations || []).map((r) => r.event_id);
       const { data: events } = eventIds.length
-        ? await supabase.from("events").select("id, event_type").in("id", eventIds)
+        ? await supabase
+            .from("events")
+            .select("id, event_type")
+            .in("id", eventIds)
         : { data: [] };
       if (cancelled) return;
       const amas = (events || []).filter((e) => e.event_type === "AMA").length;
@@ -2691,68 +2492,74 @@ export function ProfileTabPane({ user, onGoToEvents }) {
     };
   }, [user.id]);
 
-  function addLinkRow() {
-    setSocialLinks((l) => [...l, { platform: LINK_PLATFORMS[0], url: "" }]);
-  }
-  function updateLinkRow(i, patch) {
-    setSocialLinks((l) =>
-      l.map((row, idx) => (idx === i ? { ...row, ...patch } : row))
-    );
-  }
-  function removeLinkRow(i) {
-    setSocialLinks((l) => l.filter((_, idx) => idx !== i));
-  }
-  async function handleSaveLinks() {
-    setSavingLinks(true);
-    setErrorMsg("");
-    const cleaned = socialLinks.filter((l) => l.url.trim());
-    const { data: savedRows, error } = await supabase
-      .from("profiles")
-      .update({ social_links: cleaned })
-      .eq("id", user.id)
-      .select("id");
-    if (error || !savedRows || savedRows.length === 0) {
-      setErrorMsg(
-        error?.message ||
-          "your links didn't save — the update matched no rows (likely a permissions issue)."
-      );
-    } else {
-      setSocialLinks(cleaned);
-      setSavedSocialLinks(cleaned);
-    }
-    setSavingLinks(false);
-  }
-
-  async function handleTogglePublic() {
-    setPublicToggling(true);
-    setErrorMsg("");
-    const next = !isPublic;
-    const { data: savedRows, error } = await supabase
-      .from("profiles")
-      .update({ ai_profile_public: next })
-      .eq("id", user.id)
-      .select("id");
-    if (error || !savedRows || savedRows.length === 0) {
-      setErrorMsg(
-        error?.message ||
-          "visibility didn't update — the change matched no rows (likely a permissions issue)."
-      );
-    } else {
-      setIsPublic(next);
-    }
-    setPublicToggling(false);
-  }
-
   const shareUrl = user?.username
     ? `${window.location.origin}/profile/${user.username}`
     : "";
 
-  function handleCopyLink() {
+  function handleCopyShareLink() {
     if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     });
+  }
+
+  async function handlePublish() {
+    setPublishing(true);
+    setErrorMsg("");
+    const { data: savedRows, error } = await supabase
+      .from("profiles")
+      .update({ ai_profile_public: true })
+      .eq("id", user.id)
+      .select("ai_profile_public");
+    if (error || !savedRows || savedRows.length === 0 || !savedRows[0].ai_profile_public) {
+      setErrorMsg(
+        error?.message ||
+          "couldn't publish your profile — make sure verification is complete."
+      );
+    } else {
+      setIsPublic(true);
+    }
+    setPublishing(false);
+  }
+
+  async function handleUnpublish() {
+    setPublishing(true);
+    setErrorMsg("");
+    const { error } = await supabase
+      .from("profiles")
+      .update({ ai_profile_public: false })
+      .eq("id", user.id);
+    if (!error) setIsPublic(false);
+    setPublishing(false);
+  }
+
+  // "Re-upload & reapply" — the only status change a user can make
+  // themselves besides starting verification (see profiles_protect_
+  // verification trigger); clears the previous round's meet link/notes
+  // on the DB side and sends them straight into the upload sheet.
+  async function handleReapply() {
+    setErrorMsg("");
+    const { error } = await supabase
+      .from("profiles")
+      .update({ verification_status: null })
+      .eq("id", user.id);
+    if (!error) {
+      setVerificationStatus(null);
+      setVerificationSlot(null);
+      setVerificationSlotId(null);
+      setVerificationMeetLink(null);
+      setVerificationNotes(null);
+      setUploadOpen(true);
+    }
+  }
+
+  function handleVerifyBooked({ status, slot }) {
+    setVerificationStatus(status);
+    setVerificationSlot(slot ? { starts_at: slot.starts_at } : null);
+    setVerificationSlotId(slot?.id || null);
+    setVerifyFlowOpen(false);
+    setVerifyRescheduling(false);
   }
 
   async function uploadFile(file, prefix) {
@@ -2762,7 +2569,9 @@ export function ProfileTabPane({ user, onGoToEvents }) {
       .from("portfolio-files")
       .upload(path, file, { upsert: true });
     if (uploadErr) throw new Error(uploadErr.message);
-    const { data } = supabase.storage.from("portfolio-files").getPublicUrl(path);
+    const { data } = supabase.storage
+      .from("portfolio-files")
+      .getPublicUrl(path);
     return data?.publicUrl || null;
   }
 
@@ -2793,7 +2602,10 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         payload.portfolio_link = portfolioLink.trim();
         payload.portfolio_file_url = null;
       } else if (portfolioMode === "file" && portfolioFile) {
-        payload.portfolio_file_url = await uploadFile(portfolioFile, "portfolio");
+        payload.portfolio_file_url = await uploadFile(
+          portfolioFile,
+          "portfolio"
+        );
         payload.portfolio_link = null;
       }
       if (resumeMode === "link" && resumeLink.trim()) {
@@ -2843,7 +2655,8 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         }
       );
       const extractJson = await extractRes.json();
-      if (!extractRes.ok) throw new Error(extractJson?.error || "extraction failed");
+      if (!extractRes.ok)
+        throw new Error(extractJson?.error || "extraction failed");
 
       const analyzeRes = await fetch(
         `${SUPABASE_URL}/functions/v1/analyze-profile-data`,
@@ -2858,7 +2671,8 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         }
       );
       const analyzeJson = await analyzeRes.json();
-      if (!analyzeRes.ok) throw new Error(analyzeJson?.error || "AI analysis failed");
+      if (!analyzeRes.ok)
+        throw new Error(analyzeJson?.error || "AI analysis failed");
 
       setAiProfile(analyzeJson.ai_profile);
       setUploadOpen(false);
@@ -2877,7 +2691,40 @@ export function ProfileTabPane({ user, onGoToEvents }) {
     0
   );
 
-  const academicLine = [user?.program, user?.standard].filter(Boolean).join(", ");
+  const academicLine = [user?.program, user?.standard]
+    .filter(Boolean)
+    .join(", ");
+
+  // "Product Designer · 2 yrs exp" — sits right under the name everywhere
+  // instead of a separate role headline + a "Target Work" fact-strip card,
+  // which said the same thing twice.
+  const roleExperienceYears = parseExperienceYears(aiProfile?.work_experience);
+  const roleExperienceLine = aiProfile?.role?.primary
+    ? `${aiProfile.role.primary}${
+        roleExperienceYears != null
+          ? ` · ${fmtExperienceLabel(roleExperienceYears)} exp`
+          : ""
+      }`
+    : "";
+
+  const updateProfileButton = ENABLE_PORTFOLIO_AI && aiProfile && (
+    <button
+      type="button"
+      onClick={() => setUploadOpen(true)}
+      className="self-start flex items-center gap-1.5 bg-white/5 border border-white/15 text-white font-bold text-xs rounded-full pl-5 pr-3.5 py-2 hover:bg-white/10 active:opacity-80 transition-colors"
+    >
+      Update
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M4 10h11.5M10.5 5l5 5-5 5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -2885,19 +2732,26 @@ export function ProfileTabPane({ user, onGoToEvents }) {
           desktop for the owner (see PublicProfile.jsx), so this is now the
           only place avatar/name/college render above md. Mobile keeps its
           own compact header in the sidebar's mobile-only block. */}
-      <div className="hidden md:flex flex-col gap-2">
+      <div className="hidden md:flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
             <div className="relative w-16 h-16 flex-shrink-0">
               <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xl font-bold">
                 {user?.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={user.avatar_url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   (user?.name || "?")[0].toUpperCase()
                 )}
               </div>
               {isTrialActive(user?.trial_ends_at) && (
-                <TrialClockBadge size={18} className="absolute bottom-0 right-0" />
+                <TrialClockBadge
+                  size={18}
+                  className="absolute bottom-0 right-0"
+                />
               )}
             </div>
             <div className="min-w-0">
@@ -2909,30 +2763,63 @@ export function ProfileTabPane({ user, onGoToEvents }) {
                 {academicLine && ` · ${academicLine}`}
                 {user?.school_name && ` · ${user.school_name}`}
               </p>
+              {roleExperienceLine && (
+                <p className="text-evolve-yellow text-xs font-semibold mt-1">
+                  {roleExperienceLine}
+                </p>
+              )}
             </div>
           </div>
-          {ENABLE_PORTFOLIO_AI && aiProfile && (
-            <button
-              type="button"
-              onClick={() => setVerifyNoticeOpen((v) => !v)}
-              className="flex-shrink-0 bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2.5 hover:bg-white/10 active:opacity-80 transition-colors"
-            >
-              Get evolve verified
-            </button>
-          )}
         </div>
-        {ENABLE_PORTFOLIO_AI && aiProfile && verifyNoticeOpen && (
-          <p className="text-white/50 text-xs">
-            Verification calls are launching soon — we'll email you when you can book a slot.
-          </p>
-        )}
+        {updateProfileButton}
       </div>
+
+      {/* mobile: the avatar/name card itself lives in PublicProfile.jsx's
+          sidebar (owner view), directly above this pane — this mirrors the
+          desktop role/experience line + Update button right under it. */}
+      {(roleExperienceLine || updateProfileButton) && (
+        <div className="md:hidden flex flex-col gap-2 -mt-5">
+          {roleExperienceLine && (
+            <p className="text-evolve-yellow text-xs font-semibold">
+              {roleExperienceLine}
+            </p>
+          )}
+          {updateProfileButton}
+        </div>
+      )}
+
+      {ENABLE_PORTFOLIO_AI && aiProfile && (
+        <VerifyCard
+          status={verificationStatus}
+          slot={verificationSlot}
+          meetLink={verificationMeetLink}
+          notes={verificationNotes}
+          isPublic={isPublic}
+          publishing={publishing}
+          onStart={() => {
+            setVerifyRescheduling(false);
+            setVerifyFlowOpen(true);
+          }}
+          onReschedule={() => {
+            setVerifyRescheduling(true);
+            setVerifyFlowOpen(true);
+          }}
+          onReapply={handleReapply}
+          onPublish={handlePublish}
+          onUnpublish={handleUnpublish}
+          shareUrl={shareUrl}
+          copied={linkCopied}
+          onCopyLink={handleCopyShareLink}
+        />
+      )}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-white font-bold text-sm">Evolve participation</p>
           {participationTotal > 0 && (
-            <span className="text-white/40 text-xs">{participationTotal} total</span>
+            <span className="text-white/40 text-xs">
+              {participationTotal} total
+            </span>
           )}
         </div>
         {participationTotal === 0 ? (
@@ -2953,140 +2840,54 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {PARTICIPATION_CATEGORIES.map((c) => (
-              <ParticipationTile key={c.key} label={c.label} value={participation[c.key] || 0} />
+              <ParticipationTile
+                key={c.key}
+                label={c.label}
+                value={participation[c.key] || 0}
+              />
             ))}
           </div>
         )}
       </div>
 
-      {ENABLE_PORTFOLIO_AI && (aiProfile ? (
-        <>
-          <div className="md:hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-white font-bold text-sm">Get evolve verified</p>
-                <p className="text-white/40 text-xs mt-1 max-w-[260px]">
-                  A quick call with an evolve reviewer to verify your real work
-                  and earn a verified badge on your profile.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setVerifyNoticeOpen((v) => !v)}
-                className="flex-shrink-0 bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2.5 hover:bg-white/10 active:opacity-80 transition-colors"
-              >
-                Start verification
-              </button>
-            </div>
-            {verifyNoticeOpen && (
-              <p className="text-white/50 text-xs border-t border-white/10 pt-3">
-                Verification calls are launching soon — we'll email you when you
-                can book a slot.
-              </p>
-            )}
-          </div>
+      {ENABLE_PORTFOLIO_AI &&
+        (aiProfile ? (
+          <>
+            <AIProfileReveal
+              profile={aiProfile}
+              portfolioLink={portfolioLink}
+              portfolioFileUrl={portfolioFileUrl}
+              resumeLink={resumeLink}
+              resumeFileUrl={resumeFileUrl}
+              socialLinks={savedSocialLinks}
+            />
 
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#2a2a2a] bg-white/[0.02] px-4 py-3.5">
-            <div>
-              <p className="text-white text-sm font-semibold">Share with recruiters</p>
-              <p className="text-white/40 text-xs mt-0.5">
-                Publishes a read-only link to this AI profile — no login required
-                to view.
-              </p>
-            </div>
+            {errorMsg && !uploadOpen && (
+              <p className="text-red-400 text-xs">{errorMsg}</p>
+            )}
+          </>
+        ) : (
+          <div className="rounded-2xl border border-evolve-yellow/20 bg-evolve-yellow/[0.03] p-6 flex flex-col items-center text-center gap-3">
+            <GhostRadarIllustration />
+            <p className="text-white font-bold text-base">
+              Populate your profile
+            </p>
+            <p className="text-white/40 text-xs max-w-[280px]">
+              Upload your resume or portfolio and we'll build an AI profile —
+              competency radar, skill breakdown and a timeline of your work.
+            </p>
             <button
               type="button"
-              onClick={handleTogglePublic}
-              disabled={publicToggling}
-              className={`flex-shrink-0 w-11 h-6 rounded-full transition-colors relative disabled:opacity-40 ${isPublic ? "bg-evolve-yellow" : "bg-white/15"}`}
+              onClick={() => setUploadOpen(true)}
+              className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 transition-opacity"
             >
-              <span
-                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${isPublic ? "left-[22px]" : "left-0.5"}`}
-              />
+              Upload resume or portfolio
             </button>
-          </div>
-          {isPublic && shareUrl && (
-            <div className="flex items-center gap-2 -mt-3">
-              <input
-                readOnly
-                value={shareUrl}
-                className="flex-1 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-lg px-3 py-2 outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="text-evolve-yellow text-xs font-semibold px-3 py-2 rounded-lg border border-evolve-yellow/40 hover:bg-evolve-yellow/10 flex-shrink-0"
-              >
-                {linkCopied ? "Copied ✓" : "Copy"}
-              </button>
-            </div>
-          )}
-
-          <div className="rounded-2xl border border-[#2a2a2a] bg-white/[0.02] p-4 flex flex-col gap-2">
-            <label className="text-white/40 text-xs">Work &amp; social links</label>
-            <p className="text-white/30 text-[11px] -mt-1">
-              LinkedIn, Behance, Dribbble, GitHub, your site — shown on your
-              profile alongside the AI summary.
-            </p>
-            <LinksEditor
-              links={socialLinks}
-              onAdd={addLinkRow}
-              onUpdate={updateLinkRow}
-              onRemove={removeLinkRow}
-            />
-            {linksDirty && (
-              <button
-                type="button"
-                onClick={handleSaveLinks}
-                disabled={savingLinks}
-                className="self-start bg-white/5 border border-evolve-yellow/40 text-evolve-yellow font-bold text-xs rounded-xl px-4 py-2 disabled:opacity-40 hover:bg-white/10 active:opacity-80 transition-colors"
-              >
-                {savingLinks ? "Saving…" : "Save links"}
-              </button>
+            {errorMsg && !uploadOpen && (
+              <p className="text-red-400 text-xs">{errorMsg}</p>
             )}
           </div>
-
-          <AIProfileReveal
-            profile={aiProfile}
-            portfolioLink={portfolioLink}
-            portfolioFileUrl={portfolioFileUrl}
-            resumeLink={resumeLink}
-            resumeFileUrl={resumeFileUrl}
-            socialLinks={savedSocialLinks}
-          />
-
-          {errorMsg && !uploadOpen && (
-            <p className="text-red-400 text-xs">{errorMsg}</p>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setUploadOpen(true)}
-            className="self-start text-evolve-yellow text-xs font-semibold hover:opacity-80"
-          >
-            Update resume or portfolio
-          </button>
-        </>
-      ) : (
-        <div className="rounded-2xl border border-evolve-yellow/20 bg-evolve-yellow/[0.03] p-6 flex flex-col items-center text-center gap-3">
-          <GhostRadarIllustration />
-          <p className="text-white font-bold text-base">Populate your profile</p>
-          <p className="text-white/40 text-xs max-w-[280px]">
-            Upload your resume or portfolio and we'll build an AI profile —
-            competency radar, skill breakdown and a timeline of your work.
-          </p>
-          <button
-            type="button"
-            onClick={() => setUploadOpen(true)}
-            className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 transition-opacity"
-          >
-            Upload resume or portfolio
-          </button>
-          {errorMsg && !uploadOpen && (
-            <p className="text-red-400 text-xs">{errorMsg}</p>
-          )}
-        </div>
-      ))}
+        ))}
 
       {ENABLE_PORTFOLIO_AI && uploadOpen && (
         <ProfileUploadSheet
@@ -3110,6 +2911,17 @@ export function ProfileTabPane({ user, onGoToEvents }) {
           onSubmit={handleBuildProfile}
         />
       )}
+
+      <VerifyFlowModal
+        open={verifyFlowOpen}
+        user={{ id: user.id, verification_slot_id: verificationSlotId }}
+        startAtSlot={verifyRescheduling}
+        onClose={() => {
+          setVerifyFlowOpen(false);
+          setVerifyRescheduling(false);
+        }}
+        onBooked={handleVerifyBooked}
+      />
     </div>
   );
 }

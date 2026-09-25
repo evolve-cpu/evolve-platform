@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -402,14 +402,23 @@ function synthesizedYear(entry, list) {
   return String(anchor + entry.year_index);
 }
 
+const ZOOM_CAM_MIN = 1;
+const ZOOM_CAM_MAX = 5;
+const PINCH_RANGE = 3;
+
 export function SpiralTimeline({ entries }) {
   const list = (entries || [])
     .filter((e) => e?.year_index != null)
     .sort((a, b) => a.year_index - b.year_index)
     .map((e) => ({ ...e, calendar_year: synthesizedYear(e, entries) }));
-  const [activeIndex, setActiveIndex] = useState(list.length ? list.length - 1 : null);
-  const [zoom, setZoom] = useState(1);
+  // zoomP: 0 = zoomed all the way in on the first milestone, 1 = zoomed out
+  // to show the whole spiral through "today" — the single source of truth
+  // for both the camera scale and which milestone is "active", so scroll/
+  // pinch/+−/rail all drive the same value instead of fighting each other.
+  const [zoomP, setZoomP] = useState(1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const frameRef = useRef(null);
+  const pinchDistRef = useRef(null);
   if (!list.length) return null;
 
   const n = list.length;
@@ -426,14 +435,22 @@ export function SpiralTimeline({ entries }) {
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
   };
 
-  const pathPoints = [];
   const steps = Math.max(n - 1, 1) * 24;
+  const fullPoints = [];
   for (let s = 0; s <= steps; s++) {
     const t = (s / steps) * (n - 1);
     const r = rStart + t * rStep;
     const a = thetaAt(t);
-    pathPoints.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+    fullPoints.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
   }
+
+  const revealT = Math.min(n - 1, Math.max(0, zoomP * (n - 1))); // continuous 0..n-1
+  const trailStepCount = Math.max(1, Math.round((revealT / Math.max(n - 1, 1)) * steps) + 1);
+  const trailPoints = fullPoints.slice(0, trailStepCount);
+  const activeIndex = n > 1 ? Math.round(revealT) : 0;
+
+  const revealedR = rStart + revealT * rStep;
+  const camScale = Math.min(ZOOM_CAM_MAX, Math.max(ZOOM_CAM_MIN, (maxR + 14) / (revealedR + 14)));
 
   const years = Array.from(new Set(list.map((e) => e.calendar_year))).sort();
   const nowYear = String(new Date().getFullYear());
@@ -459,7 +476,68 @@ export function SpiralTimeline({ entries }) {
     return best;
   };
 
-  const active = activeIndex != null ? list[activeIndex] : list[list.length - 1];
+  // clamps a raw target position, single entry point for every gesture below.
+  function setP(p) {
+    setZoomP(Math.min(1, Math.max(0, p)));
+  }
+  function goTo(idx) {
+    setP(n > 1 ? Math.min(n - 1, Math.max(0, idx)) / (n - 1) : 0);
+  }
+  function step(dir) {
+    goTo(activeIndex + dir);
+  }
+
+  // scroll/trackpad zoom (desktop) + pinch zoom (mobile) — bound as native
+  // listeners with { passive: false } since React makes onWheel/onTouchMove
+  // passive by default, which would silently drop preventDefault() here.
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+
+    function onWheel(e) {
+      // ctrlKey/metaKey is how both an explicit Ctrl+scroll and a trackpad
+      // pinch-to-zoom gesture surface as a wheel event — plain scroll is
+      // left alone so the page can still scroll normally.
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const delta = Math.max(-30, Math.min(30, e.deltaY));
+      setZoomP((p) => Math.min(1, Math.max(0, p + delta * 0.004)));
+    }
+    function onTouchStart(e) {
+      if (e.touches.length === 2) {
+        const [a, b] = e.touches;
+        pinchDistRef.current = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      }
+    }
+    function onTouchMove(e) {
+      if (e.touches.length === 2 && pinchDistRef.current) {
+        e.preventDefault();
+        const [a, b] = e.touches;
+        const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        const ratio = dist / pinchDistRef.current;
+        setZoomP((p) => Math.min(1, Math.max(0, p - Math.log(ratio) / Math.log(PINCH_RANGE))));
+        pinchDistRef.current = dist;
+      }
+    }
+    function onTouchEnd(e) {
+      if (e.touches.length < 2) pinchDistRef.current = null;
+    }
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    el.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, []);
+
+  const active = list[activeIndex];
   const activeTickIdx = tickIndexForEntry(active, activeIndex === list.length - 1);
   const activeFraction = ticks.length > 1 ? activeTickIdx / (ticks.length - 1) : 0;
   const activeColor = TIMELINE_CATEGORY_COLOR[active.category] || TIMELINE_CATEGORY_COLOR["Work Experience"];
@@ -484,56 +562,86 @@ export function SpiralTimeline({ entries }) {
         </span>
       </div>
 
-      <div className="relative rounded-2xl border border-white/10 bg-[#0d0d0f] p-3">
-        <div
-          className="mx-auto transition-transform duration-200"
-          style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}
-        >
-          <svg viewBox="0 0 260 260" className="w-full max-w-[280px] mx-auto block">
-            <polyline
-              points={pathPoints.join(" ")}
-              fill="none"
-              stroke="rgba(255,255,255,0.16)"
-              strokeWidth="1.5"
-            />
-            {list.map((e, i) => {
-              const [x, y] = pointAt(i);
-              const color = TIMELINE_CATEGORY_COLOR[e.category] || TIMELINE_CATEGORY_COLOR["Work Experience"];
-              const isActive = i === (activeIndex ?? list.length - 1);
-              return (
-                <g key={i} className="cursor-pointer" onClick={() => setActiveIndex(i)}>
-                  {isActive && (
-                    <circle cx={x} cy={y} r={11} fill="none" stroke={color} strokeWidth="1.5" opacity="0.55" />
-                  )}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isActive ? 7 : 5.5}
-                    fill={color}
-                    stroke="#0d0d0f"
-                    strokeWidth="2"
-                  />
-                </g>
-              );
-            })}
-          </svg>
+      <div
+        ref={frameRef}
+        className="relative rounded-2xl border border-white/10 bg-[#0d0d0f] p-3 sm:p-4 [touch-action:pan-y]"
+      >
+        <div className="mx-auto w-full max-w-[440px] sm:max-w-[560px] aspect-square overflow-hidden">
+          <div
+            className="w-full h-full transition-transform duration-200 ease-out"
+            style={{ transform: `scale(${camScale})`, transformOrigin: "50% 50%" }}
+          >
+            <svg viewBox="0 0 260 260" className="w-full h-full block">
+              <polyline
+                points={fullPoints.join(" ")}
+                fill="none"
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="1.5"
+              />
+              <polyline
+                points={trailPoints.join(" ")}
+                fill="none"
+                stroke="rgba(255,255,255,0.5)"
+                strokeWidth="1.5"
+              />
+              {list.map((e, i) => {
+                const [x, y] = pointAt(i);
+                const color = TIMELINE_CATEGORY_COLOR[e.category] || TIMELINE_CATEGORY_COLOR["Work Experience"];
+                const isActive = i === activeIndex;
+                const revealed = i <= revealT + 0.02;
+                return (
+                  <g
+                    key={i}
+                    className="cursor-pointer"
+                    onClick={() => goTo(i)}
+                    style={{
+                      opacity: revealed ? 1 : 0.25,
+                      transition: "opacity 200ms ease-out"
+                    }}
+                  >
+                    {isActive && (
+                      <circle cx={x} cy={y} r={11} fill="none" stroke={color} strokeWidth="1.5" opacity="0.55" />
+                    )}
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={isActive ? 7 : 5.5}
+                      fill={color}
+                      stroke="#0d0d0f"
+                      strokeWidth="2"
+                    />
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
         </div>
         <div className="absolute bottom-3 right-3 flex flex-col gap-1.5">
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.15).toFixed(2)))}
-            className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white flex items-center justify-center text-sm font-bold transition-colors"
+            onClick={() => step(-1)}
+            disabled={activeIndex <= 0}
+            aria-label="Zoom in / step to earlier point"
+            className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white flex items-center justify-center text-sm font-bold transition-colors disabled:opacity-30 disabled:pointer-events-none"
           >
             +
           </button>
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.max(0.75, +(z - 0.15).toFixed(2)))}
-            className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white flex items-center justify-center text-sm font-bold transition-colors"
+            onClick={() => step(1)}
+            disabled={activeIndex >= n - 1}
+            aria-label="Zoom out / step to later point"
+            className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white flex items-center justify-center text-sm font-bold transition-colors disabled:opacity-30 disabled:pointer-events-none"
           >
             −
           </button>
         </div>
+        <p className="absolute bottom-3 left-3 text-white/25 text-[10px] hidden sm:block">
+          ctrl/⌘ + scroll to zoom
+        </p>
+        <p className="absolute bottom-3 left-3 text-white/25 text-[10px] sm:hidden">
+          pinch to zoom
+        </p>
       </div>
 
       <div className="px-1">
@@ -552,7 +660,7 @@ export function SpiralTimeline({ entries }) {
             <button
               type="button"
               key={i}
-              onClick={() => setActiveIndex(nearestEntryForTick(i))}
+              onClick={() => goTo(nearestEntryForTick(i))}
               className="text-[10px] font-semibold transition-colors"
               style={{ color: i === activeTickIdx ? YELLOW : "rgba(255,255,255,0.35)" }}
             >

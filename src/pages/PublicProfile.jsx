@@ -1155,7 +1155,7 @@ export default function PublicProfile() {
               copy of this now lives in ProfileTabPane's own header instead
               (see the block below, which is visitor-view only). */}
           {!activeProgramme && (
-            <div className="md:hidden flex flex-col border-b border-white/10">
+            <div className="md:hidden flex flex-col">
               <div className="flex items-center gap-3 px-5 py-4 w-full text-left">
                 <div className="relative w-12 h-12 flex-shrink-0">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-sm font-bold">

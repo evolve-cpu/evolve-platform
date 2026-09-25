@@ -389,6 +389,20 @@ const RESPONSE_SCHEMA = {
         required: ["title", "link", "client", "summary"],
       },
     },
+    testimonials: {
+      type: "ARRAY",
+      description: "Direct quotes of praise/endorsement about this person, only if they appear verbatim in the resume or portfolio text (a references section, a client/manager quote embedded in a case study, a LinkedIn recommendation pasted in, etc.). Never invent, paraphrase beyond trimming, or infer a testimonial from a project description — if no such quote is present anywhere in the source, output an empty array.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          quote: { type: "STRING", description: "The endorsement, verbatim or lightly trimmed for length. 40 words max." },
+          author: { type: "STRING", nullable: true, description: "The person quoted, if named; null if unnamed/anonymous." },
+          role: { type: "STRING", nullable: true, description: "The author's role/title, if stated; null otherwise." },
+          source: { type: "STRING", nullable: true, description: "Where this quote came from, e.g. 'Resume — References', 'Portfolio — client quote'; null if unclear." },
+        },
+        required: ["quote", "author", "role", "source"],
+      },
+    },
     competency_matrix: {
       type: "ARRAY",
       description: "Step 6 — a fixed five-point competency map for a pentagon/radar info-graphic. Exactly these five axes, in this order, each scored from the same evidence as the corresponding snapshot field: 'Design Core' (foundational_clarity), 'Collaboration' (team_work_proficiency), 'Business Understanding' (understanding_of_business), 'Leadership' (leadership scope within team_work_proficiency / dimension_ratings), 'Continuous Learning' (learning). This is a click-to-expand UI: the vertex itself only shows the score, but the panel it opens is the one place this profile explains its reasoning in full, so give it real substance — don't hold back detail to keep the chart tidy.",
@@ -472,7 +486,7 @@ const RESPONSE_SCHEMA = {
     "learning", "contributing_back", "tool_proficiency", "ai_proficiency",
     "real_work_validation", "career_switching", "location", "work_preference",
     "salary_expectations", "current_status", "links", "summary", "recruiter_highlights",
-    "notable_works", "competency_matrix", "dimension_ratings", "career_timeline", "career_trajectory",
+    "notable_works", "testimonials", "competency_matrix", "dimension_ratings", "career_timeline", "career_trajectory",
   ],
 };
 
