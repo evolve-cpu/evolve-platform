@@ -44,16 +44,15 @@ const ROLES = [
     value: "professional",
     Icon: BriefcaseIcon,
     title: "Professional & Recent Grad",
-    sub: "Working, freelancing, or recently graduated and stepping up.",
-    disabled: true
+    sub: "Working, freelancing, or recently graduated and stepping up."
   }
 ];
 
 /**
  * The very first onboarding screen for an individual sign-in — decides
- * between the Student path (fully built) and Professional & Recent Grad
- * (shown but disabled: that flow doesn't exist yet, only "student" ever
- * reaches handleRoleChoice — see the comment on it in Onboarding.jsx).
+ * between the Student path and the Professional & Recent Grad path. Both
+ * lead into the same details form (see StudentOnboarding.jsx); the only
+ * difference is Professional & Recent Grad skips the college-ID upload.
  */
 export default function RoleChoiceStep({ onSelect, onBack }) {
   return (
@@ -91,9 +90,8 @@ export default function RoleChoiceStep({ onSelect, onBack }) {
           {ROLES.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => !opt.disabled && onSelect(opt.value)}
-              disabled={opt.disabled}
-              className="w-full text-left rounded-2xl border p-4 flex items-center gap-4 transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/25"
+              onClick={() => onSelect(opt.value)}
+              className="w-full text-left rounded-2xl border p-4 flex items-center gap-4 transition-colors hover:border-white/25"
               style={{
                 backgroundColor: "rgba(255,255,255,0.03)",
                 borderColor: "#373737"
@@ -106,19 +104,12 @@ export default function RoleChoiceStep({ onSelect, onBack }) {
                 <opt.Icon />
               </span>
               <span className="flex-1 flex flex-col gap-0.5 min-w-0">
-                <span className="text-white font-bold text-base flex items-center gap-2">
+                <span className="text-white font-bold text-base">
                   {opt.title}
-                  {opt.disabled && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-white/40 bg-white/5 rounded-full px-2 py-0.5">
-                      coming soon
-                    </span>
-                  )}
                 </span>
                 <span className="text-white/50 text-xs leading-relaxed">{opt.sub}</span>
               </span>
-              {!opt.disabled && (
-                <ChevronRightIcon className="text-white/30 flex-shrink-0" />
-              )}
+              <ChevronRightIcon className="text-white/30 flex-shrink-0" />
             </button>
           ))}
         </div>

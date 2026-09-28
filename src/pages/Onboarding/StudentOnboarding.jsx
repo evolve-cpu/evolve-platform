@@ -71,27 +71,33 @@ async function callVerifyStudentId(userId, storagePath) {
 }
 
 /**
- * The Student half of the new role-split onboarding. Two phases:
- * "upload" — name (editable, prefilled) + locked email + ID upload, with an
- *   always-visible "enter details manually" escape hatch — then
+ * The Student/Professional & Recent Grad half of the new role-split
+ * onboarding (role: "student" | "professional"). Two phases:
+ * "upload" — name (editable, prefilled) + locked email, plus (student only)
+ *   an ID upload with an always-visible "enter details manually" escape
+ *   hatch — then
  * "details" — a shared academic-details form (college/year/program/stream),
  *   reached either pre-filled from a successful OCR read, blank after an
- *   unclear read, or blank via the manual-entry link. Every path funnels
- *   into this one form so there's always a final, editable confirmation
- *   step before anything is saved.
+ *   unclear read, blank via the manual-entry link, or (professional) blank
+ *   straight from the name/email screen since there's no ID to read it
+ *   from. Every path funnels into this one form so there's always a final,
+ *   editable confirmation step before anything is saved.
  *
  * Picking a file only stages it (shows the filename) — the actual upload +
  * verify-student-id call happens on "Continue", not on file selection, so
  * the person can see what they picked before committing to it.
  */
-export default function StudentOnboarding({ user, onBack, onComplete }) {
+export default function StudentOnboarding({ user, role = "student", onBack, onComplete }) {
+  const isProfessional = role === "professional";
   const [phase, setPhase] = useState("upload");
   const [name, setName] = useState(user.name || "");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [banner, setBanner] = useState(null); // { tone: "success" | "warning", text }
-  const [verificationStatus, setVerificationStatus] = useState("manual");
+  const [verificationStatus, setVerificationStatus] = useState(
+    isProfessional ? "none" : "manual"
+  );
 
   const [collegeName, setCollegeName] = useState("");
   const [year, setYear] = useState(null);
@@ -127,6 +133,15 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
     }
     setUploadError("");
     setFile(f);
+  }
+
+  // Professional & Recent Grad skips ID upload entirely — there's nothing
+  // to read, so "Continue" just carries name/email forward into the same
+  // details form the student path also lands on.
+  function handleContinueProfessional() {
+    setBanner(null);
+    setVerificationStatus("none");
+    setPhase("details");
   }
 
   async function handleContinueUpload() {
@@ -307,11 +322,12 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
         )}
         <div className="flex flex-col gap-1.5">
           <h1 className="text-white font-bold text-2xl leading-tight">
-            You're a student — nice.
+            {isProfessional ? "Working or a recent grad — nice." : "You're a student — nice."}
           </h1>
           <p className="text-white/50 text-sm">
-            Upload your college ID and we'll read your college, year and
-            program from it. Nothing else to fill in.
+            {isProfessional
+              ? "Just your name and email — we'll ask a couple of quick details next."
+              : "Upload your college ID and we'll read your college, year and program from it. Nothing else to fill in."}
           </p>
         </div>
 
@@ -343,44 +359,48 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
           </p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-white/40 text-xs">College ID</label>
-          <label
-            className="flex items-center gap-3 border border-dashed border-[#373737] rounded-xl px-4 py-3.5 cursor-pointer hover:border-white/25 transition-colors"
-            style={inputStyle}
-          >
-            <IdCardIcon className="text-white/40 flex-shrink-0" />
-            <span className="flex-1 min-w-0">
-              <span className="block text-white text-sm font-semibold truncate">
-                {file ? file.name : "Photo or PDF, front side"}
+        {!isProfessional && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-white/40 text-xs">College ID</label>
+            <label
+              className="flex items-center gap-3 border border-dashed border-[#373737] rounded-xl px-4 py-3.5 cursor-pointer hover:border-white/25 transition-colors"
+              style={inputStyle}
+            >
+              <IdCardIcon className="text-white/40 flex-shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block text-white text-sm font-semibold truncate">
+                  {file ? file.name : "Photo or PDF, front side"}
+                </span>
+                <span className="block text-white/30 text-[11px]">Up to {MAX_FILE_MB} MB</span>
               </span>
-              <span className="block text-white/30 text-[11px]">Up to {MAX_FILE_MB} MB</span>
-            </span>
-            <span className="flex-shrink-0 text-white text-xs font-semibold rounded-lg border border-[#373737] px-3 py-2 hover:bg-white/5 transition-colors">
-              Choose file
-            </span>
-            <input
-              type="file"
-              accept={ID_ACCEPTED_TYPES}
-              onChange={handleFileChange}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
-          {uploading && <p className="text-evolve-yellow text-xs mt-1">reading your ID…</p>}
-          {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
-        </div>
+              <span className="flex-shrink-0 text-white text-xs font-semibold rounded-lg border border-[#373737] px-3 py-2 hover:bg-white/5 transition-colors">
+                Choose file
+              </span>
+              <input
+                type="file"
+                accept={ID_ACCEPTED_TYPES}
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            {uploading && <p className="text-evolve-yellow text-xs mt-1">reading your ID…</p>}
+            {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
+          </div>
+        )}
+
+        {!isProfessional && (
+          <button
+            onClick={goToManualDetails}
+            className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
+          >
+            Prefer to type it in? Enter details manually
+          </button>
+        )}
 
         <button
-          onClick={goToManualDetails}
-          className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
-        >
-          Prefer to type it in? Enter details manually
-        </button>
-
-        <button
-          onClick={handleContinueUpload}
-          disabled={!file || uploading}
+          onClick={isProfessional ? handleContinueProfessional : handleContinueUpload}
+          disabled={isProfessional ? !name.trim() : !file || uploading}
           className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
         >
           {uploading ? "Reading your ID…" : (
@@ -391,12 +411,14 @@ export default function StudentOnboarding({ user, onBack, onComplete }) {
           )}
         </button>
 
-        <button
-          onClick={handleUseSampleId}
-          className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
-        >
-          Use a sample student ID (demo)
-        </button>
+        {!isProfessional && (
+          <button
+            onClick={handleUseSampleId}
+            className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
+          >
+            Use a sample student ID (demo)
+          </button>
+        )}
       </div>
     </div>
   );

@@ -141,8 +141,6 @@ export default function Onboarding() {
     setStep(value === "institute" ? "inst-profile" : "chat");
   }
 
-  // Student is the only fully-built path right now — Working Professional
-  // renders disabled in RoleChoiceStep, so this only ever fires with "student".
   function handleRoleChoice(value) {
     setRole(value);
     setStep("student-details");
@@ -168,8 +166,11 @@ export default function Onboarding() {
         .update({
           username,
           name: details.name,
-          role: "student",
-          persona: "Design school student",
+          role,
+          persona:
+            role === "professional"
+              ? "Professional & Recent Grad"
+              : "Design school student",
           school_name: details.college_name,
           standard: details.year,
           program: details.program,
@@ -552,6 +553,7 @@ export default function Onboarding() {
     content = (
       <StudentOnboarding
         user={user}
+        role={role}
         onBack={() => setStep("role-choice")}
         onComplete={handleStudentComplete}
       />
@@ -598,7 +600,7 @@ export default function Onboarding() {
         <p className="text-white/50 text-sm max-w-xs">{error}</p>
         <button
           onClick={() =>
-            role === "student"
+            role === "student" || role === "professional"
               ? handleStudentComplete(studentDraft)
               : handleConfirm(chatProfile, orgDraft)
           }
