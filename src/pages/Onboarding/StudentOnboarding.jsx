@@ -9,6 +9,12 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const ID_ACCEPTED_TYPES = ".jpg,.jpeg,.png,.pdf";
 const MAX_FILE_MB = 10;
 const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th", "5th"];
+const WORK_STATUS_OPTIONS = [
+  "Working at a company",
+  "Running my own company",
+  "Freelancing",
+  "Still exploring"
+];
 
 const inputClass =
   "w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60";
@@ -25,22 +31,90 @@ const SAMPLE_STUDENT_ID = {
   stream: "Communication Design"
 };
 
+// Same demo escape hatch, for the one-screen Professional & Recent Grad form.
+const SAMPLE_PROFESSIONAL = {
+  work_status: "Working at a company",
+  designation: "Product Designer"
+};
+
 function IdCardIcon({ className }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={className}>
-      <rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+    >
+      <rect
+        x="2.5"
+        y="5"
+        width="19"
+        height="14"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
       <circle cx="8.5" cy="11" r="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M5.5 15.5c.6-1.4 1.8-2 3-2s2.4.6 3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M14 10h5M14 13h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M5.5 15.5c.6-1.4 1.8-2 3-2s2.4.6 3 2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14 10h5M14 13h5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronDownIcon({ className }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 20 20"
+      fill="none"
+      className={className}
+    >
+      <path
+        d="M5 7.5L10 12.5L15 7.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
 function LockIcon({ className }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={className}>
-      <rect x="5" y="10.5" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 10.5V8a4 4 0 018 0v2.5" stroke="currentColor" strokeWidth="1.6" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+    >
+      <rect
+        x="5"
+        y="10.5"
+        width="14"
+        height="9"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M8 10.5V8a4 4 0 018 0v2.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
     </svg>
   );
 }
@@ -72,22 +146,31 @@ async function callVerifyStudentId(userId, storagePath) {
 
 /**
  * The Student/Professional & Recent Grad half of the new role-split
- * onboarding (role: "student" | "professional"). Two phases:
- * "upload" — name (editable, prefilled) + locked email, plus (student only)
- *   an ID upload with an always-visible "enter details manually" escape
- *   hatch — then
- * "details" — a shared academic-details form (college/year/program/stream),
+ * onboarding (role: "student" | "professional").
+ *
+ * Professional & Recent Grad is a single screen — name, locked email,
+ * "you're..." status, and designation (auto-"NA" when still exploring) —
+ * saved straight from there, no ID involved.
+ *
+ * Student is two phases:
+ * "upload" — name (editable, prefilled) + locked email + ID upload, with an
+ *   always-visible "enter details manually" escape hatch — then
+ * "details" — an academic-details form (college/year/program/stream),
  *   reached either pre-filled from a successful OCR read, blank after an
- *   unclear read, blank via the manual-entry link, or (professional) blank
- *   straight from the name/email screen since there's no ID to read it
- *   from. Every path funnels into this one form so there's always a final,
- *   editable confirmation step before anything is saved.
+ *   unclear read, or blank via the manual-entry link. Every path funnels
+ *   into this one form so there's always a final, editable confirmation
+ *   step before anything is saved.
  *
  * Picking a file only stages it (shows the filename) — the actual upload +
  * verify-student-id call happens on "Continue", not on file selection, so
  * the person can see what they picked before committing to it.
  */
-export default function StudentOnboarding({ user, role = "student", onBack, onComplete }) {
+export default function StudentOnboarding({
+  user,
+  role = "student",
+  onBack,
+  onComplete
+}) {
   const isProfessional = role === "professional";
   const [phase, setPhase] = useState("upload");
   const [name, setName] = useState(user.name || "");
@@ -106,6 +189,12 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
   const [detailsError, setDetailsError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Professional & Recent Grad only — "You're..." + designation, the two
+  // fields that replace the student college/year/program/stream set.
+  const [workStatus, setWorkStatus] = useState("");
+  const [designation, setDesignation] = useState("");
+  const isExploring = workStatus === "Still exploring";
+
   function goToManualDetails() {
     setBanner(null);
     setVerificationStatus("manual");
@@ -119,7 +208,10 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
     setProgram(SAMPLE_STUDENT_ID.program);
     setStream(SAMPLE_STUDENT_ID.stream);
     setVerificationStatus("manual");
-    setBanner({ tone: "warning", text: "Sample details — demo only, feel free to edit." });
+    setBanner({
+      tone: "warning",
+      text: "Sample details — demo only, feel free to edit."
+    });
     setPhase("details");
   }
 
@@ -135,13 +227,39 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
     setFile(f);
   }
 
-  // Professional & Recent Grad skips ID upload entirely — there's nothing
-  // to read, so "Continue" just carries name/email forward into the same
-  // details form the student path also lands on.
-  function handleContinueProfessional() {
-    setBanner(null);
-    setVerificationStatus("none");
-    setPhase("details");
+  function handleWorkStatusChange(value) {
+    setWorkStatus(value);
+    // "Still exploring" has no real job title — lock it to NA instead of
+    // leaving an empty required-looking field; switching away clears that
+    // auto-filled value so it doesn't linger as a stale answer.
+    if (value === "Still exploring") {
+      setDesignation("NA");
+    } else if (designation === "NA") {
+      setDesignation("");
+    }
+  }
+
+  function handleFillSampleProfessional() {
+    setWorkStatus(SAMPLE_PROFESSIONAL.work_status);
+    setDesignation(SAMPLE_PROFESSIONAL.designation);
+  }
+
+  // Professional & Recent Grad is a single screen — no ID to read, so
+  // "Continue" saves straight from here instead of handing off to the
+  // student path's separate academic-details phase.
+  function handleSubmitProfessional() {
+    if (!name.trim() || !workStatus) {
+      setDetailsError('name and "you\'re..." are required');
+      return;
+    }
+    setDetailsError("");
+    setSubmitting(true);
+    onComplete({
+      name: name.trim(),
+      work_status: workStatus,
+      designation: isExploring ? "NA" : designation.trim(),
+      verificationStatus: "none"
+    });
   }
 
   async function handleContinueUpload() {
@@ -156,7 +274,10 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
         setProgram(result.program || "");
         setStream(result.stream || "");
         setVerificationStatus("verified");
-        setBanner({ tone: "success", text: "Extracted from your ID — please confirm." });
+        setBanner({
+          tone: "success",
+          text: "Extracted from your ID — please confirm."
+        });
       } else {
         setVerificationStatus("unclear");
         setBanner({
@@ -192,6 +313,135 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
       stream: stream.trim(),
       verificationStatus
     });
+  }
+
+  if (isProfessional) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6 py-16"
+        style={{ backgroundColor: "#161618" }}
+      >
+        <div
+          className="w-full max-w-md mx-auto rounded-3xl border border-[#373737] p-6 sm:p-8 flex flex-col gap-5"
+          style={{ backgroundColor: "#1c1c1f" }}
+        >
+          <OnboardingProgressBar step={2} total={2} />
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="self-start text-white/40 text-xs font-semibold hover:text-white/70 transition-colors"
+            >
+              ← Back
+            </button>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-white font-bold text-2xl leading-tight">
+              Tell us about your work
+            </h1>
+            <p className="text-white/50 text-sm">
+              This shapes what shows up on your profile.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-white/40 text-xs">Full name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={inputClass}
+              style={inputStyle}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-white/40 text-xs">Email</label>
+            <div className="relative">
+              <input
+                type="email"
+                value={user.email || ""}
+                disabled
+                className="w-full text-sm text-white/40 outline-none border border-[#373737] rounded-xl pl-4 pr-10 py-3 cursor-not-allowed"
+                style={inputStyle}
+              />
+              <LockIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+            </div>
+            <p className="text-white/30 text-[11px]">
+              From your sign-in, so it can't be changed here.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-white/40 text-xs">You're...</label>
+            <div className="relative">
+              <select
+                value={workStatus}
+                onChange={(e) => handleWorkStatusChange(e.target.value)}
+                className={`${inputClass} appearance-none pr-10 ${
+                  workStatus ? "text-white" : "text-white/40"
+                }`}
+                style={inputStyle}
+              >
+                <option value="" disabled>
+                  Select one
+                </option>
+                {WORK_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} className="text-white">
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/40" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-white/40 text-xs">Designation</label>
+            <input
+              type="text"
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              placeholder="Product Designer"
+              disabled={isExploring}
+              className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={inputStyle}
+            />
+            {isExploring && (
+              <p className="text-white/30 text-[11px]">
+                Since you're still exploring, your designation will
+                automatically be set to NA.
+              </p>
+            )}
+          </div>
+
+          {detailsError && (
+            <p className="text-red-400 text-xs">{detailsError}</p>
+          )}
+
+          <button
+            onClick={handleSubmitProfessional}
+            disabled={submitting}
+            className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
+          >
+            {submitting ? (
+              "Saving…"
+            ) : (
+              <>
+                Continue
+                <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
+              </>
+            )}
+          </button>
+
+          {/* <button
+            onClick={handleFillSampleProfessional}
+            className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
+          >
+            Fill sample details (demo)
+          </button> */}
+        </div>
+      </div>
+    );
   }
 
   if (phase === "details") {
@@ -249,7 +499,8 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
                   className="text-xs font-semibold px-4 py-2 rounded-full border transition-colors"
                   style={{
                     borderColor: year === y ? "rgba(255,208,7,0.6)" : "#373737",
-                    backgroundColor: year === y ? "rgba(255,208,7,0.12)" : "transparent",
+                    backgroundColor:
+                      year === y ? "rgba(255,208,7,0.12)" : "transparent",
                     color: year === y ? "#FFD007" : "rgba(255,255,255,0.6)"
                   }}
                 >
@@ -283,14 +534,18 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
             />
           </div>
 
-          {detailsError && <p className="text-red-400 text-xs">{detailsError}</p>}
+          {detailsError && (
+            <p className="text-red-400 text-xs">{detailsError}</p>
+          )}
 
           <button
             onClick={handleSubmitDetails}
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
           >
-            {submitting ? "Saving…" : (
+            {submitting ? (
+              "Saving…"
+            ) : (
               <>
                 Continue
                 <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
@@ -322,12 +577,11 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
         )}
         <div className="flex flex-col gap-1.5">
           <h1 className="text-white font-bold text-2xl leading-tight">
-            {isProfessional ? "Working or a recent grad — nice." : "You're a student — nice."}
+            You're a student — nice.
           </h1>
           <p className="text-white/50 text-sm">
-            {isProfessional
-              ? "Just your name and email — we'll ask a couple of quick details next."
-              : "Upload your college ID and we'll read your college, year and program from it. Nothing else to fill in."}
+            Upload your college ID and we'll read your college, year and program
+            from it. Nothing else to fill in.
           </p>
         </div>
 
@@ -359,51 +613,55 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
           </p>
         </div>
 
-        {!isProfessional && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-white/40 text-xs">College ID</label>
-            <label
-              className="flex items-center gap-3 border border-dashed border-[#373737] rounded-xl px-4 py-3.5 cursor-pointer hover:border-white/25 transition-colors"
-              style={inputStyle}
-            >
-              <IdCardIcon className="text-white/40 flex-shrink-0" />
-              <span className="flex-1 min-w-0">
-                <span className="block text-white text-sm font-semibold truncate">
-                  {file ? file.name : "Photo or PDF, front side"}
-                </span>
-                <span className="block text-white/30 text-[11px]">Up to {MAX_FILE_MB} MB</span>
-              </span>
-              <span className="flex-shrink-0 text-white text-xs font-semibold rounded-lg border border-[#373737] px-3 py-2 hover:bg-white/5 transition-colors">
-                Choose file
-              </span>
-              <input
-                type="file"
-                accept={ID_ACCEPTED_TYPES}
-                onChange={handleFileChange}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
-            {uploading && <p className="text-evolve-yellow text-xs mt-1">reading your ID…</p>}
-            {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
-          </div>
-        )}
-
-        {!isProfessional && (
-          <button
-            onClick={goToManualDetails}
-            className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
+        <div className="flex flex-col gap-1.5">
+          <label className="text-white/40 text-xs">College ID</label>
+          <label
+            className="flex items-center gap-3 border border-dashed border-[#373737] rounded-xl px-4 py-3.5 cursor-pointer hover:border-white/25 transition-colors"
+            style={inputStyle}
           >
-            Prefer to type it in? Enter details manually
-          </button>
-        )}
+            <IdCardIcon className="text-white/40 flex-shrink-0" />
+            <span className="flex-1 min-w-0">
+              <span className="block text-white text-sm font-semibold truncate">
+                {file ? file.name : "Photo or PDF, front side"}
+              </span>
+              <span className="block text-white/30 text-[11px]">
+                Up to {MAX_FILE_MB} MB
+              </span>
+            </span>
+            <span className="flex-shrink-0 text-white text-xs font-semibold rounded-lg border border-[#373737] px-3 py-2 hover:bg-white/5 transition-colors">
+              Choose file
+            </span>
+            <input
+              type="file"
+              accept={ID_ACCEPTED_TYPES}
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+          {uploading && (
+            <p className="text-evolve-yellow text-xs mt-1">reading your ID…</p>
+          )}
+          {uploadError && (
+            <p className="text-red-400 text-xs mt-1">{uploadError}</p>
+          )}
+        </div>
 
         <button
-          onClick={isProfessional ? handleContinueProfessional : handleContinueUpload}
-          disabled={isProfessional ? !name.trim() : !file || uploading}
+          onClick={goToManualDetails}
+          className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
+        >
+          Prefer to type it in? Enter details manually
+        </button>
+
+        <button
+          onClick={handleContinueUpload}
+          disabled={!file || uploading}
           className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
         >
-          {uploading ? "Reading your ID…" : (
+          {uploading ? (
+            "Reading your ID…"
+          ) : (
             <>
               Continue
               <img src={right_arrow_icon} alt="" className="w-3.5 h-3.5" />
@@ -411,14 +669,12 @@ export default function StudentOnboarding({ user, role = "student", onBack, onCo
           )}
         </button>
 
-        {!isProfessional && (
-          <button
-            onClick={handleUseSampleId}
-            className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
-          >
-            Use a sample student ID (demo)
-          </button>
-        )}
+        {/* <button
+          onClick={handleUseSampleId}
+          className="self-center text-white/30 text-[11px] font-semibold underline hover:text-white/60 transition-colors"
+        >
+          Use a sample student ID (demo)
+        </button> */}
       </div>
     </div>
   );

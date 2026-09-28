@@ -161,20 +161,28 @@ export default function Onboarding() {
           details.name || user.name || user.email
         ));
 
+      const roleFields =
+        role === "professional"
+          ? {
+              persona: "Professional & Recent Grad",
+              work_status: details.work_status,
+              designation: details.designation
+            }
+          : {
+              persona: "Design school student",
+              school_name: details.college_name,
+              standard: details.year,
+              program: details.program,
+              stream: details.stream
+            };
+
       const { error: profileErr } = await supabase
         .from("profiles")
         .update({
           username,
           name: details.name,
           role,
-          persona:
-            role === "professional"
-              ? "Professional & Recent Grad"
-              : "Design school student",
-          school_name: details.college_name,
-          standard: details.year,
-          program: details.program,
-          stream: details.stream,
+          ...roleFields,
           student_id_verification_status: details.verificationStatus,
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
