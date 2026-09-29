@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../../supabaseClient";
 import AIReportModal from "./AIReportModal";
 import EvolveReviewsPanel from "./EvolveReviewsPanel";
+import AIProfilesTab from "./AIProfilesTab";
 import MentorshipV2Tab from "./MentorshipV2Tab";
 import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
@@ -1593,6 +1594,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` },
     { id: "evolve-reviews", label: "evolve portfolio reviews" },
+    { id: "ai-profiles", label: "ai profiles" },
     {
       id: "m-portfolios",
       label: `m-portfolios (${mentorshipPortfolios.length})`
@@ -2797,6 +2799,13 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             list/detail state.
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "evolve-reviews" && !isAnantAdmin && <EvolveReviewsPanel />}
+
+        {/* ══════════════════════════════════════════════════════════════
+            AI PROFILES TAB — every user with a portfolio/resume on file,
+            the source we generated from, and the resulting ai_profile,
+            side by side for eyeballing quality + a per-user regenerate.
+        ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "ai-profiles" && !isAnantAdmin && <AIProfilesTab />}
 
         {/* Individual mentorship (mentorship_enrollments etc.) — separate,
             isolated flow from the batch tabs above. Self-contained, same
