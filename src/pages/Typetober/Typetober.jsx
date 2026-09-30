@@ -38,7 +38,7 @@ function Landing({ onAccept, currentDay }) {
             className="bg-evolve-pink text-white font-extrabold text-[13px] px-3.5 py-2 rounded-full border-2 border-white"
             style={{ transform: "rotate(-4deg)" }}
           >
-            Starts Oct 1 - Oct 30
+            October 1 - 31st
             {/* {currentDay === 0
               ? "Starts Oct 1 - Oct 30"
               : currentDay >= 26
@@ -217,7 +217,11 @@ function useFoldGrid(tileCount) {
       const headerH = headerRef.current?.offsetHeight || 0;
       const cs = getComputedStyle(section);
       const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-      setBox({ width: gridRef.current?.clientWidth || 0, avail: viewH - headerH - pad, viewH });
+      setBox({
+        width: gridRef.current?.clientWidth || 0,
+        avail: viewH - headerH - pad,
+        viewH
+      });
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -229,7 +233,14 @@ function useFoldGrid(tileCount) {
   const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
   const base = vw >= 1024 ? 8 : vw >= 768 ? 6 : 4;
   if (!box.width || box.avail <= 0) {
-    return { sectionRef, headerRef, gridRef, cols: base, slots: Math.ceil((tileCount + base) / base) * base, minHeight: undefined };
+    return {
+      sectionRef,
+      headerRef,
+      gridRef,
+      cols: base,
+      slots: Math.ceil((tileCount + base) / base) * base,
+      minHeight: undefined
+    };
   }
 
   const rowsFor = (cols) => {
@@ -243,7 +254,14 @@ function useFoldGrid(tileCount) {
   const neededRows = Math.ceil(tileCount / cols);
   const rows = neededRows <= screenRows ? screenRows : neededRows + 1;
 
-  return { sectionRef, headerRef, gridRef, cols, slots: rows * cols, minHeight: box.viewH };
+  return {
+    sectionRef,
+    headerRef,
+    gridRef,
+    cols,
+    slots: rows * cols,
+    minHeight: box.viewH
+  };
 }
 
 function Fold({
@@ -274,7 +292,8 @@ function Fold({
   for (let k = 0; k < pendingCount; k++) tiles.push({ type: "pending" });
   others.forEach((item) => tiles.push({ type: "img", item }));
 
-  const { sectionRef, headerRef, gridRef, cols, slots, minHeight } = useFoldGrid(tiles.length);
+  const { sectionRef, headerRef, gridRef, cols, slots, minHeight } =
+    useFoldGrid(tiles.length);
   while (tiles.length < slots) tiles.push({ type: "ghost" });
 
   return (
