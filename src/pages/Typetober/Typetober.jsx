@@ -38,11 +38,12 @@ function Landing({ onAccept, currentDay }) {
             className="bg-evolve-pink text-white font-extrabold text-[13px] px-3.5 py-2 rounded-full border-2 border-white"
             style={{ transform: "rotate(-4deg)" }}
           >
-            {currentDay === 0
-              ? "Starts Oct 1"
+            Starts Oct 1 - Oct 30
+            {/* {currentDay === 0
+              ? "Starts Oct 1 - Oct 30"
               : currentDay >= 26
                 ? "26 letters live"
-                : `Day ${currentDay} is open`}
+                : `Day ${currentDay} is open`} */}
           </span>
           <div className="flex flex-col md:items-center">
             <span className="text-black font-bold text-[16px] md:text-[32px] mb-1">
@@ -64,7 +65,7 @@ function Landing({ onAccept, currentDay }) {
             <br />
             <span>Illustrate them your way.</span>
             <br />
-            <b className="text-[#7A034A]">Take the challenge. Win prizes.</b>
+            <b className="text-[#DF0586]">Take the challenge. Win prizes.</b>
           </p>
           {countdown && (
             <p className="text-black/55 text-[14px] font-bold">
@@ -92,7 +93,11 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
         style={{ outline: `2px solid ${accent}`, outlineOffset: "-2px" }}
       >
         {t.item.imageUrl && (
-          <img src={t.item.imageUrl} alt={`Example ${ch}`} className="w-full h-full object-cover" />
+          <img
+            src={t.item.imageUrl}
+            alt={`Example ${ch}`}
+            className="w-full h-full object-cover"
+          />
         )}
         <span
           className="absolute left-1 bottom-1 text-black text-[9px] font-extrabold px-1.5 py-0.5 rounded-full"
@@ -188,7 +193,17 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   );
 }
 
-function Fold({ i, ch, isToday, wallItems, examples, mySubs, streak, onAdd, onView }) {
+function Fold({
+  i,
+  ch,
+  isToday,
+  wallItems,
+  examples,
+  mySubs,
+  streak,
+  onAdd,
+  onView
+}) {
   const accent = accentFor(i);
   const mine = wallItems.filter((it) => it.isMine);
   const others = wallItems.filter((it) => !it.isMine);
@@ -229,7 +244,11 @@ function Fold({ i, ch, isToday, wallItems, examples, mySubs, streak, onAdd, onVi
         {isToday && streak?.current > 0 && (
           <span
             className="text-[12px] font-bold text-black bg-evolve-inchworm rounded-full px-2.5 py-1 flex-none"
-            title={streak.today ? "You've submitted today" : "Submit today to keep it going"}
+            title={
+              streak.today
+                ? "You've submitted today"
+                : "Submit today to keep it going"
+            }
           >
             🔥 {streak.current}-day streak
           </span>
@@ -262,7 +281,15 @@ function Fold({ i, ch, isToday, wallItems, examples, mySubs, streak, onAdd, onVi
   );
 }
 
-function Board({ currentDay, wallByLetter, examplesByLetter, mySubmissions, streak, onAdd, onView }) {
+function Board({
+  currentDay,
+  wallByLetter,
+  examplesByLetter,
+  mySubmissions,
+  streak,
+  onAdd,
+  onView
+}) {
   if (currentDay === 0) {
     const cd = formatCountdown();
     return (
@@ -338,8 +365,14 @@ export default function Typetober() {
   const currentDay =
     import.meta.env.DEV && devDay !== null ? devDay : getCurrentDay();
 
-  const { wallByLetter, examplesByLetter, streak, mySubmissions, stats, refresh } =
-    useTypetoberData(user);
+  const {
+    wallByLetter,
+    examplesByLetter,
+    streak,
+    mySubmissions,
+    stats,
+    refresh
+  } = useTypetoberData(user);
 
   // Shared links open one submission in the lightbox:
   //   /typetober/<username>/<letter>[-n]  (e.g. /typetober/arnab/a-2)

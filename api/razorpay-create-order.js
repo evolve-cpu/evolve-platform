@@ -48,7 +48,8 @@ export default async function handler(req, res) {
       razorpay_signature,
       product,
       letterIndex,
-      imagePath
+      imagePath,
+      currency: requestedCurrency
     } = body || {};
 
     // ── Typetober (₹10 per submission, any number of submissions per letter) ─
@@ -72,7 +73,11 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "unauthorized" });
       }
 
-      const TYPETOBER_AMOUNT_PAISE = 1000; // ₹10, flat
+      // ₹10 in India, $1 for international cards (smallest currency unit).
+      // Priced here, never trusted from the client.
+      const TYPETOBER_PRICES = { INR: 1000, USD: 100 };
+      const ttCurrency = requestedCurrency === "USD" ? "USD" : "INR";
+      const TYPETOBER_AMOUNT_PAISE = TYPETOBER_PRICES[ttCurrency];
 
       // Synchronous, server-side payment verification.
       if (action === "verify") {
@@ -131,6 +136,7 @@ export default async function handler(req, res) {
             letter_index: letterIndex,
             image_path: imagePath,
             amount: TYPETOBER_AMOUNT_PAISE / 100,
+            currency: ttCurrency,
             status: "success"
           })
           .select()
@@ -157,7 +163,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           amount: TYPETOBER_AMOUNT_PAISE,
-          currency: "INR",
+          currency: ttCurrency,
           receipt: `tt_${ttUser.id.slice(0, 8)}_${letterIndex}_${Date.now()}`
         })
       });
@@ -174,6 +180,7 @@ export default async function handler(req, res) {
           letter_index: letterIndex,
           image_path: imagePath,
           amount: TYPETOBER_AMOUNT_PAISE / 100,
+          currency: ttCurrency,
           razorpay_order_id: order.id,
           status: "pending"
         });
@@ -185,7 +192,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         order_id: order.id,
         amount: TYPETOBER_AMOUNT_PAISE,
-        currency: "INR",
+        currency: ttCurrency,
         key_id: process.env.RAZORPAY_KEY_ID
       });
     }

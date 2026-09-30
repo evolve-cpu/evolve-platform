@@ -281,7 +281,7 @@ const FAQS = [
     "Why is there a fee?",
     "It keeps everyone committed, and it's only Rs 10 per submission."
   ],
-  ["Can I pay from outside India?", "No."],
+  ["Can I pay from outside India?", "Yes. International cards pay $1 per submission."],
   [
     "My payment failed. What now?",
     <>

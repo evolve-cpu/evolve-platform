@@ -124,6 +124,7 @@ const Navigation = ({
     { path: "/portfolio-review", label: "Portfolio Review" },
     { path: "/mentorship", label: "Mentorship" },
     { path: "/events", label: "Events" },
+    { path: "/typetober", label: "Typetober" },
     { path: "/contact", label: "Contact Us", isModal: true }
   ];
 

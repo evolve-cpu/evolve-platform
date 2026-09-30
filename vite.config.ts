@@ -68,7 +68,8 @@ function mentorshipDevPaymentBypass(env) {
                 user_id: user.id,
                 letter_index: letterIndex,
                 image_path: imagePath,
-                amount: 10,
+                amount: payload.currency === "USD" ? 1 : 10,
+                currency: payload.currency === "USD" ? "USD" : "INR",
                 status: "success"
               })
               .select()

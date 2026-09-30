@@ -47,7 +47,20 @@ function toSquareBlob(file) {
   });
 }
 
+// ₹10 in India, $1 international. Default from the browser's timezone; the
+// user can switch, and the server sets the actual amount.
+const PRICE = { INR: "₹10", USD: "$1" };
+function defaultCurrency() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    return tz === "Asia/Kolkata" || tz === "Asia/Calcutta" ? "INR" : "USD";
+  } catch {
+    return "INR";
+  }
+}
+
 export default function UploadSheet({ open, onClose, user, letterIndex, onSuccess }) {
+  const [currency, setCurrency] = useState(defaultCurrency);
   const [step, setStep] = useState(1); // 1 pick, 2 pay, 3 done
   const [blob, setBlob] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -122,6 +135,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
           token: session.access_token,
           letterIndex,
           imagePath: path,
+          currency,
           devConfirm: true
         });
         setBusy(false);
@@ -136,7 +150,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
       const orderRes = await fetch("/api/razorpay-create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: "typetober", token: session.access_token, letterIndex, imagePath: path })
+        body: JSON.stringify({ product: "typetober", token: session.access_token, letterIndex, imagePath: path, currency })
       });
       const order = await orderRes.json();
       if (!orderRes.ok) throw new Error(order?.error || "couldn't start payment");
@@ -229,7 +243,26 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
       {step === 2 && (
         <>
           <h2 className="text-[26px] font-extrabold">Lock it in</h2>
-          <p className="text-white/50 text-[14px] mt-1">₹10 per submission and it goes on the wall. Add as many as you like; each one counts toward your certificates.</p>
+          <p className="text-white/50 text-[14px] mt-1">{PRICE[currency]} per submission and it goes on the wall. Add as many as you like; each one counts toward your certificates.</p>
+          <div className="flex gap-1 bg-white/5 rounded-full p-1 mt-4" role="radiogroup" aria-label="Pay with">
+            {[
+              ["INR", "India · ₹10"],
+              ["USD", "International · $1"]
+            ].map(([c, label]) => (
+              <button
+                key={c}
+                role="radio"
+                aria-checked={currency === c}
+                disabled={busy}
+                onClick={() => setCurrency(c)}
+                className={`flex-1 py-2 rounded-full font-extrabold text-[13px] ${
+                  currency === c ? "bg-evolve-yellow text-black" : "text-white/60"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-3 bg-white/5 rounded-2xl p-3 mt-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-none">
               {preview && <img src={preview} alt={letter} className="w-full h-full object-cover" />}
@@ -238,7 +271,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
               <b className="block">Typetober · Letter {letter}</b>
               <span className="text-white/50 text-[13px]">@{user?.username || user?.name}</span>
             </div>
-            <div className="text-evolve-yellow font-extrabold text-[22px]">₹10</div>
+            <div className="text-evolve-yellow font-extrabold text-[22px]">{PRICE[currency]}</div>
           </div>
           <label className="flex items-start gap-2 mt-4 text-white/60 text-[13px]">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
@@ -250,7 +283,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
             onClick={pay}
             className="tt-btn w-full mt-4 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
           >
-            {busy ? "Confirming payment…" : "Pay ₹10 & submit"}
+            {busy ? "Confirming payment…" : `Pay ${PRICE[currency]} & submit`}
           </button>
           <button onClick={() => setStep(1)} className="w-full mt-2 text-white/40 text-[13px] font-bold">
             Back

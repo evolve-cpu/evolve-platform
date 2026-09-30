@@ -27,6 +27,11 @@ create table if not exists typetober_submissions (
   created_at timestamptz not null default now()
 );
 
+-- INR (₹10) for Indian payments, USD ($1) for international ones.
+alter table typetober_submissions
+  add column if not exists currency text not null default 'INR'
+  check (currency in ('INR', 'USD'));
+
 -- Earlier drafts allowed one submission per letter. If that version was
 -- already run, drop the constraint so repeat submissions can be inserted.
 alter table typetober_submissions
