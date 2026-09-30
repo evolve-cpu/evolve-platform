@@ -36,7 +36,7 @@ export function getEventYear() {
 
 /** Calendar date (local) that letter `i` (0=A .. 25=Z) unlocks on. */
 export function dateForLetter(i, year = getEventYear()) {
-  return new Date(year, 9, i + 1); // month 9 = October
+  return new Date(year, 8, i + 1); // month 9 = October
 }
 
 /**
@@ -47,7 +47,7 @@ export function dateForLetter(i, year = getEventYear()) {
  */
 export function getCurrentDay(year = getEventYear()) {
   const now = new Date();
-  const start = new Date(year, 9, 1);
+  const start = new Date(year, 8, 1);
   const end = new Date(year, 10, 1); // Nov 1 — exclusive
   if (now < start) return 0;
   if (now >= end) return 26;
