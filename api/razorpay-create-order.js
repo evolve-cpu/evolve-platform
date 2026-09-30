@@ -26,9 +26,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    // verify env vars are present
-    if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
-    if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+    // Supabase is needed by every branch (auth + reads/writes); Razorpay
+    // itself is only needed once we actually talk to their API — checked
+    // right before each of those calls below instead of blanket-here, so
+    // the devConfirm (local-dev, no real payment) branches keep working
+    // without real Razorpay keys configured.
     if (!process.env.SUPABASE_URL) return res.status(500).json({ error: "SUPABASE_URL missing" });
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" });
 
@@ -43,8 +45,150 @@ export default async function handler(req, res) {
       action,
       razorpay_order_id,
       razorpay_payment_id,
-      razorpay_signature
+      razorpay_signature,
+      product,
+      letterIndex,
+      imagePath
     } = body || {};
+
+    // ── Typetober (₹10 per submission, any number of submissions per letter) ─
+    // Folded into this same file rather than a new api/ route to stay under
+    // Vercel Hobby's 12-function cap (see the identical note above for the
+    // individual-mentorship branch). Fully separate table
+    // (typetober_submissions) and code path — never touches mentorship or
+    // portfolio-review logic below.
+    if (product === "typetober") {
+      if (!token) return res.status(401).json({ error: "unauthorized" });
+
+      const supabaseTT = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const {
+        data: { user: ttUser },
+        error: ttAuthError
+      } = await supabaseTT.auth.getUser(token);
+      if (ttAuthError || !ttUser) {
+        return res.status(401).json({ error: "unauthorized" });
+      }
+
+      const TYPETOBER_AMOUNT_PAISE = 1000; // ₹10, flat
+
+      // Synchronous, server-side payment verification.
+      if (action === "verify") {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+          return res.status(400).json({ error: "missing payment verification fields" });
+        }
+        const expectedSignature = crypto
+          .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+          .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+          .digest("hex");
+        if (expectedSignature !== razorpay_signature) {
+          return res.status(400).json({ error: "payment verification failed" });
+        }
+
+        const { data: pending } = await supabaseTT
+          .from("typetober_submissions")
+          .select("id")
+          .eq("razorpay_order_id", razorpay_order_id)
+          .eq("user_id", ttUser.id)
+          .maybeSingle();
+        if (!pending) {
+          return res.status(404).json({ error: "submission record not found" });
+        }
+
+        const { data: submission, error: updateErr } = await supabaseTT
+          .from("typetober_submissions")
+          .update({ razorpay_payment_id, razorpay_signature, status: "success" })
+          .eq("id", pending.id)
+          .select()
+          .single();
+        if (updateErr) {
+          console.error("typetober submission update error:", updateErr);
+          return res.status(500).json({ error: "server error" });
+        }
+        return res.status(200).json({ ok: true, submission });
+      }
+
+      if (
+        typeof letterIndex !== "number" ||
+        letterIndex < 0 ||
+        letterIndex > 25 ||
+        !imagePath
+      ) {
+        return res.status(400).json({ error: "missing letter or image" });
+      }
+
+      // Local-dev-only stand-in for a confirmed payment.
+      if (devConfirm) {
+        if (process.env.NODE_ENV === "production") {
+          return res.status(403).json({ error: "not available in production" });
+        }
+        const { data: submission, error: insertErr } = await supabaseTT
+          .from("typetober_submissions")
+          .insert({
+            user_id: ttUser.id,
+            letter_index: letterIndex,
+            image_path: imagePath,
+            amount: TYPETOBER_AMOUNT_PAISE / 100,
+            status: "success"
+          })
+          .select()
+          .single();
+        if (insertErr) {
+          console.error("dev typetober insert error:", insertErr);
+          return res.status(500).json({ error: "server error" });
+        }
+        return res.status(200).json({ ok: true, submission });
+      }
+
+      if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+      if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+
+      const ttAuth = Buffer.from(
+        `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
+      ).toString("base64");
+
+      const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${ttAuth}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: TYPETOBER_AMOUNT_PAISE,
+          currency: "INR",
+          receipt: `tt_${ttUser.id.slice(0, 8)}_${letterIndex}_${Date.now()}`
+        })
+      });
+      if (!orderRes.ok) {
+        console.error("Razorpay order error:", await orderRes.text());
+        return res.status(500).json({ error: "failed to create order" });
+      }
+      const order = await orderRes.json();
+
+      const { error: insertErr } = await supabaseTT
+        .from("typetober_submissions")
+        .insert({
+          user_id: ttUser.id,
+          letter_index: letterIndex,
+          image_path: imagePath,
+          amount: TYPETOBER_AMOUNT_PAISE / 100,
+          razorpay_order_id: order.id,
+          status: "pending"
+        });
+      if (insertErr) {
+        console.error("typetober pending insert error:", insertErr);
+        return res.status(500).json({ error: "server error" });
+      }
+
+      return res.status(200).json({
+        order_id: order.id,
+        amount: TYPETOBER_AMOUNT_PAISE,
+        currency: "INR",
+        key_id: process.env.RAZORPAY_KEY_ID
+      });
+    }
 
     // ── individual mentorship (core / application_support) ───────────────
     if (INDIVIDUAL_PLAN_AMOUNTS_PAISE[plan]) {
@@ -128,6 +272,9 @@ export default async function handler(req, res) {
       }
 
       // default: create a new Razorpay order + pending enrollment row
+      if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+      if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+
       const individualAuth = Buffer.from(
         `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
       ).toString("base64");
@@ -188,6 +335,9 @@ export default async function handler(req, res) {
     }
 
     const amount = PLAN_AMOUNTS_PAISE[plan];
+    if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+    if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+
     const auth = Buffer.from(
       `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
     ).toString("base64");

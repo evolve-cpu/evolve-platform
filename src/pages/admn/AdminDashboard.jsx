@@ -7,6 +7,7 @@ import AIProfilesTab from "./AIProfilesTab";
 import MentorshipV2Tab from "./MentorshipV2Tab";
 import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
+import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1607,7 +1608,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "accelerator", label: "accelerator 1:1" },
     { id: "mentorship-v2", label: "mentorship (individual)" },
     { id: "events", label: "events" },
-    { id: "verification", label: "verification" }
+    { id: "verification", label: "verification" },
+    { id: "typetober", label: "typetober examples" }
   ];
 
   // Anant tabs: faculty → students; uni_admin / evolve admin → students + faculty + college admin
@@ -2820,6 +2822,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {/* "Get evolve verified" — call slots + booking review queue.
             Self-contained, same pattern as EventsTab. */}
         {activeTab === "verification" && !isAnantAdmin && <VerificationTab />}
+        {activeTab === "typetober" && !isAnantAdmin && <TypetoberExamplesTab />}
 
         {/* ══════════════════════════════════════════════════════════════
             REVIEWS TAB (evolve non-Anant admin only)

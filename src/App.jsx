@@ -1110,6 +1110,7 @@ import AnantStudentProfile from "./pages/anant/AnantStudentProfile.jsx";
 import { isAnant } from "./tenants/index.js";
 import { AnantThemeProvider } from "./context/AnantThemeContext.jsx";
 const SignIn = lazy(() => import("./pages/SignIn.jsx"));
+const Typetober = lazy(() => import("./pages/Typetober/Typetober.jsx"));
 const Payment = lazy(() => import("./pages/Payment.jsx"));
 const MentorshipSession = lazy(() => import("./pages/MentorshipSession.jsx"));
 const Terms = lazy(() => import("./pages/Terms.jsx"));
@@ -1223,6 +1224,7 @@ const AppLayout = () => {
       path.startsWith("/mentorship-session") ||
       path.startsWith("/evolve-in-person") ||
       path.startsWith("/events") ||
+      path.startsWith("/typetober") ||
       path.startsWith("/profile/");
     if (exempt) return;
 
@@ -1283,6 +1285,7 @@ const AppLayout = () => {
       path.startsWith("/mentorship-session") ||
       path.startsWith("/evolve-in-person") ||
       path.startsWith("/profile/") ||
+      path.startsWith("/typetober") ||
       path.startsWith("/events/");
     if (exempt) return;
 
@@ -1306,6 +1309,7 @@ const AppLayout = () => {
     "/evolve-in-person/self-reflection",
     "/evolve-in-person/reality-check",
     "/signin",
+    "/typetober",
     "/payment",
     "/mentorship-session",
     "/admin",
@@ -1329,6 +1333,7 @@ const AppLayout = () => {
     !location.pathname.startsWith("/space/") &&
     !location.pathname.startsWith("/institute/") &&
     !location.pathname.startsWith("/invite/") &&
+    !location.pathname.startsWith("/typetober/") &&
     !isEventDetailRoute;
 
   // Global landing gets the "global" footer (designers / institutions /
@@ -1394,6 +1399,7 @@ const AppLayout = () => {
       setIsHomeIntroActive(false);
     } else if (
       location.pathname === "/signin" ||
+      location.pathname.startsWith("/typetober") ||
       location.pathname === "/payment" ||
       location.pathname === "/mentorship-session" ||
       location.pathname === "/admin" ||
@@ -1795,6 +1801,8 @@ const AppLayout = () => {
               }
             />
             <Route path="/signin" element={<SignIn />} />
+            {/* /typetober/:username/:letter[-n] are share links; one route so the page never remounts */}
+            <Route path="/typetober/*" element={<Typetober />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
             <Route

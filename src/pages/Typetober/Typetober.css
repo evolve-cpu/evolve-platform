@@ -1,0 +1,293 @@
+.tt-root {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  color: #f4f4f4;
+  font-family: "Bricolage Grotesque", Arial, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.tt-scroller {
+  position: absolute;
+  inset: 56px 0 0 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tt-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* landing backdrop: generated letter-art tiles (4 / 7 / 9 columns), same as the reference mock */
+.tt-wall {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--wc, 4), 1fr);
+  gap: 6px;
+  padding: 6px;
+  align-content: start;
+}
+.tt-wall > div {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.tt-wall svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* empty grid slots on the board */
+.tt-slot {
+  transition: border-color 0.15s, background-color 0.15s, transform 0.12s;
+}
+.tt-slot:active {
+  transform: scale(0.97);
+}
+.tt-slot-open {
+  border: 1.5px dashed rgba(244, 244, 244, 0.3);
+  background: rgba(244, 244, 244, 0.04);
+  color: rgba(244, 244, 244, 0.16);
+}
+.tt-slot-open:hover {
+  border-color: var(--c);
+  color: var(--c);
+  background: rgba(244, 244, 244, 0.07);
+}
+.tt-slot-add {
+  border: 2px dashed var(--c);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+}
+.tt-slot-add:hover {
+  background: color-mix(in srgb, var(--c) 20%, transparent);
+}
+
+/* FAQ accordion (native <details>) with a rotating chevron */
+.tt-faq summary {
+  list-style: none;
+}
+.tt-faq summary::-webkit-details-marker {
+  display: none;
+}
+.tt-faq summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid rgba(244, 244, 244, 0.5);
+  border-bottom: 2px solid rgba(244, 244, 244, 0.5);
+  transform: rotate(45deg);
+  margin-top: -4px;
+  transition: transform 0.2s;
+}
+.tt-faq[open] summary::after {
+  transform: rotate(-135deg);
+  margin-top: 4px;
+}
+
+/* modal shell: fixed header area, content scrolls with a thin, rounded thumb */
+.tt-sheet-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(244, 244, 244, 0.22) transparent;
+  overscroll-behavior: contain;
+}
+.tt-sheet-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.tt-sheet-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 18px 0;
+}
+.tt-sheet-scroll::-webkit-scrollbar-thumb {
+  background: rgba(244, 244, 244, 0.22);
+  border-radius: 999px;
+}
+.tt-sheet-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 244, 244, 0.38);
+}
+
+/* icon buttons: floating boxes, no shared bar — press feels like the mock's .ibtn */
+.tt-ibtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #161616;
+  border: 1.5px solid rgba(244, 244, 244, 0.24);
+  box-shadow: 3px 3px 0 rgba(244, 244, 244, 0.09);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.tt-ibtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(244, 244, 244, 0.09);
+}
+.tt-ibtn-wide {
+  width: auto;
+  padding: 0 14px 0 5px;
+}
+
+/* pressed-shadow buttons, matching the reference mock's .cta / .btn */
+.tt-cta,
+.tt-btn {
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.tt-cta {
+  box-shadow: 5px 5px 0 #806804;
+}
+.tt-cta:active {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 #806804;
+}
+.tt-btn {
+  box-shadow: 4px 4px 0 #df0586;
+}
+.tt-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 #df0586;
+}
+.tt-btn:disabled {
+  box-shadow: none;
+}
+
+/* ink-reveal landing */
+.tt-inkhint {
+  position: absolute;
+  left: 20px;
+  top: 92px;
+  font-weight: 700;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.04em;
+  transition: opacity 0.4s;
+  z-index: 5;
+  pointer-events: none;
+}
+.tt-inkhint-gone {
+  opacity: 0;
+}
+@media (min-width: 768px) {
+  .tt-inkhint {
+    left: 50%;
+    transform: translateX(-50%);
+    top: auto;
+    bottom: 34px;
+    font-size: 16px;
+    white-space: nowrap;
+  }
+}
+
+.tt-rail {
+  position: absolute;
+  right: 0;
+  top: 66px;
+  bottom: 14px;
+  width: 40px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 20;
+  padding: 6px 0;
+  border-radius: 20px 0 0 20px;
+  background: rgba(22, 22, 22, 0.65);
+  backdrop-filter: blur(6px);
+}
+.tt-rail::-webkit-scrollbar {
+  display: none;
+}
+.tt-rail button {
+  flex: none;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #f4f4f4;
+}
+.tt-rail button.locked {
+  color: rgba(255, 255, 255, 0.25);
+}
+.tt-rail button.done {
+  color: #ffd007;
+}
+.tt-rail button.active {
+  color: #000;
+}
+.tt-rail button.active span {
+  background: #df0586;
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+}
+
+@keyframes tt-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 208, 7, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 208, 7, 0);
+  }
+}
+.tt-tile-pulse {
+  animation: tt-pulse 1.1s ease 2;
+}
+
+@keyframes tt-pop {
+  from {
+    transform: scale(0.4) rotate(-10deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.tt-tile-pop {
+  animation: tt-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.tt-toast {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 20px;
+  z-index: 200;
+  background: #f4f4f4;
+  color: #161616;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  text-align: center;
+  transform: translateY(140%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.2, 1.2, 0.4, 1), opacity 0.2s;
+  pointer-events: none;
+}
+.tt-toast.show {
+  transform: none;
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .tt-toast {
+    left: 50%;
+    right: auto;
+    width: min(440px, calc(100% - 48px));
+    transform: translateX(-50%) translateY(140%);
+  }
+  .tt-toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+}

@@ -202,3 +202,25 @@ export async function signInWithLinkedIn(destination = "/") {
   });
   if (error) throw error;
 }
+
+/**
+ * Sign in with Discord via OAuth redirect — used by /typetober's auth sheet.
+ *
+ * NOTE: this requires the Discord provider to be turned on in the Supabase
+ * Dashboard (Auth → Providers → Discord) with a Discord OAuth app's client
+ * ID/secret configured there. Supabase supports it natively; it's just not
+ * enabled yet, so this call will fail with a provider-not-enabled error
+ * until that's done.
+ *
+ * @throws {Error} if OAuth setup fails
+ */
+export async function signInWithDiscord(destination = "/") {
+  flagPostOAuthRedirectCheck();
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "discord",
+    options: {
+      redirectTo: `${window.location.origin}${destination}`
+    }
+  });
+  if (error) throw error;
+}

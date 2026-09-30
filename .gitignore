@@ -26,3 +26,4 @@ scripts/output/
 *.sw?
 .vercel
 .gitignore
+.env*
