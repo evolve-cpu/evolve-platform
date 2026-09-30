@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
@@ -193,6 +193,59 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   );
 }
 
+const GRID_GAP = 6; // gap-1.5
+
+/**
+ * Sizes one letter's grid so it fills a full screen of the board with
+ * empty boxes. Base columns: 4 on phones, 6 on tablets, 8 on desktop.
+ * When the tiles no longer fit on one screen, columns grow (boxes get
+ * smaller) up to double the base; past that, rows keep being added with one
+ * spare row at the end.
+ */
+function useFoldGrid(tileCount) {
+  const sectionRef = useRef(null);
+  const headerRef = useRef(null);
+  const gridRef = useRef(null);
+  const [box, setBox] = useState({ width: 0, avail: 0, viewH: 0 });
+
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const scroller = section?.closest(".tt-scroller");
+    if (!section || !scroller) return;
+    const measure = () => {
+      const viewH = scroller.clientHeight;
+      const headerH = headerRef.current?.offsetHeight || 0;
+      const cs = getComputedStyle(section);
+      const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      setBox({ width: gridRef.current?.clientWidth || 0, avail: viewH - headerH - pad, viewH });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(scroller);
+    if (gridRef.current) ro.observe(gridRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const base = vw >= 1024 ? 8 : vw >= 768 ? 6 : 4;
+  if (!box.width || box.avail <= 0) {
+    return { sectionRef, headerRef, gridRef, cols: base, slots: Math.ceil((tileCount + base) / base) * base, minHeight: undefined };
+  }
+
+  const rowsFor = (cols) => {
+    const tile = (box.width - GRID_GAP * (cols - 1)) / cols;
+    return Math.max(1, Math.floor((box.avail + GRID_GAP) / (tile + GRID_GAP)));
+  };
+
+  let cols = base;
+  while (cols < base * 2 && tileCount > rowsFor(cols) * cols) cols++;
+  const screenRows = rowsFor(cols);
+  const neededRows = Math.ceil(tileCount / cols);
+  const rows = neededRows <= screenRows ? screenRows : neededRows + 1;
+
+  return { sectionRef, headerRef, gridRef, cols, slots: rows * cols, minHeight: box.viewH };
+}
+
 function Fold({
   i,
   ch,
@@ -221,12 +274,17 @@ function Fold({
   for (let k = 0; k < pendingCount; k++) tiles.push({ type: "pending" });
   others.forEach((item) => tiles.push({ type: "img", item }));
 
-  const target = Math.max(tiles.length + 6, 10);
-  while (tiles.length < target) tiles.push({ type: "ghost" });
+  const { sectionRef, headerRef, gridRef, cols, slots, minHeight } = useFoldGrid(tiles.length);
+  while (tiles.length < slots) tiles.push({ type: "ghost" });
 
   return (
-    <section id={`tt-fold-${i}`} className="pt-3 pb-8 max-w-[1240px] mx-auto">
-      <div className="flex items-end gap-3 pb-3">
+    <section
+      ref={sectionRef}
+      id={`tt-fold-${i}`}
+      className="pt-3 pb-8 max-w-[1240px] mx-auto"
+      style={{ minHeight }}
+    >
+      <div ref={headerRef} className="flex items-end gap-3 pb-3">
         <div
           className="font-extrabold text-[52px] md:text-[84px] leading-[0.85]"
           style={{ color: accent }}
@@ -264,7 +322,11 @@ function Fold({
           </span>
         )}
       </div>
-      <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-1.5">
+      <div
+        ref={gridRef}
+        className="grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {tiles.map((t, idx) => (
           <Tile
             key={idx}
@@ -443,6 +505,8 @@ export default function Typetober() {
       sessionStorage.removeItem("tt_pending");
       setStage("board");
     }
+    // Email sign-in completes in place (no redirect), so close the sheet here.
+    if (user) setSheet((s) => (s?.type === "auth" ? null : s));
   }, [user]);
 
   function showToast(msg) {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ReactDOM from "react-dom";
-import { signInWithGoogle, signInWithLinkedIn } from "../../auth/signInLogic";
+import { signInWithGoogle, signInWithLinkedIn, sendOtp, verifyOtp } from "../../auth/signInLogic";
 import { accentFor } from "./lib/constants";
 
 /**
@@ -49,9 +49,131 @@ export function SheetShell({ open, onClose, children, header }) {
   );
 }
 
+const FIELD =
+  "w-full h-14 rounded-2xl bg-white/5 border border-white/15 px-4 text-[16px] text-white placeholder-white/30 focus:outline-none focus:border-evolve-yellow";
+
+/**
+ * Email sign-in, same flow as the main /signin page: name + email → 6-digit
+ * code → verified. The session then lands via onAuthStateChange and
+ * Typetober.jsx closes this sheet.
+ */
+function EmailSignIn({ onBack }) {
+  const [step, setStep] = useState("form"); // form | code
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [note, setNote] = useState("");
+
+  async function send(e) {
+    e?.preventDefault();
+    if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("Enter your name and a valid email.");
+      return;
+    }
+    setError("");
+    setNote("");
+    setBusy(true);
+    try {
+      await sendOtp(name.trim(), email.trim().toLowerCase());
+      setStep("code");
+      if (e === "resend") setNote("New code sent.");
+    } catch (err) {
+      setError(err.message || "Couldn't send the code. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verify(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      await verifyOtp(email.trim().toLowerCase(), code);
+    } catch (err) {
+      setError(err.message || "That code didn't work. Check it and try again.");
+      setBusy(false);
+    }
+  }
+
+  if (step === "code") {
+    return (
+      <form onSubmit={verify} className="mt-6">
+        <p className="text-white/60 text-[15px] leading-snug">
+          We sent a 6-digit code to <b className="text-white">{email.trim()}</b>.
+        </p>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoFocus
+          placeholder="••••••"
+          aria-label="6-digit code"
+          className={`${FIELD} mt-4 text-center tracking-[.5em] text-[22px] font-extrabold`}
+        />
+        {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
+        {note && <p className="text-evolve-inchworm text-[13px] mt-3">{note}</p>}
+        <button
+          type="submit"
+          disabled={code.length < 6 || busy}
+          className="tt-btn w-full mt-4 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
+        >
+          {busy ? "Checking…" : "Verify & continue"}
+        </button>
+        <div className="flex justify-between mt-3 text-[13px] font-bold text-white/50">
+          <button type="button" onClick={() => setStep("form")}>
+            Change email
+          </button>
+          <button type="button" disabled={busy} onClick={() => send("resend")}>
+            Resend code
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={send} className="flex flex-col gap-3 mt-6">
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Your name"
+        autoComplete="name"
+        autoFocus
+        aria-label="Name"
+        className={FIELD}
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        autoComplete="email"
+        aria-label="Email"
+        className={FIELD}
+      />
+      {error && <p className="text-red-400 text-[13px]">{error}</p>}
+      <button
+        type="submit"
+        disabled={busy}
+        className="tt-btn w-full bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
+      >
+        {busy ? "Sending code…" : "Send me a code"}
+      </button>
+      <button type="button" onClick={onBack} className="text-white/50 text-[13px] font-bold">
+        Back to other options
+      </button>
+    </form>
+  );
+}
+
 export function AuthSheet({ open, onClose }) {
   const [loading, setLoading] = useState("");
   const [error, setError] = useState("");
+  const [emailMode, setEmailMode] = useState(false);
 
   async function go(provider) {
     setError("");
@@ -75,6 +197,9 @@ export function AuthSheet({ open, onClose }) {
         certificates.
       </p>
 
+      {emailMode ? (
+        <EmailSignIn onBack={() => setEmailMode(false)} />
+      ) : (
       <div className="flex flex-col gap-3 mt-6">
         <button
           onClick={() => go("google")}
@@ -123,7 +248,24 @@ export function AuthSheet({ open, onClose }) {
             ? "Opening LinkedIn…"
             : "Continue with LinkedIn"}
         </button>
+
+        <div className="flex items-center gap-3 text-white/40 text-[14px] my-1 before:content-[''] before:flex-1 before:h-px before:bg-white/15 after:content-[''] after:flex-1 after:h-px after:bg-white/15">
+          or continue with email
+        </div>
+
+        <button
+          onClick={() => setEmailMode(true)}
+          disabled={!!loading}
+          className="w-full h-14 border border-white/20 text-white font-semibold text-[16px] rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 hover:bg-white/5"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2.5" />
+            <path d="M3.5 7l8.5 6 8.5-6" />
+          </svg>
+          Continue with email
+        </button>
       </div>
+      )}
 
       {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
     </SheetShell>
