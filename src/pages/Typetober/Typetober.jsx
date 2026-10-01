@@ -98,6 +98,8 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
             src={t.item.imageUrl}
             alt={`Example ${ch}`}
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
         )}
         <span
@@ -126,6 +128,8 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
             src={t.item.imageUrl}
             alt={ch}
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
         )}
         {mine && (
@@ -295,7 +299,7 @@ function Fold({
     <section
       ref={sectionRef}
       id={`tt-fold-${i}`}
-      className="pt-3 pb-8 max-w-[1240px] mx-auto"
+      className="tt-fold pt-3 pb-8 max-w-[1240px] mx-auto"
       style={{ minHeight }}
     >
       <div ref={headerRef} className="flex items-end gap-3 pb-3">

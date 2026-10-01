@@ -368,3 +368,13 @@
   transform: translateX(-50%) translate(4px, 4px);
   box-shadow: 1px 1px 0 #6d6d73;
 }
+
+/* Skip layout/paint for letter grids that are off screen: 26 full-screen
+   grids rendered at once made scrolling laggy. */
+.tt-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
+.tt-scroller {
+  overscroll-behavior: contain;
+}
