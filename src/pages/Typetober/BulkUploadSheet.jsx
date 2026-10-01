@@ -399,7 +399,17 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
             setError(err.message || "Payment couldn't be confirmed.");
           }
         },
-        modal: { ondismiss: () => setBusy(false) }
+        modal: {
+          // Closed without paying: release the order so nothing stays pending.
+          ondismiss: () => {
+            setBusy(false);
+            fetch("/api/razorpay-create-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ product: "typetober", action: "cancel", token: token, razorpay_order_id: order.order_id })
+            }).catch(() => {});
+          }
+        }
       });
       rzp.on("payment.failed", () => {
         setBusy(false);

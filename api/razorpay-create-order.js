@@ -93,6 +93,23 @@ export default async function handler(req, res) {
         }
       }
 
+      // Checkout closed without paying: mark that order's rows failed so
+      // they never count or show anywhere. Never touches paid rows.
+      if (action === "cancel") {
+        if (!razorpay_order_id) return res.status(400).json({ error: "missing order" });
+        const { error: cancelErr } = await supabaseTT
+          .from("typetober_submissions")
+          .update({ status: "failed" })
+          .eq("razorpay_order_id", razorpay_order_id)
+          .eq("user_id", ttUser.id)
+          .eq("status", "pending");
+        if (cancelErr) {
+          console.error("typetober cancel error:", cancelErr);
+          return res.status(500).json({ error: "server error" });
+        }
+        return res.status(200).json({ ok: true });
+      }
+
       // ₹10 in India, $1 for international cards (smallest currency unit),
       // per image. Priced here, never trusted from the client.
       const TYPETOBER_PRICES = { INR: 1000, USD: 100 };

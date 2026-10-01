@@ -277,9 +277,6 @@ function Fold({
   const accent = accentFor(i);
   const mine = wallItems.filter((it) => it.isMine);
   const others = wallItems.filter((it) => !it.isMine);
-  const pendingCount = (mySubs || []).filter(
-    (r) => r.status === "pending"
-  ).length;
 
   // Order: admin examples (max two), then the upload slot (the very first
   // box when there are no examples), then the user's own work, then
@@ -288,7 +285,6 @@ function Fold({
   const tiles = (examples || []).map((item) => ({ type: "example", item }));
   tiles.push({ type: "add" });
   mine.forEach((item) => tiles.push({ type: "mine", item }));
-  for (let k = 0; k < pendingCount; k++) tiles.push({ type: "pending" });
   others.forEach((item) => tiles.push({ type: "img", item }));
 
   const { sectionRef, headerRef, gridRef, cols, slots, minHeight } =
