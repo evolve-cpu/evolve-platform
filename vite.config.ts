@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { createClient } from "@supabase/supabase-js";
 import { recogniseLetters, validRecogniseImages } from "./api/_typetoberRecognise.js";
+import { postSubmissionsToDiscord } from "./api/_typetoberDiscord.js";
 
 // Dev-only stand-in for api/razorpay-create-order.js's devConfirm branch
 // (mentorship plans + Typetober submissions).
@@ -127,6 +128,11 @@ function mentorshipDevPaymentBypass(env) {
               res.end(JSON.stringify({ error: insertErr.message || "server error" }));
               return;
             }
+            // Posts to Discord only if DISCORD_TYPETOBER_WEBHOOK_URL is in your .env.
+            await postSubmissionsToDiscord(supabase, submissions, {
+              webhookUrl: env.DISCORD_TYPETOBER_WEBHOOK_URL,
+              supabaseUrl
+            });
             res.statusCode = 200;
             res.end(JSON.stringify({ ok: true, submissions, submission: submissions[0] }));
           } catch (err) {

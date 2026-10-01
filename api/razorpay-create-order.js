@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "node:crypto";
 import { recogniseLetters, validRecogniseImages } from "./_typetoberRecognise.js";
+import { postSubmissionsToDiscord, buildDailyReport, postReportToDiscord } from "./_typetoberDiscord.js";
 
 // TEMP: testing amount — ₹5 instead of real plan prices. Revert before going live.
 const PLAN_AMOUNTS_PAISE = {
@@ -22,6 +23,29 @@ const INDIVIDUAL_PLAN_AMOUNTS_PAISE =
     : { core: 100, application_support: 100 };
 
 export default async function handler(req, res) {
+  // Daily Typetober report to Discord. Vercel Cron calls this with GET
+  // (see vercel.json), once a day just after midnight India time, and
+  // reports the India day that just ended. Folded in here to stay under
+  // the Hobby function cap. ?day=YYYY-MM-DD reports a specific day.
+  if (req.method === "GET" && req.query?.cron === "typetober-report") {
+    if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    try {
+      const supabaseCron = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const day =
+        /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || "")
+          ? req.query.day
+          : new Date(Date.now() + 5.5 * 3600000 - 86400000).toISOString().slice(0, 10);
+      const report = await buildDailyReport(supabaseCron, day);
+      const result = await postReportToDiscord(report);
+      return res.status(200).json({ day, ...result });
+    } catch (err) {
+      console.error("typetober report cron error:", err);
+      return res.status(500).json({ error: "report failed" });
+    }
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "method not allowed" });
   }
@@ -143,6 +167,7 @@ export default async function handler(req, res) {
         if (!submissions?.length) {
           return res.status(404).json({ error: "submission record not found" });
         }
+        await postSubmissionsToDiscord(supabaseTT, submissions);
         return res.status(200).json({ ok: true, submissions, submission: submissions[0] });
       }
 
@@ -188,6 +213,7 @@ export default async function handler(req, res) {
           console.error("dev typetober insert error:", insertErr);
           return res.status(500).json({ error: "server error" });
         }
+        await postSubmissionsToDiscord(supabaseTT, submissions);
         return res.status(200).json({ ok: true, submissions, submission: submissions[0] });
       }
 
