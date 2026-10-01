@@ -113,7 +113,7 @@ export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide }) 
           {user && (
             <button onClick={onAvatarClick} className="tt-ibtn tt-ibtn-wide" aria-label="your profile">
               <img src={avatarSrc} alt={firstName} className="w-7 h-7 rounded-full" />
-              <span className="text-[14px] font-bold text-white">{firstName}</span>
+              <span className="hidden md:inline text-[14px] font-bold text-white">{firstName}</span>
             </button>
           )}
         </div>

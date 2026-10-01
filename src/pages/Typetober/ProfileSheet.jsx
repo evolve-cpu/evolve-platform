@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SheetShell } from "./Sheets";
+import { BulkIcon } from "./BulkUploadSheet";
 import { CERT_TIERS, LETTERS } from "./lib/constants";
 import { renderCertificateCard } from "./lib/shareCard";
 
@@ -67,6 +68,7 @@ export default function ProfileSheet({
   streak,
   mySubmissions,
   currentDay,
+  onBulk,
   onGoToLetter,
   onViewLetter,
   onLogout
@@ -88,6 +90,19 @@ export default function ProfileSheet({
         </div>
       </div>
 
+      {onBulk && (
+        <button
+          onClick={onBulk}
+          className="tt-btn tt-btn-dark w-full mt-5 flex items-center gap-3 text-left rounded-2xl px-4 py-3"
+        >
+          <BulkIcon />
+          <span>
+            <b className="block font-extrabold text-[16px]">Bulk upload</b>
+            <span className="text-white/50 text-[12px] font-normal">Upload many letters, pay once</span>
+          </span>
+        </button>
+      )}
+
       <div className="grid grid-cols-2 gap-2 mt-5">
         <div className="bg-white/5 rounded-2xl p-4">
           <div className="text-[28px] font-extrabold leading-none text-evolve-inchworm">
@@ -106,7 +121,7 @@ export default function ProfileSheet({
 
       {stats.total === 0 ? (
         <div className="mt-5 bg-white/5 rounded-2xl p-4 text-white/50 text-[14px]">
-          Nothing here yet — submit today's letter on the board to get started.
+          Nothing here yet. Add a letter on the board, or upload several at once with Bulk upload.
         </div>
       ) : (
         <>

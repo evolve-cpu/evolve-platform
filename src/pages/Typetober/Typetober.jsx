@@ -7,6 +7,7 @@ import InkWall from "./InkWall";
 import { AuthSheet, PrizeSheet, GuideSheet, Lightbox } from "./Sheets";
 import ProfileSheet from "./ProfileSheet";
 import UploadSheet from "./UploadSheet";
+import BulkUploadSheet, { BulkIcon } from "./BulkUploadSheet";
 import ShareSheet from "./ShareSheet";
 import { useTypetoberData, publicImageUrl } from "./lib/useTypetoberData";
 import {
@@ -90,7 +91,7 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
       <button
         onClick={() => onView(i, t.item)}
         className="relative aspect-square rounded-lg overflow-hidden bg-white/5"
-        style={{ outline: `2px solid ${accent}`, outlineOffset: "-2px" }}
+        style={{ outline: `1px solid ${accent}`, outlineOffset: "-1px" }}
       >
         {t.item.imageUrl && (
           <img
@@ -157,12 +158,6 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
           {ch}
         </span>
         <span
-          className="absolute left-1.5 bottom-1.5 text-[10px] md:text-[11px] font-extrabold"
-          style={{ color: accent }}
-        >
-          Add yours
-        </span>
-        <span
           className="absolute right-1.5 bottom-1.5 w-5 h-5 rounded-full grid place-items-center"
           style={{ background: accent }}
         >
@@ -186,7 +181,7 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
       style={{ "--c": accent }}
       aria-label={`Open slot for ${ch}`}
     >
-      <span className="font-extrabold text-[30px] md:text-[40px] leading-none">
+      <span className="font-medium text-[30px] md:text-[40px] leading-none">
         {ch}
       </span>
     </button>
@@ -267,7 +262,7 @@ function useFoldGrid(tileCount) {
 function Fold({
   i,
   ch,
-  isToday,
+  showStreak,
   wallItems,
   examples,
   mySubs,
@@ -312,13 +307,13 @@ function Fold({
         </div>
         <div className="flex-1 min-w-0 pb-1">
           <div className="text-[13px] md:text-[15px] font-bold">
-            Day {i + 1} · {ordinalOctDate(i)}
+            Letter {i + 1} of 26
           </div>
           <div className="text-[13px] text-white/40">
             {wallItems.length} submissions
           </div>
         </div>
-        {isToday && streak?.current > 0 && (
+        {showStreak && streak?.current > 0 && (
           <span
             className="text-[12px] font-bold text-black bg-evolve-inchworm rounded-full px-2.5 py-1 flex-none"
             title={
@@ -328,11 +323,6 @@ function Fold({
             }
           >
             🔥 {streak.current}-day streak
-          </span>
-        )}
-        {isToday && (
-          <span className="text-[12px] font-bold text-evolve-pink border border-evolve-pink rounded-full px-2.5 py-1 flex-none">
-            Today
           </span>
         )}
         {mine.length > 0 && (
@@ -395,7 +385,7 @@ function Board({
           key={ch}
           i={i}
           ch={ch}
-          isToday={i === currentDay - 1}
+          showStreak={i === 0}
           wallItems={wallByLetter.get(i) || []}
           examples={examplesByLetter.get(i)}
           mySubs={mySubmissions.get(i)}
@@ -404,7 +394,7 @@ function Board({
           onView={onView}
         />
       ))}
-      <div className="h-16" />
+      <div className="h-28" />
     </div>
   );
 }
@@ -519,9 +509,37 @@ export default function Typetober() {
     return `/typetober/${encodeURIComponent(user.username)}/${slug}`;
   }
 
+  // Admin report: records that this account opened Typetober (and whether
+  // it was just created from our sign-in sheet) plus a heartbeat for the
+  // daily-active and online-now counts. See typetober_ping in the migration.
+  const signedInHereRef = useRef(false);
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    const ping = () => {
+      if (document.visibilityState !== "visible") return;
+      supabase
+        .rpc("typetober_ping", {
+          signed_in_here:
+            signedInHereRef.current || !!sessionStorage.getItem("tt_pending")
+        })
+        .then(({ error }) => {
+          if (error) console.error("typetober ping error:", error);
+        });
+    };
+    ping();
+    const t = setInterval(ping, 120000);
+    document.addEventListener("visibilitychange", ping);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", ping);
+    };
+  }, [userId]);
+
   useEffect(() => {
     if (user && sessionStorage.getItem("tt_pending")) {
       sessionStorage.removeItem("tt_pending");
+      signedInHereRef.current = true;
       setStage("board");
     }
     // Email sign-in completes in place (no redirect), so close the sheet here.
@@ -570,6 +588,14 @@ export default function Typetober() {
     setSheet({ type: "upload", letterIndex: i });
   }
 
+  function handleBulk() {
+    if (!user) {
+      handleAccept();
+      return;
+    }
+    setSheet({ type: "bulk" });
+  }
+
   function handleView(i, item) {
     setSheet({ type: "lightbox", letterIndex: i, item, mine: !!item?.isMine });
   }
@@ -607,6 +633,15 @@ export default function Typetober() {
             mySubmissions={mySubmissions}
             onClick={handleRailClick}
           />
+          {currentDay > 0 && (
+            <button
+              onClick={handleBulk}
+              className="tt-bulk-fab ml-[-22px] md:ml-[-30px]"
+            >
+              <BulkIcon />
+              Bulk upload
+            </button>
+          )}
         </>
       )}
 
@@ -623,6 +658,7 @@ export default function Typetober() {
           streak={streak}
           mySubmissions={mySubmissions}
           currentDay={currentDay}
+          onBulk={currentDay > 0 ? () => setSheet({ type: "bulk" }) : undefined}
           onGoToLetter={(i) => {
             closeSheet();
             goToFold(i);
@@ -653,9 +689,22 @@ export default function Typetober() {
           onClose={closeSheet}
           user={user}
           letterIndex={sheet.letterIndex}
+          onBulk={() => setSheet({ type: "bulk" })}
           onSuccess={(i) => {
             refresh();
             showToast(`${LETTERS[i]} is live on the wall`);
+          }}
+        />
+      )}
+
+      {sheet?.type === "bulk" && (
+        <BulkUploadSheet
+          open
+          onClose={closeSheet}
+          user={user}
+          onSuccess={(n) => {
+            refresh();
+            showToast(`${n} ${n === 1 ? "letter is" : "letters are"} live on the wall`);
           }}
         />
       )}

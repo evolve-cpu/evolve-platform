@@ -42,17 +42,12 @@ export function dateForLetter(i, year = getEventYear()) {
 /**
  * How many letters are open for submission right now.
  * 0  → event hasn't started yet (before Oct 1)
- * 1-26 → that many letters (A.. ) are open, most recent = "today"
- * 26 → also covers "event is over", so the full board stays browsable/postable-to
+ * 26 → from Oct 1 on, every letter is live at once (and stays open after
+ *      the event so the board remains browsable)
  */
 export function getCurrentDay(year = getEventYear()) {
-  const now = new Date();
   const start = new Date(year, 9, 1);
-  const end = new Date(year, 10, 1); // Nov 1 — exclusive
-  if (now < start) return 0;
-  if (now >= end) return 26;
-  const diffDays = Math.floor((now - start) / 86400000);
-  return Math.min(26, diffDays + 1);
+  return new Date() < start ? 0 : 26;
 }
 
 export function ordinalOctDate(letterIndex, year = getEventYear()) {

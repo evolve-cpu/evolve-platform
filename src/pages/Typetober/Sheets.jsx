@@ -11,7 +11,7 @@ import { accentFor } from "./lib/constants";
  * Anything passed as `header` (e.g. a title + tabs) stays pinned above the
  * scrolling body.
  */
-export function SheetShell({ open, onClose, children, header }) {
+export function SheetShell({ open, onClose, children, header, footer }) {
   if (!open) return null;
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-[10050] flex items-end md:items-center justify-center">
@@ -33,9 +33,14 @@ export function SheetShell({ open, onClose, children, header }) {
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4 md:hidden" />
               {header}
             </div>
-            <div className="tt-sheet-scroll flex-1 min-h-0 overflow-y-auto px-6 md:px-8 pt-1 pb-8 md:pb-9">
+            <div className={`tt-sheet-scroll flex-1 min-h-0 overflow-y-auto px-6 md:px-8 pt-1 ${footer ? "pb-4" : "pb-8 md:pb-9"}`}>
               {children}
             </div>
+            {footer && (
+              <div className="flex-none px-6 md:px-8 pt-3 pb-5 md:pb-6 border-t border-white/10">
+                {footer}
+              </div>
+            )}
           </>
         ) : (
           <div className="tt-sheet-scroll flex-1 min-h-0 overflow-y-auto px-6 md:px-8 pt-3 pb-8 md:pt-8 md:pb-9">
@@ -193,7 +198,7 @@ export function AuthSheet({ open, onClose }) {
         Join the challenge
       </h2>
       <p className="text-white/60 mt-2 text-[15px] leading-snug">
-        Sign in to unlock today's letter, submit your work and collect
+        Sign in to submit your letters, upload in bulk and collect
         certificates.
       </p>
 
@@ -373,11 +378,11 @@ const GUIDELINES = [
   ],
   [
     "Format & themes",
-    "Create one letter per day (A–Z) from 1 to 31 October. There are no themes, so you have full creative freedom. We encourage you to submit all 26 alphabets by 31 October. You can upload them together or daily."
+    "All 26 letters (A–Z) are open from 1 to 31 October. There are no themes, so you have full creative freedom. We encourage you to submit all 26 alphabets by 31 October. Upload them one at a time or all together with bulk upload."
   ],
   [
     "Submissions & fees",
-    "Submit unlimited entries per letter across paper or digital categories. Participation costs ₹10 per letter. All entries must be submitted by 31 October, 11:59 PM IST."
+    "Submit unlimited entries per letter across paper or digital categories. Participation costs ₹10 ($1 internationally) per entry. All entries must be submitted by 31 October, 11:59 PM IST."
   ],
   [
     "Strict no-AI policy",
@@ -400,12 +405,12 @@ const FAQS = [
     "Yes, as many as you like. Each one is a separate submission with its own fee. Judges look at everything you submit."
   ],
   [
-    "What if I miss a day?",
-    "You can submit all the letters anytime before 31st Oct 2026."
+    "Do I have to post a letter every day?",
+    "No. Every letter is open, so submit them whenever you like before 31st Oct 2026."
   ],
   [
-    "Can I submit letters ahead of their date?",
-    "No. Submissions open on a daily basis, 1 letter a day."
+    "Can I upload several letters at once?",
+    "Yes. Use Bulk upload: pick your images, we match each one to its letter, you fix any we couldn't read, then pay once for all of them."
   ],
   [
     "Can I animate my letter?",

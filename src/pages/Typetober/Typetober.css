@@ -127,9 +127,12 @@
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 rgba(244, 244, 244, 0.09);
 }
-.tt-ibtn-wide {
-  width: auto;
-  padding: 0 14px 0 5px;
+/* Profile button: avatar only on phones, avatar + name from md up. */
+@media (min-width: 768px) {
+  .tt-ibtn-wide {
+    width: auto;
+    padding: 0 14px 0 5px;
+  }
 }
 
 /* pressed-shadow buttons, matching the reference mock's .cta / .btn */
@@ -290,4 +293,78 @@
   .tt-toast.show {
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* bulk upload */
+.tt-btn-dark {
+  background: #000;
+  color: #ffd007;
+  border: 2px solid #34343a;
+  box-shadow: 5px 5px 0 #6d6d73;
+}
+.tt-btn-dark:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 #6d6d73;
+}
+.tt-btn-dark:disabled {
+  box-shadow: none;
+}
+.tt-bk-lane {
+  transition: background-color 0.12s, border-color 0.12s;
+}
+.tt-bk-lane.tt-bk-hot {
+  border-color: #df0586 !important;
+  background: rgba(223, 5, 134, 0.18) !important;
+}
+.tt-bk-lift {
+  opacity: 0.35;
+}
+.tt-bk-dragging,
+.tt-bk-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+.tt-bk-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20000;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  will-change: transform;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 0 3px #ffd007;
+}
+.tt-bk-ghost img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tt-bulk-fab {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 22px;
+  border-radius: 16px;
+  background: #000;
+  color: #ffd007;
+  border: 2px solid #34343a;
+  box-shadow: 5px 5px 0 #6d6d73;
+  font-weight: 800;
+  font-size: 16px;
+  white-space: nowrap;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.tt-bulk-fab:active {
+  transform: translateX(-50%) translate(4px, 4px);
+  box-shadow: 1px 1px 0 #6d6d73;
 }

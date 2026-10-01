@@ -8,6 +8,7 @@ import MentorshipV2Tab from "./MentorshipV2Tab";
 import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
 import TypetoberExamplesTab from "./TypetoberExamplesTab";
+import TypetoberReportTab from "./TypetoberReportTab";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1609,6 +1610,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "mentorship-v2", label: "mentorship (individual)" },
     { id: "events", label: "events" },
     { id: "verification", label: "verification" },
+    { id: "typetober-report", label: "typetober report" },
     { id: "typetober", label: "typetober examples" }
   ];
 
@@ -2822,6 +2824,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {/* "Get evolve verified" — call slots + booking review queue.
             Self-contained, same pattern as EventsTab. */}
         {activeTab === "verification" && !isAnantAdmin && <VerificationTab />}
+        {activeTab === "typetober-report" && !isAnantAdmin && <TypetoberReportTab />}
         {activeTab === "typetober" && !isAnantAdmin && <TypetoberExamplesTab />}
 
         {/* ══════════════════════════════════════════════════════════════

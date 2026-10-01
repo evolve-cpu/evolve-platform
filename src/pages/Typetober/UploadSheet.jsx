@@ -1,65 +1,11 @@
 import { useRef, useState } from "react";
 import { SheetShell } from "./Sheets";
+import { BulkIcon } from "./BulkUploadSheet";
 import { supabase } from "../../supabaseClient";
-import { LETTERS, ordinalOctDate } from "./lib/constants";
+import { LETTERS } from "./lib/constants";
+import { loadRazorpayScript, toSquareBlob, PRICE, defaultCurrency } from "./lib/upload";
 
-function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (window.Razorpay) return resolve(true);
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.body.appendChild(s);
-  });
-}
-
-/**
- * Centre-crops any picked file to a 720x720 JPEG. Returns the blob to upload
- * plus a data: URL for the preview (blob: URLs are blocked by the site's
- * img-src CSP, which is why the preview used to come up empty).
- */
-function toSquareBlob(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = () => {
-      img.onload = () => {
-        const s = Math.min(img.width, img.height);
-        const canvas = document.createElement("canvas");
-        canvas.width = 720;
-        canvas.height = 720;
-        canvas
-          .getContext("2d")
-          .drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 720, 720);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
-        canvas.toBlob(
-          (blob) => (blob ? resolve({ blob, dataUrl }) : reject(new Error("crop failed"))),
-          "image/jpeg",
-          0.86
-        );
-      };
-      img.onerror = () => reject(new Error("that file didn't open"));
-      img.src = reader.result;
-    };
-    reader.onerror = () => reject(new Error("couldn't read that file"));
-    reader.readAsDataURL(file);
-  });
-}
-
-// ₹10 in India, $1 international. Default from the browser's timezone; the
-// user can switch, and the server sets the actual amount.
-const PRICE = { INR: "₹10", USD: "$1" };
-function defaultCurrency() {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    return tz === "Asia/Kolkata" || tz === "Asia/Calcutta" ? "INR" : "USD";
-  } catch {
-    return "INR";
-  }
-}
-
-export default function UploadSheet({ open, onClose, user, letterIndex, onSuccess }) {
+export default function UploadSheet({ open, onClose, user, letterIndex, onSuccess, onBulk }) {
   const [currency, setCurrency] = useState(defaultCurrency);
   const [step, setStep] = useState(1); // 1 pick, 2 pay, 3 done
   const [blob, setBlob] = useState(null);
@@ -211,7 +157,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
         <>
           <h2 className="text-[26px] font-extrabold">Drop your illustration</h2>
           <p className="text-white/50 text-[14px] mt-1">
-            Letter {letter} · {ordinalOctDate(letterIndex)}. Shoot it or upload it — we'll crop it to a square.
+            Letter {letter}. Shoot it or upload it — we'll crop it to a square.
           </p>
           <div className={`mt-4 aspect-square w-full mx-auto md:max-w-[min(100%,50vh)] relative rounded-2xl border-2 grid place-items-center overflow-hidden bg-white/5 ${preview ? "border-evolve-yellow" : "border-dashed border-white/20"}`}>
             {preview ? (
@@ -229,6 +175,18 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
               Take photo
             </button>
           </div>
+          {!preview && onBulk && (
+            <button
+              onClick={onBulk}
+              className="w-full mt-3 flex items-center gap-3 text-left rounded-2xl border-2 border-white/15 bg-black px-4 py-3"
+            >
+              <BulkIcon />
+              <span>
+                <b className="block text-evolve-yellow font-extrabold text-[15px]">Upload many at once</b>
+                <span className="text-white/50 text-[12px]">Add several letters together with one payment</span>
+              </span>
+            </button>
+          )}
           <p className="text-white/30 text-[12px] mt-3">Only your own work — copied or unlawful work gets removed, no refund.</p>
           <button
             disabled={!blob}

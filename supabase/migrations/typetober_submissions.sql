@@ -229,3 +229,61 @@ drop trigger if exists typetober_streak_on_success on typetober_submissions;
 create trigger typetober_streak_on_success
   after insert or update of status on typetober_submissions
   for each row execute function typetober_bump_streak();
+
+-- ── admin report: participants and daily activity ────────────────────
+-- Filled by typetober_ping(), which the /typetober page calls for a
+-- signed-in visitor on load and every couple of minutes while the tab is
+-- visible. Read only by the admin panel (service-role client), so no
+-- client read policies.
+--   typetober_participants: one row per account that has opened the page
+--     signed in. new_account = the account was created in the last hour
+--     and the person signed in from the Typetober sign-in sheet, i.e. an
+--     account created for Typetober.
+--   typetober_activity: one row per user per India day, with last_seen
+--     for "online now" (seen in the last 5 minutes).
+create table if not exists typetober_participants (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  joined_at timestamptz not null default now(),
+  new_account boolean not null default false
+);
+alter table typetober_participants enable row level security;
+
+create table if not exists typetober_activity (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null,
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  primary key (user_id, day)
+);
+alter table typetober_activity enable row level security;
+
+create index if not exists typetober_activity_last_seen_idx
+  on typetober_activity (last_seen);
+
+create or replace function typetober_ping(signed_in_here boolean default false)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  created timestamptz;
+begin
+  if uid is null then
+    return;
+  end if;
+  select u.created_at into created from auth.users u where u.id = uid;
+
+  insert into typetober_participants (user_id, joined_at, new_account)
+  values (uid, now(), coalesce(signed_in_here and created > now() - interval '1 hour', false))
+  on conflict (user_id) do nothing;
+
+  insert into typetober_activity (user_id, day, first_seen, last_seen)
+  values (uid, (now() at time zone 'Asia/Kolkata')::date, now(), now())
+  on conflict (user_id, day) do update set last_seen = now();
+end;
+$$;
+
+revoke all on function typetober_ping(boolean) from public;
+grant execute on function typetober_ping(boolean) to authenticated;

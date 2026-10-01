@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { createClient } from "@supabase/supabase-js";
+import { recogniseLetters, validRecogniseImages } from "./api/_typetoberRecognise.js";
 
 // Dev-only stand-in for api/razorpay-create-order.js's devConfirm branch
 // (mentorship plans + Typetober submissions).
@@ -31,7 +32,8 @@ function mentorshipDevPaymentBypass(env) {
         } catch {
           // fall through to the "invalid JSON" branch below
         }
-        if (!payload.devConfirm) return next(); // real order/verify calls: unhandled locally, as before
+        const isRecognise = payload.product === "typetober" && payload.action === "recognise";
+        if (!payload.devConfirm && !isRecognise) return next(); // real order/verify calls: unhandled locally, as before
 
         res.setHeader("Content-Type", "application/json");
         // `process.env` is NOT auto-populated from .env for vite.config.ts
@@ -45,11 +47,54 @@ function mentorshipDevPaymentBypass(env) {
           return;
         }
 
+        // Typetober bulk upload: letter recognition, same helper as production.
+        if (isRecognise) {
+          try {
+            const supabase = createClient(supabaseUrl, serviceKey);
+            const { data: { user }, error: authError } = await supabase.auth.getUser(payload.token);
+            if (authError || !user) {
+              res.statusCode = 401;
+              res.end(JSON.stringify({ error: "unauthorized" }));
+              return;
+            }
+            if (!validRecogniseImages(payload.images)) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "send 1-12 images" }));
+              return;
+            }
+            const letters = await recogniseLetters(
+              payload.images,
+              env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY
+            );
+            res.statusCode = 200;
+            res.end(JSON.stringify({ letters }));
+          } catch (err) {
+            console.error("[typetober-dev] recognise error:", err);
+            res.statusCode = 502;
+            res.end(JSON.stringify({ error: "couldn't read the images" }));
+          }
+          return;
+        }
+
         // Typetober: same effect as the real endpoint's devConfirm branch —
-        // one new paid ("success") row per submission, no Razorpay involved.
+        // one paid ("success") row per image, single or bulk, no Razorpay.
         if (payload.product === "typetober") {
-          const { letterIndex, imagePath } = payload;
-          if (typeof letterIndex !== "number" || letterIndex < 0 || letterIndex > 25 || !imagePath) {
+          const items = Array.isArray(payload.items)
+            ? payload.items
+            : [{ letterIndex: payload.letterIndex, imagePath: payload.imagePath }];
+          const valid =
+            items.length > 0 &&
+            items.length <= 60 &&
+            items.every(
+              (it) =>
+                it &&
+                Number.isInteger(it.letterIndex) &&
+                it.letterIndex >= 0 &&
+                it.letterIndex <= 25 &&
+                typeof it.imagePath === "string" &&
+                it.imagePath.length > 0
+            );
+          if (!valid) {
             res.statusCode = 400;
             res.end(JSON.stringify({ error: "missing letter or image" }));
             return;
@@ -62,18 +107,20 @@ function mentorshipDevPaymentBypass(env) {
               res.end(JSON.stringify({ error: "unauthorized" }));
               return;
             }
-            const { data: submission, error: insertErr } = await supabase
+            const usd = payload.currency === "USD";
+            const { data: submissions, error: insertErr } = await supabase
               .from("typetober_submissions")
-              .insert({
-                user_id: user.id,
-                letter_index: letterIndex,
-                image_path: imagePath,
-                amount: payload.currency === "USD" ? 1 : 10,
-                currency: payload.currency === "USD" ? "USD" : "INR",
-                status: "success"
-              })
-              .select()
-              .single();
+              .insert(
+                items.map((it) => ({
+                  user_id: user.id,
+                  letter_index: it.letterIndex,
+                  image_path: it.imagePath,
+                  amount: usd ? 1 : 10,
+                  currency: usd ? "USD" : "INR",
+                  status: "success"
+                }))
+              )
+              .select();
             if (insertErr) {
               console.error("[typetober-dev-payment-bypass] insert error:", insertErr);
               res.statusCode = 500;
@@ -81,7 +128,7 @@ function mentorshipDevPaymentBypass(env) {
               return;
             }
             res.statusCode = 200;
-            res.end(JSON.stringify({ ok: true, submission }));
+            res.end(JSON.stringify({ ok: true, submissions, submission: submissions[0] }));
           } catch (err) {
             console.error("[typetober-dev-payment-bypass] error:", err);
             res.statusCode = 500;

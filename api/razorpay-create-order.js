@@ -1,6 +1,7 @@
 // api/razorpay-create-order.js
 import { createClient } from "@supabase/supabase-js";
 import crypto from "node:crypto";
+import { recogniseLetters, validRecogniseImages } from "./_typetoberRecognise.js";
 
 // TEMP: testing amount — ₹5 instead of real plan prices. Revert before going live.
 const PLAN_AMOUNTS_PAISE = {
@@ -49,6 +50,8 @@ export default async function handler(req, res) {
       product,
       letterIndex,
       imagePath,
+      items: ttItemsRaw,
+      images: ttImages,
       currency: requestedCurrency
     } = body || {};
 
@@ -73,13 +76,31 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "unauthorized" });
       }
 
-      // ₹10 in India, $1 for international cards (smallest currency unit).
-      // Priced here, never trusted from the client.
+      // Bulk upload helper: which letter does each image show?
+      if (action === "recognise") {
+        if (!validRecogniseImages(ttImages)) {
+          return res.status(400).json({ error: "send 1-12 images" });
+        }
+        try {
+          const letters = await recogniseLetters(
+            ttImages,
+            process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
+          );
+          return res.status(200).json({ letters });
+        } catch (err) {
+          console.error("typetober recognise error:", err);
+          return res.status(502).json({ error: "couldn't read the images" });
+        }
+      }
+
+      // ₹10 in India, $1 for international cards (smallest currency unit),
+      // per image. Priced here, never trusted from the client.
       const TYPETOBER_PRICES = { INR: 1000, USD: 100 };
       const ttCurrency = requestedCurrency === "USD" ? "USD" : "INR";
-      const TYPETOBER_AMOUNT_PAISE = TYPETOBER_PRICES[ttCurrency];
+      const TYPETOBER_UNIT = TYPETOBER_PRICES[ttCurrency];
 
-      // Synchronous, server-side payment verification.
+      // Synchronous, server-side payment verification. A bulk order has one
+      // row per image, all sharing the order id; every one becomes paid.
       if (action === "verify") {
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
           return res.status(400).json({ error: "missing payment verification fields" });
@@ -92,60 +113,65 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: "payment verification failed" });
         }
 
-        const { data: pending } = await supabaseTT
-          .from("typetober_submissions")
-          .select("id")
-          .eq("razorpay_order_id", razorpay_order_id)
-          .eq("user_id", ttUser.id)
-          .maybeSingle();
-        if (!pending) {
-          return res.status(404).json({ error: "submission record not found" });
-        }
-
-        const { data: submission, error: updateErr } = await supabaseTT
+        const { data: submissions, error: updateErr } = await supabaseTT
           .from("typetober_submissions")
           .update({ razorpay_payment_id, razorpay_signature, status: "success" })
-          .eq("id", pending.id)
-          .select()
-          .single();
+          .eq("razorpay_order_id", razorpay_order_id)
+          .eq("user_id", ttUser.id)
+          .select();
         if (updateErr) {
           console.error("typetober submission update error:", updateErr);
           return res.status(500).json({ error: "server error" });
         }
-        return res.status(200).json({ ok: true, submission });
+        if (!submissions?.length) {
+          return res.status(404).json({ error: "submission record not found" });
+        }
+        return res.status(200).json({ ok: true, submissions, submission: submissions[0] });
       }
 
-      if (
-        typeof letterIndex !== "number" ||
-        letterIndex < 0 ||
-        letterIndex > 25 ||
-        !imagePath
-      ) {
+      // One image ({letterIndex, imagePath}) or a bulk list ({items: [...]}).
+      const ttItems = Array.isArray(ttItemsRaw)
+        ? ttItemsRaw
+        : [{ letterIndex, imagePath }];
+      const ttValid =
+        ttItems.length > 0 &&
+        ttItems.length <= 60 &&
+        ttItems.every(
+          (it) =>
+            it &&
+            Number.isInteger(it.letterIndex) &&
+            it.letterIndex >= 0 &&
+            it.letterIndex <= 25 &&
+            typeof it.imagePath === "string" &&
+            it.imagePath.startsWith(`${ttUser.id}/`)
+        );
+      if (!ttValid) {
         return res.status(400).json({ error: "missing letter or image" });
       }
+      const ttRows = (extra) =>
+        ttItems.map((it) => ({
+          user_id: ttUser.id,
+          letter_index: it.letterIndex,
+          image_path: it.imagePath,
+          amount: TYPETOBER_UNIT / 100,
+          currency: ttCurrency,
+          ...extra
+        }));
 
       // Local-dev-only stand-in for a confirmed payment.
       if (devConfirm) {
         if (process.env.NODE_ENV === "production") {
           return res.status(403).json({ error: "not available in production" });
         }
-        const { data: submission, error: insertErr } = await supabaseTT
+        const { data: submissions, error: insertErr } = await supabaseTT
           .from("typetober_submissions")
-          .insert({
-            user_id: ttUser.id,
-            letter_index: letterIndex,
-            image_path: imagePath,
-            amount: TYPETOBER_AMOUNT_PAISE / 100,
-            currency: ttCurrency,
-            status: "success"
-          })
-          .select()
-          .single();
+          .insert(ttRows({ status: "success" }))
+          .select();
         if (insertErr) {
           console.error("dev typetober insert error:", insertErr);
           return res.status(500).json({ error: "server error" });
         }
-        return res.status(200).json({ ok: true, submission });
+        return res.status(200).json({ ok: true, submissions, submission: submissions[0] });
       }
 
       if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
@@ -154,6 +180,7 @@ export default async function handler(req, res) {
       const ttAuth = Buffer.from(
         `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
       ).toString("base64");
+      const ttTotal = TYPETOBER_UNIT * ttItems.length;
 
       const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
         method: "POST",
@@ -162,9 +189,10 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          amount: TYPETOBER_AMOUNT_PAISE,
+          amount: ttTotal,
           currency: ttCurrency,
-          receipt: `tt_${ttUser.id.slice(0, 8)}_${letterIndex}_${Date.now()}`
+          receipt: `tt_${ttUser.id.slice(0, 8)}_${ttItems.length}_${Date.now()}`,
+          notes: { product: "typetober", images: String(ttItems.length) }
         })
       });
       if (!orderRes.ok) {
@@ -175,15 +203,7 @@ export default async function handler(req, res) {
 
       const { error: insertErr } = await supabaseTT
         .from("typetober_submissions")
-        .insert({
-          user_id: ttUser.id,
-          letter_index: letterIndex,
-          image_path: imagePath,
-          amount: TYPETOBER_AMOUNT_PAISE / 100,
-          currency: ttCurrency,
-          razorpay_order_id: order.id,
-          status: "pending"
-        });
+        .insert(ttRows({ razorpay_order_id: order.id, status: "pending" }));
       if (insertErr) {
         console.error("typetober pending insert error:", insertErr);
         return res.status(500).json({ error: "server error" });
@@ -191,8 +211,9 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         order_id: order.id,
-        amount: TYPETOBER_AMOUNT_PAISE,
+        amount: ttTotal,
         currency: ttCurrency,
+        count: ttItems.length,
         key_id: process.env.RAZORPAY_KEY_ID
       });
     }
