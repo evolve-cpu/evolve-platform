@@ -1472,11 +1472,15 @@ const AppLayout = () => {
 
       try {
         // Load critical images first (these update the progress bar)
-        await Promise.all(criticalImages.map(loadImage));
-
-        // Ensure minimum loading time for smooth UX
-        const minLoadTime = 800;
-        await new Promise((resolve) => setTimeout(resolve, minLoadTime));
+        // Never hold the site behind the loader for more than 2s: on slow
+        // connections waiting for every critical image pushed first paint
+        // (and PageSpeed's LCP) out by tens of seconds.
+        await Promise.race([
+          Promise.all(criticalImages.map(loadImage)).then(
+            () => new Promise((resolve) => setTimeout(resolve, 400))
+          ),
+          new Promise((resolve) => setTimeout(resolve, 2000))
+        ]);
 
         // Hide loading screen
         setLoadingProgress(100);
