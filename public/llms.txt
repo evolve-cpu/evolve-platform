@@ -27,9 +27,9 @@ evolve was built by Paperclip Design because no single platform was enough. The 
 
 ## Contact & Links
 
-- Website: https://evolvedesign.academy
-- Mentorship page: https://evolvedesign.academy/mentorship
-- Community page: https://evolvedesign.academy/community
-- Sessions page: https://evolvedesign.academy/webinars
-- About page: https://evolvedesign.academy/about
+- Website: https://www.evolvedesign.academy
+- Mentorship page: https://www.evolvedesign.academy/mentorship
+- Community page: https://www.evolvedesign.academy/community
+- Sessions page: https://www.evolvedesign.academy/webinars
+- About page: https://www.evolvedesign.academy/about
 - Founded by: Yagnesh Ahir, Paperclip Design

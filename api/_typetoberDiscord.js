@@ -9,7 +9,7 @@
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const COLORS = [0xffd007, 0xdf0586, 0xa35bfb, 0xc2fd5c, 0x01f1d9, 0xeb5328];
-const SITE = (process.env.SITE_URL || "https://evolvedesign.academy").replace(/\/$/, "");
+const SITE = (process.env.SITE_URL || "https://www.evolvedesign.academy").replace(/\/$/, "");
 
 const imageUrl = (supabaseUrl, path) =>
   `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/typetober-submissions/${path
