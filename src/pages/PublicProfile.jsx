@@ -1154,7 +1154,7 @@ export default function PublicProfile() {
               Identity (name/username) still shows here on mobile — desktop's
               copy of this now lives in ProfileTabPane's own header instead
               (see the block below, which is visitor-view only). */}
-          {!activeProgramme && (
+          {!activeProgramme && !(isOwner && activeTab === "profile") && (
             <div className="md:hidden flex flex-col">
               <div className="flex items-center gap-3 px-5 py-4 w-full text-left">
                 <div className="relative w-12 h-12 flex-shrink-0">
@@ -1284,22 +1284,17 @@ export default function PublicProfile() {
               )}
 
               {isOwner ? (
-                <ProfileTabPane
-                  user={user}
-                  onGoToEvents={() => handleTabChange("events")}
-                />
+                <ProfileTabPane user={user} />
               ) : (
                 card?.ai_profile && (
-                  <Section title="AI-built profile">
-                    <AIProfileReveal
-                      profile={card.ai_profile}
-                      portfolioLink={card.portfolio_link}
-                      portfolioFileUrl={card.portfolio_file_url}
-                      resumeLink={card.resume_link}
-                      resumeFileUrl={card.resume_file_url}
-                      socialLinks={card.social_links}
-                    />
-                  </Section>
+                  <AIProfileReveal
+                    profile={card.ai_profile}
+                    portfolioLink={card.portfolio_link}
+                    portfolioFileUrl={card.portfolio_file_url}
+                    resumeLink={card.resume_link}
+                    resumeFileUrl={card.resume_file_url}
+                    socialLinks={card.social_links}
+                  />
                 )
               )}
             </div>

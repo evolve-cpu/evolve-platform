@@ -564,9 +564,9 @@ export function SpiralTimeline({ entries }) {
 
       <div
         ref={frameRef}
-        className="relative rounded-2xl border border-white/10 bg-[#0d0d0f] p-3 sm:p-4 [touch-action:pan-y]"
+        className="relative w-full h-[260px] sm:h-[320px] overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d0f] p-3 sm:p-4 [touch-action:pan-y]"
       >
-        <div className="mx-auto w-full max-w-[440px] sm:max-w-[560px] aspect-square overflow-hidden">
+        <div className="mx-auto h-full aspect-square">
           <div
             className="w-full h-full transition-transform duration-200 ease-out"
             style={{ transform: `scale(${camScale})`, transformOrigin: "50% 50%" }}

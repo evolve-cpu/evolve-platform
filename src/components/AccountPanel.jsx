@@ -2023,13 +2023,29 @@ function CareerTrajectory({ trajectory }) {
   );
 }
 
+// A titled block inside AIProfileReveal's parent box, separated from the
+// one above it by a horizontal rule.
+function ProfileSection({ title, first, children }) {
+  return (
+    <div
+      className={`flex flex-col gap-4 ${
+        first ? "pb-6" : "py-6 border-t border-white/10"
+      } last:pb-0`}
+    >
+      {title && <h3 className="text-white font-bold text-sm">{title}</h3>}
+      {children}
+    </div>
+  );
+}
+
 export function AIProfileReveal({
   profile,
   portfolioLink,
   portfolioFileUrl,
   resumeLink,
   resumeFileUrl,
-  socialLinks
+  socialLinks,
+  onUpdate
 }) {
   if (!profile) return null;
   const {
@@ -2071,9 +2087,6 @@ export function AIProfileReveal({
 
   const displayTools = inferToolRowsFromProfile(profile);
   const axes = computeSkillAxes(profile);
-  const experienceYears = parseExperienceYears(work_experience);
-  const verifiedCount = real_work_validation?.validated_count || 0;
-  const toolCount = displayTools.length;
 
   const competencyAxes = competency_matrix?.length
     ? competency_matrix
@@ -2090,53 +2103,17 @@ export function AIProfileReveal({
   }));
 
   return (
-    <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col gap-8">
-      <div
-        className="absolute top-0 left-0 right-0 h-1"
-        style={{
-          background: `linear-gradient(90deg, ${YELLOW}, ${STRONG_GREEN})`
-        }}
-      />
-      <div className="flex flex-col gap-3 min-w-0">
-        <div className="flex flex-wrap gap-2">
-          {stage?.level && <Tag>{stage.level}</Tag>}
-          {niche && niche.toLowerCase() !== "not specified" && (
-            <Tag>{niche}</Tag>
-          )}
-          <Tag>{domain}</Tag>
-          <Tag>{sector}</Tag>
-        </div>
-        <ProfileLinksRow
-          portfolioLink={portfolioLink}
-          portfolioFileUrl={portfolioFileUrl}
-          resumeLink={resumeLink}
-          resumeFileUrl={resumeFileUrl}
-          socialLinks={socialLinks}
-          extractedLinks={links}
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <StatTile
-          label="Experience"
-          value={fmtExperienceLabel(experienceYears)}
-        />
-        <StatTile label="Verified Projects" value={verifiedCount} />
-        <StatTile label="Tools Cited" value={toolCount} />
-      </div>
-
-      <FactStrip
-        items={[
-          { label: "Location", value: location, tone: STRONG_GREEN },
-          { label: "Preference", value: work_preference, tone: YELLOW }
-        ]}
-      />
-      {summary && (
-        <div className="flex items-center gap-3 pt-5 border-t border-white/10">
-          <span className="w-2 h-10 rounded-full bg-evolve-yellow flex-shrink-0" />
-          <p className="text-white/75 text-sm leading-snug">{summary}</p>
-        </div>
-      )}
+    // One parent box for every infographic (desktop) — no per-matrix cards,
+    // just horizontal rules between sections. On mobile the box border and
+    // padding drop away so the content runs the full width of the cards
+    // above it.
+    <div className="flex flex-col md:rounded-2xl md:border md:border-white/10 md:bg-white/[0.02] md:p-6">
+      {/* The header block (stage/niche/domain/sector tags, profile links,
+          experience/verified-projects/tools stat tiles, location/preference
+          fact strip, the one-line summary) and the yellow→green top accent
+          were dropped per product decision — the profile now opens straight
+          on the competency matrix. Tag/ProfileLinksRow/StatTile/FactStrip
+          are kept in this file, unused. */}
 
       {/* Simplified per product decision — the AI profile was showing too
           much (signal meters, role-fit/proof-depth panels, strong/growth
@@ -2169,37 +2146,63 @@ export function AIProfileReveal({
       <SignalEvidence ... /> (x5) + CareerJourney
       */}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col items-center gap-3">
-        <p className="self-start text-white/40 text-[11px] uppercase tracking-wide">
-          Competency Matrix
-        </p>
+      <div className="flex items-center justify-between gap-3 pb-5">
+        <h2 className="text-white font-bold text-lg">evolve profile</h2>
+        {onUpdate && (
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={onUpdate}
+              aria-label="Update profile"
+              className="w-9 h-9 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <span className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg border border-white/10 bg-[#1c1c1f] px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-10">
+              Update profile
+            </span>
+          </div>
+        )}
+      </div>
+
+      <ProfileSection title="Competency matrix" first>
         <CompetencyMatrix axes={competencyAxes} />
-      </div>
+      </ProfileSection>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col items-center gap-3">
-        <p className="self-start text-white/40 text-[11px] uppercase tracking-wide">
-          Skill Profile
-        </p>
+      <ProfileSection title="Skill profile">
         <SkillDonut categories={skillCategories} />
-      </div>
+      </ProfileSection>
 
-      <SkillChipGroups
-        technical={technicalSkills}
-        soft={soft_skills}
-        interpersonal={interpersonal_skills}
-      />
+      {(technicalSkills.length > 0 ||
+        soft_skills?.length > 0 ||
+        interpersonal_skills?.length > 0) && (
+        <ProfileSection>
+          <SkillChipGroups
+            technical={technicalSkills}
+            soft={soft_skills}
+            interpersonal={interpersonal_skills}
+          />
+        </ProfileSection>
+      )}
 
-      <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
-        <p className="text-white/40 text-[11px] uppercase tracking-wide">
-          Career Timeline
-        </p>
-        <SpiralTimeline entries={timelineEntries} />
-      </div>
+      {timelineEntries.length > 0 && (
+        <ProfileSection title="Career timeline">
+          <SpiralTimeline entries={timelineEntries} />
+        </ProfileSection>
+      )}
 
       {career_trajectory?.projected_roles?.length > 0 && (
-        <div className="pt-5 border-t border-white/10">
+        <ProfileSection>
           <CareerTrajectory trajectory={career_trajectory} />
-        </div>
+        </ProfileSection>
       )}
       <Testimonials items={testimonials} />
     </div>
@@ -2213,19 +2216,19 @@ const PROFILE_BUILD_MESSAGES = [
   "Plotting your strengths…"
 ];
 
+// Three buckets on the card, each summing the raw tracked counts:
+// events = webinars + AMAs, learning = quizzes + resources.
 const PARTICIPATION_CATEGORIES = [
-  { key: "webinars", label: "Webinars" },
-  { key: "amas", label: "AMAs" },
-  { key: "community", label: "Community activities" },
-  { key: "quizzes", label: "Quizzes" },
-  { key: "resources", label: "Resources" }
+  { label: "events", keys: ["webinars", "amas"] },
+  { label: "community activity", keys: ["community"] },
+  { label: "learning", keys: ["quizzes", "resources"] }
 ];
 
 function ParticipationTile({ label, value }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-white/[0.02] px-2 py-3.5 text-center">
+    <div className="flex flex-col gap-0.5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 min-w-0">
       <span className="text-white text-lg font-bold">{value}</span>
-      <span className="text-white/40 text-[9px] uppercase tracking-wide leading-tight">
+      <span className="text-white/40 text-[11px] leading-tight truncate">
         {label}
       </span>
     </div>
@@ -2391,7 +2394,7 @@ function ProfileUploadSheet({
    donut/timeline) in place. Previously this lived inside MyAccountPanel
    behind the avatar menu — moved here so it's the tab's own first-class
    content instead of something buried in account settings. ── */
-export function ProfileTabPane({ user, onGoToEvents }) {
+export function ProfileTabPane({ user }) {
   const [loaded, setLoaded] = useState(false);
 
   const [portfolioLink, setPortfolioLink] = useState("");
@@ -2686,109 +2689,190 @@ export function ProfileTabPane({ user, onGoToEvents }) {
 
   if (!loaded) return null;
 
-  const participationTotal = PARTICIPATION_CATEGORIES.reduce(
-    (sum, c) => sum + (participation[c.key] || 0),
-    0
+  const participationCounts = PARTICIPATION_CATEGORIES.map((c) =>
+    c.keys.reduce((sum, k) => sum + (participation[k] || 0), 0)
   );
 
-  const academicLine = [user?.program, user?.standard]
-    .filter(Boolean)
-    .join(", ");
+  // One credentials line under the username — academic details for those
+  // who onboarded as a student, field/designation for professionals, never
+  // both. Older profiles without a `role` fall back to whichever set of
+  // fields they actually have.
+  const isProfessional =
+    user?.role === "professional" ||
+    (!user?.role && !!user?.designation && !user?.school_name);
+  const credentialsLine = isProfessional
+    ? [
+        user?.designation && user.designation !== "NA"
+          ? user.designation
+          : null,
+        user?.work_status
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : [
+        [user?.program, user?.standard].filter(Boolean).join(", "),
+        user?.school_name
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
-  // "Product Designer · 2 yrs exp" — sits right under the name everywhere
-  // instead of a separate role headline + a "Target Work" fact-strip card,
-  // which said the same thing twice.
-  const roleExperienceYears = parseExperienceYears(aiProfile?.work_experience);
-  const roleExperienceLine = aiProfile?.role?.primary
-    ? `${aiProfile.role.primary}${
-        roleExperienceYears != null
-          ? ` · ${fmtExperienceLabel(roleExperienceYears)} exp`
-          : ""
-      }`
-    : "";
-
-  const updateProfileButton = ENABLE_PORTFOLIO_AI && aiProfile && (
+  // Verify replaces the old Update button (updating the profile moved to
+  // the refresh icon on the competency matrix). Only offered before a
+  // verification round has started — once one's in flight, VerifyCard
+  // below shows its status instead.
+  const canVerify = ENABLE_PORTFOLIO_AI && aiProfile;
+  const isVerified = canVerify && verificationStatus === "verified";
+  const verifyButton = canVerify && !verificationStatus && (
     <button
       type="button"
-      onClick={() => setUploadOpen(true)}
-      className="self-start flex items-center gap-1.5 bg-white/5 border border-white/15 text-white font-bold text-xs rounded-full pl-5 pr-3.5 py-2 hover:bg-white/10 active:opacity-80 transition-colors"
+      onClick={() => {
+        setVerifyRescheduling(false);
+        setVerifyFlowOpen(true);
+      }}
+      className="self-start flex items-center gap-1.5 bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2 active:opacity-80 transition-opacity"
     >
-      Update
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <path
-          d="M4 10h11.5M10.5 5l5 5-5 5"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      Verify
     </button>
   );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* desktop identity header — the old page sidebar no longer shows on
-          desktop for the owner (see PublicProfile.jsx), so this is now the
-          only place avatar/name/college render above md. Mobile keeps its
-          own compact header in the sidebar's mobile-only block. */}
-      <div className="hidden md:flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="relative w-16 h-16 flex-shrink-0">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xl font-bold">
-                {user?.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  (user?.name || "?")[0].toUpperCase()
-                )}
-              </div>
-              {isTrialActive(user?.trial_ends_at) && (
-                <TrialClockBadge
-                  size={18}
-                  className="absolute bottom-0 right-0"
-                />
-              )}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-white font-bold text-xl truncate">
-                {user?.name || "evolve designer"}
-              </h1>
-              <p className="text-white/40 text-xs mt-0.5">
-                @{user?.username}
-                {academicLine && ` · ${academicLine}`}
-                {user?.school_name && ` · ${user.school_name}`}
-              </p>
-              {roleExperienceLine && (
-                <p className="text-evolve-yellow text-xs font-semibold mt-1">
-                  {roleExperienceLine}
-                </p>
-              )}
-            </div>
+      {/* identity header — shared by mobile and desktop. The old page
+          sidebar no longer shows identity for the owner on the profile tab
+          (see PublicProfile.jsx), so this is the only place avatar/name/
+          credentials render here. Once verified it becomes the gold
+          "evolve verified" card with a looping metal-gloss sweep. */}
+      <div
+        className={
+          isVerified
+            ? "verified-gloss relative overflow-hidden rounded-3xl border border-[#b8860b]/60 p-5 sm:p-7 flex items-center gap-4 sm:gap-6 min-w-0 shadow-[0_10px_40px_-12px_rgba(255,208,7,0.45)]"
+            : "flex items-center gap-4 min-w-0"
+        }
+        style={
+          isVerified
+            ? {
+                background:
+                  "linear-gradient(110deg, #FFE98A 0%, #FFD007 45%, #E8A800 100%)"
+              }
+            : undefined
+        }
+      >
+        <div
+          className={`relative flex-shrink-0 ${
+            isVerified ? "w-20 h-20 sm:w-28 sm:h-28" : "w-16 h-16"
+          }`}
+        >
+          <div
+            className={`w-full h-full rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white font-bold ${
+              isVerified
+                ? "text-2xl sm:text-3xl border-[3px] border-[#8a6d1f] bg-gradient-to-br from-[#a855f7] to-[#db2777]"
+                : "text-xl"
+            }`}
+          >
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              (user?.name || "?")[0].toUpperCase()
+            )}
           </div>
+          {isTrialActive(user?.trial_ends_at) && (
+            <TrialClockBadge
+              size={isVerified ? 26 : 18}
+              className="absolute bottom-0 right-0"
+            />
+          )}
         </div>
-        {updateProfileButton}
+        <div className="relative min-w-0 flex flex-col gap-1">
+          {isVerified && (
+            <span className="flex items-center gap-1.5 text-[#1a1a1a] text-[11px] sm:text-xs font-extrabold uppercase tracking-[0.12em]">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 2.5l2.4 1.8 3 .1.9 2.9 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.9-3 .1L12 21.5l-2.4-1.8-3-.1-.9-2.9-2.4-1.8.9-2.9-.9-2.9 2.4-1.8.9-2.9 3-.1z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8.5 12.2l2.3 2.3 4.7-4.8"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              evolve verified
+            </span>
+          )}
+          <h1
+            className={`font-bold truncate ${
+              isVerified
+                ? "text-[#1a1a1a] text-2xl sm:text-4xl"
+                : "text-white text-xl"
+            }`}
+          >
+            {user?.name || "evolve designer"}
+          </h1>
+          <p
+            className={`text-xs sm:text-sm ${
+              isVerified ? "text-[#1a1a1a]/70" : "text-white/40"
+            }`}
+          >
+            @{user?.username}
+            {credentialsLine && ` · ${credentialsLine}`}
+          </p>
+          {verifyButton && <div className="mt-1">{verifyButton}</div>}
+        </div>
       </div>
 
-      {/* mobile: the avatar/name card itself lives in PublicProfile.jsx's
-          sidebar (owner view), directly above this pane — this mirrors the
-          desktop role/experience line + Update button right under it. */}
-      {(roleExperienceLine || updateProfileButton) && (
-        <div className="md:hidden flex flex-col gap-2 -mt-5">
-          {roleExperienceLine && (
-            <p className="text-evolve-yellow text-xs font-semibold">
-              {roleExperienceLine}
-            </p>
-          )}
-          {updateProfileButton}
-        </div>
-      )}
+      {/* verified: Publish sits right under the gold card; once published,
+          the share link + unpublish take its place. */}
+      {isVerified &&
+        (isPublic ? (
+          <div className="flex flex-wrap items-center gap-2 -mt-2">
+            <input
+              readOnly
+              value={shareUrl}
+              className="flex-1 min-w-0 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-xl px-3 py-2.5 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-xl px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
+            >
+              {linkCopied ? "Copied ✓" : "Copy link"}
+            </button>
+            <button
+              type="button"
+              onClick={handleUnpublish}
+              disabled={publishing}
+              className="text-white/40 text-xs font-semibold px-2 hover:text-white/70 disabled:opacity-40"
+            >
+              Unpublish
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={publishing}
+            className="self-start -mt-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-xl px-6 py-2.5 disabled:opacity-40 active:opacity-80 transition-opacity"
+          >
+            {publishing ? "Publishing…" : "Publish"}
+          </button>
+        ))}
 
-      {ENABLE_PORTFOLIO_AI && aiProfile && (
+      {/* the idle "Get evolve verified" card is gone (the Verify button
+          above starts the flow) and the verified state lives in the header
+          card above; in-flight states (booked/verifying/needs attention)
+          still render here. */}
+      {ENABLE_PORTFOLIO_AI &&
+        aiProfile &&
+        verificationStatus &&
+        !isVerified && (
         <VerifyCard
           status={verificationStatus}
           slot={verificationSlot}
@@ -2813,41 +2897,17 @@ export function ProfileTabPane({ user, onGoToEvents }) {
         />
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <p className="text-white font-bold text-sm">Evolve participation</p>
-          {participationTotal > 0 && (
-            <span className="text-white/40 text-xs">
-              {participationTotal} total
-            </span>
-          )}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 flex flex-col gap-3">
+        <p className="text-white font-bold text-sm">evolve participation</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {PARTICIPATION_CATEGORIES.map((c, i) => (
+            <ParticipationTile
+              key={c.label}
+              label={c.label}
+              value={participationCounts[i]}
+            />
+          ))}
         </div>
-        {participationTotal === 0 ? (
-          <div className="flex flex-col items-center text-center gap-3 py-6">
-            <p className="text-white font-semibold text-sm">Nothing here yet</p>
-            <p className="text-white/40 text-xs max-w-[240px]">
-              Join a webinar, try a quiz or jump into the community and it'll
-              show up here.
-            </p>
-            <button
-              type="button"
-              onClick={onGoToEvents}
-              className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-xl px-5 py-2.5 active:opacity-80 transition-opacity"
-            >
-              Get started
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {PARTICIPATION_CATEGORIES.map((c) => (
-              <ParticipationTile
-                key={c.key}
-                label={c.label}
-                value={participation[c.key] || 0}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {ENABLE_PORTFOLIO_AI &&
@@ -2860,6 +2920,7 @@ export function ProfileTabPane({ user, onGoToEvents }) {
               resumeLink={resumeLink}
               resumeFileUrl={resumeFileUrl}
               socialLinks={savedSocialLinks}
+              onUpdate={() => setUploadOpen(true)}
             />
 
             {errorMsg && !uploadOpen && (
