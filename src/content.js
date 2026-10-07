@@ -276,8 +276,8 @@
 //   hero: {
 //     heading: "Evolve \ncommunity",
 //     subtext: "An inner circle built for creators.",
-//     // WhatsApp / join link
-//     joinUrl: "https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+//     // Discord / join link
+//     joinUrl: "https://discord.gg/MmfaqCPdF7"
 //   },
 
 //   introText:
@@ -718,8 +718,8 @@ export const community = {
   hero: {
     heading: "Evolve \ncommunity",
     subtext: "An inner circle built for creators.",
-    // WhatsApp / join link
-    joinUrl: "https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+    // Discord / join link
+    joinUrl: "https://discord.gg/MmfaqCPdF7"
   },
 
   introText:

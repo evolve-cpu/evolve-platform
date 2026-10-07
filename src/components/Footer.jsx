@@ -136,7 +136,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
 
             {/* <div className="mt-6">
               <a
-                href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                href="https://discord.gg/MmfaqCPdF7"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block"
@@ -150,7 +150,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
             </div> */}
             <div className="mt-8">
               <a
-                href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                href="https://discord.gg/MmfaqCPdF7"
                 target="_blank"
                 rel="noopener noreferrer"
                 // onClick={trackCommunityJoin}
@@ -285,7 +285,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
 
           {/* <div className="mt-4">
             <a
-              href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+              href="https://discord.gg/MmfaqCPdF7"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block"
@@ -303,7 +303,7 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
           </div> */}
           <div className="mt-8">
             <a
-              href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+              href="https://discord.gg/MmfaqCPdF7"
               target="_blank"
               rel="noopener noreferrer"
               // onClick={trackCommunityJoin}

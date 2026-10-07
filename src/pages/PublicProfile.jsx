@@ -40,17 +40,13 @@ const GROWTH_ENCOURAGEMENT = {
 };
 
 /* ─── small building blocks ──────────────────────────────────────────────── */
-function WhatsAppIcon({ className }) {
+function DiscordIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" className={className}>
-      <circle cx="12" cy="12" r="12" fill="#25D366" />
+      <circle cx="12" cy="12" r="12" fill="#5865F2" />
       <path
-        d="M12 6.5c-3.04 0-5.5 2.46-5.5 5.5 0 1.02.28 1.97.76 2.79L6.5 17.5l2.83-.74a5.47 5.47 0 002.67.69c3.04 0 5.5-2.46 5.5-5.5s-2.46-5.5-5.5-5.5z"
+        d="M16.94 7.88a11.4 11.4 0 00-2.86-.88l-.36.73a10.6 10.6 0 00-3.44 0l-.36-.73c-1 .17-1.96.47-2.86.88C5.25 10.6 4.76 13.25 5 15.86a11.5 11.5 0 003.5 1.77l.75-1.22c-.41-.15-.8-.34-1.17-.56l.29-.22a8.2 8.2 0 007.26 0l.29.22c-.37.22-.76.41-1.17.56l.75 1.22a11.5 11.5 0 003.5-1.77c.29-3.03-.49-5.65-2.06-7.98zM9.68 14.25c-.69 0-1.26-.64-1.26-1.42s.55-1.42 1.26-1.42c.7 0 1.27.64 1.26 1.42 0 .78-.56 1.42-1.26 1.42zm4.64 0c-.69 0-1.26-.64-1.26-1.42s.55-1.42 1.26-1.42c.7 0 1.27.64 1.26 1.42 0 .78-.55 1.42-1.26 1.42z"
         fill="white"
-      />
-      <path
-        d="M9.8 9.4c.13-.29.27-.3.39-.3h.33c.1 0 .25-.04.39.3.14.33.47 1.15.51 1.23.04.09.07.19.01.3-.06.11-.09.18-.17.28l-.25.29c-.08.08-.17.17-.07.34.1.17.43.7.92 1.14.63.56 1.16.74 1.33.82.17.08.27.07.36-.04.1-.11.41-.48.52-.65.11-.16.22-.14.37-.08.15.05.96.45 1.13.54.16.08.27.12.31.19.04.07.04.4-.1.79-.14.39-.8.74-1.11.79-.29.04-.65.06-1.04-.07-.24-.08-.55-.18-.94-.35-1.66-.72-2.74-2.4-2.83-2.5-.08-.11-.68-.9-.68-1.72s.43-1.22.58-1.38z"
-        fill="#25D366"
       />
     </svg>
   );
@@ -935,12 +931,12 @@ export default function PublicProfile() {
         </Link>
         <div className="flex items-center gap-2.5">
           <a
-            href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+            href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:flex items-center gap-2 text-sm font-semibold text-white/70 border border-white/15 rounded-full pl-2 pr-4 py-2 hover:text-white hover:bg-white/[0.06] transition-colors"
           >
-            <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
+            <DiscordIcon className="w-6 h-6 flex-shrink-0" />
             Evolve community
           </a>
           <button
@@ -1341,12 +1337,12 @@ export default function PublicProfile() {
                       that's hidden from the top nav on small screens —
                       same destination, just living down here instead. */}
                   <a
-                    href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                    href="https://discord.gg/MmfaqCPdF7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
-                    <WhatsAppIcon className="w-6 h-6 flex-shrink-0" />
+                    <DiscordIcon className="w-6 h-6 flex-shrink-0" />
                     Evolve community
                     <img
                       src={right_arrow_icon}

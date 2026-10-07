@@ -8,8 +8,8 @@ import { findFreeSlug } from "../lib/slug";
 import SEO from "../components/SEO";
 import SignIn from "./SignIn";
 
-const WHATSAPP_COMMUNITY_URL =
-  "https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4";
+const COMMUNITY_URL =
+  "https://discord.gg/MmfaqCPdF7";
 const PENDING_KEY = "event_register_pending";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -272,7 +272,7 @@ function TicketModal({ event, registration, user, onClose }) {
             ↓ {saving ? "saving…" : "save ticket to share"}
           </button>
           <a
-            href={WHATSAPP_COMMUNITY_URL}
+            href={COMMUNITY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full text-center border border-white/20 text-white font-bold text-sm py-3 rounded-full"

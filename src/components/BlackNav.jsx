@@ -286,7 +286,7 @@ export default function BlackNav({ onLogoClick, right }) {
               {/* join us */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
                 <a
-                  href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                  href="https://discord.gg/MmfaqCPdF7"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="cursor-pointer"

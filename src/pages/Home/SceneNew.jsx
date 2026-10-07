@@ -1886,7 +1886,7 @@ const SceneNew = React.forwardRef((props, ref) => {
           <a
             ref={orbitWaitlistButtonRef}
             // href="https://discord.gg/wKRYG7cSWt"
-            href="https://chat.whatsapp.com/GDRw3ZPmkxyGzn6yyzaUcI"
+            href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

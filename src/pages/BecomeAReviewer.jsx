@@ -9,8 +9,8 @@ const NAV_HEIGHT = 56;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const WHATSAPP_COMMUNITY_URL =
-  "https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4";
+const COMMUNITY_URL =
+  "https://discord.gg/MmfaqCPdF7";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -413,7 +413,7 @@ function ReviewerSuccessContent() {
         we've got your details, we will reach out to you shortly :)
       </p>
       <a
-        href={WHATSAPP_COMMUNITY_URL}
+        href={COMMUNITY_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-3 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow hover:opacity-90 transition-opacity"

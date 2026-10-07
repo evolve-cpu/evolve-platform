@@ -171,7 +171,7 @@ export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide }) 
 
               <div className="w-full flex justify-center mb-6">
                 <a
-                  href="https://chat.whatsapp.com/DsLtzxlHPQXC4Gaee76qz4?s=cl&p=a&ilr=4"
+                  href="https://discord.gg/MmfaqCPdF7"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center w-[180px] h-[52px] rounded-[16px] bg-evolve-yellow text-black text-[18px] font-bold"
