@@ -1,6 +1,7 @@
 // api/razorpay-webhook.js
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { fulfilPurchase } from "./_membership.js";
 
 // Tell Vercel NOT to parse the body — we need raw bytes for signature check
 export const config = { api: { bodyParser: false } };
@@ -45,6 +46,29 @@ export default async function handler(req, res) {
     // this webhook receives every payment event for the account, across
     // products — look up which table actually holds this order before
     // deciding how to process it
+
+    // membership (plans / pay-per-event / recordings) — normally already
+    // fulfilled by the browser's verify call; this catches the cases where
+    // the tab closed before that happened. fulfilPurchase is idempotent.
+    const { data: membershipMatch } = await supabase
+      .from("purchases")
+      .select("id")
+      .eq("razorpay_order_id", payment.order_id)
+      .maybeSingle();
+
+    if (membershipMatch) {
+      if (event === "payment.captured") {
+        await fulfilPurchase(supabase, payment.order_id, { razorpay_payment_id: payment.id });
+      } else if (event === "payment.failed") {
+        await supabase
+          .from("purchases")
+          .update({ status: "failed" })
+          .eq("razorpay_order_id", payment.order_id)
+          .eq("status", "pending");
+      }
+      return res.status(200).json({ ok: true });
+    }
+
     const { data: portfolioMatch } = await supabase
       .from("portfolio_review_payments")
       .select("id")

@@ -5,6 +5,58 @@ import { componentTagger } from "lovable-tagger";
 import { createClient } from "@supabase/supabase-js";
 import { recogniseLetters, validRecogniseImages } from "./api/_typetoberRecognise.js";
 import { postSubmissionsToDiscord } from "./api/_typetoberDiscord.js";
+import { priceItem, fulfilPurchase, redeemReviewCredit } from "./api/_membership.js";
+
+// Dev-only: the after-trial membership flows (see api/_membership.js) —
+// fake checkout (devConfirm), the free-review redeem, and the DEMO panel's
+// scenario switcher (src/components/membership/DevMembershipPanel.jsx),
+// which rewrites the signed-in tester's own trial/plan columns so every
+// state can be tried for real, server-side checks included.
+const DEV_SCENARIOS = {
+  trial: () => ({ trial_ends_at: new Date(Date.now() + 30 * 864e5).toISOString(), plan: null, plan_expires_at: null, review_credits: 0 }),
+  popup: () => ({ trial_ends_at: new Date(Date.now() - 6e4).toISOString(), plan: null, plan_expires_at: null, review_credits: 0 }),
+  payg: () => ({ trial_ends_at: new Date(Date.now() - 6e4).toISOString(), plan: null, plan_expires_at: null, review_credits: 0 }),
+  subM: () => ({ trial_ends_at: new Date(Date.now() - 6e4).toISOString(), plan: "monthly", plan_expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), review_credits: 0 }),
+  subA: () => ({ trial_ends_at: new Date(Date.now() - 6e4).toISOString(), plan: "annual", plan_expires_at: new Date(Date.now() + 365 * 864e5).toISOString(), review_credits: 1 })
+};
+
+async function handleMembershipDev(payload, supabase, res) {
+  const send = (status, body) => {
+    res.statusCode = status;
+    res.end(JSON.stringify(body));
+  };
+  const { data: { user }, error: authError } = await supabase.auth.getUser(payload.token);
+  if (authError || !user) return send(401, { error: "unauthorized" });
+
+  if (payload.action === "dev_scenario") {
+    const patch = DEV_SCENARIOS[payload.scenario]?.();
+    if (!patch) return send(400, { error: "unknown scenario" });
+    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+    if (error) return send(500, { error: error.message });
+    return send(200, { ok: true });
+  }
+
+  if (payload.action === "redeem_review") {
+    const out = await redeemReviewCredit(supabase, user);
+    return out.error ? send(400, { error: out.error }) : send(200, { ok: true, review: out.review });
+  }
+
+  if (!payload.devConfirm) return send(400, { error: "real Razorpay checkout doesn't run locally" });
+  const priced = await priceItem(supabase, user.id, { kind: payload.kind, plan: payload.plan, eventId: payload.event_id });
+  if (priced.error) return send(400, { error: priced.error });
+  const orderId = `dev_${user.id.slice(0, 8)}_${Date.now()}`;
+  const { error: insertErr } = await supabase.from("purchases").insert({
+    user_id: user.id,
+    ...priced.row,
+    title: priced.title,
+    amount: priced.rupees,
+    razorpay_order_id: orderId,
+    status: "pending"
+  });
+  if (insertErr) return send(500, { error: insertErr.message });
+  const purchase = await fulfilPurchase(supabase, orderId);
+  return send(200, { ok: true, purchase });
+}
 
 // Dev-only stand-in for api/razorpay-create-order.js's devConfirm branch
 // (mentorship plans + Typetober submissions).
@@ -34,7 +86,8 @@ function mentorshipDevPaymentBypass(env) {
           // fall through to the "invalid JSON" branch below
         }
         const isRecognise = payload.product === "typetober" && payload.action === "recognise";
-        if (!payload.devConfirm && !isRecognise) return next(); // real order/verify calls: unhandled locally, as before
+        const isMembership = payload.product === "membership";
+        if (!payload.devConfirm && !isRecognise && !isMembership) return next(); // real order/verify calls: unhandled locally, as before
 
         res.setHeader("Content-Type", "application/json");
         // `process.env` is NOT auto-populated from .env for vite.config.ts
@@ -45,6 +98,17 @@ function mentorshipDevPaymentBypass(env) {
         if (!supabaseUrl || !serviceKey) {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: "VITE_SUPABASE_URL / VITE_SUPABASE_SERVICE_ROLE_KEY missing in .env" }));
+          return;
+        }
+
+        if (isMembership) {
+          try {
+            await handleMembershipDev(payload, createClient(supabaseUrl, serviceKey), res);
+          } catch (err) {
+            console.error("[membership-dev] error:", err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err?.message || "server error" }));
+          }
           return;
         }
 

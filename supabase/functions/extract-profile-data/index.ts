@@ -256,10 +256,19 @@ async function fetchRendered(url: string, linkBudget: number): Promise<{ ok: boo
 /* ── PDF text extraction — unpdf runs pdf.js without a DOM/worker/filesystem,
    so it works inside this Deno edge sandbox. DOCX isn't handled yet. ─────── */
 
+// parsing a big image-heavy PDF burns through the edge function's CPU/memory
+// budget (WORKER_RESOURCE_LIMIT) — skip text extraction above this size;
+// analyze-profile-data hands the whole PDF to Gemini anyway.
+const MAX_PDF_PARSE_BYTES = 4 * 1024 * 1024;
+
 async function extractPdfText(fileUrl: string): Promise<{ ok: boolean; text: string }> {
   try {
     const res = await fetch(fileUrl);
     if (!res.ok) return { ok: false, text: "" };
+    if (Number(res.headers.get("content-length") || 0) > MAX_PDF_PARSE_BYTES) {
+      await res.body?.cancel();
+      return { ok: true, text: "" };
+    }
     const buf = new Uint8Array(await res.arrayBuffer());
     const pdf = await getDocumentProxy(buf);
     const { text } = await extractText(pdf, { mergePages: true });
@@ -470,10 +479,22 @@ serve(async (req) => {
           : undefined,
       };
     } else if (profile.portfolio_file_url) {
+      // Design portfolios are mostly images, so whatever text layer the PDF
+      // has is only a bonus — analyze-profile-data also attaches the PDF
+      // itself to Gemini, which reads every page visually.
+      const fileUrl = profile.portfolio_file_url as string;
+      const isPdf = /\.pdf(\?|$)/i.test(fileUrl);
+      const pdf = isPdf ? await extractPdfText(fileUrl) : { ok: false, text: "" };
       result.portfolio = {
-        source_url: profile.portfolio_file_url,
-        pages: [],
-        note: "Portfolio was uploaded as a file — file text extraction isn't wired up yet in this test build.",
+        source_url: fileUrl,
+        file: true,
+        is_pdf: isPdf,
+        pages: pdf.text ? [{ url: fileUrl, ok: true, text: pdf.text, raw_length: pdf.text.length, screenshot_urls: [] }] : [],
+        note: isPdf
+          ? pdf.text
+            ? undefined
+            : "Portfolio PDF has little or no selectable text (image-based pages) — the PDF itself is sent to the analysis."
+          : "Portfolio was uploaded as a non-PDF file (.pptx/.zip) — only PDF portfolios can be read right now.",
       };
     }
 
@@ -493,9 +514,15 @@ serve(async (req) => {
         const pdf = await extractPdfText(fileUrl);
         result.resume = {
           source_url: fileUrl,
+          file: true,
+          is_pdf: true,
           ok: pdf.ok,
-          text: pdf.ok ? pdf.text : null,
-          note: pdf.ok ? undefined : "couldn't extract text from this PDF — it may be a scanned/image-only file.",
+          text: pdf.text || null,
+          // Canva / Illustrator / Figma exports often outline their text, so
+          // an empty result here is normal — the PDF goes to the analysis too
+          note: pdf.text
+            ? undefined
+            : "Resume PDF has no selectable text (designed/outlined export) — the PDF itself is sent to the analysis.",
         };
       } else {
         result.resume = {

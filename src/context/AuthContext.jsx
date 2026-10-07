@@ -153,7 +153,13 @@ export function AuthProvider({ children }) {
       onboarding_completed:    profile.onboarding_completed ?? false,
       onboarding_completed_at: profile.onboarding_completed_at ?? null,
       growth_stage:            profile.growth_stage ?? 0,
-      trial_ends_at:           profile.trial_ends_at ?? null
+      trial_ends_at:           profile.trial_ends_at ?? null,
+      // after-trial membership (see src/lib/membership.js)
+      designation:             profile.designation ?? null,
+      plan:                    profile.plan ?? null,
+      plan_expires_at:         profile.plan_expires_at ?? null,
+      review_credits:          profile.review_credits ?? 0,
+      verification_status:     profile.verification_status ?? null
     };
   }
 

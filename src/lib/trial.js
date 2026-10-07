@@ -1,7 +1,9 @@
 // Free-trial helpers, driven by profiles.trial_ends_at (see
-// supabase/migrations/profile_trial_period.sql). No subscription/payment
-// tier exists yet — this only answers "are they still inside the 14-day
-// window", nothing about what should be locked once it ends.
+// supabase/migrations/profile_trial_period.sql, extended to 30 days in
+// membership_plans.sql). What's locked once it ends — and what a plan
+// unlocks — lives in src/lib/membership.js.
+
+export const TRIAL_DAYS = 30;
 
 export function trialDaysLeft(trialEndsAt) {
   if (!trialEndsAt) return null;

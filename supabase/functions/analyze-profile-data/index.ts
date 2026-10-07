@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -30,8 +31,17 @@ const DB_HEADERS = {
 const MAX_IMAGES = 6;
 const MAX_TEXT_CHARS = 20000;
 
+// Uploaded PDFs go to Gemini as documents (it reads every page visually, so
+// image-only portfolios and outlined-text resumes work). They're STREAMED
+// from storage into Gemini's Files API — never buffered/base64'd here, since
+// that blows the edge function's memory/CPU limit (WORKER_RESOURCE_LIMIT).
+const MAX_PDF_BYTES = 50 * 1024 * 1024;
+
 type ExtractedProfile = {
   portfolio?: {
+    source_url?: string;
+    file?: boolean;
+    is_pdf?: boolean;
     pages?: Array<{
       text?: string;
       url?: string;
@@ -41,6 +51,8 @@ type ExtractedProfile = {
   };
   resume?: {
     source_url?: string;
+    file?: boolean;
+    is_pdf?: boolean;
     text?: string;
     note?: string;
   };
@@ -87,15 +99,69 @@ function collectScreenshotUrls(extracted: ExtractedProfile): string[] {
   return urls.slice(0, MAX_IMAGES);
 }
 
+// the uploaded resume / portfolio PDFs (links are already rendered to text +
+// screenshots by extract-profile-data, so only stored files are attached)
+function collectPdfDocs(extracted: ExtractedProfile): Array<{ label: string; url: string }> {
+  const docs: Array<{ label: string; url: string }> = [];
+  const isPdfFile = (x?: { source_url?: string; file?: boolean; is_pdf?: boolean }) =>
+    !!x?.source_url && (x.is_pdf ?? /\.pdf(\?|$)/i.test(x.source_url)) && (x.file ?? x.source_url.includes("/storage/v1/object/"));
+  if (isPdfFile(extracted?.resume)) docs.push({ label: "Resume (PDF)", url: extracted.resume!.source_url! });
+  if (isPdfFile(extracted?.portfolio)) docs.push({ label: "Portfolio (PDF)", url: extracted.portfolio!.source_url! });
+  return docs;
+}
+
+// Files API resumable upload, body piped straight through from storage
+async function pdfToPart(doc: { label: string; url: string }): Promise<unknown | null> {
+  try {
+    const src = await fetch(doc.url);
+    const size = Number(src.headers.get("content-length") || 0);
+    if (!src.ok || !src.body || !size || size > MAX_PDF_BYTES) {
+      await src.body?.cancel();
+      return null;
+    }
+    const start = await fetch(
+      `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "X-Goog-Upload-Protocol": "resumable",
+          "X-Goog-Upload-Command": "start",
+          "X-Goog-Upload-Header-Content-Length": String(size),
+          "X-Goog-Upload-Header-Content-Type": "application/pdf",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ file: { display_name: doc.label } }),
+      }
+    );
+    const uploadUrl = start.headers.get("x-goog-upload-url");
+    if (!start.ok || !uploadUrl) {
+      await src.body.cancel();
+      return null;
+    }
+    const done = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Length": String(size),
+        "X-Goog-Upload-Offset": "0",
+        "X-Goog-Upload-Command": "upload, finalize",
+      },
+      body: src.body,
+    });
+    if (!done.ok) return null;
+    const uri = (await done.json())?.file?.uri;
+    return uri ? { fileData: { mimeType: "application/pdf", fileUri: uri } } : null;
+  } catch {
+    return null;
+  }
+}
+
 async function imageToInlineData(url: string): Promise<{ mimeType: string; data: string } | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const bytes = new Uint8Array(await res.arrayBuffer());
     const contentType = res.headers.get("content-type") || "image/png";
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    return { mimeType: contentType, data: btoa(binary) };
+    return { mimeType: contentType, data: encodeBase64(bytes) };
   } catch {
     return null;
   }
@@ -522,21 +588,31 @@ serve(async (req) => {
     }
 
     const rawText = buildRawText(extracted);
-    if (!rawText.trim()) {
+    const screenshotUrls = collectScreenshotUrls(extracted);
+    const pdfDocs = collectPdfDocs(extracted);
+    const [images, pdfParts] = await Promise.all([
+      Promise.all(screenshotUrls.map(imageToInlineData)).then((r) => r.filter(Boolean) as Array<{ mimeType: string; data: string }>),
+      Promise.all(pdfDocs.map(pdfToPart)),
+    ]);
+    const attachedDocs = pdfDocs.filter((_, i) => pdfParts[i]);
+
+    // nothing to read at all — text, screenshots or documents
+    if (!rawText.trim() && !images.length && !attachedDocs.length) {
       await dbUpdate(user_id, { ai_profile_status: "failed" });
       return new Response(
-        JSON.stringify({ error: "extracted_profile has no usable text to analyze" }),
+        JSON.stringify({ error: "We couldn't read your resume or portfolio. Try a PDF, or paste a link instead." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const screenshotUrls = collectScreenshotUrls(extracted);
-    const images = (await Promise.all(screenshotUrls.map(imageToInlineData))).filter(Boolean) as Array<{ mimeType: string; data: string }>;
-
     const parts: unknown[] = [
-      { text: `PORTFOLIO & RESUME CONTENT:\n\n${rawText}` },
+      { text: `PORTFOLIO & RESUME CONTENT:\n\n${rawText || "(no text could be extracted — read the attached documents)"}` },
+      ...attachedDocs.flatMap((doc) => [
+        { text: `--- Attached document: ${doc.label}. Read every page, including text that only appears inside images. ---` },
+        pdfParts[pdfDocs.indexOf(doc)],
+      ]),
       ...images.map((img) => ({ inlineData: img })),
-      { text: "Analyze the above (text and any attached screenshots) and return the structured profile now." },
+      { text: "Analyze the above (text, attached documents and any screenshots) and return the structured profile now." },
     ];
 
     const geminiRes = await fetch(
@@ -589,6 +665,7 @@ serve(async (req) => {
 
     profile.generated_at = new Date().toISOString();
     profile.images_analyzed = images.length;
+    profile.documents_analyzed = attachedDocs.map((d) => d.label);
 
     await dbUpdate(user_id, {
       ai_profile: profile,

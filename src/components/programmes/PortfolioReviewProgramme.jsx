@@ -937,6 +937,8 @@ import ProcessSteps from "./ProcessSteps";
 import PortfolioReviewFlow from "./PortfolioReviewFlow";
 // import GrowthStageModal from "../GrowthStageModal"; // growth feature disabled
 import { REVIEWERS } from "../../lib/reviewerRouting";
+import { isPlanActive } from "../../lib/membership";
+import { redeemFreeReview } from "../../lib/membershipCheckout";
 
 // growth_stage (0-100) reached once a Portfolio Review payment unlocks the
 // workspace — see src/lib/growthStage.js for the seed→sprout mapping.
@@ -1043,6 +1045,27 @@ function BookModal({ user, onClose, onSuccess }) {
     return match || (s ? "Other" : "");
   });
   const isSupportedStream = SUPPORTED_STREAMS.includes(streamChoice);
+  // the annual plan comes with one free review (src/lib/membership.js)
+  const hasFreeReview = isPlanActive(user) && (user?.review_credits || 0) > 0;
+
+  async function handleRedeemFree() {
+    if (!isSupportedStream) {
+      setError("Please select your stream first");
+      return;
+    }
+    setError("");
+    setPaying(true);
+    try {
+      await persistStreamIfChanged();
+      const { review } = await redeemFreeReview();
+      setConfirmedRow(review);
+      setStep("success");
+    } catch (err) {
+      setError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setPaying(false);
+    }
+  }
 
   // Verifies the payment (or dev-bypasses it) and unlocks the review
   // workspace — synchronous and server-verified, no dependency on a
@@ -1223,7 +1246,11 @@ function BookModal({ user, onClose, onSuccess }) {
               </div>
               <div className="flex items-center justify-between text-sm pt-1.5 border-t border-white/10">
                 <span className="text-white">Live review with a mentor</span>
-                <span className="text-evolve-yellow font-bold">₹2,500</span>
+                {hasFreeReview ? (
+                  <span className="text-evolve-inchworm font-bold">Free with your annual plan</span>
+                ) : (
+                  <span className="text-evolve-yellow font-bold">₹2,500</span>
+                )}
               </div>
             </div>
 
@@ -1291,11 +1318,15 @@ function BookModal({ user, onClose, onSuccess }) {
 
             {isSupportedStream ? (
               <button
-                onClick={handlePay}
+                onClick={hasFreeReview ? handleRedeemFree : handlePay}
                 disabled={paying || phone.trim().length < 10}
                 className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
               >
-                {paying ? "Processing…" : "Proceed to payment →"}
+                {paying
+                  ? "Processing…"
+                  : hasFreeReview
+                    ? "Book free review →"
+                    : "Proceed to payment →"}
               </button>
             ) : (
               <button

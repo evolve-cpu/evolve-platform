@@ -39,14 +39,20 @@ import TeamSetupStep from "./TeamSetupStep";
 // import SeedPlantedModal from "./SeedPlantedModal";
 import RoleChoiceStep from "./RoleChoiceStep";
 import StudentOnboarding from "./StudentOnboarding";
+import { useMembership } from "../../components/membership/MembershipProvider";
 
-// Shown while handleConfirm's writes are in flight, right after the chat
-// (or team-setup) finishes — between that and the seed-planted screen.
+// Shown while handleConfirm's writes are in flight, right after the details
+// step. The reference (evolve_mobile_after_trial.html) has no interstitial
+// card here — the "30 days of VIP Access" sheet + confetti opens straight
+// away (see the effect in Onboarding below) and this is just the quiet
+// backdrop behind it until the profile page loads.
 function PlantingLoader() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center gap-8"
+      className="min-h-screen flex items-center justify-center"
       style={{ backgroundColor: "#161618" }}
+      role="status"
+      aria-label="Setting up your profile"
     >
       <div className="flex items-center gap-1.5">
         {[0, 1, 2].map((i) => (
@@ -56,17 +62,6 @@ function PlantingLoader() {
             style={{ animationDelay: `${i * 0.15}s` }}
           />
         ))}
-      </div>
-      <div className="w-full max-w-xs mx-4 rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-10 flex flex-col items-center gap-4 text-center">
-        <div
-          className="w-11 h-11 rounded-full animate-spin"
-          style={{
-            border: "4px solid rgba(255,208,7,0.2)",
-            borderTopColor: "rgba(255,208,7,1)"
-          }}
-        />
-        <p className="text-white font-bold text-base">Planting your seed…</p>
-        <p className="text-white/40 text-sm">Setting up your design space</p>
       </div>
     </div>
   );
@@ -134,6 +129,26 @@ export default function Onboarding() {
   const [orgDraft, setOrgDraft] = useState(null);
   const [instProfile, setInstProfile] = useState(null);
   const [instSpaceDraft, setInstSpaceDraft] = useState(null);
+
+  // details submitted → open the 30-days-of-VIP sheet (+ confetti) right
+  // away, as the reference does. Individuals only (team/institute spaces
+  // aren't on the trial). Marks it seen so the profile page doesn't replay
+  // it on landing; the sheet lives in MembershipProvider above the router,
+  // so it stays open across the navigation to /profile.
+  const membership = useMembership();
+  useEffect(() => {
+    if (step !== "submitting" || orgDraft || fromInstitution || completingProfile || !user?.id) return;
+    try {
+      const key = `evolve_trial_sheet_seen_${user.id}`;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      /* private mode — PublicProfile will show it instead */
+      return;
+    }
+    membership.showWelcome();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   const [error, setError] = useState("");
 
   function handleOrgType(value) {

@@ -6,9 +6,13 @@ import { useAuth } from "../hooks/useAuth";
 import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel, STAGE_LABELS } from "../lib/growthStage";
 import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
-import { isTrialActive, trialDaysLeft } from "../lib/trial";
-import TrialSheet from "../components/TrialSheet";
+import { isTrialActive } from "../lib/trial";
+import { isEventOver, upcomingCutoffIso } from "../lib/events";
 import { TrialClockBadge } from "../components/TrialBadge";
+import {
+  useMembership,
+  trialBannerCopy
+} from "../components/membership/MembershipProvider";
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 import AppTabNav from "../components/AppTabNav";
@@ -179,14 +183,10 @@ function EventsTabPane() {
     };
   }, []);
 
-  const now = Date.now();
   const q = search.trim().toLowerCase();
+  // events move to "past" by themselves once they've ended (src/lib/events.js)
   const filtered = events
-    .filter((e) =>
-      filter === "upcoming"
-        ? new Date(e.start_time).getTime() >= now
-        : new Date(e.start_time).getTime() < now
-    )
+    .filter((e) => (filter === "upcoming" ? !isEventOver(e) : isEventOver(e)))
     .filter((e) => !q || e.title?.toLowerCase().includes(q))
     .sort((a, b) =>
       filter === "upcoming"
@@ -250,8 +250,15 @@ function EventsTabPane() {
                 />
               )}
               <div className="p-3.5 flex flex-col gap-1">
-                <span className="text-evolve-yellow text-[10px] font-bold uppercase tracking-wide">
-                  {event.event_type || "event"}
+                <span className="flex items-center gap-2">
+                  <span className="text-evolve-yellow text-[10px] font-bold uppercase tracking-wide">
+                    {event.event_type || "event"}
+                  </span>
+                  {filter === "past" && (event.recording_path || event.recording_url) && (
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-evolve-inchworm">
+                      ▶ recording
+                    </span>
+                  )}
                 </span>
                 <p className="text-white text-sm font-bold leading-snug">
                   {event.title}
@@ -301,40 +308,38 @@ function DesktopProfileTabs({ activeTab, onTabChange }) {
   );
 }
 
-// Persistent "N days left" banner — desktop only. Separate from TrialSheet
-// (the one-time "trial started" modal): that fires once on first visit, this
-// stays put as a page banner for the rest of the trial. No billing/upgrade
-// flow exists yet, so "Upgrade" just surfaces a short inline notice instead
-// of linking anywhere real.
-function TrialBar({ daysLeft }) {
-  const [noticeOpen, setNoticeOpen] = useState(false);
+// Persistent trial / plan banner — desktop only (mobile gets the same copy
+// from the clock badge on the avatar). Separate from the one-time VIP
+// welcome sheet; this stays put for the rest of the trial and after it.
+function TrialBar({ user }) {
+  const { access, openPlans } = useMembership();
+  const c = trialBannerCopy(user, access);
   return (
     <div
       className="hidden md:flex items-center justify-between gap-4 px-8 py-3 border-b border-white/10"
-      style={{ backgroundColor: "rgba(255,208,7,0.05)" }}
+      style={{ backgroundColor: c.ending ? "rgba(255,53,91,0.06)" : "rgba(255,208,7,0.05)" }}
     >
       <div className="flex items-center gap-2.5">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-evolve-yellow flex-shrink-0">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="flex-shrink-0"
+          style={{ color: c.ending ? "#FF355B" : "#FFD007" }}
+        >
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
           <path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <p className="text-white/70 text-xs">
-          <span className="font-bold text-white">{daysLeft ?? 14} days left</span> in your
-          free trial — my profile and grow are on the house for now.
-        </p>
+        <p className="text-white/80 text-xs font-semibold">{c.text}</p>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {noticeOpen && (
-          <span className="text-white/40 text-[11px]">upgrade plans are launching soon</span>
-        )}
-        <button
-          type="button"
-          onClick={() => setNoticeOpen(true)}
-          className="border border-evolve-yellow/50 text-evolve-yellow text-xs font-bold rounded-full px-4 py-1.5 hover:bg-evolve-yellow/10 transition-colors"
-        >
-          Upgrade
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => openPlans(2)}
+        className="flex-shrink-0 bg-evolve-yellow text-evolve-black text-xs font-bold rounded-full px-4 py-1.5 hover:opacity-90 transition-opacity"
+      >
+        {c.cta}
+      </button>
     </div>
   );
 }
@@ -353,15 +358,16 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      let { data } = await supabase
         .from("events")
         .select("*")
         .eq("status", "published")
-        .gte("start_time", new Date().toISOString())
+        .gte("start_time", upcomingCutoffIso())
         .order("start_time", { ascending: true })
-        .limit(5);
+        .limit(8);
       if (cancelled) return;
-      setEvents(data || []);
+      data = (data || []).filter((e) => !isEventOver(e)).slice(0, 5);
+      setEvents(data);
       setLoading(false);
       if (data?.[0]) {
         const { count } = await supabase
@@ -512,6 +518,64 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
   );
 }
 
+// Grow → Upskill: daily news, microlearning and quizzes (always free, in
+// every plan state). Placeholders until those surfaces ship — styled like
+// the reference's .upskill-card row.
+const UPSKILL = [
+  {
+    key: "news",
+    label: "Daily News",
+    color: "#DF0586",
+    bg: "rgba(223,5,134,0.16)",
+    icon: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 8h10M7 12h10M7 16h6" /></>
+  },
+  {
+    key: "micro",
+    label: "Microlearning",
+    color: "#A35BFB",
+    bg: "rgba(163,91,251,0.16)",
+    icon: <><path d="M3 8l9-4 9 4-9 4-9-4z" /><path d="M7 10v5c0 1.4 2.2 3 5 3s5-1.6 5-3v-5" /></>
+  },
+  {
+    key: "quiz",
+    label: "Quiz",
+    color: "#FFD007",
+    bg: "rgba(255,208,7,0.16)",
+    icon: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 015 0c0 1.7-2.5 2-2.5 4" /><path d="M12 17h.01" /></>
+  }
+];
+
+function UpskillRow() {
+  return (
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2.5 ml-0.5" style={{ color: "#6f6f72" }}>
+        Upskill
+      </p>
+      <div className="flex gap-2.5 md:max-w-xl">
+        {UPSKILL.map((u) => (
+          <div
+            key={u.key}
+            aria-disabled="true"
+            title="Coming soon"
+            className="flex-1 flex flex-col items-center gap-2 rounded-2xl pt-3.5 pb-3 px-1.5 cursor-default"
+            style={{ background: "#232325", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <span className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: u.bg }}>
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke={u.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {u.icon}
+              </svg>
+            </span>
+            <span className="text-[11.5px] font-semibold text-white text-center leading-tight">{u.label}</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: "#6f6f72" }}>
+              Coming soon
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── page ───────────────────────────────────────────────────────────────── */
 export default function PublicProfile() {
   const { username } = useParams();
@@ -591,27 +655,46 @@ export default function PublicProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 14-day free trial: shown once, the first time the owner lands on their
-  // own platform page with an active trial. "Seen" is tracked in
-  // localStorage (per user) rather than a DB write — losing that flag (new
-  // device, cleared storage) just means the sheet shows again, which is a
-  // harmless replay, not a bug worth a round trip for.
-  const [showTrialSheet, setShowTrialSheet] = useState(false);
+  // After-trial layer (src/components/membership): the 30-days-of-VIP
+  // welcome shows once on the owner's first landing during the trial, and
+  // the "your trial has ended" pop-up shows once the first time they land
+  // after it's over on pay-as-you-go. "Seen" lives in localStorage (per
+  // user) rather than a DB write — losing it just replays the sheet once,
+  // which is harmless.
+  const membership = useMembership();
+  const { access } = membership;
   useEffect(() => {
-    if (!isOwner || !user?.id) return;
-    if (!isTrialActive(user.trial_ends_at)) return;
-    const key = `evolve_trial_sheet_seen_${user.id}`;
-    if (typeof window !== "undefined" && !localStorage.getItem(key)) {
-      setShowTrialSheet(true);
+    if (!isOwner || !user?.id || typeof window === "undefined") return;
+    const seen = (k) => {
+      try {
+        return localStorage.getItem(k);
+      } catch {
+        return "1";
+      }
+    };
+    const mark = (k) => {
+      try {
+        localStorage.setItem(k, "1");
+      } catch {
+        /* private mode — fine, it just shows again */
+      }
+    };
+    if (access.phase === "trial") {
+      const key = `evolve_trial_sheet_seen_${user.id}`;
+      if (!seen(key)) {
+        mark(key);
+        membership.showWelcome();
+      }
+    } else if (access.mode === "payg") {
+      const key = `evolve_trial_ended_seen_${user.id}`;
+      if (!seen(key)) {
+        mark(key);
+        membership.openPlans(1);
+      }
     }
-  }, [isOwner, user?.id, user?.trial_ends_at]);
-
-  function dismissTrialSheet() {
-    setShowTrialSheet(false);
-    if (user?.id) {
-      localStorage.setItem(`evolve_trial_sheet_seen_${user.id}`, "1");
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, user?.id, access.phase, access.mode]);
+  const trialBadgeEnding = access.phase === "ended" && access.mode === "payg";
 
   // default collapsed on mobile (short summary) / expanded on desktop —
   // checked once on mount only, so it doesn't fight a user's own toggle
@@ -979,8 +1062,13 @@ export default function PublicProfile() {
                   (user.name || "?")[0].toUpperCase()
                 )}
               </button>
-              {isOwner && isTrialActive(user.trial_ends_at) && (
-                <TrialClockBadge size={14} className="absolute -bottom-0.5 -right-0.5" />
+              {isOwner && (
+                <TrialClockBadge
+                  size={16}
+                  ending={trialBadgeEnding}
+                  onClick={membership.openTrialStatus}
+                  className="absolute -bottom-1 -right-1"
+                />
               )}
 
               {accountMenuOpen && (
@@ -1040,16 +1128,7 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      {isOwner && !activeProgramme && isTrialActive(user.trial_ends_at) && (
-        <TrialBar daysLeft={trialDaysLeft(user.trial_ends_at)} />
-      )}
-
-      {showTrialSheet && (
-        <TrialSheet
-          daysLeft={trialDaysLeft(user.trial_ends_at)}
-          onClose={dismissTrialSheet}
-        />
-      )}
+      {isOwner && !activeProgramme && <TrialBar user={user} />}
 
       {deleteConfirmOpen && (
         <div
@@ -1161,8 +1240,13 @@ export default function PublicProfile() {
                       (card.name || "?")[0].toUpperCase()
                     )}
                   </div>
-                  {isOwner && isTrialActive(card.trial_ends_at) && (
-                    <TrialClockBadge size={16} className="absolute -bottom-0.5 -right-0.5" />
+                  {isOwner && (
+                    <TrialClockBadge
+                      size={16}
+                      ending={trialBadgeEnding}
+                      onClick={membership.openTrialStatus}
+                      className="absolute -bottom-0.5 -right-0.5"
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1297,6 +1381,7 @@ export default function PublicProfile() {
 
             {showOwnerTools && (
               <div className={activeTab === "grow" ? "contents" : "hidden"}>
+                <UpskillRow />
                 <Section title="evolve programmes">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ProgramCard

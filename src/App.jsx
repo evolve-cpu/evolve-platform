@@ -1051,6 +1051,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 import ContactModal from "./components/ContactModal";
 import { AuthProvider } from "./context/AuthContext";
+import { MembershipProvider } from "./components/membership/MembershipProvider";
 import { useAuth } from "./hooks/useAuth";
 
 // Lazy load non-critical routes
@@ -1904,7 +1905,9 @@ const App = () => {
               <AnantAppLayout />
             </AnantThemeProvider>
           ) : (
-            <AppLayout />
+            <MembershipProvider>
+              <AppLayout />
+            </MembershipProvider>
           )}
         </BrowserRouter>
       </AuthProvider>

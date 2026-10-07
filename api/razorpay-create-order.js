@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "node:crypto";
 import { recogniseLetters, validRecogniseImages } from "./_typetoberRecognise.js";
 import { postSubmissionsToDiscord, buildDailyReport, postReportToDiscord } from "./_typetoberDiscord.js";
+import { priceItem, fulfilPurchase, redeemReviewCredit, chargePaise } from "./_membership.js";
 
 // TEMP: testing amount — ₹5 instead of real plan prices. Revert before going live.
 const PLAN_AMOUNTS_PAISE = {
@@ -257,6 +258,123 @@ export default async function handler(req, res) {
         amount: ttTotal,
         currency: ttCurrency,
         count: ttItems.length,
+        key_id: process.env.RAZORPAY_KEY_ID
+      });
+    }
+
+    // ── after-trial membership: plans, pay-per-event, past recordings ────
+    // (see api/_membership.js + supabase/migrations/membership_plans.sql).
+    // Same create → Razorpay checkout → synchronous verify shape as the
+    // individual mentorship branch below; webhook is only a fallback.
+    if (product === "membership") {
+      if (!token) return res.status(401).json({ error: "unauthorized" });
+
+      const supabaseM = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const {
+        data: { user: mUser },
+        error: mAuthError
+      } = await supabaseM.auth.getUser(token);
+      if (mAuthError || !mUser) return res.status(401).json({ error: "unauthorized" });
+
+      if (action === "redeem_review") {
+        const out = await redeemReviewCredit(supabaseM, mUser);
+        if (out.error) return res.status(400).json({ error: out.error });
+        return res.status(200).json({ ok: true, review: out.review });
+      }
+
+      if (action === "verify") {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+          return res.status(400).json({ error: "missing payment verification fields" });
+        }
+        const expectedSignature = crypto
+          .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+          .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+          .digest("hex");
+        if (expectedSignature !== razorpay_signature) {
+          return res.status(400).json({ error: "payment verification failed" });
+        }
+        const { data: owned } = await supabaseM
+          .from("purchases")
+          .select("id")
+          .eq("razorpay_order_id", razorpay_order_id)
+          .eq("user_id", mUser.id)
+          .maybeSingle();
+        if (!owned) return res.status(404).json({ error: "payment record not found" });
+
+        try {
+          const purchase = await fulfilPurchase(supabaseM, razorpay_order_id, {
+            razorpay_payment_id,
+            razorpay_signature
+          });
+          return res.status(200).json({ ok: true, purchase });
+        } catch (err) {
+          console.error("membership fulfil error:", err);
+          return res.status(500).json({ error: "server error" });
+        }
+      }
+
+      const { kind, event_id } = body;
+      const priced = await priceItem(supabaseM, mUser.id, { kind, plan, eventId: event_id });
+      if (priced.error) return res.status(400).json({ error: priced.error });
+
+      // Local-dev-only stand-in for a confirmed payment, like the other
+      // branches — the client skips Razorpay entirely in import.meta.env.DEV.
+      if (devConfirm) {
+        if (process.env.NODE_ENV === "production") {
+          return res.status(403).json({ error: "not available in production" });
+        }
+        const devOrderId = `dev_${mUser.id.slice(0, 8)}_${Date.now()}`;
+        await supabaseM.from("purchases").insert({
+          user_id: mUser.id,
+          ...priced.row,
+          title: priced.title,
+          amount: priced.rupees,
+          razorpay_order_id: devOrderId,
+          status: "pending"
+        });
+        const purchase = await fulfilPurchase(supabaseM, devOrderId);
+        return res.status(200).json({ ok: true, purchase });
+      }
+
+      if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
+      if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
+
+      const amountPaise = chargePaise(priced.rupees);
+      const mAuth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString("base64");
+      const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+        method: "POST",
+        headers: { Authorization: `Basic ${mAuth}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountPaise,
+          currency: "INR",
+          receipt: `mb_${mUser.id.slice(0, 8)}_${Date.now()}`,
+          notes: { product: "membership", kind: priced.row.kind }
+        })
+      });
+      if (!orderRes.ok) {
+        console.error("Razorpay order error:", await orderRes.text());
+        return res.status(500).json({ error: "failed to create order" });
+      }
+      const order = await orderRes.json();
+
+      const { error: insertErr } = await supabaseM.from("purchases").insert({
+        user_id: mUser.id,
+        ...priced.row,
+        title: priced.title,
+        amount: amountPaise / 100,
+        razorpay_order_id: order.id,
+        status: "pending"
+      });
+      if (insertErr) {
+        console.error("purchase insert error:", insertErr);
+        return res.status(500).json({ error: "server error" });
+      }
+
+      return res.status(200).json({
+        order_id: order.id,
+        amount: amountPaise,
+        currency: "INR",
+        title: priced.title,
         key_id: process.env.RAZORPAY_KEY_ID
       });
     }

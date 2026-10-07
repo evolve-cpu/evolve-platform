@@ -20,8 +20,8 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { slugify } from "../lib/slug";
 import { QUESTIONS } from "../pages/Onboarding/questions";
-import { isTrialActive } from "../lib/trial";
 import { TrialClockBadge } from "./TrialBadge";
+import { useMembership, MEMBERSHIP_ICONS } from "./membership/MembershipProvider";
 import {
   CompetencyMatrix,
   SkillDonut,
@@ -2025,14 +2025,20 @@ function CareerTrajectory({ trajectory }) {
 
 // A titled block inside AIProfileReveal's parent box, separated from the
 // one above it by a horizontal rule.
+// One fold of the "evolve profile" card — uppercase grey label + a hairline
+// between folds, matching the reference's .jc-section-label / .jc-hr.
 function ProfileSection({ title, first, children }) {
   return (
     <div
-      className={`flex flex-col gap-4 ${
-        first ? "pb-6" : "py-6 border-t border-white/10"
+      className={`flex flex-col ${
+        first ? "pt-[18px] pb-5" : "pt-5 pb-5 border-t border-white/[0.08]"
       } last:pb-0`}
     >
-      {title && <h3 className="text-white font-bold text-sm">{title}</h3>}
+      {title && (
+        <h3 className="text-[#6f6f72] text-[11px] font-bold uppercase tracking-[0.08em] mb-3 ml-0.5">
+          {title}
+        </h3>
+      )}
       {children}
     </div>
   );
@@ -2107,7 +2113,7 @@ export function AIProfileReveal({
     // just horizontal rules between sections. On mobile the box border and
     // padding drop away so the content runs the full width of the cards
     // above it.
-    <div className="flex flex-col md:rounded-2xl md:border md:border-white/10 md:bg-white/[0.02] md:p-6">
+    <div className="flex flex-col rounded-[18px] border border-white/[0.08] bg-[#1c1c1e] px-4 pt-1.5 pb-4 md:px-6 md:pb-6">
       {/* The header block (stage/niche/domain/sector tags, profile links,
           experience/verified-projects/tools stat tiles, location/preference
           fact strip, the one-line summary) and the yellow→green top accent
@@ -2146,19 +2152,19 @@ export function AIProfileReveal({
       <SignalEvidence ... /> (x5) + CareerJourney
       */}
 
-      <div className="flex items-center justify-between gap-3 pb-5">
-        <h2 className="text-white font-bold text-lg">evolve profile</h2>
+      <div className="flex items-center justify-between gap-2.5 pt-2.5">
+        <h2 className="text-white font-bricolage font-extrabold text-base">evolve profile</h2>
         {onUpdate && (
           <div className="relative group">
             <button
               type="button"
               onClick={onUpdate}
               aria-label="Update profile"
-              className="w-9 h-9 rounded-full border border-white/15 bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full border border-white/[0.14] text-[#9a9a9a] hover:text-white active:bg-[#232325] flex items-center justify-center transition-colors"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path
-                  d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"
+                  d="M21 12a9 9 0 11-2.6-6.3M21 4v5h-5"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -2178,13 +2184,13 @@ export function AIProfileReveal({
       </ProfileSection>
 
       <ProfileSection title="Skill profile">
-        <SkillDonut categories={skillCategories} />
+        <SkillDonut categories={skillCategories} centerLabel={niche || domain} />
       </ProfileSection>
 
       {(technicalSkills.length > 0 ||
         soft_skills?.length > 0 ||
         interpersonal_skills?.length > 0) && (
-        <ProfileSection>
+        <ProfileSection title="">
           <SkillChipGroups
             technical={technicalSkills}
             soft={soft_skills}
@@ -2194,7 +2200,7 @@ export function AIProfileReveal({
       )}
 
       {timelineEntries.length > 0 && (
-        <ProfileSection title="Career timeline">
+        <ProfileSection title="Timeline">
           <SpiralTimeline entries={timelineEntries} />
         </ProfileSection>
       )}
@@ -2210,10 +2216,10 @@ export function AIProfileReveal({
 }
 
 const PROFILE_BUILD_MESSAGES = [
-  "Reading your resume and portfolio…",
-  "Finding your projects…",
-  "Building your timeline…",
-  "Plotting your strengths…"
+  "reading your resume and portfolio...",
+  "finding your projects...",
+  "building your timeline...",
+  "plotting your strengths..."
 ];
 
 // Three buckets on the card, each summing the raw tracked counts:
@@ -2226,20 +2232,105 @@ const PARTICIPATION_CATEGORIES = [
 
 function ParticipationTile({ label, value }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 min-w-0">
-      <span className="text-white text-lg font-bold">{value}</span>
-      <span className="text-white/40 text-[11px] leading-tight truncate">
+    <div className="flex flex-col gap-0.5 rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 min-w-0">
+      <span
+        className="font-bricolage font-extrabold text-xl leading-tight"
+        style={{ color: value ? "#FFFFFF" : "#6f6f72" }}
+      >
+        {value}
+      </span>
+      <span className="text-[#9a9a9a] text-[11px] font-semibold leading-tight">
         {label}
       </span>
     </div>
   );
 }
 
-function BuildingSpinner() {
+// "Mapping your journey" — full-screen while the AI profile builds, ported
+// from the reference's journey-processing state: a ghost pentagon whose
+// shape draws itself in, the cycling status line, and a pink→purple bar.
+// The real build takes anywhere from a few seconds to a minute, so the bar
+// eases toward 92% on its own and only fills once the build returns.
+const BUILD_RINGS = [29, 58, 87, 116, 145];
+function pentagon(r) {
+  return Array.from({ length: 5 }, (_, i) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+    return `${(200 + r * Math.cos(a)).toFixed(1)},${(200 + r * Math.sin(a)).toFixed(1)}`;
+  }).join(" L ");
+}
+
+function ProfileBuildingScreen({ status }) {
+  const [progress, setProgress] = useState(8);
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    const t0 = Date.now();
+    const tick = setInterval(() => {
+      const secs = (Date.now() - t0) / 1000;
+      setProgress(8 + 84 * (1 - Math.exp(-secs / 12)));
+    }, 350);
+    const draw = setTimeout(() => setDrawn(true), 1400);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(draw);
+    };
+  }, []);
+
+  // mobile: takes over the whole screen, like the reference. desktop: the
+  // same content in a centred modal over the dimmed page.
   return (
-    <div className="relative w-14 h-14 flex-shrink-0">
-      <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-      <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-evolve-yellow animate-spin" />
+    <div
+      className="fixed inset-0 z-[80] flex md:items-center md:justify-center bg-[#161616] md:bg-black/60"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="w-full flex flex-col items-center text-center px-7 pt-20 pb-10 md:w-[420px] md:rounded-3xl md:border md:border-white/[0.14] md:bg-[#1c1c1e] md:px-8 md:pt-10 md:pb-9 md:shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+      <div className="w-full flex justify-center" style={{ opacity: 0.85 }}>
+        <svg viewBox="0 0 400 400" className="w-[86%] max-w-[320px] md:max-w-[220px] h-auto overflow-visible">
+          <defs>
+            <linearGradient id="buildFillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#DF0586" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#A35BFB" stopOpacity="0.55" />
+            </linearGradient>
+          </defs>
+          {BUILD_RINGS.map((r) => (
+            <path key={r} d={`M ${pentagon(r)} Z`} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          ))}
+          {Array.from({ length: 5 }, (_, i) => {
+            const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+            return (
+              <line key={i} x1="200" y1="200" x2={200 + 145 * Math.cos(a)} y2={200 + 145 * Math.sin(a)} stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+            );
+          })}
+          <path
+            d="M 200.0,113.0 L 332.4,157.0 L 273.3,300.9 L 169.3,242.2 L 161.4,187.5 Z"
+            fill="url(#buildFillGrad)"
+            stroke="#FFD007"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeDasharray="700"
+            style={{
+              strokeDashoffset: drawn ? 0 : 700,
+              fillOpacity: drawn ? 1 : 0,
+              transition: "stroke-dashoffset 1.1s ease, fill-opacity 1.1s ease"
+            }}
+          />
+        </svg>
+      </div>
+      <p className="font-bricolage font-bold text-lg text-white mt-7 mb-2">Mapping your journey</p>
+      <p className="text-[13px] h-[18px]" style={{ color: "#9a9a9a" }}>
+        {status || PROFILE_BUILD_MESSAGES[0]}
+      </p>
+      <div className="w-full max-w-[240px] h-1 rounded mt-[22px] overflow-hidden" style={{ background: "#232325" }}>
+        <div
+          className="h-full rounded"
+          style={{
+            width: `${progress}%`,
+            background: "linear-gradient(90deg, #DF0586, #A35BFB)",
+            transition: "width 0.35s ease"
+          }}
+        />
+      </div>
+      </div>
     </div>
   );
 }
@@ -2305,6 +2396,9 @@ function ProfileUploadSheet({
     setTimeout(onClose, 220);
   }
 
+  // full screen, so it has to sit outside the sheet's transformed box
+  if (building) return <ProfileBuildingScreen status={buildStep} />;
+
   return (
     <div className="fixed inset-0 z-[70] flex items-end md:items-center md:justify-center">
       <div
@@ -2320,17 +2414,7 @@ function ProfileUploadSheet({
       >
         <div className="w-10 h-1 rounded-full bg-white/15 md:hidden mx-auto" />
 
-        {building ? (
-          <div className="flex flex-col items-center text-center gap-4 py-10">
-            <BuildingSpinner />
-            <p className="text-white font-semibold text-sm">
-              {buildStep || "Building your profile…"}
-            </p>
-            <p className="text-white/30 text-xs">
-              This usually takes under a minute.
-            </p>
-          </div>
-        ) : (
+        {(
           <>
             <div>
               <h3 className="text-white font-bold text-lg">
@@ -2433,6 +2517,13 @@ export function ProfileTabPane({ user }) {
     quizzes: 0,
     resources: 0
   });
+
+  // after-trial access (src/lib/membership.js): the verified badge and the
+  // public page only hold while the trial or a plan is running — on
+  // pay-as-you-go the header drops back to plain and a "Profile is
+  // private" card offers the plans instead.
+  const membership = useMembership();
+  const { access } = membership;
 
   useEffect(() => {
     let cancelled = false;
@@ -2565,6 +2656,22 @@ export function ProfileTabPane({ user }) {
     setVerifyRescheduling(false);
   }
 
+  // the "you're evolve verified" moment — an admin flips the status, so the
+  // first time the owner lands here afterwards they get the badge sheet +
+  // confetti with Publish & share. Once per user (localStorage).
+  useEffect(() => {
+    if (!loaded || verificationStatus !== "verified" || !access.full || !user?.id) return;
+    const key = `evolve_verified_sheet_seen_${user.id}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      return;
+    }
+    membership.showVerified(isPublic ? handleCopyShareLink : handlePublish);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, verificationStatus, access.full, user?.id]);
+
   async function uploadFile(file, prefix) {
     const ext = file.name.split(".").pop();
     const path = `${user.id}/${prefix}-${Date.now()}.${ext}`;
@@ -2679,6 +2786,17 @@ export function ProfileTabPane({ user }) {
 
       setAiProfile(analyzeJson.ai_profile);
       setUploadOpen(false);
+      // reference: once the profile is built, nudge them to get verified
+      if (!verificationStatus) {
+        setTimeout(
+          () =>
+            membership.showVerifyPrompt(() => {
+              setVerifyRescheduling(false);
+              setVerifyFlowOpen(true);
+            }),
+          700
+        );
+      }
     } catch (err) {
       setErrorMsg(err.message || "something went wrong");
     } finally {
@@ -2721,7 +2839,9 @@ export function ProfileTabPane({ user }) {
   // verification round has started — once one's in flight, VerifyCard
   // below shows its status instead.
   const canVerify = ENABLE_PORTFOLIO_AI && aiProfile;
-  const isVerified = canVerify && verificationStatus === "verified";
+  const wasVerified = canVerify && verificationStatus === "verified";
+  const isVerified = wasVerified && access.full;
+  const profileLocked = wasVerified && !access.full;
   const verifyButton = canVerify && !verificationStatus && (
     <button
       type="button"
@@ -2779,12 +2899,12 @@ export function ProfileTabPane({ user }) {
               (user?.name || "?")[0].toUpperCase()
             )}
           </div>
-          {isTrialActive(user?.trial_ends_at) && (
-            <TrialClockBadge
-              size={isVerified ? 26 : 18}
-              className="absolute bottom-0 right-0"
-            />
-          )}
+          <TrialClockBadge
+            size={isVerified ? 26 : 22}
+            ending={access.phase === "ended" && access.mode === "payg"}
+            onClick={membership.openTrialStatus}
+            className="absolute -bottom-0.5 -right-0.5"
+          />
         </div>
         <div className="relative min-w-0 flex flex-col gap-1">
           {isVerified && (
@@ -2827,6 +2947,16 @@ export function ProfileTabPane({ user }) {
           {verifyButton && <div className="mt-1">{verifyButton}</div>}
         </div>
       </div>
+
+      {profileLocked && (
+        <div className="at-priv">
+          <span className="ic">{MEMBERSHIP_ICONS.lock}</span>
+          <span className="tx">Profile is private</span>
+          <button type="button" onClick={() => membership.openPlans(2)}>
+            Unlock with a plan
+          </button>
+        </div>
+      )}
 
       {/* verified: Publish sits right under the gold card; once published,
           the share link + unpublish take its place. */}
@@ -2872,7 +3002,7 @@ export function ProfileTabPane({ user }) {
       {ENABLE_PORTFOLIO_AI &&
         aiProfile &&
         verificationStatus &&
-        !isVerified && (
+        !wasVerified && (
         <VerifyCard
           status={verificationStatus}
           slot={verificationSlot}
@@ -2897,9 +3027,11 @@ export function ProfileTabPane({ user }) {
         />
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 flex flex-col gap-3">
-        <p className="text-white font-bold text-sm">evolve participation</p>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="rounded-[18px] border border-white/[0.08] bg-[#1c1c1e] px-4 pt-1.5 pb-4">
+        <p className="text-white font-bricolage font-extrabold text-base pt-2.5 mb-3">
+          evolve participation
+        </p>
+        <div className="grid grid-cols-3 gap-2">
           {PARTICIPATION_CATEGORIES.map((c, i) => (
             <ParticipationTile
               key={c.label}
@@ -2928,24 +3060,45 @@ export function ProfileTabPane({ user }) {
             )}
           </>
         ) : (
-          <div className="rounded-2xl border border-evolve-yellow/20 bg-evolve-yellow/[0.03] p-6 flex flex-col items-center text-center gap-3">
-            <GhostRadarIllustration />
-            <p className="text-white font-bold text-base">
-              Populate your profile
+          // reference .jc-populate (is-basic): ghost pentagon with a dashed
+          // yellow shape, "Build your evolve profile", Get started
+          <div
+            className="flex flex-col items-center justify-center text-center rounded-3xl px-6 py-8 min-h-[60vh] md:min-h-0"
+            style={{ background: "#232325", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <svg viewBox="0 0 400 400" aria-hidden="true" className="w-[200px] h-auto">
+              {BUILD_RINGS.map((r) => (
+                <path key={r} d={`M ${pentagon(r)} Z`} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+              ))}
+              {Array.from({ length: 5 }, (_, i) => {
+                const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                return <line key={i} x1="200" y1="200" x2={200 + 145 * Math.cos(a)} y2={200 + 145 * Math.sin(a)} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />;
+              })}
+              <path
+                d="M 200.0,113.0 L 332.4,157.0 L 273.3,300.9 L 169.3,242.2 L 161.4,187.5 Z"
+                fill="rgba(255,208,7,0.07)"
+                stroke="rgba(255,208,7,0.55)"
+                strokeWidth="2.5"
+                strokeDasharray="6 8"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p className="font-bricolage font-extrabold text-2xl text-white mt-[22px] mb-2.5">
+              Build your evolve profile
             </p>
-            <p className="text-white/40 text-xs max-w-[280px]">
-              Upload your resume or portfolio and we'll build an AI profile —
-              competency radar, skill breakdown and a timeline of your work.
+            <p className="text-[15px] leading-normal max-w-[290px] mb-7" style={{ color: "#9a9a9a" }}>
+              Share your resume or portfolio. We'll map your skills, strengths and journey for you.
             </p>
             <button
               type="button"
               onClick={() => setUploadOpen(true)}
-              className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 transition-opacity"
+              className="inline-flex items-center gap-2 bg-evolve-yellow text-[#161616] font-bold text-[15px] rounded-[14px] px-7 py-3.5 active:scale-[0.97] transition-transform"
             >
-              Upload resume or portfolio
+              Get started
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
             {errorMsg && !uploadOpen && (
-              <p className="text-red-400 text-xs">{errorMsg}</p>
+              <p className="text-red-400 text-xs mt-3">{errorMsg}</p>
             )}
           </div>
         ))}

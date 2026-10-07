@@ -618,6 +618,7 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import { supabase } from "../supabaseClient";
+import { isEventOver, upcomingCutoffIso } from "../lib/events";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 
@@ -1161,9 +1162,9 @@ const Webinars = () => {
       .from("events")
       .select("*")
       .eq("status", "published")
-      .gte("start_time", new Date().toISOString())
+      .gte("start_time", upcomingCutoffIso())
       .order("start_time", { ascending: true })
-      .then(({ data }) => setUpcomingEvents(data || []));
+      .then(({ data }) => setUpcomingEvents((data || []).filter((e) => !isEventOver(e))));
   }, []);
 
   // SVGs are still imported here — content.js only holds the text/URLs

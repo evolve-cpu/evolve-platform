@@ -52,8 +52,22 @@ const EMPTY_FORM = {
   speaker_socials: [""],
   cover_image_url: "",
   join_link: "",
-  capacity: ""
+  capacity: "",
+  // pricing after the trial (blank = default for the type, see
+  // src/lib/membership.js) + the past-event CMS: recording, its thumbnail
+  // and the guests who were on the session
+  price_inr: "",
+  recording_price_inr: "",
+  recording_path: "",
+  recording_url: "",
+  recording_thumbnail_url: "",
+  recording_duration_min: "",
+  guests: [{ name: "", title: "", photo_url: "" }]
 };
+
+// new events get their id up front so a recording can be uploaded into
+// that event's folder before the row is first saved
+const newEventForm = () => ({ ...EMPTY_FORM, _id: crypto.randomUUID() });
 
 function slugify(text) {
   return text
@@ -194,6 +208,73 @@ function ImageField({ label, value, onUploaded, pathPrefix }) {
   );
 }
 
+// Past-event recording upload — goes to the PRIVATE event-recordings bucket
+// under "<event id>/…" (that folder name is what the storage policy in
+// membership_plans.sql checks access against), so viewers only ever get a
+// short-lived signed URL, never a public link.
+function RecordingField({ eventId, value, onUploaded, onRemove }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleFile(file) {
+    if (!file || !eventId) return;
+    setUploading(true);
+    setError("");
+    const path = `${eventId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("event-recordings")
+      .upload(path, file, { contentType: file.type || "video/mp4" });
+    if (upErr) {
+      setError(
+        /size|exceed|too large/i.test(upErr.message)
+          ? `${upErr.message} — raise the upload limit in Supabase (Storage → Settings) or paste a hosted player URL instead.`
+          : upErr.message
+      );
+      setUploading(false);
+      return;
+    }
+    onUploaded(path);
+    setUploading(false);
+  }
+
+  return (
+    <div>
+      <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+        recording video (private — only people with access can stream it)
+      </label>
+      {value ? (
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-white truncate">{value.split("/").pop()}</span>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-xs font-bold px-3 py-1 rounded-lg"
+            style={{ border: "1px solid #333", color: "#aaa" }}
+          >
+            remove
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+            className="text-xs text-white"
+            disabled={uploading}
+          />
+          {uploading && (
+            <span className="text-xs" style={{ color: "#888" }}>
+              uploading… large files take a while, keep this tab open
+            </span>
+          )}
+        </div>
+      )}
+      {error && <p className="text-xs mt-1" style={{ color: "#ef4444" }}>{error}</p>}
+    </div>
+  );
+}
+
 function EventForm({ form, setForm, onSave, onCancel, saving }) {
   function updateCategoryName(ci, name) {
     setForm((f) => ({
@@ -238,6 +319,16 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
   }
   function removeSocial(i) {
     setForm((f) => ({ ...f, speaker_socials: f.speaker_socials.filter((_, idx) => idx !== i) }));
+  }
+
+  function updateGuest(i, key, value) {
+    setForm((f) => ({ ...f, guests: f.guests.map((g, idx) => (idx === i ? { ...g, [key]: value } : g)) }));
+  }
+  function addGuest() {
+    setForm((f) => ({ ...f, guests: [...f.guests, { name: "", title: "", photo_url: "" }] }));
+  }
+  function removeGuest(i) {
+    setForm((f) => ({ ...f, guests: f.guests.filter((_, idx) => idx !== i) }));
   }
 
   return (
@@ -430,6 +521,125 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
         />
       </div>
 
+      <div className="md:col-span-2 pt-2">
+        <p className="text-xs font-black uppercase tracking-wide" style={{ color: Y }}>
+          pricing after the free trial
+        </p>
+        <p className="text-[11px] mt-1" style={{ color: "#888" }}>
+          Free during the 30-day trial and for anyone on a plan. Blank = default (AMA / Panel ₹20,
+          Webinar / Workshop ₹150, recording ₹30). 0 = free for everyone.
+        </p>
+      </div>
+      <Field
+        type="number"
+        min="0"
+        label="live session price (₹)"
+        value={form.price_inr}
+        placeholder={["Webinar", "Workshop"].includes(form.event_type) ? "150" : "20"}
+        onChange={(e) => setForm((f) => ({ ...f, price_inr: e.target.value }))}
+      />
+      <Field
+        type="number"
+        min="0"
+        label="recording price (₹)"
+        value={form.recording_price_inr}
+        placeholder="30"
+        onChange={(e) => setForm((f) => ({ ...f, recording_price_inr: e.target.value }))}
+      />
+
+      <div className="md:col-span-2 pt-2">
+        <p className="text-xs font-black uppercase tracking-wide" style={{ color: Y }}>
+          past event — recording &amp; guests
+        </p>
+        <p className="text-[11px] mt-1" style={{ color: "#888" }}>
+          Shows on the event page once the session is over. "About the session" above is reused as
+          its about section.
+        </p>
+      </div>
+      <div className="md:col-span-2">
+        <RecordingField
+          eventId={form._id}
+          value={form.recording_path}
+          onUploaded={(path) => setForm((f) => ({ ...f, recording_path: path }))}
+          onRemove={() => setForm((f) => ({ ...f, recording_path: "" }))}
+        />
+      </div>
+      <div className="md:col-span-2">
+        <Field
+          label="…or a hosted player URL (VdoCipher / Bunny Stream / Vimeo embed) — used when no video is uploaded"
+          value={form.recording_url}
+          placeholder="https://iframe.mediadelivery.net/embed/..."
+          onChange={(e) => setForm((f) => ({ ...f, recording_url: e.target.value }))}
+        />
+      </div>
+      <ImageField
+        label="recording thumbnail (falls back to the cover image)"
+        value={form.recording_thumbnail_url}
+        pathPrefix="recording-thumbs"
+        onUploaded={(url) => setForm((f) => ({ ...f, recording_thumbnail_url: url }))}
+      />
+      <Field
+        type="number"
+        min="0"
+        label="recording length (minutes)"
+        value={form.recording_duration_min}
+        onChange={(e) => setForm((f) => ({ ...f, recording_duration_min: e.target.value }))}
+      />
+
+      <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          guests on the session
+        </label>
+        <div className="space-y-2">
+          {form.guests.map((g, i) => (
+            <div
+              key={i}
+              className="rounded-lg p-3 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-center"
+              style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}
+            >
+              <input
+                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={g.name}
+                placeholder="Guest name"
+                onChange={(e) => updateGuest(i, "name", e.target.value)}
+              />
+              <input
+                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={g.title}
+                placeholder="Role / company"
+                onChange={(e) => updateGuest(i, "title", e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => removeGuest(i)}
+                className="text-xs font-bold px-3 py-2 rounded-lg"
+                style={{ border: "1px solid #333", color: "#aaa" }}
+              >
+                remove
+              </button>
+              <div className="md:col-span-3">
+                <ImageField
+                  label="guest photo"
+                  value={g.photo_url}
+                  pathPrefix="guests"
+                  onUploaded={(url) => updateGuest(i, "photo_url", url)}
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addGuest}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg"
+            style={{ border: `1px solid ${Y}`, color: Y }}
+          >
+            + add guest
+          </button>
+        </div>
+      </div>
+
       <div className="md:col-span-2 flex gap-2 pt-1">
         <button
           onClick={() => onSave("draft")}
@@ -466,6 +676,7 @@ function eventToForm(event) {
       ? Math.round((new Date(event.end_time) - new Date(event.start_time)) / 60000)
       : 60;
   return {
+    _id: event.id,
     title: event.title || "",
     slug: event.slug || "",
     _slugTouched: true,
@@ -484,15 +695,25 @@ function eventToForm(event) {
     speaker_socials: event.speaker_socials?.length ? event.speaker_socials : [""],
     cover_image_url: event.cover_image_url || "",
     join_link: event.join_link || "",
-    capacity: event.capacity ?? ""
+    capacity: event.capacity ?? "",
+    price_inr: event.price_inr ?? "",
+    recording_price_inr: event.recording_price_inr ?? "",
+    recording_path: event.recording_path || "",
+    recording_url: event.recording_url || "",
+    recording_thumbnail_url: event.recording_thumbnail_url || "",
+    recording_duration_min: event.recording_duration_min ?? "",
+    guests: event.guests?.length ? event.guests : [{ name: "", title: "", photo_url: "" }]
   };
 }
+
+const intOrNull = (v) => (v === "" || v == null ? null : parseInt(v, 10));
 
 function formToPayload(form, status) {
   const start_time = istToUtc(form.date, form.time);
   const durationMinutes = parseInt(form.durationMinutes, 10) || 0;
   const end_time = start_time ? new Date(new Date(start_time).getTime() + durationMinutes * 60000).toISOString() : null;
   return {
+    id: form._id,
     title: form.title.trim(),
     slug: slugify(form.slug || form.title),
     event_type: form.event_type || EVENT_TYPES[0],
@@ -510,6 +731,15 @@ function formToPayload(form, status) {
     cover_image_url: form.cover_image_url || null,
     join_link: form.join_link.trim() || null,
     capacity: form.capacity === "" ? null : parseInt(form.capacity, 10),
+    price_inr: intOrNull(form.price_inr),
+    recording_price_inr: intOrNull(form.recording_price_inr),
+    recording_path: form.recording_path || null,
+    recording_url: form.recording_url.trim() || null,
+    recording_thumbnail_url: form.recording_thumbnail_url || null,
+    recording_duration_min: intOrNull(form.recording_duration_min),
+    guests: form.guests
+      .map((g) => ({ name: g.name.trim(), title: g.title.trim(), photo_url: g.photo_url || "" }))
+      .filter((g) => g.name),
     status
   };
 }
@@ -520,7 +750,7 @@ export default function EventsTab() {
   const [registrantsByEvent, setRegistrantsByEvent] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [creating, setCreating] = useState(false);
-  const [createForm, setCreateForm] = useState(EMPTY_FORM);
+  const [createForm, setCreateForm] = useState(newEventForm);
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
@@ -571,7 +801,7 @@ export default function EventsTab() {
     }
     setEvents((prev) => [data, ...prev]);
     setCreating(false);
-    setCreateForm(EMPTY_FORM);
+    setCreateForm(newEventForm());
     if (data.status === "published") syncCalendar(data.id);
   }
 
@@ -647,7 +877,7 @@ export default function EventsTab() {
         {!creating && (
           <button
             onClick={() => {
-              setCreateForm(EMPTY_FORM);
+              setCreateForm(newEventForm());
               setCreating(true);
               setExpandedId(null);
             }}

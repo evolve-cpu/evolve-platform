@@ -7,6 +7,11 @@ import { useAuth } from "../hooks/useAuth";
 import { findFreeSlug } from "../lib/slug";
 import SEO from "../components/SEO";
 import SignIn from "./SignIn";
+import { useMembership } from "../components/membership/MembershipProvider";
+import PastEventRecording, { EventGuests } from "../components/events/PastEventRecording";
+import { eventPrice, eventKindLabel, inr } from "../lib/membership";
+import { fetchOwnedEventIds } from "../lib/membershipCheckout";
+import { isEventOver } from "../lib/events";
 
 const COMMUNITY_URL =
   "https://discord.gg/MmfaqCPdF7";
@@ -301,6 +306,11 @@ export default function EventDetail() {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  // after the trial, pay-as-you-go people buy events / recordings one at a
+  // time — which ones they already own (src/lib/membership.js)
+  const membership = useMembership();
+  const [owned, setOwned] = useState({ event: new Set(), recording: new Set() });
+  const reloadOwned = () => fetchOwnedEventIds(user?.id).then(setOwned);
 
   useEffect(() => {
     fetchEvent();
@@ -336,6 +346,7 @@ export default function EventDetail() {
     setRegistrantCount(count || 0);
 
     if (user) {
+      reloadOwned();
       const { data: existing } = await supabase
         .from("event_registrations")
         .select("*")
@@ -372,7 +383,28 @@ export default function EventDetail() {
       setShowTicketModal(true);
       return;
     }
-    setShowQuestionModal(true);
+    // trial / plan → straight in; pay-as-you-go → pay sheet first, then
+    // the same question modal once paid
+    membership.gate(
+      {
+        kind: "event",
+        event_id: event.id,
+        title: event.title,
+        sub: eventKindLabel(event),
+        price: eventPrice(event),
+        owned: owned.event.has(event.id)
+      },
+      () => {
+        reloadOwned();
+        setShowQuestionModal(true);
+      }
+    );
+  }
+
+  function goSignIn() {
+    sessionStorage.setItem("signin_from", `/events/${slug}`);
+    if (window.innerWidth >= 768) setShowSignInModal(true);
+    else navigate("/signin", { state: { from: `/events/${slug}` } });
   }
 
   async function handleRegisterSubmit({ category, question, anonymous }) {
@@ -391,6 +423,14 @@ export default function EventDetail() {
       .single();
 
     if (error) {
+      // membership_plans.sql refuses the insert for a paid event the
+      // person hasn't paid for — reopen the pay sheet instead of a raw error
+      if (/payment required/i.test(error.message)) {
+        setShowQuestionModal(false);
+        setSubmitting(false);
+        handleBookSpot();
+        return;
+      }
       setSubmitError(error.message);
       setSubmitting(false);
       return;
@@ -418,6 +458,8 @@ export default function EventDetail() {
   if (loading) {
     return <div className="min-h-screen bg-evolve-black" />;
   }
+
+  const isPast = event && isEventOver(event);
 
   if (notFound) {
     return (
@@ -532,7 +574,19 @@ export default function EventDetail() {
             </div>
           )}
 
-          {event.question_categories?.length > 0 && (
+          <EventGuests guests={event.guests} />
+
+          {isPast && (
+            <PastEventRecording
+              event={event}
+              user={user}
+              ownedRecording={owned.recording.has(event.id)}
+              onPurchased={reloadOwned}
+              onSignIn={goSignIn}
+            />
+          )}
+
+          {!isPast && event.question_categories?.length > 0 && (
             <div>
               <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-3">
                 question categories
@@ -554,6 +608,7 @@ export default function EventDetail() {
             </div>
           )}
 
+          {!isPast && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="font-bold text-sm">Register</p>
             <p className="text-white/50 text-xs mt-1">
@@ -568,12 +623,29 @@ export default function EventDetail() {
                 ? "You're going ✓ — view ticket"
                 : "Book my spot →"}
             </button>
+            {user &&
+              !myRegistration &&
+              !membership.access.full &&
+              eventPrice(event) > 0 &&
+              !owned.event.has(event.id) && (
+                <p className="text-white/40 text-xs mt-3">
+                  {inr(eventPrice(event))} for this session ·{" "}
+                  <button
+                    type="button"
+                    onClick={() => membership.openPlans(2)}
+                    className="text-evolve-yellow font-semibold hover:underline"
+                  >
+                    free with a plan
+                  </button>
+                </p>
+              )}
             {registrantCount > 0 && (
               <p className="text-white/40 text-xs mt-3">
                 {registrantCount} going
               </p>
             )}
           </div>
+          )}
         </div>
       </div>
 
