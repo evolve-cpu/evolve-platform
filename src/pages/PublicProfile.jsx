@@ -402,11 +402,6 @@ function EventsTabPane() {
     };
   }, []);
 
-  function goBack() {
-    // in-app history entry to step back to, else the profile tab
-    if (window.history.state?.idx > 0) navigate(-1);
-    else navigate("/app/profile");
-  }
 
   const q = search.trim().toLowerCase();
   // events move to "past" by themselves once they've ended (src/lib/events.js);
@@ -429,8 +424,8 @@ function EventsTabPane() {
     <div className="flex flex-col w-full">
       <button
         type="button"
-        onClick={goBack}
-        aria-label="back"
+        onClick={() => navigate("/app/profile")}
+        aria-label="back to my profile"
         className="hidden md:flex w-9 h-9 rounded-full border border-white/10 items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors mb-5"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
