@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { findFreeSlug } from "../lib/slug";
 
 /**
  * AuthContext
@@ -7,8 +8,8 @@ import { supabase } from "../supabaseClient";
  * Single shared instance of auth state for the whole app. Every component
  * that calls useAuth() reads/writes the SAME user object — critical for
  * things like Navigation's account modal, which must see a profile update
- * (e.g. onboarding_completed flipping to true) the instant another component
- * (Onboarding.jsx) calls refreshUser(), not just on its own next mount.
+ * (e.g. trial_ends_at being set on first platform entry) the instant another
+ * component (PlatformApp.jsx) calls refreshUser(), not just on its own next mount.
  *
  * Supports:
  *   • Google One Tap   (signInWithIdToken — initialised in App.jsx)
@@ -84,7 +85,10 @@ export function AuthProvider({ children }) {
       .maybeSingle();
 
     if (profile) {
-      setUser(buildUser(authUser, profile));
+      const provisioned = profile.username
+        ? profile
+        : await provisionIndividual(authUser, profile);
+      setUser(buildUser(authUser, provisioned));
       setAuthLoading(false);
       return;
     }
@@ -112,9 +116,36 @@ export function AuthProvider({ children }) {
 
     if (newProfile) {
       setIsNewUser(true);
-      setUser(buildUser(authUser, newProfile));
+      setUser(buildUser(authUser, await provisionIndividual(authUser, newProfile)));
     }
     setAuthLoading(false);
+  }
+
+  // There's no onboarding step any more — signing in drops people straight
+  // onto the platform (/app), which is keyed off their username. So every
+  // profile without one gets a username here and is marked onboarded as an
+  // individual. Student vs pro is decided later, at checkout (student ID
+  // upload). Institution admins still go through /onboarding explicitly from
+  // the institutions page, which reuses this username.
+  async function provisionIndividual(authUser, profile) {
+    const username = await findFreeSlug(
+      supabase,
+      "profile_cards",
+      "username",
+      profile.name || authUser.email
+    );
+    const { data } = await supabase
+      .from("profiles")
+      .update({
+        username,
+        onboarding_completed: true,
+        onboarding_completed_at:
+          profile.onboarding_completed_at || new Date().toISOString()
+      })
+      .eq("id", authUser.id)
+      .select()
+      .single();
+    return data || profile;
   }
 
   function buildUser(authUser, profile) {
@@ -154,6 +185,7 @@ export function AuthProvider({ children }) {
       onboarding_completed_at: profile.onboarding_completed_at ?? null,
       growth_stage:            profile.growth_stage ?? 0,
       trial_ends_at:           profile.trial_ends_at ?? null,
+      trial_started_at:        profile.trial_started_at ?? null,
       // after-trial membership (see src/lib/membership.js)
       designation:             profile.designation ?? null,
       plan:                    profile.plan ?? null,

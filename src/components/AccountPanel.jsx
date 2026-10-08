@@ -3027,20 +3027,24 @@ export function ProfileTabPane({ user }) {
         />
       )}
 
-      <div className="rounded-[18px] border border-white/[0.08] bg-[#1c1c1e] px-4 pt-1.5 pb-4">
-        <p className="text-white font-bricolage font-extrabold text-base pt-2.5 mb-3">
-          evolve participation
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {PARTICIPATION_CATEGORIES.map((c, i) => (
-            <ParticipationTile
-              key={c.label}
-              label={c.label}
-              value={participationCounts[i]}
-            />
-          ))}
+      {/* hidden until the AI profile exists — a brand-new account only
+          sees the "Build your evolve profile" prompt below */}
+      {(!ENABLE_PORTFOLIO_AI || aiProfile) && (
+        <div className="rounded-[18px] border border-white/[0.08] bg-[#1c1c1e] px-4 pt-1.5 pb-4">
+          <p className="text-white font-bricolage font-extrabold text-base pt-2.5 mb-3">
+            evolve participation
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {PARTICIPATION_CATEGORIES.map((c, i) => (
+              <ParticipationTile
+                key={c.label}
+                label={c.label}
+                value={participationCounts[i]}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {ENABLE_PORTFOLIO_AI &&
         (aiProfile ? (

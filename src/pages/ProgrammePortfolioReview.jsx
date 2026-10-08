@@ -29,7 +29,7 @@ export default function ProgrammePortfolioReview() {
         style={{ backgroundColor: "#161618" }}
       >
         <Link
-          to={`/profile/${user.username}`}
+          to="/app/grow"
           className="flex items-center gap-1.5 text-evolve-yellow text-sm font-semibold"
         >
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">

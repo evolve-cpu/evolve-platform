@@ -900,25 +900,14 @@ const Mentorship = () => {
   const acceleratorFeatures = COPY.pricing.acceleratorFeatures;
 
   // "Get started" everywhere on this page (hero + pricing boxes) funnels into
-  // the same place: sign in (if needed) → finish onboarding (if needed) →
-  // land on the mentorship card inside the profile page. The sessionStorage
-  // flag survives the sign-in/onboarding redirects (which always land plain
-  // on /profile/:username, see Onboarding.jsx) so PublicProfile can still
-  // open the mentorship pane once the user actually gets there.
+  // the same place: the mentorship programme inside the platform. Signed-out
+  // visitors are bounced through /signin and back by PlatformApp; the
+  // sessionStorage flag is a fallback in case a sign-in lands them on a
+  // plain /app/profile instead (PublicProfile then opens mentorship).
   const handleGetStarted = (source) => {
     trackCtaClick("get_started", source);
     sessionStorage.setItem("open_mentorship_card", "1");
-    if (!user) {
-      navigate("/signin");
-      return;
-    }
-    if (!user.onboarding_completed) {
-      navigate("/onboarding");
-      return;
-    }
-    navigate(`/profile/${user.username}`, {
-      state: { activeProgramme: "mentorship" }
-    });
+    navigate("/app/grow/mentorship");
   };
 
   return (

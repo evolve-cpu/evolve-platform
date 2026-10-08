@@ -109,13 +109,11 @@ const Navigation = ({
   const accountBtnRef = useRef(null);
   const [accountPos, setAccountPos] = useState({ top: 0, left: 0 });
 
-  // Onboarding is deliberately not tied to sign-in — a signed-in visitor can
-  // browse freely with an incomplete profile. This is the CTA that sends
-  // them into /onboarding on their own terms — as an individual, same as
-  // every other onboarding entry point.
+  // Fallback for the rare account still missing a username (AuthContext
+  // normally provisions one at sign-in) — the platform finishes setting it up.
   const handleCompleteOnboarding = () => {
     setAccountOpen(false);
-    navigate("/onboarding");
+    navigate("/app/profile");
   };
 
   const navItems = [
@@ -557,7 +555,7 @@ const Navigation = ({
                   <button
                     onClick={() => {
                       setAccountOpen(false);
-                      navigate(`/profile/${user.username}`);
+                      navigate("/app/profile");
                     }}
                     className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
@@ -652,7 +650,7 @@ const Navigation = ({
               <button
                 onClick={() => {
                   setAccountOpen(false);
-                  navigate(`/profile/${user.username}`);
+                  navigate("/app/profile");
                 }}
                 className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >

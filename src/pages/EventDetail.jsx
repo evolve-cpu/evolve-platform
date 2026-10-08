@@ -291,8 +291,15 @@ function TicketModal({ event, registration, user, onClose }) {
   );
 }
 
-export default function EventDetail() {
-  const { slug } = useParams();
+// Two homes for the same page:
+//   /events/:slug      — public, viewable signed out (SEO, shared links)
+//   /app/events/:slug  — `embedded` inside the signed-in platform, where
+//                        registration actually happens
+// Booking from the public page signs the visitor in (if needed) and moves
+// them into the platform copy, which picks the booking up via PENDING_KEY.
+export default function EventDetail({ embedded = false, slug: slugProp }) {
+  const params = useParams();
+  const slug = slugProp ?? params.slug;
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
 
@@ -317,10 +324,24 @@ export default function EventDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, user?.id]);
 
-  // Signed in (any method) while the sign-in modal was open — close it and
-  // let the booking flow continue on this same page.
+  const platformPath = `/app/events/${slug}`;
+
+  // History ends up as …/app/events → /app/events/:slug, so "back" from the
+  // event stays inside the platform.
+  function enterPlatform() {
+    navigate("/app/events", { replace: true });
+    navigate(platformPath);
+  }
+
+  // Signed in (any method) while the sign-in modal was open — close it and,
+  // if they were mid-booking, carry on inside the platform.
   useEffect(() => {
-    if (user) setShowSignInModal(false);
+    if (!user) return;
+    setShowSignInModal(false);
+    if (!embedded && sessionStorage.getItem(PENDING_KEY) === slug) {
+      enterPlatform();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function fetchEvent() {
@@ -355,9 +376,9 @@ export default function EventDetail() {
         .maybeSingle();
       setMyRegistration(existing || null);
 
-      if (!existing && sessionStorage.getItem(PENDING_KEY) === slug) {
+      if (embedded && sessionStorage.getItem(PENDING_KEY) === slug) {
         sessionStorage.removeItem(PENDING_KEY);
-        setShowQuestionModal(true);
+        if (!existing) setShowQuestionModal(true);
       }
     }
     setLoading(false);
@@ -369,18 +390,23 @@ export default function EventDetail() {
       // location.state alone doesn't survive the full-page redirect round trip
       // for Google/LinkedIn OAuth sign-in, so also persist it the same way
       // PortfolioReviewForm.jsx does for its own deep-link-back-after-signin flow.
-      sessionStorage.setItem("signin_from", `/events/${slug}`);
+      sessionStorage.setItem("signin_from", platformPath);
       // Desktop: sign in without leaving the event page (modal). Mobile: the
       // full /signin page has more room to breathe, so keep the normal nav.
       if (window.innerWidth >= 768) {
         setShowSignInModal(true);
       } else {
-        navigate("/signin", { state: { from: `/events/${slug}` } });
+        navigate("/signin", { state: { from: platformPath } });
       }
       return;
     }
     if (myRegistration) {
       setShowTicketModal(true);
+      return;
+    }
+    if (!embedded) {
+      sessionStorage.setItem(PENDING_KEY, slug);
+      enterPlatform();
       return;
     }
     // trial / plan → straight in; pay-as-you-go → pay sheet first, then
@@ -402,9 +428,9 @@ export default function EventDetail() {
   }
 
   function goSignIn() {
-    sessionStorage.setItem("signin_from", `/events/${slug}`);
+    sessionStorage.setItem("signin_from", platformPath);
     if (window.innerWidth >= 768) setShowSignInModal(true);
-    else navigate("/signin", { state: { from: `/events/${slug}` } });
+    else navigate("/signin", { state: { from: platformPath } });
   }
 
   async function handleRegisterSubmit({ category, question, anonymous }) {
@@ -455,8 +481,10 @@ export default function EventDetail() {
     notifyRegistration(data.id);
   }
 
+  const eventsHome = embedded ? "/app/events" : "/events";
+
   if (loading) {
-    return <div className="min-h-screen bg-evolve-black" />;
+    return <div className={embedded ? "min-h-[50vh]" : "min-h-screen bg-evolve-black"} />;
   }
 
   const isPast = event && isEventOver(event);
@@ -467,7 +495,7 @@ export default function EventDetail() {
         <p className="text-lg font-bold">
           This event doesn't exist or isn't published yet.
         </p>
-        <Link to="/events" className="text-evolve-yellow underline">
+        <Link to={eventsHome} className="text-evolve-yellow underline">
           Back to events
         </Link>
       </div>
@@ -475,17 +503,32 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-evolve-black text-white">
-      <SEO
-        title={`${event.title} — Evolve Events`}
-        description={event.description || event.title}
-        path={`/events/${event.slug}`}
-        image={event.cover_image_url}
-      />
+    <div className={embedded ? "text-white" : "min-h-screen bg-evolve-black text-white"}>
+      {!embedded && (
+        <SEO
+          title={`${event.title} — Evolve Events`}
+          description={event.description || event.title}
+          path={`/events/${event.slug}`}
+          image={event.cover_image_url}
+        />
+      )}
 
-      <div className="max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-10 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
+      {embedded && (
+        <Link
+          to="/app/events"
+          className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold mb-6"
+        >
+          ← all events
+        </Link>
+      )}
+
+      <div
+        className={`grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 ${
+          embedded ? "pb-10" : "max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-10"
+        }`}
+      >
         {/* left card */}
-        <div className="md:sticky md:top-24 h-fit flex flex-col gap-4">
+        <div className={`md:sticky ${embedded ? "md:top-20" : "md:top-24"} h-fit flex flex-col gap-4`}>
           <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03]">
             {event.cover_image_url && (
               <img

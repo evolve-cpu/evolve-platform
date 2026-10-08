@@ -19,11 +19,19 @@ const DEFAULT_RECORDING_PRICE = 30;
 const IS_PROD = process.env.VERCEL_ENV === "production";
 const chargePaise = (rupees) => (IS_PROD ? rupees * 100 : 100);
 
+// Statuses that mean a student ID has been uploaded — the student price
+// applies straight away; an admin reviews the ID afterwards. (Set by the
+// verify-student-id edge function, or "submitted" when it couldn't run.)
+export const STUDENT_ID_STATUSES = ["submitted", "verified", "unclear", "manual"];
+
+// Student pricing is picked at checkout by uploading a student ID — there's
+// no student/pro question at sign-up any more, so everyone else pays pro.
+// role === "student" covers people who onboarded under the old flow.
 export function tierFor(profile) {
-  const isPro =
-    profile?.role === "professional" ||
-    (!profile?.role && !!profile?.designation && !profile?.school_name);
-  return isPro ? "pro" : "student";
+  if (profile?.role === "student") return "student";
+  if (STUDENT_ID_STATUSES.includes(profile?.student_id_verification_status))
+    return "student";
+  return "pro";
 }
 
 export function eventPrice(ev) {
@@ -48,7 +56,7 @@ export function hasFullAccess(profile) {
 export async function priceItem(supabase, userId, { kind, plan, eventId }) {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, designation, school_name, trial_ends_at, plan_expires_at")
+    .select("role, student_id_verification_status, trial_ends_at, plan_expires_at")
     .eq("id", userId)
     .single();
   if (!profile) return { error: "profile not found" };

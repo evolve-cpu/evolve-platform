@@ -85,10 +85,9 @@ const REVIEWERS = [
 const TESTIMONIALS_LIST = COPY.testimonials.items;
 
 /* ─────────────────────────────────────────────
-   GetStartedButton — shared black CTA. Always lands on the visitor's own
-   profile — if they're signed in but haven't onboarded yet (no profile to
-   land on), it detours through /onboarding first; if they're not signed in
-   at all, /onboarding's own guard bounces them through /signin and back.
+   GetStartedButton — shared black CTA. Always lands on the portfolio review
+   programme inside the visitor's platform — if they're not signed in,
+   PlatformApp bounces them through /signin and back.
 ───────────────────────────────────────────── */
 const GetStartedButton = ({ trackLabel, mobile = false }) => {
   const navigate = useNavigate();
@@ -97,11 +96,7 @@ const GetStartedButton = ({ trackLabel, mobile = false }) => {
     <button
       onClick={() => {
         trackPortfolioReviewCta(trackLabel);
-        if (user?.onboarding_completed && user?.username) {
-          navigate(`/profile/${user.username}`);
-        } else {
-          navigate("/onboarding");
-        }
+        navigate("/app/grow/portfolio-review");
       }}
       className="font-extrabold cursor-pointer flex items-center gap-3 rounded-2xl transition-opacity duration-150 hover:opacity-90"
       style={{

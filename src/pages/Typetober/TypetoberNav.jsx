@@ -17,7 +17,9 @@ const NAV_ITEMS = [
 
 const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
-export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide }) {
+// `onBack` (platform mode, /app/typetober) swaps the site menu for a "back to
+// platform" button — inside the platform the marketing menu doesn't apply.
+export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide, onBack }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,6 +87,18 @@ export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide }) 
     <>
       {/* Floating icon buttons — no shared bar/logo, matches the reference design. */}
       <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-3 pt-3 md:px-6 md:pt-5 pointer-events-none">
+        {onBack ? (
+          <button
+            onClick={onBack}
+            className="tt-ibtn tt-ibtn-wide pointer-events-auto"
+            aria-label="back to my platform"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FFD007" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            <span className="hidden md:inline text-[14px] font-bold text-white">My platform</span>
+          </button>
+        ) : (
         <button
           onClick={() => setMenuOpen((v) => !v)}
           className="tt-ibtn pointer-events-auto"
@@ -98,6 +112,7 @@ export default function TypetoberNav({ user, onAvatarClick, onPrize, onGuide }) 
             </svg>
           )}
         </button>
+        )}
 
         <div className="flex items-center gap-2 pointer-events-auto">
           <button onClick={onPrize} aria-label="Prizes" className="tt-ibtn">

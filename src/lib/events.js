@@ -18,3 +18,28 @@ export function isEventOver(ev, now = Date.now()) {
 export function upcomingCutoffIso() {
   return new Date(Date.now() - DEFAULT_LENGTH_MS * 6).toISOString();
 }
+
+// started but not ended yet — "Live now" in the lists
+export function isEventLive(ev, now = Date.now()) {
+  return new Date(ev?.start_time).getTime() <= now && !isEventOver(ev, now);
+}
+
+// Typetober isn't a row in `events` — it's a month-long challenge (Oct 1–31)
+// that the platform's event lists pin alongside the real events.
+export const TYPETOBER_EVENT = {
+  title: "Typetober",
+  description: "One letter a day, A to Z. Post yours to the wall and climb the leaderboard.",
+  thumb:
+    "https://res.cloudinary.com/diuswhkzn/image/upload/v1791456141/Typetober_thumbnail_z5s1fa.png",
+  path: "/app/typetober"
+};
+
+export function typetoberWindow(now = new Date()) {
+  const y = now.getFullYear();
+  return { start: new Date(y, 9, 1), end: new Date(y, 10, 1) };
+}
+
+export function isTypetoberLive(now = new Date()) {
+  const { start, end } = typetoberWindow(now);
+  return now >= start && now < end;
+}

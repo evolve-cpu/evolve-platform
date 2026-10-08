@@ -1077,6 +1077,7 @@ const WhatIsDesign = lazy(() => import("./pages/WhatIsDesign"));
 const Footer = lazy(() => import("./components/Footer"));
 const Onboarding = lazy(() => import("./pages/Onboarding/Onboarding"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const PlatformApp = lazy(() => import("./pages/PlatformApp"));
 const ProgrammePortfolioReview = lazy(
   () => import("./pages/ProgrammePortfolioReview")
 );
@@ -1200,43 +1201,11 @@ const AppLayout = () => {
   const authBootstrappedRef = useRef(false);
   const wasSignedInRef = useRef(false);
 
-  // Sign-in and onboarding are coupled: a signed-in visitor with an
-  // incomplete profile is routed into /onboarding regardless of which
-  // surface they signed in through — Google One Tap and the in-page
-  // AuthModal (used on other pages) don't navigate anywhere on their own,
-  // unlike the dedicated /signin page, so this is the single choke point
-  // that catches all of them. Exempted routes handle their own post-signin
-  // flow (payment, portfolio review) or are unrelated account types
-  // (admin, institute spaces, invites) that shouldn't be pulled into the
-  // designer-profile onboarding chat.
-  useEffect(() => {
-    if (authLoading || !user || user.onboarding_completed) return;
-    const path = location.pathname;
-    const exempt =
-      path === "/onboarding" ||
-      path === "/signin" ||
-      path.startsWith("/admin") ||
-      path.startsWith("/payment") ||
-      path.startsWith("/community/portfolio-review") ||
-      path.startsWith("/portfolio-review") ||
-      path.startsWith("/invite/") ||
-      path.startsWith("/institute/") ||
-      path.startsWith("/space/") ||
-      path.startsWith("/mentorship-session") ||
-      path.startsWith("/evolve-in-person") ||
-      path.startsWith("/events") ||
-      path.startsWith("/typetober") ||
-      path.startsWith("/profile/");
-    if (exempt) return;
-
-    // always land on the profile page once onboarding finishes — not back on
-    // whatever marketing page the visitor happened to be signed in from
-    navigate("/onboarding", { replace: true });
-  }, [user, authLoading, location.pathname, navigate]);
-
-  // Mirror image of the effect above, for a visitor who's already onboarded:
-  // without this they'd just stay on whatever marketing page they signed in
-  // from (or, for Google/LinkedIn, land back on "/" — OAuth's redirectTo —
+  // There's no onboarding step after sign-in any more (AuthContext gives
+  // every new individual a username straight away), so a fresh sign-in just
+  // lands on the platform (/app). Without this they'd stay on whatever
+  // marketing page they signed in from (or, for Google/LinkedIn, land back
+  // on "/" — OAuth's redirectTo —
   // since that's a hard cross-origin redirect that bypasses every in-SPA
   // "where should this go" check).
   //
@@ -1270,7 +1239,7 @@ const AppLayout = () => {
     }
 
     if (oauthFlagged) sessionStorage.removeItem("oauth_post_signin_check");
-    if (!isSignedIn || !user.onboarding_completed || !user.username) return;
+    if (!isSignedIn || !user.username) return;
 
     const path = location.pathname;
     const exempt =
@@ -1286,11 +1255,12 @@ const AppLayout = () => {
       path.startsWith("/mentorship-session") ||
       path.startsWith("/evolve-in-person") ||
       path.startsWith("/profile/") ||
+      path.startsWith("/app") ||
       path.startsWith("/typetober") ||
       path.startsWith("/events/");
     if (exempt) return;
 
-    navigate(`/profile/${user.username}`, { replace: true });
+    navigate("/app/profile", { replace: true });
   }, [user, authLoading, location.pathname, navigate]);
 
   // GA4: track page views on route change (SPA navigation doesn't auto-fire page_view)
@@ -1331,6 +1301,8 @@ const AppLayout = () => {
   const shouldShowFooter =
     !hideFooterRoutes.includes(location.pathname) &&
     !location.pathname.startsWith("/profile/") &&
+    location.pathname !== "/app" &&
+    !location.pathname.startsWith("/app/") &&
     !location.pathname.startsWith("/space/") &&
     !location.pathname.startsWith("/institute/") &&
     !location.pathname.startsWith("/invite/") &&
@@ -1408,6 +1380,8 @@ const AppLayout = () => {
       location.pathname === "/admin/dashboard" ||
       location.pathname === "/onboarding" ||
       location.pathname.startsWith("/profile/") ||
+      location.pathname === "/app" ||
+      location.pathname.startsWith("/app/") ||
       location.pathname.startsWith("/space/") ||
       location.pathname.startsWith("/institute/") ||
       location.pathname.startsWith("/invite/")
@@ -1810,6 +1784,7 @@ const AppLayout = () => {
             <Route path="/typetober/*" element={<Typetober />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
+            <Route path="/app/*" element={<PlatformApp />} />
             <Route
               path="/programmes/portfolio-review"
               element={<ProgrammePortfolioReview />}

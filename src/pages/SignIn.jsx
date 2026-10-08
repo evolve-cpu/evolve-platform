@@ -93,17 +93,12 @@ function LoadingStep({ label, sub, progress }) {
 /* ══════════════════════════════════════════════════════════════════════════════
    Helpers
 ══════════════════════════════════════════════════════════════════════════════ */
-// Any explicit `from` (a deep link, /payment, /webinars, etc.) always wins —
-// onboarding never hijacks a deliberate destination. Otherwise, sign-in and
-// onboarding are coupled again: a freshly signed-in user with an incomplete
-// profile is sent straight into /onboarding, and an already-onboarded user
-// lands on their own profile instead of the marketing landing page.
+// Any explicit `from` (a deep link, /payment, /webinars, etc.) always wins.
+// Otherwise a signed-in user lands straight on the platform — there's no
+// onboarding step any more (AuthContext gives every new user a username).
 function resolveLandingPath(user, from) {
   if (from && from !== "/") return from;
-  if (user?.onboarding_completed && user?.username)
-    return `/profile/${user.username}`;
-  if (!user?.onboarding_completed) return "/onboarding";
-  return "/";
+  return "/app/profile";
 }
 
 function goToFrom(navigate, from, user) {

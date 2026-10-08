@@ -7,7 +7,12 @@ import Spinner from "../components/Spinner";
 import { stageForProgress, stageLabel, STAGE_LABELS } from "../lib/growthStage";
 import { getPortfolioReviewProgress } from "../lib/portfolioReviewProgress";
 import { isTrialActive } from "../lib/trial";
-import { isEventOver, upcomingCutoffIso } from "../lib/events";
+import {
+  isEventOver,
+  isEventLive,
+  isTypetoberLive,
+  TYPETOBER_EVENT
+} from "../lib/events";
 import { TrialClockBadge } from "../components/TrialBadge";
 import {
   useMembership,
@@ -16,6 +21,7 @@ import {
 import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewProgramme";
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 import AppTabNav from "../components/AppTabNav";
+import EventDetail from "./EventDetail";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -154,132 +160,6 @@ function ProgramCard({
   );
 }
 
-// The Events tab pane — browsing published events from inside the platform
-// itself instead of sending the owner out to the marketing site's /events
-// page. Booking/tickets stay on the existing /events/:slug (EventDetail.jsx)
-// flow rather than duplicating that logic here; this is just the in-platform
-// entry point into it.
-function EventsTabPane() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("upcoming");
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from("events")
-      .select("*")
-      .eq("status", "published")
-      .order("start_time", { ascending: true })
-      .then(({ data }) => {
-        if (!cancelled) {
-          setEvents(data || []);
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const q = search.trim().toLowerCase();
-  // events move to "past" by themselves once they've ended (src/lib/events.js)
-  const filtered = events
-    .filter((e) => (filter === "upcoming" ? !isEventOver(e) : isEventOver(e)))
-    .filter((e) => !q || e.title?.toLowerCase().includes(q))
-    .sort((a, b) =>
-      filter === "upcoming"
-        ? new Date(a.start_time) - new Date(b.start_time)
-        : new Date(b.start_time) - new Date(a.start_time)
-    );
-
-  return (
-    <Section
-      title="events"
-      action={
-        <div className="flex items-center gap-1 rounded-full border border-white/10 p-0.5">
-          {["upcoming", "past"].map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`text-[11px] font-semibold capitalize rounded-full px-3 py-1 transition-colors ${
-                filter === f
-                  ? "bg-evolve-yellow text-evolve-black"
-                  : "text-white/50 hover:text-white"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      }
-    >
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="search events…"
-        className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-2.5 transition-colors focus:border-evolve-yellow/60"
-        style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-      />
-
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner size={28} />
-        </div>
-      ) : filtered.length === 0 ? (
-        <p className="text-white/40 text-sm py-10 text-center">
-          {filter === "upcoming"
-            ? "No upcoming events right now — check back soon."
-            : "No past events yet."}
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filtered.map((event) => (
-            <Link
-              key={event.id}
-              to={`/events/${event.slug}`}
-              className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-white/20 transition-colors flex flex-col"
-            >
-              {event.cover_image_url && (
-                <img
-                  src={event.cover_image_url}
-                  alt=""
-                  className="w-full h-32 object-cover"
-                />
-              )}
-              <div className="p-3.5 flex flex-col gap-1">
-                <span className="flex items-center gap-2">
-                  <span className="text-evolve-yellow text-[10px] font-bold uppercase tracking-wide">
-                    {event.event_type || "event"}
-                  </span>
-                  {filter === "past" && (event.recording_path || event.recording_url) && (
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-evolve-inchworm">
-                      ▶ recording
-                    </span>
-                  )}
-                </span>
-                <p className="text-white text-sm font-bold leading-snug">
-                  {event.title}
-                </p>
-                <p className="text-white/40 text-xs">
-                  {new Date(event.start_time).toLocaleDateString("en-IN", {
-                    timeZone: "Asia/Kolkata",
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric"
-                  })}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </Section>
-  );
-}
-
 // Desktop-only "my profile" / "grow" switcher — replaces AppTabNav's pill
 // row in the header on this page; mobile keeps the bottom AppTabNav as its
 // only tab switcher, so this never renders below the md breakpoint.
@@ -350,6 +230,329 @@ const EVENTS_RAIL_COLORS = ["#A35BFB", "#DF0586", "#01F1D9", "#FFB14F"];
 // events instead of identity (identity moved into ProfileTabPane's header).
 // Collapsible via the chevron pinned to its left edge, same interaction
 // pattern the old sidebar's collapse toggle used.
+// shared bits for the in-platform event lists (events tab + desktop rail)
+function fmtEventDay(iso) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    timeZone: "Asia/Kolkata",
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function fmtEventTime(iso) {
+  return new Date(iso).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function LiveDot() {
+  return (
+    <span className="relative flex w-1.5 h-1.5 flex-shrink-0">
+      <span className="absolute inset-0 rounded-full bg-evolve-pink animate-ping opacity-75" />
+      <span className="relative w-1.5 h-1.5 rounded-full bg-evolve-pink" />
+    </span>
+  );
+}
+
+// "Thu, Aug 20 · Recorded" / "● Live now" / "Fri, Oct 9 · 7:00 pm"
+function EventWhen({ event }) {
+  if (isEventLive(event)) {
+    return (
+      <span className="flex items-center gap-1.5 text-evolve-pink">
+        <LiveDot />
+        Live now
+      </span>
+    );
+  }
+  if (isEventOver(event)) {
+    const recorded = event.recording_path || event.recording_url;
+    return (
+      <span>
+        {fmtEventDay(event.start_time)}
+        {recorded ? " · Recorded" : " · Ended"}
+      </span>
+    );
+  }
+  return (
+    <span>
+      {fmtEventDay(event.start_time)} · {fmtEventTime(event.start_time)}
+    </span>
+  );
+}
+
+function EventThumb({ src, index = 0, className = "" }) {
+  return (
+    <span
+      className={`block rounded-[14px] overflow-hidden flex-shrink-0 ${className}`}
+      style={src ? undefined : { backgroundColor: EVENTS_RAIL_COLORS[index % EVENTS_RAIL_COLORS.length] }}
+    >
+      {src && <img src={src} alt="" className="w-full h-full object-cover" />}
+    </span>
+  );
+}
+
+// one event: a row on mobile (64px 1:1 thumb beside the text), a card on
+// desktop (full-width 1:1 image on top) so the grid fills the pane
+function EventRow({ to, thumb, index, title, when, description }) {
+  return (
+    <Link
+      to={to}
+      className="group flex gap-3.5 py-4 transition-colors hover:opacity-80 md:hover:opacity-100 md:flex-col md:gap-0 md:py-0 md:rounded-2xl md:overflow-hidden md:border md:border-white/10 md:bg-white/[0.03] md:hover:border-white/25"
+    >
+      <span className="block flex-shrink-0 w-16 h-16 rounded-[14px] overflow-hidden md:w-full md:h-auto md:aspect-square md:rounded-none">
+        <EventThumb
+          src={thumb}
+          index={index}
+          className="w-full h-full !rounded-none md:transition-transform md:duration-300 md:group-hover:scale-[1.03]"
+        />
+      </span>
+      <span className="min-w-0 flex-1 pt-px md:p-3.5 md:pt-3">
+        <span className="block text-white/40 text-[11.5px] md:text-xs font-semibold mb-1">
+          {when}
+        </span>
+        <span className="block text-white font-bold text-[14.5px] md:text-[15px] leading-snug mb-1.5">
+          {title}
+        </span>
+        {description && (
+          <span className="text-white/55 text-[12.5px] md:text-[13px] leading-normal line-clamp-2">
+            {description}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
+function TypetoberLiveLabel() {
+  return (
+    <span className="flex items-center gap-1.5 flex-wrap">
+      <span className="flex items-center gap-1.5 text-evolve-pink">
+        <LiveDot />
+        Live now
+      </span>
+      <span>· Oct 1 – 31 · Challenge</span>
+    </span>
+  );
+}
+
+// Typetober pinned on top of Upcoming while it runs — a highlighted row on
+// mobile, a wide featured banner across the grid on desktop
+function TypetoberFeature() {
+  return (
+    <Link
+      to={TYPETOBER_EVENT.path}
+      className="group flex items-center gap-3.5 md:gap-7 rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.06] hover:bg-evolve-yellow/[0.1] transition-colors p-3 md:p-5 mb-2 md:mb-6"
+    >
+      <span className="block flex-shrink-0 w-16 h-16 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-[14px] md:rounded-xl overflow-hidden">
+        <img
+          src={TYPETOBER_EVENT.thumb}
+          alt=""
+          className="w-full h-full object-cover md:transition-transform md:duration-300 md:group-hover:scale-[1.03]"
+        />
+      </span>
+      <span className="min-w-0 flex-1 flex flex-col">
+        <span className="block text-white/40 text-[11.5px] md:text-sm font-semibold mb-1 md:mb-2">
+          <TypetoberLiveLabel />
+        </span>
+        <span className="block text-white font-bold text-[14.5px] md:font-bricolage md:font-extrabold md:text-3xl leading-snug mb-1 md:mb-2">
+          {TYPETOBER_EVENT.title}
+        </span>
+        <span className="text-white/55 text-[12.5px] md:text-base leading-normal line-clamp-2 md:max-w-xl">
+          {TYPETOBER_EVENT.description}
+        </span>
+        <span className="hidden md:inline-flex self-start items-center gap-2 mt-5 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-full px-5 py-2.5">
+          Join the challenge
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+// The Events tab pane — browsing published events from inside the platform
+// itself instead of sending the owner out to the marketing site's /events
+// page. Each event opens at /app/events/:slug (EventDetail.jsx, embedded),
+// where booking happens. Typetober is pinned on top of Upcoming while it's
+// running (October).
+function EventsTabPane() {
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("upcoming");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .order("start_time", { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) {
+          setEvents(data || []);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function goBack() {
+    // in-app history entry to step back to, else the profile tab
+    if (window.history.state?.idx > 0) navigate(-1);
+    else navigate("/app/profile");
+  }
+
+  const q = search.trim().toLowerCase();
+  // events move to "past" by themselves once they've ended (src/lib/events.js);
+  // live ones sort first within upcoming
+  const filtered = events
+    .filter((e) => (filter === "upcoming" ? !isEventOver(e) : isEventOver(e)))
+    .filter((e) => !q || e.title?.toLowerCase().includes(q))
+    .sort((a, b) =>
+      filter === "upcoming"
+        ? Number(isEventLive(b)) - Number(isEventLive(a)) ||
+          new Date(a.start_time) - new Date(b.start_time)
+        : new Date(b.start_time) - new Date(a.start_time)
+    );
+  const showTypetober =
+    filter === "upcoming" &&
+    isTypetoberLive() &&
+    (!q || TYPETOBER_EVENT.title.toLowerCase().includes(q));
+
+  return (
+    <div className="flex flex-col w-full">
+      <button
+        type="button"
+        onClick={goBack}
+        aria-label="back"
+        className="hidden md:flex w-9 h-9 rounded-full border border-white/10 items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors mb-5"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M11 6l-6 6 6 6" />
+        </svg>
+      </button>
+
+      <div className="md:hidden mb-[18px]">
+        <h1 className="font-bricolage font-extrabold text-[26px] text-white mb-1.5">Events</h1>
+        <p className="text-[13.5px] leading-normal text-white/50 max-w-[300px]">
+          Webinars, AMAs, and live sessions from the evolve community.
+        </p>
+      </div>
+
+      {/* tabs, then search — side by side on desktop */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5 md:gap-4 mb-3.5 md:mb-6">
+        <div className="inline-flex self-start md:self-auto rounded-full border border-white/10 bg-[#1c1c1e] p-1 gap-0.5">
+          {["upcoming", "past"].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`text-[13px] font-bold capitalize rounded-full px-[18px] py-2 transition-colors ${
+                filter === f ? "bg-[#2c2c2e] text-white" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        <label className="flex items-center md:w-80 rounded-xl border border-white/10 bg-[#1c1c1e] focus-within:border-evolve-yellow/60 transition-colors">
+          <svg className="ml-3 text-white/35 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search events"
+            className="flex-1 min-w-0 bg-transparent outline-none text-[13.5px] text-white placeholder:text-white/35 py-[11px] pl-2 pr-3"
+          />
+        </label>
+      </div>
+
+      {showTypetober && <TypetoberFeature />}
+
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spinner size={28} />
+        </div>
+      ) : filtered.length === 0 ? (
+        !showTypetober && (
+          <p className="text-white/40 text-[13px] py-9 text-center">
+            {q
+              ? "No events match that search."
+              : filter === "upcoming"
+                ? "No upcoming events right now — check back soon."
+                : "No past events yet."}
+          </p>
+        )
+      ) : (
+        <div className="flex flex-col divide-y divide-white/[0.08] md:divide-y-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4">
+          {filtered.map((event, i) => (
+            <EventRow
+              key={event.id}
+              to={`/app/events/${event.slug}`}
+              thumb={event.cover_image_url}
+              index={i}
+              title={event.title}
+              when={<EventWhen event={event} />}
+              description={event.description}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// one rail entry — live ones get a tinted pink card so they stand out
+function RailRow({ to, thumb, index, title, when, live }) {
+  return (
+    <Link
+      to={to}
+      className={`flex items-center gap-3.5 transition-colors ${
+        live
+          ? "rounded-2xl border border-evolve-pink/30 bg-evolve-pink/[0.08] hover:bg-evolve-pink/[0.13] p-2.5"
+          : "rounded-2xl p-2.5 -mx-2.5 hover:bg-white/[0.04]"
+      }`}
+    >
+      <EventThumb src={thumb} index={index} className="w-[72px] h-[72px] !rounded-xl" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-white text-[15px] font-bold leading-snug line-clamp-2">{title}</span>
+        <span className="block text-white/45 text-xs font-semibold mt-1">{when}</span>
+      </span>
+      <svg className="flex-shrink-0 text-white/30" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </Link>
+  );
+}
+
+function RailSection({ label, live, children }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p
+        className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wide ${
+          live ? "text-evolve-pink" : "text-white/45"
+        }`}
+      >
+        {live && <LiveDot />}
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+// Desktop right rail on the profile / grow tabs: what's live right now
+// (Typetober included while it runs), then what's coming up, then what's
+// just happened — the next live/upcoming session gets the big card.
 function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -357,47 +560,48 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      let { data } = await supabase
-        .from("events")
-        .select("*")
-        .eq("status", "published")
-        .gte("start_time", upcomingCutoffIso())
-        .order("start_time", { ascending: true })
-        .limit(8);
-      if (cancelled) return;
-      data = (data || []).filter((e) => !isEventOver(e)).slice(0, 5);
-      setEvents(data);
-      setLoading(false);
-      if (data?.[0]) {
-        const { count } = await supabase
-          .from("event_registrations")
-          .select("id", { count: "exact", head: true })
-          .eq("event_id", data[0].id)
-          .eq("status", "registered");
-        if (!cancelled) setGoingCount(count ?? 0);
-      }
-    })();
+    supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .order("start_time", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setEvents(data || []);
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  function fmtDate(iso) {
-    return new Date(iso).toLocaleDateString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    });
-  }
-  function fmtTime(iso) {
-    return new Date(iso).toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "numeric",
-      minute: "2-digit"
-    });
-  }
+  const live = events.filter((e) => isEventLive(e));
+  const upcoming = events.filter((e) => !isEventOver(e) && !isEventLive(e));
+  const past = events
+    .filter((e) => isEventOver(e))
+    .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+    .slice(0, 3);
+  const featured = live[0] || upcoming[0] || null;
+  const liveRest = live.filter((e) => e !== featured);
+  const upcomingRest = upcoming.filter((e) => e !== featured).slice(0, 4);
+  const typetoberLive = isTypetoberLive();
+
+  const featuredId = featured?.id;
+  useEffect(() => {
+    if (!featuredId) return;
+    let cancelled = false;
+    supabase
+      .from("event_registrations")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", featuredId)
+      .eq("status", "registered")
+      .then(({ count }) => {
+        if (!cancelled) setGoingCount(count ?? 0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredId]);
 
   if (collapsed) {
     return (
@@ -416,10 +620,10 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
     );
   }
 
-  const [featured, ...rest] = events;
+  const nothing = !featured && !typetoberLive && past.length === 0;
 
   return (
-    <div className="hidden md:flex md:w-[340px] flex-shrink-0 flex-col gap-4 border-l border-white/10 px-6 py-8 relative">
+    <div className="hidden md:flex md:w-[360px] flex-shrink-0 flex-col gap-6 border-l border-white/10 px-6 py-8 relative">
       <button
         type="button"
         onClick={onToggleCollapsed}
@@ -431,87 +635,132 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
         </svg>
       </button>
 
-      <p className="text-white/40 text-xs font-bold uppercase tracking-wide">Events</p>
+      <div className="flex items-center justify-between">
+        <p className="text-white/40 text-xs font-bold uppercase tracking-wide">Events</p>
+        <button
+          type="button"
+          onClick={onGoToEvents}
+          className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide hover:opacity-80"
+        >
+          View all
+        </button>
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-10">
           <Spinner size={22} />
         </div>
-      ) : !featured ? (
-        <p className="text-white/40 text-xs">No upcoming events right now.</p>
+      ) : nothing ? (
+        <p className="text-white/40 text-xs">No events right now.</p>
       ) : (
         <>
-          <Link
-            to={`/events/${featured.slug}`}
-            className="rounded-2xl overflow-hidden border border-white/10 relative hover:border-white/20 transition-colors"
-          >
-            <div className="aspect-[4/3]">
-              {featured.cover_image_url ? (
-                <img src={featured.cover_image_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-evolve-yellow" />
-              )}
-            </div>
-            {featured.event_type && (
-              <span className="absolute top-3 left-3 bg-white text-black text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                {featured.event_type}
-              </span>
-            )}
-          </Link>
-          <div className="flex flex-col gap-1 -mt-1">
-            <p className="text-white font-bold text-sm leading-snug">{featured.title}</p>
-            {featured.speaker_name && (
-              <p className="text-white/40 text-xs">
-                {featured.speaker_name}
-                {featured.speaker_title ? ` · ${featured.speaker_title}` : ""}
-              </p>
-            )}
-            <p className="text-white/50 text-xs mt-1">
-              {fmtDate(featured.start_time)} · {fmtTime(featured.start_time)}
-            </p>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            {goingCount !== null && (
-              <span className="text-white/40 text-xs">{goingCount} going</span>
-            )}
-            <Link
-              to={`/events/${featured.slug}`}
-              className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
-            >
-              View Event
-            </Link>
-          </div>
-
-          {rest.length > 0 && (
-            <div className="flex flex-col mt-2">
-              {rest.map((event, i) => (
+          {featured && (
+            <div className="flex flex-col gap-3">
+              <Link
+                to={`/app/events/${featured.slug}`}
+                className="rounded-2xl overflow-hidden border border-white/10 relative hover:border-white/20 transition-colors"
+              >
+                <div className="aspect-square">
+                  {featured.cover_image_url ? (
+                    <img src={featured.cover_image_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-evolve-yellow" />
+                  )}
+                </div>
+                <span className="absolute top-3 left-3 flex items-center gap-1.5">
+                  {isEventLive(featured) && (
+                    <span className="flex items-center gap-1.5 bg-evolve-pink text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                      Live
+                    </span>
+                  )}
+                  {featured.event_type && (
+                    <span className="bg-white text-black text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                      {featured.event_type}
+                    </span>
+                  )}
+                </span>
+              </Link>
+              <div className="flex flex-col gap-1">
+                <p className="text-white font-bold text-sm leading-snug">{featured.title}</p>
+                {featured.speaker_name && (
+                  <p className="text-white/40 text-xs">
+                    {featured.speaker_name}
+                    {featured.speaker_title ? ` · ${featured.speaker_title}` : ""}
+                  </p>
+                )}
+                <p className="text-white/50 text-xs mt-1">
+                  <EventWhen event={featured} />
+                </p>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                {goingCount !== null && (
+                  <span className="text-white/40 text-xs">{goingCount} going</span>
+                )}
                 <Link
-                  key={event.id}
-                  to={`/events/${event.slug}`}
-                  className="flex items-start gap-3 py-3 border-t border-white/10 hover:opacity-80 transition-opacity"
+                  to={`/app/events/${featured.slug}`}
+                  className="ml-auto bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
                 >
-                  <span
-                    className="w-9 h-9 rounded-lg flex-shrink-0"
-                    style={{ backgroundColor: EVENTS_RAIL_COLORS[i % EVENTS_RAIL_COLORS.length] }}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-white text-xs font-bold truncate">{event.title}</p>
-                    <p className="text-white/40 text-[11px] mt-0.5">
-                      {fmtDate(event.start_time)} · {fmtTime(event.start_time)}
-                    </p>
-                  </div>
+                  View Event
                 </Link>
-              ))}
+              </div>
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onGoToEvents}
-            className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide self-start mt-1 hover:opacity-80"
-          >
-            View all
-          </button>
+          {(typetoberLive || liveRest.length > 0) && (
+            <RailSection label="Live now" live>
+              {typetoberLive && (
+                <RailRow
+                  live
+                  to={TYPETOBER_EVENT.path}
+                  thumb={TYPETOBER_EVENT.thumb}
+                  title={TYPETOBER_EVENT.title}
+                  when="Oct 1 – 31 · Challenge"
+                />
+              )}
+              {liveRest.map((e, i) => (
+                <RailRow
+                  live
+                  key={e.id}
+                  to={`/app/events/${e.slug}`}
+                  thumb={e.cover_image_url}
+                  index={i}
+                  title={e.title}
+                  when={e.event_type || "Live session"}
+                />
+              ))}
+            </RailSection>
+          )}
+
+          {upcomingRest.length > 0 && (
+            <RailSection label="Upcoming">
+              {upcomingRest.map((e, i) => (
+                <RailRow
+                  key={e.id}
+                  to={`/app/events/${e.slug}`}
+                  thumb={e.cover_image_url}
+                  index={i + 1}
+                  title={e.title}
+                  when={<EventWhen event={e} />}
+                />
+              ))}
+            </RailSection>
+          )}
+
+          {past.length > 0 && (
+            <RailSection label="Past">
+              {past.map((e, i) => (
+                <RailRow
+                  key={e.id}
+                  to={`/app/events/${e.slug}`}
+                  thumb={e.cover_image_url}
+                  index={i + 2}
+                  title={e.title}
+                  when={<EventWhen event={e} />}
+                />
+              ))}
+            </RailSection>
+          )}
         </>
       )}
     </div>
@@ -576,13 +825,68 @@ function UpskillRow() {
   );
 }
 
+/* ─── platform URLs (/app/*) ─────────────────────────────────────────────── */
+// programme pane id ↔ its URL under /app — see PlatformApp.jsx for the map
+const PROGRAMME_PATHS = {
+  "portfolio-review": "grow/portfolio-review",
+  mentorship: "grow/mentorship",
+  "account-menu": "account",
+  account: "account/details",
+  invoice: "account/invoice"
+};
+const APP_TABS = ["profile", "grow", "events", "community"];
+
+function appPathFor(tab, programme) {
+  if (programme && PROGRAMME_PATHS[programme])
+    return `/app/${PROGRAMME_PATHS[programme]}`;
+  return `/app/${APP_TABS.includes(tab) ? tab : "profile"}`;
+}
+
+function parseAppPath(pathname) {
+  const rest = pathname.replace(/^\/app\/?/, "").replace(/\/+$/, "");
+  const programme = Object.keys(PROGRAMME_PATHS).find(
+    (k) => PROGRAMME_PATHS[k] === rest
+  );
+  if (programme) {
+    return {
+      tab: PROGRAMME_PATHS[programme].startsWith("grow") ? "grow" : "profile",
+      programme,
+      eventSlug: null
+    };
+  }
+  const [tab, slug] = rest.split("/");
+  if (tab === "events" && slug) {
+    return { tab: "events", programme: null, eventSlug: decodeURIComponent(slug) };
+  }
+  return {
+    tab: APP_TABS.includes(tab) ? tab : "profile",
+    programme: null,
+    eventSlug: null
+  };
+}
+
 /* ─── page ───────────────────────────────────────────────────────────────── */
-export default function PublicProfile() {
-  const { username } = useParams();
+// `platform` = rendered by PlatformApp at /app/* — the owner's own platform,
+// where the open tab / programme / event comes from the URL (see
+// parseAppPath). Without it this is the public /profile/:username page that
+// other people see; the owner landing there is sent to /app instead.
+export default function PublicProfile({ platform = false }) {
+  const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const isOwner = user?.username === username;
+  const username = platform ? user?.username : params.username;
+  const isOwner = !!user?.username && user.username === username;
+  const appView = platform ? parseAppPath(location.pathname) : null;
+
+  useEffect(() => {
+    if (platform || !isOwner) return;
+    const programme = location.state?.activeProgramme;
+    navigate(programme ? appPathFor("profile", programme) : "/app/profile", {
+      replace: true
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platform, isOwner]);
 
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -602,10 +906,11 @@ export default function PublicProfile() {
   const hadMentorshipRedirectFlag =
     typeof window !== "undefined" &&
     sessionStorage.getItem("open_mentorship_card") === "1";
-  const [activeProgramme, setActiveProgramme] = useState(
+  const [localProgramme, setLocalProgramme] = useState(
     location.state?.activeProgramme ||
       (hadMentorshipRedirectFlag ? "mentorship" : null)
   );
+  const activeProgramme = appView ? appView.programme : localProgramme;
   // once a pane has been opened, keep it mounted (just hidden via CSS)
   // instead of unmounting it on every switch — so reopening a programme (or
   // hopping back to it after visiting another tab) doesn't reset its
@@ -627,12 +932,32 @@ export default function PublicProfile() {
   // which top-level section of the dashboard is showing when no programme
   // pane is open — independent of `activeProgramme` above, which still
   // handles portfolio-review/mentorship/account/etc. exactly as before.
-  const [activeTab, setActiveTab] = useState("profile");
+  const [localTab, setLocalTab] = useState("profile");
+  const activeTab = appView ? appView.tab : localTab;
+
+  // on the platform these push a new URL (so the browser back button steps
+  // back through tabs/panels); on the public page they're plain state
+  function setActiveProgramme(programme) {
+    if (appView) navigate(appPathFor(appView.tab, programme));
+    else setLocalProgramme(programme);
+  }
 
   function handleTabChange(tab) {
-    setActiveProgramme(null);
-    setActiveTab(tab);
+    if (appView) {
+      navigate(appPathFor(tab, null));
+      return;
+    }
+    setLocalProgramme(null);
+    setLocalTab(tab);
   }
+
+  // the /mentorship marketing CTA's flag (above) on the platform → its URL
+  useEffect(() => {
+    if (appView && hadMentorshipRedirectFlag && appView.programme !== "mentorship") {
+      navigate(appPathFor("grow", "mentorship"), { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // desktop-only right rail (upcoming events) — replaces the identity
@@ -841,6 +1166,8 @@ export default function PublicProfile() {
   // (replacing history, not pushing) and hand the redirect the panel state
   // it's already sitting on so it doesn't get bounced back to the dashboard.
   function handleAccountSaved(newUsername) {
+    // the platform URL isn't keyed off the username — nothing to fix up
+    if (platform) return;
     navigate(`/profile/${newUsername}`, {
       replace: true,
       state: { activeProgramme: "account" }
@@ -1338,7 +1665,8 @@ export default function PublicProfile() {
             activeProgramme === "portfolio-review" ? "pb-0" : "pb-8"
           } ${!activeProgramme && isOwner ? "pb-24 md:pb-8" : ""}`}
         >
-          {isOwner && !activeProgramme && (
+          {/* the events tab has its own back arrow instead (EventsTabPane) */}
+          {isOwner && !activeProgramme && activeTab !== "events" && (
             <DesktopProfileTabs activeTab={activeTab} onTabChange={handleTabChange} />
           )}
 
@@ -1441,7 +1769,11 @@ export default function PublicProfile() {
 
             {activeTab === "events" && (
               <div className="contents">
-                <EventsTabPane />
+                {appView?.eventSlug ? (
+                  <EventDetail embedded slug={appView.eventSlug} />
+                ) : (
+                  <EventsTabPane />
+                )}
               </div>
             )}
 

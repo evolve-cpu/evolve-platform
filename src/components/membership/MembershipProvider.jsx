@@ -2,7 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supabaseClient";
-import { accessState, planPrice, inr, ITEM_PRICES } from "../../lib/membership";
+import {
+  accessState,
+  planPrice,
+  tierFor,
+  inr,
+  ITEM_PRICES,
+  PLAN_PRICES
+} from "../../lib/membership";
 import { startMembershipCheckout } from "../../lib/membershipCheckout";
 import { fireConfetti } from "../../lib/confetti";
 import DevMembershipPanel from "./DevMembershipPanel";
@@ -105,7 +112,131 @@ function LockRow({ t, s }) {
   );
 }
 
-function TrialEndedModal({ user, step, setStep, onClose, onSubscribe }) {
+/* ── student pricing: "are you a student?" → upload ID → student price ──
+   Replaces the student/pro question onboarding used to ask. The price drops
+   as soon as the ID is uploaded; verify-student-id reads it (and records
+   student_id_path) and an admin reviews it later. ─────────────────────── */
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const ID_ACCEPTED_TYPES = ".jpg,.jpeg,.png,.pdf";
+const MAX_ID_MB = 10;
+
+async function submitStudentId(user, file) {
+  const ext = file.name.split(".").pop();
+  const path = `${user.id}/id-${Date.now()}.${ext}`;
+  const { error: uploadErr } = await supabase.storage
+    .from("student-ids")
+    .upload(path, file, { upsert: true });
+  if (uploadErr) throw new Error(uploadErr.message);
+
+  // best-effort OCR read — it sets verified / unclear itself
+  let status = null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-student-id`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ user_id: user.id, storage_path: path })
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) status = json.is_clear ? "verified" : "unclear";
+  } catch {
+    /* falls through to "submitted" */
+  }
+  if (!status) {
+    status = "submitted";
+    await supabase
+      .from("profiles")
+      .update({ student_id_verification_status: status, student_id_path: path })
+      .eq("id", user.id);
+  }
+  return status;
+}
+
+function StudentPricing({ user, onStudentId }) {
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  if (tierFor(user) === "student") {
+    return (
+      <p className="at-note" style={{ margin: "0 0 12px" }}>
+        <span style={{ color: "var(--at-g)" }}>✓ </span>
+        Student pricing applied
+      </p>
+    );
+  }
+
+  async function upload() {
+    if (!file || busy) return;
+    if (file.size > MAX_ID_MB * 1024 * 1024) {
+      setError(`That file is over ${MAX_ID_MB} MB.`);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const status = await submitStudentId(user, file);
+      onStudentId(status);
+    } catch (e) {
+      setError(e?.message || "Couldn't upload that. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const s = PLAN_PRICES.student;
+  const p = PLAN_PRICES.pro;
+  return (
+    <div className="at-save" style={{ flexDirection: "column", alignItems: "stretch", margin: "0 0 14px" }}>
+      <span>
+        <b>Are you a student?</b> Upload your student ID and pay the student price —{" "}
+        {inr(s.monthly)} a month instead of {inr(p.monthly)}.
+      </span>
+      {!open ? (
+        <button
+          type="button"
+          className="at-btn ghost"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => setOpen(true)}
+        >
+          I’m a student
+        </button>
+      ) : (
+        <div style={{ display: "grid", gap: 8 }}>
+          <input
+            type="file"
+            accept={ID_ACCEPTED_TYPES}
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              setError("");
+            }}
+            style={{ fontSize: 13, color: "var(--at-mute)" }}
+          />
+          <button
+            type="button"
+            className="at-btn"
+            style={{ alignSelf: "flex-start" }}
+            disabled={!file || busy}
+            onClick={upload}
+          >
+            {busy ? "Uploading…" : "Upload ID and get student price"}
+          </button>
+          <span className="at-note" style={{ margin: 0 }}>
+            JPG, PNG or PDF, up to {MAX_ID_MB} MB. We review it after you pay.
+          </span>
+          {error && <span className="at-err" style={{ textAlign: "left", margin: 0 }}>{error}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentId }) {
   const m = planPrice(user, "monthly");
   const a = planPrice(user, "annual");
   const [card, setCard] = useState(step === 2 ? 2 : 0);
@@ -186,6 +317,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe }) {
                 {IC.back}Back
               </button>
               <h1 style={{ margin: "10px 0 14px" }}>How do you want to unlock?</h1>
+              <StudentPricing user={user} onStudentId={onStudentId} />
               <div className="at-car" ref={carRef}>
                 <div className="at-cc">
                   <h3>Pay as you go</h3>
@@ -259,7 +391,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe }) {
 }
 
 /* ── pay sheet: this one item, or switch to a plan ──────────────────────── */
-function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled }) {
+function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onStudentId }) {
   const { item } = pay;
   const isPlanItem = item.kind === "plan";
   const inSub = access.mode === "sub";
@@ -438,6 +570,11 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled }) {
                   ))}
                 </div>
               </div>
+              {pay.choice === "sub" && (
+                <div style={{ marginTop: 12 }} onClick={(e) => e.stopPropagation()}>
+                  <StudentPricing user={user} onStudentId={onStudentId} />
+                </div>
+              )}
               {pay.choice === "sub" && (
                 <div className="at-sum">
                   <div className="g">
@@ -631,7 +768,15 @@ function VerifiedSheet({ access, onPublish, onClose }) {
 
 /* ── provider ─────────────────────────────────────────────────────────── */
 export function MembershipProvider({ children }) {
-  const { user: authUser, refreshUser } = useAuth();
+  const { user: authUser, setUser, refreshUser } = useAuth();
+
+  // patched in place (not refreshUser(), which flips authLoading and would
+  // remount the page behind the open sheet)
+  const handleStudentId = useCallback(
+    (status) =>
+      setUser((u) => (u ? { ...u, student_id_verification_status: status } : u)),
+    [setUser]
+  );
 
   // dev-only overrides from the DEMO panel (DevMembershipPanel): student/pro
   // pricing and the "already spent this month" amount. Both are UI-only —
@@ -734,6 +879,7 @@ export function MembershipProvider({ children }) {
             setPlansStep(0);
             payFor({ kind: "plan", plan });
           }}
+          onStudentId={handleStudentId}
         />
       )}
       {user && pay && (
@@ -745,6 +891,7 @@ export function MembershipProvider({ children }) {
           spent={devSpent ?? spent}
           onClose={closePay}
           onFulfilled={() => refreshUser?.()}
+          onStudentId={handleStudentId}
         />
       )}
       {welcome && <VipWelcome onClose={() => setWelcome(false)} />}

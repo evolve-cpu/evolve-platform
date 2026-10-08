@@ -29,11 +29,19 @@ export function inr(n) {
   return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
+// Statuses that mean a student ID has been uploaded — the student price
+// applies straight away; an admin reviews the ID afterwards. (Set by the
+// verify-student-id edge function, or "submitted" when it couldn't run.)
+export const STUDENT_ID_STATUSES = ["submitted", "verified", "unclear", "manual"];
+
+// Student pricing is picked at checkout by uploading a student ID — there's
+// no student/pro question at sign-up any more, so everyone else pays pro.
+// role === "student" covers people who onboarded under the old flow.
 export function tierFor(user) {
-  const isPro =
-    user?.role === "professional" ||
-    (!user?.role && !!user?.designation && !user?.school_name);
-  return isPro ? "pro" : "student";
+  if (user?.role === "student") return "student";
+  if (STUDENT_ID_STATUSES.includes(user?.student_id_verification_status))
+    return "student";
+  return "pro";
 }
 
 export function planPrice(user, plan) {

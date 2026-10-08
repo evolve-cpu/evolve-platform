@@ -421,9 +421,14 @@ function Rail({ currentDay, mySubmissions, onClick }) {
   );
 }
 
-export default function Typetober() {
+// `platform` = rendered at /app/typetober, inside the signed-in platform
+// (PlatformApp guards sign-in) — goes straight to the board, and "back"
+// returns to the platform's events tab. The public /typetober page keeps the
+// landing; accepting the challenge (signing in first if needed) moves the
+// person into the platform version.
+export default function Typetober({ platform = false }) {
   const { user, logout } = useAuth();
-  const [stage, setStage] = useState("landing");
+  const [stage, setStage] = useState(platform ? "board" : "landing");
   const [sheet, setSheet] = useState(null);
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
@@ -536,11 +541,20 @@ export default function Typetober() {
     };
   }, [userId]);
 
+  // History ends up as …/app/events → /app/typetober, so "back" from the
+  // board lands on the platform rather than the public landing.
+  function enterPlatform() {
+    navigate("/app/events", { replace: true });
+    navigate("/app/typetober");
+  }
+
   useEffect(() => {
     if (user && sessionStorage.getItem("tt_pending")) {
       sessionStorage.removeItem("tt_pending");
       signedInHereRef.current = true;
-      setStage("board");
+      if (platform) setStage("board");
+      else enterPlatform();
+      return;
     }
     // Email sign-in completes in place (no redirect), so close the sheet here.
     if (user) setSheet((s) => (s?.type === "auth" ? null : s));
@@ -554,7 +568,8 @@ export default function Typetober() {
 
   function handleAccept() {
     if (user) {
-      setStage("board");
+      if (platform) setStage("board");
+      else enterPlatform();
       return;
     }
     sessionStorage.setItem("tt_pending", "1");
@@ -602,14 +617,16 @@ export default function Typetober() {
 
   function closeSheet() {
     setSheet(null);
-    if (location.pathname !== "/typetober" || sharedId)
-      navigate("/typetober", { replace: true });
+    const home = platform ? "/app/typetober" : "/typetober";
+    if (location.pathname !== home || sharedId)
+      navigate(home, { replace: true });
   }
 
   return (
     <div className="tt-root">
       <TypetoberNav
         user={user}
+        onBack={platform ? () => navigate("/app/events") : undefined}
         onAvatarClick={() => setSheet({ type: "profile" })}
         onPrize={() => setSheet({ type: "prize" })}
         onGuide={() => setSheet({ type: "guide" })}
@@ -677,8 +694,9 @@ export default function Typetober() {
           }}
           onLogout={async () => {
             await logout();
-            setStage("landing");
-            closeSheet();
+            setSheet(null);
+            if (platform) navigate("/typetober", { replace: true });
+            else setStage("landing");
           }}
         />
       )}

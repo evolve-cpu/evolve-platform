@@ -134,7 +134,7 @@ export default function InviteAccept() {
       await refreshUser();
     }
 
-    navigate(`/profile/${username}`, { replace: true, state: { justJoinedOrg: invite.org_name } });
+    navigate("/app/profile", { replace: true });
   }
 
   if (phase === "loading") {

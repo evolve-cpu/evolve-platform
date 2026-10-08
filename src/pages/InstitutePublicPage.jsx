@@ -1224,7 +1224,7 @@ export default function InstitutePublicPage() {
           )}
           {user?.username && (
             <Link
-              to={`/profile/${user.username}`}
+              to="/app/profile"
               className="w-[30px] h-[30px] rounded-full overflow-hidden flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 ml-1"
               style={{ background: "linear-gradient(135deg, rgba(163,91,251,1), #c264ff)" }}
             >
