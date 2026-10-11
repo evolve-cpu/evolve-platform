@@ -1045,6 +1045,8 @@ import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 // Eager load only the global landing + Home page (critical)
 import GlobalLanding from "./pages/GlobalLanding/GlobalLanding";
+import MainHome from "./pages/MainHome/MainHome";
+import Pricing from "./pages/Pricing/Pricing";
 import Home from "./pages/Home/Home";
 import Navigation from "./components/Navigation";
 import LoadingScreen from "./components/LoadingScreen";
@@ -1055,7 +1057,7 @@ import { MembershipProvider } from "./components/membership/MembershipProvider";
 import { useAuth } from "./hooks/useAuth";
 
 // Lazy load non-critical routes
-const AboutUs = lazy(() => import("./pages/AboutUs"));
+const AboutUs = lazy(() => import("./pages/About/About"));
 const Webinars = lazy(() => import("./pages/Webinars.jsx"));
 const EventDetail = lazy(() => import("./pages/EventDetail.jsx"));
 const Quiz = lazy(() => import("./pages/Quiz"));
@@ -1309,10 +1311,6 @@ const AppLayout = () => {
     !location.pathname.startsWith("/typetober/") &&
     !isEventDetailRoute;
 
-  // Global landing gets the "global" footer (designers / institutions /
-  // corporates nav) instead of the designer-flow footer.
-  const footerVariant = location.pathname === "/" ? "global" : "designer";
-
   // Check orientation for tablets
   useEffect(() => {
     const checkOrientation = () => {
@@ -1361,7 +1359,6 @@ const AppLayout = () => {
   // Set navbar visibility based on route
   useEffect(() => {
     if (
-      location.pathname === "/" ||
       location.pathname === "/institutions" ||
       location.pathname === "/corporates" ||
       location.pathname === "/for-institutes/portfolio-review-programme" ||
@@ -1708,7 +1705,8 @@ const AppLayout = () => {
               }
             />
 
-            <Route path="/" element={<GlobalLanding />} />
+            <Route path="/" element={<MainHome />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/institutions" element={<Institutions />} />
             <Route path="/corporates" element={<Corporates />} />
             <Route
@@ -1823,7 +1821,6 @@ const AppLayout = () => {
           !(location.pathname === "/designers" && isHomeIntroActive) && (
             <Suspense fallback={null}>
               <Footer
-                variant={footerVariant}
                 onContactClick={() => setIsContactModalOpen(true)}
               />
             </Suspense>

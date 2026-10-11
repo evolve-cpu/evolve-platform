@@ -21,6 +21,17 @@ import { inr, recordingPrice } from "../../lib/membership";
 
 const SIGNED_URL_TTL = 60 * 60 * 2; // 2 hours
 
+// Admins paste whatever YouTube gives them (watch?v=, youtu.be/, /live/,
+// /shorts/); only the /embed/ form plays inside an iframe. Videos must be
+// Unlisted — Private ones refuse to embed. Non-YouTube URLs pass through.
+export function toEmbedUrl(url) {
+  if (!url) return url;
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|live\/|shorts\/)|youtu\.be\/)([\w-]{11})/
+  );
+  return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0&modestbranding=1` : url;
+}
+
 function Watermark({ text }) {
   const [pos, setPos] = useState({ x: 12, y: 14 });
   useEffect(() => {
@@ -87,10 +98,10 @@ function Player({ event, user }) {
         )
       ) : (
         <iframe
-          src={event.recording_url}
+          src={toEmbedUrl(event.recording_url)}
           title={event.title}
           className="w-full h-full"
-          allow="encrypted-media; fullscreen"
+          allow="encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
         />
       )}

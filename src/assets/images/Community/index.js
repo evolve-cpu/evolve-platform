@@ -27,6 +27,22 @@ import portfolio_reviews_mobile from "./portfolio_reviews_mobile.svg";
 import resources from "./resources.svg";
 import resources_mobile from "./resources_mobile.svg";
 import anant_logo from "./anant_logo.png";
+import activities_poster_1 from "./activities_poster_1.svg";
+import activities_poster_2 from "./activities_poster_2.svg";
+import activities_poster_3 from "./activities_poster_3.svg";
+import activities_poster_4 from "./activities_poster_4.svg";
+import activities_poster_5 from "./activities_poster_5.svg";
+import ama_poster_1 from "./ama_poster_1.svg";
+import ama_poster_2 from "./ama_poster_2.svg";
+import ama_poster_3 from "./ama_poster_3.svg";
+import ama_poster_4 from "./ama_poster_4.svg";
+import book_1 from "./book_1.svg";
+import book_2 from "./book_2.svg";
+import book_3 from "./book_3.svg";
+import book_4 from "./book_4.svg";
+import vector_1 from "./vector_1.svg";
+import vector_2 from "./vector_2.svg";
+import vector_3 from "./vector_3.svg";
 
 export {
   doors_community,
@@ -57,5 +73,21 @@ export {
   portfolio_reviews_mobile,
   resources,
   resources_mobile,
-  anant_logo
+  anant_logo,
+  activities_poster_1,
+  activities_poster_2,
+  activities_poster_3,
+  activities_poster_4,
+  activities_poster_5,
+  ama_poster_1,
+  ama_poster_2,
+  ama_poster_3,
+  ama_poster_4,
+  book_1,
+  book_2,
+  book_3,
+  book_4,
+  vector_1,
+  vector_2,
+  vector_3
 };

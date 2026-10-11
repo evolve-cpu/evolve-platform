@@ -14,7 +14,6 @@ import {
   evolve_be_remarkable
 } from "../assets/images/Nav";
 
-import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import AuthModal from "./AuthModal";
@@ -118,12 +117,13 @@ const Navigation = ({
 
   const navItems = [
     { path: "/", label: "Home" },
-    { path: "/community", label: "Community" },
-    { path: "/portfolio-review", label: "Portfolio Review" },
-    { path: "/mentorship", label: "Mentorship" },
     { path: "/events", label: "Events" },
-    { path: "/typetober", label: "Typetober" },
-    { path: "/contact", label: "Contact Us", isModal: true }
+    { path: "/mentorship", label: "Mentorship Programme" },
+    { path: "/portfolio-review", label: "Portfolio Review" },
+    { path: "/community", label: "Community" },
+    { path: "/pricing", label: "Pricing" },
+    { path: "/about", label: "About" },
+    { path: "/contact", label: "contact us", isModal: true }
   ];
 
   const isActive = (p) => {
@@ -728,7 +728,7 @@ const Navigation = ({
             <div ref={menuContentRef} className="h-full flex flex-col">
               <div className="flex-1 flex items-center">
                 <div className="w-full flex justify-center px-6 md:px-8">
-                  <div className="flex flex-col items-start space-y-2 tracking-normal">
+                  <div className="flex flex-col items-start gap-4 md:gap-2 tracking-normal">
                     {navItems.map((item) => {
                       /* sub-item styling */
                       const subClass = item.sub
@@ -797,39 +797,6 @@ const Navigation = ({
                     })}
                   </div>
                 </div>
-              </div>
-
-              {/* JOIN US */}
-              {/* <div className="w-full flex justify-center mb-5 md:mb-6">
-                <a
-                  href="https://discord.gg/MmfaqCPdF7"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={join_us_button}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.src = join_us_button_hover)
-                    }
-                    onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
-                    alt="join evolve community"
-                    className="w-auto h-12 md:h-16"
-                  />
-                </a>
-              </div> */}
-              <div className="w-full flex justify-center mb-5 md:mb-6">
-                <a
-                  href="https://discord.gg/MmfaqCPdF7"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  // onClick={trackCommunityJoin}
-                  className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
-                  style={{
-                    boxShadow: "0 6px 0 #806804"
-                  }}
-                >
-                  Join Us
-                </a>
               </div>
 
               {/* MARQUEE */}

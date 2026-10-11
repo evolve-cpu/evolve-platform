@@ -566,9 +566,9 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
       </div>
       <div className="md:col-span-2">
         <Field
-          label="…or a hosted player URL (VdoCipher / Bunny Stream / Vimeo embed) — used when no video is uploaded"
+          label="…or a video link — Unlisted YouTube (free), or a VdoCipher / Bunny Stream / Vimeo embed. Used when no video is uploaded"
           value={form.recording_url}
-          placeholder="https://iframe.mediadelivery.net/embed/..."
+          placeholder="https://youtu.be/... or https://www.youtube.com/watch?v=..."
           onChange={(e) => setForm((f) => ({ ...f, recording_url: e.target.value }))}
         />
       </div>

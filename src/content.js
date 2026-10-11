@@ -737,10 +737,10 @@ export const community = {
     //   ctaLink: "/community/portfolio-review"
     // },
     {
-      title: "AMA sessions",
+      title: "AMA Sessions",
       subtitle: "Ask what really matters.",
       descriptionMobile:
-        "Ask anything in open sessions with professionals who've done it for real.",
+        "Ask anything in open sessions with working professionals and get real answers from people in the field.",
       descriptionDesktop:
         "Ask anything in open sessions with working professionals. Get answers from people who've been there and know how it actually works."
     },
@@ -748,7 +748,7 @@ export const community = {
       title: "Activities",
       subtitle: "Learn by doing.",
       descriptionMobile:
-        "Take short challenges, ship work, compare approaches, and learn new ways.",
+        "Take on short, time-bound challenges, share your work, and see how others solve the same brief.",
       descriptionDesktop:
         "Jump into short, time-bound challenges designed to stretch your thinking. Ship your work, see how others approached the same brief, and pick up new ways of solving problems."
     },
@@ -764,7 +764,7 @@ export const community = {
       title: "Bookclub",
       subtitle: "Read. Learn. Finish.",
       descriptionMobile:
-        "Read design classics together in a weekly book club you actually finish.",
+        "Read design classics and modern must-reads together, breaking them down into ideas you can use.",
       descriptionDesktop:
         "Join the book club to read design classics and modern must-reads together. We break books into small chunks and meet weekly to talk ideas, opinions, and real takeaways, so you actually finish what you start."
     }

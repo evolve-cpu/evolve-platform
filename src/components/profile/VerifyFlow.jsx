@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import OnboardingProgressBar from "../../pages/Onboarding/OnboardingProgressBar";
 
@@ -312,169 +312,18 @@ export function VerifyCard({
   );
 }
 
-/* ── Type-or-record answer input — text always uploads inline; a
-   recorded answer uploads to Supabase Storage as soon as recording
-   stops (not deferred to the final submit) so the wizard only ever
-   carries a small storage path around, never a blob. ────────────────── */
-function VoiceOrTextInput({ userId, questionKey, value, onChange, placeholder }) {
-  const mode = value?.mode || "type";
-  const [recording, setRecording] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [seconds, setSeconds] = useState(0);
-  const [permissionError, setPermissionError] = useState("");
-  const recorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const streamRef = useRef(null);
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      clearInterval(timerRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
-
-  function setMode(next) {
-    onChange({ ...value, mode: next });
-  }
-
-  async function startRecording() {
-    setPermissionError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => handleRecordingStopped(recorder.mimeType || "audio/webm");
-      recorder.start();
-      recorderRef.current = recorder;
-      setRecording(true);
-      setSeconds(0);
-      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-    } catch {
-      setPermissionError("Couldn't access your microphone — try typing instead.");
-    }
-  }
-
-  function stopRecording() {
-    recorderRef.current?.stop();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    clearInterval(timerRef.current);
-    setRecording(false);
-  }
-
-  async function handleRecordingStopped(mimeType) {
-    const blob = new Blob(chunksRef.current, { type: mimeType });
-    setPreviewUrl(URL.createObjectURL(blob));
-    setUploading(true);
-    const ext = mimeType.includes("mp4") ? "m4a" : "webm";
-    const path = `${userId}/${questionKey}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("verification-audio")
-      .upload(path, blob, { contentType: mimeType });
-    setUploading(false);
-    if (error) {
-      setPermissionError("Upload failed — try recording again.");
-      return;
-    }
-    onChange({ mode: "record", text: null, audioPath: path });
-  }
-
+/* ── Typed answer input. (Voice answers were removed; old submissions
+   with an audioPath still play back in the admin Verification tab.) ── */
+function AnswerInput({ value, onChange, placeholder }) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setMode("type")}
-          className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-            mode === "type"
-              ? "border-evolve-yellow/50 bg-evolve-yellow/[0.12] text-evolve-yellow"
-              : "border-[#373737] text-white/50 hover:border-white/20"
-          }`}
-        >
-          Type
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("record")}
-          className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-            mode === "record"
-              ? "border-evolve-yellow/50 bg-evolve-yellow/[0.12] text-evolve-yellow"
-              : "border-[#373737] text-white/50 hover:border-white/20"
-          }`}
-        >
-          Record
-        </button>
-      </div>
-
-      {mode === "type" ? (
-        <textarea
-          value={value?.text || ""}
-          onChange={(e) => onChange({ mode: "type", text: e.target.value, audioPath: null })}
-          placeholder={placeholder}
-          rows={6}
-          className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60 resize-none"
-          style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-        />
-      ) : (
-        <div className="rounded-xl border border-[#373737] px-4 py-5 flex flex-col items-center gap-3" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
-          {!previewUrl && !recording && (
-            <button
-              type="button"
-              onClick={startRecording}
-              className="w-14 h-14 rounded-full bg-evolve-yellow text-evolve-black flex items-center justify-center"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="8" />
-              </svg>
-            </button>
-          )}
-          {recording && (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center animate-pulse"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
-            </button>
-          )}
-          {recording && (
-            <p className="text-white/50 text-xs">
-              recording… {String(Math.floor(seconds / 60)).padStart(1, "0")}:
-              {String(seconds % 60).padStart(2, "0")}
-            </p>
-          )}
-          {!recording && !previewUrl && (
-            <p className="text-white/40 text-xs">Tap to record your answer</p>
-          )}
-          {uploading && <p className="text-white/40 text-xs">Uploading…</p>}
-          {previewUrl && !uploading && (
-            <div className="flex flex-col items-center gap-2 w-full">
-              <audio src={previewUrl} controls className="w-full" />
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewUrl(null);
-                  onChange({ mode: "record", text: null, audioPath: null });
-                }}
-                className="text-evolve-yellow text-[11px] font-semibold hover:opacity-80"
-              >
-                Re-record
-              </button>
-            </div>
-          )}
-          {permissionError && (
-            <p className="text-red-400 text-[11px]">{permissionError}</p>
-          )}
-        </div>
-      )}
-    </div>
+    <textarea
+      value={value?.text || ""}
+      onChange={(e) => onChange({ mode: "type", text: e.target.value, audioPath: null })}
+      placeholder={placeholder}
+      rows={6}
+      className="w-full text-sm text-white outline-none border border-[#373737] rounded-xl px-4 py-3 transition-colors focus:border-evolve-yellow/60 resize-none"
+      style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+    />
   );
 }
 
@@ -652,9 +501,7 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
               <h3 className="text-white font-bold text-xl leading-tight">{currentQuestion.title}</h3>
               <p className="text-white/40 text-sm mt-1.5">{currentQuestion.subtitle}</p>
             </div>
-            <VoiceOrTextInput
-              userId={user.id}
-              questionKey={currentQuestion.key}
+            <AnswerInput
               value={answers[currentQuestion.key]}
               onChange={(next) =>
                 setAnswers((a) => ({ ...a, [currentQuestion.key]: next }))

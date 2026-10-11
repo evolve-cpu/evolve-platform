@@ -11,9 +11,7 @@ import {
 } from "../assets/images/Nav";
 import {
   hand_with_thunder,
-  hand_with_thunder_mobile,
-  join_us_button,
-  join_us_button_hover
+  hand_with_thunder_mobile
 } from "../assets/images/Home";
 
 const useIsMobile = (bp = 768) => {
@@ -28,7 +26,7 @@ const useIsMobile = (bp = 768) => {
   return isMobile;
 };
 
-const Footer = ({ onContactClick, variant = "designer" }) => {
+const Footer = ({ onContactClick }) => {
   const isMobile = useIsMobile();
   const location = useLocation();
 
@@ -44,44 +42,77 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
   const marqueeGroupRef = useRef(null);
   const marqueeTL = useRef(null);
 
-  const navigationLinks =
-    variant === "global"
-      ? [
-          { path: "/designers", label: "Designers" },
-          { path: "/institutions", label: "Institutions" },
-          { path: "/corporates", label: "Corporates" }
-        ]
-      : [
-          { label: "Home", path: "/" },
-          { path: "/community", label: "Community" },
-          { path: "/portfolio-review", label: "Portfolio Review" },
-          { path: "/mentorship", label: "Mentorship" },
-          // { path: "/evolve-in-person", label: "evolve in-person" },
-          { path: "/events", label: "Events" },
-          // { label: "contact us", path: "/contact" }
-          { path: "/contact", label: "Contact Us", isModal: true }
-          // {
-          //   path: "https://tally.so/r/ob6WVV?formEventsForwarding=1",
-          //   label: "rate this website",
-          //   external: true
-          // }
-        ];
+  const navigationLinks = [
+    { path: "/", label: "Home" },
+    { path: "/events", label: "Events" },
+    { path: "/mentorship", label: "Mentorship" },
+    { path: "/portfolio-review", label: "Portfolio review" },
+    { path: "/community", label: "Community" },
+    { path: "/pricing", label: "Pricing" },
+    { path: "/about", label: "About" },
+    { path: "/contact", label: "Contact us", isModal: true }
+  ];
 
   const socialLinks = [
     { label: "Instagram", url: "https://www.instagram.com/evolvebypaperclip/" },
-    // { label: "facebook", url: "#" },
     { label: "Youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
-    { label: "Medium", url: "https://medium.com/@evolvebypaperclip" },
     {
-      label: "LinkedIn",
+      label: "Linkedin",
       url: "https://www.linkedin.com/company/evolvedesignacademy/"
     },
-    {
-      label: "Discord",
-      // url: "https://discord.com/channels/@me/1347086283985649749/1438414139365265479"
-      url: "https://discord.gg/wKRYG7cSWt"
-    }
+    { label: "Discord", url: "https://discord.gg/wKRYG7cSWt" }
   ];
+
+  const audienceLinks = [
+    { path: "/institutions", label: "Institutions" },
+    { path: "/corporates", label: "Corporates" }
+  ];
+
+  const linkClass = (active) =>
+    `leading-tight transition-colors duration-300 hover:text-evolve-pink ${
+      active ? "text-evolve-pink" : "text-black"
+    }`;
+
+  const renderNavLink = (item, sizeClass) =>
+    item.isModal ? (
+      <button
+        onClick={() => onContactClick && onContactClick()}
+        className={`${sizeClass} ${linkClass(false)}`}
+      >
+        {item.label}
+      </button>
+    ) : (
+      <Link
+        to={item.path}
+        className={`${sizeClass} ${linkClass(isActive(item.path))}`}
+      >
+        {item.label}
+      </Link>
+    );
+
+  const joinUsButton = (
+    <a
+      href="https://discord.gg/MmfaqCPdF7"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[60px] rounded-[16px] bg-evolve-black text-white text-[18px] md:text-[22px] font-extrabold leading-none transition-all duration-150 hover:translate-y-[2px] hover:shadow-[0_4px_0_#806804] select-none"
+      style={{ boxShadow: "0 6px 0 #806804" }}
+    >
+      Join us
+    </a>
+  );
+
+  const legal = (sizeClass) => (
+    <div className={`${sizeClass} text-black`}>
+      <Link to="/privacy" className="hover:text-evolve-pink transition-colors">
+        privacy policy
+      </Link>{" "}
+      and{" "}
+      <Link to="/terms" className="hover:text-evolve-pink transition-colors">
+        t&amp;c conditions
+      </Link>
+    </div>
+  );
 
   useLayoutEffect(() => {
     const container = marqueeRef.current;
@@ -125,109 +156,32 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
     <footer className="relative w-full bg-evolve-yellow text-black overflow-hidden min-h-screen md:min-h-screen md:min-h-[100dvh] isolate">
       {/* =================== DESKTOP (md+) =================== */}
       <div className="hidden md:block relative min-h-screen md:min-h-[100dvh]">
-        <div className="max-w-[1200px] mx-auto px-8 pt-16 pb-[14rem] relative min-h-screen md:min-h-[100dvh]">
+        <div className="max-w-[1600px] mx-auto px-[8vw] pt-[clamp(64px,9vw,180px)] pb-[16rem] relative min-h-screen md:min-h-[100dvh]">
           {/* text/content layer */}
-          <div className="relative z-30 w-2/3 h-full">
-            <h2 className="font-extrabold text-[4rem] leading-[1.1]">
-              Ready to
-              <br />
-              Be Remarkable?
+          <div className="relative z-30 w-[46%] h-full">
+            <h2
+              className="font-extrabold text-evolve-black leading-[1.05] whitespace-nowrap"
+              style={{ fontSize: "clamp(40px, 3.4vw, 64px)", letterSpacing: "-0.04em" }}
+            >
+              Ready to Be Remarkable?
             </h2>
 
-            {/* <div className="mt-6">
-              <a
-                href="https://discord.gg/MmfaqCPdF7"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block"
-              >
-                <img
-                  src={join_us_button}
-                  alt="join us"
-                  className="w-auto h-[3.5rem] hover:opacity-80 transition-opacity duration-300"
-                />
-              </a>
-            </div> */}
-            <div className="mt-8">
-              <a
-                href="https://discord.gg/MmfaqCPdF7"
-                target="_blank"
-                rel="noopener noreferrer"
-                // onClick={trackCommunityJoin}
-                className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
-                style={{
-                  boxShadow: "0 6px 0 #806804"
-                }}
-              >
-                Join Us
-              </a>
-            </div>
+            <div className="mt-8">{joinUsButton}</div>
 
-            <div className="h-px bg-black my-8" />
+            <div className="h-px bg-black/70 my-10" />
 
             <div className="grid grid-cols-2 gap-12">
               <div>
-                <div className="text-[1.25rem] leading-none mb-4">
-                  Navigation
-                </div>
+                <div className="text-[1.1rem] leading-none mb-5">Navigation</div>
                 <ul className="space-y-1">
-                  {/* {navigationLinks.map((item) => (
-                    <li key={item.label} className={item.sub ? "pl-4" : ""}>
-                      <Link
-                        to={item.path}
-                        className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                          item.sub
-                            ? "text-[1.5rem] text-black/50"
-                            : "text-[2rem]"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))} */}
-                  {navigationLinks.map((item) => {
-                    if (item.isHeader) {
-                      return (
-                        <li key={item.label}>
-                          <span className="text-[2rem] leading-tight text-black">
-                            {item.label}
-                          </span>
-                        </li>
-                      );
-                    }
-                    return (
-                      <li key={item.label} className={item.sub ? "" : ""}>
-                        {item.isModal ? (
-                          <button
-                            onClick={() => onContactClick && onContactClick()}
-                            className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                              item.sub
-                                ? "text-[1.5rem] text-black/50"
-                                : "text-[2rem] text-black"
-                            }`}
-                          >
-                            {item.label}
-                          </button>
-                        ) : (
-                          <Link
-                            to={item.path}
-                            className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                              item.sub
-                                ? `text-[1.5rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black/50"}`
-                                : `text-[2rem] ${isActive(item.path) ? "text-evolve-pink" : "text-black"}`
-                            }`}
-                          >
-                            {item.label}
-                          </Link>
-                        )}
-                      </li>
-                    );
-                  })}
+                  {navigationLinks.map((item) => (
+                    <li key={item.label}>{renderNavLink(item, "text-[2rem]")}</li>
+                  ))}
                 </ul>
               </div>
 
               <div>
-                <div className="text-[1.25rem] leading-none mb-4">Socials</div>
+                <div className="text-[1.1rem] leading-none mb-5">socials</div>
                 <ul className="space-y-1">
                   {socialLinks.map((item) => (
                     <li key={item.label}>
@@ -242,27 +196,22 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
                     </li>
                   ))}
                 </ul>
+
+                <div className="text-[1.1rem] leading-none mt-14 mb-3">
+                  evolve for
+                </div>
+                <ul className="space-y-1">
+                  {audienceLinks.map((item) => (
+                    <li key={item.label}>{renderNavLink(item, "text-[2rem]")}</li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            <div className="mt-8 text-[0.9rem] text-black/50">
-              ©2026 evolve. All rights reserved
-            </div>
+            <div className="mt-10">{legal("text-[1.4rem]")}</div>
 
-            <div className="mt-3 flex items-center gap-6">
-              <Link
-                to="/privacy"
-                className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
-              >
-                Privacy Policy
-              </Link>
-              <span className="text-black/30 text-sm">·</span>
-              <Link
-                to="/terms"
-                className="text-[0.9rem] text-black/50 hover:text-black transition-colors duration-200"
-              >
-                Terms &amp; Conditions
-              </Link>
+            <div className="mt-6 text-[0.95rem] text-black">
+              @2026 evolve. all rights reserved
             </div>
           </div>
 
@@ -279,149 +228,68 @@ const Footer = ({ onContactClick, variant = "designer" }) => {
       {/* =================== MOBILE (base–md) =================== */}
       <div className="md:hidden relative px-5 pt-8 pb-28">
         <div className="relative z-30">
-          <h2 className="font-extrabold text-[2rem] leading-tight">
-            Ready To Be Remarkable?
+          <h2
+            className="font-extrabold text-[2.25rem] leading-[1.05]"
+            style={{ letterSpacing: "-0.04em" }}
+          >
+            Ready to Be Remarkable?
           </h2>
 
-          {/* <div className="mt-4">
-            <a
-              href="https://discord.gg/MmfaqCPdF7"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block"
-            >
-              <img
-                src={join_us_button}
-                alt="join us"
-                onMouseEnter={(e) =>
-                  (e.currentTarget.src = join_us_button_hover)
-                }
-                onMouseLeave={(e) => (e.currentTarget.src = join_us_button)}
-                className="w-auto h-[3rem]"
-              />
-            </a>
-          </div> */}
-          <div className="mt-8">
-            <a
-              href="https://discord.gg/MmfaqCPdF7"
-              target="_blank"
-              rel="noopener noreferrer"
-              // onClick={trackCommunityJoin}
-              className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
-              style={{
-                boxShadow: "0 6px 0 #806804"
-              }}
-            >
-              Join Us
-            </a>
-          </div>
+          <div className="mt-6">{joinUsButton}</div>
 
-          <div className="h-px bg-black my-6" />
+          <div className="h-px bg-black/70 my-8" />
 
-          <div>
-            <ul className="space-y-1">
-              {socialLinks.map((item) => (
-                <li key={item.label}>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[1.25rem] leading-[1.75rem] hover:text-evolve-pink transition-colors duration-300"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <div className="text-[0.9rem] leading-none mb-3">Navigation</div>
+              <ul className="space-y-1">
+                {navigationLinks.map((item) => (
+                  <li key={item.label}>{renderNavLink(item, "text-[1.25rem]")}</li>
+                ))}
+              </ul>
+            </div>
 
-          <div className="h-px bg-black my-6" />
-
-          <div>
-            <ul className="space-y-1">
-              {/* {navigationLinks.map((item) => (
-                <li key={item.label} className={item.sub ? "pl-4" : ""}>
-                  <Link
-                    to={item.path}
-                    className={`leading-[1.75rem] hover:text-evolve-pink transition-colors duration-300 ${
-                      item.sub ? "text-[1rem] text-black/50" : "text-[1.25rem]"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))} */}
-              {navigationLinks.map((item) => {
-                if (item.isHeader) {
-                  return (
-                    <li key={item.label}>
-                      <span className="text-[1.5rem] leading-tight text-black">
-                        {item.label}
-                      </span>
-                    </li>
-                  );
-                }
-                return (
-                  <li key={item.label} className={item.sub ? "" : ""}>
-                    {item.isModal ? (
-                      <button
-                        onClick={() => onContactClick && onContactClick()}
-                        className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                          item.sub
-                            ? "text-[1.25rem] text-black/50"
-                            : "text-[1.5rem]"
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ) : (
-                      <Link
-                        to={item.path}
-                        className={`leading-tight hover:text-evolve-pink transition-colors duration-300 ${
-                          item.sub
-                            ? "text-[1.25rem] text-black/50"
-                            : "text-[1.5rem]"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    )}
+            <div>
+              <div className="text-[0.9rem] leading-none mb-3">socials</div>
+              <ul className="space-y-1">
+                {socialLinks.map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[1.25rem] leading-tight hover:text-evolve-pink transition-colors duration-300"
+                    >
+                      {item.label}
+                    </a>
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+
+              <div className="text-[0.9rem] leading-none mt-8 mb-3">evolve for</div>
+              <ul className="space-y-1">
+                {audienceLinks.map((item) => (
+                  <li key={item.label}>{renderNavLink(item, "text-[1.25rem]")}</li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          <div className="h-px bg-black my-6" />
+          <div className="mt-8">{legal("text-[1rem]")}</div>
 
-          <div className="text-[0.9375rem] leading-6">
-            ©2026 evolve. all rights reserved
-          </div>
-
-          <div className="flex items-center gap-4 mt-3">
-            <Link
-              to="/privacy"
-              className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200"
-            >
-              privacy policy
-            </Link>
-            <span className="text-black/30 text-xs">·</span>
-            <Link
-              to="/terms"
-              className="text-[0.8rem] text-black/50 hover:text-black transition-colors duration-200"
-            >
-              t&amp;c conditions
-            </Link>
+          <div className="mt-3 text-[0.85rem] text-black">
+            @2026 evolve. all rights reserved
           </div>
         </div>
-
-        {/* mobile svg below text */}
-        <img
-          src={hand_with_thunder_mobile}
-          alt="hand with thunder"
-          className="pointer-events-none select-none absolute right-0 -bottom-10 w-[90%] z-10"
-        />
       </div>
+
+      {/* mobile hand — anchored to the footer (like the marquee), not the
+          text block, so it always sits right on top of the marquee */}
+      <img
+        src={hand_with_thunder_mobile}
+        alt="hand with thunder"
+        className="md:hidden pointer-events-none select-none absolute right-0 bottom-0 w-[90%] z-10"
+      />
 
       {/* ======= shared slanted marquee ======= */}
       <div className="pointer-events-none absolute left-[-20vw] right-[-18vw] bottom-0 origin-bottom rotate-[-9deg] z-20">
