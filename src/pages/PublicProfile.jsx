@@ -22,6 +22,7 @@ import PortfolioReviewProgramme from "../components/programmes/PortfolioReviewPr
 import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 import AppTabNav from "../components/AppTabNav";
 import EventDetail from "./EventDetail";
+import { eventHasRecording } from "../components/events/PastEventRecording";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -268,7 +269,7 @@ function EventWhen({ event }) {
     );
   }
   if (isEventOver(event)) {
-    const recorded = event.recording_path || event.recording_url;
+    const recorded = eventHasRecording(event);
     return (
       <span>
         {fmtEventDay(event.start_time)}

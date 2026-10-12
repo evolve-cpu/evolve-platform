@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { fetchAdminRole } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { anu_admin_hero_img_1 } from "../../assets/anant";
 
@@ -13,32 +13,21 @@ export default function AnantAdminLanding() {
   const [adminRole, setAdminRole] = useState("");
 
   useEffect(() => {
-    // PIN-based evolve admin session
-    if (sessionStorage.getItem("admin_access") === "true") {
-      setSignedIn(true);
-      setAdminName("Admin");
-      setAdminInitial("A");
-      setAdminRole("evolve admin");
-      return;
-    }
-
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       const email = session.user.email || "";
 
-      const [{ data: fac }, { data: adm }] = await Promise.all([
-        supabaseAdmin.from("anu_faculty").select("first_name, last_name").eq("anu_email", email).maybeSingle(),
-        supabaseAdmin.from("anu_admins").select("first_name, last_name").eq("anu_email", email).maybeSingle()
-      ]);
-      const person = fac || adm;
-      if (!person) return; // student or unrecognised session — show "Sign in"
+      const who = await fetchAdminRole();
+      if (!who.role) return; // student or unrecognised session — show "Sign in"
 
-      const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
+      const name = who.name || (who.role === "evolve" ? "Admin" : "");
       setSignedIn(true);
       setAdminName(name || email);
       setAdminInitial((name[0] || email[0] || "A").toUpperCase());
-      setAdminRole(fac ? "faculty" : "college admin");
+      setAdminRole(
+        who.role === "anant_faculty" ? "faculty" : who.role === "anant_admin" ? "college admin" : "evolve admin"
+      );
     }
     checkSession();
 

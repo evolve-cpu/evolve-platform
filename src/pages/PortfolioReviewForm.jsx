@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
-import { supabaseAdmin } from "../supabaseAdminClient";
+import { fetchMyAnuStudent } from "../supabaseAdminClient";
 import BlackNav from "../components/BlackNav";
 import { evolve_cube } from "../assets/images/Home";
 import { tenant, isAnant } from "../tenants";
@@ -1285,23 +1285,12 @@ export default function PortfolioReviewForm() {
     async function handleSession(session) {
       setAnantSession(session || null);
       if (session?.user) {
-        const email = session.user.email?.toLowerCase();
-        const { data } = await supabaseAdmin
-          .from("anu_students")
-          .select("id, auth_user_id, first_name, last_name, program, stream, year, anu_email")
-          .eq("anu_email", email)
-          .maybeSingle();
+        // also stamps auth_user_id + invite_accepted_at on first arrival
+        // (magic link invites redirect here directly, bypassing AnantSignIn)
+        const data = await fetchMyAnuStudent();
         if (data) {
           // Populate sessionStorage cache so home/profile pages load instantly
           sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
-          // Stamp auth_user_id + invite_accepted_at when student first arrives
-          // (magic link invites redirect here directly, bypassing AnantSignIn)
-          if (!data.auth_user_id) {
-            supabaseAdmin.from("anu_students").update({
-              auth_user_id: session.user.id,
-              invite_accepted_at: new Date().toISOString()
-            }).eq("id", data.id).then(() => {});
-          }
         }
         // If not a student, redirect to sign-in (handles admin sessions bleeding in)
         if (!data) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { callAdminApi, fetchMyAnuStudent } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 
 const NAV_BG    = "#060c17";
@@ -39,20 +39,11 @@ export default function AnantSignIn() {
   }, []);
 
   async function stampAndRedirect(authUser) {
-    const addr = authUser.email?.toLowerCase();
-    if (!addr) return;
-    const { data } = await supabaseAdmin
-      .from("anu_students")
-      .select("id, auth_user_id")
-      .eq("anu_email", addr)
-      .maybeSingle();
+    if (!authUser.email) return;
+    // also stamps auth_user_id + invite_accepted_at on first arrival
+    const data = await fetchMyAnuStudent();
     if (!data) return; // not a student — don't redirect to student form
-    if (!data.auth_user_id) {
-      await supabaseAdmin.from("anu_students").update({
-        auth_user_id: authUser.id,
-        invite_accepted_at: new Date().toISOString()
-      }).eq("id", data.id);
-    }
+    sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
     navigate("/portfolio-review/form", { replace: true });
   }
 
@@ -61,33 +52,19 @@ export default function AnantSignIn() {
     if (!addr) return;
     setError(""); setStep("sending");
 
-    // Whitelist check — select all fields we'll need for the session cache
-    const { data: student, error: dbErr } = await supabaseAdmin
-      .from("anu_students")
-      .select("id, first_name, last_name, program, stream, year, anu_email")
-      .eq("anu_email", addr)
-      .maybeSingle();
+    // Whitelist check (the student's details are cached after sign-in)
+    const check = await callAdminApi({ op: "anu_student_check", email: addr });
 
-    if (dbErr) {
-      console.error("anu_students query error:", dbErr);
-      setError(`DB error: ${dbErr.message}`);
+    if (check.error) {
+      console.error("anu_student_check error:", check.error);
+      setError(`Something went wrong: ${check.error.message}`);
       setStep("email"); return;
     }
 
-    if (!student) {
+    if (!check.exists) {
       setError("This email is not registered. Please use your ANU email address.");
       setStep("email"); return;
     }
-
-    // Cache student data so home/profile pages don't need an extra DB round-trip
-    sessionStorage.setItem("anu_student_cache", JSON.stringify({
-      first_name: student.first_name,
-      last_name:  student.last_name,
-      program:    student.program,
-      stream:     student.stream,
-      year:       student.year,
-      anu_email:  student.anu_email
-    }));
 
     await sendSignInEmail(addr);
     setStep("sent");

@@ -10,8 +10,6 @@ const evolve = {
     import.meta.env.VITE_BREVO_PORTFOLIO_TEMPLATE_ID
   ),
 
-  adminPinEnvKey: "VITE_ADMIN_PIN",
-
   formFields: {
     showCourse: false,
     showBatch: false,

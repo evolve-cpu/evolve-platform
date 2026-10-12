@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { recogniseLetters, validRecogniseImages } from "./api/_typetoberRecognise.js";
 import { postSubmissionsToDiscord } from "./api/_typetoberDiscord.js";
 import { priceItem, fulfilPurchase, redeemReviewCredit } from "./api/_membership.js";
+import adminApiHandler from "./api/admin.js";
 
 // Dev-only: the after-trial membership flows (see api/_membership.js) —
 // fake checkout (devConfirm), the free-review redeem, and the DEMO panel's
@@ -254,6 +255,39 @@ function mentorshipDevPaymentBypass(env) {
   };
 }
 
+// Dev-only: serve api/admin.js (the admin panel's server side) under
+// `vite dev`, with a minimal stand-in for Vercel's req/res. The handler
+// reads server-side env vars (no VITE_ prefix) — copied in from .env /
+// .env.local here because vite.config doesn't populate process.env.
+function adminApiDev(env) {
+  const keys = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GEMINI_API_KEY", "BREVO_API_KEY", "RESEND_API_KEY"];
+  for (const k of keys) if (!process.env[k] && env[k]) process.env[k] = env[k];
+  if (!process.env.SUPABASE_URL && env.VITE_SUPABASE_URL) process.env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+  // local convenience only: VITE_GEMINI_API_KEY is no longer read by client code, so it isn't bundled
+  if (!process.env.GEMINI_API_KEY && env.VITE_GEMINI_API_KEY) process.env.GEMINI_API_KEY = env.VITE_GEMINI_API_KEY;
+  return {
+    name: "admin-api-dev",
+    configureServer(server) {
+      server.middlewares.use("/api/admin", async (req, res) => {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const vres = {
+          status(code) {
+            res.statusCode = code;
+            return vres;
+          },
+          json(obj) {
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(obj));
+            return vres;
+          }
+        };
+        await adminApiHandler({ method: req.method, headers: req.headers, body: Buffer.concat(chunks).toString("utf8") }, vres);
+      });
+    }
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
@@ -276,7 +310,8 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    mode === "development" && mentorshipDevPaymentBypass(env)
+    mode === "development" && mentorshipDevPaymentBypass(env),
+    mode === "development" && adminApiDev(env)
   ].filter(Boolean),
 
   resolve: {

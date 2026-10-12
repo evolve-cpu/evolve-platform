@@ -1,48 +1,32 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { callAdminApi, fetchAdminRole } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 
 const NAV_BG = "#060c17";
 const NAV_BORD = "#0d1f3c";
 const ACCENT = "#2563eb";
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
-const REDIRECT = `${ANU_ORIGIN}/admin/dashboard`;
-
-async function sendSignInEmail(toEmail, magicLink, role) {
-  await fetch("/api/send-admin-login-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ toEmail, magicLink, role })
-  });
-}
 
 export default function AnantAdminLogin() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  // mode: "email" (faculty/uni-admin OTP) or "pin" (evolve super-admin via ?ea=1)
-  const [mode, setMode] = useState(
-    searchParams.get("ea") === "1" ? "pin" : "email"
-  );
+  // Faculty, uni admins and Evolve admins (admin_users) all sign in with an
+  // emailed link; api/admin.js checks the address and sends it. (The old
+  // ?ea=1 PIN mode is gone: the PIN shipped in the public JS bundle.)
+  const mode = "email";
   const [step, setStep] = useState("input"); // input | sending | sent
   const [email, setEmail] = useState("");
-  const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
 
-  const evolvePin = import.meta.env.VITE_ADMIN_PIN;
-  const anantPin = import.meta.env.VITE_ANANT_ADMIN_PIN;
-
-  // If PIN session or Supabase session already valid, skip login
+  // Already signed in as staff / an Evolve admin → straight to the dashboard
+  // (a student's session stays here instead of bouncing off the guard)
   useEffect(() => {
-    if (sessionStorage.getItem("admin_access") === "true") {
-      navigate("/admin/dashboard", { replace: true });
-      return;
-    }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) navigate("/admin/dashboard", { replace: true });
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const who = await fetchAdminRole();
+      if (who.role) navigate("/admin/dashboard", { replace: true });
     });
   }, [navigate]);
 
@@ -53,68 +37,16 @@ export default function AnantAdminLogin() {
     setError("");
     setStep("sending");
 
-    // Whitelist check
-    const [{ data: faculty }, { data: admin }] = await Promise.all([
-      supabaseAdmin
-        .from("anu_faculty")
-        .select("id")
-        .eq("anu_email", addr)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("anu_admins")
-        .select("id")
-        .eq("anu_email", addr)
-        .maybeSingle()
-    ]);
-
-    if (!faculty && !admin) {
-      setError("This email is not registered as faculty or admin.");
+    // whitelist check + link generation + email, all server-side
+    const res = await callAdminApi({ op: "anant_staff_login", email: addr });
+    if (!res.ok) {
+      setError(res.error?.message || res.error || "Could not send the sign-in link. Please try again.");
       setStep("input");
       return;
     }
 
-    const role = admin ? "uni_admin" : "faculty";
-    const { data: linkData, error: otpErr } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: addr,
-        options: { redirectTo: REDIRECT, expiresIn: 86400 }
-      });
-
-    if (otpErr) {
-      console.error("generateLink error:", otpErr);
-      setError(otpErr.message);
-      setStep("input");
-      return;
-    }
-
-    const magicLink = linkData?.properties?.action_link;
-    if (!magicLink) {
-      setError("Could not generate sign-in link. Please try again.");
-      setStep("input");
-      return;
-    }
-
-    await sendSignInEmail(addr, magicLink, role);
     setStep("sent");
     startCountdown();
-  }
-
-  /* ── PIN mode ── */
-  function handlePinSubmit(e) {
-    e.preventDefault();
-    const entered = pin.trim();
-    if (
-      (evolvePin && entered === String(evolvePin)) ||
-      (anantPin && entered === String(anantPin))
-    ) {
-      sessionStorage.setItem("admin_access", "true");
-      sessionStorage.setItem("admin_tenant", "anant");
-      sessionStorage.removeItem("anu_role");
-      navigate("/admin/dashboard");
-      return;
-    }
-    setError("Wrong PIN.");
   }
 
   function startCountdown() {
@@ -289,63 +221,6 @@ export default function AnantAdminLogin() {
                   </button>
                 </>
               )}
-            </>
-          )}
-
-          {/* ══ PIN MODE ══ */}
-          {mode === "pin" && (
-            <>
-              <button
-                onClick={() => {
-                  setMode("email");
-                  setPin("");
-                  setError("");
-                }}
-                className="flex items-center gap-1.5 text-sm font-semibold w-fit"
-                style={{ color: "#60a5fa" }}
-              >
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12.5 15L7.5 10L12.5 5"
-                    stroke="#60a5fa"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                back
-              </button>
-              <h1
-                className="font-extrabold text-white"
-                style={{ fontSize: 32, letterSpacing: "-0.04em" }}
-              >
-                admin PIN
-              </h1>
-              <form onSubmit={handlePinSubmit} className="flex flex-col gap-4">
-                <input
-                  value={pin}
-                  onChange={(e) =>
-                    setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
-                  }
-                  inputMode="numeric"
-                  placeholder="••••"
-                  className="w-full rounded-2xl px-5 py-4 text-white text-center text-2xl tracking-[0.3em] font-bold outline-none border"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    borderColor: "rgba(255,255,255,0.12)"
-                  }}
-                  autoFocus
-                />
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={pin.length < 4}
-                  className="w-full font-bold text-base rounded-2xl py-4 transition-opacity disabled:opacity-40"
-                  style={{ background: ACCENT, color: "#fff" }}
-                >
-                  continue
-                </button>
-              </form>
             </>
           )}
         </div>

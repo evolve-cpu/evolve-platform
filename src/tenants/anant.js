@@ -12,8 +12,6 @@ const anant = {
       import.meta.env.VITE_BREVO_PORTFOLIO_TEMPLATE_ID
   ),
 
-  adminPinEnvKey: "VITE_ANANT_ADMIN_PIN",
-
   formFields: {
     showCourse: true,
     showBatch: true,

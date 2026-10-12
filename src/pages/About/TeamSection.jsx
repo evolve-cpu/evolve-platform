@@ -26,13 +26,13 @@ const TEAM = [
       "https://www.linkedin.com/in/sakshi-patki-97473b200/?isSelfProfile=true"
   },
   {
-    name: "Arnab Majumdar",
+    name: "Arnab Majumder",
     role: "Tech Lead",
     driveId: "1WrrZ8oUMw1v9hafFB2K9xrgScwhT6TBl",
     linkedin: "https://www.linkedin.com/in/arnab-majumder-923ab41bb/"
   },
   {
-    name: "Yash singh dhandal",
+    name: "Yash",
     role: "Community Lead",
     driveId: "1aRHTkAkXEa9c8MMJ5PPD1w4AjqeoNRyx",
     linkedin: "https://www.linkedin.com/in/yvd-singh/"

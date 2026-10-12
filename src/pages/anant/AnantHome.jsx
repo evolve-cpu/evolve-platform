@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { fetchMyAnuStudent } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 import {
@@ -133,11 +133,7 @@ export default function AnantHome() {
         }
       } catch {}
       // Only students (in anu_students) get a student profile here
-      const { data } = await supabaseAdmin
-        .from("anu_students")
-        .select("first_name, last_name, program, stream, year, anu_email")
-        .eq("anu_email", email)
-        .maybeSingle();
+      const data = await fetchMyAnuStudent();
       if (data)
         sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
       setStudentData(data || null);

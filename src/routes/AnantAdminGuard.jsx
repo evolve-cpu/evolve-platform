@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { supabaseAdmin } from "../supabaseAdminClient";
+import { fetchAdminRole } from "../supabaseAdminClient";
 
 /**
  * Guard for ANU admin/faculty routes.
  *
- * Access is granted if:
- *   1. PIN-based: sessionStorage admin_access = "true"  (evolve super admin)
- *   2. Supabase session: user email found in anu_faculty OR anu_admins
+ * Access is granted when the signed-in user is an Evolve admin
+ * (admin_users) or their email is in anu_faculty / anu_admins — decided by
+ * api/admin.js, never by anything stored in the browser.
  *
  * Uses onAuthStateChange to catch magic link sessions from URL hash,
  * so faculty/admin clicking an invite link land here automatically.
@@ -21,68 +21,42 @@ export default function AnantAdminGuard({ children }) {
     let timeoutId;
     let unsubFn = null;
 
-    async function verifyRole(user) {
+    // api/admin.js decides the role from the signed-in, verified email
+    // (and links a first-time staff member's auth id). Everything the
+    // dashboard loads is checked again on the server, so the flags set here
+    // only choose which screens to show.
+    async function verifyRole() {
       if (resolved) return;
+      const who = await fetchAdminRole();
 
-      const email = user.email?.toLowerCase();
-      if (!email) { resolved = true; setStatus("denied"); return; }
-
-      const [{ data: faculty }, { data: admin }] = await Promise.all([
-        supabaseAdmin
-          .from("anu_faculty")
-          .select("id, stream, program, auth_user_id")
-          .eq("anu_email", email)
-          .maybeSingle(),
-        supabaseAdmin
-          .from("anu_admins")
-          .select("id, auth_user_id")
-          .eq("anu_email", email)
-          .maybeSingle()
-      ]);
-
-      if (faculty) {
-        if (!faculty.auth_user_id) {
-          await supabaseAdmin.from("anu_faculty").update({
-            auth_user_id: user.id,
-            invite_accepted_at: new Date().toISOString()
-          }).eq("id", faculty.id);
-        }
+      if (who.role === "anant_faculty") {
         sessionStorage.setItem("admin_access", "true");
         sessionStorage.setItem("admin_tenant", "anant");
         sessionStorage.setItem("anu_role",     "faculty");
-        sessionStorage.setItem("anu_stream",   faculty.stream  || "");
-        sessionStorage.setItem("anu_program",  faculty.program || "");
+        sessionStorage.setItem("anu_stream",   who.stream  || "");
+        sessionStorage.setItem("anu_program",  who.program || "");
         resolved = true; setStatus("ok"); return;
       }
 
-      if (admin) {
-        if (!admin.auth_user_id) {
-          await supabaseAdmin.from("anu_admins").update({
-            auth_user_id: user.id,
-            invite_accepted_at: new Date().toISOString()
-          }).eq("id", admin.id);
-        }
+      if (who.role === "anant_admin" || who.role === "evolve") {
         sessionStorage.setItem("admin_access", "true");
         sessionStorage.setItem("admin_tenant", "anant");
-        sessionStorage.setItem("anu_role",     "uni_admin");
+        if (who.role === "anant_admin") sessionStorage.setItem("anu_role", "uni_admin");
+        else sessionStorage.removeItem("anu_role"); // Evolve admin: full Anant view
         sessionStorage.removeItem("anu_stream");
         sessionStorage.removeItem("anu_program");
         resolved = true; setStatus("ok"); return;
       }
 
+      sessionStorage.removeItem("admin_access");
       resolved = true; setStatus("denied");
     }
 
     async function init() {
-      // Fast path: PIN already in session
-      if (sessionStorage.getItem("admin_access") === "true") {
-        setStatus("ok"); return;
-      }
-
       // getSession processes the URL hash (magic link tokens) if present
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        await verifyRole(session.user);
+        await verifyRole();
         return;
       }
 
@@ -96,7 +70,7 @@ export default function AnantAdminGuard({ children }) {
         async (event, sess) => {
           if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && sess?.user) {
             clearTimeout(timeoutId);
-            await verifyRole(sess.user);
+            await verifyRole();
             subscription.unsubscribe();
           }
         }

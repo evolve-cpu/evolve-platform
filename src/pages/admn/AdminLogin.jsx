@@ -1,44 +1,52 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
+import { fetchAdminRole } from "../../supabaseAdminClient";
 
+// Admins sign in with their normal Evolve account; api/admin.js checks the
+// verified email against admin_users (or anu_admins / anu_faculty). This
+// replaced a 4-digit PIN that shipped inside the public JS bundle.
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const [state, setState] = useState("checking"); // checking | signed-out | denied
+  const [email, setEmail] = useState("");
 
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data?.session?.user;
+      if (!user) {
+        if (!cancelled) setState("signed-out");
+        return;
+      }
+      const who = await fetchAdminRole();
+      if (cancelled) return;
+      if (who.role) {
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
+      setEmail(user.email || "");
+      setState("denied");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
-  const evolvePin = import.meta.env.VITE_ADMIN_PIN;
-  const anantPin  = import.meta.env.VITE_ANANT_ADMIN_PIN;
+  function goSignIn() {
+    sessionStorage.setItem("signin_from", "/admin");
+    navigate("/signin", { state: { from: "/admin" } });
+  }
 
-  const canSubmit = useMemo(() => pin.trim().length === 4, [pin]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-
-    const entered = pin.trim();
-
-    if (evolvePin && entered === String(evolvePin)) {
-      sessionStorage.setItem("admin_access", "true");
-      sessionStorage.setItem("admin_tenant", "evolve");
-      navigate("/admin/dashboard");
-      return;
-    }
-
-    if (anantPin && entered === String(anantPin)) {
-      sessionStorage.setItem("admin_access", "true");
-      sessionStorage.setItem("admin_tenant", "anant");
-      navigate("/admin/dashboard");
-      return;
-    }
-
-    setError("Wrong PIN. Try again.");
-  };
+  async function switchAccount() {
+    await supabase.auth.signOut();
+    goSignIn();
+  }
 
   return (
     <div className="min-h-screen bg-evolve-yellow flex items-center justify-center px-6">
-      <form
-        onSubmit={handleSubmit}
+      <div
         className="
           w-full max-w-[420px]
           bg-evolve-yellow
@@ -52,52 +60,47 @@ export default function AdminLogin() {
           admin access
         </h1>
 
-        <p className="mt-2 text-black/80 text-[16px]">
-          enter the 4 digit pin to continue
-        </p>
+        {state === "checking" && <p className="mt-2 text-black/80 text-[16px]">checking your account…</p>}
 
-        <input
-          value={pin}
-          onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-            setPin(val);
-          }}
-          inputMode="numeric"
-          placeholder="••••"
-          className="
-            mt-6 w-full
-            rounded-2xl
-            border-[3px] border-black/40
-            bg-black/10
-            px-6 py-4
-            text-black font-extrabold
-            text-[22px]
-            tracking-[0.2em]
-            outline-none
-            text-center
-          "
-        />
+        {state === "signed-out" && (
+          <>
+            <p className="mt-2 text-black/80 text-[16px]">
+              sign in with your evolve team account to continue
+            </p>
+            <AdminButton onClick={goSignIn}>sign in</AdminButton>
+          </>
+        )}
 
-        {error && <p className="mt-4 text-evolve-pink font-bold">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="
-            mt-8 w-full
-            bg-black text-white font-extrabold
-            rounded-[37.11px]
-            px-10 py-4
-            text-[18px]
-            shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
-            transition-all duration-300
-            active:scale-[0.98]
-            disabled:opacity-40
-          "
-        >
-          continue
-        </button>
-      </form>
+        {state === "denied" && (
+          <>
+            <p className="mt-2 text-black/80 text-[16px]">
+              <b>{email}</b> isn&apos;t on the admin list. Ask a team admin to add it, or switch account.
+            </p>
+            <AdminButton onClick={switchAccount}>switch account</AdminButton>
+          </>
+        )}
+      </div>
     </div>
+  );
+}
+
+function AdminButton({ children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        mt-8 w-full
+        bg-black text-white font-extrabold
+        rounded-[37.11px]
+        px-10 py-4
+        text-[18px]
+        shadow-[6px_6px_0px_rgba(0,0,0,0.25)]
+        transition-all duration-300
+        active:scale-[0.98]
+      "
+    >
+      {children}
+    </button>
   );
 }

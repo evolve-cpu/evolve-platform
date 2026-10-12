@@ -8,7 +8,7 @@ import { findFreeSlug } from "../lib/slug";
 import SEO from "../components/SEO";
 import SignIn from "./SignIn";
 import { useMembership } from "../components/membership/MembershipProvider";
-import PastEventRecording, { EventGuests } from "../components/events/PastEventRecording";
+import PastEventRecording, { EventGuests, eventHasRecording } from "../components/events/PastEventRecording";
 import { eventPrice, eventKindLabel, inr } from "../lib/membership";
 import { fetchOwnedEventIds } from "../lib/membershipCheckout";
 import { isEventOver } from "../lib/events";
@@ -291,6 +291,207 @@ function TicketModal({ event, registration, user, onClose }) {
   );
 }
 
+// ── Past event page ────────────────────────────────────────────────────
+// One column, one left edge: type, title, byline + stats, the recording,
+// then "About the session" and "About the speakers". Body copy is capped
+// at a readable measure inside the same column as the video.
+
+function fmtRecordedDay(dtStr) {
+  if (!dtStr) return "";
+  const d = new Date(dtStr);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" })
+  });
+}
+
+// admin-typed copy: keep the line breaks, collapse runs of blank lines,
+// and turn bare URLs into links
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+function RichText({ text, className = "" }) {
+  const clean = text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  return (
+    <p className={`whitespace-pre-line break-words ${className}`}>
+      {clean.split(URL_RE).map((part, i) =>
+        i % 2 ? (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow underline underline-offset-2 hover:opacity-80">
+            {part.replace(/^https?:\/\/(www\.)?/, "").replace(/\?.*$/, "")}
+          </a>
+        ) : (
+          part
+        )
+      )}
+    </p>
+  );
+}
+
+const AVATAR_COLORS = ["#DF0586", "#A35BFB", "#FFD007"];
+
+function initials(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+// new rows carry a `speakers` list; older events only have the single
+// speaker_* columns, so fall back to those
+function pastEventSpeakers(event) {
+  const list = (event.speakers || []).filter((sp) => sp?.name);
+  if (list.length) return list;
+  if (!event.speaker_name) return [];
+  return [
+    {
+      name: event.speaker_name,
+      role: event.speaker_title,
+      bio: event.speaker_bio,
+      photo_url: event.speaker_photo_url,
+      links: event.speaker_socials || []
+    }
+  ];
+}
+
+function PastSection({ title, children }) {
+  return (
+    <section className="mt-12 md:mt-14">
+      <h2 className="text-xl md:text-2xl font-extrabold pb-4 border-b border-white/10">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function PastSpeaker({ speaker, index }) {
+  const links = speaker.links || (speaker.linkedin ? [speaker.linkedin] : []);
+  return (
+    <div className="py-7 grid grid-cols-[48px_1fr] md:grid-cols-[56px_1fr] gap-x-4 md:gap-x-5">
+      {speaker.photo_url ? (
+        <img src={speaker.photo_url} alt={speaker.name} className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover" />
+      ) : (
+        <span
+          className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-sm md:text-base font-extrabold text-evolve-black"
+          style={{ backgroundColor: AVATAR_COLORS[index % AVATAR_COLORS.length] }}
+        >
+          {initials(speaker.name)}
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="font-extrabold text-base md:text-lg leading-tight">{speaker.name}</p>
+        {speaker.role && <p className="text-white/50 text-sm mt-1">{speaker.role}</p>}
+        {speaker.bio && (
+          <RichText text={speaker.bio} className="text-white/65 text-[15px] leading-[1.7] mt-3 max-w-[68ch]" />
+        )}
+        {links.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {links.map((url) => {
+              const platform = detectPlatform(url);
+              return (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 text-[13px] font-semibold text-white/80 hover:text-evolve-yellow hover:border-evolve-yellow/50 transition-colors"
+                >
+                  <SocialIcon platform={platform} className="w-3.5 h-3.5" />
+                  {platform === "linkedin" ? "LinkedIn" : platform === "website" ? "Website" : platform[0].toUpperCase() + platform.slice(1)}
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PastEventView({ event, user, ownedRecording, onPurchased, onSignIn, registrantCount }) {
+  const speakers = pastEventSpeakers(event);
+  const hasRecording = eventHasRecording(event);
+  const count = event.attendee_count ?? (registrantCount || null);
+  const byline = event.speaker_name;
+
+  const stats = [
+    count ? (
+      <>
+        <span className="text-white font-semibold">{count}</span> registered
+      </>
+    ) : null,
+    `${hasRecording ? "recorded" : "held"} ${fmtRecordedDay(event.start_time)}`,
+    event.recording_duration_min ? `${event.recording_duration_min} min` : null
+  ].filter(Boolean);
+
+  return (
+    <article className="w-full max-w-[880px]">
+      <header>
+        <p className="text-sm font-semibold text-white/45">{event.event_type || "Webinar"}</p>
+        <h1 className="mt-2 text-[30px] md:text-[44px] font-extrabold leading-[1.08] tracking-[-0.01em]">
+          {event.title}
+        </h1>
+        {byline && (
+          <p className="mt-3 text-base md:text-lg text-white/70">
+            by <span className="text-white font-semibold">{byline}</span>
+          </p>
+        )}
+        <p className="mt-3 text-sm text-white/50">
+          {stats.map((s, i) => (
+            <span key={i}>
+              {i > 0 && <span className="mx-2 text-white/25">·</span>}
+              {s}
+            </span>
+          ))}
+        </p>
+      </header>
+
+      <div className="mt-8">
+        {hasRecording ? (
+          <PastEventRecording
+            event={event}
+            user={user}
+            ownedRecording={ownedRecording}
+            onPurchased={onPurchased}
+            onSignIn={onSignIn}
+            bare
+          />
+        ) : event.cover_image_url ? (
+          <img
+            src={event.cover_image_url}
+            alt=""
+            className="w-full aspect-video object-cover rounded-2xl border border-white/10"
+          />
+        ) : null}
+      </div>
+
+      {event.description && (
+        <PastSection title="About the session">
+          <RichText text={event.description} className="pt-6 text-white/70 text-[15px] md:text-base leading-[1.75] max-w-[68ch]" />
+        </PastSection>
+      )}
+
+      {speakers.length > 0 && (
+        <PastSection title={speakers.length > 1 ? "About the speakers" : "About the speaker"}>
+          <div className="divide-y divide-white/10">
+            {speakers.map((sp, i) => (
+              <PastSpeaker key={`${sp.name}-${i}`} speaker={sp} index={i} />
+            ))}
+          </div>
+        </PastSection>
+      )}
+
+      {event.guests?.some((g) => g?.name) && (
+        <div className="mt-12">
+          <EventGuests guests={event.guests} />
+        </div>
+      )}
+    </article>
+  );
+}
+
 // Two homes for the same page:
 //   /events/:slug      — public, viewable signed out (SEO, shared links)
 //   /app/events/:slug  — `embedded` inside the signed-in platform, where
@@ -522,6 +723,18 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
         </Link>
       )}
 
+      {isPast ? (
+        <div className={embedded ? "pb-16" : "max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-16"}>
+          <PastEventView
+            event={event}
+            user={user}
+            ownedRecording={owned.recording.has(event.id)}
+            onPurchased={reloadOwned}
+            onSignIn={goSignIn}
+            registrantCount={registrantCount}
+          />
+        </div>
+      ) : (
       <div
         className={`grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 ${
           embedded ? "pb-10" : "max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-10"
@@ -619,17 +832,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
 
           <EventGuests guests={event.guests} />
 
-          {isPast && (
-            <PastEventRecording
-              event={event}
-              user={user}
-              ownedRecording={owned.recording.has(event.id)}
-              onPurchased={reloadOwned}
-              onSignIn={goSignIn}
-            />
-          )}
-
-          {!isPast && event.question_categories?.length > 0 && (
+          {event.question_categories?.length > 0 && (
             <div>
               <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-3">
                 question categories
@@ -651,7 +854,6 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
             </div>
           )}
 
-          {!isPast && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="font-bold text-sm">Register</p>
             <p className="text-white/50 text-xs mt-1">
@@ -688,9 +890,9 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
               </p>
             )}
           </div>
-          )}
         </div>
       </div>
+      )}
 
       {showQuestionModal && (
         <QuestionModal

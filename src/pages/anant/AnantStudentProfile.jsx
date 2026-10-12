@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { fetchMyAnuStudent } from "../../supabaseAdminClient";
 import { anant_logo } from "../../assets/images/Community";
 import { useAnantTheme } from "../../context/AnantThemeContext";
 
@@ -40,12 +40,8 @@ export default function AnantStudentProfile() {
         }
       } catch {}
 
-      // DB query — service role key bypasses RLS (null storage prevents JWT bleed-through)
-      const { data } = await supabaseAdmin
-        .from("anu_students")
-        .select("*")
-        .eq("anu_email", email)
-        .maybeSingle();
+      // the signed-in student's own row, via api/admin.js
+      const data = await fetchMyAnuStudent();
       if (data)
         sessionStorage.setItem("anu_student_cache", JSON.stringify(data));
       return data || null;

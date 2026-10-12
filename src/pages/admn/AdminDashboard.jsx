@@ -9,7 +9,7 @@ import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
 import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import TypetoberReportTab from "./TypetoberReportTab";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -851,7 +851,6 @@ export default function AdminDashboard() {
   const [aiInsight, setAiInsight] = useState("");
   const [aiError, setAiError] = useState("");
 
-  const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
   /* allow text selection on admin page */
   useEffect(() => {
@@ -891,7 +890,8 @@ export default function AdminDashboard() {
     sessionStorage.removeItem("anu_role");
     sessionStorage.removeItem("anu_stream");
     sessionStorage.removeItem("anu_program");
-    if (isAnantAdmin) await supabase.auth.signOut();
+    // admin access is the signed-in account now, so leaving means signing out
+    await supabase.auth.signOut();
     navigate("/admin");
   };
 
@@ -1289,10 +1289,6 @@ export default function AdminDashboard() {
 
   /* ── Gemini AI ──────────────────────────────────────────────────────── */
   const generateInsights = async () => {
-    if (!GEMINI_KEY) {
-      setAiError("Missing VITE_GEMINI_API_KEY in .env");
-      return;
-    }
     setAiLoading(true);
     setAiInsight("");
     setAiError("");
@@ -1324,21 +1320,14 @@ LIVE DATA:
 Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: what's working, what to improve, and one concrete action to take this week. Use plain language, no buzzwords. Number each insight 1. 2. 3.`;
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.6, maxOutputTokens: 500 }
-          })
-        }
-      );
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      if (text) setAiInsight(text);
-      else setAiError("No response from Gemini. Check API key.");
+      // the Gemini key lives on the server (api/admin.js), not in the bundle
+      const data = await callAdminApi({
+        op: "gemini",
+        prompt,
+        generationConfig: { temperature: 0.6, maxOutputTokens: 500 }
+      });
+      if (data.text) setAiInsight(data.text);
+      else setAiError("No response from Gemini: " + (data.error?.message || data.error || "check GEMINI_API_KEY on the server"));
     } catch (e) {
       setAiError("Gemini error: " + e.message);
     } finally {

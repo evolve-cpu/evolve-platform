@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabaseAdmin } from "../../supabaseAdminClient";
+import { isEventOver } from "../../lib/events";
+import { toEmbedUrl } from "../../components/events/PastEventRecording";
 
 const Y = "#FFD007";
 const inputStyle = { backgroundColor: "#0d0d0d", border: "1px solid #262626" };
@@ -22,6 +24,18 @@ async function callEventsNotify(body) {
   return data;
 }
 
+// The recording link lives in event_recording_links, readable only by
+// people entitled to the recording (events_recording_links.sql), never on
+// the public events row. Empty link = remove it.
+async function saveRecordingLink(eventId, url) {
+  const { error } = url
+    ? await supabaseAdmin
+        .from("event_recording_links")
+        .upsert({ event_id: eventId, url, updated_at: new Date().toISOString() })
+    : await supabaseAdmin.from("event_recording_links").delete().eq("event_id", eventId);
+  if (error) alert(`Event saved, but the recording link wasn't: ${error.message}`);
+}
+
 // best-effort — publishing shouldn't fail if the calendar sync hiccups
 function syncCalendar(eventId) {
   callEventsNotify({ mode: "sync_calendar", event_id: eventId }).catch(() => {});
@@ -35,6 +49,10 @@ const STATUS_COLOR = {
 };
 
 const EVENT_TYPES = ["AMA", "Webinar", "Workshop", "Panel Discussion"];
+// the "add past event" form only offers these two
+const PAST_EVENT_TYPES = ["Webinar", "AMA"];
+
+const EMPTY_SPEAKER = { name: "", role: "", bio: "", linkedin: "", photo_url: "" };
 
 const EMPTY_FORM = {
   title: "",
@@ -62,12 +80,17 @@ const EMPTY_FORM = {
   recording_url: "",
   recording_thumbnail_url: "",
   recording_duration_min: "",
-  guests: [{ name: "", title: "", photo_url: "" }]
+  guests: [{ name: "", title: "", photo_url: "" }],
+  // past-event page (events_past_sessions.sql): headline count + the
+  // "About the speakers" section
+  attendee_count: "",
+  speakers: [{ ...EMPTY_SPEAKER }]
 };
 
 // new events get their id up front so a recording can be uploaded into
 // that event's folder before the row is first saved
 const newEventForm = () => ({ ...EMPTY_FORM, _id: crypto.randomUUID() });
+const newPastEventForm = () => ({ ...newEventForm(), event_type: PAST_EVENT_TYPES[0] });
 
 function slugify(text) {
   return text
@@ -669,6 +692,238 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
   );
 }
 
+// Past events are added after the fact, from what's already on Luma /
+// YouTube: type, title, byline, date, the YouTube link, a thumbnail, the
+// registered count, "About the session" and one card per speaker. Same
+// form state as EventForm, so saving goes through formToPayload and any
+// field this form doesn't show is kept as it was.
+function PastEventForm({ form, setForm, onSave, onCancel, saving, onShowAllFields }) {
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  function updateSpeaker(i, key, value) {
+    setForm((f) => ({ ...f, speakers: f.speakers.map((sp, idx) => (idx === i ? { ...sp, [key]: value } : sp)) }));
+  }
+  function addSpeaker() {
+    setForm((f) => ({ ...f, speakers: [...f.speakers, { ...EMPTY_SPEAKER }] }));
+  }
+  function removeSpeaker(i) {
+    setForm((f) => ({ ...f, speakers: f.speakers.filter((_, idx) => idx !== i) }));
+  }
+
+  const link = form.recording_url.trim();
+  const isYouTube = !!link && toEmbedUrl(link) !== link;
+  const inFuture = form.date && new Date(`${form.date}T23:59:59+05:30`) > new Date();
+
+  return (
+    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          type
+        </label>
+        <div className="inline-flex rounded-lg p-1 gap-1" style={inputStyle}>
+          {PAST_EVENT_TYPES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, event_type: t }))}
+              className="text-xs font-bold px-4 py-1.5 rounded-md"
+              style={form.event_type === t ? { background: Y, color: "#111" } : { color: "#aaa" }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="md:col-span-2">
+        <Field
+          label="title"
+          value={form.title}
+          placeholder="Service Design 101: Designing the Intangible"
+          onChange={(e) => {
+            const title = e.target.value;
+            setForm((f) => ({ ...f, title, slug: f._slugTouched ? f.slug : slugify(title) }));
+          }}
+        />
+      </div>
+      <Field
+        label="speakers (shown as “by …” under the title)"
+        value={form.speaker_name}
+        placeholder="Abhinav & Nandini"
+        onChange={set("speaker_name")}
+      />
+      <Field
+        label="slug (public URL: /events/...)"
+        value={form.slug}
+        onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value), _slugTouched: true }))}
+      />
+
+      <div>
+        <Field type="date" label="date it happened" value={form.date} onChange={set("date")} />
+        {inFuture && (
+          <p className="text-[11px] mt-1" style={{ color: "#f59e0b" }}>
+            This date is in the future, so it will show under upcoming, not past.
+          </p>
+        )}
+      </div>
+      <Field
+        type="number"
+        min="0"
+        label="registered"
+        value={form.attendee_count}
+        placeholder="204"
+        onChange={set("attendee_count")}
+      />
+
+      <div className="md:col-span-2">
+        <Field
+          label="YouTube recording link"
+          value={form.recording_url}
+          placeholder="https://youtu.be/..."
+          onChange={set("recording_url")}
+        />
+        <p className="text-[11px] mt-1" style={{ color: link && !isYouTube ? "#f59e0b" : "#888" }}>
+          {link && !isYouTube
+            ? "Not a YouTube link. It will be embedded as-is, so it must be an embeddable player URL."
+            : "Set the video to Unlisted on YouTube (not Private, which won't play on the site). Any YouTube link format works."}
+        </p>
+      </div>
+
+      <ImageField
+        label="thumbnail (16:9, shown before play and in event lists)"
+        value={form.cover_image_url}
+        pathPrefix="covers"
+        onUploaded={(url) => setForm((f) => ({ ...f, cover_image_url: url }))}
+      />
+      <Field
+        type="number"
+        min="0"
+        label="recording length in minutes (optional)"
+        value={form.recording_duration_min}
+        onChange={set("recording_duration_min")}
+      />
+
+      <div className="md:col-span-2">
+        <TextAreaField
+          label="about the session (line breaks and emoji are kept as typed)"
+          rows={10}
+          value={form.description}
+          onChange={set("description")}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          about the speakers
+        </label>
+        <div className="space-y-3">
+          {form.speakers.map((sp, i) => (
+            <div
+              key={i}
+              className="rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 gap-2"
+              style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}
+            >
+              <input
+                className="rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
+                style={inputStyle}
+                value={sp.name}
+                placeholder="Full name (e.g. Nandini Kulkarni)"
+                onChange={(e) => updateSpeaker(i, "name", e.target.value)}
+              />
+              <input
+                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={sp.role}
+                placeholder="Role, company (e.g. CEO, Idiom Circular Services)"
+                onChange={(e) => updateSpeaker(i, "role", e.target.value)}
+              />
+              <textarea
+                className="md:col-span-2 rounded-lg px-3 py-2 text-sm text-white outline-none resize-y"
+                style={inputStyle}
+                rows={5}
+                value={sp.bio}
+                placeholder="Bio"
+                onChange={(e) => updateSpeaker(i, "bio", e.target.value)}
+              />
+              <input
+                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={sp.linkedin}
+                placeholder="LinkedIn URL"
+                onChange={(e) => updateSpeaker(i, "linkedin", e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => removeSpeaker(i)}
+                className="text-xs font-bold px-3 py-2 rounded-lg md:justify-self-end"
+                style={{ border: "1px solid #333", color: "#aaa" }}
+              >
+                remove speaker
+              </button>
+              <div className="md:col-span-2">
+                <ImageField
+                  label="photo (optional, initials are shown otherwise)"
+                  value={sp.photo_url}
+                  pathPrefix="speakers"
+                  onUploaded={(url) => updateSpeaker(i, "photo_url", url)}
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addSpeaker}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg"
+            style={{ border: `1px solid ${Y}`, color: Y }}
+          >
+            + add speaker
+          </button>
+        </div>
+      </div>
+
+      <Field
+        type="number"
+        min="0"
+        label="recording price after the trial (₹, blank = ₹30, 0 = free)"
+        value={form.recording_price_inr}
+        placeholder="30"
+        onChange={set("recording_price_inr")}
+      />
+
+      <div className="md:col-span-2 flex flex-wrap items-center gap-2 pt-1">
+        <button
+          onClick={() => onSave("draft")}
+          disabled={saving}
+          className="text-xs font-bold px-4 py-2 rounded-lg"
+          style={{ border: "1px solid #333", color: "#aaa" }}
+        >
+          {saving ? "saving…" : "save as draft"}
+        </button>
+        <button
+          onClick={() => onSave("published")}
+          disabled={saving}
+          className="text-xs font-black px-4 py-2 rounded-lg"
+          style={{ background: Y, color: "#111" }}
+        >
+          {saving ? "saving…" : "publish"}
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-xs font-bold px-4 py-2 rounded-lg"
+          style={{ border: "1px solid #333", color: "#aaa" }}
+        >
+          cancel
+        </button>
+        {onShowAllFields && (
+          <button type="button" onClick={onShowAllFields} className="text-xs underline ml-auto" style={{ color: "#888" }}>
+            show all fields
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function eventToForm(event) {
   const { date, time } = utcToIst(event.start_time);
   const durationMinutes =
@@ -699,10 +954,14 @@ function eventToForm(event) {
     price_inr: event.price_inr ?? "",
     recording_price_inr: event.recording_price_inr ?? "",
     recording_path: event.recording_path || "",
-    recording_url: event.recording_url || "",
+    recording_url: event._recording_link || event.recording_url || "",
     recording_thumbnail_url: event.recording_thumbnail_url || "",
     recording_duration_min: event.recording_duration_min ?? "",
-    guests: event.guests?.length ? event.guests : [{ name: "", title: "", photo_url: "" }]
+    guests: event.guests?.length ? event.guests : [{ name: "", title: "", photo_url: "" }],
+    attendee_count: event.attendee_count ?? "",
+    speakers: event.speakers?.length
+      ? event.speakers.map((sp) => ({ ...EMPTY_SPEAKER, ...sp }))
+      : [{ ...EMPTY_SPEAKER }]
   };
 }
 
@@ -734,12 +993,24 @@ function formToPayload(form, status) {
     price_inr: intOrNull(form.price_inr),
     recording_price_inr: intOrNull(form.recording_price_inr),
     recording_path: form.recording_path || null,
-    recording_url: form.recording_url.trim() || null,
+    // the link itself is saved to event_recording_links (saveRecordingLink)
+    recording_url: null,
+    has_recording_link: !!form.recording_url.trim(),
     recording_thumbnail_url: form.recording_thumbnail_url || null,
     recording_duration_min: intOrNull(form.recording_duration_min),
     guests: form.guests
       .map((g) => ({ name: g.name.trim(), title: g.title.trim(), photo_url: g.photo_url || "" }))
       .filter((g) => g.name),
+    attendee_count: intOrNull(form.attendee_count),
+    speakers: form.speakers
+      .map((sp) => ({
+        name: sp.name.trim(),
+        role: sp.role.trim(),
+        bio: sp.bio.trim(),
+        linkedin: sp.linkedin.trim(),
+        photo_url: sp.photo_url || ""
+      }))
+      .filter((sp) => sp.name),
     status
   };
 }
@@ -749,7 +1020,7 @@ export default function EventsTab() {
   const [events, setEvents] = useState([]);
   const [registrantsByEvent, setRegistrantsByEvent] = useState({});
   const [expandedId, setExpandedId] = useState(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(null); // null | "upcoming" | "past"
   const [createForm, setCreateForm] = useState(newEventForm);
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -772,6 +1043,11 @@ export default function EventsTab() {
       ? await supabaseAdmin.from("event_registrations").select("*").in("event_id", eventIds)
       : { data: [] };
 
+    const { data: links } = eventIds.length
+      ? await supabaseAdmin.from("event_recording_links").select("event_id, url").in("event_id", eventIds)
+      : { data: [] };
+    const linkByEvent = Object.fromEntries((links || []).map((l) => [l.event_id, l.url]));
+
     const userIds = [...new Set((registrations || []).map((r) => r.user_id).filter(Boolean))];
     const { data: profiles } = userIds.length
       ? await supabaseAdmin.from("profiles").select("id, name, username, email").in("id", userIds)
@@ -784,7 +1060,7 @@ export default function EventsTab() {
       byEvent[r.event_id].push({ ...r, profile: profileById[r.user_id] });
     });
 
-    setEvents(eventRows || []);
+    setEvents((eventRows || []).map((e) => ({ ...e, _recording_link: linkByEvent[e.id] || "" })));
     setRegistrantsByEvent(byEvent);
     setLoading(false);
   }
@@ -794,13 +1070,16 @@ export default function EventsTab() {
     setSaving(true);
     const payload = formToPayload(createForm, status);
     const { data, error } = await supabaseAdmin.from("events").insert(payload).select().single();
-    setSaving(false);
     if (error) {
+      setSaving(false);
       alert(error.message);
       return;
     }
-    setEvents((prev) => [data, ...prev]);
-    setCreating(false);
+    const link = createForm.recording_url.trim();
+    await saveRecordingLink(data.id, link);
+    setSaving(false);
+    setEvents((prev) => [{ ...data, _recording_link: link }, ...prev]);
+    setCreating(null);
     setCreateForm(newEventForm());
     if (data.status === "published") syncCalendar(data.id);
   }
@@ -815,12 +1094,15 @@ export default function EventsTab() {
     setSaving(true);
     const payload = formToPayload(editForm, status);
     const { data, error } = await supabaseAdmin.from("events").update(payload).eq("id", event.id).select().single();
-    setSaving(false);
     if (error) {
+      setSaving(false);
       alert(error.message);
       return;
     }
-    setEvents((prev) => prev.map((e) => (e.id === event.id ? data : e)));
+    const link = editForm.recording_url.trim();
+    await saveRecordingLink(event.id, link);
+    setSaving(false);
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...data, _recording_link: link } : e)));
     setEditForm(null);
     if (data.status === "published") syncCalendar(data.id);
   }
@@ -837,7 +1119,7 @@ export default function EventsTab() {
       alert(error.message);
       return;
     }
-    setEvents((prev) => prev.map((e) => (e.id === event.id ? data : e)));
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...data, _recording_link: e._recording_link } : e)));
   }
 
   async function handleInvite(event) {
@@ -875,24 +1157,46 @@ export default function EventsTab() {
           events ({events.length})
         </p>
         {!creating && (
-          <button
-            onClick={() => {
-              setCreateForm(newEventForm());
-              setCreating(true);
-              setExpandedId(null);
-            }}
-            className="text-xs font-black px-4 py-2 rounded-lg"
-            style={{ background: Y, color: "#111" }}
-          >
-            + new event
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setCreateForm(newPastEventForm());
+                setCreating("past");
+                setExpandedId(null);
+              }}
+              className="text-xs font-bold px-4 py-2 rounded-lg"
+              style={{ border: `1px solid ${Y}`, color: Y }}
+            >
+              + add past event
+            </button>
+            <button
+              onClick={() => {
+                setCreateForm(newEventForm());
+                setCreating("upcoming");
+                setExpandedId(null);
+              }}
+              className="text-xs font-black px-4 py-2 rounded-lg"
+              style={{ background: Y, color: "#111" }}
+            >
+              + new event
+            </button>
+          </div>
         )}
       </div>
 
       {creating && (
         <div className="rounded-xl p-4" style={{ backgroundColor: "#111", border: `1px solid ${Y}55` }}>
-          <p className="text-xs font-bold text-white mb-1">New event</p>
-          <EventForm form={createForm} setForm={setCreateForm} onSave={handleCreate} onCancel={() => setCreating(false)} saving={saving} />
+          {creating === "past" ? (
+            <>
+              <p className="text-xs font-bold text-white mb-1">Add a past event</p>
+              <PastEventForm form={createForm} setForm={setCreateForm} onSave={handleCreate} onCancel={() => setCreating(null)} saving={saving} />
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold text-white mb-1">New event</p>
+              <EventForm form={createForm} setForm={setCreateForm} onSave={handleCreate} onCancel={() => setCreating(null)} saving={saving} />
+            </>
+          )}
         </div>
       )}
 
@@ -916,7 +1220,7 @@ export default function EventsTab() {
                   setExpandedId(event.id);
                   setEditForm(null);
                 }
-                setCreating(false);
+                setCreating(null);
               }}
               className="w-full flex flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors"
             >
@@ -934,7 +1238,8 @@ export default function EventsTab() {
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-white truncate">{event.title}</p>
                   <p className="text-xs truncate" style={{ color: "#888" }}>
-                    {fmtDt(event.start_time)} · {registrants.length} registered
+                    {event.event_type} · {fmtDt(event.start_time)} ·{" "}
+                    {event.attendee_count ?? registrants.length} registered
                   </p>
                 </div>
               </div>
@@ -949,13 +1254,24 @@ export default function EventsTab() {
             {isExpanded && (
               <div className="p-4 pt-0 space-y-3">
                 {isEditing ? (
-                  <EventForm
-                    form={editForm}
-                    setForm={setEditForm}
-                    onSave={(status) => handleUpdate(event, status)}
-                    onCancel={() => setEditForm(null)}
-                    saving={saving}
-                  />
+                  isEventOver(event) && !editForm._allFields ? (
+                    <PastEventForm
+                      form={editForm}
+                      setForm={setEditForm}
+                      onSave={(status) => handleUpdate(event, status)}
+                      onCancel={() => setEditForm(null)}
+                      saving={saving}
+                      onShowAllFields={() => setEditForm((f) => ({ ...f, _allFields: true }))}
+                    />
+                  ) : (
+                    <EventForm
+                      form={editForm}
+                      setForm={setEditForm}
+                      onSave={(status) => handleUpdate(event, status)}
+                      onCancel={() => setEditForm(null)}
+                      saving={saving}
+                    />
+                  )
                 ) : (
                   <>
                     <div className="flex flex-wrap gap-2">
