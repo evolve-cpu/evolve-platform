@@ -23,6 +23,7 @@ import MentorshipProgramme from "../components/programmes/MentorshipProgramme";
 import AppTabNav from "../components/AppTabNav";
 import EventDetail from "./EventDetail";
 import { eventHasRecording } from "../components/events/PastEventRecording";
+import { callAdminApi } from "../supabaseAdminClient";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -1184,7 +1185,8 @@ export default function PublicProfile({ platform = false }) {
   async function handleDeleteAccount() {
     setAccountMenuOpen(false);
     setDeleteConfirmOpen(false);
-    const { error } = await supabase.rpc("delete_own_account");
+    // server deletes the account, then sends the "Sorry to see you go" email
+    const { error } = await callAdminApi({ op: "delete_account" });
     if (error) {
       window.alert(
         "Couldn't delete your account right now — please contact support."

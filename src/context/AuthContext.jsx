@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { findFreeSlug } from "../lib/slug";
+import { callAdminApi } from "../supabaseAdminClient";
 
 /**
  * AuthContext
@@ -116,6 +117,8 @@ export function AuthProvider({ children }) {
 
     if (newProfile) {
       setIsNewUser(true);
+      // "Welcome to Evolve" email — server sends it once, to this account only
+      callAdminApi({ op: "welcome_email" });
       setUser(buildUser(authUser, await provisionIndividual(authUser, newProfile)));
     }
     setAuthLoading(false);

@@ -20,6 +20,8 @@
 //   storage             admin roles → signed upload/read URLs, remove, list
 //   gemini              admin roles → dashboard insights, key stays here
 //   anu_student_self    signed in → the caller's own anu_students row
+//   welcome_email       signed in → "Welcome to Evolve" to the caller, once
+//   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
 //   anu_student_check   public → { exists } for the student sign-in form
 //   anant_staff_login   public → emails a magic link to listed Anant staff
 //
@@ -27,6 +29,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "./_sendEmail.js";
+import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEmails.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -238,6 +241,41 @@ export async function handleAdmin(body, req) {
     const { data } = await db.from("anu_students").select("*").eq("anu_email", email).maybeSingle();
     if (data) await linkAuthUser(db, "anu_students", data, user.id);
     return { student: data || null };
+  }
+
+  // first sign-up → welcome email, at most once (claim the stamp first)
+  if (op === "welcome_email") {
+    const { data: claimed } = await db
+      .from("profiles")
+      .update({ welcome_email_sent_at: new Date().toISOString() })
+      .eq("id", user.id)
+      .is("welcome_email_sent_at", null)
+      .select("name, email")
+      .maybeSingle();
+    if (!claimed) return { sent: false };
+    const to = claimed.email || user.email;
+    if (!to) return { sent: false };
+    await sendWelcomeEmail({ to, firstName: firstNameOf(claimed.name, to) });
+    return { sent: true };
+  }
+
+  // delete the caller's own account (profile cascades, then the auth user),
+  // then say goodbye — only once the delete has actually gone through
+  if (op === "delete_account") {
+    const { data: profile } = await db.from("profiles").select("name, email").eq("id", user.id).maybeSingle();
+    const { error: profErr } = await db.from("profiles").delete().eq("id", user.id);
+    if (profErr) throw new HttpError(500, profErr.message);
+    const { error: authErr } = await db.auth.admin.deleteUser(user.id);
+    if (authErr) throw new HttpError(500, authErr.message);
+    const to = profile?.email || user.email;
+    if (to) {
+      try {
+        await sendGoodbyeEmail({ to, firstName: firstNameOf(profile?.name || user.user_metadata?.full_name, to) });
+      } catch (err) {
+        console.error("goodbye email failed:", err.message);
+      }
+    }
+    return { deleted: true };
   }
 
   const who = await roleOf(db, user);
