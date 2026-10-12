@@ -24,6 +24,7 @@ import AppTabNav from "../components/AppTabNav";
 import EventDetail from "./EventDetail";
 import { eventHasRecording } from "../components/events/PastEventRecording";
 import { callAdminApi } from "../supabaseAdminClient";
+import CommunityFeed from "../components/community/CommunityFeed";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -1673,8 +1674,8 @@ export default function PublicProfile({ platform = false }) {
               whenever another pane is open, same "keep it mounted" approach
               as every pane below, so nothing here has to reload either.
               Split into activeTab sections: "profile" (identity/growth/AI
-              profile), "grow" (the programmes grid), "community" (coming
-              soon) — independent of the activeProgramme pane swap above. */}
+              profile), "grow" (the programmes grid), "community" (the
+              Discord feed, CommunityFeed.jsx) — independent of the activeProgramme pane swap above. */}
           <div className={activeProgramme ? "hidden" : "contents"}>
             <div className={activeTab === "profile" ? "contents" : "hidden"}>
               {isOwner && !user.onboarding_completed && (
@@ -1775,14 +1776,7 @@ export default function PublicProfile({ platform = false }) {
               </div>
             )}
 
-            {activeTab === "community" && (
-              <div className="flex flex-col items-center justify-center text-center gap-2 py-20">
-                <p className="text-white font-bold text-lg">Community is coming soon</p>
-                <p className="text-white/40 text-sm max-w-xs">
-                  We're building a space to connect with other designers on evolve. Check back soon.
-                </p>
-              </div>
-            )}
+            {activeTab === "community" && <CommunityFeed />}
           </div>
 
           {/* every other pane: mounted once first opened, then kept mounted

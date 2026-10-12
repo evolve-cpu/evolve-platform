@@ -69,16 +69,30 @@ export function AuthProvider({ children }) {
       // same user already loaded — this is just Supabase re-validating the
       // session on focus, not a real sign-in. Skip the reload entirely.
       if (loadedUserIdRef.current === authUser.id) return;
-      loadProfile(authUser);
+      // deferred: calling Supabase from inside this callback can deadlock on
+      // the auth lock (notably in in-app browsers like Discord/Instagram)
+      setTimeout(() => loadProfile(authUser), 0);
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // Always ends with authLoading=false, even if a query throws — otherwise
+  // every screen gated on authLoading (all of /app) stays blank forever.
   async function loadProfile(authUser) {
     setAuthLoading(true);
     loadedUserIdRef.current = authUser.id;
+    try {
+      await loadProfileInner(authUser);
+    } catch (e) {
+      console.error("loadProfile error:", e);
+      loadedUserIdRef.current = null;
+    } finally {
+      setAuthLoading(false);
+    }
+  }
 
+  async function loadProfileInner(authUser) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -90,7 +104,6 @@ export function AuthProvider({ children }) {
         ? profile
         : await provisionIndividual(authUser, profile);
       setUser(buildUser(authUser, provisioned));
-      setAuthLoading(false);
       return;
     }
 
@@ -121,7 +134,6 @@ export function AuthProvider({ children }) {
       callAdminApi({ op: "welcome_email" });
       setUser(buildUser(authUser, await provisionIndividual(authUser, newProfile)));
     }
-    setAuthLoading(false);
   }
 
   // There's no onboarding step any more — signing in drops people straight
@@ -130,25 +142,39 @@ export function AuthProvider({ children }) {
   // individual. Student vs pro is decided later, at checkout (student ID
   // upload). Institution admins still go through /onboarding explicitly from
   // the institutions page, which reuses this username.
+  // findFreeSlug only checks profile_cards, so the name can still collide
+  // with another profile's username — on a unique violation, retry with a
+  // random suffix rather than leaving the user without one (which blanks /app).
   async function provisionIndividual(authUser, profile) {
-    const username = await findFreeSlug(
+    const base = await findFreeSlug(
       supabase,
       "profile_cards",
       "username",
       profile.name || authUser.email
     );
-    const { data } = await supabase
-      .from("profiles")
-      .update({
-        username,
-        onboarding_completed: true,
-        onboarding_completed_at:
-          profile.onboarding_completed_at || new Date().toISOString()
-      })
-      .eq("id", authUser.id)
-      .select()
-      .single();
-    return data || profile;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const username =
+        attempt === 0
+          ? base
+          : `${base}-${Math.random().toString(36).slice(2, 6)}`;
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({
+          username,
+          onboarding_completed: true,
+          onboarding_completed_at:
+            profile.onboarding_completed_at || new Date().toISOString()
+        })
+        .eq("id", authUser.id)
+        .select()
+        .single();
+      if (data) return data;
+      if (error?.code !== "23505") {
+        console.error("provisionIndividual error:", error);
+        break;
+      }
+    }
+    return profile;
   }
 
   function buildUser(authUser, profile) {

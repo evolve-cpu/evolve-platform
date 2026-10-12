@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import SEO from "../../components/SEO";
+import { useAuth } from "../../hooks/useAuth";
 import HeroSection from "./HeroSection";
 import EcosystemSection from "./EcosystemSection";
 import GuidanceSection from "./GuidanceSection";
@@ -9,6 +10,7 @@ import ClosingSection from "./ClosingSection";
 
 const MainHome = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <>
@@ -18,7 +20,7 @@ const MainHome = () => {
         path="/"
       />
       <main className="w-full overflow-x-hidden">
-        <HeroSection onStart={() => navigate("/signin")} />
+        <HeroSection onStart={() => navigate(user ? "/app/profile" : "/signin")} />
         <EcosystemSection />
         <GuidanceSection />
         <VideoTestimonialsSection />

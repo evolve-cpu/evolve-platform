@@ -22,6 +22,7 @@
 //   anu_student_self    signed in → the caller's own anu_students row
 //   welcome_email       signed in → "Welcome to Evolve" to the caller, once
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
+//   community_feed      signed in → Discord posts for the Community tab (syncs if stale)
 //   anu_student_check   public → { exists } for the student sign-in form
 //   anant_staff_login   public → emails a magic link to listed Anant staff
 //
@@ -30,6 +31,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "./_sendEmail.js";
 import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEmails.js";
+import { communityFeed } from "./_discordCommunity.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -242,6 +244,8 @@ export async function handleAdmin(body, req) {
     if (data) await linkAuthUser(db, "anu_students", data, user.id);
     return { student: data || null };
   }
+
+  if (op === "community_feed") return communityFeed(db);
 
   // first sign-up → welcome email, at most once (claim the stamp first)
   if (op === "welcome_email") {

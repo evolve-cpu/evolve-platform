@@ -923,7 +923,7 @@ function FactStrip({ items }) {
   );
   if (!list.length) return null;
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
       {list.map((item) => (
         <div
           key={item.label}
@@ -1161,7 +1161,7 @@ function RecruiterHighlights({ points }) {
       <p className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide">
         For Recruiters — at a glance
       </p>
-      <div className="grid sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {list.map((pt, i) => (
           <div
             key={i}
@@ -1190,7 +1190,7 @@ function NotableWorks({ works }) {
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
         Project Blocks
       </p>
-      <div className="grid sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {list.map((w, i) => {
           const Tag = w.link ? "a" : "div";
           const tagProps = w.link
@@ -1283,13 +1283,13 @@ function Testimonials({ items }) {
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
         Testimonials
       </p>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
         {list.map((t, i) => (
           <div
             key={i}
-            className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3"
+            className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3"
           >
-            <p className="text-white/80 text-sm leading-snug">
+            <p className="text-white/80 text-sm leading-snug break-words">
               &ldquo;{t.quote}&rdquo;
             </p>
             <div className="flex items-center gap-2">
@@ -1510,7 +1510,7 @@ function InterviewFocus({ ratings, traits }) {
       <p className="text-white/40 text-[11px] uppercase tracking-wide">
         Interview Focus
       </p>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {growth.map((r, i) => (
           <div
             key={`g-${i}`}
@@ -1981,7 +1981,7 @@ function CareerTrajectory({ trajectory }) {
           </p>
         </div>
       )}
-      <div className="grid sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {roles.map((r, i) => {
           const color = TRAJECTORY_DIMENSION_COLOR[r.fit_dimension] || YELLOW;
           return (
@@ -2138,7 +2138,7 @@ export function AIProfileReveal({
           side detail panel; the old ones are kept below, unused, for the
           same reason as everything else in this block.)
       <SignalMeterGrid profile={profile} axes={axes} />
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <RoleFitMap role={role} business={understanding_of_business} clarity={foundational_clarity} />
         <ProofDepthPanel links={links} projects={notable_works} validated={real_work_validation?.validated_count} tools={displayTools} />
       </div>

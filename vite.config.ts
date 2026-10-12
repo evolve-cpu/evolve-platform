@@ -260,7 +260,7 @@ function mentorshipDevPaymentBypass(env) {
 // reads server-side env vars (no VITE_ prefix) — copied in from .env /
 // .env.local here because vite.config doesn't populate process.env.
 function adminApiDev(env) {
-  const keys = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GEMINI_API_KEY", "BREVO_API_KEY", "RESEND_API_KEY"];
+  const keys = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GEMINI_API_KEY", "BREVO_API_KEY", "RESEND_API_KEY", "DISCORD_BOT_TOKEN", "DISCORD_COMMUNITY_CHANNEL_IDS"];
   for (const k of keys) if (!process.env[k] && env[k]) process.env[k] = env[k];
   if (!process.env.SUPABASE_URL && env.VITE_SUPABASE_URL) process.env.SUPABASE_URL = env.VITE_SUPABASE_URL;
   // local convenience only: VITE_GEMINI_API_KEY is no longer read by client code, so it isn't bundled
