@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SheetShell } from "./Sheets";
+import { track, keepRecording } from "../../lib/clarity";
 import { supabase } from "../../supabaseClient";
 import { LETTERS, accentFor } from "./lib/constants";
 import {
@@ -329,6 +330,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
   }
 
   async function pay() {
+    track("typetober_pay_click", { typetober_stage: "pay_clicked", typetober_mode: "bulk", typetober_bulk_count: items.length });
     setError("");
     setBusy(true);
     // Upload every image first (skipping ones already uploaded on an
@@ -358,6 +360,8 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
       };
 
       const finish = () => {
+        track("typetober_paid", { typetober_stage: "paid", typetober_mode: "bulk", typetober_bulk_count: list.length });
+        keepRecording("typetober_paid");
         setBusy(false);
         setPaidCount(list.length);
         setStep("done");
@@ -402,6 +406,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
         modal: {
           // Closed without paying: release the order so nothing stays pending.
           ondismiss: () => {
+            track("typetober_payment_closed", { typetober_stage: "payment_closed" });
             setBusy(false);
             fetch("/api/razorpay-create-order", {
               method: "POST",
@@ -412,6 +417,8 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
         }
       });
       rzp.on("payment.failed", () => {
+        track("typetober_payment_failed", { typetober_stage: "payment_failed" });
+        keepRecording("typetober_payment_failed");
         setBusy(false);
         setError("Payment failed. Nothing was charged for a failed attempt.");
       });

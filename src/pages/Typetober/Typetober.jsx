@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { track } from "../../lib/clarity";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
@@ -551,6 +552,7 @@ export default function Typetober({ platform = false }) {
   useEffect(() => {
     if (user && sessionStorage.getItem("tt_pending")) {
       sessionStorage.removeItem("tt_pending");
+      track("typetober_signed_in", { typetober_stage: "signed_in" });
       signedInHereRef.current = true;
       if (platform) setStage("board");
       else enterPlatform();
@@ -573,6 +575,7 @@ export default function Typetober({ platform = false }) {
       return;
     }
     sessionStorage.setItem("tt_pending", "1");
+    track("typetober_signin_shown");
     setSheet({ type: "auth" });
   }
 
@@ -600,6 +603,7 @@ export default function Typetober({ platform = false }) {
       handleAccept();
       return;
     }
+    track("typetober_upload_open", { typetober_stage: "upload_open" });
     setSheet({ type: "upload", letterIndex: i });
   }
 
@@ -608,6 +612,7 @@ export default function Typetober({ platform = false }) {
       handleAccept();
       return;
     }
+    track("typetober_bulk_open", { typetober_stage: "upload_open" });
     setSheet({ type: "bulk" });
   }
 
@@ -633,7 +638,13 @@ export default function Typetober({ platform = false }) {
       />
 
       {stage === "landing" ? (
-        <Landing onAccept={handleAccept} currentDay={currentDay} />
+        <Landing
+          onAccept={() => {
+            track("typetober_accept_click", { typetober_stage: "accepted" });
+            handleAccept();
+          }}
+          currentDay={currentDay}
+        />
       ) : (
         <>
           <Board
@@ -707,7 +718,10 @@ export default function Typetober({ platform = false }) {
           onClose={closeSheet}
           user={user}
           letterIndex={sheet.letterIndex}
-          onBulk={() => setSheet({ type: "bulk" })}
+          onBulk={() => {
+            track("typetober_bulk_open", { typetober_stage: "upload_open" });
+            setSheet({ type: "bulk" });
+          }}
           onSuccess={(i) => {
             refresh();
             showToast(`${LETTERS[i]} is live on the wall`);
@@ -736,8 +750,13 @@ export default function Typetober({ platform = false }) {
           item={sheet.item}
           mine={!!(sheet.mine || (user && sheet.item?.user_id === user.id))}
           shared={!!sheet.shared}
-          onShare={() => setSheet({ ...sheet, type: "share" })}
+          onShare={() => {
+            track("typetober_share_open");
+            setSheet({ ...sheet, type: "share" });
+          }}
           onJoin={() => {
+            // someone opened a shared letter and decided to take part
+            track("typetober_join_from_shared", { typetober_stage: "accepted" });
             closeSheet();
             handleAccept();
           }}

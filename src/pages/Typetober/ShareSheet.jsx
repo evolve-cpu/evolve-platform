@@ -3,6 +3,8 @@ import { SheetShell } from "./Sheets";
 import { renderWorkCard } from "./lib/shareCard";
 
 // Typetober channel on the Evolve Discord server.
+import { track } from "../../lib/clarity";
+
 const DISCORD_INVITE = "https://discord.gg/HpDcGubnYW";
 
 function downloadBlob(blob, filename) {
@@ -301,7 +303,10 @@ export default function ShareSheet({
           href={DISCORD_INVITE}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => copyText(caption)}
+          onClick={() => {
+            track("typetober_discord_join");
+            copyText(caption);
+          }}
           className="flex-none px-4 py-2.5 rounded-full bg-evolve-yellow text-black font-extrabold text-[14px]"
         >
           Join
@@ -310,7 +315,10 @@ export default function ShareSheet({
 
       <div className="grid grid-cols-3 gap-2 mt-4">
         <button
-          onClick={nativeShare}
+          onClick={() => {
+            track("typetober_share_native");
+            nativeShare();
+          }}
           disabled={busy}
           className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-[13px] disabled:opacity-50"
         >
@@ -344,7 +352,10 @@ export default function ShareSheet({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => copyText(caption)}
+            onClick={() => {
+              track("typetober_share_app", { typetober_share_to: label });
+              copyText(caption);
+            }}
             className={appClass}
           >
             <span className={appDot}>

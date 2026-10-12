@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { SheetShell } from "./Sheets";
 import { BulkIcon } from "./BulkUploadSheet";
+import { track, keepRecording } from "../../lib/clarity";
 import { supabase } from "../../supabaseClient";
 import { LETTERS } from "./lib/constants";
 import { loadRazorpayScript, toSquareBlob, PRICE, defaultCurrency } from "./lib/upload";
@@ -46,6 +47,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
   }
 
   async function pay() {
+    track("typetober_pay_click", { typetober_stage: "pay_clicked", typetober_mode: "single" });
     setError("");
     setBusy(true);
     try {
@@ -122,6 +124,8 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
             });
             setBusy(false);
             setStep(3);
+            track("typetober_paid", { typetober_stage: "paid", typetober_mode: "single" });
+            keepRecording("typetober_paid");
             onSuccess?.(letterIndex);
           } catch (err) {
             setBusy(false);
@@ -131,6 +135,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
         modal: {
           // Closed without paying: release the order so nothing stays pending.
           ondismiss: () => {
+            track("typetober_payment_closed", { typetober_stage: "payment_closed" });
             setBusy(false);
             fetch("/api/razorpay-create-order", {
               method: "POST",
@@ -141,6 +146,8 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
         }
       });
       rzp.on("payment.failed", () => {
+        track("typetober_payment_failed", { typetober_stage: "payment_failed" });
+        keepRecording("typetober_payment_failed");
         setBusy(false);
         setError("Payment failed. Nothing was charged for a failed attempt.");
       });
