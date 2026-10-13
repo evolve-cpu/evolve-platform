@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { noWidow } from "../../lib/noWidow";
 
 // TODO: add the remaining testimonials (Umar Badi, Tanisha Sant, Abdul Fadhil,
 // Shivani Saini, and the "evolve community is rare…" one) once the full copy
@@ -30,7 +31,7 @@ const TEXT_TESTIMONIALS = [
   },
   {
     quote:
-      "Evolve has honestly ignited the fun side of design for me again. It’s made me think beyond just creating something and actually engage with new people, ideas and perspectives.",
+      "evolve has honestly ignited the fun side of design for me again. It’s made me think beyond just creating something and actually engage with new people, ideas and perspectives.",
     name: "Sristi Mehta",
     role: "Freelance Graphic Designer"
   },
@@ -65,7 +66,11 @@ const TestimonialCard = ({ t, className = "" }) => (
     <span
       aria-hidden="true"
       className="block font-extrabold italic text-evolve-pink"
-      style={{ fontSize: "clamp(40px, 3vw, 56px)", lineHeight: 0.6, height: "0.45em" }}
+      style={{
+        fontSize: "clamp(40px, 3vw, 56px)",
+        lineHeight: 0.6,
+        height: "0.45em"
+      }}
     >
       “
     </span>
@@ -73,7 +78,7 @@ const TestimonialCard = ({ t, className = "" }) => (
       className="mt-3 md:mt-[clamp(12px,1vw,20px)] font-bold text-evolve-black"
       style={{ fontSize: "clamp(14px, 1.3vw, 24px)", lineHeight: 1.25 }}
     >
-      {t.quote}
+      {noWidow(t.quote)}
     </p>
     <p
       className="mt-6 md:mt-[clamp(24px,2.7vw,52px)] font-bold text-evolve-black"
@@ -110,9 +115,7 @@ const MarqueeTrack = ({ items, direction, duration, vertical }) => {
       onClick={vertical ? undefined : () => setPaused((p) => !p)}
     >
       <div
-        className={`tt-track flex ${
-          vertical ? "flex-col" : "flex-row w-max"
-        }`}
+        className={`tt-track flex ${vertical ? "flex-col" : "flex-row w-max"}`}
         style={{
           animation: `tt-${direction} ${duration}s linear infinite`,
           animationPlayState: paused ? "paused" : "running"

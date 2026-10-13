@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { MotionConfig, motion } from "framer-motion";
 import CtaButton from "./CtaButton";
 import { mentorship, portfolio_review } from "../../assets/images/Home_images";
+import { noWidow } from "../../lib/noWidow";
 
 const CARDS = [
   {
@@ -58,7 +59,7 @@ const GuidanceSection = () => {
             className="mt-6 md:mt-[clamp(20px,1.8vw,32px)] font-medium text-evolve-black max-w-[340px] md:max-w-none"
             style={{ fontSize: "clamp(20px, 1.85vw, 36px)", lineHeight: 1.35 }}
           >
-            Accelerate your career with targeted, senior-led feedback on demand.
+            {noWidow("Accelerate your career with targeted, senior-led feedback on demand.")}
           </motion.p>
 
           <div className="mt-10 md:mt-[clamp(40px,4vw,80px)] grid grid-cols-1 md:grid-cols-2 gap-11 md:gap-[clamp(32px,3.1vw,60px)]">
@@ -96,7 +97,7 @@ const GuidanceSection = () => {
                       lineHeight: 1.5
                     }}
                   >
-                    {card.desc}
+                    {noWidow(card.desc)}
                   </p>
                   <div className="mt-12 md:mt-[clamp(32px,3.3vw,64px)]">
                     <CtaButton onClick={() => navigate(card.path)}>

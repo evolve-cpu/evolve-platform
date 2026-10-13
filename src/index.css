@@ -190,6 +190,13 @@ textarea,
   html {
     scroll-behavior: smooth;
   }
+
+  /* no single-word last lines in body copy (browsers that support it) */
+  p,
+  li,
+  blockquote {
+    text-wrap: pretty;
+  }
 }
 
 @layer components {

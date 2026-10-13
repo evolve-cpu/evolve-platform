@@ -8,6 +8,7 @@ import {
   events,
   community
 } from "../../assets/images/Home_images";
+import { noWidow } from "../../lib/noWidow";
 
 const DISCORD_URL = "https://discord.gg/MmfaqCPdF7";
 
@@ -178,7 +179,7 @@ const DesktopEcosystem = ({ onNavigate }) => {
                     lineHeight: 1.2
                   }}
                 >
-                  {active.tagline}
+                  {noWidow(active.tagline)}
                 </h3>,
                 <p
                   key="p"
@@ -188,7 +189,7 @@ const DesktopEcosystem = ({ onNavigate }) => {
                     lineHeight: 1.6
                   }}
                 >
-                  {active.desc}
+                  {noWidow(active.desc)}
                 </p>,
                 <div key="b" className="mt-[clamp(24px,2.6vw,48px)]">
                   <TabAction tab={active} onNavigate={onNavigate} />
@@ -246,7 +247,7 @@ const MobileEcosystem = ({ onNavigate }) => (
           {tab.label}
         </h3>
         <p className="mt-3 text-black text-[22px] leading-[1.3]">
-          {tab.tagline}
+          {noWidow(tab.tagline)}
         </p>
         <div className="mt-8">
           <TabAction tab={tab} onNavigate={onNavigate} />
