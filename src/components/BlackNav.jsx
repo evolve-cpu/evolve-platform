@@ -64,42 +64,53 @@ export default function BlackNav({ onLogoClick, right }) {
   }, []);
 
   /* ── GSAP open / close ──────────────────────────────────────────────────── */
+  // Lock/unlock exactly once per open, restore scroll instantly (the site sets
+  // scroll-behavior: smooth), and kill in-flight tweens so a quick double tap
+  // can't leave an invisible menu with the page still locked.
+  const scrollLockedRef = useRef(false);
+
+  const restoreBody = () => {
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    document.documentElement.style.overflow = "";
+  };
+
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
     const panel = menuPanelRef.current;
     if (!underlay || !panel) return;
 
-    const lockScroll = () => {
-      bodyScrollRef.current = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${bodyScrollRef.current}px`;
-      document.body.style.width = "100%";
-      document.documentElement.style.overflow = "hidden";
-    };
-
-    const unlockScroll = () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      document.documentElement.style.overflow = "";
-      window.scrollTo(0, bodyScrollRef.current);
-    };
+    gsap.killTweensOf([underlay, panel]);
 
     if (menuOpen) {
-      lockScroll();
+      if (!scrollLockedRef.current) {
+        scrollLockedRef.current = true;
+        bodyScrollRef.current = window.scrollY;
+        document.body.style.overflow = "hidden";
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${bodyScrollRef.current}px`;
+        document.body.style.width = "100%";
+        document.documentElement.style.overflow = "hidden";
+      }
       if (isDesktop()) {
-        gsap.set(underlay, { display: "block", opacity: 0 });
+        gsap.set(underlay, { display: "block", opacity: 0, yPercent: 0 });
         gsap.set(panel, { xPercent: -100 });
         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
       } else {
-        gsap.set(underlay, { display: "block", yPercent: -100 });
+        gsap.set(underlay, { display: "block", opacity: 1, yPercent: -100 });
+        gsap.set(panel, { xPercent: 0 });
         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
-      unlockScroll();
+      if (scrollLockedRef.current) {
+        scrollLockedRef.current = false;
+        restoreBody();
+        window.scrollTo({ top: bodyScrollRef.current, behavior: "instant" });
+      }
+      if (getComputedStyle(underlay).display === "none") return;
       if (isDesktop()) {
         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
         gsap.to(underlay, {
@@ -117,11 +128,17 @@ export default function BlackNav({ onLogoClick, right }) {
         });
       }
     }
-
-    return () => {
-      unlockScroll();
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menuOpen]);
+
+  // never leave the page locked if the nav unmounts with the menu open
+  useEffect(
+    () => () => {
+      if (scrollLockedRef.current) restoreBody();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   /* ── close on route change ──────────────────────────────────────────────── */
   useEffect(() => {

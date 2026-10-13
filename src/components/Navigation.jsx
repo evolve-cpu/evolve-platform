@@ -72,13 +72,25 @@ const Navigation = ({
   const [navHiddenByScroll, setNavHiddenByScroll] = useState(false);
   const lastScrollYRef = useRef(0);
   const scrollTickingRef = useRef(false);
+  // true while the menu has the page locked; scroll events then come from the
+  // lock/unlock itself, not the user, so they must not hide the navbar
+  const scrollLockedRef = useRef(false);
 
   useEffect(() => {
     if (!NAVBAR_SCROLL_HIDE) return;
     const handleScroll = () => {
+      if (scrollLockedRef.current) {
+        lastScrollYRef.current = window.scrollY;
+        return;
+      }
       if (scrollTickingRef.current) return;
       scrollTickingRef.current = true;
       requestAnimationFrame(() => {
+        if (scrollLockedRef.current) {
+          lastScrollYRef.current = window.scrollY;
+          scrollTickingRef.current = false;
+          return;
+        }
         const currentY = window.scrollY;
         const delta = currentY - lastScrollYRef.current;
         if (Math.abs(delta) > 5) {
@@ -239,78 +251,87 @@ const Navigation = ({
     };
   }, []);
 
+  // The navbar never hides while the menu or account popup is open — the
+  // close controls live on it.
+  const navVisible =
+    showNavbar &&
+    (menuOpen || accountOpen || !(NAVBAR_SCROLL_HIDE && navHiddenByScroll));
+
   const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
     if (!outerRef.current) return;
     const el = outerRef.current;
-    const visible = showNavbar && !(NAVBAR_SCROLL_HIDE && navHiddenByScroll);
 
     if (!hasAnimatedRef.current) {
-      gsap.set(el, { y: visible ? 0 : -100 });
-      el.style.pointerEvents = visible ? "auto" : "none";
+      gsap.set(el, { y: navVisible ? 0 : -100 });
       hasAnimatedRef.current = true;
       return;
     }
 
-    if (visible) {
-      gsap.to(el, {
-        y: 0,
-        duration: 0.6,
-        ease: "power3.out",
-        onStart: () => {
-          el.style.pointerEvents = "auto";
-        }
-      });
-    } else {
-      gsap.to(el, {
-        y: -100,
-        duration: 0.4,
-        ease: "power2.in",
-        onComplete: () => {
-          el.style.pointerEvents = "none";
-        }
-      });
-    }
-  }, [showNavbar, navHiddenByScroll]);
+    // overwrite kills any in-flight show/hide tween, so a quick
+    // down-then-up scroll can't leave the bar half-hidden
+    gsap.to(el, {
+      y: navVisible ? 0 : -100,
+      duration: navVisible ? 0.6 : 0.4,
+      ease: navVisible ? "power3.out" : "power2.in",
+      overwrite: true
+    });
+  }, [navVisible]);
+
+  const lockScroll = () => {
+    if (scrollLockedRef.current) return;
+    scrollLockedRef.current = true;
+    bodyScrollRef.current = window.scrollY;
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${bodyScrollRef.current}px`;
+    document.body.style.width = "100%";
+    document.documentElement.style.overflow = "hidden";
+  };
+
+  const unlockScroll = () => {
+    if (!scrollLockedRef.current) return;
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    document.documentElement.style.overflow = "";
+    // "instant" — the site sets scroll-behavior: smooth, which would
+    // otherwise animate from the top back down to where the user was
+    window.scrollTo({ top: bodyScrollRef.current, behavior: "instant" });
+    lastScrollYRef.current = bodyScrollRef.current;
+    // let the restore's scroll event pass before scroll-hide listens again
+    requestAnimationFrame(() => {
+      scrollLockedRef.current = false;
+    });
+  };
 
   useEffect(() => {
     const underlay = menuUnderlayRef.current;
     const panel = menuPanelRef.current;
     if (!underlay || !panel) return;
 
-    const lockScroll = () => {
-      bodyScrollRef.current = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${bodyScrollRef.current}px`;
-      document.body.style.width = "100%";
-      document.documentElement.style.overflow = "hidden";
-    };
-
-    const unlockScroll = () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      document.documentElement.style.overflow = "";
-      window.scrollTo(0, bodyScrollRef.current);
-    };
+    gsap.killTweensOf([underlay, panel]);
 
     if (menuOpen) {
       lockScroll();
+      setNavHiddenByScroll(false);
 
       if (isDesktop()) {
-        gsap.set(underlay, { display: "block", opacity: 0 });
+        gsap.set(underlay, { display: "block", opacity: 0, yPercent: 0 });
         gsap.set(panel, { xPercent: -100 });
         gsap.to(underlay, { opacity: 1, duration: 0.55, ease: "power3.out" });
         gsap.to(panel, { xPercent: 0, duration: 0.55, ease: "power3.out" });
       } else {
-        gsap.set(underlay, { display: "block", yPercent: -100 });
+        gsap.set(underlay, { display: "block", opacity: 1, yPercent: -100 });
+        gsap.set(panel, { xPercent: 0 });
         gsap.to(underlay, { yPercent: 0, duration: 0.55, ease: "power3.out" });
       }
     } else {
       unlockScroll();
+
+      if (getComputedStyle(underlay).display === "none") return;
 
       if (isDesktop()) {
         gsap.to(panel, { xPercent: -100, duration: 0.45, ease: "power2.in" });
@@ -329,11 +350,22 @@ const Navigation = ({
         });
       }
     }
-
-    return () => {
-      unlockScroll();
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menuOpen]);
+
+  // never leave the page locked if the navbar unmounts with the menu open
+  useEffect(
+    () => () => {
+      if (!scrollLockedRef.current) return;
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.documentElement.style.overflow = "";
+      scrollLockedRef.current = false;
+    },
+    []
+  );
 
   useEffect(() => {
     setMenuOpen(false);
@@ -404,8 +436,6 @@ const Navigation = ({
         ["ref", payment.razorpay_payment_id || "—"]
       ]
     : [];
-
-  const navVisible = showNavbar && !(NAVBAR_SCROLL_HIDE && navHiddenByScroll);
 
   return (
     <>
@@ -709,6 +739,16 @@ const Navigation = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* MOBILE: tap outside the menu to close it */}
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="close menu"
+          onClick={() => setMenuOpen(false)}
+          className="md:hidden fixed inset-0 z-[9989] bg-black/30"
+        />
       )}
 
       {/* MENU UNDERLAY */}
