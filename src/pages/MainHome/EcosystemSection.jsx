@@ -20,7 +20,7 @@ const TABS = [
     tagline: "Showcase real skill growth, backed by data.",
     desc: "Upload your portfolio and resume to create a dynamic designer profile. Map your technical capabilities, track core competencies over time, and display a comprehensive timeline of your academic and professional journey.",
     cta: "Know more",
-    path: "/app/profile"
+    path: "/profile-creation"
   },
   {
     id: "events",
@@ -46,7 +46,8 @@ const TABS = [
     image: grow,
     tagline: "Build consistent habits with bite-sized learning.",
     desc: "Stay sharp with daily design news, quick quizzes and microlearning modules. Small, focused sessions that fit into your day and add up to real, measurable progress.",
-    comingSoon: true
+    cta: "Know more",
+    path: "/grow"
   }
 ];
 

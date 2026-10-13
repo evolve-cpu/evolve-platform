@@ -48,6 +48,8 @@ const Footer = ({ onContactClick }) => {
 
   const navigationLinks = [
     { path: "/", label: "Home" },
+    { path: "/profile-creation", label: "Profile creation" },
+    { path: "/grow", label: "Grow" },
     { path: "/events", label: "Events" },
     { path: "/mentorship", label: "Mentorship" },
     { path: "/portfolio-review", label: "Portfolio review" },

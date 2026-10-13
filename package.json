@@ -24,6 +24,8 @@
     "routes": [
       "/",
       "/about",
+      "/profile-creation",
+      "/grow",
       "/community",
       "/webinars",
       "/mentorship",

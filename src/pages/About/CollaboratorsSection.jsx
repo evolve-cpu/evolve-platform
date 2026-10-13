@@ -149,11 +149,11 @@ const CollaboratorsSection = () => {
           )}
         </MobileMemberSheet>
 
-        <div className="mt-14 md:mt-[4vw] flex justify-center">
+        {/* <div className="mt-14 md:mt-[4vw] flex justify-center">
           <CtaButton onClick={() => navigate(COLLABORATOR_PATH)}>
             Be a collaborator
           </CtaButton>
-        </div>
+        </div> */}
       </div>
     </section>
   );

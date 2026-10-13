@@ -129,6 +129,8 @@ const Navigation = ({
 
   const navItems = [
     { path: "/", label: "Home" },
+    { path: "/profile-creation", label: "Profile Creation" },
+    { path: "/grow", label: "Grow" },
     { path: "/events", label: "Events" },
     { path: "/mentorship", label: "Mentorship Programme" },
     { path: "/portfolio-review", label: "Portfolio Review" },
@@ -769,12 +771,12 @@ const Navigation = ({
             <div ref={menuContentRef} className="h-full flex flex-col">
               <div className="flex-1 flex items-center">
                 <div className="w-full flex justify-center px-6 md:px-8">
-                  <div className="flex flex-col items-start gap-4 md:gap-2 tracking-normal">
+                  <div className="flex flex-col items-start gap-3 md:gap-1.5 tracking-normal">
                     {navItems.map((item) => {
                       /* sub-item styling */
                       const subClass = item.sub
                         ? "text-[14px] md:text-[18px] text-black/50 pl-5 md:pl-6"
-                        : "text-[24px] md:text-[30px]";
+                        : "text-[20px] md:text-[26px]";
 
                       if (item.isHeader) {
                         return (
@@ -795,7 +797,7 @@ const Navigation = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => setMenuOpen(false)}
-                            className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink`}
+                            className={`${subClass} font-bold leading-[1.05] text-left tracking-normal transition-colors duration-300 text-black hover:text-evolve-pink`}
                           >
                             {item.label}
                           </a>
@@ -810,7 +812,7 @@ const Navigation = ({
                               setMenuOpen(false);
                               if (onContactClick) onContactClick();
                             }}
-                            className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                            className={`${subClass} font-bold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
                               location.pathname === item.path
                                 ? "text-evolve-pink"
                                 : "text-black hover:text-evolve-pink"
@@ -826,7 +828,7 @@ const Navigation = ({
                           key={item.path}
                           to={item.path}
                           onClick={() => setMenuOpen(false)}
-                          className={`${subClass} font-extrabold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
+                          className={`${subClass} font-bold leading-[1.05] text-left tracking-normal transition-colors duration-300 ${
                             isActive(item.path)
                               ? "text-evolve-pink"
                               : "text-black hover:text-evolve-pink"

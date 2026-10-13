@@ -1092,6 +1092,10 @@ const InstituteSettingsPage = lazy(
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const Institutions = lazy(() => import("./pages/Institutions"));
 const Corporates = lazy(() => import("./pages/Corporates"));
+const ProfileCreation = lazy(
+  () => import("./pages/Ecosystem/ProfileCreation")
+);
+const Grow = lazy(() => import("./pages/Ecosystem/Grow"));
 
 // Import only critical home images
 import * as images from "./assets/images/Home";
@@ -1731,6 +1735,8 @@ const AppLayout = () => {
               element={<CollegeRealityCheck />}
             />
             <Route path="/about" element={<AboutUs />} />
+            <Route path="/profile-creation" element={<ProfileCreation />} />
+            <Route path="/grow" element={<Grow />} />
             <Route path="/events" element={<Webinars />} />
             <Route path="/events/:slug" element={<EventDetail />} />
             <Route path="/quiz" element={<Quiz />} />
