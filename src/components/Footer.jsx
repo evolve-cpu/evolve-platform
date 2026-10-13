@@ -109,11 +109,11 @@ const Footer = ({ onContactClick }) => {
   const legal = (sizeClass) => (
     <div className={`${sizeClass} text-black`}>
       <Link to="/privacy" className="hover:text-evolve-pink transition-colors">
-        Privacy policy
+        Privacy Policy
       </Link>{" "}
       and{" "}
       <Link to="/terms" className="hover:text-evolve-pink transition-colors">
-        Terms &amp; conditions
+        Terms &amp; Conditions
       </Link>
     </div>
   );
@@ -165,7 +165,10 @@ const Footer = ({ onContactClick }) => {
           <div className="relative z-30 w-[46%] h-full">
             <h2
               className="font-extrabold text-evolve-black leading-[1.05] whitespace-nowrap"
-              style={{ fontSize: "clamp(40px, 3.4vw, 64px)", letterSpacing: "-0.04em" }}
+              style={{
+                fontSize: "clamp(40px, 3.4vw, 64px)",
+                letterSpacing: "-0.04em"
+              }}
             >
               Ready to Be Remarkable?
             </h2>
@@ -176,16 +179,20 @@ const Footer = ({ onContactClick }) => {
 
             <div className="grid grid-cols-2 gap-12">
               <div>
-                <div className="text-[1.1rem] leading-none mb-5">Navigation</div>
+                <div className="text-[1.1rem] leading-none mb-5">
+                  Navigation
+                </div>
                 <ul className="space-y-1">
                   {navigationLinks.map((item) => (
-                    <li key={item.label}>{renderNavLink(item, "text-[2rem]")}</li>
+                    <li key={item.label}>
+                      {renderNavLink(item, "text-[2rem]")}
+                    </li>
                   ))}
                 </ul>
               </div>
 
               <div>
-                <div className="text-[1.1rem] leading-none mb-5">socials</div>
+                <div className="text-[1.1rem] leading-none mb-5">Socials</div>
                 <ul className="space-y-1">
                   {socialLinks.map((item) => (
                     <li key={item.label}>
@@ -206,7 +213,9 @@ const Footer = ({ onContactClick }) => {
                 </div>
                 <ul className="space-y-1">
                   {audienceLinks.map((item) => (
-                    <li key={item.label}>{renderNavLink(item, "text-[2rem]")}</li>
+                    <li key={item.label}>
+                      {renderNavLink(item, "text-[2rem]")}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -248,13 +257,15 @@ const Footer = ({ onContactClick }) => {
               <div className="text-[0.9rem] leading-none mb-3">Navigation</div>
               <ul className="space-y-1">
                 {navigationLinks.map((item) => (
-                  <li key={item.label}>{renderNavLink(item, "text-[1.25rem]")}</li>
+                  <li key={item.label}>
+                    {renderNavLink(item, "text-[1.25rem]")}
+                  </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <div className="text-[0.9rem] leading-none mb-3">socials</div>
+              <div className="text-[0.9rem] leading-none mb-3">Socials</div>
               <ul className="space-y-1">
                 {socialLinks.map((item) => (
                   <li key={item.label}>
@@ -270,10 +281,14 @@ const Footer = ({ onContactClick }) => {
                 ))}
               </ul>
 
-              <div className="text-[0.9rem] leading-none mt-8 mb-3">evolve for</div>
+              <div className="text-[0.9rem] leading-none mt-8 mb-3">
+                evolve for
+              </div>
               <ul className="space-y-1">
                 {audienceLinks.map((item) => (
-                  <li key={item.label}>{renderNavLink(item, "text-[1.25rem]")}</li>
+                  <li key={item.label}>
+                    {renderNavLink(item, "text-[1.25rem]")}
+                  </li>
                 ))}
               </ul>
             </div>

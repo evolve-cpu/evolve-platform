@@ -39,7 +39,7 @@ const TEAM = [
   },
   {
     name: "Chesna Sorathia",
-    role: "Support Team Lead",
+    role: "Operations",
     driveId: "12WO8HgaQ8JO-cooIhIPn6EwGIcovgcX9",
     linkedin: "https://www.linkedin.com/in/chesna-sorathiya/"
   }

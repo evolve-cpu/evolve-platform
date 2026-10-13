@@ -1055,6 +1055,7 @@ import ContactModal from "./components/ContactModal";
 import { AuthProvider } from "./context/AuthContext";
 import { MembershipProvider } from "./components/membership/MembershipProvider";
 import { useAuth } from "./hooks/useAuth";
+import useScrollRestoration from "./hooks/useScrollRestoration";
 
 // Lazy load non-critical routes
 const AboutUs = lazy(() => import("./pages/About/About"));
@@ -1343,12 +1344,10 @@ const AppLayout = () => {
     return Math.max(currentWidth / targetWidth, 0.7);
   };
 
-  // Prevent native scroll restore
-  useEffect(() => {
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-  }, []);
+  // Scroll to top on new pages; Back/Forward returns to the section the
+  // visitor left from (e.g. after bouncing to /signin). /designers restores
+  // its own scene position.
+  useScrollRestoration({ skipPaths: ["/designers"] });
 
   // App mounted fine — clear the one-shot chunk-reload guard so a later,
   // genuinely new chunk-load failure can still trigger one auto-reload.
@@ -1389,13 +1388,6 @@ const AppLayout = () => {
       setShowNavbar(true);
       setIsHomeIntroActive(false);
     }
-  }, [location.pathname]);
-
-  // Reset scroll on route change (optimized)
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-    });
   }, [location.pathname]);
 
   // Preload images with working progress
@@ -1832,11 +1824,7 @@ const AppLayout = () => {
 
 /* ------------------------------- Anant App Layout ------------------------------- */
 const AnantAppLayout = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    requestAnimationFrame(() => window.scrollTo(0, 0));
-  }, [location.pathname]);
+  useScrollRestoration();
 
   return (
     <Suspense
