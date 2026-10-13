@@ -14,7 +14,9 @@ import {
   book_1,
   book_2,
   book_3,
-  book_4
+  book_4,
+  ama_poster_5,
+  ama_poster_6
 } from "../../assets/images/Community";
 
 // Posters per tab, in the same order as COPY.cards (AMA, Activities, Bookclub).
@@ -23,7 +25,14 @@ const TAB_MEDIA = [
   {
     id: "ama",
     framed: true,
-    images: [ama_poster_1, ama_poster_2, ama_poster_3, ama_poster_4]
+    images: [
+      ama_poster_1,
+      ama_poster_2,
+      ama_poster_3,
+      ama_poster_4,
+      ama_poster_5,
+      ama_poster_6
+    ]
   },
   {
     id: "activities",
@@ -32,7 +41,7 @@ const TAB_MEDIA = [
       activities_poster_1,
       activities_poster_2,
       activities_poster_3,
-      activities_poster_4,
+      // activities_poster_4
       activities_poster_5
     ]
   },

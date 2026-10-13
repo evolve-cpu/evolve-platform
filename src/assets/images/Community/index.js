@@ -32,10 +32,13 @@ import activities_poster_2 from "./activities_poster_2.svg";
 import activities_poster_3 from "./activities_poster_3.svg";
 import activities_poster_4 from "./activities_poster_4.svg";
 import activities_poster_5 from "./activities_poster_5.svg";
-import ama_poster_1 from "./ama_poster_1.svg";
-import ama_poster_2 from "./ama_poster_2.svg";
-import ama_poster_3 from "./ama_poster_3.svg";
-import ama_poster_4 from "./ama_poster_4.svg";
+// import ama_poster_1 from "./ama_poster_1.svg";
+import ama_poster_1 from "./ama_poster_1.jpg";
+import ama_poster_2 from "./ama_poster_2.jpg";
+import ama_poster_3 from "./ama_poster_3.jpg";
+import ama_poster_4 from "./ama_poster_4.jpg";
+import ama_poster_5 from "./ama_poster_5.jpg";
+import ama_poster_6 from "./ama_poster_6.jpg";
 import book_1 from "./book_1.svg";
 import book_2 from "./book_2.svg";
 import book_3 from "./book_3.svg";
@@ -83,6 +86,8 @@ export {
   ama_poster_2,
   ama_poster_3,
   ama_poster_4,
+  ama_poster_5,
+  ama_poster_6,
   book_1,
   book_2,
   book_3,
