@@ -51,7 +51,7 @@ function BackBtn({ onBack }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-sm font-semibold">back</span>
+      <span className="text-sm font-semibold">Back</span>
     </button>
   );
 }
@@ -349,12 +349,12 @@ export default function SignIn({ onClose } = {}) {
                   className="text-white font-bold leading-tight"
                   style={{ fontSize: 40, letterSpacing: "-0.16px" }}
                 >
-                  let's build your
+                  Let's build your
                   <br />
                   design space.
                 </h1>
                 <p className="text-white/40 text-sm mt-3">
-                  join designers, institutions and corporates who are shaping
+                  Join designers, institutions and corporates who are shaping
                   the future of design industry.
                 </p>
               </div>
@@ -365,7 +365,7 @@ export default function SignIn({ onClose } = {}) {
                   className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold text-base rounded-2xl py-4 active:opacity-80"
                 >
                   {GOOGLE_ICON}
-                  continue with google
+                  Continue with Google
                 </button>
                 <button
                   onClick={handleLinkedInSignIn}
@@ -379,13 +379,13 @@ export default function SignIn({ onClose } = {}) {
                   >
                     <path d="M16.667 1.667H3.333A1.667 1.667 0 0 0 1.667 3.333v13.334A1.667 1.667 0 0 0 3.333 18.333h13.334A1.667 1.667 0 0 0 18.333 16.667V3.333A1.667 1.667 0 0 0 16.667 1.667ZM6.667 15H4.167V7.917h2.5V15ZM5.417 6.875a1.458 1.458 0 1 1 0-2.917 1.458 1.458 0 0 1 0 2.917ZM15.833 15h-2.5v-3.542c0-.833-.015-1.916-1.166-1.916-1.167 0-1.334.908-1.334 1.85V15H8.333V7.917h2.4v.983h.034c.333-.633 1.15-1.3 2.366-1.3 2.534 0 3 1.667 3 3.834V15Z" />
                   </svg>
-                  continue with linkedin
+                  Continue with LinkedIn
                 </button>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-white/20" />
                 <span className="text-white/40 text-sm whitespace-nowrap">
-                  or continue with email
+                  Or continue with email
                 </span>
                 <div className="flex-1 h-px bg-white/20" />
               </div>
@@ -406,13 +406,13 @@ export default function SignIn({ onClose } = {}) {
                     strokeLinecap="round"
                   />
                 </svg>
-                continue with email
+                Continue with email
               </button>
               {error && (
                 <p className="text-red-400 text-sm text-center">{error}</p>
               )}
               <p className="text-white/25 text-xs text-center">
-                by continuing, you agree to evolve's terms &amp; conditions and
+                By continuing, you agree to evolve's terms &amp; conditions and
                 privacy policy.
               </p>
             </div>
@@ -429,12 +429,12 @@ export default function SignIn({ onClose } = {}) {
               className="text-white font-bold leading-tight"
               style={{ fontSize: 40, letterSpacing: "-0.16px" }}
             >
-              what's your name &amp; email?
+              What's your name &amp; email?
             </h1>
             <div className="flex flex-col gap-3">
               <input
                 type="text"
-                placeholder="your name"
+                placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputCls}
@@ -442,7 +442,7 @@ export default function SignIn({ onClose } = {}) {
               />
               <input
                 type="email"
-                placeholder="your email"
+                placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) =>
@@ -461,7 +461,7 @@ export default function SignIn({ onClose } = {}) {
               disabled={!name.trim() || !email.trim()}
               className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
             >
-              send code
+              Send code
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
@@ -473,7 +473,7 @@ export default function SignIn({ onClose } = {}) {
               </svg>
             </button>
             <p className="text-white/30 text-xs text-center">
-              we'll send a 6-digit code to your email.
+              We'll send a 6-digit code to your email.
             </p>
           </div>
         </div>
@@ -482,7 +482,7 @@ export default function SignIn({ onClose } = {}) {
       {/* SENDING */}
       {step === "sending" && (
         <LoadingStep
-          label="sending your code..."
+          label="Sending your code..."
           sub={email}
           progress={progress}
         />
@@ -498,10 +498,10 @@ export default function SignIn({ onClose } = {}) {
                 className="text-white font-bold leading-tight"
                 style={{ fontSize: 40, letterSpacing: "-0.16px" }}
               >
-                check your email.
+                Check your email.
               </h1>
               <p className="text-white/50 text-sm mt-2">
-                we sent a 6-digit code to{" "}
+                We sent a 6-digit code to{" "}
                 <span className="text-white">{email}</span>
               </p>
             </div>
@@ -536,7 +536,7 @@ export default function SignIn({ onClose } = {}) {
               disabled={otpDigits.join("").length < 6}
               className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
             >
-              confirm
+              Confirm
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"
@@ -549,13 +549,13 @@ export default function SignIn({ onClose } = {}) {
             </button>
             <p className="text-center text-sm">
               {countdown > 0 ? (
-                <span className="text-white/30">resend in {countdown}s</span>
+                <span className="text-white/30">Resend in {countdown}s</span>
               ) : (
                 <button
                   onClick={handleResend}
                   className="text-evolve-yellow underline underline-offset-2"
                 >
-                  resend code
+                  Resend code
                 </button>
               )}
             </p>
@@ -566,7 +566,7 @@ export default function SignIn({ onClose } = {}) {
       {/* VERIFYING */}
       {step === "verifying" && (
         <LoadingStep
-          label="verifying your code..."
+          label="Verifying your code..."
           sub={email}
           progress={progress}
         />

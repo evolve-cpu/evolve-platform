@@ -9,6 +9,12 @@ import {
   right_arrow_yellow
 } from "../../assets/images/Home_images";
 
+const SCROLL_CUE_CSS = `
+@keyframes hero-scroll-cue { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+.hero-scroll-cue svg { animation: hero-scroll-cue 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hero-scroll-cue svg { animation: none; } }
+`;
+
 const HeroSection = ({ onStart }) => (
   <section className="relative w-full min-h-[100svh] md:min-h-screen bg-evolve-yellow overflow-hidden flex items-center justify-center">
     {/* Rays */}
@@ -108,6 +114,31 @@ const HeroSection = ({ onStart }) => (
         />
       </button>
     </div>
+
+    {/* Scroll cue */}
+    <button
+      type="button"
+      aria-label="Scroll down"
+      onClick={() =>
+        window.scrollBy({ top: window.innerHeight, behavior: "smooth" })
+      }
+      className="hero-scroll-cue absolute bottom-5 md:bottom-8 left-1/2 -translate-x-1/2 z-[4] text-black"
+    >
+      <style>{SCROLL_CUE_CSS}</style>
+      <svg
+        width="36"
+        height="36"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-8 h-8 md:w-10 md:h-10"
+      >
+        <path d="M6 6l6 6 6-6M6 13l6 6 6-6" />
+      </svg>
+    </button>
   </section>
 );
 

@@ -20,7 +20,7 @@ import "./membership.css";
      • VIP welcome sheet (30 days of VIP access) + confetti, once
      • trial-status sheet from the clock badge on the avatar
      • trial-ended pop-up: what's locked → how do you want to unlock
-       (pay as you go / monthly / annual, priced by student vs pro)
+       (free membership / monthly / annual, priced by student vs pro)
      • pay sheet: pay for this only, or switch to a plan — with a savings
        nudge once pay-per-item spend this month passes a monthly plan
      • "you're evolve verified" sheet + confetti
@@ -320,7 +320,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
               <StudentPricing user={user} onStudentId={onStudentId} />
               <div className="at-car" ref={carRef}>
                 <div className="at-cc">
-                  <h3>Pay as you go</h3>
+                  <h3>Free membership</h3>
                   <div className="at-cp">
                     ₹0 <small>to start</small>
                   </div>

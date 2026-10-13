@@ -1152,10 +1152,106 @@ function UpcomingEventsSection({ events }) {
   );
 }
 
+const PAST_PAGE = 6;
+
+// Ended events, newest first. Each card opens the event page, which shows the
+// recording for past events.
+function PastEventsSection({ events }) {
+  const [shown, setShown] = useState(PAST_PAGE);
+  if (!events.length) return null;
+
+  return (
+    <section className="bg-evolve-yellow px-6 md:px-16 py-16 md:py-24">
+      <h2
+        className="text-black text-center font-extrabold"
+        style={{
+          fontSize: "clamp(44px, 4.6vw, 80px)",
+          lineHeight: 1,
+          letterSpacing: "-0.03em"
+        }}
+      >
+        {COPY.pastSection.heading}
+      </h2>
+      <p
+        className="mt-4 mx-auto max-w-[760px] text-black font-medium text-center"
+        style={{ fontSize: "clamp(17px, 1.4vw, 24px)", lineHeight: 1.35 }}
+      >
+        {COPY.pastSection.description}
+      </p>
+
+      <div className="mt-10 md:mt-14 mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {events.slice(0, shown).map((event) => {
+          const { day, month, year } = fmtEventDate(event.start_time);
+          const photo = event.cover_image_url || event.speaker_photo_url;
+          return (
+            <Link
+              key={event.id}
+              to={`/events/${event.slug}`}
+              className="group flex flex-col rounded-[24px] border border-black bg-[#FFDC47] overflow-hidden transition-transform duration-150 hover:-translate-y-1"
+            >
+              <div className="aspect-video bg-black overflow-hidden">
+                {photo && (
+                  <img
+                    src={photo}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  />
+                )}
+              </div>
+              <div className="flex flex-col flex-1 p-5 md:p-6">
+                <span className="self-start bg-black text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full">
+                  {event.event_type || "Webinar"}
+                </span>
+                <h3
+                  className="mt-3 text-evolve-pink font-extrabold text-2xl leading-[1.05]"
+                  style={{ letterSpacing: "-0.02em" }}
+                >
+                  {event.title}
+                </h3>
+                {event.speaker_name && (
+                  <p className="mt-2 text-black font-bold text-base leading-tight">
+                    by {event.speaker_name}
+                  </p>
+                )}
+                <div className="mt-auto pt-5 flex items-center justify-between gap-3">
+                  <p className="text-black/70 font-medium text-sm">
+                    {day} {month} {year}
+                    {event.recording_duration_min
+                      ? ` · ${event.recording_duration_min} min`
+                      : ""}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-black font-bold text-sm">
+                    Watch recording
+                    <img src={right_arrow_icon} alt="" className="h-4 w-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {events.length > shown && (
+        <div className="mt-10 md:mt-14 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShown((n) => n + PAST_PAGE)}
+            className="inline-flex items-center gap-2 rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow font-semibold px-8 py-4 text-[18px] leading-none shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
+          >
+            Show more
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 const Webinars = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [currentMobileCard, setCurrentMobileCard] = useState(0);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [pastEvents, setPastEvents] = useState([]);
 
   useEffect(() => {
     supabase
@@ -1165,6 +1261,15 @@ const Webinars = () => {
       .gte("start_time", upcomingCutoffIso())
       .order("start_time", { ascending: true })
       .then(({ data }) => setUpcomingEvents((data || []).filter((e) => !isEventOver(e))));
+
+    supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .lt("start_time", new Date().toISOString())
+      .order("start_time", { ascending: false })
+      .limit(60)
+      .then(({ data }) => setPastEvents((data || []).filter((e) => isEventOver(e))));
   }, []);
 
   // SVGs are still imported here — content.js only holds the text/URLs
@@ -1362,6 +1467,8 @@ const Webinars = () => {
           </div> */}
         </section>
       </div>
+
+      <PastEventsSection events={pastEvents} />
     </main>
   );
 };

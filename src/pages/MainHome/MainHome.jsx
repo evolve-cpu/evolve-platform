@@ -11,6 +11,7 @@ import ClosingSection from "./ClosingSection";
 const MainHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const handleStart = () => navigate(user ? "/app/profile" : "/signin");
 
   return (
     <>
@@ -20,12 +21,12 @@ const MainHome = () => {
         path="/"
       />
       <main className="w-full overflow-x-hidden">
-        <HeroSection onStart={() => navigate(user ? "/app/profile" : "/signin")} />
+        <HeroSection onStart={handleStart} />
         <EcosystemSection />
         <GuidanceSection />
         <VideoTestimonialsSection />
         <TextTestimonialsSection />
-        <ClosingSection />
+        <ClosingSection onStart={handleStart} />
       </main>
     </>
   );

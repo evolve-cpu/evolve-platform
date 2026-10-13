@@ -9,6 +9,8 @@ import {
   community
 } from "../../assets/images/Home_images";
 
+const DISCORD_URL = "https://discord.gg/MmfaqCPdF7";
+
 const TABS = [
   {
     id: "profile",
@@ -16,17 +18,8 @@ const TABS = [
     image: my_profile,
     tagline: "Showcase real skill growth, backed by data.",
     desc: "Upload your portfolio and resume to create a dynamic designer profile. Map your technical capabilities, track core competencies over time, and display a comprehensive timeline of your academic and professional journey.",
-    cta: "Get started",
+    cta: "Know more",
     path: "/app/profile"
-  },
-  {
-    id: "grow",
-    label: "Grow",
-    image: grow,
-    tagline: "Build consistent habits with bite-sized learning.",
-    desc: "Stay sharp with daily design news, quick quizzes and microlearning modules. Small, focused sessions that fit into your day and add up to real, measurable progress.",
-    cta: "Get started",
-    path: "/app/grow"
   },
   {
     id: "events",
@@ -44,11 +37,37 @@ const TABS = [
     tagline: "Connect with an ambitious network of peers.",
     desc: "Meet designers who are as driven as you are. From AMAs and bookclubs to in-person activities, find the people who will push your work and your thinking forward.",
     cta: "Join community",
-    path: "/app/community"
+    href: DISCORD_URL
+  },
+  {
+    id: "grow",
+    label: "Grow",
+    image: grow,
+    tagline: "Build consistent habits with bite-sized learning.",
+    desc: "Stay sharp with daily design news, quick quizzes and microlearning modules. Small, focused sessions that fit into your day and add up to real, measurable progress.",
+    comingSoon: true
   }
 ];
 
 const EASE = [0.22, 1, 0.36, 1];
+
+// Coming-soon tabs get a label instead of a button; `href` tabs open externally.
+const TabAction = ({ tab, onNavigate }) =>
+  tab.comingSoon ? (
+    <p
+      className="font-extrabold text-black"
+      style={{ fontSize: "clamp(20px, 1.5vw, 28px)" }}
+    >
+      Coming soon...
+    </p>
+  ) : (
+    <CtaButton
+      href={tab.href}
+      onClick={tab.href ? undefined : () => onNavigate(tab.path)}
+    >
+      {tab.cta}
+    </CtaButton>
+  );
 
 /* ------------------------------ Desktop: tabs ------------------------------ */
 const DesktopEcosystem = ({ onNavigate }) => {
@@ -172,9 +191,7 @@ const DesktopEcosystem = ({ onNavigate }) => {
                   {active.desc}
                 </p>,
                 <div key="b" className="mt-[clamp(24px,2.6vw,48px)]">
-                  <CtaButton onClick={() => onNavigate(active.path)}>
-                    {active.cta}
-                  </CtaButton>
+                  <TabAction tab={active} onNavigate={onNavigate} />
                 </div>
               ].map((el) => (
                 <motion.div
@@ -232,7 +249,7 @@ const MobileEcosystem = ({ onNavigate }) => (
           {tab.tagline}
         </p>
         <div className="mt-8">
-          <CtaButton onClick={() => onNavigate(tab.path)}>{tab.cta}</CtaButton>
+          <TabAction tab={tab} onNavigate={onNavigate} />
         </div>
       </motion.article>
     ))}

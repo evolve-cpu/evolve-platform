@@ -1030,7 +1030,7 @@ const Community = () => {
             className="font-extrabold text-evolve-pink"
             style={{
               fontSize: "clamp(64px, 8vw, 128px)",
-              lineHeight: "clamp(48px, 7vw, 110px)",
+              lineHeight: "clamp(48px, 6vw, 110px)",
               letterSpacing: "-0.03em"
             }}
           >
@@ -1072,10 +1072,7 @@ const Community = () => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={trackCommunityJoin}
-              className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-[#1F1F1F] text-white text-[18px] md:text-[24px] font-bold leading-none transition-all duration-150 hover:opacity-90 active:shadow-none select-none"
-              style={{
-                boxShadow: "0 6px 0 #808080"
-              }}
+              className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[58px] rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow text-[18px] md:text-[24px] font-bold leading-none shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none select-none"
             >
               Join Us
             </a>

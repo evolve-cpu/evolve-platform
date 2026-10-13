@@ -12,7 +12,7 @@ import { supabase } from "../../supabaseClient";
 const SCENARIOS = [
   ["trial", "Trial active"],
   ["popup", "Trial ended pop-up"],
-  ["payg", "Pay as you go"],
+  ["payg", "Free membership"],
   ["subM", "Monthly plan"],
   ["subA", "Annual plan"]
 ];

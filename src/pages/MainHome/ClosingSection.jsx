@@ -6,8 +6,6 @@ import {
   marquee_vector_2
 } from "../../assets/images/Nav";
 
-const DISCORD_URL = "https://discord.gg/MmfaqCPdF7";
-
 const MARQUEE_CSS = `
 @keyframes closing-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .closing-marquee { animation: none !important; } }
@@ -34,7 +32,7 @@ const MarqueeGroup = () => (
   </div>
 );
 
-const ClosingSection = () => (
+const ClosingSection = ({ onStart }) => (
   <MotionConfig reducedMotion="user">
     <section className="relative w-full min-h-[80svh] md:min-h-screen bg-evolve-lavender-indigo border-y-2 border-evolve-yellow overflow-hidden flex flex-col">
       <style>{MARQUEE_CSS}</style>
@@ -54,13 +52,13 @@ const ClosingSection = () => (
             letterSpacing: "-0.03em"
           }}
         >
-          we’re here to change how you think,
+          We’re here to change how you think,
           <br className="hidden md:block" /> so you’ll never see the world, the
           <br className="hidden md:block" /> same way again.
         </h2>
 
         <div className="mt-10 md:mt-[clamp(32px,3.2vw,60px)]">
-          <CtaButton href={DISCORD_URL}>Explore community</CtaButton>
+          <CtaButton onClick={onStart}>Start for free</CtaButton>
         </div>
       </motion.div>
 

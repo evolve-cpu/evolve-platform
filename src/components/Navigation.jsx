@@ -121,9 +121,10 @@ const Navigation = ({
     { path: "/mentorship", label: "Mentorship Programme" },
     { path: "/portfolio-review", label: "Portfolio Review" },
     { path: "/community", label: "Community" },
+    { path: "/typetober", label: "Typetober" },
     { path: "/pricing", label: "Pricing" },
     { path: "/about", label: "About" },
-    { path: "/contact", label: "contact us", isModal: true }
+    { path: "/contact", label: "Contact Us", isModal: true }
   ];
 
   const isActive = (p) => {
@@ -509,7 +510,7 @@ const Navigation = ({
                       <span className="hidden md:inline">{fullName}</span>
                     </>
                   ) : (
-                    "sign in"
+                    "Sign in"
                   )}
                 </button>
               )}
@@ -559,21 +560,21 @@ const Navigation = ({
                     }}
                     className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
-                    my profile page
+                    My profile page
                   </button>
                 ) : (
                   <button
                     onClick={handleCompleteOnboarding}
                     className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
-                    complete your profile
+                    Complete your profile
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
                   className="mt-3 text-black font-extrabold underline flex items-center gap-2"
                 >
-                  log out
+                  Log out
                 </button>
                 {paymentLoading ? (
                   <p className="mt-5 text-black/40 text-[13px]">
@@ -654,21 +655,21 @@ const Navigation = ({
                 }}
                 className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >
-                my profile page
+                My profile page
               </button>
             ) : (
               <button
                 onClick={handleCompleteOnboarding}
                 className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >
-                complete your profile
+                Complete your profile
               </button>
             )}
             <button
               onClick={handleLogout}
               className="mt-3 text-black font-extrabold underline"
             >
-              log out
+              Log out
             </button>
             {paymentLoading ? (
               <p className="mt-5 text-black/40 text-[13px]">loading payment…</p>

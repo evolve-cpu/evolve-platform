@@ -21,11 +21,11 @@ import {
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
 
 const NAV_ITEMS = [
-  { path: "/", label: "home" },
-  { path: "/community", label: "community" },
-  { path: "/mentorship", label: "mentorship" },
-  { path: "/events", label: "events" },
-  { path: "/contact", label: "contact us", isModal: true }
+  { path: "/", label: "Home" },
+  { path: "/community", label: "Community" },
+  { path: "/mentorship", label: "Mentorship" },
+  { path: "/events", label: "Events" },
+  { path: "/contact", label: "Contact Us", isModal: true }
 ];
 
 const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;

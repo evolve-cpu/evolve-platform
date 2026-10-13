@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 // assets
 import {
@@ -13,6 +14,7 @@ import {
   hand_with_thunder,
   hand_with_thunder_mobile
 } from "../assets/images/Home";
+import { right_arrow_yellow } from "../assets/images/Home_images";
 
 const useIsMobile = (bp = 768) => {
   const [isMobile, setIsMobile] = useState(
@@ -29,6 +31,8 @@ const useIsMobile = (bp = 768) => {
 const Footer = ({ onContactClick }) => {
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const isActive = (path) => {
     if (!path) return false;
@@ -90,26 +94,26 @@ const Footer = ({ onContactClick }) => {
       </Link>
     );
 
-  const joinUsButton = (
-    <a
-      href="https://discord.gg/MmfaqCPdF7"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center justify-center w-[160px] md:w-[200px] h-[52px] md:h-[60px] rounded-[16px] bg-evolve-black text-white text-[18px] md:text-[22px] font-extrabold leading-none transition-all duration-150 hover:translate-y-[2px] hover:shadow-[0_4px_0_#806804] select-none"
-      style={{ boxShadow: "0 6px 0 #806804" }}
+  // same CTA (and destination) as the home hero's "Start for free"
+  const startButton = (
+    <button
+      type="button"
+      onClick={() => navigate(user ? "/app/profile" : "/signin")}
+      className="inline-flex items-center gap-3 rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow font-semibold px-8 py-4 text-[18px] md:text-[20px] leading-none shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none select-none"
     >
-      Join us
-    </a>
+      Start for free
+      <img src={right_arrow_yellow} alt="" className="w-5 h-5 md:w-6 md:h-6" />
+    </button>
   );
 
   const legal = (sizeClass) => (
     <div className={`${sizeClass} text-black`}>
       <Link to="/privacy" className="hover:text-evolve-pink transition-colors">
-        privacy policy
+        Privacy policy
       </Link>{" "}
       and{" "}
       <Link to="/terms" className="hover:text-evolve-pink transition-colors">
-        t&amp;c conditions
+        Terms &amp; conditions
       </Link>
     </div>
   );
@@ -166,7 +170,7 @@ const Footer = ({ onContactClick }) => {
               Ready to Be Remarkable?
             </h2>
 
-            <div className="mt-8">{joinUsButton}</div>
+            <div className="mt-8">{startButton}</div>
 
             <div className="h-px bg-black/70 my-10" />
 
@@ -211,7 +215,7 @@ const Footer = ({ onContactClick }) => {
             <div className="mt-10">{legal("text-[1.4rem]")}</div>
 
             <div className="mt-6 text-[0.95rem] text-black">
-              @2026 evolve. all rights reserved
+              @2026 evolve. All rights reserved
             </div>
           </div>
 
@@ -235,7 +239,7 @@ const Footer = ({ onContactClick }) => {
             Ready to Be Remarkable?
           </h2>
 
-          <div className="mt-6">{joinUsButton}</div>
+          <div className="mt-6">{startButton}</div>
 
           <div className="h-px bg-black/70 my-8" />
 
@@ -278,7 +282,7 @@ const Footer = ({ onContactClick }) => {
           <div className="mt-8">{legal("text-[1rem]")}</div>
 
           <div className="mt-3 text-[0.85rem] text-black">
-            @2026 evolve. all rights reserved
+            @2026 evolve. All rights reserved
           </div>
         </div>
       </div>

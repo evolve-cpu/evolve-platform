@@ -25,9 +25,21 @@ const SIZES = {
   }
 };
 
-const MemberCard = ({ member, photoBg, size = "lg" }) => {
+// socialBelow: icon sits under the text instead of beside the name (mobile sheet).
+const MemberCard = ({ member, photoBg, size = "lg", socialBelow = false }) => {
   const s = SIZES[size];
   const social = getSocial(member);
+  const socialLink = social && (
+    <a
+      href={social.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${member.name} on ${social.label}`}
+      className="shrink-0"
+    >
+      <img src={social.icon} alt="" className="w-6 h-6" />
+    </a>
+  );
 
   return (
     <article className="w-full">
@@ -53,17 +65,7 @@ const MemberCard = ({ member, photoBg, size = "lg" }) => {
         >
           {member.name}
         </h3>
-        {social && (
-          <a
-            href={social.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`${member.name} on ${social.label}`}
-            className="shrink-0"
-          >
-            <img src={social.icon} alt="" className="w-6 h-6" />
-          </a>
-        )}
+        {!socialBelow && socialLink}
       </div>
 
       <p
@@ -83,6 +85,10 @@ const MemberCard = ({ member, photoBg, size = "lg" }) => {
             {member.note}
           </p>
         </>
+      )}
+
+      {socialBelow && socialLink && (
+        <div className="mt-6 [&_img]:w-9 [&_img]:h-9">{socialLink}</div>
       )}
     </article>
   );

@@ -781,6 +781,9 @@ const PortfolioReview = () => {
               </p>
               <div className="mt-6">
                 <GetStartedButton trackLabel="pricing_desktop" />
+                <p className="mt-4 font-semibold text-black text-[14px] md:text-[clamp(14px,1vw,17px)]">
+                  *Free with annual subscription
+                </p>
               </div>
             </div>
 
@@ -873,6 +876,9 @@ const PortfolioReview = () => {
               </p>
               <div className="mt-6">
                 <GetStartedButton trackLabel="pricing_mobile" mobile />
+                <p className="mt-4 font-medium text-black/70 text-[14px] md:text-[clamp(14px,1vw,17px)]">
+                  *Free with annual subscription
+                </p>
               </div>
             </div>
 

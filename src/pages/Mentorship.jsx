@@ -731,6 +731,12 @@ const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
       >
         {price}
       </p>
+      <p
+        className="font-semibold text-black"
+        style={{ fontSize: "clamp(13px, 1.2vw, 15px)", marginTop: "8px" }}
+      >
+        *20% Off on Annual subscription
+      </p>
       <div
         className="w-full"
         style={{

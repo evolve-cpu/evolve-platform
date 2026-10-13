@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MotionConfig, motion, AnimatePresence } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import SEO from "../../components/SEO";
 import { right_arrow_yellow } from "../../assets/images/Home_images";
 import { useAuth } from "../../hooks/useAuth";
@@ -10,9 +10,9 @@ import { ITEM_PRICES, PLAN_PRICES, inr, tierFor } from "../../lib/membership";
 const CARD_BG = "#FFDC47";
 
 // ids match the tiers in lib/membership.js (PLAN_PRICES / tierFor)
-const AUDIENCES = [
-  { id: "student", label: "Student" },
-  { id: "pro", label: "Professional" }
+const TIERS = [
+  { id: "student", title: "Students" },
+  { id: "pro", title: "Professionals" }
 ];
 
 const PLAN_FEATURES = [
@@ -22,14 +22,13 @@ const PLAN_FEATURES = [
   "10% off mentorship"
 ];
 
-// Pay-as-you-go item prices are the same for every tier.
-const PAYG = {
-  title: "Pay as you go",
+// Free-membership item prices are the same for every tier.
+const FREE_PLAN = {
+  title: "Free Membership",
   price: inr(0),
   suffix: "to start",
   note: "Pay per event. Verified profile stays locked.",
   items: [
-    { label: "AI assistant", value: "Free", free: true },
     { label: "Daily news, microlearning & quizzes", value: "Free", free: true },
     { label: "Community events", value: inr(ITEM_PRICES.COMMUNITY) },
     { label: "Webinars", value: inr(ITEM_PRICES.WEBINAR) },
@@ -41,31 +40,31 @@ const PAYG = {
 };
 
 // `id` is the plan name the checkout API expects ("monthly" | "annual").
-function subscriptionsFor(tier) {
+const BILLING = [
+  { id: "monthly", label: "Monthly" },
+  { id: "annual", label: "Annually" }
+];
+
+function planDetails(tier, plan) {
   const { monthly, annual } = PLAN_PRICES[tier];
-  return [
-    {
-      id: "monthly",
-      title: "Monthly",
-      price: inr(monthly),
-      suffix: "/ month · cancel anytime",
-      features: [
-        ...PLAN_FEATURES.map((label) => ({ label, included: true })),
-        { label: "1 free portfolio review", included: false }
-      ]
-    },
-    {
-      id: "annual",
-      title: "Annually",
-      price: inr(annual),
-      suffix: `/ year · ${inr(annual / 12)} a month`,
-      badge: "20% Off",
-      features: [
-        ...PLAN_FEATURES.map((label) => ({ label, included: true })),
-        { label: "1 free portfolio review", included: true }
-      ]
-    }
-  ];
+  const isAnnual = plan === "annual";
+  return {
+    price: inr(isAnnual ? annual : monthly),
+    suffix: isAnnual
+      ? `/ year · ${inr(annual / 12)} a month`
+      : "/ month · cancel anytime",
+    badge: isAnnual ? "20% Off" : null,
+    features: [
+      ...PLAN_FEATURES.map((label) => ({ label, included: true })),
+      isAnnual
+        ? { label: "1 free portfolio review", included: true }
+        : {
+            label: "1 free portfolio review",
+            sub: "(free for annual plan)",
+            included: false
+          }
+    ]
+  };
 }
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -116,7 +115,7 @@ const PlanButton = ({ label, mobileLabel, onClick }) => (
 
 // Title + price block. The note slot keeps a fixed height on desktop so the
 // dividers line up across all three cards.
-const CardHeader = ({ title, price, suffix, note }) => (
+const CardHeader = ({ title, price, suffix, note, toggle }) => (
   <div>
     <h2
       className="font-bold text-evolve-black"
@@ -124,7 +123,10 @@ const CardHeader = ({ title, price, suffix, note }) => (
     >
       {title}
     </h2>
-    <div className="mt-14 md:mt-[clamp(48px,4.6vw,88px)] flex items-end flex-wrap gap-x-3 gap-y-1">
+    {toggle}
+    <div
+      className={`${toggle ? "mt-8 md:mt-[clamp(24px,2.4vw,48px)]" : "mt-14 md:mt-[clamp(48px,4.6vw,88px)]"} flex items-end flex-wrap gap-x-3 gap-y-1`}
+    >
       <span
         className="font-extrabold text-evolve-black"
         style={{ fontSize: "clamp(56px, 4.4vw, 84px)", lineHeight: 0.9, letterSpacing: "-0.04em" }}
@@ -171,7 +173,7 @@ const Divider = () => (
 
 const listTextStyle = { fontSize: "clamp(15px, 1.05vw, 20px)", lineHeight: 1.3 };
 
-const PaygCard = ({ plan, cta, onSelect }) => (
+const FreeCard = ({ plan, cta, onSelect }) => (
   <Card>
     <CardHeader {...plan} />
     <Divider />
@@ -199,61 +201,73 @@ const PaygCard = ({ plan, cta, onSelect }) => (
   </Card>
 );
 
-const SubscriptionCard = ({ plan, cta, onSelect }) => (
-  <Card badge={plan.badge}>
-    <CardHeader {...plan} />
-    <Divider />
-    <ul className="flex flex-col gap-7 md:gap-[clamp(18px,1.6vw,32px)]">
-      {plan.features.map((feature) => (
-        <li key={feature.label} className="flex items-start gap-5">
-          {feature.included ? <CheckIcon /> : <CrossIcon />}
-          <span className="font-semibold text-evolve-black max-w-[220px] md:max-w-[clamp(180px,11.5vw,230px)]" style={listTextStyle}>
-            {feature.label}
-            <span className="sr-only">{feature.included ? " (included)" : " (not included)"}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
-    <div className="mt-24 md:mt-auto md:pt-[clamp(32px,3vw,60px)]">
-      <PlanButton label={cta.label} mobileLabel={cta.mobileLabel} onClick={onSelect} />
-    </div>
-  </Card>
-);
-
-const AudienceToggle = ({ value, onChange }) => (
+const BillingToggle = ({ id, value, onChange }) => (
   <div
     role="tablist"
-    aria-label="Plan type"
-    className="mx-auto grid grid-cols-2 w-full max-w-[400px] md:max-w-[clamp(420px,30vw,580px)] gap-4 md:gap-[clamp(24px,2.4vw,48px)]"
+    aria-label="Billing period"
+    className="mt-6 md:mt-[clamp(20px,1.8vw,36px)] grid grid-cols-2 rounded-[10px] md:rounded-[clamp(10px,0.7vw,14px)] bg-evolve-yellow p-1.5 md:p-[clamp(4px,0.4vw,8px)] w-full max-w-[260px] md:max-w-[clamp(240px,19vw,380px)]"
   >
-    {AUDIENCES.map((audience) => {
-      const active = value === audience.id;
+    {BILLING.map((b) => {
+      const active = value === b.id;
       return (
         <button
-          key={audience.id}
+          key={b.id}
           type="button"
           role="tab"
           aria-selected={active}
-          onClick={() => onChange(audience.id)}
-          className={`relative rounded-[10px] md:rounded-[clamp(10px,0.8vw,16px)] py-2 md:py-[clamp(10px,1vw,20px)] font-bold transition-colors duration-200 ${active ? "text-white" : "text-[#806804] hover:text-evolve-black"}`}
-          style={{ fontSize: "clamp(15px, 1.15vw, 22px)" }}
+          onClick={() => onChange(b.id)}
+          className={`relative rounded-[8px] md:rounded-[clamp(8px,0.55vw,12px)] py-2 md:py-[clamp(6px,0.55vw,10px)] font-medium transition-colors duration-200 ${active ? "text-white" : "text-[#806804] hover:text-evolve-black"}`}
+          style={{ fontSize: "clamp(14px, 1.05vw, 20px)" }}
         >
           {active && (
             <motion.span
-              layoutId="pricing-audience-pill"
+              layoutId={`billing-pill-${id}`}
               className="absolute inset-0 rounded-[inherit] bg-evolve-pink"
-              transition={{ duration: 0.35, ease: EASE }}
+              transition={{ duration: 0.3, ease: EASE }}
             />
           )}
-          <span className="relative">{audience.label}</span>
+          <span className="relative">{b.label}</span>
         </button>
       );
     })}
   </div>
 );
 
+const TierCard = ({ tier, plan, onPlanChange, cta, onSelect }) => {
+  const details = planDetails(tier.id, plan);
+
+  return (
+    <Card badge={details.badge}>
+      <CardHeader
+        title={tier.title}
+        price={details.price}
+        suffix={details.suffix}
+        toggle={<BillingToggle id={tier.id} value={plan} onChange={onPlanChange} />}
+      />
+      <Divider />
+      <ul className="flex flex-col gap-7 md:gap-[clamp(18px,1.6vw,32px)]">
+        {details.features.map((feature) => (
+          <li key={feature.label} className="flex items-start gap-5">
+            {feature.included ? <CheckIcon /> : <CrossIcon />}
+            <span className="font-semibold text-evolve-black max-w-[220px] md:max-w-[clamp(180px,11.5vw,230px)]" style={listTextStyle}>
+              {feature.label}
+              {feature.sub && (
+                <span className="block mt-1 font-normal text-[0.7em]">{feature.sub}</span>
+              )}
+              <span className="sr-only">{feature.included ? " (included)" : " (not included)"}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-24 md:mt-auto md:pt-[clamp(32px,3vw,60px)]">
+        <PlanButton label={cta.label} mobileLabel={cta.mobileLabel} onClick={onSelect} />
+      </div>
+    </Card>
+  );
+};
+
 const PLAN_IDS = ["monthly", "annual"];
-const TIER_IDS = AUDIENCES.map((a) => a.id);
+const TIER_IDS = TIERS.map((t) => t.id);
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -268,13 +282,12 @@ const Pricing = () => {
   const resumeTier = TIER_IDS.includes(params.get("tier")) ? params.get("tier") : null;
   const resumePlan = PLAN_IDS.includes(params.get("plan")) ? params.get("plan") : null;
 
-  const [audience, setAudience] = useState(resumeTier || "student");
-  const subscriptions = subscriptionsFor(audience);
-
-  // signed in: open on the tier they'd actually be charged
-  useEffect(() => {
-    if (userTier && !resumeTier) setAudience(userTier);
-  }, [userTier, resumeTier]);
+  // billing period picked on each tier card
+  const [plans, setPlans] = useState(() => ({
+    student: "annual",
+    pro: "annual",
+    ...(resumeTier && resumePlan ? { [resumeTier]: resumePlan } : {})
+  }));
 
   // Same checkout as inside the app (MembershipProvider). The server prices
   // a plan by tierFor(user), so the student price needs a student ID first —
@@ -299,7 +312,7 @@ const Pricing = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, resumeTier, resumePlan]);
 
-  const paygCta = { label: "Continue", mobileLabel: "Continue" };
+  const freeCta = { label: "Continue", mobileLabel: "Continue" };
   const planCta = (plan) =>
     access.mode === "sub" && access.plan === plan
       ? { label: "Extend plan", mobileLabel: "Extend plan" }
@@ -309,7 +322,7 @@ const Pricing = () => {
     <MotionConfig reducedMotion="user">
       <SEO
         title="Pricing | Evolve"
-        description="Pick your plan and continue evolving. Pay as you go, or subscribe monthly or annually for full access to evolve."
+        description="Pick your plan and continue evolving. Start with a free membership, or subscribe monthly or annually for full access to evolve."
         path="/pricing"
       />
       <main className="w-full overflow-x-hidden bg-evolve-yellow">
@@ -336,36 +349,27 @@ const Pricing = () => {
             </motion.p>
 
             <motion.div
-              variants={fadeUp}
-              className="mt-10 md:mt-[clamp(56px,5.6vw,108px)] px-6 md:px-0"
+              variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+              className="mt-12 md:mt-[clamp(56px,5.6vw,108px)] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-[clamp(20px,2.2vw,44px)]"
             >
-              <AudienceToggle value={audience} onChange={setAudience} />
-            </motion.div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={audience}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-                className="mt-8 md:mt-[clamp(28px,2.6vw,52px)] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-[clamp(20px,2.2vw,44px)]"
-              >
-                <PaygCard
-                  plan={PAYG}
-                  cta={paygCta}
-                  onSelect={() => navigate(user ? "/app/profile" : "/signin")}
+              <FreeCard
+                plan={FREE_PLAN}
+                cta={freeCta}
+                onSelect={() => navigate(user ? "/app/profile" : "/signin")}
+              />
+              {TIERS.map((tier) => (
+                <TierCard
+                  key={tier.id}
+                  tier={tier}
+                  plan={plans[tier.id]}
+                  onPlanChange={(plan) =>
+                    setPlans((prev) => ({ ...prev, [tier.id]: plan }))
+                  }
+                  cta={planCta(plans[tier.id])}
+                  onSelect={() => subscribe(tier.id, plans[tier.id])}
                 />
-                {subscriptions.map((plan) => (
-                  <SubscriptionCard
-                    key={plan.id}
-                    plan={plan}
-                    cta={planCta(plan.id)}
-                    onSelect={() => subscribe(audience, plan.id)}
-                  />
-                ))}
-              </motion.div>
-            </AnimatePresence>
+              ))}
+            </motion.div>
           </motion.div>
         </section>
       </main>

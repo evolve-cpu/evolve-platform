@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Quote, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import CtaButton from "../MainHome/CtaButton";
 import { linkedin_logo } from "../../assets/images/Mentorship";
+import MobileMemberSheet, { MobileMemberGrid } from "./MobileMemberSheet";
 
 const BUILDER_FORM_URL = "https://forms.gle/rM6fbKVHxaY7Pnkx8";
 
@@ -86,6 +87,16 @@ const PlayIcon = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
     <path d="M8 5v14l11-7-11-7z" fill="#161616" />
   </svg>
+);
+
+// Pink quote marks on the yellow button (flips a card to its testimonial).
+const QuoteIcon = () => (
+  <span
+    aria-hidden="true"
+    className="font-extrabold text-evolve-pink leading-none translate-y-[0.22em] text-[48px] md:text-[clamp(44px,3.4vw,64px)]"
+  >
+    “
+  </span>
 );
 
 const PauseIcon = () => (
@@ -174,7 +185,7 @@ const FlipMedia = ({ b }) => {
             aria-label={`Read ${b.name}'s testimonial`}
             className={ROUND_BUTTON}
           >
-            <Quote className="w-6 h-6 md:w-[clamp(22px,1.6vw,30px)] md:h-[clamp(22px,1.6vw,30px)] fill-current" />
+            <QuoteIcon />
           </button>
         </div>
 
@@ -267,6 +278,9 @@ const BuildersSection = () => {
   const trackRef = useRef(null);
   const [active, setActive] = useState(0);
   const [playingIdx, setPlayingIdx] = useState(null);
+  const [sheetIdx, setSheetIdx] = useState(null);
+  const [sheetPlaying, setSheetPlaying] = useState(false);
+  const sheetBuilder = sheetIdx === null ? null : BUILDERS[sheetIdx];
   const [isDesktop, setIsDesktop] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -283,7 +297,8 @@ const BuildersSection = () => {
   const count = BUILDERS.length;
   const visible = isDesktop ? DESKTOP_VISIBLE : 1;
   const pages = Math.max(1, count - visible + 1);
-  const showControls = count > visible;
+  // mobile shows a grid + bottom sheet instead of the carousel
+  const showControls = isDesktop && count > visible;
 
   // Keep the dots in sync with manual swipes / scrolls.
   const handleScroll = () => {
@@ -346,7 +361,7 @@ const BuildersSection = () => {
         <div
           ref={trackRef}
           onScroll={handleScroll}
-          className={`mt-8 md:mt-[clamp(48px,4vw,80px)] md:mx-auto md:max-w-[min(82vw,1500px)] flex gap-6 md:gap-[2.1vw] overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+          className={`hidden md:flex mt-8 md:mt-[clamp(48px,4vw,80px)] md:mx-auto md:max-w-[min(82vw,1500px)] gap-6 md:gap-[2.1vw] overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
             count < DESKTOP_VISIBLE ? "md:justify-center" : ""
           }`}
         >
@@ -363,6 +378,32 @@ const BuildersSection = () => {
             </div>
           ))}
         </div>
+
+        <MobileMemberGrid
+          members={BUILDERS}
+          photoBg="rgba(0,0,0,0.1)"
+          onSelect={(i) => {
+            setSheetPlaying(false);
+            setSheetIdx(i);
+          }}
+        />
+        <MobileMemberSheet
+          open={Boolean(sheetBuilder)}
+          onClose={() => {
+            setSheetPlaying(false);
+            setSheetIdx(null);
+          }}
+          label={sheetBuilder?.name}
+        >
+          {sheetBuilder && (
+            <BuilderCard
+              key={sheetBuilder.name}
+              b={sheetBuilder}
+              isPlaying={sheetPlaying}
+              onToggle={setSheetPlaying}
+            />
+          )}
+        </MobileMemberSheet>
 
         {showControls && (
           <div className="mt-10 md:mt-[clamp(40px,4vw,80px)] mx-auto md:max-w-[min(30vw,600px)] flex items-center justify-between">

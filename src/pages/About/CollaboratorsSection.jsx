@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CtaButton from "../MainHome/CtaButton";
 import MemberCard from "./MemberCard";
-import MemberCarousel from "./MemberCarousel";
+import MobileMemberSheet, { MobileMemberGrid } from "./MobileMemberSheet";
 
 const PHOTO_BG = "#FFE470";
 const COLLABORATOR_PATH = "/portfolio-review/become-a-reviewer";
@@ -96,6 +97,8 @@ const COLLABORATORS = [
 
 const CollaboratorsSection = () => {
   const navigate = useNavigate();
+  const [openIdx, setOpenIdx] = useState(null);
+  const openMember = openIdx === null ? null : COLLABORATORS[openIdx];
 
   return (
     <section className="w-full bg-evolve-yellow">
@@ -131,7 +134,20 @@ const CollaboratorsSection = () => {
           ))}
         </div>
 
-        <MemberCarousel members={COLLABORATORS} photoBg={PHOTO_BG} size="sm" />
+        <MobileMemberGrid
+          members={COLLABORATORS}
+          photoBg={PHOTO_BG}
+          onSelect={setOpenIdx}
+        />
+        <MobileMemberSheet
+          open={Boolean(openMember)}
+          onClose={() => setOpenIdx(null)}
+          label={openMember?.name}
+        >
+          {openMember && (
+            <MemberCard member={openMember} photoBg={PHOTO_BG} socialBelow />
+          )}
+        </MobileMemberSheet>
 
         <div className="mt-14 md:mt-[4vw] flex justify-center">
           <CtaButton onClick={() => navigate(COLLABORATOR_PATH)}>

@@ -5,7 +5,7 @@ import { isTrialActive, trialDaysLeft } from "./trial";
 // actually charged, and the DB (membership_plans.sql) enforces access.
 //
 //   trial (30 days)  → everything open
-//   ended, no plan   → "pay as you go": verified badge + public profile
+//   ended, no plan   → "free membership": verified badge + public profile
 //                      lock, events/webinars/past sessions are pay-per-item
 //   ended, on a plan → everything open again; annual adds 1 free review
 //

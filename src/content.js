@@ -668,14 +668,14 @@ export const webinars = {
     heading: "evolve\nevents",
     // Desktop subtext (two lines)
     subtextDesktop:
-      "learn from people who've been there,\ndone that, and have the work to prove it.",
+      "Learn from people who've been there,\ndone that, and have the work to prove it.",
     // Mobile subtext (single line)
     subtextMobile:
-      "learn from people who've been there, done that, and have the work to prove it."
+      "Learn from people who've been there, done that, and have the work to prove it."
   },
 
   pastSection: {
-    heading: "Past webinars",
+    heading: "Past events",
     description:
       "Real talk from working professionals. Practical takeaways you can use immediately. Every session is recorded, so you never miss out."
   },
@@ -716,7 +716,7 @@ export const community = {
   },
 
   hero: {
-    heading: "Evolve \ncommunity",
+    heading: "evolve \ncommunity",
     subtext: "An inner circle built for creators.",
     // Discord / join link
     joinUrl: "https://discord.gg/MmfaqCPdF7"
