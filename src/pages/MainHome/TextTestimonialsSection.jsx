@@ -163,13 +163,13 @@ const TextTestimonialsSection = () => {
         ))}
       </div>
 
-      {/* Mobile: two rows — left→right, right→left */}
+      {/* Mobile: two rows, both left→right */}
       <div className="md:hidden flex flex-col gap-4 py-14">
         {rows.map((row, i) => (
           <MarqueeTrack
             key={i}
             items={row}
-            direction={i === 0 ? "right" : "left"}
+            direction="right"
             duration={28 + i * 4}
           />
         ))}

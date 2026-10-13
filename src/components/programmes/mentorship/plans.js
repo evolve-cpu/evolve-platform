@@ -24,8 +24,7 @@ export const PLANS = {
     tagline: "One-time · 5 sessions + 6 application calls",
     desc: "Everything in core mentorship, plus 6 extra calls — 2 per job application — so you're not applying alone.",
     features: [
-      "5 live 1:1 sessions with Yagnesh",
-      "6 calls · 2 calls per job application",
+      "11 live 1:1 sessions with Yagnesh",
       "Session recordings + notes after every call",
       "Resource shelf tailored to your goals",
       "Book a call anytime — paid top-ups if required"

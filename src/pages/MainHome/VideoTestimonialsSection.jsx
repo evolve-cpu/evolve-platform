@@ -25,6 +25,7 @@ const VIDEO_TESTIMONIALS = [
 ];
 
 const DESKTOP_VISIBLE = 3;
+const AUTO_SWIPE_MS = 2000;
 
 const PlayIcon = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -113,6 +114,8 @@ const VideoTestimonialsSection = () => {
   const trackRef = useRef(null);
   const [active, setActive] = useState(0);
   const [playingIdx, setPlayingIdx] = useState(null);
+  const [inView, setInView] = useState(false);
+  const [touching, setTouching] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -147,7 +150,7 @@ const VideoTestimonialsSection = () => {
 
   const goTo = (idx) => {
     const el = trackRef.current;
-    const target = el?.children[Math.max(0, Math.min(idx, pages - 1))];
+    const target = el?.children[(idx + pages) % pages];
     if (!target) return;
     el.scrollTo({
       left: target.offsetLeft - el.offsetLeft,
@@ -160,11 +163,22 @@ const VideoTestimonialsSection = () => {
     const el = trackRef.current;
     if (!el) return;
     const io = new IntersectionObserver(([entry]) => {
+      setInView(entry.isIntersecting);
       if (!entry.isIntersecting) setPlayingIdx(null);
     });
     io.observe(el);
     return () => io.disconnect();
   }, []);
+
+  // Auto-swipe to the next card (wrapping round) while the section is on
+  // screen — paused while a video plays or a finger is on the carousel.
+  // Keyed on `active`, so a manual swipe restarts the countdown.
+  useEffect(() => {
+    if (!showControls || !inView || touching || playingIdx !== null) return;
+    const id = setTimeout(() => goTo(active + 1), AUTO_SWIPE_MS);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, showControls, inView, touching, playingIdx, pages]);
 
   return (
     <section className="w-full bg-evolve-pink py-14 md:py-[clamp(72px,6vw,120px)]">
@@ -184,6 +198,11 @@ const VideoTestimonialsSection = () => {
         <div
           ref={trackRef}
           onScroll={handleScroll}
+          onTouchStart={() => setTouching(true)}
+          onTouchEnd={() => setTouching(false)}
+          onTouchCancel={() => setTouching(false)}
+          onMouseEnter={() => setTouching(true)}
+          onMouseLeave={() => setTouching(false)}
           className={`flex gap-4 md:gap-[2.1vw] overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
             count < DESKTOP_VISIBLE ? "md:justify-center" : ""
           }`}
@@ -207,7 +226,6 @@ const VideoTestimonialsSection = () => {
             <button
               type="button"
               onClick={() => goTo(active - 1)}
-              disabled={active === 0}
               aria-label="Previous testimonial"
               className="p-2 transition-opacity hover:opacity-70 disabled:opacity-30"
             >
@@ -229,7 +247,6 @@ const VideoTestimonialsSection = () => {
             <button
               type="button"
               onClick={() => goTo(active + 1)}
-              disabled={active >= pages - 1}
               aria-label="Next testimonial"
               className="p-2 transition-opacity hover:opacity-70 disabled:opacity-30"
             >

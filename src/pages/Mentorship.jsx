@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
 import { renderWithBreaks } from "../utils/renderWithBreaks";
+import { noWidow } from "../lib/noWidow";
 import { useAuth } from "../hooks/useAuth";
 
 import gsap from "gsap";
@@ -38,6 +39,13 @@ import {
   trackPlanSelected,
   trackLoginRequired
 } from "../utils/analytics";
+
+// noWidow for each paragraph of a multi-line answer
+const noWidowLines = (text) =>
+  text
+    .split(/(\n|<br\s*\/?>)/)
+    .map((part, i) => (i % 2 ? part : noWidow(part)))
+    .join("");
 
 /* ─────────────────────────────────────────────
    Testimonial data (edit text in src/content.js)
@@ -709,16 +717,6 @@ const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
         {title}
       </p>
       <p
-        className="font-bold"
-        style={{
-          color: "#DF0586",
-          fontSize: "clamp(13px, 1.3vw, 16px)",
-          marginTop: "6px"
-        }}
-      >
-        + Surprise Gift Worth ₹5,000 Inside!
-      </p>
-      <p
         className="font-extrabold text-black"
         style={{
           fontSize: "clamp(40px, 5vw, 64px)",
@@ -769,7 +767,19 @@ const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
         ))}
       </ul>
     </div>
-    <GetStartedCta onClick={onGetStarted} className="self-start mt-8" />
+    <div className="mt-8">
+      <GetStartedCta onClick={onGetStarted} />
+      <p
+        className="font-bold"
+        style={{
+          color: "#DF0586",
+          fontSize: "clamp(13px, 1.3vw, 16px)",
+          marginTop: "16px"
+        }}
+      >
+        Surprise Gift Worth ₹5,000 Inside!
+      </p>
+    </div>
   </div>
 );
 
@@ -1056,7 +1066,7 @@ const Mentorship = () => {
                 letterSpacing: "-0.02em"
               }}
             >
-              see how it works
+              See how it works
             </button>
           </div>
         </div>
@@ -1545,15 +1555,6 @@ const Mentorship = () => {
             <br />
             {COPY.framework.sessionsLine}
           </h2>
-          <p
-            className="text-black font-bold mt-6"
-            style={{
-              fontSize: "clamp(18px, 2vw, 40px)",
-              letterSpacing: "-2px"
-            }}
-          >
-            {renderWithBreaks(COPY.framework.sessionTime)}
-          </p>
         </div>
         <div className="bg-evolve-lavender-indigo flex flex-1 overflow-hidden py-12 px-10">
           <div
@@ -1621,12 +1622,6 @@ const Mentorship = () => {
             <br />
             {COPY.framework.sessionsLine}
           </h2>
-          <p
-            className="text-black font-bold mt-4"
-            style={{ fontSize: "24px", letterSpacing: "-1px" }}
-          >
-            {renderWithBreaks(COPY.framework.sessionTime)}
-          </p>
         </div>
         <div className="bg-evolve-lavender-indigo px-5 py-8 flex flex-col gap-8">
           {COPY.framework.stagesMobile.map(({ label, body }) => (
@@ -1903,7 +1898,7 @@ const Mentorship = () => {
               className="inline-flex items-center gap-2 font-extrabold text-white rounded-xl px-6 py-3 text-base transition-opacity hover:opacity-90 active:opacity-80"
               style={{ backgroundColor: "#000" }}
             >
-              connect with us
+              Connect with us
             </a>
           </div>
         </div>
@@ -2023,7 +2018,7 @@ const Mentorship = () => {
                     lineHeight: "1.2"
                   }}
                 >
-                  {item.q}
+                  {noWidow(item.q)}
                 </span>
                 <span className="ml-3 flex-shrink-0">
                   <svg
@@ -2058,7 +2053,7 @@ const Mentorship = () => {
                     paddingBottom: "20px"
                   }}
                 >
-                  {renderWithBreaks(item.a)}
+                  {renderWithBreaks(noWidowLines(item.a))}
                 </p>
               )}
               {i !== FAQS.length - 1 && (
@@ -2075,7 +2070,7 @@ const Mentorship = () => {
         </div>
         <div className="mt-10 flex flex-col items-start gap-3">
           <p className="font-semibold text-black text-base">
-            {COPY.faqSection.contactPrompt}
+            {noWidow(COPY.faqSection.contactPrompt)}
           </p>
           <a
             href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
@@ -2084,7 +2079,7 @@ const Mentorship = () => {
             className="inline-flex items-center gap-2 font-extrabold text-white rounded-xl px-6 py-3 text-base active:opacity-80"
             style={{ backgroundColor: "#000" }}
           >
-            connect with us
+            Connect with us
           </a>
         </div>
       </section>
