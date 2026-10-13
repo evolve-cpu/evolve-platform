@@ -11,8 +11,6 @@ import {
   hero_mentorship_tab,
   apply_now_button,
   apply_now_button_hover,
-  how_button,
-  how_button_hover,
   mentor_yagnesh,
   get_started_button,
   // get_started_button_hover
@@ -102,8 +100,8 @@ const TestimonialsMobile = () => {
   return (
     <section className="block md:hidden relative bg-evolve-yellow overflow-hidden py-10 px-5">
       <h2
-        className="text-black font-extrabold text-center w-full leading-tight mb-10"
-        style={{ fontSize: "clamp(32px, 10vw, 46px)", letterSpacing: "-0.5px" }}
+        className="text-black font-extrabold text-center w-full leading-tight mb-10 whitespace-nowrap"
+        style={{ fontSize: "min(8.4vw, 46px)", letterSpacing: "-0.5px" }}
       >
         {COPY.testimonials.sectionHeading}
       </h2>
@@ -780,7 +778,6 @@ const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
 ───────────────────────────────────────────── */
 const Mentorship = () => {
   const [applyHover, setApplyHover] = useState(false);
-  const [howHover, setHowHover] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [batch, setBatch] = useState(null);
@@ -1045,18 +1042,22 @@ const Mentorship = () => {
             {renderWithBreaks(COPY.cta.body)}
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
-            <img
-              src={howHover ? how_button_hover : how_button}
-              alt="how it works"
-              onMouseEnter={() => setHowHover(true)}
-              onMouseLeave={() => setHowHover(false)}
+            <button
+              type="button"
               onClick={() => {
                 trackCtaClick("how_it_works", "section2");
                 scrollTo(section5Ref);
               }}
-              className="cursor-pointer transition-opacity duration-150"
-              style={{ width: isMobile ? "180px" : "220px" }}
-            />
+              className="rounded-[14px] bg-evolve-yellow text-black font-extrabold border-2 border-black shadow-[4px_4px_0px_#000] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+              style={{
+                width: isMobile ? "210px" : "250px",
+                padding: isMobile ? "10px 0" : "14px 0",
+                fontSize: isMobile ? "18px" : "20px",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              see how it works
+            </button>
           </div>
         </div>
         <img
@@ -1225,7 +1226,7 @@ const Mentorship = () => {
         />
         <div className="relative z-20 flex flex-col px-5 pt-[10%]">
           <h2
-            className="text-black font-extrabold text-center w-full leading-tight"
+            className="text-black font-extrabold text-left w-full leading-tight"
             style={{
               fontSize: "clamp(32px, 10vw, 46px)",
               letterSpacing: "-0.5px"
