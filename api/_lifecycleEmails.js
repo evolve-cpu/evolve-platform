@@ -32,6 +32,24 @@ const HEADING_FONT =
   "'Bricolage Grotesque','Arial Black',Helvetica,Arial,sans-serif";
 const BODY_FONT = "Inter,Helvetica,Arial,sans-serif";
 
+// Gmail and most Outlooks ignore web fonts, so titles go out as images
+// drawn in Bricolage (public/images/email/, 3x for retina; width/height
+// here are the display size). The alt text is styled as the fallback for
+// clients that block images. A title without an image renders as text.
+const HEADINGS = {
+  "Welcome to evolve!": ["welcome.png", 250, 37],
+  "Sorry to see you go": ["sorry.png", 247, 37],
+  "You're in!": ["youre-in.png", 117, 37]
+};
+
+function heading(title) {
+  const img = HEADINGS[title];
+  const textStyle = `font-family:${HEADING_FONT};font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-0.03em;color:#DF0586`;
+  if (!img) return `<h1 style="margin:0;${textStyle}">${esc(title)}</h1>`;
+  const [file, w, h] = img;
+  return `<img src="${SITE}/images/email/${file}" width="${w}" height="${h}" alt="${esc(title)}" style="display:block;border:0;width:${w}px;height:${h}px;${textStyle}">`;
+}
+
 // Dark card with a yellow header band (pink title), body copy, a hairline
 // and the evolve logo (also used by the sign-in link email in
 // api/_manualGrant.js). Same look as the sign-in code email in
@@ -49,7 +67,7 @@ export function emailLayout({ title, preheader, paragraphs }) {
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:522px;background:#161616;border-radius:24px;overflow:hidden">
       <tr><td style="background:#FFD007;padding:40px 44px 38px;border-radius:24px 24px 0 0">
-        <h1 style="margin:0;font-family:${HEADING_FONT};font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-0.03em;color:#DF0586">${esc(title)}</h1>
+        ${heading(title)}
       </td></tr>
       <tr><td style="padding:36px 44px 32px;font-family:${BODY_FONT};color:#ffffff">
         ${paragraphs.map((p) => p.startsWith("<table") ? p : `<p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#ffffff">${p}</p>`).join("\n        ")}
