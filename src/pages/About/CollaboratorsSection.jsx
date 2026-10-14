@@ -47,7 +47,7 @@ const COLLABORATORS = [
   {
     name: "Padmaja Amin",
     role: "Product Designer at Stadium",
-    note: "external Jury & Webinar Speaker",
+    note: "External Jury & Webinar Speaker",
     driveId: "13ki61Czpt8uL_x0KcghutikQIT0CvVli",
     linkedin: "https://in.linkedin.com/in/padmaja-amin"
   },

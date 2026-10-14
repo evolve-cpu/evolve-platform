@@ -6,6 +6,9 @@ import { useAuth } from "../../hooks/useAuth";
 import TypetoberNav from "./TypetoberNav";
 import InkWall from "./InkWall";
 import { AuthSheet, PrizeSheet, GuideSheet, Lightbox } from "./Sheets";
+import evolve_black from "../../assets/images/Typetober/evolve_black.svg";
+import fontfabric_black from "../../assets/images/Typetober/fontfabric_black.svg";
+import rescript_logo from "../../assets/images/Typetober/rescript.png";
 import ProfileSheet from "./ProfileSheet";
 import UploadSheet from "./UploadSheet";
 import BulkUploadSheet, { BulkIcon } from "./BulkUploadSheet";
@@ -33,7 +36,7 @@ function Landing({ onAccept, currentDay }) {
         {/* The yellow panel is the one area the ink never covers (InkWall measures heroRef). */}
         <div
           ref={heroRef}
-          className="relative w-full md:w-[min(750px,calc(100%-64px))] bg-evolve-yellow text-black rounded-[28px] md:rounded-[32px] px-5 pt-6 pb-6 md:px-14 md:pt-12 md:pb-12 flex flex-col items-start md:items-center gap-4 md:gap-5 text-left md:text-center"
+          className="relative w-full md:w-[min(750px,calc(100%-64px))] bg-evolve-yellow text-black rounded-[28px] md:rounded-[32px] px-5 pt-6 pb-6 md:px-14 md:pt-10 md:pb-10 flex flex-col items-start md:items-center gap-4 md:gap-5 text-left md:text-center"
           style={{ pointerEvents: "auto" }}
         >
           <span
@@ -48,9 +51,27 @@ function Landing({ onAccept, currentDay }) {
                 : `Day ${currentDay} is open`} */}
           </span>
           <div className="flex flex-col md:items-center">
-            <span className="text-black font-bold text-[16px] md:text-[32px] mb-1">
-              evolve's
-            </span>
+            {/* evolve × Fontfabric presents */}
+            <div className="flex flex-col items-start md:items-center gap-1 md:gap-1.5 mb-2">
+              <div className="flex items-center gap-3 md:gap-4">
+                <img
+                  src={evolve_black}
+                  alt="evolve"
+                  className="h-[22px] md:h-[34px] w-auto"
+                />
+                <span className="text-black font-semibold text-[20px] md:text-[28px] leading-none">
+                  &times;
+                </span>
+                <img
+                  src={fontfabric_black}
+                  alt="Fontfabric"
+                  className="h-[30px] md:h-[44px] w-auto"
+                />
+              </div>
+              <span className="text-black font-semibold text-[15px] md:text-[20px] tracking-[.02em]">
+                presents
+              </span>
+            </div>
             <h1
               className="font-extrabold text-evolve-pink leading-[0.9] text-[60px] md:text-[130px]
              [text-shadow:4px_4px_0_#7A034A]
@@ -80,6 +101,14 @@ function Landing({ onAccept, currentDay }) {
           >
             Accept challenge
           </button>
+          <div className="flex items-center gap-2.5 self-start md:self-center text-black font-bold text-[13px] tracking-[.04em]">
+            <span>Stationery partner</span>
+            <img
+              src={rescript_logo}
+              alt="Rescript"
+              className="h-[34px] md:h-[44px] w-auto bg-white rounded-[9px] px-2 py-1 shadow-[0_0_0_2px_#161616]"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -736,7 +765,9 @@ export default function Typetober({ platform = false }) {
           user={user}
           onSuccess={(n) => {
             refresh();
-            showToast(`${n} ${n === 1 ? "letter is" : "letters are"} live on the wall`);
+            showToast(
+              `${n} ${n === 1 ? "letter is" : "letters are"} live on the wall`
+            );
           }}
         />
       )}
@@ -756,7 +787,9 @@ export default function Typetober({ platform = false }) {
           }}
           onJoin={() => {
             // someone opened a shared letter and decided to take part
-            track("typetober_join_from_shared", { typetober_stage: "accepted" });
+            track("typetober_join_from_shared", {
+              typetober_stage: "accepted"
+            });
             closeSheet();
             handleAccept();
           }}

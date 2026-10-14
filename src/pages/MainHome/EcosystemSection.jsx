@@ -17,8 +17,8 @@ const TABS = [
     id: "profile",
     label: "My Profile",
     image: my_profile,
-    tagline: "Showcase real skill growth, backed by data.",
-    desc: "Upload your portfolio and resume to create a dynamic designer profile. Map your technical capabilities, track core competencies over time, and display a comprehensive timeline of your academic and professional journey.",
+    tagline: "Make Your Skill Growth Visible.",
+    desc: "Stop letting your capabilities stay hidden behind portfolios and static PDFs. Build a living, verified profile that proves your design momentum with real competency data.",
     cta: "Know more",
     path: "/profile-creation"
   },
@@ -29,7 +29,7 @@ const TABS = [
     tagline: "Learn real-world practices from industry leaders.",
     desc: "Join live sessions, AMAs and workshops with practising designers. Ask questions, see how real work gets done, and catch up on recordings whenever you need them.",
     cta: "Know more",
-    path: "/app/events"
+    path: "/events"
   },
   {
     id: "community",
@@ -38,14 +38,15 @@ const TABS = [
     tagline: "Connect with an ambitious network of peers.",
     desc: "Meet designers who are as driven as you are. From AMAs and bookclubs to in-person activities, find the people who will push your work and your thinking forward.",
     cta: "Join community",
-    href: DISCORD_URL
+    // href: DISCORD_URL
+    path: "/community"
   },
   {
     id: "grow",
     label: "Grow",
     image: grow,
-    tagline: "Build consistent habits with bite-sized learning.",
-    desc: "Stay sharp with daily design news, quick quizzes and microlearning modules. Small, focused sessions that fit into your day and add up to real, measurable progress.",
+    tagline: "5 Minutes a Day. Continuous Career Growth.",
+    desc: "No endless courses or burnt-out schedules. Build an unstoppable daily habit with bite-sized lessons, instant quizzes, and curated industry news",
     cta: "Know more",
     path: "/grow"
   }

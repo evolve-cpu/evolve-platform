@@ -37,6 +37,7 @@ const NO_MEMBERSHIP = {
   gate: (_item, run) => run?.(),
   openTrialStatus: () => {},
   showWelcome: () => {},
+  showWelcomeBack: () => {},
   showVerified: () => {},
   showVerifyPrompt: () => {}
 };
@@ -653,6 +654,48 @@ function VipWelcome({ onClose }) {
   );
 }
 
+/* ── rejoined after deleting an account: the old trial carries on ───────── */
+function WelcomeBack({ access, onClose, onPlans }) {
+  const days = access.phase === "trial" ? access.daysLeft || 0 : 0;
+  return (
+    <Overlay onClose={onClose}>
+      <div className="ev-sheet" role="dialog" aria-modal="true">
+        <div className="ev-sheet-handle" />
+        <span className="ev-sheet-icon">{IC.clock}</span>
+        <div className="ev-sheet-title">Welcome back to evolve</div>
+        {days > 0 ? (
+          <p className="ev-sheet-hint">
+            Your free trial picks up where you left off — you have{" "}
+            <b style={{ color: "#FFD007", fontWeight: 600 }}>
+              {days} {days === 1 ? "day" : "days"}
+            </b>{" "}
+            of your trial left.
+          </p>
+        ) : (
+          <p className="ev-sheet-hint">
+            Your free trial was already used up on your previous account, so it doesn’t restart.
+            Pick a plan to unlock everything again.
+          </p>
+        )}
+        {days > 0 ? (
+          <button type="button" className="ev-btn" onClick={onClose}>
+            Continue {ArrowRight}
+          </button>
+        ) : (
+          <>
+            <button type="button" className="ev-btn" onClick={onPlans}>
+              See plans {ArrowRight}
+            </button>
+            <button type="button" className="at-link" onClick={onClose}>
+              Maybe later
+            </button>
+          </>
+        )}
+      </div>
+    </Overlay>
+  );
+}
+
 /* ── profile just built: prompt to verify (reference #verifyPromptSheet) ── */
 function VerifyPrompt({ onStart, onClose }) {
   return (
@@ -793,6 +836,7 @@ export function MembershipProvider({ children }) {
   const [pay, setPay] = useState(null);
   const [spent, setSpent] = useState(0);
   const [welcome, setWelcome] = useState(false);
+  const [welcomeBack, setWelcomeBack] = useState(false);
   const [status, setStatus] = useState(false);
   const [verified, setVerified] = useState(null); // { onPublish }
   const [verifyPrompt, setVerifyPrompt] = useState(null); // { onStart }
@@ -860,6 +904,7 @@ export function MembershipProvider({ children }) {
       gate,
       openTrialStatus: () => setStatus(true),
       showWelcome: () => setWelcome(true),
+      showWelcomeBack: () => setWelcomeBack(true),
       showVerified: (onPublish) => setVerified({ onPublish }),
       showVerifyPrompt: (onStart) => setVerifyPrompt({ onStart })
     }),
@@ -895,6 +940,16 @@ export function MembershipProvider({ children }) {
         />
       )}
       {welcome && <VipWelcome onClose={() => setWelcome(false)} />}
+      {welcomeBack && (
+        <WelcomeBack
+          access={access}
+          onClose={() => setWelcomeBack(false)}
+          onPlans={() => {
+            setWelcomeBack(false);
+            setPlansStep(2);
+          }}
+        />
+      )}
       {user && status && (
         <TrialStatus
           user={user}

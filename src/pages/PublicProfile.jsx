@@ -443,9 +443,9 @@ function EventsTabPane() {
         </p>
       </div>
 
-      {/* tabs, then search — side by side on desktop */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5 md:gap-4 mb-3.5 md:mb-6">
-        <div className="inline-flex self-start md:self-auto rounded-full border border-white/10 bg-[#1c1c1e] p-1 gap-0.5">
+      {/* tabs, then search under them on the left */}
+      <div className="flex flex-col items-start gap-3.5 md:gap-4 mb-3.5 md:mb-6">
+        <div className="inline-flex self-start rounded-full border border-white/10 bg-[#1c1c1e] p-1 gap-0.5">
           {["upcoming", "past"].map((f) => (
             <button
               key={f}
@@ -460,7 +460,7 @@ function EventsTabPane() {
           ))}
         </div>
 
-        <label className="flex items-center md:w-80 rounded-xl border border-white/10 bg-[#1c1c1e] focus-within:border-evolve-yellow/60 transition-colors">
+        <label className="flex items-center self-stretch md:self-start md:w-80 rounded-xl border border-white/10 bg-[#1c1c1e] focus-within:border-evolve-yellow/60 transition-colors">
           <svg className="ml-3 text-white/35 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-3.5-3.5" />
@@ -1002,6 +1002,19 @@ export default function PublicProfile({ platform = false }) {
         /* private mode — fine, it just shows again */
       }
     };
+    // rejoined after deleting an account — the old trial carried on
+    // (trial_rejoin_ledger.sql), so tell them what's left instead of the
+    // "30 days of VIP" welcome
+    if (user.trial_resumed_at) {
+      const key = `evolve_trial_resumed_seen_${user.id}`;
+      if (!seen(key)) {
+        mark(key);
+        mark(`evolve_trial_sheet_seen_${user.id}`);
+        mark(`evolve_trial_ended_seen_${user.id}`);
+        membership.showWelcomeBack();
+      }
+      return;
+    }
     if (access.phase === "trial") {
       const key = `evolve_trial_sheet_seen_${user.id}`;
       if (!seen(key)) {
@@ -1016,7 +1029,7 @@ export default function PublicProfile({ platform = false }) {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOwner, user?.id, access.phase, access.mode]);
+  }, [isOwner, user?.id, user?.trial_resumed_at, access.phase, access.mode]);
   const trialBadgeEnding = access.phase === "ended" && access.mode === "payg";
 
   // default collapsed on mobile (short summary) / expanded on desktop —
@@ -1326,7 +1339,9 @@ export default function PublicProfile({ platform = false }) {
         className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10 flex-shrink-0"
         style={{ backgroundColor: "#161618" }}
       >
-        <Link to="/">
+        {/* inside the platform the logo is the app's home (my profile), not
+            the marketing site's */}
+        <Link to={platform || isOwner ? "/app/profile" : "/"}>
           <img
             src={evolve_yellow_logo}
             alt="evolve"
@@ -1348,25 +1363,6 @@ export default function PublicProfile({ platform = false }) {
             <DiscordIcon className="w-6 h-6 flex-shrink-0" />
             Evolve community
           </a>
-          <button
-            title="notifications"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M13.73 21a2 2 0 01-3.46 0"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
           {user ? (
             <div className="relative" ref={accountMenuRef}>
               <button
@@ -1388,12 +1384,14 @@ export default function PublicProfile({ platform = false }) {
                   (user.name || "?")[0].toUpperCase()
                 )}
               </button>
+              {/* indicator only — a second tap target on a 32px avatar
+                  kept getting hit instead of the avatar (trial status is
+                  still one tap away on the profile header's badge) */}
               {isOwner && (
                 <TrialClockBadge
                   size={16}
                   ending={trialBadgeEnding}
-                  onClick={membership.openTrialStatus}
-                  className="absolute -bottom-1 -right-1"
+                  className="absolute -bottom-1 -right-1 pointer-events-none"
                 />
               )}
 
@@ -1745,23 +1743,6 @@ export default function PublicProfile({ platform = false }) {
                       buttonLabel={mentorshipEnrollment ? "Continue program" : undefined}
                     />
                   </div>
-                  {/* mobile-only stand-in for the "evolve community" link
-                      that's hidden from the top nav on small screens —
-                      same destination, just living down here instead. */}
-                  <a
-                    href="https://discord.gg/MmfaqCPdF7"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="md:hidden flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm font-semibold text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
-                  >
-                    <DiscordIcon className="w-6 h-6 flex-shrink-0" />
-                    Evolve community
-                    <img
-                      src={right_arrow_icon}
-                      alt=""
-                      className="w-3.5 h-3.5 ml-auto flex-shrink-0"
-                    />
-                  </a>
                 </Section>
               </div>
             )}

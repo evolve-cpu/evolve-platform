@@ -659,6 +659,7 @@
 // import LoadingScreen from "./components/LoadingScreen";
 // import TabletOrientationOverlay from "./components/TabletOrientationOverlay";
 // import ContactModal from "./components/ContactModal";
+import CookieConsent from "./components/CookieConsent";
 
 // // Lazy load non-critical routes
 // const AboutUs = lazy(() => import("./pages/AboutUs"));
@@ -1514,9 +1515,11 @@ const AppLayout = () => {
       window.removeEventListener("openContactModal", handleOpenContactModal);
   }, []);
 
-  // Load Google Sign-In script ONLY when needed (deferred)
+  // Load the Google Sign-In script straight away (async, so it doesn't block
+  // anything) — it used to wait for the loader, then an idle callback (up to
+  // 3s), then another 1s before prompting, so One Tap often showed up late.
   useEffect(() => {
-    if (googleScriptLoaded || isLoading) return;
+    if (googleScriptLoaded) return;
 
     const loadGoogleScript = () => {
       const script = document.createElement("script");
@@ -1562,17 +1565,14 @@ const AppLayout = () => {
       document.body.appendChild(script);
     };
 
-    // Delay Google script load until after critical content
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(loadGoogleScript, { timeout: 3000 });
-    } else {
-      setTimeout(loadGoogleScript, 3000);
-    }
-  }, [isLoading, googleScriptLoaded]);
+    loadGoogleScript();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Prompt Google One Tap (only when navbar is shown and user not logged in)
+  // Prompt Google One Tap as soon as the loader is gone (only when navbar is
+  // shown and user not logged in)
   useEffect(() => {
-    if (!showNavbar || !googleScriptLoaded) return;
+    if (!showNavbar || !googleScriptLoaded || isLoading) return;
 
     const promptGoogleOneTap = async () => {
       if (!window.google?.accounts?.id) return;
@@ -1601,12 +1601,11 @@ const AppLayout = () => {
       }
     );
 
-    const timeoutId = setTimeout(promptGoogleOneTap, 1000);
+    promptGoogleOneTap();
     return () => {
-      clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
-  }, [showNavbar, googleScriptLoaded]);
+  }, [showNavbar, googleScriptLoaded, isLoading]);
 
   // useEffect(() => {
   //   const isDevEnv = window.location.hostname.includes(
@@ -1875,6 +1874,7 @@ const App = () => {
               <AppLayout />
             </MembershipProvider>
           )}
+          {navigator.userAgent !== "ReactSnap" && <CookieConsent />}
         </BrowserRouter>
       </AuthProvider>
       {navigator.userAgent !== "ReactSnap" && <Analytics />}

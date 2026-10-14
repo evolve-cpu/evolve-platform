@@ -2,6 +2,8 @@ import { useState } from "react";
 import ReactDOM from "react-dom";
 import { signInWithGoogle, signInWithLinkedIn, sendOtp, verifyOtp } from "../../auth/signInLogic";
 import { accentFor } from "./lib/constants";
+import fontfabric_white from "../../assets/images/Typetober/fontfabric.svg";
+import rescript_logo from "../../assets/images/Typetober/rescript.png";
 
 /**
  * Shared bottom-sheet-on-mobile / centred-modal-on-desktop shell. Every
@@ -311,6 +313,18 @@ export function PrizeSheet({ open, onClose }) {
       <div className="font-extrabold text-[16px] mt-3">Prizes worth over</div>
       <div className="text-[52px] md:text-[56px] font-extrabold text-evolve-yellow leading-none mt-1.5 tracking-tight">
         ₹50,000
+      </div>
+
+      <h3 className={SECTION_LABEL}>Our partners</h3>
+      <div className="flex gap-3 mt-3">
+        <div className="flex-1 flex flex-col items-start gap-3 rounded-2xl border-2 border-white/15 p-3.5 text-white/50 text-[12px] font-bold tracking-[.04em]">
+          <span>In partnership with</span>
+          <img src={fontfabric_white} alt="Fontfabric" className="h-[42px] w-auto" />
+        </div>
+        <div className="flex-1 flex flex-col items-start gap-3 rounded-2xl border-2 border-white/15 p-3.5 text-white/50 text-[12px] font-bold tracking-[.04em]">
+          <span>Stationery partner</span>
+          <img src={rescript_logo} alt="Rescript" className="h-[42px] w-auto bg-white rounded-[9px] px-2 py-1" />
+        </div>
       </div>
 
       <h3 className={SECTION_LABEL}>Top prizes</h3>

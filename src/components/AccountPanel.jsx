@@ -1752,6 +1752,40 @@ function ProfileLinksRow({
   );
 }
 
+// The owner's saved portfolio + resume, as labelled pills at the right of
+// the My Profile identity header (icon-only on small screens). `dark` is for
+// the gold "evolve verified" card, where light-on-dark pills would vanish.
+function ProfileSourceLinks({ portfolio, resume, dark }) {
+  if (!portfolio && !resume) return null;
+  const pill = `flex items-center gap-1.5 rounded-full border text-xs font-bold px-2.5 sm:px-3.5 py-2 transition-colors ${
+    dark
+      ? "border-[#1a1a1a]/25 text-[#1a1a1a] bg-white/30 hover:bg-white/50"
+      : "border-white/10 bg-white/[0.04] text-white/70 hover:text-evolve-yellow hover:border-evolve-yellow/40"
+  }`;
+  return (
+    <div className="relative ml-auto flex items-center gap-2 flex-shrink-0">
+      {portfolio && (
+        <a href={withScheme(portfolio)} target="_blank" rel="noopener noreferrer" title="Portfolio" className={pill}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+          <span className="hidden sm:inline">Portfolio</span>
+        </a>
+      )}
+      {resume && (
+        <a href={withScheme(resume)} target="_blank" rel="noopener noreferrer" title="Resume" className={pill}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M9 13h6M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <span className="hidden sm:inline">Resume</span>
+        </a>
+      )}
+    </div>
+  );
+}
+
 // precise experience — replaces the old 8-bucket range strip. Accepts a
 // numeric work_experience from newly-built profiles, and falls back to a
 // best-effort midpoint parse of the old bucket strings ("2-5", "15+", "<1")
@@ -2418,11 +2452,11 @@ function ProfileUploadSheet({
           <>
             <div>
               <h3 className="text-white font-bold text-lg">
-                Upload resume or portfolio
+                Upload resume and portfolio
               </h3>
               <p className="text-white/40 text-xs mt-1">
-                We'll build your AI profile from whatever you give us — one is
-                enough, both is better.
+                We need both your portfolio and your resume to build your AI
+                profile.
               </p>
             </div>
 
@@ -2493,6 +2527,9 @@ export function ProfileTabPane({ user }) {
 
   const [aiProfile, setAiProfile] = useState(null);
   const [savedSocialLinks, setSavedSocialLinks] = useState([]);
+  // what's actually saved (the link/file state above also tracks the
+  // upload sheet's in-progress edits) — drives the header's pills
+  const [savedSources, setSavedSources] = useState({ portfolio: null, resume: null });
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [building, setBuilding] = useState(false);
@@ -2541,6 +2578,10 @@ export function ProfileTabPane({ user }) {
         setPortfolioFileUrl(data.portfolio_file_url || null);
         setResumeLink(data.resume_link || "");
         setResumeFileUrl(data.resume_file_url || null);
+        setSavedSources({
+          portfolio: data.portfolio_link || data.portfolio_file_url || null,
+          resume: data.resume_link || data.resume_file_url || null
+        });
         setAiProfile(data.ai_profile || null);
         setSavedSocialLinks(data.social_links || []);
         setIsPublic(!!data.ai_profile_public);
@@ -2685,16 +2726,26 @@ export function ProfileTabPane({ user }) {
     return data?.publicUrl || null;
   }
 
+  // both are required to build the AI profile — a file uploaded on an
+  // earlier build still counts, so updating doesn't force a re-upload
   const hasPortfolioValue =
-    portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFile;
+    (portfolioMode === "link" ? !!portfolioLink.trim() : !!portfolioFile) ||
+    !!portfolioFileUrl;
   const hasResumeValue =
-    resumeMode === "link" ? !!resumeLink.trim() : !!resumeFile;
-  const canBuild = hasPortfolioValue || hasResumeValue;
+    (resumeMode === "link" ? !!resumeLink.trim() : !!resumeFile) ||
+    !!resumeFileUrl;
+  const canBuild = hasPortfolioValue && hasResumeValue;
 
   async function handleBuildProfile() {
     setErrorMsg("");
     if (!canBuild) {
-      setErrorMsg("add at least a portfolio or a resume first.");
+      setErrorMsg(
+        !hasPortfolioValue && !hasResumeValue
+          ? "add both your portfolio and your resume first."
+          : !hasPortfolioValue
+            ? "add your portfolio too — we need both to build your profile."
+            : "add your resume too — we need both to build your profile."
+      );
       return;
     }
 
@@ -2750,6 +2801,10 @@ export function ProfileTabPane({ user }) {
         setPortfolioFileUrl(saved.portfolio_file_url || null);
         setResumeLink(saved.resume_link || "");
         setResumeFileUrl(saved.resume_file_url || null);
+        setSavedSources({
+          portfolio: saved.portfolio_link || saved.portfolio_file_url || null,
+          resume: saved.resume_link || saved.resume_file_url || null
+        });
       }
 
       const extractRes = await fetch(
@@ -2946,6 +3001,11 @@ export function ProfileTabPane({ user }) {
           </p>
           {verifyButton && <div className="mt-1">{verifyButton}</div>}
         </div>
+        <ProfileSourceLinks
+          portfolio={savedSources.portfolio}
+          resume={savedSources.resume}
+          dark={isVerified}
+        />
       </div>
 
       {profileLocked && (
@@ -3059,6 +3119,17 @@ export function ProfileTabPane({ user }) {
               onUpdate={() => setUploadOpen(true)}
             />
 
+            <p className="text-white/40 text-xs leading-relaxed -mt-2">
+              AI can make mistakes - please reach out to{" "}
+              <a
+                href="mailto:content@evolvedesign.academy"
+                className="text-white/60 underline hover:text-evolve-yellow"
+              >
+                content@evolvedesign.academy
+              </a>{" "}
+              to report inaccuracies
+            </p>
+
             {errorMsg && !uploadOpen && (
               <p className="text-red-400 text-xs">{errorMsg}</p>
             )}
@@ -3091,7 +3162,7 @@ export function ProfileTabPane({ user }) {
               Build your evolve profile
             </p>
             <p className="text-[15px] leading-normal max-w-[290px] mb-7" style={{ color: "#9a9a9a" }}>
-              Share your resume or portfolio. We'll map your skills, strengths and journey for you.
+              Share your resume and portfolio. We'll map your skills, strengths and journey for you.
             </p>
             <button
               type="button"

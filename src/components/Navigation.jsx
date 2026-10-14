@@ -37,6 +37,22 @@ const MIXED_BR = 16;
 const NAVBAR_SCROLL_HIDE = true;
 // ─────────────────────────────────────────────────────────────────────────────
 
+// The site menu — also used by the Typetober board's nav
+// (src/pages/Typetober/TypetoberNav.jsx), so keep the two in sync here.
+export const SITE_NAV_ITEMS = [
+  { path: "/", label: "Home" },
+  { path: "/profile-creation", label: "Profile Creation" },
+  { path: "/grow", label: "Grow" },
+  { path: "/events", label: "Events" },
+  { path: "/mentorship", label: "Mentorship Programme" },
+  { path: "/portfolio-review", label: "Portfolio Review" },
+  { path: "/community", label: "Community" },
+  { path: "/typetober", label: "Typetober" },
+  { path: "/pricing", label: "Pricing" },
+  { path: "/about", label: "About" },
+  { path: "/contact", label: "Contact Us", isModal: true }
+];
+
 const Navigation = ({
   onContactClick,
   showNavbar = true,
@@ -127,19 +143,7 @@ const Navigation = ({
     navigate("/app/profile");
   };
 
-  const navItems = [
-    { path: "/", label: "Home" },
-    { path: "/profile-creation", label: "Profile Creation" },
-    { path: "/grow", label: "Grow" },
-    { path: "/events", label: "Events" },
-    { path: "/mentorship", label: "Mentorship Programme" },
-    { path: "/portfolio-review", label: "Portfolio Review" },
-    { path: "/community", label: "Community" },
-    { path: "/typetober", label: "Typetober" },
-    { path: "/pricing", label: "Pricing" },
-    { path: "/about", label: "About" },
-    { path: "/contact", label: "Contact Us", isModal: true }
-  ];
+  const navItems = SITE_NAV_ITEMS;
 
   const isActive = (p) => {
     if (p === "/" && location.pathname === "/") return true;

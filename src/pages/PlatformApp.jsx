@@ -24,6 +24,8 @@ import Typetober from "./Typetober/Typetober";
  *
  * The 30-day trial starts here, the first time someone lands on the platform
  * (public.start_trial(), see platform_entry_trial.sql) — not at sign-up.
+ * Someone who deleted their account and came back resumes the old trial
+ * instead of getting a new one (trial_rejoin_ledger.sql).
  */
 export default function PlatformApp() {
   const { user, setUser, authLoading, refreshUser } = useAuth();
@@ -40,11 +42,19 @@ export default function PlatformApp() {
       return;
     }
     let cancelled = false;
-    supabase.rpc("start_trial").then(({ data, error }) => {
+    supabase.rpc("start_trial").then(async ({ data, error }) => {
       if (cancelled) return;
       if (error) {
         console.error("start_trial error:", error);
       } else {
+        // was this a resumed trial (deleted account, same email)? drives the
+        // "welcome back, N days left" sheet in PublicProfile.jsx
+        const { data: row } = await supabase
+          .from("profiles")
+          .select("trial_resumed_at")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
         // patched in place rather than refreshUser(), which would flip
         // authLoading and remount the whole platform
         setUser((u) =>
@@ -52,7 +62,8 @@ export default function PlatformApp() {
             ? {
                 ...u,
                 trial_started_at: u.trial_started_at || new Date().toISOString(),
-                trial_ends_at: data ?? u.trial_ends_at
+                trial_ends_at: data ?? u.trial_ends_at,
+                trial_resumed_at: row?.trial_resumed_at ?? u.trial_resumed_at ?? null
               }
             : u
         );

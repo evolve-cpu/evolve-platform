@@ -27,14 +27,18 @@ const FREE_PLAN = {
   title: "Free Membership",
   price: inr(0),
   suffix: "to start",
-  note: "Pay per event. Verified profile stays locked.",
+  note: "Start with a 30-day free trial, then choose the plan that works for you.",
   items: [
     { label: "Daily news, microlearning & quizzes", value: "Free", free: true },
     { label: "Community events", value: inr(ITEM_PRICES.COMMUNITY) },
     { label: "Webinars", value: inr(ITEM_PRICES.WEBINAR) },
     { label: "Past sessions", value: inr(ITEM_PRICES.RECORDING) },
     { label: "Portfolio review", value: inr(ITEM_PRICES.REVIEW) },
-    { label: "Mentorship programme", value: inr(ITEM_PRICES.MENTOR_MIN), sub: "onwards" },
+    {
+      label: "Mentorship programme",
+      value: inr(ITEM_PRICES.MENTOR_MIN),
+      sub: "onwards"
+    },
     { label: "Verified profile", value: "Plan only" }
   ]
 };
@@ -119,7 +123,11 @@ const CardHeader = ({ title, price, suffix, note, toggle }) => (
   <div>
     <h2
       className="font-bold text-evolve-black"
-      style={{ fontSize: "clamp(28px, 2.1vw, 40px)", lineHeight: 1.1, letterSpacing: "-0.01em" }}
+      style={{
+        fontSize: "clamp(28px, 2.1vw, 40px)",
+        lineHeight: 1.1,
+        letterSpacing: "-0.01em"
+      }}
     >
       {title}
     </h2>
@@ -129,7 +137,11 @@ const CardHeader = ({ title, price, suffix, note, toggle }) => (
     >
       <span
         className="font-extrabold text-evolve-black"
-        style={{ fontSize: "clamp(56px, 4.4vw, 84px)", lineHeight: 0.9, letterSpacing: "-0.04em" }}
+        style={{
+          fontSize: "clamp(56px, 4.4vw, 84px)",
+          lineHeight: 0.9,
+          letterSpacing: "-0.04em"
+        }}
       >
         {price}
       </span>
@@ -171,7 +183,10 @@ const Divider = () => (
   <hr className="my-8 md:my-[clamp(24px,2vw,40px)] border-0 border-t border-black/20" />
 );
 
-const listTextStyle = { fontSize: "clamp(15px, 1.05vw, 20px)", lineHeight: 1.3 };
+const listTextStyle = {
+  fontSize: "clamp(15px, 1.05vw, 20px)",
+  lineHeight: 1.3
+};
 
 const FreeCard = ({ plan, cta, onSelect }) => (
   <Card>
@@ -180,7 +195,10 @@ const FreeCard = ({ plan, cta, onSelect }) => (
     <ul className="flex flex-col gap-6 md:gap-[clamp(16px,1.4vw,28px)]">
       {plan.items.map((item) => (
         <li key={item.label} className="flex items-start justify-between gap-4">
-          <span className="font-semibold text-evolve-black max-w-[60%] md:max-w-[clamp(140px,10vw,200px)]" style={listTextStyle}>
+          <span
+            className="font-semibold text-evolve-black max-w-[60%] md:max-w-[clamp(140px,10vw,200px)]"
+            style={listTextStyle}
+          >
             {item.label}
           </span>
           <span
@@ -189,14 +207,20 @@ const FreeCard = ({ plan, cta, onSelect }) => (
           >
             {item.value}
             {item.sub && (
-              <span className="block font-semibold text-[0.7em] leading-none">{item.sub}</span>
+              <span className="block font-semibold text-[0.7em] leading-none">
+                {item.sub}
+              </span>
             )}
           </span>
         </li>
       ))}
     </ul>
     <div className="mt-12 md:mt-auto md:pt-[clamp(32px,3vw,60px)]">
-      <PlanButton label={cta.label} mobileLabel={cta.mobileLabel} onClick={onSelect} />
+      <PlanButton
+        label={cta.label}
+        mobileLabel={cta.mobileLabel}
+        onClick={onSelect}
+      />
     </div>
   </Card>
 );
@@ -242,25 +266,38 @@ const TierCard = ({ tier, plan, onPlanChange, cta, onSelect }) => {
         title={tier.title}
         price={details.price}
         suffix={details.suffix}
-        toggle={<BillingToggle id={tier.id} value={plan} onChange={onPlanChange} />}
+        toggle={
+          <BillingToggle id={tier.id} value={plan} onChange={onPlanChange} />
+        }
       />
       <Divider />
       <ul className="flex flex-col gap-7 md:gap-[clamp(18px,1.6vw,32px)]">
         {details.features.map((feature) => (
           <li key={feature.label} className="flex items-start gap-5">
             {feature.included ? <CheckIcon /> : <CrossIcon />}
-            <span className="font-semibold text-evolve-black max-w-[220px] md:max-w-[clamp(180px,11.5vw,230px)]" style={listTextStyle}>
+            <span
+              className="font-semibold text-evolve-black max-w-[220px] md:max-w-[clamp(180px,11.5vw,230px)]"
+              style={listTextStyle}
+            >
               {feature.label}
               {feature.sub && (
-                <span className="block mt-1 font-normal text-[0.7em]">{feature.sub}</span>
+                <span className="block mt-1 font-normal text-[0.7em]">
+                  {feature.sub}
+                </span>
               )}
-              <span className="sr-only">{feature.included ? " (included)" : " (not included)"}</span>
+              <span className="sr-only">
+                {feature.included ? " (included)" : " (not included)"}
+              </span>
             </span>
           </li>
         ))}
       </ul>
       <div className="mt-24 md:mt-auto md:pt-[clamp(32px,3vw,60px)]">
-        <PlanButton label={cta.label} mobileLabel={cta.mobileLabel} onClick={onSelect} />
+        <PlanButton
+          label={cta.label}
+          mobileLabel={cta.mobileLabel}
+          onClick={onSelect}
+        />
       </div>
     </Card>
   );
@@ -279,8 +316,12 @@ const Pricing = () => {
   // ?tier=&plan= is set when a signed-out visitor picks a plan; they come
   // back here after sign-in and checkout picks up where they left off
   const params = new URLSearchParams(location.search);
-  const resumeTier = TIER_IDS.includes(params.get("tier")) ? params.get("tier") : null;
-  const resumePlan = PLAN_IDS.includes(params.get("plan")) ? params.get("plan") : null;
+  const resumeTier = TIER_IDS.includes(params.get("tier"))
+    ? params.get("tier")
+    : null;
+  const resumePlan = PLAN_IDS.includes(params.get("plan"))
+    ? params.get("plan")
+    : null;
 
   // billing period picked on each tier card
   const [plans, setPlans] = useState(() => ({
@@ -305,7 +346,8 @@ const Pricing = () => {
 
   const resumed = useRef(false);
   useEffect(() => {
-    if (authLoading || !user || !resumeTier || !resumePlan || resumed.current) return;
+    if (authLoading || !user || !resumeTier || !resumePlan || resumed.current)
+      return;
     resumed.current = true;
     navigate("/pricing", { replace: true });
     subscribe(resumeTier, resumePlan);
@@ -336,7 +378,11 @@ const Pricing = () => {
             <motion.h1
               variants={fadeUp}
               className="text-center font-extrabold text-evolve-pink"
-              style={{ fontSize: "clamp(56px, 6.2vw, 120px)", lineHeight: 1, letterSpacing: "-0.05em" }}
+              style={{
+                fontSize: "clamp(56px, 6.2vw, 120px)",
+                lineHeight: 1,
+                letterSpacing: "-0.05em"
+              }}
             >
               Pricing
             </motion.h1>

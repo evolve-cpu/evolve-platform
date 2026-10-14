@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { findFreeSlug } from "../lib/slug";
 import { callAdminApi } from "../supabaseAdminClient";
+import { excludeIfTeam } from "../lib/clarity";
 
 /**
  * AuthContext
@@ -48,6 +49,7 @@ export function AuthProvider({ children }) {
         window.history.replaceState(null, "", window.location.pathname);
       }
       const authUser = data?.session?.user;
+      excludeIfTeam(authUser?.email);
       if (authUser) loadProfile(authUser);
       else setAuthLoading(false);
     });
@@ -60,6 +62,7 @@ export function AuthProvider({ children }) {
         window.history.replaceState(null, "", window.location.pathname);
       }
       const authUser = session?.user;
+      excludeIfTeam(authUser?.email);
       if (!authUser) {
         loadedUserIdRef.current = null;
         setUser(null);
@@ -215,6 +218,8 @@ export function AuthProvider({ children }) {
       growth_stage:            profile.growth_stage ?? 0,
       trial_ends_at:           profile.trial_ends_at ?? null,
       trial_started_at:        profile.trial_started_at ?? null,
+      // set when a deleted account's trial was resumed (trial_rejoin_ledger.sql)
+      trial_resumed_at:        profile.trial_resumed_at ?? null,
       // after-trial membership (see src/lib/membership.js)
       designation:             profile.designation ?? null,
       plan:                    profile.plan ?? null,
