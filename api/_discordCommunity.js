@@ -15,7 +15,10 @@
 // of the feed on the next sync. Underscore prefix = not its own function.
 
 const API = "https://discord.com/api/v10";
-const SYNC_EVERY_MS = 5 * 60 * 1000;
+const SYNC_EVERY_MS = 2 * 60 * 1000;
+// a sync that dies mid-way (Vercel can stop a function once it has
+// answered) frees the slot after this long, so the next viewer retries
+const LEASE_MS = 60 * 1000;
 const PER_CHANNEL = 50;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const BUCKET = "community-media";
@@ -97,6 +100,14 @@ async function toRow(db, msg, channel, existing) {
   };
 }
 
+// A forwarded message keeps its text and files in message_snapshots, not
+// on the message itself — lift them up so it isn't skipped as empty.
+function normalize(m) {
+  const snap = m.message_snapshots?.[0]?.message;
+  if (!snap || m.content || m.attachments?.length) return m;
+  return { ...m, content: snap.content || "", attachments: snap.attachments || [], mentions: snap.mentions || [] };
+}
+
 export async function syncChannels(db) {
   const { token, channels } = config();
   if (!token || !channels.length) throw new Error("DISCORD_BOT_TOKEN / DISCORD_COMMUNITY_CHANNEL_IDS not set");
@@ -106,10 +117,12 @@ export async function syncChannels(db) {
 
   for (const info of infos) {
     const channel = { id: info.id, name: info.name, guild_id: info.guild_id, names };
-    const msgs = (await discord(token, `/channels/${info.id}/messages?limit=${PER_CHANNEL}`)).filter(
-      // ordinary posts and replies; skip joins, pins and other system lines
-      (m) => (m.type === 0 || m.type === 19) && !m.author?.bot && (m.content || m.attachments?.length)
-    );
+    const msgs = (await discord(token, `/channels/${info.id}/messages?limit=${PER_CHANNEL}`))
+      .map(normalize)
+      .filter(
+        // ordinary posts and replies; skip joins, pins and other system lines
+        (m) => (m.type === 0 || m.type === 19) && !m.author?.bot && (m.content || m.attachments?.length)
+      );
 
     const ids = msgs.map((m) => m.id);
     const { data: existingRows } = ids.length
@@ -117,9 +130,10 @@ export async function syncChannels(db) {
       : { data: [] };
     const existing = Object.fromEntries((existingRows || []).map((r) => [r.id, r]));
 
-    const rows = [];
-    for (const m of msgs) rows.push(await toRow(db, m, channel, existing[m.id]));
-    if (rows.length) {
+    // newest first, saved 5 at a time, so a sync that gets cut off still
+    // lands the latest posts
+    for (let i = 0; i < msgs.length; i += 5) {
+      const rows = await Promise.all(msgs.slice(i, i + 5).map((m) => toRow(db, m, channel, existing[m.id])));
       const { error } = await db.from("community_posts").upsert(rows, { onConflict: "id" });
       if (error) throw new Error(error.message);
     }
@@ -139,30 +153,39 @@ export async function syncChannels(db) {
   }
 }
 
-// Claim the sync slot (one winner per window), then pull. A failed pull is
-// recorded and the feed is served from what's already stored.
+// Claim the sync slot — due (last success older than SYNC_EVERY_MS) and not
+// already running (or its lease ran out) — then pull. Success and failure
+// both release the slot; a failure is recorded in last_error.
 export async function syncIfStale(db) {
-  const cutoff = new Date(Date.now() - SYNC_EVERY_MS).toISOString();
+  const now = Date.now();
+  const due = new Date(now - SYNC_EVERY_MS).toISOString();
+  const leaseGone = new Date(now - LEASE_MS).toISOString();
   const { data: claimed } = await db
     .from("community_sync_state")
-    .update({ last_synced_at: new Date().toISOString() })
+    .update({ sync_started_at: new Date(now).toISOString() })
     .eq("id", 1)
-    .or(`last_synced_at.is.null,last_synced_at.lt.${cutoff}`)
+    .or(`last_synced_at.is.null,last_synced_at.lt.${due}`)
+    .or(`sync_started_at.is.null,sync_started_at.lt.${leaseGone}`)
     .select("id")
     .maybeSingle();
   if (!claimed) return;
+  let lastError = null;
   try {
     await syncChannels(db);
-    await db.from("community_sync_state").update({ last_error: null }).eq("id", 1);
   } catch (err) {
     console.error("community sync failed:", err.message);
-    await db.from("community_sync_state").update({ last_error: err.message.slice(0, 500) }).eq("id", 1);
+    lastError = err.message.slice(0, 500);
   }
+  await db
+    .from("community_sync_state")
+    .update({ last_synced_at: new Date().toISOString(), sync_started_at: null, last_error: lastError })
+    .eq("id", 1);
 }
 
 export async function communityFeed(db) {
-  // don't make the reader wait more than a few seconds on Discord
-  await Promise.race([syncIfStale(db), new Promise((r) => setTimeout(r, 6000))]);
+  // don't make the reader wait long on Discord; a slow first sync carries on
+  // from where it stopped on the next visit
+  await Promise.race([syncIfStale(db), new Promise((r) => setTimeout(r, 8000))]);
   const { data, error } = await db
     .from("community_posts")
     .select("id, channel_id, channel_name, author_name, author_avatar_url, content, attachments, reactions, jump_url, posted_at")
