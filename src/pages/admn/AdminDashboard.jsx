@@ -7,6 +7,7 @@ import AIProfilesTab from "./AIProfilesTab";
 import MentorshipV2Tab from "./MentorshipV2Tab";
 import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
+import GrantAccessTab from "./GrantAccessTab";
 import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import TypetoberReportTab from "./TypetoberReportTab";
 import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
@@ -1580,6 +1581,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "overview", label: "overview" },
     { id: "tables", label: "all tables" },
     { id: "payments", label: `payments (${payments.length})` },
+    { id: "grant-access", label: "grant access" },
     { id: "batches", label: `batches (${batches.length})` },
     { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
     { id: "profiles", label: `profiles (${profiles.length})` },
@@ -2813,6 +2815,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {/* "Get evolve verified" — call slots + booking review queue.
             Self-contained, same pattern as EventsTab. */}
         {activeTab === "verification" && !isAnantAdmin && <VerificationTab />}
+        {/* manual access for off-platform payments / free grants — GrantAccessTab.jsx */}
+        {activeTab === "grant-access" && !isAnantAdmin && <GrantAccessTab />}
         {activeTab === "typetober-report" && !isAnantAdmin && <TypetoberReportTab />}
         {activeTab === "typetober" && !isAnantAdmin && <TypetoberExamplesTab />}
 

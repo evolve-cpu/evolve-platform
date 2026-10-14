@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  ankit_thumbnail,
+  mishti_thumbnail
+} from "../../assets/images/Home_images";
 
 // Desktop shows 3 cards side by side; with more than 3 it becomes a carousel.
 // Mobile always shows one card at a time.
@@ -13,14 +17,15 @@ const VIDEO_TESTIMONIALS = [
     name: "Mishti Purohit",
     role: "Design Student, Anant University",
     video:
-      "https://res.cloudinary.com/diuswhkzn/video/upload/v1787313592/Mishti_s_testimonial_video_2_gp4zyw.mp4"
+      "https://res.cloudinary.com/diuswhkzn/video/upload/v1787313592/Mishti_s_testimonial_video_2_gp4zyw.mp4",
+    thumbnail: mishti_thumbnail
   },
-  // TODO: add Ankit Passi once the video is uploaded
   {
     name: "Ankit Passi",
     role: "Deputy Manager (Design), Deloitte Digital",
     video:
-      "https://res.cloudinary.com/diuswhkzn/video/upload/v1791490923/Ankit_testimonial_tbzm35.mp4"
+      "https://res.cloudinary.com/diuswhkzn/video/upload/v1791490923/Ankit_testimonial_tbzm35.mp4",
+    thumbnail: ankit_thumbnail
   }
 ];
 
@@ -69,11 +74,13 @@ const VideoCard = ({ t, isPlaying, onToggle }) => {
   return (
     <article className="h-full flex flex-col rounded-[24px] md:rounded-[clamp(24px,2vw,40px)] overflow-hidden bg-evolve-yellow">
       <div className="relative aspect-[554/742] bg-black">
-        {/* #t=0.1 makes the browser paint the first frame as a thumbnail */}
+        {/* a thumbnail goes in as the poster; without one, #t=0.1 makes the
+            browser paint the first frame instead (that seek would hide a poster) */}
         <video
           ref={videoRef}
-          src={`${t.video}#t=0.1`}
-          preload="metadata"
+          src={t.thumbnail ? t.video : `${t.video}#t=0.1`}
+          poster={t.thumbnail}
+          preload={t.thumbnail ? "none" : "metadata"}
           playsInline
           onClick={() => onToggle(!isPlaying)}
           onEnded={() => onToggle(false)}

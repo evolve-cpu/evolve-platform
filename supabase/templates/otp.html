@@ -1,0 +1,119 @@
+<!--
+  Sign-in code email (6-digit OTP from signInWithOtp).
+  Supabase sends this itself, so it is set in the dashboard, not deployed:
+  Authentication → Emails → Templates. Paste this file into BOTH
+    • "Magic Link"     (returning users)
+    • "Confirm signup" (first-time users — shouldCreateUser sends this one)
+  Subject for both: Your evolve sign-in code
+  The "15 minutes" line assumes Email OTP Expiration = 900 seconds
+  (Authentication → Providers → Email). Change both together.
+  Same look as the welcome / goodbye emails in api/_lifecycleEmails.js.
+-->
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light"><meta name="supported-color-schemes" content="dark light">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#ffffff">
+<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all">Your one-time code is {{ .Token }}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 16px">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:522px;background:#161616;border-radius:24px;overflow:hidden">
+      <tr><td style="padding:52px 44px 40px">
+        <h1 style="margin:0;font-family:'Bricolage Grotesque','Arial Black',Helvetica,Arial,sans-serif;font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-0.02em;color:#ffffff">Your sign-in code.</h1>
+      </td></tr>
+      <tr><td style="padding:0"><div style="height:1px;line-height:1px;font-size:0;background:#4a4a4a">&nbsp;</div></td></tr>
+      <tr><td style="padding:40px 44px 30px;font-family:Inter,Helvetica,Arial,sans-serif;color:#ffffff">
+        <p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#ffffff">Hi {{ if .Data.first_name }}{{ .Data.first_name }}{{ else if .Data.full_name }}{{ .Data.full_name }}{{ else if .Data.name }}{{ .Data.name }}{{ else }}there{{ end }},</p>
+        <p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#ffffff">Here is your one-time code to sign in to evolve.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:352px">
+          <tr><td align="center" style="background:#FFD007;border-radius:20px;padding:34px 16px">
+            <span style="font-family:'Bricolage Grotesque','Arial Black',Helvetica,Arial,sans-serif;font-size:44px;line-height:1;font-weight:800;letter-spacing:0.12em;color:#DF0586">{{ .Token }}</span>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 30px"><div style="height:1px;line-height:1px;font-size:0;background:#4a4a4a">&nbsp;</div></td></tr>
+      <tr><td style="padding:32px 44px 0;font-family:Inter,Helvetica,Arial,sans-serif">
+        <table role="presentation" cellpadding="0" cellspacing="0">
+          <tr><td style="background:#2e2e2e;border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.3;color:#ffffff">This code expires in 15 minutes.</td></tr>
+        </table>
+        <p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#a3a3a3">If you didn't request this code, you can safely ignore this email.<br>Your account is secure.</p>
+        <p style="margin:16px 0 0;font-size:13px;line-height:1.55;color:#a3a3a3">Do not share this code with anyone, including the evolve team.</p>
+      </td></tr>
+      <tr><td style="padding:32px 44px 40px">
+        <a href="https://www.evolvedesign.academy" style="text-decoration:none"><img src="https://www.evolvedesign.academy/images/evolve-email-logo.png" width="128" height="52" alt="evolve, be remarkable" style="display:block;border:0;width:128px;height:auto"></a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:36px 40px 24px;border-bottom:2px solid #eeeeee;">
+              <p style="margin:0;font-size:28px;font-weight:800;color:#111111;letter-spacing:-0.5px;">your sign-in code.</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 40px;">
+              <p style="margin:0 0 6px;font-size:15px;color:#333333;">hi,</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#333333;">here is your one-time code to sign in to evolve.</p>
+
+              <!-- OTP Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center" style="background:#FFD007;border-radius:10px;padding:28px 20px;">
+                    <p style="margin:0;font-size:42px;font-weight:800;color:rgba(223,5,134,1);letter-spacing:10px;">{{ .Token }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <hr style="border:none;border-top:1px solid #eeeeee;margin:0 0 24px;" />
+
+              <!-- Expiry notice -->
+              <table cellpadding="0" cellspacing="0" style="background:#f5f5f5;border-radius:8px;padding:14px 18px;margin-bottom:28px;">
+                <tr>
+                  <td style="font-size:14px;color:#555555;">⏱ this code expires in 15 minutes.</td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 4px;font-size:13px;color:#888888;">if you didn't request this code, you can safely ignore this email.</p>
+              <p style="margin:0 0 4px;font-size:13px;color:#888888;">your account is secure.</p>
+              <p style="margin:0;font-size:13px;color:#888888;">do not share this code with anyone, including the evolve team.</p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="background:#111111;padding:28px 40px;">
+              <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#FFD007;letter-spacing:-0.3px;">&#xe; evolve™</p>
+              <p style="margin:0;font-size:11px;color:#666666;letter-spacing:1px;text-transform:uppercase;">be remarkable</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html> -->

@@ -19,6 +19,7 @@
 //   query               admin roles → replay a query chain
 //   storage             admin roles → signed upload/read URLs, remove, list
 //   gemini              admin roles → dashboard insights, key stays here
+//   grant_access        Evolve admins → manual access (paid outside Razorpay / free), see _manualGrant.js
 //   anu_student_self    signed in → the caller's own anu_students row
 //   welcome_email       signed in → "Welcome to Evolve" to the caller, once
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
@@ -32,6 +33,7 @@ import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "./_sendEmail.js";
 import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEmails.js";
 import { communityFeed } from "./_discordCommunity.js";
+import { grantAccess } from "./_manualGrant.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -301,6 +303,14 @@ export async function handleAdmin(body, req) {
   if (op === "query") return runQuery(db, who, body);
   if (op === "storage") return runStorage(db, who, body);
   if (op === "gemini") return runGemini(body);
+  if (op === "grant_access") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    try {
+      return await grantAccess(db, body);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
+  }
 
   throw new HttpError(400, `unknown op: ${op}`);
 }

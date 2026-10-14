@@ -12,6 +12,9 @@ import events from "./events.svg";
 import community from "./community.svg";
 import mentorship from "./mentorship.svg";
 import portfolio_review from "./portfolio_review.svg";
+import evolve_email_logo from "./evolve_email_logo.svg";
+import ankit_thumbnail from "./ankit_thumbnail.png";
+import mishti_thumbnail from "./mishti_thumbnail.png";
 
 export {
   Hero_bottom,
@@ -27,5 +30,8 @@ export {
   events,
   community,
   mentorship,
-  portfolio_review
+  portfolio_review,
+  ankit_thumbnail,
+  mishti_thumbnail,
+  evolve_email_logo
 };

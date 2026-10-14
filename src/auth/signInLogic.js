@@ -140,7 +140,8 @@ export async function sendOtp(name, email) {
     email,
     options: {
       shouldCreateUser: true,
-      data: { full_name: name }
+      // first_name is the greeting in the sign-in code email (supabase/templates/otp.html)
+      data: { full_name: name, first_name: String(name || "").trim().split(/\s+/)[0] }
     }
   });
   if (error) throw error;
