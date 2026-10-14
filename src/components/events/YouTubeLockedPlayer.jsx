@@ -62,8 +62,30 @@ const Icon = {
   ),
   fullscreen: (
     <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  ),
+  exitFullscreen: (
+    <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   )
 };
+
+// Element fullscreen, with Safari's webkit-prefixed API. iPhone Safari has
+// no element fullscreen at all, so there the player falls back to filling
+// the viewport with CSS (`pseudoFull` below).
+const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+function requestFullscreen(el) {
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) return false;
+  Promise.resolve(req.call(el))
+    .then(() => screen.orientation?.lock?.("landscape"))
+    .catch(() => {});
+  return true;
+}
+
+function exitFullscreen() {
+  screen.orientation?.unlock?.();
+  (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+}
 
 function Svg({ children, className = "w-5 h-5" }) {
   return (
@@ -88,7 +110,32 @@ export default function YouTubeLockedPlayer({ videoId, poster, title, children }
   const hideTimer = useRef(null);
 
   const playing = state === 1 || state === 3; // playing / buffering
-  const canFullscreen = typeof document !== "undefined" && !!document.fullscreenEnabled;
+  const [nativeFull, setNativeFull] = useState(false);
+  const [pseudoFull, setPseudoFull] = useState(false);
+  const isFull = nativeFull || pseudoFull;
+
+  useEffect(() => {
+    const onChange = () => setNativeFull(fullscreenElement() === wrapRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  // CSS fallback: stop the page scrolling behind it, Escape closes it
+  useEffect(() => {
+    if (!pseudoFull) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => e.key === "Escape" && setPseudoFull(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [pseudoFull]);
 
   // create the player only once someone presses play
   useEffect(() => {
@@ -178,8 +225,10 @@ export default function YouTubeLockedPlayer({ videoId, poster, title, children }
   }
 
   function toggleFullscreen() {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else wrapRef.current?.requestFullscreen?.();
+    if (pseudoFull) setPseudoFull(false);
+    else if (fullscreenElement()) exitFullscreen();
+    else if (!requestFullscreen(wrapRef.current)) setPseudoFull(true);
+    poke();
   }
 
   // paused (not just started) or ended → our poster hides YouTube's
@@ -190,7 +239,13 @@ export default function YouTubeLockedPlayer({ videoId, poster, title, children }
   return (
     <div
       ref={wrapRef}
-      className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-white/10 select-none"
+      className={`overflow-hidden bg-black select-none ${
+        pseudoFull
+          ? "fixed inset-0 z-[10000] w-screen h-[100dvh]"
+          : isFull
+            ? "relative w-full h-full"
+            : "relative w-full aspect-video rounded-2xl border border-white/10"
+      }`}
       onContextMenu={(e) => e.preventDefault()}
       onMouseMove={started ? poke : undefined}
     >
@@ -269,11 +324,14 @@ export default function YouTubeLockedPlayer({ videoId, poster, title, children }
             >
               {rate}x
             </button>
-            {canFullscreen && (
-              <button type="button" onClick={toggleFullscreen} aria-label="Fullscreen" className="hover:text-evolve-yellow">
-                <Svg>{Icon.fullscreen}</Svg>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              aria-label={isFull ? "Exit fullscreen" : "Fullscreen"}
+              className="hover:text-evolve-yellow"
+            >
+              <Svg>{isFull ? Icon.exitFullscreen : Icon.fullscreen}</Svg>
+            </button>
           </div>
         </div>
       )}

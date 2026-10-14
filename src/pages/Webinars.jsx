@@ -619,6 +619,7 @@ import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import { supabase } from "../supabaseClient";
 import { isEventOver, upcomingCutoffIso } from "../lib/events";
+import { eventHasRecording } from "../components/events/PastEventRecording";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 
@@ -1221,10 +1222,12 @@ function PastEventsSection({ events }) {
                       ? ` · ${event.recording_duration_min} min`
                       : ""}
                   </p>
-                  <span className="inline-flex items-center gap-1.5 text-black font-bold text-sm">
-                    Watch recording
-                    <img src={right_arrow_icon} alt="" className="h-4 w-4" />
-                  </span>
+                  {eventHasRecording(event) && (
+                    <span className="inline-flex items-center gap-1.5 text-black font-bold text-sm">
+                      Watch recording
+                      <img src={right_arrow_icon} alt="" className="h-4 w-4" />
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>

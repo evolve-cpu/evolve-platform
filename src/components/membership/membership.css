@@ -189,13 +189,6 @@
 .at-priv .tx { flex: 1; min-width: 0; }
 .at-priv button { border: 1.5px solid #161616; border-radius: 999px; padding: 7px 14px; background: #ffd007; color: #161616; font: 700 13px "Bricolage Grotesque", sans-serif; cursor: pointer; white-space: nowrap; }
 
-.at-pastlock-card { padding: 24px 20px; border-radius: 20px; background: rgba(22, 22, 24, 0.94); border: 1px solid rgba(255, 255, 255, 0.12); text-align: center; color: #fff; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
-.at-pastlock-card .lk { width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 50%; background: rgba(223, 5, 134, 0.16); color: #df0586; display: flex; align-items: center; justify-content: center; }
-.at-pastlock-card .lk svg { width: 22px; height: 22px; }
-.at-pastlock-card .t { font: 800 18px "Bricolage Grotesque", sans-serif; }
-.at-pastlock-card .s { font: 13px Inter, sans-serif; color: #9a9a9f; margin: 4px 0 16px; }
-.at-pastlock-card button { border: 1.5px solid #161616; border-radius: 12px; padding: 12px 20px; background: #ffd007; color: #161616; font: 700 14px "Bricolage Grotesque", sans-serif; box-shadow: 2px 3px 0 #161616; cursor: pointer; }
-
 /* reference #trialSheet / #verifyPromptSheet: the plain .bottom-sheet
    (card #232325, 18px Bricolage title, flat yellow .btn-primary) rather
    than the after-trial .at-modal look. Centred card on desktop. */

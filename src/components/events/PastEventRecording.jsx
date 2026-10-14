@@ -6,8 +6,8 @@ import YouTubeLockedPlayer from "./YouTubeLockedPlayer";
 
 // Past-event recording, uploaded through the admin Events CMS
 // (src/pages/admn/EventsTab.jsx). Locked behind the after-trial rules: open
-// during the trial / on a plan / once bought (₹30 default), otherwise a
-// blurred thumbnail with the reference's "Unlock this session" card.
+// during the trial / on a plan / once bought (₹30 default), otherwise
+// the thumbnail with a lock and a sticky "Unlock" bar (LockedPlayer).
 //
 // Anti-piracy, layer by layer:
 //   • file sits in a PRIVATE bucket — the DB only hands a short-lived signed
@@ -184,6 +184,85 @@ function Player({ event, user }) {
   );
 }
 
+// The app's mobile tab bar (AppTabNav) is fixed to the bottom too; the unlock
+// bar sits just above it so neither covers the other.
+function useTabBarHeight() {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const nav = document.querySelector("[data-app-tabnav]");
+    if (!nav) return;
+    const measure = () =>
+      setHeight(getComputedStyle(nav).display === "none" ? 0 : nav.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(nav);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  return height;
+}
+
+// Locked recording: the session's thumbnail stays as-is with a lock in place
+// of the play button, and the unlock CTA lives in a bar stuck to the bottom
+// of the screen.
+function LockedPlayer({ thumb, price, signedIn, onUnlock }) {
+  const tabBar = useTabBarHeight();
+  const cta = signedIn ? `Unlock for ${inr(price)}` : "Sign in to watch";
+
+  // keeps the page's last content clear of the fixed bar
+  useEffect(() => {
+    const prev = document.body.style.paddingBottom;
+    document.body.style.paddingBottom = "6rem";
+    return () => {
+      document.body.style.paddingBottom = prev;
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onUnlock}
+        className="group relative block w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-[#19191b]"
+        aria-label={cta}
+      >
+        {thumb && <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+        <span className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-[76px] md:h-[76px] rounded-full bg-black/70 backdrop-blur-sm text-white flex items-center justify-center group-hover:scale-105 transition-transform [&>svg]:w-6 [&>svg]:h-6 md:[&>svg]:w-7 md:[&>svg]:h-7">
+          {MEMBERSHIP_ICONS.lock}
+        </span>
+      </button>
+
+      <div
+        className="fixed inset-x-0 z-[45] border-t border-white/10 bg-[#161618]/95 backdrop-blur-md"
+        style={{ bottom: tabBar }}
+      >
+        <div className="max-w-5xl mx-auto px-5 md:px-8 py-3 md:py-4 flex items-center gap-4">
+          <span className="hidden sm:flex w-10 h-10 flex-none rounded-full bg-evolve-pink/15 text-evolve-pink items-center justify-center [&>svg]:w-5 [&>svg]:h-5">
+            {MEMBERSHIP_ICONS.lock}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-white font-bold text-sm md:text-base leading-tight">Watch this session</p>
+            <p className="text-white/50 text-xs md:text-sm leading-tight mt-0.5">
+              {signedIn ? "Unlock the full recording, yours to rewatch anytime" : "Sign in to unlock the full recording"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onUnlock}
+            className="flex-none rounded-xl bg-evolve-yellow text-evolve-black font-extrabold text-sm md:text-base px-4 md:px-6 py-2.5 md:py-3 transition-transform active:scale-95 hover:brightness-105"
+          >
+            {cta}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // `bare` drops the small "recording" label and length line, for layouts
 // that already show them (EventDetail.jsx → PastEventView)
 export default function PastEventRecording({ event, user, ownedRecording, onPurchased, onSignIn, bare = false }) {
@@ -201,41 +280,26 @@ export default function PastEventRecording({ event, user, ownedRecording, onPurc
       {open ? (
         <Player event={event} user={user} />
       ) : (
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-[#19191b]">
-          {thumb && (
-            <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover blur-[8px] scale-110 opacity-60" />
-          )}
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="at-pastlock-card w-full max-w-[320px]">
-              <div className="lk">{MEMBERSHIP_ICONS.lock}</div>
-              <div className="t">Unlock this session</div>
-              <div className="s">Watch the full recording anytime</div>
-              {user ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    pay(
-                      {
-                        kind: "recording",
-                        event_id: event.id,
-                        title: event.title,
-                        sub: "Past session",
-                        price
-                      },
-                      onPurchased
-                    )
-                  }
-                >
-                  Unlock for {inr(price)}
-                </button>
-              ) : (
-                <button type="button" onClick={onSignIn}>
-                  Sign in to watch
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <LockedPlayer
+          thumb={thumb}
+          price={price}
+          signedIn={!!user}
+          onUnlock={
+            user
+              ? () =>
+                  pay(
+                    {
+                      kind: "recording",
+                      event_id: event.id,
+                      title: event.title,
+                      sub: "Past session",
+                      price
+                    },
+                    onPurchased
+                  )
+              : onSignIn
+          }
+        />
       )}
 
       {!bare && event.recording_duration_min ? (

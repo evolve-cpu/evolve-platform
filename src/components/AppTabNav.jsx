@@ -93,6 +93,7 @@ export default function AppTabNav({ activeTab, onTabChange, variant = "mobile" }
 
   return (
     <nav
+      data-app-tabnav
       className="md:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-white/10"
       style={{ backgroundColor: "#161618" }}
     >
