@@ -391,7 +391,8 @@ const Pricing = () => {
               className="mt-3 md:mt-[clamp(16px,1.4vw,28px)] mx-auto max-w-[280px] md:max-w-none text-center font-medium text-evolve-black"
               style={{ fontSize: "clamp(22px, 1.6vw, 30px)", lineHeight: 1.3 }}
             >
-              Pick your plan and continue evolving!
+              Start with a 30-day free trial, then choose the plan that works
+              for you.
             </motion.p>
 
             <motion.div
