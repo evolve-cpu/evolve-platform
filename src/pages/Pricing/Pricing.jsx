@@ -27,7 +27,7 @@ const FREE_PLAN = {
   title: "Free Membership",
   price: inr(0),
   suffix: "to start",
-  note: "Start with a 30-day free trial, then choose the plan that works for you.",
+  note: "Pay per event. Verified profile stays locked",
   items: [
     { label: "Daily news, microlearning & quizzes", value: "Free", free: true },
     { label: "Community events", value: inr(ITEM_PRICES.COMMUNITY) },
