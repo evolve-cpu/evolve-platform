@@ -19,7 +19,8 @@ const TABS = [
     image: my_profile,
     tagline: "Make Your Skill Growth Visible.",
     desc: "Stop letting your capabilities stay hidden behind portfolios and static PDFs. Build a living, verified profile that proves your design momentum with real competency data.",
-    cta: "Know more",
+    // cta: "Know more",
+    cta: "Explore profile features",
     path: "/profile-creation"
   },
   {
@@ -28,7 +29,7 @@ const TABS = [
     image: events,
     tagline: "Learn real-world practices from industry leaders.",
     desc: "Join live sessions, AMAs and workshops with practising designers. Ask questions, see how real work gets done, and catch up on recordings whenever you need them.",
-    cta: "Know more",
+    cta: "Explore events",
     path: "/events"
   },
   {
@@ -37,7 +38,7 @@ const TABS = [
     image: community,
     tagline: "Connect with an ambitious network of peers.",
     desc: "Meet designers who are as driven as you are. From AMAs and bookclubs to in-person activities, find the people who will push your work and your thinking forward.",
-    cta: "Join community",
+    cta: "Explore community",
     // href: DISCORD_URL
     path: "/community"
   },
@@ -47,7 +48,7 @@ const TABS = [
     image: grow,
     tagline: "5 Minutes a Day. Continuous Career Growth.",
     desc: "No endless courses or burnt-out schedules. Build an unstoppable daily habit with bite-sized lessons, instant quizzes, and curated industry news",
-    cta: "Know more",
+    cta: "See how grow works",
     path: "/grow"
   }
 ];
