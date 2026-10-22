@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabaseClient";
 import AuthModal from "./AuthModal";
+import { trackSignupCta } from "../lib/platformAnalytics";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -522,6 +523,7 @@ const Navigation = ({
                       // straight to their profile instead of bouncing them
                       // back to whatever marketing page they happened to be
                       // browsing (see resolveLandingPath in SignIn.jsx).
+                      trackSignupCta("sign_in", "nav");
                       return navigate("/signin");
                     }
                     if (!accountOpen) openAccountModal();

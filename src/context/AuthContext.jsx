@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { findFreeSlug } from "../lib/slug";
 import { callAdminApi } from "../supabaseAdminClient";
 import { excludeIfTeam } from "../lib/clarity";
+import { trackSignup, pingActive } from "../lib/platformAnalytics";
 
 /**
  * AuthContext
@@ -85,6 +86,7 @@ export function AuthProvider({ children }) {
   async function loadProfile(authUser) {
     setAuthLoading(true);
     loadedUserIdRef.current = authUser.id;
+    pingActive(authUser.id);
     try {
       await loadProfileInner(authUser);
     } catch (e) {
@@ -122,10 +124,13 @@ export function AuthProvider({ children }) {
       authUser.user_metadata?.picture    ||
       null;
 
+    // google_one_tap / google / linkedin / email, for the admin platform report
+    const signup_method = trackSignup(authUser);
+
     const { data: newProfile } = await supabase
       .from("profiles")
       .upsert(
-        { id: authUser.id, email: authUser.email, name, avatar_url },
+        { id: authUser.id, email: authUser.email, name, avatar_url, signup_method },
         { onConflict: "id" }
       )
       .select()

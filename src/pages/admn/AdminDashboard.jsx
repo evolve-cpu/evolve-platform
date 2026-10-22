@@ -10,6 +10,7 @@ import VerificationTab from "./VerificationTab";
 import GrantAccessTab from "./GrantAccessTab";
 import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import TypetoberReportTab from "./TypetoberReportTab";
+import PlatformReportTab from "./PlatformReportTab";
 import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1579,6 +1580,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
   const ALL_TABS = [
     { id: "overview", label: "overview" },
+    { id: "platform-report", label: "platform report" },
     { id: "tables", label: "all tables" },
     { id: "payments", label: `payments (${payments.length})` },
     { id: "grant-access", label: "grant access" },
@@ -2817,6 +2819,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {activeTab === "verification" && !isAnantAdmin && <VerificationTab />}
         {/* manual access for off-platform payments / free grants — GrantAccessTab.jsx */}
         {activeTab === "grant-access" && !isAnantAdmin && <GrantAccessTab />}
+        {activeTab === "platform-report" && !isAnantAdmin && <PlatformReportTab />}
         {activeTab === "typetober-report" && !isAnantAdmin && <TypetoberReportTab />}
         {activeTab === "typetober" && !isAnantAdmin && <TypetoberExamplesTab />}
 

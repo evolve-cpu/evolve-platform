@@ -7,11 +7,15 @@ import GuidanceSection from "./GuidanceSection";
 import VideoTestimonialsSection from "./VideoTestimonialsSection";
 import TextTestimonialsSection from "./TextTestimonialsSection";
 import ClosingSection from "./ClosingSection";
+import { trackSignupCta } from "../../lib/platformAnalytics";
 
 const MainHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const handleStart = () => navigate(user ? "/app/profile" : "/signin");
+  const handleStart = (location) => {
+    if (!user) trackSignupCta("start_for_free", location);
+    navigate(user ? "/app/profile" : "/signin");
+  };
 
   return (
     <>
@@ -21,12 +25,12 @@ const MainHome = () => {
         path="/"
       />
       <main className="w-full overflow-x-hidden">
-        <HeroSection onStart={handleStart} />
+        <HeroSection onStart={() => handleStart("home_hero")} />
         <EcosystemSection />
         <GuidanceSection />
         <VideoTestimonialsSection />
         <TextTestimonialsSection />
-        <ClosingSection onStart={handleStart} />
+        <ClosingSection onStart={() => handleStart("home_closing")} />
       </main>
     </>
   );

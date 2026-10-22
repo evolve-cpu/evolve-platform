@@ -1101,6 +1101,7 @@ const Grow = lazy(() => import("./pages/Ecosystem/Grow"));
 // Import only critical home images
 import * as images from "./assets/images/Home";
 import { supabase } from "./supabaseClient";
+import { markSignupMethod } from "./lib/platformAnalytics";
 import CollegeActivation from "./pages/College_Activity_Page/CollegeActivation.jsx";
 import CollegeActivities from "./pages/College_Activity_Page/CollegeActivities.jsx";
 import CollegeSelfReflection from "./pages/College_Activity_Page/CollegeSelfReflection.jsx";
@@ -1550,6 +1551,7 @@ const AppLayout = () => {
           nonce: hashedNonce,
           cancel_on_tap_outside: false,
           callback: async (response) => {
+            markSignupMethod("google_one_tap");
             const { error } = await supabase.auth.signInWithIdToken({
               provider: "google",
               token: response.credential,

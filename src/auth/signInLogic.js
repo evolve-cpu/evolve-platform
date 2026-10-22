@@ -127,6 +127,7 @@
 // ── END OLD CODE ───────────────────────────────────────────────────────────
 
 import { supabase } from "../supabaseClient";
+import { markSignupMethod } from "../lib/platformAnalytics";
 
 /**
  * Step 1 — send OTP to the user's email.
@@ -136,6 +137,7 @@ import { supabase } from "../supabaseClient";
  * @throws {Error} if supabase returns an error
  */
 export async function sendOtp(name, email) {
+  markSignupMethod("email");
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -182,6 +184,7 @@ function flagPostOAuthRedirectCheck() {
 
 export async function signInWithGoogle(destination = "/") {
   flagPostOAuthRedirectCheck();
+  markSignupMethod("google");
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -195,6 +198,7 @@ export async function signInWithGoogle(destination = "/") {
 
 export async function signInWithLinkedIn(destination = "/") {
   flagPostOAuthRedirectCheck();
+  markSignupMethod("linkedin");
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "linkedin_oidc",
     options: {
@@ -217,6 +221,7 @@ export async function signInWithLinkedIn(destination = "/") {
  */
 export async function signInWithDiscord(destination = "/") {
   flagPostOAuthRedirectCheck();
+  markSignupMethod("discord");
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "discord",
     options: {

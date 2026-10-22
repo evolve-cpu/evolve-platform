@@ -15,6 +15,7 @@ import {
   hand_with_thunder_mobile
 } from "../assets/images/Home";
 import { right_arrow_yellow } from "../assets/images/Home_images";
+import { trackSignupCta } from "../lib/platformAnalytics";
 
 const useIsMobile = (bp = 768) => {
   const [isMobile, setIsMobile] = useState(
@@ -100,7 +101,10 @@ const Footer = ({ onContactClick }) => {
   const startButton = (
     <button
       type="button"
-      onClick={() => navigate(user ? "/app/profile" : "/signin")}
+      onClick={() => {
+        if (!user) trackSignupCta("start_for_free", "footer");
+        navigate(user ? "/app/profile" : "/signin");
+      }}
       className="inline-flex items-center gap-3 rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow font-semibold px-8 py-4 text-[18px] md:text-[20px] leading-none shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none select-none"
     >
       Start for free

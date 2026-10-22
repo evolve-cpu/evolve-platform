@@ -25,6 +25,7 @@ import EventDetail from "./EventDetail";
 import { eventHasRecording } from "../components/events/PastEventRecording";
 import { callAdminApi } from "../supabaseAdminClient";
 import CommunityFeed from "../components/community/CommunityFeed";
+import { pingActive } from "../lib/platformAnalytics";
 import {
   AccountMenuList,
   MyAccountPanel,
@@ -932,6 +933,15 @@ export default function PublicProfile({ platform = false }) {
   // handles portfolio-review/mentorship/account/etc. exactly as before.
   const [localTab, setLocalTab] = useState("profile");
   const activeTab = appView ? appView.tab : localTab;
+
+  // which platform areas this user has opened, for the admin platform report
+  useEffect(() => {
+    if (!appView || !isOwner) return;
+    const programmeArea = { "portfolio-review": "portfolio_review", mentorship: "mentorship" };
+    const area = activeProgramme ? programmeArea[activeProgramme] : activeTab;
+    if (area) pingActive(user.id, area);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, activeProgramme, isOwner]);
 
   // on the platform these push a new URL (so the browser back button steps
   // back through tabs/panels); on the public page they're plain state
