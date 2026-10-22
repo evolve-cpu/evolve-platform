@@ -32,7 +32,7 @@ const LANDING = {
   recording: "/app/events",
   portfolio_review: "/app/grow/portfolio-review",
   mentorship: "/app/grow/mentorship",
-  demo: "/app"
+  demo: "/app/grow" // straight to the programmes, not My Profile
 };
 
 const manualOrderId = () => `manual_${crypto.randomUUID()}`;

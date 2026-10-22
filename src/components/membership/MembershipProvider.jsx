@@ -727,6 +727,10 @@ function fmtDay(iso) {
 }
 
 export function trialBannerCopy(user, access) {
+  // demo access (demo_access.sql) reads as that, even mid-trial
+  if (access.demo) {
+    return { ending: false, text: `Demo access · till ${fmtDay(user.plan_expires_at)}`, cta: "See plans" };
+  }
   if (access.phase === "trial") {
     return {
       ending: false,

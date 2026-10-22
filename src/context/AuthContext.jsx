@@ -222,6 +222,8 @@ export function AuthProvider({ children }) {
       trial_resumed_at:        profile.trial_resumed_at ?? null,
       // invited with a free portfolio review — no trial (review_invite.sql)
       review_invite_at:        profile.review_invite_at ?? null,
+      // demo access from the admin panel — plan reads "Demo access" (demo_access.sql)
+      demo_until:              profile.demo_until ?? null,
       // after-trial membership (see src/lib/membership.js)
       designation:             profile.designation ?? null,
       plan:                    profile.plan ?? null,

@@ -52,6 +52,17 @@ export function isPlanActive(user) {
   return !!user?.plan_expires_at && new Date(user.plan_expires_at).getTime() > Date.now();
 }
 
+// Demo access from the admin panel (demo_access.sql) sets plan_expires_at
+// to demo_until — if they differ, a real plan runs past the demo and that's
+// what they're on.
+export function isDemoPlan(user) {
+  return (
+    !!user?.demo_until &&
+    isPlanActive(user) &&
+    new Date(user.plan_expires_at).getTime() === new Date(user.demo_until).getTime()
+  );
+}
+
 // phase: "trial" | "ended"; mode: "sub" | "payg"
 export function accessState(user) {
   const onTrial = isTrialActive(user?.trial_ends_at);
@@ -60,6 +71,7 @@ export function accessState(user) {
     phase: onTrial ? "trial" : "ended",
     mode: onPlan ? "sub" : "payg",
     plan: onPlan ? user.plan : null,
+    demo: isDemoPlan(user),
     full: onTrial || onPlan,
     daysLeft: trialDaysLeft(user?.trial_ends_at),
     reviewCredits: onPlan ? user?.review_credits || 0 : 0
