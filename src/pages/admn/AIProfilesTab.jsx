@@ -35,7 +35,7 @@ function statusBadge(status) {
   );
 }
 
-function SourceLink({ link, fileUrl }) {
+export function SourceLink({ link, fileUrl }) {
   const href = link || fileUrl;
   if (!href) return <span style={{ color: "#333" }}>—</span>;
   return (
@@ -67,8 +67,9 @@ async function callEdgeFn(name, user_id) {
 }
 
 /* ── modal: source (portfolio/resume) + the generated profile, side by
-   side, so an admin can eyeball how close the AI output landed ── */
-function ViewModal({ row, onClose }) {
+   side, so an admin can eyeball how close the AI output landed. Also used
+   by VerificationTab before a verification call. ── */
+export function ViewModal({ row, onClose }) {
   const modal = (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center p-4"

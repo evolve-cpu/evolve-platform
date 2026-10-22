@@ -23,7 +23,7 @@ import { firstNameOf, emailLayout, esc } from "./_lifecycleEmails.js";
 
 const SITE = "https://www.evolvedesign.academy";
 
-export const GRANT_KINDS = ["none", "plan", "event", "recording", "portfolio_review", "mentorship"];
+export const GRANT_KINDS = ["none", "plan", "event", "recording", "portfolio_review", "mentorship", "demo"];
 
 const LANDING = {
   none: "/app",
@@ -31,7 +31,8 @@ const LANDING = {
   event: "/app/events",
   recording: "/app/events",
   portfolio_review: "/app/grow/portfolio-review",
-  mentorship: "/app/grow/mentorship"
+  mentorship: "/app/grow/mentorship",
+  demo: "/app"
 };
 
 const manualOrderId = () => `manual_${crypto.randomUUID()}`;
@@ -84,16 +85,154 @@ async function openReviewCycle(db, profile) {
     .order("attempt", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (latest && !latest.review_report_url) return "already had an open review";
-  const { error } = await db.from("evolve_portfolio_reviews").insert({
+  if (latest && !latest.review_report_url) return { note: "already had an open review", id: null };
+  const { data: made, error } = await db
+    .from("evolve_portfolio_reviews")
+    .insert({
+      user_id: profile.id,
+      name: profile.name || "",
+      email: profile.email || "",
+      review_status: "draft",
+      attempt: (latest?.attempt || 0) + 1
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return { note: `review ${(latest?.attempt || 0) + 1} opened`, id: made.id };
+}
+
+async function insertReviewPayment(db, profile, amount, audit) {
+  const { error } = await db.from("portfolio_review_payments").insert({
     user_id: profile.id,
     name: profile.name || "",
     email: profile.email || "",
-    review_status: "draft",
-    attempt: (latest?.attempt || 0) + 1
+    amount: amount * 100, // this table stores paise
+    phone: "",
+    razorpay_order_id: manualOrderId(),
+    razorpay_payment_id: audit,
+    status: "success"
   });
   if (error) throw new Error(error.message);
-  return `review ${(latest?.attempt || 0) + 1} opened`;
+}
+
+// Demo access (supabase/migrations/demo_access.sql): everything except
+// mentorship until demo_until — an active plan (events, recordings, public
+// profile, verification all key off plan_expires_at) plus an open review.
+// What it replaced is kept in demo_restore so revokeDemo() can undo it.
+// Granting again while a demo is running just moves the end date.
+async function grantDemo(db, profile, grant, amount, audit) {
+  const until = new Date(grant.demo_until || "");
+  if (isNaN(until.getTime()) || until.getTime() <= Date.now()) throw new Error("pick a demo end date in the future");
+  until.setHours(23, 59, 59, 999);
+  const untilIso = until.toISOString();
+
+  const { data: cur } = await db
+    .from("profiles")
+    .select("plan, plan_expires_at, review_credits, demo_until, demo_restore")
+    .eq("id", profile.id)
+    .single();
+
+  // never cut short a real plan that runs past the demo
+  const ts = (v) => (v ? new Date(v).getTime() : 0);
+  const restore = cur?.demo_until ? cur.demo_restore || {} : null;
+  const prevExpiry = restore ? restore.plan_expires_at : cur?.plan_expires_at;
+  const keepRealPlan = ts(prevExpiry) > until.getTime();
+
+  if (restore) {
+    const { error } = await db
+      .from("profiles")
+      .update({ demo_until: untilIso, ...(keepRealPlan ? {} : { plan_expires_at: untilIso }) })
+      .eq("id", profile.id);
+    if (error) throw new Error(error.message);
+    return `demo extended to ${until.toDateString()}`;
+  }
+
+  await insertReviewPayment(db, profile, amount, audit);
+  const review = await openReviewCycle(db, profile);
+  const { error } = await db
+    .from("profiles")
+    .update({
+      ...(keepRealPlan ? {} : { plan: "annual", plan_expires_at: untilIso }),
+      demo_until: untilIso,
+      demo_restore: {
+        plan: cur?.plan ?? null,
+        plan_expires_at: cur?.plan_expires_at ?? null,
+        review_credits: cur?.review_credits ?? 0,
+        review_id: review.id
+      }
+    })
+    .eq("id", profile.id);
+  if (error) throw new Error(error.message);
+  return `demo access till ${until.toDateString()} · ${review.note}`;
+}
+
+// Cancels demos: plan fields go back to what they were (unless the person
+// bought a plan during the demo — then plan_expires_at no longer matches
+// demo_until and it's left alone), and the review the demo opened is
+// deleted if it was never submitted.
+export async function revokeDemo(db, body) {
+  const ids = (Array.isArray(body.user_ids) ? body.user_ids : []).filter(Boolean);
+  if (!ids.length) throw new Error("no users picked");
+  const { data: rows, error } = await db
+    .from("profiles")
+    .select("id, email, plan_expires_at, demo_until, demo_restore")
+    .in("id", ids)
+    .not("demo_until", "is", null);
+  if (error) throw new Error(error.message);
+
+  const results = [];
+  for (const p of rows || []) {
+    const r = { email: p.email };
+    try {
+      const restore = p.demo_restore || {};
+      const planUntouched = p.plan_expires_at && new Date(p.plan_expires_at).getTime() === new Date(p.demo_until).getTime();
+      const { error: upErr } = await db
+        .from("profiles")
+        .update({
+          ...(planUntouched
+            ? {
+                plan: restore.plan ?? null,
+                plan_expires_at: restore.plan_expires_at ?? null,
+                review_credits: restore.review_credits ?? 0
+              }
+            : {}),
+          demo_until: null,
+          demo_restore: null
+        })
+        .eq("id", p.id);
+      if (upErr) throw new Error(upErr.message);
+      if (restore.review_id) {
+        await db
+          .from("evolve_portfolio_reviews")
+          .delete()
+          .eq("id", restore.review_id)
+          .eq("review_status", "draft")
+          .is("review_report_url", null);
+      }
+      r.ok = true;
+    } catch (err) {
+      r.ok = false;
+      r.error = err.message;
+    }
+    results.push(r);
+  }
+  return { results };
+}
+
+// A free portfolio review invite (e.g. a partner college cohort) — see
+// supabase/migrations/review_invite.sql. No 30-day trial for them: if they
+// haven't started one yet, it's stamped as started and already over, so
+// public.start_trial() leaves it alone. Their review upload also builds
+// their AI profile (api/admin.js op "review_profile_build").
+async function markReviewInvite(db, userId) {
+  const now = new Date().toISOString();
+  const { error } = await db.from("profiles").update({ review_invite_at: now }).eq("id", userId);
+  if (error) throw new Error(error.message);
+  await db
+    .from("profiles")
+    .update({ trial_started_at: now, trial_ends_at: now })
+    .eq("id", userId)
+    .is("trial_started_at", null);
 }
 
 async function applyGrant(db, profile, grant, amount, audit) {
@@ -149,19 +288,13 @@ async function applyGrant(db, profile, grant, amount, audit) {
     }
 
     case "portfolio_review": {
-      const { error } = await db.from("portfolio_review_payments").insert({
-        user_id: userId,
-        name: profile.name || "",
-        email: profile.email || "",
-        amount: amount * 100, // this table stores paise
-        phone: "",
-        razorpay_order_id: manualOrderId(),
-        razorpay_payment_id: audit,
-        status: "success"
-      });
-      if (error) throw new Error(error.message);
-      return await openReviewCycle(db, profile);
+      if (amount === 0) await markReviewInvite(db, userId);
+      await insertReviewPayment(db, profile, amount, audit);
+      return (await openReviewCycle(db, profile)).note;
     }
+
+    case "demo":
+      return await grantDemo(db, profile, grant, amount, audit);
 
     case "mentorship": {
       if (!["core", "application_support"].includes(grant.mentorship_plan)) throw new Error("pick a mentorship plan");
@@ -189,7 +322,8 @@ const GRANT_LINE = {
   event: "Your event access is ready.",
   recording: "Your recording is unlocked.",
   portfolio_review: "Your portfolio review is ready to start. Upload your portfolio and resume, and our reviewers will take it from there.",
-  mentorship: "Your mentorship is set up and ready to go."
+  mentorship: "Your mentorship is set up and ready to go.",
+  demo: "Your demo access is on: events, recordings, your portfolio review and the full platform are all unlocked."
 };
 
 async function sendSignInLink(db, profile, kind) {
@@ -221,7 +355,7 @@ async function sendSignInLink(db, profile, kind) {
   });
 }
 
-// body: { people: [{ email, name }], grant: { kind, plan?, event_id?, mentorship_plan?, tier? },
+// body: { people: [{ email, name }], grant: { kind, plan?, event_id?, mentorship_plan?, tier?, demo_until? },
 //         amount (rupees, 0 = free), reference, note, send_link }
 export async function grantAccess(db, body) {
   const grant = body.grant || {};

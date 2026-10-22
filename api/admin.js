@@ -20,10 +20,12 @@
 //   storage             admin roles → signed upload/read URLs, remove, list
 //   gemini              admin roles → dashboard insights, key stays here
 //   grant_access        Evolve admins → manual access (paid outside Razorpay / free), see _manualGrant.js
+//   revoke_demo         Evolve admins → cancels demo access granted through grant_access
 //   anu_student_self    signed in → the caller's own anu_students row
 //   welcome_email       signed in → "Welcome to Evolve" to the caller, once
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
 //   community_feed      signed in → Discord posts for the Community tab (syncs if stale)
+//   review_profile_build signed in → builds a free-review invitee's AI profile from their review uploads
 //   anu_student_check   public → { exists } for the student sign-in form
 //   anant_staff_login   public → emails a magic link to listed Anant staff
 //
@@ -33,7 +35,7 @@ import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "./_sendEmail.js";
 import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEmails.js";
 import { communityFeed } from "./_discordCommunity.js";
-import { grantAccess } from "./_manualGrant.js";
+import { grantAccess, revokeDemo } from "./_manualGrant.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -221,6 +223,62 @@ async function anantStaffLogin(db, email) {
   return { ok: true };
 }
 
+// ── AI profile from a free review invite's uploads ─────────────────────
+// Invited students (review_invite_at, see _manualGrant.js) get their My
+// Profile built from the resume + portfolio they just submitted for the
+// review, so they don't upload both twice. Same two edge functions as My
+// Profile's build button. Awaited (not fire-and-forget) — the browser
+// doesn't wait for it, but the function keeps running till it's done.
+async function callEdgeFn(name, userId) {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const anon = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(`${url}/functions/v1/${name}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${anon}`, apikey: anon },
+    body: JSON.stringify({ user_id: userId })
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error || `${name} failed`);
+  return json;
+}
+
+async function reviewProfileBuild(db, userId) {
+  const { data: profile } = await db
+    .from("profiles")
+    .select("review_invite_at, ai_profile")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!profile?.review_invite_at) return { built: false, reason: "not a review invite" };
+  // never overwrite a profile they've already built themselves
+  if (profile.ai_profile) return { built: false, reason: "already has a profile" };
+
+  const { data: review } = await db
+    .from("evolve_portfolio_reviews")
+    .select("resume_mode, resume_value, portfolio_mode, portfolio_value")
+    .eq("user_id", userId)
+    .order("attempt", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!review?.resume_value || !review?.portfolio_value) return { built: false, reason: "no resume/portfolio yet" };
+
+  const resumeIsLink = review.resume_mode === "link";
+  const portfolioIsLink = (review.portfolio_mode || "link") === "link";
+  const { error } = await db
+    .from("profiles")
+    .update({
+      resume_link: resumeIsLink ? review.resume_value : null,
+      resume_file_url: resumeIsLink ? null : review.resume_value,
+      portfolio_link: portfolioIsLink ? review.portfolio_value : null,
+      portfolio_file_url: portfolioIsLink ? null : review.portfolio_value
+    })
+    .eq("id", userId);
+  if (error) throw new HttpError(500, error.message);
+
+  await callEdgeFn("extract-profile-data", userId);
+  await callEdgeFn("analyze-profile-data", userId);
+  return { built: true };
+}
+
 // ── handler ────────────────────────────────────────────────────────────
 export async function handleAdmin(body, req) {
   const db = serviceClient();
@@ -248,6 +306,8 @@ export async function handleAdmin(body, req) {
   }
 
   if (op === "community_feed") return communityFeed(db);
+
+  if (op === "review_profile_build") return reviewProfileBuild(db, user.id);
 
   // first sign-up → welcome email, at most once (claim the stamp first)
   if (op === "welcome_email") {
@@ -307,6 +367,15 @@ export async function handleAdmin(body, req) {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     try {
       return await grantAccess(db, body);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
+  }
+
+  if (op === "revoke_demo") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    try {
+      return await revokeDemo(db, body);
     } catch (err) {
       throw new HttpError(400, err.message);
     }

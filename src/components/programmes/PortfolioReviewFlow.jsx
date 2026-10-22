@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { callAdminApi } from "../../supabaseAdminClient";
 import { useAuth } from "../../hooks/useAuth";
 import { getPortfolioReviewProgress } from "../../lib/portfolioReviewProgress";
 import {
@@ -712,6 +713,14 @@ export default function PortfolioReviewFlow({
       return;
     }
     setPhase("booking");
+    // invited with a free review (review_invite.sql) → the same resume +
+    // portfolio also build their My Profile, in the background
+    if (authUser?.review_invite_at) {
+      callAdminApi({ op: "review_profile_build" }).then((r) => {
+        if (r.error) console.error("review_profile_build:", r.error.message);
+        else if (r.built) refreshUser();
+      });
+    }
     advanceGrowthStage(
       SUBMIT_GROWTH_STAGE,
       "Your portfolio is growing 🌿",

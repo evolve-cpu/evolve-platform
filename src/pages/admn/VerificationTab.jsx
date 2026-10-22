@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabaseAdmin } from "../../supabaseAdminClient";
+import { ViewModal, SourceLink } from "./AIProfilesTab";
 
 const Y = "#FFD007";
 const inputStyle = { backgroundColor: "#0d0d0d", border: "1px solid #262626" };
@@ -198,6 +199,7 @@ function BookingRow({ row, onChange }) {
   const [notes, setNotes] = useState(row.verification_notes || "");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [viewing, setViewing] = useState(false);
 
   async function saveMeetLinkAndEmail() {
     if (!meetLink.trim()) return;
@@ -252,6 +254,47 @@ function BookingRow({ row, onChange }) {
           {STATUS_LABEL[row.verification_status] || row.verification_status}
         </span>
       </div>
+
+      {/* what they built their profile from + the AI profile itself, to
+          look over before the call */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t pt-3 text-xs" style={{ borderColor: "#262626" }}>
+        <span style={labelStyle}>
+          portfolio: <SourceLink link={row.portfolio_link} fileUrl={row.portfolio_file_url} />
+        </span>
+        <span style={labelStyle}>
+          resume: <SourceLink link={row.resume_link} fileUrl={row.resume_file_url} />
+        </span>
+        {row.ai_profile ? (
+          <button
+            type="button"
+            onClick={() => setViewing(true)}
+            className="ml-auto text-xs font-bold rounded-lg px-3 py-1.5"
+            style={{ background: `${Y}22`, color: Y }}
+          >
+            view AI profile
+          </button>
+        ) : (
+          <span className="ml-auto" style={labelStyle}>
+            no AI profile yet
+          </span>
+        )}
+      </div>
+      {viewing && (
+        <ViewModal
+          row={{
+            name: row.name,
+            email: row.email,
+            portfolioLink: row.portfolio_link,
+            portfolioFileUrl: row.portfolio_file_url,
+            resumeLink: row.resume_link,
+            resumeFileUrl: row.resume_file_url,
+            socialLinks: row.social_links,
+            aiProfile: row.ai_profile,
+            aiProfileUpdatedAt: row.ai_profile_updated_at
+          }}
+          onClose={() => setViewing(false)}
+        />
+      )}
 
       <div className="grid sm:grid-cols-2 gap-3 border-t pt-3" style={{ borderColor: "#262626" }}>
         <AnswerBlock label="Tell us about yourself" answer={row.verification_answers?.about} />
@@ -342,7 +385,7 @@ export default function VerificationTab() {
     const { data } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, name, email, verification_status, verification_answers, verification_meet_link, verification_notes, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
+        "id, name, email, portfolio_link, portfolio_file_url, resume_link, resume_file_url, social_links, ai_profile, ai_profile_updated_at, verification_status, verification_answers, verification_meet_link, verification_notes, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
       )
       .not("verification_status", "is", null)
       .order("verification_status", { ascending: true });

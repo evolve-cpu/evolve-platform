@@ -1021,7 +1021,9 @@ export default function PublicProfile({ platform = false }) {
         mark(key);
         membership.showWelcome();
       }
-    } else if (access.mode === "payg") {
+    } else if (access.mode === "payg" && !user.review_invite_at) {
+      // free-review invitees never had a trial (review_invite.sql), so
+      // there's no "your trial has ended" for them
       const key = `evolve_trial_ended_seen_${user.id}`;
       if (!seen(key)) {
         mark(key);
@@ -1029,7 +1031,7 @@ export default function PublicProfile({ platform = false }) {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOwner, user?.id, user?.trial_resumed_at, access.phase, access.mode]);
+  }, [isOwner, user?.id, user?.trial_resumed_at, user?.review_invite_at, access.phase, access.mode]);
   const trialBadgeEnding = access.phase === "ended" && access.mode === "payg";
 
   // default collapsed on mobile (short summary) / expanded on desktop —

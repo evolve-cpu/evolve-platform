@@ -6,6 +6,7 @@ import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 // partner colleges). Writes the same rows a real payment would, creates
 // accounts that don't exist yet and can email a one-click sign-in link.
 // Server side: api/_manualGrant.js (op "grant_access", Evolve admins only).
+// Demo access is cancelled from the "Active demos" list (op "revoke_demo").
 
 const Y = "#FFD007";
 const inputStyle = { backgroundColor: "#0d0d0d", border: "1px solid #262626" };
@@ -18,6 +19,7 @@ const KINDS = [
   { id: "event", label: "event (live)" },
   { id: "recording", label: "event recording" },
   { id: "mentorship", label: "mentorship (individual)" },
+  { id: "demo", label: "demo access (everything except mentorship)" },
   { id: "none", label: "nothing, just an account + sign-in link" }
 ];
 
@@ -125,6 +127,87 @@ function RecentGrants({ refreshKey }) {
   );
 }
 
+// Everyone on demo access right now, with cancel (one or all). Cancelling
+// puts their plan back to what it was before the demo — see revokeDemo()
+// in api/_manualGrant.js.
+function ActiveDemos({ refreshKey }) {
+  const [rows, setRows] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabaseAdmin
+      .from("profiles")
+      .select("id, name, email, demo_until")
+      .not("demo_until", "is", null)
+      .order("demo_until", { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) setRows(data || []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, reload]);
+
+  async function cancel(list) {
+    if (!list.length) return;
+    const who = list.length === 1 ? list[0].email : `${list.length} people`;
+    if (!window.confirm(`Cancel demo access for ${who}?`)) return;
+    setBusy(true);
+    setError("");
+    const res = await callAdminApi({ op: "revoke_demo", user_ids: list.map((r) => r.id) });
+    setBusy(false);
+    if (res.error) setError(res.error.message);
+    else {
+      const failed = res.results.filter((r) => !r.ok);
+      if (failed.length) setError(failed.map((r) => `${r.email}: ${r.error}`).join(" · "));
+    }
+    setReload((k) => k + 1);
+  }
+
+  if (!rows?.length) return null;
+  return (
+    <div className="rounded-xl p-4" style={inputStyle}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-bold text-white">Active demos ({rows.length})</p>
+        <button
+          type="button"
+          onClick={() => cancel(rows)}
+          disabled={busy}
+          className="text-xs font-bold text-red-400 hover:text-red-300 disabled:opacity-40"
+        >
+          cancel all
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+      <div className="flex flex-col divide-y divide-white/5">
+        {rows.map((r) => {
+          const over = new Date(r.demo_until).getTime() < Date.now();
+          return (
+            <div key={r.id} className="py-2 text-xs flex flex-wrap items-center gap-x-4 gap-y-0.5">
+              <span className="text-white font-semibold">{r.name || r.email}</span>
+              {r.name && <span className="text-white/40">{r.email}</span>}
+              <span style={{ color: over ? "#666" : Y }}>
+                {over ? "ended" : "till"} {fmtDate(r.demo_until)}
+              </span>
+              <button
+                type="button"
+                onClick={() => cancel([r])}
+                disabled={busy}
+                className="ml-auto text-red-400 hover:text-red-300 disabled:opacity-40"
+              >
+                cancel
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function GrantAccessTab() {
   const [peopleText, setPeopleText] = useState("");
   const [kind, setKind] = useState("portfolio_review");
@@ -132,6 +215,11 @@ export default function GrantAccessTab() {
   const [eventId, setEventId] = useState("");
   const [mentorshipPlan, setMentorshipPlan] = useState("core");
   const [tier, setTier] = useState("");
+  const [demoUntil, setDemoUntil] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    return d.toISOString().slice(0, 10);
+  });
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
@@ -161,12 +249,16 @@ export default function GrantAccessTab() {
     setResults(null);
     if (!people.length) return setError("add at least one email");
     if (needsEvent && !eventId) return setError("pick an event");
+    if (kind === "demo" && !demoUntil) return setError("pick when the demo ends");
     const amt = Number(amount) || 0;
     const summary = [
       `Grant "${kindLabel}" to ${people.length} ${people.length === 1 ? "person" : "people"}`,
+      kind === "demo" ? `until ${fmtDate(demoUntil)}` : null,
       amt ? `₹${amt} received each` : "for free",
       sendLink ? "and email them a sign-in link" : "(no email)"
-    ].join(", ");
+    ]
+      .filter(Boolean)
+      .join(", ");
     if (!window.confirm(`${summary}?`)) return;
 
     setBusy(true);
@@ -178,7 +270,8 @@ export default function GrantAccessTab() {
         plan,
         event_id: eventId || null,
         mentorship_plan: mentorshipPlan,
-        tier: tier || null
+        tier: tier || null,
+        demo_until: kind === "demo" ? demoUntil : null
       },
       amount: amt,
       reference,
@@ -259,6 +352,18 @@ export default function GrantAccessTab() {
             </Field>
           )}
 
+          {kind === "demo" && (
+            <Field label="Demo ends on (cancel any time from Active demos below)">
+              <input
+                type="date"
+                value={demoUntil}
+                onChange={(e) => setDemoUntil(e.target.value)}
+                className={fieldClass}
+                style={inputStyle}
+              />
+            </Field>
+          )}
+
           {kind === "mentorship" && (
             <Field label="Mentorship plan">
               <select
@@ -291,6 +396,12 @@ export default function GrantAccessTab() {
               className={fieldClass}
               style={inputStyle}
             />
+            {kind === "portfolio_review" && !Number(amount) && (
+              <p className="text-xs mt-1" style={labelStyle}>
+                Free review invite: no 30-day trial, and their review upload
+                also builds their profile.
+              </p>
+            )}
           </Field>
 
           <Field label="Payment reference (UPI / bank txn id)">
@@ -348,6 +459,8 @@ export default function GrantAccessTab() {
           </div>
         )}
       </div>
+
+      <ActiveDemos refreshKey={refreshKey} />
 
       <RecentGrants refreshKey={refreshKey} />
     </div>

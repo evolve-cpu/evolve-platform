@@ -220,6 +220,8 @@ export function AuthProvider({ children }) {
       trial_started_at:        profile.trial_started_at ?? null,
       // set when a deleted account's trial was resumed (trial_rejoin_ledger.sql)
       trial_resumed_at:        profile.trial_resumed_at ?? null,
+      // invited with a free portfolio review — no trial (review_invite.sql)
+      review_invite_at:        profile.review_invite_at ?? null,
       // after-trial membership (see src/lib/membership.js)
       designation:             profile.designation ?? null,
       plan:                    profile.plan ?? null,
