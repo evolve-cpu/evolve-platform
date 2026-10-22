@@ -21,6 +21,7 @@
 //   gemini              admin roles → dashboard insights, key stays here
 //   grant_access        Evolve admins → manual access (paid outside Razorpay / free), see _manualGrant.js
 //   revoke_demo         Evolve admins → cancels demo access granted through grant_access
+//   revoke_grant        Evolve admins → undoes one manual grant (Recent manual grants list)
 //   anu_student_self    signed in → the caller's own anu_students row
 //   welcome_email       signed in → "Welcome to Evolve" to the caller, once
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
@@ -35,7 +36,7 @@ import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "./_sendEmail.js";
 import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEmails.js";
 import { communityFeed } from "./_discordCommunity.js";
-import { grantAccess, revokeDemo } from "./_manualGrant.js";
+import { grantAccess, revokeDemo, revokeGrant } from "./_manualGrant.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -372,6 +373,14 @@ export async function handleAdmin(body, req) {
     }
   }
 
+  if (op === "revoke_grant") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    try {
+      return await revokeGrant(db, body);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
+  }
   if (op === "revoke_demo") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     try {

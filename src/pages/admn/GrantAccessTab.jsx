@@ -61,20 +61,39 @@ const fmtDate = (d) =>
     year: "numeric"
   });
 
+// Each row can be revoked (op "revoke_grant", revokeGrant() in
+// api/_manualGrant.js): the row stays as the audit trail, marked
+// "refunded", and whatever it unlocked is switched back off.
 function RecentGrants({ refreshKey }) {
   const [rows, setRows] = useState(null);
+  const [reload, setReload] = useState(0);
+  const [busyId, setBusyId] = useState(null);
+  const [msg, setMsg] = useState(null); // { id, text, error }
+
+  async function revoke(g) {
+    if (!window.confirm(`Revoke "${g.what}" for ${g.email || g.who}?`)) return;
+    setBusyId(g.id);
+    setMsg(null);
+    const res = await callAdminApi({ op: "revoke_grant", table: g.table, id: g.id });
+    setBusyId(null);
+    setMsg(res.error ? { id: g.id, text: res.error.message, error: true } : { id: g.id, text: res.note });
+    setReload((k) => k + 1);
+  }
 
   useEffect(() => {
     let cancelled = false;
     const manual = (q) => q.like("razorpay_order_id", "manual_%").order("created_at", { ascending: false }).limit(50);
     Promise.all([
-      manual(supabaseAdmin.from("purchases").select("created_at, kind, plan, title, amount, razorpay_payment_id, profiles(name, email)")),
-      manual(supabaseAdmin.from("portfolio_review_payments").select("created_at, name, email, amount, razorpay_payment_id")),
-      manual(supabaseAdmin.from("mentorship_enrollments").select("created_at, plan, amount, razorpay_payment_id, profiles(name, email)"))
+      manual(supabaseAdmin.from("purchases").select("id, status, created_at, kind, plan, title, amount, razorpay_payment_id, profiles(name, email)")),
+      manual(supabaseAdmin.from("portfolio_review_payments").select("id, status, created_at, name, email, amount, razorpay_payment_id")),
+      manual(supabaseAdmin.from("mentorship_enrollments").select("id, status, created_at, plan, amount, razorpay_payment_id, profiles(name, email)"))
     ]).then(([p, r, m]) => {
       if (cancelled) return;
       const all = [
         ...(p.data || []).map((x) => ({
+          table: "purchases",
+          id: x.id,
+          status: x.status,
           at: x.created_at,
           who: x.profiles?.name || x.profiles?.email,
           email: x.profiles?.email,
@@ -83,6 +102,9 @@ function RecentGrants({ refreshKey }) {
           audit: x.razorpay_payment_id
         })),
         ...(r.data || []).map((x) => ({
+          table: "portfolio_review_payments",
+          id: x.id,
+          status: x.status,
           at: x.created_at,
           who: x.name || x.email,
           email: x.email,
@@ -91,6 +113,9 @@ function RecentGrants({ refreshKey }) {
           audit: x.razorpay_payment_id
         })),
         ...(m.data || []).map((x) => ({
+          table: "mentorship_enrollments",
+          id: x.id,
+          status: x.status,
           at: x.created_at,
           who: x.profiles?.name || x.profiles?.email,
           email: x.profiles?.email,
@@ -104,7 +129,7 @@ function RecentGrants({ refreshKey }) {
     return () => {
       cancelled = true;
     };
-  }, [refreshKey]);
+  }, [refreshKey, reload]);
 
   return (
     <div className="rounded-xl p-4" style={inputStyle}>
@@ -112,16 +137,38 @@ function RecentGrants({ refreshKey }) {
       {rows === null && <p className="text-xs" style={labelStyle}>loading…</p>}
       {rows?.length === 0 && <p className="text-xs" style={labelStyle}>none yet</p>}
       <div className="flex flex-col divide-y divide-white/5">
-        {rows?.map((g, i) => (
-          <div key={i} className="py-2 text-xs flex flex-wrap gap-x-4 gap-y-0.5">
-            <span className="text-white/40 w-24 shrink-0">{fmtDate(g.at)}</span>
-            <span className="text-white font-semibold">{g.who}</span>
-            {g.email && g.email !== g.who && <span className="text-white/40">{g.email}</span>}
-            <span style={{ color: Y }}>{g.what}</span>
-            <span className="text-white/70">{g.amount ? `₹${Number(g.amount).toLocaleString("en-IN")}` : "free"}</span>
-            <span className="text-white/40 basis-full">{g.audit}</span>
-          </div>
-        ))}
+        {rows?.map((g) => {
+          const revoked = g.status !== "success";
+          return (
+            <div
+              key={`${g.table}:${g.id}`}
+              className="py-2 text-xs flex flex-wrap gap-x-4 gap-y-0.5"
+              style={revoked ? { opacity: 0.45 } : undefined}
+            >
+              <span className="text-white/40 w-24 shrink-0">{fmtDate(g.at)}</span>
+              <span className="text-white font-semibold">{g.who}</span>
+              {g.email && g.email !== g.who && <span className="text-white/40">{g.email}</span>}
+              <span style={{ color: Y }}>{g.what}</span>
+              <span className="text-white/70">{g.amount ? `₹${Number(g.amount).toLocaleString("en-IN")}` : "free"}</span>
+              {revoked ? (
+                <span className="ml-auto text-white/50">{g.status === "refunded" ? "revoked" : g.status}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => revoke(g)}
+                  disabled={busyId === g.id}
+                  className="ml-auto text-red-400 hover:text-red-300 disabled:opacity-40"
+                >
+                  {busyId === g.id ? "revoking…" : "revoke"}
+                </button>
+              )}
+              <span className="text-white/40 basis-full">{g.audit}</span>
+              {msg?.id === g.id && (
+                <span className={`basis-full ${msg.error ? "text-red-400" : "text-green-400"}`}>{msg.text}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

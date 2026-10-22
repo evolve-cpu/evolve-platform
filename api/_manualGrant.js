@@ -396,3 +396,96 @@ export async function grantAccess(db, body) {
   }
   return { results };
 }
+
+// Undoes one manual grant from the "Recent manual grants" list (op
+// "revoke_grant" in api/admin.js). The row is kept as the audit trail but
+// marked status "refunded", which every access check already ignores;
+// whatever the grant switched on elsewhere is switched back off:
+//   plan          plan_expires_at moves back by the month/year it added
+//                 (cleared if that's already past), annual's review credit
+//                 comes back off
+//   event         their registration for that event is cancelled
+//   review        the review cycle is removed if it hasn't been started
+//                 (no uploads, no report); a started one is left in place
+//   mentorship    status alone is enough
+// Demo access isn't revoked here — cancel it from Active demos.
+const REVOCABLE = ["purchases", "portfolio_review_payments", "mentorship_enrollments"];
+
+export async function revokeGrant(db, body) {
+  const { table, id } = body || {};
+  if (!REVOCABLE.includes(table) || !id) throw new Error("bad grant");
+  const { data: row, error } = await db.from(table).select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!row) throw new Error("grant not found");
+  if (!String(row.razorpay_order_id || "").startsWith("manual_")) throw new Error("only manual grants can be revoked here");
+  if (row.status !== "success") throw new Error("already revoked");
+
+  const { error: stErr } = await db.from(table).update({ status: "refunded" }).eq("id", id);
+  if (stErr) throw new Error(stErr.message);
+  const userId = row.user_id;
+  const notes = [];
+
+  if (table === "purchases" && row.kind === "plan") {
+    const { data: p } = await db
+      .from("profiles")
+      .select("plan_expires_at, review_credits, demo_until")
+      .eq("id", userId)
+      .single();
+    if (p?.plan_expires_at) {
+      const back = new Date(p.plan_expires_at);
+      if (row.plan === "annual") back.setFullYear(back.getFullYear() - 1);
+      else back.setMonth(back.getMonth() - 1);
+      const over = back.getTime() <= Date.now();
+      await db
+        .from("profiles")
+        .update({
+          plan: over ? null : undefined,
+          plan_expires_at: over ? null : back.toISOString(),
+          review_credits: Math.max(0, (p.review_credits || 0) - (row.plan === "annual" ? 1 : 0))
+        })
+        .eq("id", userId);
+      notes.push(over ? "plan ended" : `plan now ends ${back.toDateString()}`);
+    }
+  }
+
+  if (table === "purchases" && row.kind === "event" && row.event_id) {
+    const { data: other } = await db
+      .from("purchases")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("event_id", row.event_id)
+      .eq("kind", "event")
+      .eq("status", "success")
+      .limit(1)
+      .maybeSingle();
+    if (!other) {
+      await db
+        .from("event_registrations")
+        .update({ status: "cancelled" })
+        .eq("user_id", userId)
+        .eq("event_id", row.event_id);
+      notes.push("event registration cancelled");
+    }
+  }
+
+  if (table === "portfolio_review_payments") {
+    const { data: latest } = await db
+      .from("evolve_portfolio_reviews")
+      .select("id, resume_value, portfolio_value, review_report_url")
+      .eq("user_id", userId)
+      .order("attempt", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (latest && !latest.review_report_url) {
+      if (!latest.resume_value && !latest.portfolio_value) {
+        await db.from("evolve_portfolio_reviews").delete().eq("id", latest.id);
+        notes.push("open review removed");
+      } else {
+        notes.push("review already started, left in place");
+      }
+    }
+    if (!row.amount) await db.from("profiles").update({ review_invite_at: null }).eq("id", userId);
+  }
+
+  return { ok: true, note: notes.join(" · ") || "revoked" };
+}
