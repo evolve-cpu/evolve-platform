@@ -22,14 +22,14 @@ const NAV_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", url: "https://www.instagram.com/evolvebypaperclip/" },
-  { label: "Youtube", url: "https://www.youtube.com/@evolvebypaperclip" },
+  { label: "Instagram", url: "https://www.instagram.com/designwithevolve/" },
+  { label: "Youtube", url: "https://www.youtube.com/@designwithevolve" },
   { label: "Medium", url: "https://medium.com/@evolvebypaperclip" },
   {
     label: "LinkedIn",
-    url: "https://www.linkedin.com/company/evolvedesignacademy/"
+    url: "https://www.linkedin.com/company/designwithevolve/"
   },
-  { label: "Discord", url: "https://discord.gg/wKRYG7cSWt" }
+  { label: "Discord", url: "https://discord.gg/PZUFaqg4HE" }
 ];
 
 /**
