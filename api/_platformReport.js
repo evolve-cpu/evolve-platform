@@ -56,8 +56,9 @@ function tally(rows, keyOf) {
 }
 
 // today / this week / this month / total, from a list of timestamps
+// (anything after "today" is left out, for reports on a past day)
 function periods(stamps, w) {
-  const days = stamps.filter(Boolean).map(istDay);
+  const days = stamps.filter(Boolean).map(istDay).filter((d) => d <= w.today);
   return {
     today: days.filter((d) => d === w.today).length,
     week: days.filter((d) => d >= w.week).length,
@@ -77,12 +78,15 @@ function hostOf(url) {
 /**
  * @param {number} rangeDays  window for visits, CTA clicks, sign-up split,
  *                            DAU average and the per-day series (default 7)
+ * @param {number} now        report as of this moment (default: now); the
+ *                            weekly Discord post passes the end of last Sunday
  */
 export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() } = {}) {
   const days = Math.min(Math.max(Number(rangeDays) || 7, 1), 90);
   const w = windows(now);
   const rangeStartDay = addDays(w.today, -(days - 1));
   const rangeStart = istDayStartIso(rangeStartDay);
+  const rangeEnd = istDayStartIso(addDays(w.today, 1));
   const mauStartDay = addDays(w.today, -29);
   const activityStartDay = rangeStartDay < mauStartDay ? rangeStartDay : mauStartDay;
   const warnings = [];
@@ -96,18 +100,18 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
     soft(fetchAll(db, "admin_users", "email"), "admin_users", warnings),
     soft(
       fetchAll(db, "analytics_visits", "visitor_id,user_id,landing_path,referrer,utm_source,utm_medium,utm_campaign,created_at", (q) =>
-        q.gte("created_at", rangeStart)
+        q.gte("created_at", rangeStart).lt("created_at", rangeEnd)
       ),
       "analytics_visits",
       warnings
     ),
     soft(
-      fetchAll(db, "analytics_events", "user_id,event,props,created_at", (q) => q.gte("created_at", rangeStart)),
+      fetchAll(db, "analytics_events", "user_id,event,props,created_at", (q) => q.gte("created_at", rangeStart).lt("created_at", rangeEnd)),
       "analytics_events",
       warnings
     ),
     soft(
-      fetchAll(db, "user_daily_activity", "user_id,day", (q) => q.gte("day", activityStartDay)),
+      fetchAll(db, "user_daily_activity", "user_id,day", (q) => q.gte("day", activityStartDay).lte("day", w.today)),
       "user_daily_activity",
       warnings
     ),
@@ -161,7 +165,7 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
   };
 
   // ── accounts ────────────────────────────────────────────────────────
-  const inRange = (ts) => ts && istDay(ts) >= rangeStartDay;
+  const inRange = (ts) => ts && istDay(ts) >= rangeStartDay && istDay(ts) <= w.today;
   const accounts = {
     ...periods(users.map((p) => p.created_at), w),
     byMethodInRange: tally(users.filter((p) => inRange(p.created_at)), (p) => p.signup_method || "unknown"),
@@ -201,7 +205,11 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
 
   // ── platform sections ───────────────────────────────────────────────
   const sectionUsers = (area, from) =>
-    new Set(ex.filter((r) => r.area === area && (!from || istDay(r.last_at) >= from)).map((r) => r.user_id)).size;
+    new Set(
+      ex
+        .filter((r) => r.area === area && istDay(r.first_at) <= w.today && (!from || istDay(r.last_at) >= from))
+        .map((r) => r.user_id)
+    ).size;
   const sections = SECTIONS.map((area) => ({
     area,
     allTime: sectionUsers(area),
@@ -217,7 +225,9 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
   }
   const series = [];
   for (let d = rangeStartDay; d <= w.today; d = addDays(d, 1)) series.push({ day: d, users: perDay.get(d)?.size || 0 });
-  const completeDays = series.filter((s) => s.day < w.today);
+  // today only counts toward the average once it's over (a report on a past week)
+  const todayOver = now >= Date.parse(rangeEnd) - 1000;
+  const completeDays = series.filter((s) => s.day < w.today || todayOver);
   const active = {
     today: perDay.get(w.today)?.size || 0,
     yesterday: perDay.get(addDays(w.today, -1))?.size || 0,

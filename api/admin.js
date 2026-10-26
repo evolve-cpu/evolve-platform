@@ -23,6 +23,9 @@
 //   revoke_demo         Evolve admins → cancels demo access granted through grant_access
 //   revoke_grant        Evolve admins → undoes one manual grant (Recent manual grants list)
 //   platform_report     Evolve admins → visits, sign-ups, activity, exploration (see _platformReport.js)
+//   platform_report_discord Evolve admins → posts last week's report to Discord now (see _platformDiscord.js)
+//
+// Plus GET ?cron=platform-report: the weekly Discord post (vercel.json).
 //   anu_student_self    signed in → the caller's own anu_students row
 //   welcome_email       signed in → "Welcome to Evolve" to the caller, once
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
@@ -39,6 +42,7 @@ import { firstNameOf, sendWelcomeEmail, sendGoodbyeEmail } from "./_lifecycleEma
 import { communityFeed } from "./_discordCommunity.js";
 import { grantAccess, revokeDemo, revokeGrant } from "./_manualGrant.js";
 import { buildPlatformReport } from "./_platformReport.js";
+import { buildWeeklyReports, postWeeklyReportToDiscord } from "./_platformDiscord.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -387,6 +391,10 @@ export async function handleAdmin(body, req) {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     return buildPlatformReport(db, { rangeDays: body.rangeDays });
   }
+  if (op === "platform_report_discord") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    return postWeeklyReportToDiscord(await buildWeeklyReports(db));
+  }
 
   if (op === "revoke_demo") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
@@ -401,6 +409,22 @@ export async function handleAdmin(body, req) {
 }
 
 export default async function handler(req, res) {
+  // Weekly platform report to Discord. Vercel Cron calls this with GET just after
+  // midnight Sunday India time (vercel.json) and reports the Monday–Sunday
+  // week that just ended. ?end=YYYY-MM-DD (a Sunday) reports another week.
+  if (req.method === "GET" && req.query?.cron === "platform-report") {
+    if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    try {
+      const end = /^\d{4}-\d{2}-\d{2}$/.test(req.query.end || "") ? req.query.end : undefined;
+      return res.status(200).json(await postWeeklyReportToDiscord(await buildWeeklyReports(serviceClient(), end)));
+    } catch (err) {
+      console.error("platform report cron error:", err);
+      return res.status(500).json({ error: "report failed" });
+    }
+  }
+
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};

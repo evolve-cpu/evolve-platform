@@ -140,6 +140,18 @@ export default function PlatformReportTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState("");
+
+  // same post the Monday cron sends: last full Monday–Sunday week
+  async function sendToDiscord() {
+    if (!window.confirm("Post last week's report to #platform-analytics now?")) return;
+    setSending(true);
+    setSent("");
+    const res = await callAdminApi({ op: "platform_report_discord" });
+    setSent(res.error ? `Couldn't send: ${res.error.message}` : res.skipped ? `Not sent: ${res.skipped}` : "Sent to Discord.");
+    setSending(false);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -196,7 +208,8 @@ export default function PlatformReportTab() {
         <div>
           <h2 className="text-lg font-bold text-white">Platform report</h2>
           <p className="text-sm mt-1" style={{ color: "#888" }}>
-            Visits, sign-ups and platform use. Days are India time; the evolve team's accounts are left out
+            Visits, sign-ups and platform use; posted weekly to Discord just after midnight on Sunday. Days are India time; the
+            evolve team's accounts are left out
             {r ? ` (${r.excludedTeamAccounts})` : ""}.
             {r ? ` Range: ${rangeText}.` : ""}
           </p>
@@ -224,8 +237,21 @@ export default function PlatformReportTab() {
           >
             {loading ? "Loading…" : "Refresh"}
           </button>
+          <button
+            onClick={sendToDiscord}
+            disabled={sending}
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: "#5865F2", color: "#fff" }}
+          >
+            {sending ? "Sending…" : "Send last week to Discord"}
+          </button>
         </div>
       </div>
+      {sent && (
+        <p className="text-sm -mt-3 mb-4" style={{ color: sent === "Sent to Discord." ? G : "#f87171" }}>
+          {sent}
+        </p>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg p-3 text-sm" style={{ background: "#2a0f12", color: "#f87171" }}>
