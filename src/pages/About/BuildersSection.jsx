@@ -29,7 +29,7 @@ const BUILDERS = [
   },
   {
     name: "Murtuza Banani",
-    role: "Student, Graphic Era University",
+    role: "Designer",
     driveId: "1DmE1272XQtDoY9AkuyTJ7-YNqXcqPUk2",
     video:
       "https://res.cloudinary.com/diuswhkzn/video/upload/v1791575794/Murtuza_builder_plr6it.mp4",
