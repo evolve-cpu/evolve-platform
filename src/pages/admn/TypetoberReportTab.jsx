@@ -8,6 +8,10 @@ import { supabaseAdmin } from "../../supabaseAdminClient";
 //                           new_account = created for Typetober
 //   typetober_activity      one row per user per India day, last_seen for
 //                           "online now"
+// and, for community-favourite voting (typetober_voting.sql):
+//   typetober_votes         current votes, one row per voter per submission
+//   typetober_vote_events   every vote, take-back and turned-away attempt
+//   typetober_vote_config   voting window + votes per person
 // Days are India calendar days (IST).
 
 const Y = "#FFD007";
@@ -22,6 +26,9 @@ const inr = (n) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const usd = (n) => `$${Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 const dayLabel = (d) =>
   new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", weekday: "short" });
+
+const imageUrl = (path) =>
+  path ? supabaseAdmin.storage.from("typetober-submissions").getPublicUrl(path).data?.publicUrl : "";
 
 async function fetchAll(table, columns) {
   const out = [];
@@ -61,6 +68,9 @@ export default function TypetoberReportTab() {
   const [parts, setParts] = useState([]);
   const [acts, setActs] = useState([]);
   const [names, setNames] = useState({});
+  const [votes, setVotes] = useState([]);
+  const [voteEvents, setVoteEvents] = useState([]);
+  const [voteConfig, setVoteConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updated, setUpdated] = useState(null);
@@ -69,10 +79,14 @@ export default function TypetoberReportTab() {
     setLoading(true);
     setError("");
     try {
-      const [s, p, a] = await Promise.all([
+      const soft = (e) => {
+        console.error(e);
+        return [];
+      };
+      const [s, p, a, v, ve, vc] = await Promise.all([
         fetchAll(
           "typetober_submissions",
-          "id,user_id,letter_index,amount,currency,status,razorpay_order_id,created_at"
+          "id,user_id,letter_index,image_path,amount,currency,status,razorpay_order_id,created_at"
         ),
         fetchAll("typetober_participants", "user_id,joined_at,new_account").catch((e) => {
           console.error(e);
@@ -81,23 +95,35 @@ export default function TypetoberReportTab() {
         fetchAll("typetober_activity", "user_id,day,last_seen").catch((e) => {
           console.error(e);
           return [];
-        })
+        }),
+        fetchAll("typetober_votes", "submission_id,voter_id,created_at").catch(soft),
+        fetchAll("typetober_vote_events", "voter_id,submission_id,action,created_at").catch(soft),
+        fetchAll("typetober_vote_config", "opens_at,closes_at,vote_limit").catch(soft)
       ]);
       setSubs(s);
       setParts(p);
       setActs(a);
+      setVotes(v);
+      setVoteEvents(ve);
+      setVoteConfig(vc[0] || null);
 
-      // Names for the latest orders.
-      const ids = [...new Set(s.filter((r) => r.status === "success").slice(-200).map((r) => r.user_id))];
-      if (ids.length) {
+      // Names for the latest orders and for the creators who got votes.
+      const subOwner = new Map(s.map((r) => [r.id, r.user_id]));
+      const ids = [
+        ...new Set([
+          ...s.filter((r) => r.status === "success").slice(-200).map((r) => r.user_id),
+          ...v.map((r) => subOwner.get(r.submission_id)).filter(Boolean)
+        ])
+      ];
+      const m = {};
+      for (let i = 0; i < ids.length; i += 200) {
         const { data } = await supabaseAdmin
           .from("profiles")
           .select("id,name,username,email")
-          .in("id", ids);
-        const m = {};
+          .in("id", ids.slice(i, i + 200));
         (data || []).forEach((r) => (m[r.id] = r));
-        setNames(m);
       }
+      setNames(m);
       setUpdated(new Date());
     } catch (err) {
       console.error("typetober report error:", err);
@@ -208,6 +234,85 @@ export default function TypetoberReportTab() {
     };
   }, [subs, parts, acts]);
 
+  const voting = useMemo(() => {
+    const subById = new Map(subs.filter((r) => r.status === "success").map((r) => [r.id, r]));
+    const perSub = new Map();
+    votes.forEach((v) => perSub.set(v.submission_id, (perSub.get(v.submission_id) || 0) + 1));
+    const leaderboard = [...perSub.entries()]
+      .map(([id, n]) => ({ sub: subById.get(id), votes: n }))
+      .filter((r) => r.sub)
+      .sort((a, b) => b.votes - a.votes || (a.sub.created_at < b.sub.created_at ? -1 : 1));
+
+    const perCreator = new Map();
+    leaderboard.forEach(({ sub, votes: n }) => {
+      const c = perCreator.get(sub.user_id) || { user_id: sub.user_id, votes: 0, entries: 0 };
+      c.votes += n;
+      c.entries++;
+      perCreator.set(sub.user_id, c);
+    });
+
+    const perVoter = new Map();
+    votes.forEach((v) => perVoter.set(v.voter_id, (perVoter.get(v.voter_id) || 0) + 1));
+    const limit = voteConfig?.vote_limit || 0;
+
+    const count = (action) => voteEvents.filter((e) => e.action === action).length;
+    const days = new Map();
+    voteEvents.forEach((e) => {
+      const d = istDay(e.created_at);
+      const row = days.get(d) || {
+        day: d,
+        vote: 0,
+        unvote: 0,
+        blocked_own: 0,
+        blocked_limit: 0,
+        blocked_closed: 0,
+        people: new Set()
+      };
+      row[e.action]++;
+      row.people.add(e.voter_id);
+      days.set(d, row);
+    });
+
+    return {
+      leaderboard,
+      creators: [...perCreator.values()].sort((a, b) => b.votes - a.votes),
+      days: [...days.values()].map((d) => ({ ...d, people: d.people.size })).sort((a, b) => (a.day < b.day ? 1 : -1)),
+      totals: {
+        votes: votes.length,
+        voters: perVoter.size,
+        usedAll: limit ? [...perVoter.values()].filter((n) => n >= limit).length : 0,
+        avg: perVoter.size ? (votes.length / perVoter.size).toFixed(1) : "0",
+        votedSubs: perSub.size,
+        unvotes: count("unvote"),
+        blockedOwn: count("blocked_own"),
+        blockedLimit: count("blocked_limit"),
+        blockedClosed: count("blocked_closed")
+      }
+    };
+  }, [subs, votes, voteEvents, voteConfig]);
+
+  const personLabel = (id) => {
+    const p = names[id];
+    return p?.name || p?.username || id?.slice(0, 8) || "–";
+  };
+
+  function downloadVotesCsv() {
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const head = ["Rank", "Votes", "Letter", "Creator", "Username", "Email", "Submitted (IST)", "Image", "Submission id"];
+    const lines = voting.leaderboard.map(({ sub, votes: n }, i) => {
+      const p = names[sub.user_id] || {};
+      return [i + 1, n, LETTERS[sub.letter_index], p.name, p.username, p.email, istDay(sub.created_at), imageUrl(sub.image_path), sub.id]
+        .map(esc)
+        .join(",");
+    });
+    const blob = new Blob([[head.join(","), ...lines].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `typetober-votes-${todayIst()}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   function downloadCsv() {
     const head = [
       "Date (IST)",
@@ -236,6 +341,15 @@ export default function TypetoberReportTab() {
   }
 
   const t = report.totals;
+  const vt = voting.totals;
+  const istTime = (ts) =>
+    new Date(ts).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit"
+    });
   const maxLetter = Math.max(1, ...report.perLetter);
   const th = "text-left text-[11px] font-semibold uppercase tracking-wider px-3 py-2 whitespace-nowrap";
   const td = "px-3 py-2 whitespace-nowrap";
@@ -451,6 +565,158 @@ export default function TypetoberReportTab() {
           </tbody>
         </table>
       </div>
+
+      <div className="flex flex-wrap items-end justify-between gap-3 mt-12 mb-4 pt-6" style={{ borderTop: "1px solid #222" }}>
+        <div>
+          <h2 className="text-lg font-bold text-white">Community favourite voting</h2>
+          <p className="text-sm mt-1" style={{ color: "#888" }}>
+            {voteConfig
+              ? `Open ${istTime(voteConfig.opens_at)} to ${istTime(Date.parse(voteConfig.closes_at) - 60000)} IST · ${voteConfig.vote_limit} votes per person`
+              : "Voting isn't set up yet. Run supabase/migrations/typetober_voting.sql."}
+          </p>
+        </div>
+        <button
+          onClick={downloadVotesCsv}
+          disabled={!voting.leaderboard.length}
+          className="px-4 py-2 rounded-lg text-sm font-bold"
+          style={{ background: Y, color: "#000" }}
+        >
+          Download votes CSV
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card label="Votes cast" value={vt.votes} sub={`on ${vt.votedSubs} submissions`} color={P} />
+        <Card label="Voters" value={vt.voters} sub={`${vt.avg} votes each · ${vt.usedAll} used all`} />
+        <Card label="Votes taken back" value={vt.unvotes} sub="then free to use again" />
+        <Card
+          label="Turned away"
+          value={vt.blockedOwn + vt.blockedLimit + vt.blockedClosed}
+          sub={`${vt.blockedOwn} own work · ${vt.blockedLimit} out of votes · ${vt.blockedClosed} closed`}
+        />
+      </div>
+
+      <h3 className="text-sm font-bold text-white mt-8 mb-2">Most voted submissions</h3>
+      <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #222" }}>
+        <table className="w-full text-sm" style={{ color: "#ddd" }}>
+          <thead style={{ background: "#111", color: "#777" }}>
+            <tr>
+              <th className={th}>#</th>
+              <th className={th}>Image</th>
+              <th className={th}>Letter</th>
+              <th className={th}>Creator</th>
+              <th className={th}>Email</th>
+              <th className={th}>Votes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {voting.leaderboard.slice(0, 50).map(({ sub, votes: n }, i) => (
+              <tr key={sub.id} style={{ borderTop: "1px solid #1d1d1d" }}>
+                <td className={`${td} font-bold text-white`}>{i + 1}</td>
+                <td className="px-3 py-1.5">
+                  <a href={imageUrl(sub.image_path)} target="_blank" rel="noreferrer">
+                    <img src={imageUrl(sub.image_path)} alt="" className="w-12 h-12 rounded object-cover" loading="lazy" />
+                  </a>
+                </td>
+                <td className={`${td} font-bold`} style={{ color: Y }}>
+                  {LETTERS[sub.letter_index]}
+                </td>
+                <td className={`${td} text-white`}>{personLabel(sub.user_id)}</td>
+                <td className={td} style={{ color: "#999" }}>
+                  {names[sub.user_id]?.email || "–"}
+                </td>
+                <td className={`${td} font-extrabold`} style={{ color: P }}>
+                  {n}
+                </td>
+              </tr>
+            ))}
+            {!voting.leaderboard.length && (
+              <tr>
+                <td colSpan={6} className="px-3 py-6 text-center" style={{ color: "#666" }}>
+                  No votes yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
+        <div>
+          <h3 className="text-sm font-bold text-white mb-2">Votes by creator (all their entries)</h3>
+          <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #222" }}>
+            <table className="w-full text-sm" style={{ color: "#ddd" }}>
+              <thead style={{ background: "#111", color: "#777" }}>
+                <tr>
+                  <th className={th}>Creator</th>
+                  <th className={th}>Entries voted</th>
+                  <th className={th}>Votes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {voting.creators.slice(0, 25).map((c) => (
+                  <tr key={c.user_id} style={{ borderTop: "1px solid #1d1d1d" }}>
+                    <td className={`${td} text-white`}>{personLabel(c.user_id)}</td>
+                    <td className={td}>{c.entries}</td>
+                    <td className={`${td} font-bold`} style={{ color: P }}>
+                      {c.votes}
+                    </td>
+                  </tr>
+                ))}
+                {!voting.creators.length && (
+                  <tr>
+                    <td colSpan={3} className="px-3 py-6 text-center" style={{ color: "#666" }}>
+                      No votes yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-white mb-2">Voting day by day</h3>
+          <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #222" }}>
+            <table className="w-full text-sm" style={{ color: "#ddd" }}>
+              <thead style={{ background: "#111", color: "#777" }}>
+                <tr>
+                  <th className={th}>Date</th>
+                  <th className={th}>People</th>
+                  <th className={th}>Votes</th>
+                  <th className={th}>Taken back</th>
+                  <th className={th}>Own work</th>
+                  <th className={th}>Out of votes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {voting.days.map((d) => (
+                  <tr key={d.day} style={{ borderTop: "1px solid #1d1d1d" }}>
+                    <td className={`${td} font-semibold text-white`}>{dayLabel(d.day)}</td>
+                    <td className={td}>{d.people}</td>
+                    <td className={td} style={{ color: P }}>
+                      {d.vote}
+                    </td>
+                    <td className={td}>{d.unvote}</td>
+                    <td className={td}>{d.blocked_own}</td>
+                    <td className={td}>{d.blocked_limit}</td>
+                  </tr>
+                ))}
+                {!voting.days.length && (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-6 text-center" style={{ color: "#666" }}>
+                      No voting activity yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p className="text-[12px] mt-2" style={{ color: "#666" }}>
+        Votes are what stands now; taken-back votes don't count. Own work, out of votes and closed are attempts the
+        server refused.
+      </p>
     </div>
   );
 }

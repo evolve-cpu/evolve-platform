@@ -23,15 +23,34 @@ export const CERT_TIERS = [
 ];
 
 /**
- * Which year's October this challenge points at. Once this year's window
- * (Oct 1 – Oct 31) has fully passed, roll forward to next year rather than
- * needing a code change every twelve months.
+ * Which year's Typetober this page points at. It stays on this year through
+ * November and December (voting and results), and only looks ahead to next
+ * October once a new calendar year starts.
  */
 export function getEventYear() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const afterWindow = new Date(y, 10, 1); // Nov 1
-  return now >= afterWindow ? y + 1 : y;
+  return new Date().getFullYear();
+}
+
+/** Submissions close 31 Oct, 11:59 PM IST (= 1 Nov 00:00 IST). */
+export function submissionsCloseAt(year = getEventYear()) {
+  return new Date(Date.UTC(year, 9, 31, 18, 30));
+}
+
+/**
+ * Where the challenge is right now:
+ *   upcoming → before Oct 1
+ *   open     → submissions open (Oct 1 – Oct 31, 11:59 PM IST)
+ *   voting   → submissions closed, community-favourite voting open
+ *   closed   → voting over, waiting on / showing results
+ * The voting window comes from the server (typetober_vote_config); until it
+ * has loaded, the time after submissions close counts as voting.
+ */
+export function getPhase(voteClosesAt, year = getEventYear()) {
+  const now = Date.now();
+  if (now < new Date(year, 9, 1).getTime()) return "upcoming";
+  if (now < submissionsCloseAt(year).getTime()) return "open";
+  if (voteClosesAt && now >= Date.parse(voteClosesAt)) return "closed";
+  return "voting";
 }
 
 /** Calendar date (local) that letter `i` (0=A .. 25=Z) unlocks on. */

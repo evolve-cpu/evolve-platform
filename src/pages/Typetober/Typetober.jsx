@@ -14,16 +14,19 @@ import UploadSheet from "./UploadSheet";
 import BulkUploadSheet, { BulkIcon } from "./BulkUploadSheet";
 import ShareSheet from "./ShareSheet";
 import { useTypetoberData, publicImageUrl } from "./lib/useTypetoberData";
+import { useVotes } from "./lib/useVotes";
 import {
   LETTERS,
   accentFor,
   getCurrentDay,
+  getPhase,
   ordinalOctDate,
   formatCountdown
 } from "./lib/constants";
 import "./Typetober.css";
 
-function Landing({ onAccept, currentDay }) {
+function Landing({ onAccept, phase }) {
+  const afterSubmissions = phase === "voting" || phase === "closed";
   const heroRef = useRef(null);
   const countdown = formatCountdown();
   return (
@@ -43,7 +46,7 @@ function Landing({ onAccept, currentDay }) {
             className="bg-evolve-pink text-white font-extrabold text-[13px] px-3.5 py-2 rounded-full border-2 border-white"
             style={{ transform: "rotate(-4deg)" }}
           >
-            October 1 - 31st
+            {afterSubmissions ? "Submissions closed" : "October 1 - 31st"}
             {/* {currentDay === 0
               ? "Starts Oct 1 - Oct 30"
               : currentDay >= 26
@@ -83,6 +86,17 @@ function Landing({ onAccept, currentDay }) {
               Typetober
             </h1>
           </div>
+          {afterSubmissions ? (
+            <p className="text-black font-semibold text-[18px] md:text-[26px] leading-snug">
+              Submissions are in.
+              <br />
+              <b className="text-[#DF0586]">
+                {phase === "voting"
+                  ? "Vote for your community favourites."
+                  : "Voting has closed. Results on 7 Nov."}
+              </b>
+            </p>
+          ) : (
           <p className="text-black font-semibold text-[18px] md:text-[26px] leading-snug">
             1 month. 26 alphabets.
             <br />
@@ -90,6 +104,7 @@ function Landing({ onAccept, currentDay }) {
             <br />
             <b className="text-[#DF0586]">Take the challenge. Win prizes.</b>
           </p>
+          )}
           {countdown && (
             <p className="text-black/55 text-[14px] font-bold">
               {countdown.days}d {countdown.hours}h until letters start unlocking
@@ -99,7 +114,11 @@ function Landing({ onAccept, currentDay }) {
             onClick={onAccept}
             className="tt-cta w-full md:w-auto md:min-w-[360px] bg-black text-evolve-yellow font-extrabold text-[20px] py-4 px-8 rounded-2xl border-2 border-black"
           >
-            Accept challenge
+            {phase === "voting"
+              ? "Vote now"
+              : phase === "closed"
+                ? "See the wall"
+                : "Accept challenge"}
           </button>
           <div className="flex items-center gap-2.5 self-start md:self-center text-black font-bold text-[13px] tracking-[.04em]">
             <span>Stationery partner</span>
@@ -382,8 +401,179 @@ function Fold({
   );
 }
 
+function Heart({ filled, size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <path
+        d="M12 20.5s-7.5-4.6-7.5-10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.6c0 5.7-7.5 10.3-7.5 10.3z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Vote pill: heart + count. Shared by the voting tiles and the lightbox. */
+function VoteButton({ item, votes, large = false }) {
+  const voted = votes.mine.has(item.id);
+  const count = votes.counts[item.id] || 0;
+  const open = votes.phase === "voting";
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        votes.onToggle(item);
+      }}
+      disabled={!open || votes.busy.has(item.id)}
+      aria-pressed={voted}
+      aria-label={voted ? "Take back your vote" : "Vote for this"}
+      className={`flex items-center justify-center gap-1.5 rounded-full font-extrabold border-2 transition-colors ${
+        large ? "text-[16px] px-5 py-3 w-full" : "text-[13px] px-2.5 py-1"
+      } ${
+        voted
+          ? "bg-evolve-pink border-evolve-pink text-white"
+          : "bg-black/70 border-white/25 text-white"
+      } ${open ? "" : "cursor-default"}`}
+    >
+      <Heart filled={voted} size={large ? 20 : 15} />
+      {large
+        ? `${voted ? "Voted" : open ? "Vote" : "Votes"} · ${count}`
+        : count}
+    </button>
+  );
+}
+
+function VoteTile({ item, ch, i, votes, onView }) {
+  return (
+    <div
+      className="relative aspect-square rounded-xl overflow-hidden bg-white/5"
+      style={
+        item.isMine
+          ? { outline: "2px solid #FFD007", outlineOffset: "-2px" }
+          : undefined
+      }
+    >
+      <button
+        onClick={() => onView(i, item)}
+        className="absolute inset-0 w-full h-full"
+        aria-label={`View ${ch} by ${item.profiles?.username || item.profiles?.name || "participant"}`}
+      >
+        {item.imageUrl && (
+          <img
+            src={item.imageUrl}
+            alt={ch}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+      </button>
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2 pointer-events-none bg-gradient-to-t from-black/70 to-transparent">
+        <span className="text-[12px] font-bold text-white/90 truncate min-w-0">
+          {item.isMine
+            ? "You"
+            : `@${item.profiles?.username || item.profiles?.name || "participant"}`}
+        </span>
+        <span className="pointer-events-auto flex-none">
+          <VoteButton item={item} votes={votes} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// After submissions close: only real submissions, bigger tiles, a vote
+// button on each. No examples, no empty boxes.
+function VoteFold({ i, ch, wallItems, votes, onView }) {
+  const accent = accentFor(i);
+  return (
+    <section
+      id={`tt-fold-${i}`}
+      className="tt-fold pt-3 pb-8 max-w-[1240px] mx-auto"
+    >
+      <div className="flex items-end gap-3 pb-3">
+        <div
+          className="font-extrabold text-[52px] md:text-[84px] leading-[0.85]"
+          style={{ color: accent }}
+        >
+          {ch}
+        </div>
+        <div className="flex-1 min-w-0 pb-1">
+          <div className="text-[13px] md:text-[15px] font-bold">
+            Letter {i + 1} of 26
+          </div>
+          <div className="text-[13px] text-white/40">
+            {wallItems.length} submissions
+          </div>
+        </div>
+      </div>
+      {wallItems.length ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+          {wallItems.map((item) => (
+            <VoteTile
+              key={item.id}
+              item={item}
+              ch={ch}
+              i={i}
+              votes={votes}
+              onView={onView}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-white/40 text-[14px]">No entries for {ch}.</p>
+      )}
+    </section>
+  );
+}
+
+const fmtIst = (ts) =>
+  new Date(ts).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
+function VoteBanner({ votes }) {
+  const limit = votes.config?.limit;
+  const left = limit ? Math.max(0, limit - votes.mine.size) : null;
+  // closes_at is midnight; show the last minute voting is open.
+  const until = votes.config?.closesAt
+    ? fmtIst(Date.parse(votes.config.closesAt) - 60000)
+    : null;
+  return (
+    <div className="max-w-[1240px] mx-auto mt-3 rounded-2xl bg-evolve-yellow text-black px-4 py-3 md:px-5 flex flex-wrap items-center gap-x-4 gap-y-1">
+      {votes.phase === "voting" ? (
+        <>
+          <b className="text-[15px] md:text-[17px] font-extrabold">
+            Submissions are closed. Vote for your community favourites.
+          </b>
+          <span className="text-[13px] md:text-[14px] font-bold">
+            {left !== null && (
+              <span className="bg-black text-evolve-yellow rounded-full px-2.5 py-0.5 mr-2">
+                {left} of {limit} votes left
+              </span>
+            )}
+            {until && `Voting closes ${until} IST`}
+          </span>
+        </>
+      ) : (
+        <b className="text-[15px] md:text-[17px] font-extrabold">
+          Voting has closed. Results are out on 7 Nov.
+        </b>
+      )}
+    </div>
+  );
+}
+
 function Board({
   currentDay,
+  phase,
+  votes,
   wallByLetter,
   examplesByLetter,
   mySubmissions,
@@ -391,6 +581,25 @@ function Board({
   onAdd,
   onView
 }) {
+  if (phase === "voting" || phase === "closed") {
+    return (
+      <div className="tt-scroller pr-11 md:pr-16 pl-4 md:pl-8">
+        <VoteBanner votes={votes} />
+        {LETTERS.map((ch, i) => (
+          <VoteFold
+            key={ch}
+            i={i}
+            ch={ch}
+            wallItems={wallByLetter.get(i) || []}
+            votes={votes}
+            onView={onView}
+          />
+        ))}
+        <div className="h-28" />
+      </div>
+    );
+  }
+
   if (currentDay === 0) {
     const cd = formatCountdown();
     return (
@@ -467,6 +676,7 @@ export default function Typetober({ platform = false }) {
   // import.meta.env.DEV is compiled to `false` and dead-code-eliminated in
   // production builds, so none of this ships.
   const [devDay, setDevDay] = useState(null);
+  const [devPhase, setDevPhase] = useState(null);
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const currentDay =
     import.meta.env.DEV && devDay !== null ? devDay : getCurrentDay();
@@ -479,6 +689,25 @@ export default function Typetober({ platform = false }) {
     stats,
     refresh
   } = useTypetoberData(user);
+
+  const voteState = useVotes(user);
+  const phase =
+    import.meta.env.DEV && devPhase
+      ? devPhase
+      : getPhase(voteState.config?.closesAt);
+  const submissionsOpen = phase === "open";
+  const votes = {
+    ...voteState,
+    phase,
+    onToggle: async (item) => {
+      if (!user) {
+        handleAccept();
+        return;
+      }
+      const msg = await voteState.toggle(item);
+      if (msg) showToast(msg);
+    }
+  };
 
   // Shared links open one submission in the lightbox:
   //   /typetober/<username>/<letter>[-n]  (e.g. /typetober/arnab/a-2)
@@ -620,7 +849,7 @@ export default function Typetober({ platform = false }) {
   }
 
   function handleRailClick(i) {
-    if (i >= currentDay) {
+    if (i >= currentDay && submissionsOpen) {
       showToast(`${LETTERS[i]} unlocks ${ordinalOctDate(i)}`);
       return;
     }
@@ -628,6 +857,10 @@ export default function Typetober({ platform = false }) {
   }
 
   function handleAdd(i) {
+    if (!submissionsOpen) {
+      showToast("Submissions are closed.");
+      return;
+    }
     if (!user) {
       handleAccept();
       return;
@@ -637,6 +870,10 @@ export default function Typetober({ platform = false }) {
   }
 
   function handleBulk() {
+    if (!submissionsOpen) {
+      showToast("Submissions are closed.");
+      return;
+    }
     if (!user) {
       handleAccept();
       return;
@@ -672,12 +909,14 @@ export default function Typetober({ platform = false }) {
             track("typetober_accept_click", { typetober_stage: "accepted" });
             handleAccept();
           }}
-          currentDay={currentDay}
+          phase={phase}
         />
       ) : (
         <>
           <Board
             currentDay={currentDay}
+            phase={phase}
+            votes={votes}
             wallByLetter={wallByLetter}
             examplesByLetter={examplesByLetter}
             mySubmissions={mySubmissions}
@@ -686,11 +925,11 @@ export default function Typetober({ platform = false }) {
             onView={handleView}
           />
           <Rail
-            currentDay={currentDay}
+            currentDay={submissionsOpen ? currentDay : 26}
             mySubmissions={mySubmissions}
             onClick={handleRailClick}
           />
-          {currentDay > 0 && (
+          {currentDay > 0 && submissionsOpen && (
             <button
               onClick={handleBulk}
               className="tt-bulk-fab ml-[-22px] md:ml-[-30px]"
@@ -715,7 +954,11 @@ export default function Typetober({ platform = false }) {
           streak={streak}
           mySubmissions={mySubmissions}
           currentDay={currentDay}
-          onBulk={currentDay > 0 ? () => setSheet({ type: "bulk" }) : undefined}
+          onBulk={
+            currentDay > 0 && submissionsOpen
+              ? () => setSheet({ type: "bulk" })
+              : undefined
+          }
           onGoToLetter={(i) => {
             closeSheet();
             goToFold(i);
@@ -781,6 +1024,12 @@ export default function Typetober({ platform = false }) {
           item={sheet.item}
           mine={!!(sheet.mine || (user && sheet.item?.user_id === user.id))}
           shared={!!sheet.shared}
+          phase={phase}
+          voteAction={
+            phase !== "open" && phase !== "upcoming" && !sheet.item?.isExample ? (
+              <VoteButton item={sheet.item} votes={votes} large />
+            ) : null
+          }
           onShare={() => {
             track("typetober_share_open");
             setSheet({ ...sheet, type: "share" });
@@ -827,9 +1076,26 @@ export default function Typetober({ platform = false }) {
                 onChange={(e) => setDevDay(Number(e.target.value))}
                 className="w-full"
               />
+              <div className="flex justify-between text-[12px] font-bold text-white/60 mt-2 mb-1">
+                <span>Dev: phase</span>
+                <b className="text-white">{phase}</b>
+              </div>
+              <select
+                value={devPhase || ""}
+                onChange={(e) => setDevPhase(e.target.value || null)}
+                className="w-full bg-white/10 rounded-lg text-[12px] py-1.5 px-2"
+              >
+                <option value="">Real date</option>
+                <option value="open">open</option>
+                <option value="voting">voting</option>
+                <option value="closed">closed</option>
+              </select>
               <div className="flex gap-2 mt-2">
                 <button
-                  onClick={() => setDevDay(null)}
+                  onClick={() => {
+                    setDevDay(null);
+                    setDevPhase(null);
+                  }}
                   className="flex-1 bg-white/10 rounded-lg text-[11px] py-1.5 font-bold"
                 >
                   Use real date

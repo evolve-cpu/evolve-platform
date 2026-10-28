@@ -571,10 +571,13 @@ export function Lightbox({
   item,
   mine,
   shared,
+  phase,
+  voteAction,
   onShare,
   onJoin
 }) {
   if (!item) return null;
+  const submissionsClosed = phase === "voting" || phase === "closed";
   return (
     <SheetShell open={open} onClose={onClose}>
       <div className="relative rounded-2xl overflow-hidden aspect-square bg-white/5 w-full mx-auto md:max-w-[min(100%,58vh)]">
@@ -598,6 +601,7 @@ export function Lightbox({
           </div>
         </div>
       </div>
+      {voteAction && <div className="mt-5">{voteAction}</div>}
       {mine ? (
         <button
           onClick={onShare}
@@ -605,7 +609,7 @@ export function Lightbox({
         >
           Share this letter
         </button>
-      ) : shared ? (
+      ) : shared && !submissionsClosed ? (
         <>
           <p className="text-white/60 text-[15px] mt-4 leading-snug">
             1 month, 26 alphabets. Illustrate them your way and put yours on the
