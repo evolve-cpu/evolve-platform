@@ -22,8 +22,11 @@ create table if not exists typetober_vote_config (
 );
 
 insert into typetober_vote_config (id, opens_at, closes_at, vote_limit)
-values (true, '2026-11-01 00:00+05:30', '2026-11-07 00:00+05:30', 10)
+values (true, '2026-11-01 00:00+05:30', '2026-11-07 00:00+05:30', 5)
 on conflict (id) do nothing;
+
+-- 5 votes per person (an earlier draft of this file used 10).
+update typetober_vote_config set vote_limit = 5 where vote_limit = 10;
 
 alter table typetober_vote_config enable row level security;
 
@@ -104,6 +107,7 @@ declare
   cfg typetober_vote_config;
   owner uuid;
   used int;
+  tester boolean;
   err text;
 begin
   if uid is null then
@@ -115,13 +119,22 @@ begin
   perform pg_advisory_xact_lock(hashtext('typetober_vote:' || uid::text));
 
   select * into cfg from typetober_vote_config;
+
+  -- Team accounts (admin_users) may vote outside the window, so the flow
+  -- can be tested on dev.evolvedesign.academy before voting opens. Their
+  -- early votes are cleared with the snippet at the bottom of this file.
+  select exists (
+    select 1 from admin_users a
+    join auth.users u on lower(u.email) = a.email
+    where u.id = uid
+  ) into tester;
   select s.user_id into owner
   from typetober_submissions s
   where s.id = sub_id and s.status = 'success';
 
   if owner is null then
     err := 'not_found';
-  elsif now() < cfg.opens_at or now() >= cfg.closes_at then
+  elsif not tester and (now() < cfg.opens_at or now() >= cfg.closes_at) then
     err := 'voting_closed';
     insert into typetober_vote_events (voter_id, submission_id, action) values (uid, sub_id, 'blocked_closed');
   elsif cast_it and owner = uid then
@@ -157,3 +170,8 @@ $$;
 
 revoke all on function typetober_cast_vote(uuid, boolean) from public;
 grant execute on function typetober_cast_vote(uuid, boolean) to authenticated;
+
+-- ── after testing: clear the team's early test votes ─────────────────
+-- Run once before voting opens (anything cast before opens_at is a test):
+--   delete from typetober_votes where created_at < (select opens_at from typetober_vote_config);
+--   delete from typetober_vote_events where created_at < (select opens_at from typetober_vote_config);

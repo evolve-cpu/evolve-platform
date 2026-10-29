@@ -241,6 +241,11 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   );
 }
 
+const SHOW_DEV_TOOLS =
+  import.meta.env.DEV ||
+  (typeof window !== "undefined" &&
+    window.location.hostname === "dev.evolvedesign.academy");
+
 const GRID_GAP = 6; // gap-1.5
 
 /**
@@ -672,14 +677,14 @@ export default function Typetober({ platform = false }) {
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
 
-  // Dev-only override so the board is testable before Oct 1 / after Oct 26 —
-  // import.meta.env.DEV is compiled to `false` and dead-code-eliminated in
-  // production builds, so none of this ships.
+  // Dev override so the board is testable off-season (day + phase).
+  // Also shown on dev.evolvedesign.academy (the development branch) so the
+  // voting flow can be tested there; never on the live site.
   const [devDay, setDevDay] = useState(null);
   const [devPhase, setDevPhase] = useState(null);
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const currentDay =
-    import.meta.env.DEV && devDay !== null ? devDay : getCurrentDay();
+    SHOW_DEV_TOOLS && devDay !== null ? devDay : getCurrentDay();
 
   const {
     wallByLetter,
@@ -692,7 +697,7 @@ export default function Typetober({ platform = false }) {
 
   const voteState = useVotes(user);
   const phase =
-    import.meta.env.DEV && devPhase
+    SHOW_DEV_TOOLS && devPhase
       ? devPhase
       : getPhase(voteState.config?.closesAt);
   const submissionsOpen = phase === "open";
@@ -1060,7 +1065,7 @@ export default function Typetober({ platform = false }) {
 
       <div className={`tt-toast ${toast ? "show" : ""}`}>{toast}</div>
 
-      {import.meta.env.DEV && (
+      {SHOW_DEV_TOOLS && (
         <div className="absolute left-3 bottom-3 z-[110]">
           {devToolsOpen ? (
             <div className="bg-[#161616] border border-white/20 rounded-2xl p-3 w-56 text-white">
