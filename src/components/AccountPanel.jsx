@@ -2541,6 +2541,8 @@ export function ProfileTabPane({ user }) {
   const [verificationSlotId, setVerificationSlotId] = useState(null);
   const [verificationMeetLink, setVerificationMeetLink] = useState(null);
   const [verificationNotes, setVerificationNotes] = useState(null);
+  // Calendly link for invited cohorts (verification_booking_url.sql)
+  const [verificationBookingUrl, setVerificationBookingUrl] = useState(null);
   const [isPublic, setIsPublic] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -2568,7 +2570,7 @@ export function ProfileTabPane({ user }) {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, ai_profile, social_links, username, ai_profile_public, verification_status, verification_slot_id, verification_meet_link, verification_notes, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
+          "portfolio_link, portfolio_file_url, resume_link, resume_file_url, ai_profile, social_links, username, ai_profile_public, verification_status, verification_slot_id, verification_meet_link, verification_notes, verification_booking_url, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -2590,6 +2592,7 @@ export function ProfileTabPane({ user }) {
         setVerificationSlot(data.verification_slots || null);
         setVerificationMeetLink(data.verification_meet_link || null);
         setVerificationNotes(data.verification_notes || null);
+        setVerificationBookingUrl(data.verification_booking_url || null);
       }
       setLoaded(true);
     })();
@@ -3203,7 +3206,13 @@ export function ProfileTabPane({ user }) {
 
       <VerifyFlowModal
         open={verifyFlowOpen}
-        user={{ id: user.id, verification_slot_id: verificationSlotId }}
+        user={{
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          verification_slot_id: verificationSlotId,
+          verification_booking_url: verificationBookingUrl
+        }}
         startAtSlot={verifyRescheduling}
         onClose={() => {
           setVerifyFlowOpen(false);

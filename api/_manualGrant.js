@@ -223,10 +223,17 @@ export async function revokeDemo(db, body) {
 // supabase/migrations/review_invite.sql. No 30-day trial for them: if they
 // haven't started one yet, it's stamped as started and already over, so
 // public.start_trial() leaves it alone. Their review upload also builds
-// their AI profile (api/admin.js op "review_profile_build").
+// their AI profile (api/admin.js op "review_profile_build"), and their
+// "Get evolve verified" call is booked on Calendly rather than from
+// verification_slots (supabase/migrations/verification_booking_url.sql).
+const VERIFICATION_BOOKING_URL = "https://calendly.com/evolvedesignacademy/portfolioreview";
+
 async function markReviewInvite(db, userId) {
   const now = new Date().toISOString();
-  const { error } = await db.from("profiles").update({ review_invite_at: now }).eq("id", userId);
+  const { error } = await db
+    .from("profiles")
+    .update({ review_invite_at: now, verification_booking_url: VERIFICATION_BOOKING_URL })
+    .eq("id", userId);
   if (error) throw new Error(error.message);
   await db
     .from("profiles")
@@ -484,7 +491,12 @@ export async function revokeGrant(db, body) {
         notes.push("review already started, left in place");
       }
     }
-    if (!row.amount) await db.from("profiles").update({ review_invite_at: null }).eq("id", userId);
+    if (!row.amount) {
+      await db
+        .from("profiles")
+        .update({ review_invite_at: null, verification_booking_url: null })
+        .eq("id", userId);
+    }
   }
 
   return { ok: true, note: notes.join(" · ") || "revoked" };

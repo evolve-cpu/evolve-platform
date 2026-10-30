@@ -259,10 +259,12 @@ export function VerifyCard({
           <div className="min-w-0 flex-1">
             <p className="text-white font-bold text-sm">Call booked</p>
             <p className="text-white/40 text-xs mt-0.5">
-              {slot ? `${fmtSlotDate(slot.starts_at)} · ${fmtSlotTime(slot.starts_at)}` : "…"}
+              {slot
+                ? `${fmtSlotDate(slot.starts_at)} · ${fmtSlotTime(slot.starts_at)}`
+                : "Booked on Calendly — the invite's in your email"}
             </p>
             <div className="flex items-center gap-3 mt-1.5">
-              {!meetLink && (
+              {!meetLink && slot && (
                 <button
                   type="button"
                   onClick={onReschedule}
@@ -352,7 +354,21 @@ function answerIsEmpty(a) {
    counter; mobile: true full screen (not a bottom sheet, per the
    reference — this flow reads like its own short page, not an
    overlay). `startAtSlot` skips straight to the slot step, used by
-   "Reschedule" on an already-booked call. ───────────────────────────── */
+   "Reschedule" on an already-booked call. `user.verification_booking_url`
+   (set by the backend for invited cohorts, see verification_booking_url.sql)
+   swaps the slot picker for that Calendly page. ─────────────────────── */
+function calendlyEmbedUrl(url, user) {
+  const params = new URLSearchParams({
+    embed_domain: window.location.host,
+    embed_type: "Inline",
+    hide_landing_page_details: "1",
+    hide_gdpr_banner: "1"
+  });
+  if (user.name) params.set("name", user.name);
+  if (user.email) params.set("email", user.email);
+  return `${url}${url.includes("?") ? "&" : "?"}${params}`;
+}
+
 export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClose, onBooked }) {
   const [step, setStep] = useState(startAtSlot ? 3 : 1);
   const [answers, setAnswers] = useState(
@@ -371,8 +387,10 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  const bookingUrl = user?.verification_booking_url || null;
+
   useEffect(() => {
-    if (!open || step !== 3) return;
+    if (!open || step !== 3 || bookingUrl) return;
     let cancelled = false;
     (async () => {
       setSlots(null);
@@ -388,7 +406,31 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
     return () => {
       cancelled = true;
     };
-  }, [open, step]);
+  }, [open, step, bookingUrl]);
+
+  // Calendly booking — the embedded page posts calendly.event_scheduled
+  // once the call is confirmed; that's when the profile moves to "booked".
+  useEffect(() => {
+    if (!open || step !== 3 || !bookingUrl) return;
+    async function onMessage(e) {
+      if (e.origin !== "https://calendly.com" || e.data?.event !== "calendly.event_scheduled") return;
+      setSubmitting(true);
+      setError("");
+      const { error: saveErr } = await supabase
+        .from("profiles")
+        .update({ verification_status: "booked", verification_answers: answers })
+        .eq("id", user.id);
+      setSubmitting(false);
+      if (saveErr) {
+        setError(saveErr.message || "your call is booked, but we couldn't save it here — please reach out to us.");
+        return;
+      }
+      onBooked({ status: "booked", answers, slot: null });
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, step, bookingUrl, answers]);
 
   if (!open) return null;
 
@@ -519,7 +561,27 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
           </div>
         )}
 
-        {step === 3 && (
+        {step === 3 && bookingUrl && (
+          <div className="flex flex-col gap-5 flex-1">
+            <div>
+              <h3 className="text-white font-bold text-xl leading-tight">Book your 1:1 call</h3>
+              <p className="text-white/40 text-sm mt-1.5">
+                15 minutes with someone from the evolve team — pick whatever
+                works.
+              </p>
+            </div>
+            <iframe
+              title="Book your verification call"
+              src={calendlyEmbedUrl(bookingUrl, user)}
+              className="w-full rounded-xl border border-[#373737] bg-white"
+              style={{ height: 620 }}
+            />
+            {submitting && <p className="text-white/40 text-xs">Saving your booking…</p>}
+            {error && <p className="text-red-400 text-xs">{error}</p>}
+          </div>
+        )}
+
+        {step === 3 && !bookingUrl && (
           <div className="flex flex-col gap-5 flex-1">
             <div>
               <h3 className="text-white font-bold text-xl leading-tight">

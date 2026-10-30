@@ -244,7 +244,12 @@ function BookingRow({ row, onChange }) {
             {row.email}
           </p>
           <p className="text-xs mt-1 text-white/60">
-            call: {fmtDt(row.verification_slots?.starts_at)}
+            call:{" "}
+            {row.verification_slots?.starts_at
+              ? fmtDt(row.verification_slots.starts_at)
+              : row.verification_booking_url
+                ? "booked on Calendly"
+                : fmtDt(null)}
           </p>
         </div>
         <span
@@ -385,7 +390,7 @@ export default function VerificationTab() {
     const { data } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, name, email, portfolio_link, portfolio_file_url, resume_link, resume_file_url, social_links, ai_profile, ai_profile_updated_at, verification_status, verification_answers, verification_meet_link, verification_notes, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
+        "id, name, email, portfolio_link, portfolio_file_url, resume_link, resume_file_url, social_links, ai_profile, ai_profile_updated_at, verification_status, verification_answers, verification_meet_link, verification_notes, verification_booking_url, verification_slots!profiles_verification_slot_id_fkey(starts_at)"
       )
       .not("verification_status", "is", null)
       .order("verification_status", { ascending: true });

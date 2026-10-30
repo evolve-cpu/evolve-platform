@@ -32,7 +32,7 @@ alter table typetober_vote_config enable row level security;
 
 create table if not exists typetober_votes (
   submission_id uuid not null references typetober_submissions(id) on delete cascade,
-  voter_id uuid not null references profiles(id) on delete cascade,
+  voter_id uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   primary key (submission_id, voter_id)
 );
@@ -51,7 +51,7 @@ create policy "typetober votes: read own"
 -- attempts that were turned away (own work, out of votes, voting closed).
 create table if not exists typetober_vote_events (
   id bigint generated always as identity primary key,
-  voter_id uuid not null references profiles(id) on delete cascade,
+  voter_id uuid not null references auth.users(id) on delete cascade,
   submission_id uuid references typetober_submissions(id) on delete cascade,
   action text not null check (action in ('vote', 'unvote', 'blocked_own', 'blocked_limit', 'blocked_closed')),
   created_at timestamptz not null default now()
@@ -175,3 +175,16 @@ grant execute on function typetober_cast_vote(uuid, boolean) to authenticated;
 -- Run once before voting opens (anything cast before opens_at is a test):
 --   delete from typetober_votes where created_at < (select opens_at from typetober_vote_config);
 --   delete from typetober_vote_events where created_at < (select opens_at from typetober_vote_config);
+
+-- ── fix for an earlier draft ─────────────────────────────────────────
+-- voter_id first referenced profiles(id). That gave the API a second
+-- submissions → profiles path (through these tables), which broke the
+-- wall's `profiles(...)` embed ("more than one relationship was found").
+-- auth.users isn't exposed to the API, so pointing at it removes the path.
+alter table typetober_votes drop constraint if exists typetober_votes_voter_id_fkey;
+alter table typetober_votes add constraint typetober_votes_voter_id_fkey
+  foreign key (voter_id) references auth.users(id) on delete cascade;
+alter table typetober_vote_events drop constraint if exists typetober_vote_events_voter_id_fkey;
+alter table typetober_vote_events add constraint typetober_vote_events_voter_id_fkey
+  foreign key (voter_id) references auth.users(id) on delete cascade;
+notify pgrst, 'reload schema';
