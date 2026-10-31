@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { callAdminApi } from "../../supabaseAdminClient";
+import JourneysPanel, { UserJourneyModal } from "./JourneysPanel";
 
 // Admin: platform report. All numbers come from api/_platformReport.js
 // (op "platform_report"), which reads the first-party tracking tables in
@@ -142,6 +143,8 @@ export default function PlatformReportTab() {
   const [search, setSearch] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState("");
+  const [view, setView] = useState("overview");
+  const [journeyUser, setJourneyUser] = useState(null);
 
   // same post the Monday cron sends: last full Monday–Sunday week
   async function sendToDiscord() {
@@ -253,12 +256,31 @@ export default function PlatformReportTab() {
         </p>
       )}
 
-      {error && (
+      <div className="flex gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: "#111", border: "1px solid #222" }}>
+        {[
+          ["overview", "Overview"],
+          ["journeys", "Journeys"]
+        ].map(([k, l]) => (
+          <button
+            key={k}
+            onClick={() => setView(k)}
+            className="px-4 py-1.5 rounded-lg text-sm font-semibold"
+            style={view === k ? { background: Y, color: "#000" } : { color: "#aaa" }}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {view === "journeys" && <JourneysPanel rangeDays={rangeDays} onOpenUser={setJourneyUser} />}
+      <UserJourneyModal userId={journeyUser} onClose={() => setJourneyUser(null)} />
+
+      {view === "overview" && error && (
         <div className="mb-4 rounded-lg p-3 text-sm" style={{ background: "#2a0f12", color: "#f87171" }}>
           {error}
         </div>
       )}
-      {r?.warnings?.length > 0 && (
+      {view === "overview" && r?.warnings?.length > 0 && (
         <div className="mb-4 rounded-lg p-3 text-sm" style={{ background: "#2a230f", color: Y }}>
           Some numbers are missing. Has supabase/migrations/platform_analytics.sql been run?
           <div className="text-[12px] mt-1" style={{ color: "#a08a3a" }}>
@@ -266,9 +288,9 @@ export default function PlatformReportTab() {
           </div>
         </div>
       )}
-      {!r && loading && <p style={{ color: "#666" }}>Loading…</p>}
+      {view === "overview" && !r && loading && <p style={{ color: "#666" }}>Loading…</p>}
 
-      {r && (
+      {view === "overview" && r && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <PeriodCard title="Accounts created" p={r.accounts} color={Y} />
@@ -418,7 +440,11 @@ export default function PlatformReportTab() {
                 <tbody>
                   {users.slice(0, 200).map((u) => (
                     <tr key={u.id} style={{ borderTop: "1px solid #1d1d1d" }}>
-                      <td className={`${td} text-white`}>{u.name || u.username || u.id.slice(0, 8)}</td>
+                      <td className={td}>
+                        <button onClick={() => setJourneyUser(u.id)} className="text-white underline decoration-[#444] hover:decoration-white" title="See journey">
+                          {u.name || u.username || u.id.slice(0, 8)}
+                        </button>
+                      </td>
                       <td className={td} style={{ color: "#999" }}>
                         {u.email || "–"}
                       </td>

@@ -12,23 +12,23 @@
 
 const IST_MS = 5.5 * 3600000;
 const DAY_MS = 86400000;
-const TEAM_DOMAIN = "@evolvedesign.academy";
+export const TEAM_DOMAIN = "@evolvedesign.academy";
 
 // "% of platform explored" is out of these six
 export const AREAS = ["profile", "grow", "events", "community", "portfolio_review", "mentorship"];
 const SECTIONS = ["profile", "grow", "events", "community"];
 
-const istDay = (ts) => new Date(Date.parse(ts) + IST_MS).toISOString().slice(0, 10);
-const istDayStartIso = (day) => new Date(Date.parse(`${day}T00:00:00Z`) - IST_MS).toISOString();
-const addDays = (day, n) => new Date(Date.parse(`${day}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
+export const istDay = (ts) => new Date(Date.parse(ts) + IST_MS).toISOString().slice(0, 10);
+export const istDayStartIso = (day) => new Date(Date.parse(`${day}T00:00:00Z`) - IST_MS).toISOString();
+export const addDays = (day, n) => new Date(Date.parse(`${day}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 
-function windows(now = Date.now()) {
+export function windows(now = Date.now()) {
   const today = istDay(new Date(now).toISOString());
   const dow = (new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7; // Monday = 0
   return { today, week: addDays(today, -dow), month: `${today.slice(0, 8)}01` };
 }
 
-async function fetchAll(db, table, columns, apply = (q) => q) {
+export async function fetchAll(db, table, columns, apply = (q) => q) {
   const out = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await apply(db.from(table).select(columns)).range(from, from + 999);
@@ -39,13 +39,13 @@ async function fetchAll(db, table, columns, apply = (q) => q) {
 }
 
 // a missing table (migration not run yet) shouldn't blank the whole report
-const soft = (p, label, warnings) =>
+export const soft = (p, label, warnings) =>
   p.catch((err) => {
     warnings.push(`${label}: ${err.message}`);
     return [];
   });
 
-function tally(rows, keyOf) {
+export function tally(rows, keyOf) {
   const m = new Map();
   for (const r of rows) {
     const k = keyOf(r);
@@ -67,7 +67,7 @@ function periods(stamps, w) {
   };
 }
 
-function hostOf(url) {
+export function hostOf(url) {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {

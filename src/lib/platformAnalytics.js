@@ -13,6 +13,9 @@
 //   pingActive(area)        signed-in heartbeat → DAU/MAU, and the platform
 //                           area opened (profile/grow/events/community/
 //                           portfolio_review/mentorship)
+//   trackStep(path)         every route change (App.jsx), in order → journeys
+//                           (supabase/migrations/platform_journeys.sql); plus a
+//                           "leave" step when the tab is closed
 //
 // Skipped on local dev, on the Anant tenant, and on browsers flagged as the
 // evolve team (src/lib/clarity.js). Without cookie consent the visitor id
@@ -28,7 +31,9 @@ const VISIT_LOGGED_KEY = "evolve_visit_logged";
 const LAST_CTA_KEY = "evolve_last_signup_cta";
 const METHOD_KEY = "evolve_signup_method";
 const PING_KEY = "evolve_active_ping";
+const SESSION_KEY = "evolve_session";
 const PENDING_MS = 60 * 60000; // a CTA / method older than an hour doesn't count
+const SESSION_IDLE_MS = 30 * 60000; // a new session after 30 minutes idle
 
 function store(kind) {
   try {
@@ -58,6 +63,25 @@ function visitorId() {
   return id;
 }
 
+// one session per tab, renewed after 30 minutes without a step
+function sessionId() {
+  const s = store("session");
+  let cur = null;
+  try {
+    cur = JSON.parse(s?.getItem(SESSION_KEY) || "null");
+  } catch {
+    // start a new one
+  }
+  if (!cur || Date.now() - cur.at > SESSION_IDLE_MS) cur = { id: randomId(), at: Date.now(), last: null };
+  cur.at = Date.now();
+  s?.setItem(SESSION_KEY, JSON.stringify(cur));
+  return cur;
+}
+
+function saveSession(cur) {
+  store("session")?.setItem(SESSION_KEY, JSON.stringify(cur));
+}
+
 function putPending(key, value) {
   store("local")?.setItem(key, JSON.stringify({ value, at: Date.now() }));
 }
@@ -85,6 +109,10 @@ function rpc(name, args) {
 export function trackVisit() {
   try {
     if (!enabled()) return;
+    // closing the tab / leaving the site ends the journey (every page load,
+    // reloads included). A plain fetch with keepalive outlives the page;
+    // supabase.rpc can't promise that.
+    window.addEventListener("pagehide", trackLeave);
     const session = store("session");
     if (session?.getItem(VISIT_LOGGED_KEY)) return;
     session?.setItem(VISIT_LOGGED_KEY, "1");
@@ -101,7 +129,8 @@ export function trackVisit() {
       p_visitor: visitorId(),
       p_path: window.location.pathname,
       p_referrer: ref,
-      p_utm: utm
+      p_utm: utm,
+      p_session: sessionId().id
     });
   } catch {
     // ignore
@@ -116,7 +145,8 @@ export function trackSignupCta(cta, location = "") {
       p_visitor: visitorId(),
       p_event: "cta_click",
       p_props: { cta, location },
-      p_path: window.location.pathname
+      p_path: window.location.pathname,
+      p_session: sessionId().id
     });
   } catch {
     // ignore
@@ -151,7 +181,8 @@ export function trackSignup(authUser) {
         p_visitor: visitorId(),
         p_event: "signup",
         p_props: { method, cta: lastCta?.cta || null, cta_location: lastCta?.location || null },
-        p_path: window.location.pathname
+        p_path: window.location.pathname,
+        p_session: sessionId().id
       });
     }
   } catch {
@@ -170,6 +201,47 @@ export function pingActive(userId, area = null) {
     if (s?.getItem(key) === (area ? "1" : day)) return;
     s?.setItem(key, area ? "1" : day);
     rpc("analytics_ping", { p_area: area });
+  } catch {
+    // ignore
+  }
+}
+
+export function trackStep(path) {
+  try {
+    if (!enabled() || path.startsWith("/admin")) return;
+    const cur = sessionId();
+    if (cur.last === path) return; // re-render / replace to the same page
+    cur.last = path;
+    saveSession(cur);
+    rpc("analytics_track_step", { p_visitor: visitorId(), p_session: cur.id, p_kind: "page", p_path: path });
+  } catch {
+    // ignore
+  }
+}
+
+function trackLeave() {
+  try {
+    if (!enabled()) return;
+    const raw = store("session")?.getItem(SESSION_KEY);
+    const cur = raw && JSON.parse(raw);
+    if (!cur) return;
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+    fetch(`${url}/rest/v1/rpc/analytics_track_step`, {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        p_visitor: visitorId(),
+        p_session: cur.id,
+        p_kind: "leave",
+        p_path: window.location.pathname
+      })
+    }).catch(() => {});
+    // coming back to this tab (bfcache) continues the session as a new page
+    cur.last = null;
+    saveSession(cur);
   } catch {
     // ignore
   }

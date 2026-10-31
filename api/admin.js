@@ -24,6 +24,8 @@
 //   revoke_grant        Evolve admins → undoes one manual grant (Recent manual grants list)
 //   platform_report     Evolve admins → visits, sign-ups, activity, exploration (see _platformReport.js)
 //   platform_report_discord Evolve admins → posts last week's report to Discord now (see _platformDiscord.js)
+//   platform_journeys   Evolve admins → funnel, entry/exit pages, paths, recent sessions (see _platformJourneys.js)
+//   platform_user_journey Evolve admins → one user's sessions, step by step
 //
 // Plus GET ?cron=platform-report: the weekly Discord post (vercel.json).
 //   anu_student_self    signed in → the caller's own anu_students row
@@ -43,6 +45,7 @@ import { communityFeed } from "./_discordCommunity.js";
 import { grantAccess, revokeDemo, revokeGrant } from "./_manualGrant.js";
 import { buildPlatformReport } from "./_platformReport.js";
 import { buildWeeklyReports, postWeeklyReportToDiscord } from "./_platformDiscord.js";
+import { buildJourneyReport, buildUserJourney } from "./_platformJourneys.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -390,6 +393,15 @@ export async function handleAdmin(body, req) {
   if (op === "platform_report") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     return buildPlatformReport(db, { rangeDays: body.rangeDays });
+  }
+  if (op === "platform_journeys" || op === "platform_user_journey") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    if (op === "platform_journeys") return buildJourneyReport(db, { rangeDays: body.rangeDays });
+    try {
+      return await buildUserJourney(db, body.userId);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
   }
   if (op === "platform_report_discord") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");

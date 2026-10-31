@@ -1101,7 +1101,7 @@ const Grow = lazy(() => import("./pages/Ecosystem/Grow"));
 // Import only critical home images
 import * as images from "./assets/images/Home";
 import { supabase } from "./supabaseClient";
-import { markSignupMethod } from "./lib/platformAnalytics";
+import { markSignupMethod, trackStep } from "./lib/platformAnalytics";
 import CollegeActivation from "./pages/College_Activity_Page/CollegeActivation.jsx";
 import CollegeActivities from "./pages/College_Activity_Page/CollegeActivities.jsx";
 import CollegeSelfReflection from "./pages/College_Activity_Page/CollegeSelfReflection.jsx";
@@ -1274,6 +1274,7 @@ const AppLayout = () => {
 
   // GA4: track page views on route change (SPA navigation doesn't auto-fire page_view)
   useEffect(() => {
+    trackStep(location.pathname);
     if (typeof window.gtag === "function") {
       window.gtag("event", "page_view", {
         page_path: location.pathname,
