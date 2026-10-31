@@ -46,7 +46,7 @@ function Landing({ onAccept, phase }) {
             className="bg-evolve-pink text-white font-extrabold text-[13px] px-3.5 py-2 rounded-full border-2 border-white"
             style={{ transform: "rotate(-4deg)" }}
           >
-            {afterSubmissions ? "Submissions closed" : "October 1 - 31st"}
+            {afterSubmissions ? "Submissions closed" : "Extended till Nov 1st"}
             {/* {currentDay === 0
               ? "Starts Oct 1 - Oct 30"
               : currentDay >= 26

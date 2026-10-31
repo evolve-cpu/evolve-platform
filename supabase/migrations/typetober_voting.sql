@@ -1,6 +1,6 @@
 -- ============================================================
 -- Typetober — community favourite voting. Opens when submissions close
--- (31 Oct, 11:59 PM IST) and runs until the window in
+-- (1 Nov, 11:59 PM IST) and runs until the window in
 -- typetober_vote_config. Each signed-in person gets `vote_limit` votes,
 -- at most one per submission, never on their own work. A vote can be taken
 -- back while voting is open, which frees it up again.
@@ -27,6 +27,10 @@ on conflict (id) do nothing;
 
 -- 5 votes per person (an earlier draft of this file used 10).
 update typetober_vote_config set vote_limit = 5 where vote_limit = 10;
+
+-- Submissions were extended to 1 Nov, 11:59 PM IST, so voting opens 2 Nov.
+update typetober_vote_config set opens_at = '2026-11-02 00:00+05:30'
+where opens_at = '2026-11-01 00:00+05:30';
 
 alter table typetober_vote_config enable row level security;
 

@@ -392,11 +392,11 @@ const GUIDELINES = [
   ],
   [
     "Format & themes",
-    "All 26 letters (A–Z) are open from 1 to 31 October. There are no themes, so you have full creative freedom. We encourage you to submit all 26 alphabets by 31 October. Upload them one at a time or all together with bulk upload."
+    "All 26 letters (A–Z) are open from 1 October to 1 November. There are no themes, so you have full creative freedom. We encourage you to submit all 26 alphabets by 1 November. Upload them one at a time or all together with bulk upload."
   ],
   [
     "Submissions & fees",
-    "Submit unlimited entries per letter across paper or digital categories. Participation costs ₹10 ($1 internationally) per entry. All entries must be submitted by 31 October, 11:59 PM IST."
+    "Submit unlimited entries per letter across paper or digital categories. Participation costs ₹10 ($1 internationally) per entry. All entries must be submitted by 1 November, 11:59 PM IST."
   ],
   [
     "Strict no-AI policy",
@@ -420,7 +420,7 @@ const FAQS = [
   ],
   [
     "Do I have to post a letter every day?",
-    "No. Every letter is open, so submit them whenever you like before 31st Oct 2026."
+    "No. Every letter is open, so submit them whenever you like before 1st Nov 2026, 11:59 PM IST."
   ],
   [
     "Can I upload several letters at once?",

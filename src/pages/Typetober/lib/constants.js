@@ -31,15 +31,18 @@ export function getEventYear() {
   return new Date().getFullYear();
 }
 
-/** Submissions close 31 Oct, 11:59 PM IST (= 1 Nov 00:00 IST). */
+/**
+ * Submissions close 1 Nov, 11:59 PM IST (= 2 Nov 00:00 IST). Originally
+ * 31 Oct; extended by a day on participants' request.
+ */
 export function submissionsCloseAt(year = getEventYear()) {
-  return new Date(Date.UTC(year, 9, 31, 18, 30));
+  return new Date(Date.UTC(year, 10, 1, 18, 30));
 }
 
 /**
  * Where the challenge is right now:
  *   upcoming → before Oct 1
- *   open     → submissions open (Oct 1 – Oct 31, 11:59 PM IST)
+ *   open     → submissions open (Oct 1 – Nov 1, 11:59 PM IST)
  *   voting   → submissions closed, community-favourite voting open
  *   closed   → voting over, waiting on / showing results
  * The voting window comes from the server (typetober_vote_config); until it

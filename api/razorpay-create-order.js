@@ -172,13 +172,15 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, submissions, submission: submissions[0] });
       }
 
-      // Submissions are open 1 Oct – 31 Oct 11:59 PM IST. Only new orders
-      // are refused outside that; a payment started before the deadline can
-      // still be verified above. Local dev skips this to test off-season.
+      // Submissions are open 1 Oct – 1 Nov 11:59 PM IST (extended a day from
+      // 31 Oct). Only new orders are refused outside that; a payment started
+      // before the deadline can still be verified above. Local dev skips this
+      // to test off-season. Keep in step with submissionsCloseAt() in
+      // src/pages/Typetober/lib/constants.js.
       const ttYear = new Date().getUTCFullYear();
       const ttOpen =
         Date.now() >= Date.UTC(ttYear, 8, 30, 18, 30) &&
-        Date.now() < Date.UTC(ttYear, 9, 31, 18, 30);
+        Date.now() < Date.UTC(ttYear, 10, 1, 18, 30);
       if (!ttOpen && process.env.NODE_ENV === "production") {
         return res.status(403).json({ error: "Typetober submissions are closed" });
       }
