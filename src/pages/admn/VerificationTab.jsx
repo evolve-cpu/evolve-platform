@@ -105,18 +105,110 @@ function AnswerBlock({ label, answer }) {
   );
 }
 
-function SlotsPanel({ slots, onChange }) {
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("11:00");
-  const [saving, setSaving] = useState(false);
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_START = 8 * 60; // first chip in the time grid, minutes since midnight IST
+const DAY_END = 22 * 60; // grid runs up to (not including) this
 
-  async function addSlot() {
-    const starts_at = istToUtc(date, time);
-    if (!starts_at) return;
+function toMins(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function toTimeStr(mins) {
+  return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+}
+
+function fmtTime(timeStr) {
+  const mins = toMins(timeStr);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""} ${h < 12 ? "am" : "pm"}`;
+}
+
+// every YYYY-MM-DD from..to inclusive whose weekday is in `days`
+function datesInRange(from, to, days) {
+  if (!from) return [];
+  const end = new Date(`${to || from}T00:00:00Z`);
+  const out = [];
+  for (let d = new Date(`${from}T00:00:00Z`); d <= end && out.length < 366; d.setUTCDate(d.getUTCDate() + 1)) {
+    if (days.includes(d.getUTCDay())) out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+function istDateKey(dtStr) {
+  return new Date(dtStr).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+}
+
+function SlotsPanel({ slots, onChange }) {
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [days, setDays] = useState([0, 1, 2, 3, 4, 5, 6]);
+  const [step, setStep] = useState(30);
+  const [times, setTimes] = useState([]);
+  const [rangeFrom, setRangeFrom] = useState("10:00");
+  const [rangeTo, setRangeTo] = useState("13:00");
+  const [lastClicked, setLastClicked] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const isRange = !!toDate && toDate !== fromDate;
+  const chips = [];
+  for (let m = DAY_START; m < DAY_END; m += step) chips.push(toTimeStr(m));
+
+  // what "add" would insert: every chosen date x every chosen time, minus
+  // past times and slots that already exist
+  const existing = new Set(slots.map((s) => new Date(s.starts_at).getTime()));
+  const now = Date.now();
+  const dates = datesInRange(fromDate, toDate, isRange ? days : [0, 1, 2, 3, 4, 5, 6]);
+  const candidates = dates.flatMap((d) => times.map((t) => istToUtc(d, t)));
+  const toInsert = candidates.filter((iso) => {
+    const ts = new Date(iso).getTime();
+    return ts > now && !existing.has(ts);
+  });
+  const skipped = candidates.length - toInsert.length;
+
+  function changeStep(next) {
+    setStep(next);
+    // drop picked times that don't sit on the new grid
+    setTimes((prev) => prev.filter((t) => (toMins(t) - DAY_START) % next === 0));
+    setLastClicked(null);
+  }
+
+  // shift-click selects everything between the last clicked chip and this one
+  function toggleTime(t, shiftKey) {
+    if (shiftKey && lastClicked) {
+      const [a, b] = [toMins(lastClicked), toMins(t)].sort((x, y) => x - y);
+      const span = chips.filter((c) => toMins(c) >= a && toMins(c) <= b);
+      setTimes((prev) => [...new Set([...prev, ...span])].sort());
+    } else {
+      setTimes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t].sort()));
+    }
+    setLastClicked(t);
+  }
+
+  function selectRange() {
+    const a = toMins(rangeFrom);
+    const b = toMins(rangeTo);
+    // range end is exclusive: 10:00–13:00 at 60 min gives 10, 11, 12
+    const span = chips.filter((c) => toMins(c) >= a && toMins(c) < b);
+    setTimes((prev) => [...new Set([...prev, ...span])].sort());
+  }
+
+  async function addSlots() {
+    if (toInsert.length === 0) return;
     setSaving(true);
-    await supabaseAdmin.from("verification_slots").insert({ starts_at });
+    setMsg("");
+    const { error } = await supabaseAdmin
+      .from("verification_slots")
+      .insert(toInsert.map((starts_at) => ({ starts_at })));
     setSaving(false);
-    setDate("");
+    if (error) {
+      setMsg(`failed: ${error.message}`);
+      return;
+    }
+    setMsg(`added ${toInsert.length} slot${toInsert.length === 1 ? "" : "s"} ✓`);
+    setTimes([]);
     onChange();
   }
 
@@ -125,67 +217,260 @@ function SlotsPanel({ slots, onChange }) {
     onChange();
   }
 
+  async function removeDay(ids) {
+    if (!window.confirm(`Remove all ${ids.length} open slots on this day?`)) return;
+    await supabaseAdmin.from("verification_slots").delete().in("id", ids);
+    onChange();
+  }
+
   const open = slots.filter((s) => !s.is_booked);
   const booked = slots.filter((s) => s.is_booked);
+  const openByDay = open.reduce((acc, s) => {
+    const key = istDateKey(s.starts_at);
+    (acc[key] ||= []).push(s);
+    return acc;
+  }, {});
+
+  const chipBtn = (active) => ({
+    background: active ? Y : "#1a1a1a",
+    color: active ? "#000" : "#aaa",
+    border: `1px solid ${active ? Y : "#262626"}`
+  });
 
   return (
     <div className="rounded-xl p-4" style={inputStyle}>
       <p className="text-sm font-bold text-white mb-3">Available call slots</p>
-      <div className="flex flex-wrap items-end gap-2 mb-4">
+
+      {/* 1. dates */}
+      <div className="flex flex-wrap items-end gap-2 mb-3">
         <div>
           <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
-            Date
+            From date
           </label>
           <input
             type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
             className="text-sm text-white rounded-lg px-3 py-2 outline-none"
             style={inputStyle}
           />
         </div>
         <div>
           <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
-            Time (IST)
+            To date (optional)
+          </label>
+          <input
+            type="date"
+            value={toDate}
+            min={fromDate || undefined}
+            onChange={(e) => setToDate(e.target.value)}
+            className="text-sm text-white rounded-lg px-3 py-2 outline-none"
+            style={inputStyle}
+          />
+        </div>
+        {toDate && (
+          <button
+            type="button"
+            onClick={() => setToDate("")}
+            className="text-[11px] py-2"
+            style={labelStyle}
+          >
+            single day
+          </button>
+        )}
+      </div>
+      {isRange && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          <span className="text-xs mr-1" style={labelStyle}>
+            on
+          </span>
+          {WEEKDAYS.map((w, i) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() =>
+                setDays((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]))
+              }
+              className="text-[11px] font-bold rounded-md px-2 py-1"
+              style={chipBtn(days.includes(i))}
+            >
+              {w}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setDays([1, 2, 3, 4, 5])}
+            className="text-[11px] ml-1"
+            style={labelStyle}
+          >
+            weekdays
+          </button>
+          <button
+            type="button"
+            onClick={() => setDays([0, 1, 2, 3, 4, 5, 6])}
+            className="text-[11px]"
+            style={labelStyle}
+          >
+            all
+          </button>
+        </div>
+      )}
+
+      {/* 2. times */}
+      <div className="flex flex-wrap items-end gap-2 mb-2 border-t pt-3" style={{ borderColor: "#262626" }}>
+        <div>
+          <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+            Slot every
+          </label>
+          <select
+            value={step}
+            onChange={(e) => changeStep(Number(e.target.value))}
+            className="text-sm text-white rounded-lg px-3 py-2 outline-none"
+            style={inputStyle}
+          >
+            {[15, 30, 45, 60].map((n) => (
+              <option key={n} value={n}>
+                {n} min
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+            From (IST)
           </label>
           <input
             type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
+            value={rangeFrom}
+            onChange={(e) => setRangeFrom(e.target.value)}
+            className="text-sm text-white rounded-lg px-3 py-2 outline-none"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+            To (IST)
+          </label>
+          <input
+            type="time"
+            value={rangeTo}
+            onChange={(e) => setRangeTo(e.target.value)}
             className="text-sm text-white rounded-lg px-3 py-2 outline-none"
             style={inputStyle}
           />
         </div>
         <button
           type="button"
-          onClick={addSlot}
-          disabled={!date || saving}
+          onClick={selectRange}
+          className="text-xs font-bold rounded-lg px-3 py-2"
+          style={{ background: `${Y}22`, color: Y }}
+        >
+          select range
+        </button>
+        {times.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setTimes([])}
+            className="text-[11px] py-2"
+            style={labelStyle}
+          >
+            clear times
+          </button>
+        )}
+      </div>
+      <p className="text-[10px] mb-2" style={labelStyle}>
+        click to toggle a time · shift-click to select everything in between
+      </p>
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {chips.map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={(e) => toggleTime(t, e.shiftKey)}
+            className="text-[11px] font-semibold rounded-md px-2 py-1 select-none"
+            style={chipBtn(times.includes(t))}
+          >
+            {fmtTime(t)}
+          </button>
+        ))}
+      </div>
+
+      {/* 3. confirm */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <button
+          type="button"
+          onClick={addSlots}
+          disabled={toInsert.length === 0 || saving}
           className="text-xs font-bold rounded-lg px-4 py-2 disabled:opacity-40"
           style={{ background: Y, color: "#000" }}
         >
-          {saving ? "adding…" : "add slot"}
+          {saving
+            ? "adding…"
+            : `add ${toInsert.length} slot${toInsert.length === 1 ? "" : "s"}`}
         </button>
+        <span className="text-[11px]" style={labelStyle}>
+          {dates.length} day{dates.length === 1 ? "" : "s"} × {times.length} time
+          {times.length === 1 ? "" : "s"}
+          {skipped > 0 && ` · ${skipped} skipped (already exist or in the past)`}
+        </span>
+        {msg && <span className="text-[11px] text-white/50">{msg}</span>}
       </div>
-      <div className="flex flex-col gap-1.5">
+
+      {/* existing open slots, grouped by day */}
+      <div className="flex flex-col gap-3 border-t pt-3" style={{ borderColor: "#262626" }}>
         {open.length === 0 && (
           <p className="text-xs" style={labelStyle}>
             no open slots
           </p>
         )}
-        {open.map((s) => (
-          <div key={s.id} className="flex items-center justify-between text-xs">
-            <span className="text-white/70">{fmtDt(s.starts_at)}</span>
-            <button
-              type="button"
-              onClick={() => removeSlot(s.id)}
-              className="text-red-400 hover:text-red-300"
-            >
-              remove
-            </button>
+        {Object.entries(openByDay).map(([day, daySlots]) => (
+          <div key={day}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-white/80">
+                {new Date(`${day}T00:00:00Z`).toLocaleDateString("en-IN", {
+                  timeZone: "UTC",
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric"
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeDay(daySlots.map((s) => s.id))}
+                className="text-[11px] text-red-400 hover:text-red-300"
+              >
+                remove day
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {daySlots.map((s) => (
+                <span
+                  key={s.id}
+                  className="flex items-center gap-1.5 text-[11px] rounded-md px-2 py-1 text-white/70"
+                  style={{ background: "#1a1a1a", border: "1px solid #262626" }}
+                >
+                  {new Date(s.starts_at).toLocaleTimeString("en-IN", {
+                    timeZone: "Asia/Kolkata",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => removeSlot(s.id)}
+                    className="text-red-400 hover:text-red-300"
+                    aria-label="remove slot"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         ))}
         {booked.length > 0 && (
-          <p className="text-[10px] mt-2" style={labelStyle}>
+          <p className="text-[10px]" style={labelStyle}>
             {booked.length} slot{booked.length === 1 ? "" : "s"} currently booked
           </p>
         )}
