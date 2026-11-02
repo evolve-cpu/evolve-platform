@@ -93,7 +93,7 @@ function Landing({ onAccept, phase }) {
               <b className="text-[#DF0586]">
                 {phase === "voting"
                   ? "Vote for your community favourites."
-                  : "Voting has closed. Results on 7 Nov."}
+                  : "Voting has closed. Explore the gallery."}
               </b>
             </p>
           ) : (
@@ -117,7 +117,7 @@ function Landing({ onAccept, phase }) {
             {phase === "voting"
               ? "Vote now"
               : phase === "closed"
-                ? "See the wall"
+                ? "See the gallery"
                 : "Accept challenge"}
           </button>
           <div className="flex items-center gap-2.5 self-start md:self-center text-black font-bold text-[13px] tracking-[.04em]">
@@ -481,16 +481,19 @@ function VoteTile({ item, ch, i, votes, onView }) {
             ? "You"
             : `@${item.profiles?.username || item.profiles?.name || "participant"}`}
         </span>
-        <span className="pointer-events-auto flex-none">
-          <VoteButton item={item} votes={votes} />
-        </span>
+        {votes.phase === "voting" && (
+          <span className="pointer-events-auto flex-none">
+            <VoteButton item={item} votes={votes} />
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
 // After submissions close: only real submissions, bigger tiles, a vote
-// button on each. No examples, no empty boxes.
+// button on each while voting is open. No examples, no empty boxes. Once
+// voting closes it's the same grid as a plain gallery.
 function VoteFold({ i, ch, wallItems, votes, onView }) {
   const accent = accentFor(i);
   return (
@@ -567,9 +570,14 @@ function VoteBanner({ votes }) {
           </span>
         </>
       ) : (
-        <b className="text-[15px] md:text-[17px] font-extrabold">
-          Voting has closed. Results are out on 7 Nov.
-        </b>
+        <>
+          <b className="text-[15px] md:text-[17px] font-extrabold">
+            The Typetober gallery
+          </b>
+          <span className="text-[13px] md:text-[14px] font-bold">
+            Voting has closed. Every letter from the community, A to Z.
+          </span>
+        </>
       )}
     </div>
   );
@@ -1031,7 +1039,7 @@ export default function Typetober({ platform = false }) {
           shared={!!sheet.shared}
           phase={phase}
           voteAction={
-            phase !== "open" && phase !== "upcoming" && !sheet.item?.isExample ? (
+            phase === "voting" && !sheet.item?.isExample ? (
               <VoteButton item={sheet.item} votes={votes} large />
             ) : null
           }

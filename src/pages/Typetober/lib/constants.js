@@ -44,7 +44,8 @@ export function submissionsCloseAt(year = getEventYear()) {
  *   upcoming → before Oct 1
  *   open     → submissions open (Oct 1 – Nov 1, 11:59 PM IST)
  *   voting   → submissions closed, community-favourite voting open
- *   closed   → voting over, waiting on / showing results
+ *   closed   → voting over (ends 4 Nov, 11:59 PM IST); the board is a
+ *              plain gallery
  * The voting window comes from the server (typetober_vote_config); until it
  * has loaded, the time after submissions close counts as voting.
  */

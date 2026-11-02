@@ -74,6 +74,35 @@ async function dbFetchProfile(userId: string): Promise<Record<string, unknown> |
   return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 }
 
+/* ── Every rebuild captures a fresh set of screenshots and overwrites
+   extracted_profile, so the previous build's set is left unreferenced in
+   storage. Runs only after the new result is saved — a failed rebuild keeps
+   the old profile's images intact. ── */
+async function pruneOldScreenshots(userId: string, keepUrls: string[]): Promise<void> {
+  const prefix = `${userId}/screenshots/`;
+  const listRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/portfolio-files`, {
+    method: "POST",
+    headers: DB_HEADERS,
+    body: JSON.stringify({ prefix, limit: 1000 }),
+  });
+  if (!listRes.ok) return;
+  const objects = await listRes.json();
+  if (!Array.isArray(objects)) return;
+
+  const keep = new Set(keepUrls.map((u) => u.split("/portfolio-files/").pop()));
+  const stale = objects
+    .filter((o: { id: string | null }) => o.id !== null)
+    .map((o: { name: string }) => prefix + o.name)
+    .filter((path: string) => !keep.has(path));
+  if (!stale.length) return;
+
+  await fetch(`${SUPABASE_URL}/storage/v1/object/portfolio-files`, {
+    method: "DELETE",
+    headers: DB_HEADERS,
+    body: JSON.stringify({ prefixes: stale }),
+  });
+}
+
 /* ── Plain fetch — no JS execution. Works for static/server-rendered pages,
    comes back empty for JS-rendered SPAs (Framer/Wix/Webflow/CRA shells).
    Used as the fallback when the rendered fetch below fails or times out. ── */
@@ -539,6 +568,9 @@ serve(async (req) => {
       extracted_profile_status: "done",
       extracted_profile_updated_at: new Date().toISOString(),
     });
+
+    const portfolioPages = (result.portfolio as { pages?: Array<{ screenshot_urls?: string[] }> } | undefined)?.pages ?? [];
+    await pruneOldScreenshots(user_id, portfolioPages.flatMap((p) => p.screenshot_urls ?? [])).catch(() => {});
 
     return new Response(
       JSON.stringify({ success: true, extracted_profile: result, status: "done" }),

@@ -32,6 +32,11 @@ update typetober_vote_config set vote_limit = 5 where vote_limit = 10;
 update typetober_vote_config set opens_at = '2026-11-02 00:00+05:30'
 where opens_at = '2026-11-01 00:00+05:30';
 
+-- Voting ends 4 Nov, 11:59 PM IST (was 6 Nov); from 5 Nov the board is a
+-- gallery.
+update typetober_vote_config set closes_at = '2026-11-05 00:00+05:30'
+where closes_at = '2026-11-07 00:00+05:30';
+
 alter table typetober_vote_config enable row level security;
 
 create table if not exists typetober_votes (
