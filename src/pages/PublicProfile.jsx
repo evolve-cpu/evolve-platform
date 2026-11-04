@@ -11,6 +11,7 @@ import {
   isEventOver,
   isEventLive,
   isTypetoberLive,
+  collapseSeries,
   TYPETOBER_EVENT
 } from "../lib/events";
 import { TrialClockBadge } from "../components/TrialBadge";
@@ -419,6 +420,8 @@ function EventsTabPane() {
           new Date(a.start_time) - new Date(b.start_time)
         : new Date(b.start_time) - new Date(a.start_time)
     );
+  // a recurring series shows only its next session under upcoming
+  const listed = filter === "upcoming" ? collapseSeries(filtered) : filtered;
   const showTypetober =
     filter === "upcoming" &&
     isTypetoberLive() &&
@@ -481,7 +484,7 @@ function EventsTabPane() {
         <div className="flex justify-center py-10">
           <Spinner size={28} />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : listed.length === 0 ? (
         !showTypetober && (
           <p className="text-white/40 text-[13px] py-9 text-center">
             {q
@@ -493,7 +496,7 @@ function EventsTabPane() {
         )
       ) : (
         <div className="flex flex-col divide-y divide-white/[0.08] md:divide-y-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4">
-          {filtered.map((event, i) => (
+          {listed.map((event, i) => (
             <EventRow
               key={event.id}
               to={`/app/events/${event.slug}`}
@@ -575,7 +578,7 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
   }, []);
 
   const live = events.filter((e) => isEventLive(e));
-  const upcoming = events.filter((e) => !isEventOver(e) && !isEventLive(e));
+  const upcoming = collapseSeries(events.filter((e) => !isEventOver(e) && !isEventLive(e)));
   const past = events
     .filter((e) => isEventOver(e))
     .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
@@ -589,13 +592,12 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
   useEffect(() => {
     if (!featuredId) return;
     let cancelled = false;
+    // RLS hides other people's registrations, so count via the RPC
+    // (events_registration_controls.sql)
     supabase
-      .from("event_registrations")
-      .select("id", { count: "exact", head: true })
-      .eq("event_id", featuredId)
-      .eq("status", "registered")
-      .then(({ count }) => {
-        if (!cancelled) setGoingCount(count ?? 0);
+      .rpc("event_going_counts", { event_ids: [featuredId] })
+      .then(({ data }) => {
+        if (!cancelled) setGoingCount(data?.[0]?.going ?? 0);
       });
     return () => {
       cancelled = true;

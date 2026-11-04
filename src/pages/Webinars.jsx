@@ -618,7 +618,7 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import { supabase } from "../supabaseClient";
-import { isEventOver, upcomingCutoffIso } from "../lib/events";
+import { isEventOver, upcomingCutoffIso, collapseSeries } from "../lib/events";
 import { eventHasRecording } from "../components/events/PastEventRecording";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -1263,7 +1263,7 @@ const Webinars = () => {
       .eq("status", "published")
       .gte("start_time", upcomingCutoffIso())
       .order("start_time", { ascending: true })
-      .then(({ data }) => setUpcomingEvents((data || []).filter((e) => !isEventOver(e))));
+      .then(({ data }) => setUpcomingEvents(collapseSeries((data || []).filter((e) => !isEventOver(e)))));
 
     supabase
       .from("events")

@@ -11,7 +11,7 @@ import { useMembership } from "../components/membership/MembershipProvider";
 import PastEventRecording, { EventGuests, eventHasRecording } from "../components/events/PastEventRecording";
 import { eventPrice, eventKindLabel, inr } from "../lib/membership";
 import { fetchOwnedEventIds } from "../lib/membershipCheckout";
-import { isEventOver } from "../lib/events";
+import { isEventOver, registrationClosedReason } from "../lib/events";
 
 const COMMUNITY_URL =
   "https://discord.gg/MmfaqCPdF7";
@@ -31,6 +31,39 @@ function notifyRegistration(registrationId) {
     },
     body: JSON.stringify({ mode: "notify", registration_id: registrationId })
   }).catch(() => {});
+}
+
+// UTM tags + referrer the visitor first landed on this event with. Kept in
+// sessionStorage because booking from the public page goes through sign-in
+// (sometimes an OAuth round trip) and then /app/events/:slug, which has no
+// query string any more. Saved onto the registration row.
+const utmKey = (slug) => `event_utm:${slug}`;
+const UTM_KEYS = ["source", "medium", "campaign", "content", "term"];
+
+function captureUtm(slug) {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const utm = {};
+    UTM_KEYS.forEach((k) => {
+      const v = q.get(`utm_${k}`);
+      if (v) utm[`utm_${k}`] = v.slice(0, 150).toLowerCase();
+    });
+    const ref = document.referrer && !document.referrer.startsWith(window.location.origin) ? document.referrer.slice(0, 300) : "";
+    if (ref) utm.referrer = ref;
+    if (Object.keys(utm).length && !sessionStorage.getItem(utmKey(slug))) {
+      sessionStorage.setItem(utmKey(slug), JSON.stringify(utm));
+    }
+  } catch {
+    // tracking must never break the page
+  }
+}
+
+function readUtm(slug) {
+  try {
+    return JSON.parse(sessionStorage.getItem(utmKey(slug)) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 function fmtDateTime(dtStr) {
@@ -86,10 +119,145 @@ function SocialIcon({ platform, className }) {
   );
 }
 
+const fieldClass = "w-full rounded-lg px-3 py-2.5 text-sm bg-[#0d0d0d] border border-white/10 outline-none";
+
+const INPUT_TYPES = {
+  social: { type: "url", placeholder: "https://linkedin.com/in/…" },
+  website: { type: "url", placeholder: "https://…" },
+  phone: { type: "tel", placeholder: "+91 …" },
+  company: { type: "text", placeholder: "Company / college" }
+};
+
+// One custom question from events.registration_questions (built in the
+// admin Events tab). Value shapes: text → string, options → string or
+// string[] (multi), checkbox / terms → boolean.
+function CustomQuestion({ q, value, onChange }) {
+  const label = (
+    <p className="text-sm font-semibold mb-1.5">
+      {q.label}
+      {q.required && <span className="text-evolve-yellow"> *</span>}
+    </p>
+  );
+
+  if (q.type === "checkbox" || q.type === "terms") {
+    return (
+      <div>
+        {q.type === "terms" && q.terms_text && (
+          <div className="max-h-28 overflow-y-auto rounded-lg bg-[#0d0d0d] border border-white/10 px-3 py-2 text-xs text-white/50 whitespace-pre-line mb-2">
+            {q.terms_text}
+          </div>
+        )}
+        <label className="flex items-start gap-2 text-sm text-white/80 cursor-pointer">
+          <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} className="mt-1" />
+          <span>
+            {q.type === "terms" ? (
+              <>
+                I agree to the{" "}
+                {q.terms_url ? (
+                  <a href={q.terms_url} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow underline">
+                    {q.label}
+                  </a>
+                ) : (
+                  q.label
+                )}
+              </>
+            ) : (
+              q.label
+            )}
+            {q.required && <span className="text-evolve-yellow"> *</span>}
+          </span>
+        </label>
+      </div>
+    );
+  }
+
+  if (q.type === "options") {
+    const selected = q.multi ? value || [] : value;
+    return (
+      <div>
+        {label}
+        <div className="flex flex-col gap-1.5">
+          {q.options.map((opt) => {
+            const checked = q.multi ? selected.includes(opt) : selected === opt;
+            return (
+              <label
+                key={opt}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm cursor-pointer border ${
+                  checked ? "border-evolve-yellow/60 bg-evolve-yellow/[0.06]" : "border-white/10 bg-[#0d0d0d]"
+                }`}
+              >
+                <input
+                  type={q.multi ? "checkbox" : "radio"}
+                  name={q.id}
+                  checked={checked}
+                  onChange={() =>
+                    onChange(q.multi ? (checked ? selected.filter((o) => o !== opt) : [...selected, opt]) : opt)
+                  }
+                />
+                {opt}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (q.type === "text") {
+    return (
+      <div>
+        {label}
+        {q.long ? (
+          <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} rows={3} className={`${fieldClass} resize-y`} />
+        ) : (
+          <input value={value || ""} onChange={(e) => onChange(e.target.value)} className={fieldClass} />
+        )}
+      </div>
+    );
+  }
+
+  const input = INPUT_TYPES[q.type] || INPUT_TYPES.company;
+  return (
+    <div>
+      {label}
+      <input
+        type={input.type}
+        value={value || ""}
+        placeholder={input.placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className={fieldClass}
+      />
+    </div>
+  );
+}
+
+function isAnswered(v) {
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "string") return v.trim() !== "";
+  return !!v;
+}
+
 function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
   const [category, setCategory] = useState("");
   const [question, setQuestion] = useState("");
   const [anonymous, setAnonymous] = useState(false);
+  const [answers, setAnswers] = useState({});
+  const [missing, setMissing] = useState("");
+  const questions = event.registration_questions || [];
+  const askSpeaker = event.collect_speaker_question !== false;
+
+  function submit() {
+    const unanswered = questions.find((q) => q.required && !isAnswered(answers[q.id]));
+    if (unanswered) {
+      setMissing(`Please answer “${unanswered.label}”.`);
+      return;
+    }
+    setMissing("");
+    const clean = Object.fromEntries(
+      Object.entries(answers).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v]).filter(([, v]) => isAnswered(v))
+    );
+    onSubmit({ category, question, anonymous, answers: clean });
+  }
 
   return createPortal(
     <>
@@ -97,7 +265,7 @@ function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
         className="fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="fixed z-[9991] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[480px] bg-[#111] border border-white/10 rounded-2xl px-6 py-7 text-white">
+      <div className="fixed z-[9991] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[480px] max-h-[90vh] overflow-y-auto bg-[#111] border border-white/10 rounded-2xl px-6 py-7 text-white">
         <button
           onClick={onClose}
           className="absolute top-4 right-5 text-white/50 text-2xl leading-none"
@@ -107,11 +275,31 @@ function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
         </button>
         <h2 className="text-xl font-extrabold">You're almost in</h2>
         <p className="text-white/50 text-sm mt-1.5">
-          Have a question for the speaker? Pick a category and ask away. It's
-          optional.
+          {event.requires_approval
+            ? "Spots for this session are limited, so the team reviews every request. We'll email you as soon as you're in."
+            : askSpeaker
+              ? "Have a question for the speaker? Pick a category and ask away. It's optional."
+              : "Just a few details and your spot is saved."}
         </p>
 
-        <div className="mt-5 flex flex-col gap-3">
+        <div className="mt-5 flex flex-col gap-4">
+          {questions.map((q) => (
+            <CustomQuestion
+              key={q.id}
+              q={q}
+              value={answers[q.id]}
+              onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))}
+            />
+          ))}
+        </div>
+
+        {askSpeaker && (
+        <div className={`flex flex-col gap-3 ${questions.length ? "mt-5 pt-5 border-t border-white/10" : "mt-5"}`}>
+          {questions.length > 0 && (
+            <p className="text-sm font-semibold">
+              Have a question for the speaker? <span className="text-white/40 font-normal">Optional</span>
+            </p>
+          )}
           {event.question_categories?.length > 0 && (
             <select
               value={category}
@@ -143,15 +331,20 @@ function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
             Submit this question anonymously. We won't show your name to the
             speaker or other attendees.
           </label>
+        </div>
+        )}
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+        <div className="mt-5 flex flex-col gap-3">
+          {(missing || error) && <p className="text-red-400 text-xs">{missing || error}</p>}
 
           <button
-            onClick={() => onSubmit({ category, question, anonymous })}
+            onClick={submit}
             disabled={submitting}
-            className="mt-1 w-full bg-evolve-yellow text-evolve-black font-extrabold text-sm py-3 rounded-lg disabled:opacity-50"
+            className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-sm py-3 rounded-lg disabled:opacity-50"
           >
-            {submitting ? "Registering…" : "Register →"}
+            {submitting
+              ? event.requires_approval ? "Sending request…" : "Registering…"
+              : event.requires_approval ? "Request to join →" : "Register →"}
           </button>
         </div>
       </div>
@@ -473,6 +666,14 @@ function PastEventView({ event, user, ownedRecording, onPurchased, onSignIn, reg
         </PastSection>
       )}
 
+      {(event.about_sections || [])
+        .filter((s) => s.body)
+        .map((s, i) => (
+          <PastSection key={i} title={s.title || "About the session"}>
+            <RichText text={s.body} className="pt-6 text-white/70 text-[15px] md:text-base leading-[1.75] max-w-[68ch]" />
+          </PastSection>
+        ))}
+
       {speakers.length > 0 && (
         <PastSection title={speakers.length > 1 ? "About the speakers" : "About the speaker"}>
           <div className="divide-y divide-white/10">
@@ -559,13 +760,13 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
       return;
     }
     setEvent(eventRow);
+    captureUtm(slug);
 
-    const { count } = await supabase
-      .from("event_registrations")
-      .select("id", { count: "exact", head: true })
-      .eq("event_id", eventRow.id)
-      .eq("status", "registered");
-    setRegistrantCount(count || 0);
+    // RLS only shows people their own registration, so the real count
+    // comes from an RPC (events_registration_controls.sql)
+    const { data: counts } = await supabase.rpc("event_going_counts", { event_ids: [eventRow.id] });
+    const going = counts?.[0]?.going || 0;
+    setRegistrantCount(going);
 
     if (user) {
       reloadOwned();
@@ -579,7 +780,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
 
       if (embedded && sessionStorage.getItem(PENDING_KEY) === slug) {
         sessionStorage.removeItem(PENDING_KEY);
-        if (!existing) setShowQuestionModal(true);
+        if (!existing && !registrationClosedReason(eventRow, going)) setShowQuestionModal(true);
       }
     }
     setLoading(false);
@@ -602,9 +803,10 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
       return;
     }
     if (myRegistration) {
-      setShowTicketModal(true);
+      if (myRegistration.status === "registered") setShowTicketModal(true);
       return;
     }
+    if (registrationClosedReason(event, registrantCount)) return;
     if (!embedded) {
       sessionStorage.setItem(PENDING_KEY, slug);
       enterPlatform();
@@ -634,9 +836,11 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
     else navigate("/signin", { state: { from: platformPath } });
   }
 
-  async function handleRegisterSubmit({ category, question, anonymous }) {
+  async function handleRegisterSubmit({ category, question, anonymous, answers }) {
     setSubmitting(true);
     setSubmitError("");
+    // status is decided by the event_registration_rules trigger — 'pending'
+    // on approval events, 'registered' otherwise
     const { data, error } = await supabase
       .from("event_registrations")
       .insert({
@@ -644,7 +848,9 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
         user_id: user.id,
         question_category: category || null,
         question_text: question.trim() || null,
-        question_anonymous: anonymous
+        question_anonymous: anonymous,
+        answers: answers || {},
+        ...readUtm(slug)
       })
       .select()
       .single();
@@ -675,10 +881,12 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
     }
 
     setMyRegistration(data);
-    setRegistrantCount((c) => c + 1);
     setSubmitting(false);
     setShowQuestionModal(false);
-    setShowTicketModal(true);
+    if (data.status === "registered") {
+      setRegistrantCount((c) => c + 1);
+      setShowTicketModal(true);
+    }
     notifyRegistration(data.id);
   }
 
@@ -689,6 +897,10 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
   }
 
   const isPast = event && isEventOver(event);
+  const myStatus = myRegistration?.status || null;
+  const closedReason = registrationClosedReason(event, registrantCount);
+  const bookDisabled = myRegistration ? myStatus !== "registered" : !!closedReason;
+  const spotsLeft = event?.capacity != null ? Math.max(0, event.capacity - registrantCount) : null;
 
   if (notFound) {
     return (
@@ -824,11 +1036,28 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
               <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-2">
                 about the session
               </p>
-              <p className="border-l-2 border-evolve-yellow pl-4 text-white/70 text-sm leading-relaxed">
-                {event.description}
-              </p>
+              <RichText
+                text={event.description}
+                className="border-l-2 border-evolve-yellow pl-4 text-white/70 text-sm leading-relaxed"
+              />
             </div>
           )}
+
+          {(event.about_sections || []).map((s, i) => (
+            <div key={i}>
+              {s.title && (
+                <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-2">
+                  {s.title}
+                </p>
+              )}
+              {s.body && (
+                <RichText
+                  text={s.body}
+                  className="border-l-2 border-evolve-yellow pl-4 text-white/70 text-sm leading-relaxed"
+                />
+              )}
+            </div>
+          ))}
 
           <EventGuests guests={event.guests} />
 
@@ -857,19 +1086,44 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="font-bold text-sm">Register</p>
             <p className="text-white/50 text-xs mt-1">
-              Save your spot for this session. You can ask the speaker a
-              question when you register.
+              {myStatus === "pending"
+                ? "Your request is in. The team reviews every request and we'll email you once you're approved."
+                : myStatus === "rejected"
+                  ? "We couldn't fit you into this one, but keep an eye out for the next session."
+                  : !myRegistration && closedReason === "full"
+                    ? "This session is full."
+                    : !myRegistration && closedReason
+                      ? "Registrations have closed for this session."
+                      : event.requires_approval
+                        ? "Spots are limited and every request is reviewed. Request yours and we'll email you once you're in."
+                        : event.collect_speaker_question !== false
+                          ? "Save your spot for this session. You can ask the speaker a question when you register."
+                          : "Save your spot for this session."}
             </p>
             <button
               onClick={handleBookSpot}
-              className="mt-4 bg-evolve-yellow text-evolve-black font-extrabold text-sm px-6 py-3 rounded-lg"
+              disabled={bookDisabled}
+              className="mt-4 bg-evolve-yellow text-evolve-black font-extrabold text-sm px-6 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {myRegistration
+              {myStatus === "registered"
                 ? "You're going ✓ — view ticket"
-                : "Book my spot →"}
+                : myStatus === "pending"
+                  ? "Request sent · awaiting approval"
+                  : myStatus === "rejected"
+                    ? "Not approved this time"
+                    : myStatus === "cancelled"
+                      ? "Registration cancelled"
+                      : closedReason === "full"
+                        ? "Session full"
+                        : closedReason
+                          ? "Registrations closed"
+                          : event.requires_approval
+                            ? "Request to join →"
+                            : "Book my spot →"}
             </button>
             {user &&
               !myRegistration &&
+              !closedReason &&
               !membership.access.full &&
               eventPrice(event) > 0 &&
               !owned.event.has(event.id) && (
@@ -884,9 +1138,15 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
                   </button>
                 </p>
               )}
-            {registrantCount > 0 && (
+            {(registrantCount > 0 || spotsLeft != null) && (
               <p className="text-white/40 text-xs mt-3">
-                {registrantCount} going
+                {registrantCount > 0 && `${registrantCount} going`}
+                {registrantCount > 0 && spotsLeft != null && !closedReason && " · "}
+                {spotsLeft != null && !closedReason && (
+                  <span className={spotsLeft <= 10 ? "text-evolve-yellow font-semibold" : ""}>
+                    {spotsLeft} {spotsLeft === 1 ? "spot" : "spots"} left
+                  </span>
+                )}
               </p>
             )}
           </div>

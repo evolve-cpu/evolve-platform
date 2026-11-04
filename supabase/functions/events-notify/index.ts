@@ -44,7 +44,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *             | { mode: "notify", registration_id }
  *             | { mode: "invite", event_id, email, name }
  *             | { mode: "send_reminder", registration_id }
- *             | { mode: "send_due_reminders" }
+ *             | { mode: "send_due_reminders" }   (also tops up open-ended recurring series)
  *
  * "send_due_reminders" is the cron-invoked mode (see
  * supabase/migrations/event_reminder_scheduling.sql for the Supabase
@@ -225,25 +225,15 @@ function speakerLineHtml(event: any) {
   return `<p>Join ${event.speaker_name} for a conversation on ${event.description || event.title}.</p>`;
 }
 
-async function sendConfirmationEmail(toEmail: string, toName: string, event: any) {
+async function sendBrevo(toEmail: string, toName: string, subject: string, html: string) {
   if (!BREVO_API_KEY) return;
-  const { dateLine, time } = formatEventDateTime(event.start_time);
-  const html = `
-    ${coverImageHtml(event)}
-    <p>Hi ${toName || "there"},</p>
-    <p>You've successfully registered for <strong>${event.title}</strong>. We're looking forward to having you with us!</p>
-    <p>${dateLine} · ${time} IST</p>
-    ${speakerLineHtml(event)}
-    <p>We've also added the event to your calendar, so you're all set. You'll find the calendar invite in your inbox.</p>
-    <p>See you there!<br/>Team evolve</p>
-  `;
   const r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       sender: { name: "evolve", email: "noreply@evolvedesign.academy" },
       to: [{ email: toEmail, name: toName || undefined }],
-      subject: `You've successfully registered for ${event.title}`,
+      subject,
       htmlContent: html
     })
   });
@@ -251,6 +241,53 @@ async function sendConfirmationEmail(toEmail: string, toName: string, event: any
     const err = await r.text();
     throw new Error(`Brevo error: ${err}`);
   }
+}
+
+// `approved` = an admin approved a request on an approval-only event
+async function sendConfirmationEmail(toEmail: string, toName: string, event: any, approved = false) {
+  const { dateLine, time } = formatEventDateTime(event.start_time);
+  const html = `
+    ${coverImageHtml(event)}
+    <p>Hi ${toName || "there"},</p>
+    <p>${
+      approved
+        ? `Good news, your request to join <strong>${event.title}</strong> has been approved. You're in!`
+        : `You've successfully registered for <strong>${event.title}</strong>. We're looking forward to having you with us!`
+    }</p>
+    <p>${dateLine} · ${time} IST</p>
+    ${speakerLineHtml(event)}
+    <p>We've also added the event to your calendar, so you're all set. You'll find the calendar invite in your inbox.</p>
+    <p>See you there!<br/>Team evolve</p>
+  `;
+  await sendBrevo(
+    toEmail,
+    toName,
+    approved ? `You're in: ${event.title}` : `You've successfully registered for ${event.title}`,
+    html
+  );
+}
+
+async function sendRequestReceivedEmail(toEmail: string, toName: string, event: any) {
+  const { dateLine, time } = formatEventDateTime(event.start_time);
+  const html = `
+    ${coverImageHtml(event)}
+    <p>Hi ${toName || "there"},</p>
+    <p>Thanks for requesting a spot at <strong>${event.title}</strong>. Spots are limited, so the team reviews every request.</p>
+    <p>${dateLine} · ${time} IST</p>
+    <p>We'll email you as soon as you're approved, with a calendar invite and everything you need to join.</p>
+    <p>Team evolve</p>
+  `;
+  await sendBrevo(toEmail, toName, `Request received: ${event.title}`, html);
+}
+
+async function sendDeclinedEmail(toEmail: string, toName: string, event: any) {
+  const html = `
+    <p>Hi ${toName || "there"},</p>
+    <p>Thanks for your interest in <strong>${event.title}</strong>. We had more requests than spots this time, so we couldn't fit you into this session.</p>
+    <p>We run sessions like this often, so keep an eye on <a href="https://evolvedesign.academy/events">evolve events</a> for the next one.</p>
+    <p>Team evolve</p>
+  `;
+  await sendBrevo(toEmail, toName, `About your request for ${event.title}`, html);
 }
 
 // Same-day nudge — sent close to start_time by whatever calls mode "send_reminder"
@@ -292,9 +329,7 @@ async function handleSyncCalendar(event_id: string) {
   return { ok: true, google_calendar_event_id: calendarEventId };
 }
 
-async function notifyRegistration(registration: any, event: any) {
-  const calendarEventId = await ensureCalendarEvent(event);
-
+async function registrationContact(registration: any) {
   let email = registration.invitee_email as string | null;
   let name = registration.invitee_name as string | null;
   if (registration.user_id) {
@@ -303,9 +338,15 @@ async function notifyRegistration(registration: any, event: any) {
     name = profile?.name ?? name;
   }
   if (!email) throw new Error("registration has no email to notify");
+  return { email, name: name || "" };
+}
+
+async function notifyRegistration(registration: any, event: any) {
+  const calendarEventId = await ensureCalendarEvent(event);
+  const { email, name } = await registrationContact(registration);
 
   await addAttendee(calendarEventId, email);
-  await sendConfirmationEmail(email, name || "", event);
+  await sendConfirmationEmail(email, name, event, !!registration.reviewed_at);
   await admin.from("event_registrations").update({ calendar_synced: true }).eq("id", registration.id);
 }
 
@@ -319,6 +360,23 @@ async function handleNotify(registration_id: string) {
 
   const { data: event, error: eventErr } = await admin.from("events").select("*").eq("id", registration.event_id).single();
   if (eventErr || !event) throw new Error("event not found");
+
+  // Approval events (events_registration_controls.sql): a new request is
+  // 'pending' → "request received"; the admin's decision calls this again
+  // → calendar invite + "you're in", or a short decline note.
+  if (registration.status === "pending") {
+    const { email, name } = await registrationContact(registration);
+    await sendRequestReceivedEmail(email, name, event);
+    return { ok: true, status: "pending" };
+  }
+  if (registration.status === "rejected") {
+    const { email, name } = await registrationContact(registration);
+    await sendDeclinedEmail(email, name, event);
+    return { ok: true, status: "rejected" };
+  }
+  if (registration.status !== "registered") return { ok: true, skipped: registration.status };
+  // already invited + emailed — don't send it twice
+  if (registration.calendar_synced) return { ok: true, skipped: "already notified" };
 
   await notifyRegistration(registration, event);
   return { ok: true };
@@ -349,11 +407,104 @@ async function handleSendReminder(registration_id: string) {
   return { ok: true };
 }
 
+/* ── recurring series ─────────────────────────────────────────────────── */
+// Copy of seriesOccurrences in src/lib/events.js — keep the two in step.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const IST_MS = 5.5 * 60 * 60 * 1000;
+const SERIES_HORIZON_DAYS = 28;
+
+function seriesOccurrences(firstStartIso: string, rec: any, horizonMs: number, max = 60) {
+  const first = new Date(firstStartIso).getTime();
+  if (!rec?.freq) return [first];
+  const interval = Math.max(1, parseInt(rec.interval, 10) || 1);
+  const until = Math.min(horizonMs, first + 366 * DAY_MS);
+  const firstIst = new Date(first + IST_MS);
+  const weekdays: number[] = rec.freq === "weekly" && rec.weekdays?.length ? rec.weekdays : [firstIst.getUTCDay()];
+  const firstWeekStart = first - firstIst.getUTCDay() * DAY_MS;
+  const out: number[] = [];
+  for (let t = first; t <= until && out.length < max; t += DAY_MS) {
+    const d = new Date(t + IST_MS);
+    const days = Math.round((t - first) / DAY_MS);
+    let hit = t === first;
+    if (rec.freq === "daily") hit = days % interval === 0;
+    else if (rec.freq === "weekly")
+      hit = hit || (weekdays.includes(d.getUTCDay()) && Math.floor(Math.round((t - firstWeekStart) / DAY_MS) / 7) % interval === 0);
+    else if (rec.freq === "monthly") {
+      const months = (d.getUTCFullYear() - firstIst.getUTCFullYear()) * 12 + d.getUTCMonth() - firstIst.getUTCMonth();
+      hit = d.getUTCDate() === firstIst.getUTCDate() && months % interval === 0;
+    }
+    if (hit) out.push(t);
+  }
+  return out;
+}
+
+// Open-ended ("never ends") series are only created a few weeks ahead by
+// the admin Events tab; this keeps them topped up. Each new session copies
+// the series' latest one. Already-existing slugs are skipped, so re-running
+// is safe.
+async function extendOpenSeries() {
+  const { data: rows, error } = await admin
+    .from("events")
+    .select("*")
+    .not("series_id", "is", null)
+    .eq("recurrence->ends->>type", "never")
+    .order("start_time", { ascending: true });
+  if (error) throw new Error(error.message);
+
+  const bySeries = new Map<string, any[]>();
+  for (const r of rows || []) {
+    if (!bySeries.has(r.series_id)) bySeries.set(r.series_id, []);
+    bySeries.get(r.series_id)!.push(r);
+  }
+
+  const horizon = Date.now() + SERIES_HORIZON_DAYS * DAY_MS;
+  let created = 0;
+  for (const list of bySeries.values()) {
+    const anchor = list[0];
+    const latest = list[list.length - 1];
+    const latestStart = new Date(latest.start_time).getTime();
+    const lengthMs = latest.end_time ? new Date(latest.end_time).getTime() - latestStart : 3600000;
+    const closeBefore = latest.registration_closes_at ? latestStart - new Date(latest.registration_closes_at).getTime() : null;
+    const baseSlug = latest.recurrence?.slug || anchor.slug;
+
+    const fresh = seriesOccurrences(anchor.start_time, latest.recurrence, horizon).filter((t) => t > latestStart);
+    if (!fresh.length) continue;
+
+    const { id: _id, created_at: _c, updated_at: _u, google_calendar_event_id: _g, ...template } = latest;
+    const newRows = fresh.map((t) => ({
+      ...template,
+      slug: `${baseSlug}-${new Date(t + IST_MS).toISOString().slice(0, 10)}`,
+      start_time: new Date(t).toISOString(),
+      end_time: new Date(t + lengthMs).toISOString(),
+      registration_closes_at: closeBefore == null ? null : new Date(t - closeBefore).toISOString(),
+      registration_open: true,
+      attendee_count: null,
+      recording_path: null,
+      has_recording_link: false
+    }));
+    const { data: inserted, error: insErr } = await admin
+      .from("events")
+      .upsert(newRows, { onConflict: "slug", ignoreDuplicates: true })
+      .select("id");
+    if (insErr) console.error(`extend series ${latest.series_id}:`, insErr.message);
+    else created += inserted?.length || 0;
+  }
+  return created;
+}
+
 // Cron-invoked (see file header) — catches up any registration that's
 // within 9h of its event's start and hasn't been reminded yet, rather
 // than requiring the cron tick to land exactly on the 9h mark. That
 // also covers someone registering after the 9h mark has already passed.
 async function handleSendDueReminders() {
+  // piggybacks on the same 15-minute cron; never blocks the reminders
+  let seriesSessionsCreated = 0;
+  try {
+    seriesSessionsCreated = await extendOpenSeries();
+  } catch (err) {
+    console.error("extend series failed:", err.message);
+  }
+
   const nineHoursOut = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString();
 
   const { data: events, error } = await admin
@@ -363,7 +514,7 @@ async function handleSendDueReminders() {
     .gt("start_time", new Date().toISOString())
     .lte("start_time", nineHoursOut);
   if (error) throw new Error(error.message);
-  if (!events?.length) return { ok: true, remindersSent: 0 };
+  if (!events?.length) return { ok: true, remindersSent: 0, seriesSessionsCreated };
 
   let remindersSent = 0;
   for (const event of events) {
@@ -394,7 +545,7 @@ async function handleSendDueReminders() {
       }
     }
   }
-  return { ok: true, remindersSent };
+  return { ok: true, remindersSent, seriesSessionsCreated };
 }
 
 async function handleInvite(event_id: string, email: string, name: string) {

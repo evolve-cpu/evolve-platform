@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabaseAdmin } from "../../supabaseAdminClient";
-import { isEventOver } from "../../lib/events";
+import {
+  isEventOver,
+  isEventLive,
+  seriesOccurrences,
+  describeRecurrence,
+  registrationClosedReason,
+  WEEKDAYS
+} from "../../lib/events";
 import { toEmbedUrl } from "../../components/events/PastEventRecording";
 
 const Y = "#FFD007";
@@ -54,6 +61,38 @@ const PAST_EVENT_TYPES = ["Webinar", "AMA"];
 
 const EMPTY_SPEAKER = { name: "", role: "", bio: "", linkedin: "", photo_url: "" };
 
+// Custom registration questions (events.registration_questions), answered
+// in the registration modal on EventDetail.jsx and stored per registration
+// in event_registrations.answers, keyed by question id.
+const QUESTION_TYPES = [
+  { type: "text", name: "Text", placeholder: "What would you like to get out of this session?" },
+  { type: "options", name: "Options", placeholder: "What best describes your role?" },
+  { type: "social", name: "Social Profile", placeholder: "Your LinkedIn profile" },
+  { type: "company", name: "Company", placeholder: "Where do you work / study?" },
+  { type: "checkbox", name: "Checkbox", placeholder: "I'll keep my camera on during the session" },
+  { type: "terms", name: "Terms", placeholder: "Terms and Conditions" },
+  { type: "phone", name: "Phone", placeholder: "Phone number" },
+  { type: "website", name: "Website", placeholder: "Portfolio / website" }
+];
+const questionTypeName = (type) => QUESTION_TYPES.find((t) => t.type === type)?.name || type;
+
+function questionSubtitle(q) {
+  if (q.type === "options") {
+    const opts = (q.options || []).filter(Boolean);
+    return `${opts.length} option${opts.length === 1 ? "" : "s"}: ${opts.join(", ")}`;
+  }
+  if (q.type === "terms") return q.terms_url || q.terms_text || "";
+  return "";
+}
+
+function questionKind(q) {
+  if (q.type === "text") return q.long ? "Long Text" : "Short Text";
+  if (q.type === "options") return q.multi ? "Multi Select" : "Single Select";
+  return questionTypeName(q.type);
+}
+
+const EMPTY_RECURRENCE = { freq: "", interval: "1", weekdays: [], endsType: "never", endsDate: "", endsCount: "8" };
+
 const EMPTY_FORM = {
   title: "",
   slug: "",
@@ -84,7 +123,18 @@ const EMPTY_FORM = {
   // past-event page (events_past_sessions.sql): headline count + the
   // "About the speakers" section
   attendee_count: "",
-  speakers: [{ ...EMPTY_SPEAKER }]
+  speakers: [{ ...EMPTY_SPEAKER }],
+  // registration controls (events_registration_controls.sql)
+  about_sections: [],
+  requires_approval: false,
+  registration_open: true,
+  closes_date: "",
+  closes_time: "",
+  collect_speaker_question: true,
+  registration_questions: [],
+  recurrence: EMPTY_RECURRENCE,
+  series_id: null,
+  applyToSeries: false
 };
 
 // new events get their id up front so a recording can be uploaded into
@@ -298,6 +348,383 @@ function RecordingField({ eventId, value, onUploaded, onRemove }) {
   );
 }
 
+function ToggleField({ label, hint, checked, onChange }) {
+  return (
+    <label className="flex items-start gap-3 rounded-lg p-3 cursor-pointer" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5" style={{ accentColor: Y }} />
+      <span>
+        <span className="text-xs font-bold text-white block">{label}</span>
+        {hint && <span className="text-[11px] block mt-0.5" style={{ color: "#888" }}>{hint}</span>}
+      </span>
+    </label>
+  );
+}
+
+const smallBtn = { border: "1px solid #333", color: "#aaa" };
+
+// Google-Meet style "repeat" picker. Only used when an event isn't part of
+// a series yet — saving generates the later occurrences (see saveSeries).
+function RecurrenceField({ value, onChange, startDate }) {
+  const set = (patch) => onChange({ ...value, ...patch });
+  const startWeekday = startDate ? new Date(`${startDate}T12:00:00+05:30`).getUTCDay() : null;
+  function toggleDay(d) {
+    const days = value.weekdays.includes(d) ? value.weekdays.filter((x) => x !== d) : [...value.weekdays, d];
+    set({ weekdays: days });
+  }
+  return (
+    <div className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+      <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "#aaa" }}>
+        <span>Repeat</span>
+        <select
+          className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+          style={inputStyle}
+          value={value.freq}
+          onChange={(e) =>
+            set({
+              freq: e.target.value,
+              weekdays: e.target.value === "weekly" && !value.weekdays.length && startWeekday != null ? [startWeekday] : value.weekdays
+            })
+          }
+        >
+          <option value="">does not repeat</option>
+          <option value="daily">daily</option>
+          <option value="weekly">weekly</option>
+          <option value="monthly">monthly (same date)</option>
+        </select>
+        {value.freq && (
+          <>
+            <span>every</span>
+            <input
+              type="number"
+              min="1"
+              className="w-16 rounded-lg px-3 py-2 text-sm text-white outline-none"
+              style={inputStyle}
+              value={value.interval}
+              onChange={(e) => set({ interval: e.target.value })}
+            />
+            <span>{{ daily: "day(s)", weekly: "week(s)", monthly: "month(s)" }[value.freq]}</span>
+          </>
+        )}
+      </div>
+
+      {value.freq === "weekly" && (
+        <div className="flex flex-wrap gap-1">
+          {WEEKDAYS.map((d, i) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => toggleDay(i)}
+              className="text-xs font-bold w-11 py-1.5 rounded-md"
+              style={value.weekdays.includes(i) ? { background: Y, color: "#111" } : smallBtn}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {value.freq && (
+        <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "#aaa" }}>
+          <span>Ends</span>
+          {[
+            ["never", "never"],
+            ["on", "on date"],
+            ["after", "after"]
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => set({ endsType: k })}
+              className="text-xs font-bold px-3 py-1.5 rounded-md"
+              style={value.endsType === k ? { background: Y, color: "#111" } : smallBtn}
+            >
+              {label}
+            </button>
+          ))}
+          {value.endsType === "on" && (
+            <input
+              type="date"
+              className="rounded-lg px-3 py-1.5 text-sm text-white outline-none"
+              style={inputStyle}
+              value={value.endsDate}
+              onChange={(e) => set({ endsDate: e.target.value })}
+            />
+          )}
+          {value.endsType === "after" && (
+            <>
+              <input
+                type="number"
+                min="2"
+                max="60"
+                className="w-16 rounded-lg px-3 py-1.5 text-sm text-white outline-none"
+                style={inputStyle}
+                value={value.endsCount}
+                onChange={(e) => set({ endsCount: e.target.value })}
+              />
+              <span>sessions</span>
+            </>
+          )}
+        </div>
+      )}
+      {value.freq && (
+        <p className="text-[11px]" style={{ color: "#888" }}>
+          Each session gets its own page, registrations and reminders. Public lists show only the next
+          one. {value.endsType === "never" && "Sessions are created 4 weeks ahead and topped up automatically."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function AboutSectionsField({ sections, onChange }) {
+  const update = (i, key, v) => onChange(sections.map((s, idx) => (idx === i ? { ...s, [key]: v } : s)));
+  return (
+    <div className="space-y-2">
+      {sections.map((s, i) => (
+        <div key={i} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
+              style={inputStyle}
+              value={s.title}
+              placeholder='Section title (e.g. "Who is this for", "What you will take away")'
+              onChange={(e) => update(i, "title", e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => onChange(sections.filter((_, idx) => idx !== i))}
+              className="text-xs font-bold px-3 rounded-lg"
+              style={smallBtn}
+            >
+              remove
+            </button>
+          </div>
+          <textarea
+            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-y"
+            style={inputStyle}
+            rows={4}
+            value={s.body}
+            placeholder="Line breaks are kept as typed"
+            onChange={(e) => update(i, "body", e.target.value)}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...sections, { title: "", body: "" }])}
+        className="text-xs font-bold px-3 py-1.5 rounded-lg"
+        style={{ border: `1px solid ${Y}`, color: Y }}
+      >
+        + add section
+      </button>
+    </div>
+  );
+}
+
+function QuestionEditor({ q, onChange, onDone }) {
+  const set = (patch) => onChange({ ...q, ...patch });
+  const options = q.options?.length ? q.options : [""];
+  return (
+    <div className="space-y-2 pt-2">
+      <input
+        className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+        style={inputStyle}
+        value={q.label}
+        placeholder={QUESTION_TYPES.find((t) => t.type === q.type)?.placeholder}
+        onChange={(e) => set({ label: e.target.value })}
+        autoFocus
+      />
+      {q.type === "text" && (
+        <div className="flex gap-1">
+          {[
+            [false, "short answer"],
+            [true, "long answer"]
+          ].map(([long, label]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => set({ long })}
+              className="text-xs font-bold px-3 py-1.5 rounded-md"
+              style={!!q.long === long ? { background: Y, color: "#111" } : smallBtn}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {q.type === "options" && (
+        <>
+          <div className="flex gap-1">
+            {[
+              [false, "single select"],
+              [true, "multi select"]
+            ].map(([multi, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => set({ multi })}
+                className="text-xs font-bold px-3 py-1.5 rounded-md"
+                style={!!q.multi === multi ? { background: Y, color: "#111" } : smallBtn}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {options.map((opt, oi) => (
+            <div key={oi} className="flex gap-2">
+              <input
+                className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={inputStyle}
+                value={opt}
+                placeholder={`Option ${oi + 1}`}
+                onChange={(e) => set({ options: options.map((o, idx) => (idx === oi ? e.target.value : o)) })}
+              />
+              <button
+                type="button"
+                onClick={() => set({ options: options.filter((_, idx) => idx !== oi) })}
+                className="text-xs font-bold px-3 rounded-lg"
+                style={smallBtn}
+              >
+                remove
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={() => set({ options: [...options, ""] })} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={smallBtn}>
+            + add option
+          </button>
+        </>
+      )}
+      {q.type === "terms" && (
+        <>
+          <input
+            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+            style={inputStyle}
+            value={q.terms_url || ""}
+            placeholder="Link to the terms (optional)"
+            onChange={(e) => set({ terms_url: e.target.value })}
+          />
+          <textarea
+            className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-y"
+            style={inputStyle}
+            rows={3}
+            value={q.terms_text || ""}
+            placeholder="…or the terms themselves, shown in the form"
+            onChange={(e) => set({ terms_text: e.target.value })}
+          />
+        </>
+      )}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs" style={{ color: "#aaa" }}>
+          <input type="checkbox" checked={!!q.required} onChange={(e) => set({ required: e.target.checked })} style={{ accentColor: Y }} />
+          required
+        </label>
+        <button type="button" onClick={onDone} className="text-xs font-black px-3 py-1.5 rounded-lg" style={{ background: Y, color: "#111" }}>
+          done
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function QuestionsBuilder({ questions, onChange }) {
+  const [editingId, setEditingId] = useState(null);
+  const [picking, setPicking] = useState(false);
+  const hasTerms = questions.some((q) => q.type === "terms");
+
+  function add(type) {
+    const q = { id: crypto.randomUUID().slice(0, 8), type, label: "", required: type === "terms", options: type === "options" ? ["", ""] : [] };
+    onChange([...questions, q]);
+    setEditingId(q.id);
+    setPicking(false);
+  }
+  function move(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= questions.length) return;
+    const next = [...questions];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div className="space-y-2">
+      {questions.map((q, i) => (
+        <div key={q.id} className="rounded-lg p-3" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+          <div className="flex items-start gap-3">
+            <div className="flex flex-col">
+              <button type="button" onClick={() => move(i, -1)} className="text-[10px] leading-none px-1" style={{ color: "#666" }} aria-label="move up">
+                ▲
+              </button>
+              <button type="button" onClick={() => move(i, 1)} className="text-[10px] leading-none px-1 mt-1" style={{ color: "#666" }} aria-label="move down">
+                ▼
+              </button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">{q.label || <span style={{ color: "#666" }}>Untitled question</span>}</p>
+              {questionSubtitle(q) && (
+                <p className="text-xs truncate" style={{ color: "#888" }}>{questionSubtitle(q)}</p>
+              )}
+              <p className="text-[11px] mt-0.5" style={{ color: "#666" }}>
+                {questionKind(q)}
+                {q.required ? " · Required" : ""}
+              </p>
+            </div>
+            <button type="button" onClick={() => setEditingId(editingId === q.id ? null : q.id)} className="text-xs font-bold px-3 py-1 rounded-lg" style={smallBtn}>
+              edit
+            </button>
+            <button type="button" onClick={() => onChange(questions.filter((x) => x.id !== q.id))} className="text-xs font-bold px-3 py-1 rounded-lg" style={smallBtn}>
+              remove
+            </button>
+          </div>
+          {editingId === q.id && (
+            <QuestionEditor
+              q={q}
+              onChange={(nq) => onChange(questions.map((x) => (x.id === q.id ? nq : x)))}
+              onDone={() => setEditingId(null)}
+            />
+          )}
+        </div>
+      ))}
+
+      {picking ? (
+        <div className="rounded-lg p-3" style={{ backgroundColor: "#0d0d0d", border: `1px solid ${Y}55` }}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-bold text-white">Add question</p>
+            <button type="button" onClick={() => setPicking(false)} className="text-xs" style={{ color: "#888" }}>
+              cancel
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {QUESTION_TYPES.map((t) => {
+              const disabled = t.type === "terms" && hasTerms;
+              return (
+                <button
+                  key={t.type}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => add(t.type)}
+                  className="text-sm font-bold text-left px-3 py-2.5 rounded-lg disabled:opacity-40"
+                  style={{ backgroundColor: "#1a1a1a", color: "#ddd" }}
+                >
+                  {t.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ border: `1px solid ${Y}`, color: Y }}
+        >
+          + add question
+        </button>
+      )}
+    </div>
+  );
+}
+
 function EventForm({ form, setForm, onSave, onCancel, saving }) {
   function updateCategoryName(ci, name) {
     setForm((f) => ({
@@ -379,10 +806,20 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
 
       <div className="md:col-span-2">
         <TextAreaField
-          label="about the session"
-          rows={3}
+          label="about the session (line breaks are kept as typed)"
+          rows={6}
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          more sections (shown under "about the session")
+        </label>
+        <AboutSectionsField
+          sections={form.about_sections}
+          onChange={(about_sections) => setForm((f) => ({ ...f, about_sections }))}
         />
       </div>
 
@@ -466,6 +903,70 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
         value={form.capacity}
         onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
       />
+
+      <div className="md:col-span-2">
+        {form.series_id ? (
+          <ToggleField
+            label={`Part of a recurring series · ${describeRecurrence(form._recurrenceRaw) || "repeats"}`}
+            hint="Tick to also copy these changes (everything except date, time and slug) to every upcoming session in the series."
+            checked={form.applyToSeries}
+            onChange={(applyToSeries) => setForm((f) => ({ ...f, applyToSeries }))}
+          />
+        ) : (
+          <RecurrenceField
+            value={form.recurrence}
+            startDate={form.date}
+            onChange={(recurrence) => setForm((f) => ({ ...f, recurrence }))}
+          />
+        )}
+      </div>
+
+      <div className="md:col-span-2 pt-2">
+        <p className="text-xs font-black uppercase tracking-wide" style={{ color: Y }}>
+          registration
+        </p>
+      </div>
+      <ToggleField
+        label="Registration open"
+        hint="Turn off to stop new sign-ups. The page shows “Registrations closed”."
+        checked={form.registration_open}
+        onChange={(registration_open) => setForm((f) => ({ ...f, registration_open }))}
+      />
+      <ToggleField
+        label="Require approval"
+        hint="People request a spot; you approve or decline them under Registrants. Calendar invite goes out on approval."
+        checked={form.requires_approval}
+        onChange={(requires_approval) => setForm((f) => ({ ...f, requires_approval }))}
+      />
+      <Field
+        type="date"
+        label="close registrations on (optional)"
+        value={form.closes_date}
+        onChange={(e) => setForm((f) => ({ ...f, closes_date: e.target.value }))}
+      />
+      <Field
+        type="time"
+        label="at (IST)"
+        value={form.closes_time}
+        onChange={(e) => setForm((f) => ({ ...f, closes_time: e.target.value }))}
+      />
+      <div className="md:col-span-2">
+        <ToggleField
+          label="Ask for a question for the speaker"
+          hint="The AMA-style fields: question category, question, and the anonymous option. Turn off for sessions that don't need them."
+          checked={form.collect_speaker_question}
+          onChange={(collect_speaker_question) => setForm((f) => ({ ...f, collect_speaker_question }))}
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          custom questions (asked when someone registers)
+        </label>
+        <QuestionsBuilder
+          questions={form.registration_questions}
+          onChange={(registration_questions) => setForm((f) => ({ ...f, registration_questions }))}
+        />
+      </div>
 
       <Field
         label="speaker / host name"
@@ -924,6 +1425,291 @@ function PastEventForm({ form, setForm, onSave, onCancel, saving, onShowAllField
   );
 }
 
+const REG_STATUS_COLOR = { registered: "#22c55e", pending: "#f59e0b", rejected: "#ef4444", cancelled: "#666" };
+const REG_STATUS_LABEL = { registered: "going", pending: "pending", rejected: "declined", cancelled: "cancelled" };
+
+function formatAnswer(v) {
+  if (Array.isArray(v)) return v.join(", ");
+  if (v === true) return "yes";
+  if (v === false || v == null) return "";
+  return String(v);
+}
+
+function referrerHost(ref) {
+  try {
+    return ref ? new URL(ref).hostname.replace(/^www\./, "") : "";
+  } catch {
+    return "";
+  }
+}
+
+const UTM_PRESETS = ["instagram", "linkedin", "whatsapp", "discord", "email", "newsletter"];
+
+function UtmLinkBuilder({ event }) {
+  const [utm, setUtm] = useState({ source: "", medium: "social", campaign: event.slug });
+  const [copied, setCopied] = useState(false);
+  const params = new URLSearchParams();
+  if (utm.source) params.set("utm_source", utm.source);
+  if (utm.medium) params.set("utm_medium", utm.medium);
+  if (utm.campaign) params.set("utm_campaign", utm.campaign);
+  const url = `${window.location.origin}/events/${event.slug}${utm.source ? `?${params}` : ""}`;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-bold text-white">Tracked link (UTM)</p>
+      <div className="flex flex-wrap gap-1">
+        {UTM_PRESETS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setUtm((u) => ({ ...u, source: s, medium: s === "email" || s === "newsletter" ? "email" : "social" }))}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-md"
+            style={utm.source === s ? { background: Y, color: "#111" } : smallBtn}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {["source", "medium", "campaign"].map((k) => (
+          <input
+            key={k}
+            className="rounded-lg px-3 py-2 text-xs text-white outline-none"
+            style={inputStyle}
+            placeholder={`utm_${k}`}
+            value={utm[k]}
+            onChange={(e) => setUtm((u) => ({ ...u, [k]: e.target.value.trim().toLowerCase().replace(/\s+/g, "-") }))}
+          />
+        ))}
+      </div>
+      <div className="flex gap-2 items-center">
+        <code className="flex-1 text-[11px] truncate px-3 py-2 rounded-lg" style={{ ...inputStyle, color: "#aaa" }}>
+          {url}
+        </code>
+        <button
+          type="button"
+          disabled={!utm.source}
+          onClick={() => {
+            navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }}
+          className="text-xs font-bold px-3 py-2 rounded-lg disabled:opacity-40"
+          style={{ border: `1px solid ${Y}`, color: Y }}
+        >
+          {copied ? "copied!" : "copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RegistrantsPanel({ event, registrants, onReview, onAttended }) {
+  const [filter, setFilter] = useState(event.requires_approval ? "pending" : "all");
+  const count = (s) => registrants.filter((r) => r.status === s).length;
+  const going = count("registered");
+  const pending = count("pending");
+  const attended = registrants.filter((r) => r.attended).length;
+  const questions = event.registration_questions || [];
+
+  const bySource = {};
+  registrants
+    .filter((r) => r.status !== "cancelled")
+    .forEach((r) => {
+      const key = r.utm_source || (r.source === "admin_invite" ? "admin invite" : referrerHost(r.referrer) || "direct");
+      bySource[key] = (bySource[key] || 0) + 1;
+    });
+  const sources = Object.entries(bySource).sort((a, b) => b[1] - a[1]);
+
+  const shown = filter === "all" ? registrants : registrants.filter((r) => r.status === filter);
+
+  function exportCsv() {
+    downloadCSV(
+      `${event.slug}-registrants.csv`,
+      registrants.map((r) => ({
+        name: r.profile?.name || r.invitee_name || "",
+        username: r.profile?.username || "",
+        email: r.profile?.email || r.invitee_email || "",
+        registered_at: r.registered_at,
+        status: REG_STATUS_LABEL[r.status] || r.status,
+        attended: r.attended ? "yes" : "",
+        source: r.source,
+        utm_source: r.utm_source || "",
+        utm_medium: r.utm_medium || "",
+        utm_campaign: r.utm_campaign || "",
+        referrer: r.referrer || "",
+        question_category: r.question_category || "",
+        question_text: r.question_text || "",
+        question_anonymous: r.question_anonymous,
+        ...Object.fromEntries(questions.map((q) => [q.label, formatAnswer(r.answers?.[q.id])]))
+      }))
+    );
+  }
+
+  return (
+    <div className="border-t pt-3 space-y-3" style={{ borderColor: "#1f1f1f" }}>
+      <div className="flex flex-wrap gap-2">
+        {[
+          ["going", going, REG_STATUS_COLOR.registered],
+          ...(event.capacity != null ? [["spots left", Math.max(0, event.capacity - going), "#aaa"]] : []),
+          ["pending", pending, REG_STATUS_COLOR.pending],
+          ["declined", count("rejected"), REG_STATUS_COLOR.rejected],
+          ["cancelled", count("cancelled"), "#666"],
+          ["attended", attended, Y]
+        ].map(([label, n, color]) => (
+          <div key={label} className="rounded-lg px-3 py-2 min-w-[80px]" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+            <p className="text-lg font-black" style={{ color }}>{n}</p>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: "#666" }}>{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {sources.length > 0 && (
+        <div>
+          <p className="text-xs font-bold text-white mb-1">Where registrations came from</p>
+          <div className="flex flex-wrap gap-1.5 text-[11px]">
+            {sources.map(([src, n]) => (
+              <span key={src} className="px-2.5 py-1 rounded-md" style={{ backgroundColor: "#1a1a1a", color: "#ccc" }}>
+                {src} <span style={{ color: Y }}>{n}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1">
+          {[
+            ["all", `all (${registrants.length})`],
+            ["registered", `going (${going})`],
+            ["pending", `pending (${pending})`],
+            ["rejected", `declined (${count("rejected")})`]
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setFilter(k)}
+              className="text-xs font-bold px-3 py-1.5 rounded-md"
+              style={filter === k ? { background: Y, color: "#111" } : smallBtn}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          {pending > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!confirm(`Approve all ${pending} pending requests?`)) return;
+                registrants.filter((r) => r.status === "pending").forEach((r) => onReview(r, "registered"));
+              }}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg"
+              style={{ border: "1px solid #22c55e55", color: "#22c55e" }}
+            >
+              approve all pending
+            </button>
+          )}
+          <button
+            onClick={exportCsv}
+            disabled={registrants.length === 0}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-40"
+            style={smallBtn}
+          >
+            export CSV
+          </button>
+        </div>
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="text-xs" style={{ color: "#555" }}>Nobody here yet.</p>
+      ) : (
+        <div className="space-y-2 text-xs" style={{ color: "#aaa" }}>
+          {shown.map((r) => (
+            <div key={r.id} className="rounded-lg p-3" style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="min-w-0">
+                  <span className="text-white font-bold">{r.profile?.name || r.invitee_name || "—"}</span> ·{" "}
+                  {r.profile?.email || r.invitee_email || "—"} · {fmtDt(r.registered_at)}
+                  <span className="ml-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: REG_STATUS_COLOR[r.status] }}>
+                    {REG_STATUS_LABEL[r.status] || r.status}
+                  </span>
+                  {r.source === "admin_invite" && (
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: Y }}>
+                      invited
+                    </span>
+                  )}
+                  {r.utm_source && (
+                    <span className="ml-2 text-[10px]" style={{ color: "#888" }}>
+                      via {r.utm_source}
+                      {r.utm_campaign ? ` / ${r.utm_campaign}` : ""}
+                    </span>
+                  )}
+                  {r.status === "registered" && !r.calendar_synced && (
+                    <span className="ml-2 text-[10px]" style={{ color: "#666" }}>
+                      (calendar/email pending)
+                    </span>
+                  )}
+                </p>
+                <div className="flex items-center gap-2">
+                  {r.status === "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onReview(r, "registered")}
+                        className="text-xs font-bold px-3 py-1 rounded-lg"
+                        style={{ background: "#22c55e", color: "#111" }}
+                      >
+                        approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onReview(r, "rejected")}
+                        className="text-xs font-bold px-3 py-1 rounded-lg"
+                        style={{ border: "1px solid #ef444455", color: "#ef4444" }}
+                      >
+                        decline
+                      </button>
+                    </>
+                  )}
+                  {r.status === "rejected" && (
+                    <button type="button" onClick={() => onReview(r, "registered")} className="text-xs font-bold px-3 py-1 rounded-lg" style={smallBtn}>
+                      approve instead
+                    </button>
+                  )}
+                  {r.status === "registered" && (
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={!!r.attended} onChange={(e) => onAttended(r, e.target.checked)} style={{ accentColor: Y }} />
+                      attended
+                    </label>
+                  )}
+                </div>
+              </div>
+              {r.question_text && (
+                <p className="mt-1" style={{ color: "#888" }}>
+                  {r.question_anonymous ? "anonymous" : "asked"}
+                  {r.question_category ? ` · ${r.question_category}` : ""}: "{r.question_text}"
+                </p>
+              )}
+              {questions.some((q) => formatAnswer(r.answers?.[q.id])) && (
+                <div className="mt-1 space-y-0.5">
+                  {questions.map((q) =>
+                    formatAnswer(r.answers?.[q.id]) ? (
+                      <p key={q.id}>
+                        <span style={{ color: "#666" }}>{q.label}:</span> {formatAnswer(r.answers[q.id])}
+                      </p>
+                    ) : null
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function eventToForm(event) {
   const { date, time } = utcToIst(event.start_time);
   const durationMinutes =
@@ -961,8 +1747,81 @@ function eventToForm(event) {
     attendee_count: event.attendee_count ?? "",
     speakers: event.speakers?.length
       ? event.speakers.map((sp) => ({ ...EMPTY_SPEAKER, ...sp }))
-      : [{ ...EMPTY_SPEAKER }]
+      : [{ ...EMPTY_SPEAKER }],
+    about_sections: event.about_sections || [],
+    requires_approval: !!event.requires_approval,
+    registration_open: event.registration_open !== false,
+    closes_date: event.registration_closes_at ? utcToIst(event.registration_closes_at).date : "",
+    closes_time: event.registration_closes_at ? utcToIst(event.registration_closes_at).time : "",
+    collect_speaker_question: event.collect_speaker_question !== false,
+    registration_questions: event.registration_questions || [],
+    recurrence: EMPTY_RECURRENCE,
+    series_id: event.series_id || null,
+    _recurrenceRaw: event.recurrence || null,
+    applyToSeries: false
   };
+}
+
+const cleanQuestions = (questions) =>
+  questions
+    .map((q) => ({ ...q, label: q.label.trim(), options: (q.options || []).map((o) => o.trim()).filter(Boolean) }))
+    .filter((q) => q.label && (q.type !== "options" || q.options.length));
+
+function recurrenceFromForm(r) {
+  if (!r.freq) return null;
+  return {
+    freq: r.freq,
+    interval: Math.max(1, parseInt(r.interval, 10) || 1),
+    weekdays: r.freq === "weekly" ? r.weekdays : [],
+    ends:
+      r.endsType === "on" && r.endsDate
+        ? { type: "on", date: r.endsDate }
+        : r.endsType === "after"
+          ? { type: "after", count: Math.min(60, Math.max(2, parseInt(r.endsCount, 10) || 2)) }
+          : { type: "never" }
+  };
+}
+
+// fields a series shares — "apply to all upcoming sessions" copies these
+const SERIES_SKIP_FIELDS = ["id", "slug", "start_time", "end_time", "status", "recording_path", "recording_url", "has_recording_link", "attendee_count", "recurrence", "series_id"];
+
+// a series' close time is "this long before the session starts", so each
+// occurrence gets its own
+function shiftedCloseTime(template, startMs) {
+  if (!template.registration_closes_at) return null;
+  const before = new Date(template.start_time) - new Date(template.registration_closes_at);
+  return new Date(startMs - before).toISOString();
+}
+
+// Turns a just-saved event into the first session of a series: tags it
+// with series_id + recurrence and inserts the later occurrences, each
+// named "<slug>-YYYY-MM-DD". Open-ended series are topped up later by the
+// events-notify cron.
+async function saveSeries(saved, recurrence) {
+  const seriesId = crypto.randomUUID();
+  const rec = { ...recurrence, slug: saved.slug };
+  const lengthMs = saved.end_time ? new Date(saved.end_time) - new Date(saved.start_time) : 3600000;
+  const times = seriesOccurrences(saved.start_time, rec).slice(1);
+  const base = Object.fromEntries(Object.entries(saved).filter(([k]) => !["id", "created_at", "updated_at", "google_calendar_event_id"].includes(k)));
+  const rows = times.map((t) => ({
+    ...base,
+    slug: `${saved.slug}-${new Date(t + 5.5 * 3600000).toISOString().slice(0, 10)}`,
+    start_time: new Date(t).toISOString(),
+    end_time: new Date(t + lengthMs).toISOString(),
+    registration_closes_at: shiftedCloseTime(saved, t),
+    series_id: seriesId,
+    recurrence: rec
+  }));
+  const { data: first, error: e1 } = await supabaseAdmin
+    .from("events")
+    .update({ series_id: seriesId, recurrence: rec })
+    .eq("id", saved.id)
+    .select()
+    .single();
+  if (e1) throw e1;
+  const { data: more, error: e2 } = rows.length ? await supabaseAdmin.from("events").insert(rows).select() : { data: [] };
+  if (e2) throw e2;
+  return [first, ...(more || [])];
 }
 
 const intOrNull = (v) => (v === "" || v == null ? null : parseInt(v, 10));
@@ -1011,6 +1870,14 @@ function formToPayload(form, status) {
         photo_url: sp.photo_url || ""
       }))
       .filter((sp) => sp.name),
+    about_sections: (form.about_sections || [])
+      .map((s) => ({ title: s.title.trim(), body: s.body.trim() }))
+      .filter((s) => s.title || s.body),
+    requires_approval: !!form.requires_approval,
+    registration_open: form.registration_open !== false,
+    registration_closes_at: form.closes_date ? istToUtc(form.closes_date, form.closes_time || "23:59") : null,
+    collect_speaker_question: form.collect_speaker_question !== false,
+    registration_questions: cleanQuestions(form.registration_questions || []),
     status
   };
 }
@@ -1029,6 +1896,15 @@ export default function EventsTab() {
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
+  const [listFilter, setListFilter] = useState("upcoming");
+
+  // upcoming soonest-first, past most-recent-first
+  const visibleEvents =
+    listFilter === "upcoming"
+      ? events.filter((e) => !isEventOver(e)).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+      : listFilter === "past"
+        ? events.filter((e) => isEventOver(e))
+        : events;
 
   useEffect(() => {
     fetchData();
@@ -1077,8 +1953,21 @@ export default function EventsTab() {
     }
     const link = createForm.recording_url.trim();
     await saveRecordingLink(data.id, link);
+    let rows = [data];
+    const recurrence = creating === "upcoming" ? recurrenceFromForm(createForm.recurrence) : null;
+    if (recurrence) {
+      try {
+        rows = await saveSeries(data, recurrence);
+      } catch (err) {
+        alert(`Event saved, but the repeating sessions weren't: ${err.message}`);
+      }
+    }
     setSaving(false);
-    setEvents((prev) => [{ ...data, _recording_link: link }, ...prev]);
+    setEvents((prev) =>
+      [...rows.map((r) => ({ ...r, _recording_link: r.id === data.id ? link : "" })), ...prev].sort(
+        (a, b) => new Date(b.start_time) - new Date(a.start_time)
+      )
+    );
     setCreating(null);
     setCreateForm(newEventForm());
     if (data.status === "published") syncCalendar(data.id);
@@ -1101,10 +1990,108 @@ export default function EventsTab() {
     }
     const link = editForm.recording_url.trim();
     await saveRecordingLink(event.id, link);
+
+    const recurrence = !event.series_id ? recurrenceFromForm(editForm.recurrence) : null;
+    try {
+      if (recurrence) {
+        await saveSeries(data, recurrence);
+      } else if (event.series_id && editForm.applyToSeries) {
+        const shared = Object.fromEntries(Object.entries(payload).filter(([k]) => !SERIES_SKIP_FIELDS.includes(k)));
+        const { data: upcoming } = await supabaseAdmin
+          .from("events")
+          .select("id, start_time")
+          .eq("series_id", event.series_id)
+          .neq("id", event.id)
+          .gt("start_time", new Date().toISOString());
+        for (const occ of upcoming || []) {
+          const { error: e } = await supabaseAdmin
+            .from("events")
+            .update({ ...shared, registration_closes_at: shiftedCloseTime(data, new Date(occ.start_time).getTime()) })
+            .eq("id", occ.id);
+          if (e) throw e;
+        }
+      }
+    } catch (err) {
+      alert(`This session saved, but the rest of the series didn't update: ${err.message}`);
+    }
     setSaving(false);
-    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...data, _recording_link: link } : e)));
     setEditForm(null);
+    if (recurrence || editForm.applyToSeries) await fetchData();
+    else setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...data, _recording_link: link } : e)));
     if (data.status === "published") syncCalendar(data.id);
+  }
+
+  async function patchEvent(event, patch) {
+    const { data, error } = await supabaseAdmin.from("events").update(patch).eq("id", event.id).select().single();
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...data, _recording_link: e._recording_link } : e)));
+  }
+
+  // a live session that's wrapped up early — moves it to Past right away
+  function endSessionNow(event) {
+    if (!confirm(`End "${event.title}" now? It moves to past events.`)) return;
+    patchEvent(event, { end_time: new Date().toISOString(), registration_open: false });
+  }
+
+  // Stops a series after this session: later sessions nobody has registered
+  // for are deleted, the rest stay (cancel those by hand), and the series no
+  // longer tops itself up.
+  async function endSeriesAfter(event) {
+    if (!confirm(`Stop "${event.title}" repeating after this session?`)) return;
+    const { data: later } = await supabaseAdmin
+      .from("events")
+      .select("id")
+      .eq("series_id", event.series_id)
+      .gt("start_time", event.start_time);
+    const laterIds = (later || []).map((e) => e.id);
+    const keep = laterIds.filter((id) => (registrantsByEvent[id] || []).length > 0);
+    const drop = laterIds.filter((id) => !keep.includes(id));
+    if (drop.length) {
+      const { error } = await supabaseAdmin.from("events").delete().in("id", drop);
+      if (error) {
+        alert(error.message);
+        return;
+      }
+    }
+    const endDate = utcToIst(event.start_time).date;
+    const rec = { ...(event.recurrence || {}), ends: { type: "on", date: endDate } };
+    await supabaseAdmin.from("events").update({ recurrence: rec }).eq("series_id", event.series_id);
+    if (keep.length) alert(`${keep.length} later session(s) already have registrations, so they were kept. Cancel them individually if needed.`);
+    await fetchData();
+  }
+
+  async function reviewRegistration(reg, status) {
+    const { error } = await supabaseAdmin
+      .from("event_registrations")
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq("id", reg.id);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    // approved → calendar invite + confirmation; declined → a short note
+    callEventsNotify({ mode: "notify", registration_id: reg.id }).catch((err) =>
+      alert(`Saved, but the email/calendar step failed: ${err.message}`)
+    );
+    setRegistrantsByEvent((prev) => ({
+      ...prev,
+      [reg.event_id]: prev[reg.event_id].map((r) => (r.id === reg.id ? { ...r, status, reviewed_at: new Date().toISOString() } : r))
+    }));
+  }
+
+  async function setAttended(reg, attended) {
+    const { error } = await supabaseAdmin.from("event_registrations").update({ attended }).eq("id", reg.id);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setRegistrantsByEvent((prev) => ({
+      ...prev,
+      [reg.event_id]: prev[reg.event_id].map((r) => (r.id === reg.id ? { ...r, attended } : r))
+    }));
   }
 
   async function handleCancelEvent(event) {
@@ -1153,9 +2140,24 @@ export default function EventsTab() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-wide" style={{ color: Y }}>
-          events ({events.length})
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-xs font-black uppercase tracking-wide" style={{ color: Y }}>
+            events ({visibleEvents.length})
+          </p>
+          <div className="flex gap-1">
+            {["upcoming", "past", "all"].map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setListFilter(k)}
+                className="text-xs font-bold px-3 py-1 rounded-md"
+                style={listFilter === k ? { background: Y, color: "#111" } : smallBtn}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+        </div>
         {!creating && (
           <div className="flex gap-2">
             <button
@@ -1204,10 +2206,13 @@ export default function EventsTab() {
         <p className="text-sm" style={{ color: "#666" }}>No events yet.</p>
       )}
 
-      {events.map((event) => {
+      {visibleEvents.map((event) => {
         const isExpanded = expandedId === event.id;
         const isEditing = isExpanded && editForm;
         const registrants = registrantsByEvent[event.id] || [];
+        const pendingCount = registrants.filter((r) => r.status === "pending").length;
+        const attendedCount = registrants.filter((r) => r.attended).length;
+        const closedReason = registrationClosedReason(event, registrants.filter((r) => r.status === "registered").length);
         return (
           <div key={event.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111", border: "1px solid #1f1f1f" }}>
             <button
@@ -1239,16 +2244,36 @@ export default function EventsTab() {
                   <p className="text-sm font-bold text-white truncate">{event.title}</p>
                   <p className="text-xs truncate" style={{ color: "#888" }}>
                     {event.event_type} · {fmtDt(event.start_time)} ·{" "}
-                    {event.attendee_count ?? registrants.length} registered
+                    {event.attendee_count ?? registrants.filter((r) => r.status === "registered").length} going
+                    {event.capacity != null ? ` / ${event.capacity}` : ""}
+                    {pendingCount > 0 && <span style={{ color: REG_STATUS_COLOR.pending }}> · {pendingCount} pending</span>}
+                    {attendedCount > 0 && ` · ${attendedCount} attended`}
                   </p>
                 </div>
               </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {event.series_id && (
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ color: "#a78bfa", border: "1px solid #a78bfa55" }} title={describeRecurrence(event.recurrence)}>
+                    ↻ recurring
+                  </span>
+                )}
+                {event.requires_approval && (
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ color: "#f59e0b", border: "1px solid #f59e0b55" }}>
+                    approval
+                  </span>
+                )}
+                {event.status === "published" && closedReason && closedReason !== "ended" && (
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ color: "#aaa", border: "1px solid #33333399" }}>
+                    {closedReason === "full" ? "full" : "registration closed"}
+                  </span>
+                )}
               <span
                 className="text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full flex-shrink-0"
                 style={{ color: STATUS_COLOR[event.status], border: `1px solid ${STATUS_COLOR[event.status]}55` }}
               >
                 {event.status}
               </span>
+              </div>
             </button>
 
             {isExpanded && (
@@ -1291,6 +2316,33 @@ export default function EventsTab() {
                           {copiedId === event.id ? "copied!" : "copy public link"}
                         </button>
                       )}
+                      {event.status === "published" && !isEventOver(event) && (
+                        <button
+                          onClick={() => patchEvent(event, { registration_open: event.registration_open === false })}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                          style={{ border: "1px solid #333", color: "#aaa" }}
+                        >
+                          {event.registration_open === false ? "reopen registrations" : "close registrations"}
+                        </button>
+                      )}
+                      {isEventLive(event) && (
+                        <button
+                          onClick={() => endSessionNow(event)}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                          style={{ border: "1px solid #333", color: "#aaa" }}
+                        >
+                          end session now
+                        </button>
+                      )}
+                      {event.series_id && event.recurrence?.ends?.type !== "on" && (
+                        <button
+                          onClick={() => endSeriesAfter(event)}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                          style={{ border: "1px solid #333", color: "#aaa" }}
+                        >
+                          stop repeating after this
+                        </button>
+                      )}
                       {event.status !== "cancelled" && (
                         <button
                           onClick={() => handleCancelEvent(event)}
@@ -1305,7 +2357,13 @@ export default function EventsTab() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs" style={{ color: "#aaa" }}>
                       <div>
                         <p className="font-bold text-white mb-1">Session</p>
-                        <p>{event.description || "no description"}</p>
+                        <p className="whitespace-pre-line">{event.description || "no description"}</p>
+                        {event.about_sections?.map((s, i) => (
+                          <div key={i} className="mt-2">
+                            <p className="font-bold text-white">{s.title}</p>
+                            <p className="whitespace-pre-line">{s.body}</p>
+                          </div>
+                        ))}
                         {event.question_categories?.length > 0 && (
                           <div className="mt-1 space-y-1">
                             {event.question_categories.map((cat, i) => (
@@ -1327,6 +2385,14 @@ export default function EventsTab() {
                         <p style={{ color: "#888" }}>{event.speaker_bio || ""}</p>
                         <p className="mt-1">join link: {event.join_link || "not set"}</p>
                         <p>capacity: {event.capacity ?? "unlimited"}</p>
+                        <p>
+                          registration: {event.requires_approval ? "needs approval" : "open to all"}
+                          {event.registration_closes_at ? ` · closes ${fmtDt(event.registration_closes_at)}` : ""}
+                        </p>
+                        {event.series_id && <p>repeats: {describeRecurrence(event.recurrence)}</p>}
+                        {event.registration_questions?.length > 0 && (
+                          <p>custom questions: {event.registration_questions.map((q) => q.label).join(" · ")}</p>
+                        )}
                       </div>
                     </div>
 
@@ -1360,64 +2426,13 @@ export default function EventsTab() {
                       {inviteSuccess && <p className="text-xs" style={{ color: "#22c55e" }}>{inviteSuccess}</p>}
                     </div>
 
-                    <div className="border-t pt-3" style={{ borderColor: "#1f1f1f" }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-bold text-white">Registrants ({registrants.length})</p>
-                        <button
-                          onClick={() =>
-                            downloadCSV(
-                              `${event.slug}-registrants.csv`,
-                              registrants.map((r) => ({
-                                name: r.profile?.name || r.invitee_name || "",
-                                username: r.profile?.username || "",
-                                email: r.profile?.email || r.invitee_email || "",
-                                registered_at: r.registered_at,
-                                status: r.status,
-                                source: r.source,
-                                question_category: r.question_category || "",
-                                question_text: r.question_text || "",
-                                question_anonymous: r.question_anonymous
-                              }))
-                            )
-                          }
-                          disabled={registrants.length === 0}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-40"
-                          style={{ border: "1px solid #333", color: "#aaa" }}
-                        >
-                          export CSV
-                        </button>
+                    {event.status === "published" && (
+                      <div className="border-t pt-3" style={{ borderColor: "#1f1f1f" }}>
+                        <UtmLinkBuilder event={event} />
                       </div>
-                      {registrants.length === 0 ? (
-                        <p className="text-xs" style={{ color: "#555" }}>No registrants yet.</p>
-                      ) : (
-                        <div className="space-y-1 text-xs" style={{ color: "#aaa" }}>
-                          {registrants.map((r) => (
-                            <div key={r.id}>
-                              <p>
-                                {r.profile?.name || r.invitee_name || "—"} ({r.profile?.email || r.invitee_email || "—"}) ·{" "}
-                                {fmtDt(r.registered_at)}
-                                {r.source === "admin_invite" && (
-                                  <span className="ml-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: Y }}>
-                                    invited
-                                  </span>
-                                )}
-                                {!r.calendar_synced && (
-                                  <span className="ml-2 text-[10px]" style={{ color: "#666" }}>
-                                    (calendar/email pending)
-                                  </span>
-                                )}
-                              </p>
-                              {r.question_text && (
-                                <p style={{ color: "#888" }}>
-                                  {r.question_anonymous ? "anonymous" : "asked"}
-                                  {r.question_category ? ` · ${r.question_category}` : ""}: "{r.question_text}"
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    )}
+
+                    <RegistrantsPanel event={event} registrants={registrants} onReview={reviewRegistration} onAttended={setAttended} />
                   </>
                 )}
               </div>

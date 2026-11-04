@@ -38,6 +38,13 @@ export default async function handler(req, res) {
         /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || "")
           ? req.query.day
           : new Date(Date.now() + 5.5 * 3600000 - 86400000).toISOString().slice(0, 10);
+      // Only report days inside the submission window (Oct 1 – Nov 1, see
+      // src/pages/Typetober/lib/constants.js). The cron stays scheduled all
+      // year and picks back up next October; ?day= still forces a report.
+      const mmdd = day.slice(5);
+      if (!req.query.day && !(mmdd >= "10-01" && mmdd <= "11-01")) {
+        return res.status(200).json({ day, skipped: "outside submission window" });
+      }
       const report = await buildDailyReport(supabaseCron, day);
       const result = await postReportToDiscord(report);
       return res.status(200).json({ day, ...result });

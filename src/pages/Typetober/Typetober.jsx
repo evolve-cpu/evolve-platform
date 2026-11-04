@@ -420,7 +420,8 @@ function Heart({ filled, size = 16 }) {
   );
 }
 
-/** Vote pill: heart + count. Shared by the voting tiles and the lightbox. */
+/** Vote pill: heart + count. Shared by the voting tiles and the lightbox.
+ *  After voting closes it stays as a read-only like count on the gallery. */
 function VoteButton({ item, votes, large = false }) {
   const voted = votes.mine.has(item.id);
   const count = votes.counts[item.id] || 0;
@@ -433,7 +434,7 @@ function VoteButton({ item, votes, large = false }) {
       }}
       disabled={!open || votes.busy.has(item.id)}
       aria-pressed={voted}
-      aria-label={voted ? "Take back your vote" : "Vote for this"}
+      aria-label={!open ? `${count} likes` : voted ? "Take back your vote" : "Vote for this"}
       className={`flex items-center justify-center gap-1.5 rounded-full font-extrabold border-2 transition-colors ${
         large ? "text-[16px] px-5 py-3 w-full" : "text-[13px] px-2.5 py-1"
       } ${
@@ -444,7 +445,9 @@ function VoteButton({ item, votes, large = false }) {
     >
       <Heart filled={voted} size={large ? 20 : 15} />
       {large
-        ? `${voted ? "Voted" : open ? "Vote" : "Votes"} · ${count}`
+        ? open
+          ? `${voted ? "Voted" : "Vote"} · ${count}`
+          : `${count} ${count === 1 ? "like" : "likes"}`
         : count}
     </button>
   );
@@ -481,7 +484,7 @@ function VoteTile({ item, ch, i, votes, onView }) {
             ? "You"
             : `@${item.profiles?.username || item.profiles?.name || "participant"}`}
         </span>
-        {votes.phase === "voting" && (
+        {(votes.phase === "voting" || votes.phase === "closed") && (
           <span className="pointer-events-auto flex-none">
             <VoteButton item={item} votes={votes} />
           </span>
@@ -493,7 +496,7 @@ function VoteTile({ item, ch, i, votes, onView }) {
 
 // After submissions close: only real submissions, bigger tiles, a vote
 // button on each while voting is open. No examples, no empty boxes. Once
-// voting closes it's the same grid as a plain gallery.
+// voting closes it's the same grid as a gallery, with each like count shown.
 function VoteFold({ i, ch, wallItems, votes, onView }) {
   const accent = accentFor(i);
   return (
@@ -1039,7 +1042,7 @@ export default function Typetober({ platform = false }) {
           shared={!!sheet.shared}
           phase={phase}
           voteAction={
-            phase === "voting" && !sheet.item?.isExample ? (
+            (phase === "voting" || phase === "closed") && !sheet.item?.isExample ? (
               <VoteButton item={sheet.item} votes={votes} large />
             ) : null
           }
