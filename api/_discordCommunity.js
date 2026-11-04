@@ -54,14 +54,42 @@ function cleanContent(msg, channelNames) {
     .replace(/<t:(\d+)(?::\w)?>/g, (_, s) => new Date(Number(s) * 1000).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 }
 
-async function copyImage(db, messageId, att) {
-  if (!att.content_type?.startsWith("image/") || att.size > MAX_IMAGE_BYTES) return null;
+// Discord's media proxy resizes and re-encodes on request; a feed card never
+// needs more than this, and full-size PNG screenshots run to several MB each
+const FEED_IMAGE_SIDE = 1280;
+
+function resizedUrl(att) {
+  if (!att.proxy_url || !att.width || !att.height) return null;
+  const scale = Math.min(1, FEED_IMAGE_SIDE / Math.max(att.width, att.height));
+  const u = new URL(att.proxy_url);
+  u.searchParams.set("format", "webp");
+  u.searchParams.set("width", String(Math.round(att.width * scale)));
+  u.searchParams.set("height", String(Math.round(att.height * scale)));
+  return u.toString();
+}
+
+async function fetchImage(att) {
+  const small = resizedUrl(att);
+  if (small) {
+    const res = await fetch(small).catch(() => null);
+    const type = res?.ok ? res.headers.get("content-type") || "" : "";
+    if (type.startsWith("image/")) return { body: Buffer.from(await res.arrayBuffer()), type };
+  }
   const res = await fetch(att.url);
   if (!res.ok) return null;
-  const path = `${messageId}/${att.id}-${att.filename.replace(/[^\w.-]/g, "_")}`;
+  return { body: Buffer.from(await res.arrayBuffer()), type: att.content_type };
+}
+
+async function copyImage(db, messageId, att) {
+  if (!att.content_type?.startsWith("image/") || att.size > MAX_IMAGE_BYTES) return null;
+  const img = await fetchImage(att);
+  if (!img) return null;
+  const name = att.filename.replace(/[^\w.-]/g, "_");
+  const path = `${messageId}/${att.id}-${img.type === "image/webp" ? name.replace(/\.\w+$/, "") + ".webp" : name}`;
+  // paths are unique per attachment, so browsers can keep the file for a year
   const { error } = await db.storage
     .from(BUCKET)
-    .upload(path, Buffer.from(await res.arrayBuffer()), { contentType: att.content_type, upsert: true });
+    .upload(path, img.body, { contentType: img.type, upsert: true, cacheControl: "31536000" });
   if (error) return null;
   return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }

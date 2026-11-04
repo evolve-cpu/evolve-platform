@@ -560,7 +560,7 @@ function PastSection({ title, children }) {
 }
 
 function PastSpeaker({ speaker, index }) {
-  const links = speaker.links || (speaker.linkedin ? [speaker.linkedin] : []);
+  const links = speaker.links?.length ? speaker.links : speaker.linkedin ? [speaker.linkedin] : [];
   return (
     <div className="py-7 grid grid-cols-[48px_1fr] md:grid-cols-[56px_1fr] gap-x-4 md:gap-x-5">
       {speaker.photo_url ? (
@@ -897,6 +897,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
   }
 
   const isPast = event && isEventOver(event);
+  const upcomingSpeakers = event ? pastEventSpeakers(event) : [];
   const myStatus = myRegistration?.status || null;
   const closedReason = registrationClosedReason(event, registrantCount);
   const bookDisabled = myRegistration ? myStatus !== "registered" : !!closedReason;
@@ -975,49 +976,59 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
             </div>
           </div>
 
-          {event.speaker_name && (
+          {upcomingSpeakers.length > 0 && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-2">
-                about the speaker
+                {upcomingSpeakers.length > 1 ? "about the speakers" : "about the speaker"}
               </p>
-              <div className="flex items-center gap-3">
-                {event.speaker_photo_url && (
-                  <img
-                    src={event.speaker_photo_url}
-                    alt={event.speaker_name}
-                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                  />
-                )}
-                <div>
-                  <p className="font-bold text-sm">{event.speaker_name}</p>
-                  {event.speaker_title && (
-                    <p className="text-white/50 text-xs">
-                      {event.speaker_title}
-                    </p>
-                  )}
-                </div>
+              <div className="flex flex-col divide-y divide-white/10">
+                {upcomingSpeakers.map((sp, i) => {
+                  const links = sp.links?.length ? sp.links : sp.linkedin ? [sp.linkedin] : [];
+                  return (
+                    <div key={`${sp.name}-${i}`} className="py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-center gap-3">
+                        {sp.photo_url ? (
+                          <img
+                            src={sp.photo_url}
+                            alt={sp.name}
+                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <span
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-extrabold text-evolve-black flex-shrink-0"
+                            style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                          >
+                            {initials(sp.name)}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm">{sp.name}</p>
+                          {sp.role && <p className="text-white/50 text-xs">{sp.role}</p>}
+                        </div>
+                      </div>
+                      {sp.bio && (
+                        <RichText text={sp.bio} className="text-white/60 text-xs mt-3 leading-relaxed" />
+                      )}
+                      {links.length > 0 && (
+                        <div className="flex items-center gap-3 mt-3">
+                          {links.map((url) => (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white/50 hover:text-evolve-yellow transition-colors"
+                              aria-label={detectPlatform(url)}
+                            >
+                              <SocialIcon platform={detectPlatform(url)} className="w-4 h-4" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {event.speaker_bio && (
-                <p className="text-white/60 text-xs mt-3 leading-relaxed">
-                  {event.speaker_bio}
-                </p>
-              )}
-              {event.speaker_socials?.length > 0 && (
-                <div className="flex items-center gap-3 mt-3">
-                  {event.speaker_socials.map((url) => (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white/50 hover:text-evolve-yellow transition-colors"
-                      aria-label={detectPlatform(url)}
-                    >
-                      <SocialIcon platform={detectPlatform(url)} className="w-4 h-4" />
-                    </a>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>

@@ -59,7 +59,9 @@ const EVENT_TYPES = ["AMA", "Webinar", "Workshop", "Panel Discussion"];
 // the "add past event" form only offers these two
 const PAST_EVENT_TYPES = ["Webinar", "AMA"];
 
-const EMPTY_SPEAKER = { name: "", role: "", bio: "", linkedin: "", photo_url: "" };
+// `links` = any social links; `linkedin` is the older single-link field,
+// still read for speakers saved before links existed
+const EMPTY_SPEAKER = { name: "", role: "", bio: "", linkedin: "", links: [""], photo_url: "" };
 
 // Custom registration questions (events.registration_questions), answered
 // in the registration modal on EventDetail.jsx and stored per registration
@@ -238,6 +240,40 @@ function TextAreaField({ label, ...rest }) {
   );
 }
 
+// Covers and speaker photos are shown on every member's profile page, so a
+// raw 5 MB camera/export file is re-served on each visit. Scale to at most
+// 1600px and re-encode as WebP (keeps transparency, unlike JPEG); keep the
+// original if the browser can't encode WebP or the result isn't smaller.
+const MAX_IMAGE_SIDE = 1600;
+
+function shrinkImage(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) =>
+            blob && blob.type === "image/webp" && blob.size < file.size
+              ? resolve({ blob, ext: "webp" })
+              : resolve({ blob: file, ext: null }),
+          "image/webp",
+          0.85
+        );
+      };
+      img.onerror = () => resolve({ blob: file, ext: null });
+      img.src = reader.result;
+    };
+    reader.onerror = () => resolve({ blob: file, ext: null });
+    reader.readAsDataURL(file);
+  });
+}
+
 function ImageField({ label, value, onUploaded, pathPrefix }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -246,8 +282,13 @@ function ImageField({ label, value, onUploaded, pathPrefix }) {
     if (!file) return;
     setUploading(true);
     setError("");
-    const path = `${pathPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
-    const { error: upErr } = await supabaseAdmin.storage.from("event-images").upload(path, file);
+    const { blob, ext } = await shrinkImage(file);
+    const name = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const path = `${pathPrefix}/${Date.now()}-${ext ? name.replace(/\.\w+$/, "") + "." + ext : name}`;
+    // paths are unique per upload, so browsers can keep the file for a year
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("event-images")
+      .upload(path, blob, { cacheControl: "31536000" });
     if (upErr) {
       setError(upErr.message);
       setUploading(false);
@@ -346,6 +387,118 @@ function RecordingField({ eventId, value, onUploaded, onRemove }) {
       {error && <p className="text-xs mt-1" style={{ color: "#ef4444" }}>{error}</p>}
     </div>
   );
+}
+
+// One card per speaker (events.speakers). Each speaker has any number of
+// social links — the platform is detected from the URL on the event page.
+function SpeakersField({ speakers, onChange }) {
+  const update = (i, patch) => onChange(speakers.map((sp, idx) => (idx === i ? { ...sp, ...patch } : sp)));
+  return (
+    <div className="space-y-3">
+      {speakers.map((sp, i) => {
+        const links = sp.links?.length ? sp.links : [""];
+        return (
+          <div
+            key={i}
+            className="rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 gap-2"
+            style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}
+          >
+            <input
+              className="rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
+              style={inputStyle}
+              value={sp.name}
+              placeholder="Full name (e.g. Nandini Kulkarni)"
+              onChange={(e) => update(i, { name: e.target.value })}
+            />
+            <input
+              className="rounded-lg px-3 py-2 text-sm text-white outline-none"
+              style={inputStyle}
+              value={sp.role}
+              placeholder="Role, company (e.g. Senior Product Designer, Razorpay)"
+              onChange={(e) => update(i, { role: e.target.value })}
+            />
+            <textarea
+              className="md:col-span-2 rounded-lg px-3 py-2 text-sm text-white outline-none resize-y"
+              style={inputStyle}
+              rows={4}
+              value={sp.bio}
+              placeholder="Bio"
+              onChange={(e) => update(i, { bio: e.target.value })}
+            />
+            <div className="md:col-span-2 space-y-2">
+              {links.map((url, li) => (
+                <div key={li} className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                    style={inputStyle}
+                    value={url}
+                    placeholder="Social link (LinkedIn, Instagram, website…)"
+                    onChange={(e) => update(i, { links: links.map((l, idx) => (idx === li ? e.target.value : l)) })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => update(i, { links: links.filter((_, idx) => idx !== li) })}
+                    className="text-xs font-bold px-3 rounded-lg"
+                    style={smallBtn}
+                  >
+                    remove
+                  </button>
+                </div>
+              ))}
+              <button type="button" onClick={() => update(i, { links: [...links, ""] })} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={smallBtn}>
+                + add link
+              </button>
+            </div>
+            <div className="md:col-span-2 flex flex-wrap items-end justify-between gap-2">
+              <ImageField
+                label="photo (optional, initials are shown otherwise)"
+                value={sp.photo_url}
+                pathPrefix="speakers"
+                onUploaded={(url) => update(i, { photo_url: url })}
+              />
+              <button
+                type="button"
+                onClick={() => onChange(speakers.filter((_, idx) => idx !== i))}
+                className="text-xs font-bold px-3 py-2 rounded-lg"
+                style={smallBtn}
+              >
+                remove speaker
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => onChange([...speakers, { ...EMPTY_SPEAKER }])}
+        className="text-xs font-bold px-3 py-1.5 rounded-lg"
+        style={{ border: `1px solid ${Y}`, color: Y }}
+      >
+        + add speaker
+      </button>
+    </div>
+  );
+}
+
+const joinNames = (names) =>
+  names.length <= 1 ? names[0] || "" : `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+
+// The single speaker_* columns still feed the ticket, the emails
+// (events-notify) and the "by …" byline, so the new-event form keeps them
+// filled from the speakers list: all names joined, and the title / bio /
+// links only when there's exactly one speaker.
+function withSpeakers(f, speakers) {
+  const named = speakers.filter((sp) => sp.name.trim());
+  const one = named.length === 1 ? named[0] : null;
+  return {
+    ...f,
+    speakers,
+    speaker_name: joinNames(named.map((sp) => sp.name.trim())),
+    speaker_title: one?.role || "",
+    speaker_bio: one?.bio || "",
+    speaker_photo_url: named[0]?.photo_url || "",
+    speaker_socials: one?.links?.length ? one.links : [""]
+  };
 }
 
 function ToggleField({ label, hint, checked, onChange }) {
@@ -761,16 +914,6 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
     }));
   }
 
-  function updateSocial(i, value) {
-    setForm((f) => ({ ...f, speaker_socials: f.speaker_socials.map((s, idx) => (idx === i ? value : s)) }));
-  }
-  function addSocial() {
-    setForm((f) => ({ ...f, speaker_socials: [...f.speaker_socials, ""] }));
-  }
-  function removeSocial(i) {
-    setForm((f) => ({ ...f, speaker_socials: f.speaker_socials.filter((_, idx) => idx !== i) }));
-  }
-
   function updateGuest(i, key, value) {
     setForm((f) => ({ ...f, guests: f.guests.map((g, idx) => (idx === i ? { ...g, [key]: value } : g)) }));
   }
@@ -968,73 +1111,19 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
         />
       </div>
 
-      <Field
-        label="speaker / host name"
-        value={form.speaker_name}
-        onChange={(e) => setForm((f) => ({ ...f, speaker_name: e.target.value }))}
-      />
-      <Field
-        label="speaker title / role"
-        value={form.speaker_title}
-        placeholder="Senior Product Designer at ..."
-        onChange={(e) => setForm((f) => ({ ...f, speaker_title: e.target.value }))}
-      />
       <div className="md:col-span-2">
-        <TextAreaField
-          label="speaker bio"
-          rows={2}
-          value={form.speaker_bio}
-          onChange={(e) => setForm((f) => ({ ...f, speaker_bio: e.target.value }))}
-        />
+        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
+          speakers / hosts (add as many as you need)
+        </label>
+        <SpeakersField speakers={form.speakers} onChange={(speakers) => setForm((f) => withSpeakers(f, speakers))} />
       </div>
 
-      <ImageField
-        label="speaker photo"
-        value={form.speaker_photo_url}
-        pathPrefix="speakers"
-        onUploaded={(url) => setForm((f) => ({ ...f, speaker_photo_url: url }))}
-      />
       <ImageField
         label="cover image"
         value={form.cover_image_url}
         pathPrefix="covers"
         onUploaded={(url) => setForm((f) => ({ ...f, cover_image_url: url }))}
       />
-
-      <div className="md:col-span-2">
-        <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
-          speaker social links (linkedin, instagram, etc. — platform is auto-detected)
-        </label>
-        <div className="space-y-2">
-          {form.speaker_socials.map((url, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
-                style={inputStyle}
-                value={url}
-                placeholder="https://linkedin.com/in/..."
-                onChange={(e) => updateSocial(i, e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeSocial(i)}
-                className="text-xs font-bold px-3 rounded-lg"
-                style={{ border: "1px solid #333", color: "#aaa" }}
-              >
-                remove
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addSocial}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg"
-            style={{ border: `1px solid ${Y}`, color: Y }}
-          >
-            + add social link
-          </button>
-        </div>
-      </div>
 
       <div className="md:col-span-2">
         <Field
@@ -1201,16 +1290,6 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
 function PastEventForm({ form, setForm, onSave, onCancel, saving, onShowAllFields }) {
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  function updateSpeaker(i, key, value) {
-    setForm((f) => ({ ...f, speakers: f.speakers.map((sp, idx) => (idx === i ? { ...sp, [key]: value } : sp)) }));
-  }
-  function addSpeaker() {
-    setForm((f) => ({ ...f, speakers: [...f.speakers, { ...EMPTY_SPEAKER }] }));
-  }
-  function removeSpeaker(i) {
-    setForm((f) => ({ ...f, speakers: f.speakers.filter((_, idx) => idx !== i) }));
-  }
-
   const link = form.recording_url.trim();
   const isYouTube = !!link && toEmbedUrl(link) !== link;
   const inFuture = form.date && new Date(`${form.date}T23:59:59+05:30`) > new Date();
@@ -1317,69 +1396,7 @@ function PastEventForm({ form, setForm, onSave, onCancel, saving, onShowAllField
         <label className="text-xs font-semibold mb-1 block" style={labelStyle}>
           about the speakers
         </label>
-        <div className="space-y-3">
-          {form.speakers.map((sp, i) => (
-            <div
-              key={i}
-              className="rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 gap-2"
-              style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a" }}
-            >
-              <input
-                className="rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
-                style={inputStyle}
-                value={sp.name}
-                placeholder="Full name (e.g. Nandini Kulkarni)"
-                onChange={(e) => updateSpeaker(i, "name", e.target.value)}
-              />
-              <input
-                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
-                style={inputStyle}
-                value={sp.role}
-                placeholder="Role, company (e.g. CEO, Idiom Circular Services)"
-                onChange={(e) => updateSpeaker(i, "role", e.target.value)}
-              />
-              <textarea
-                className="md:col-span-2 rounded-lg px-3 py-2 text-sm text-white outline-none resize-y"
-                style={inputStyle}
-                rows={5}
-                value={sp.bio}
-                placeholder="Bio"
-                onChange={(e) => updateSpeaker(i, "bio", e.target.value)}
-              />
-              <input
-                className="rounded-lg px-3 py-2 text-sm text-white outline-none"
-                style={inputStyle}
-                value={sp.linkedin}
-                placeholder="LinkedIn URL"
-                onChange={(e) => updateSpeaker(i, "linkedin", e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeSpeaker(i)}
-                className="text-xs font-bold px-3 py-2 rounded-lg md:justify-self-end"
-                style={{ border: "1px solid #333", color: "#aaa" }}
-              >
-                remove speaker
-              </button>
-              <div className="md:col-span-2">
-                <ImageField
-                  label="photo (optional, initials are shown otherwise)"
-                  value={sp.photo_url}
-                  pathPrefix="speakers"
-                  onUploaded={(url) => updateSpeaker(i, "photo_url", url)}
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addSpeaker}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg"
-            style={{ border: `1px solid ${Y}`, color: Y }}
-          >
-            + add speaker
-          </button>
-        </div>
+        <SpeakersField speakers={form.speakers} onChange={(speakers) => setForm((f) => ({ ...f, speakers }))} />
       </div>
 
       <Field
@@ -1745,9 +1762,25 @@ function eventToForm(event) {
     recording_duration_min: event.recording_duration_min ?? "",
     guests: event.guests?.length ? event.guests : [{ name: "", title: "", photo_url: "" }],
     attendee_count: event.attendee_count ?? "",
+    // events from before the speakers list only have the speaker_* columns
     speakers: event.speakers?.length
-      ? event.speakers.map((sp) => ({ ...EMPTY_SPEAKER, ...sp }))
-      : [{ ...EMPTY_SPEAKER }],
+      ? event.speakers.map((sp) => ({
+          ...EMPTY_SPEAKER,
+          ...sp,
+          links: sp.links?.length ? sp.links : sp.linkedin ? [sp.linkedin] : [""]
+        }))
+      : event.speaker_name
+        ? [
+            {
+              ...EMPTY_SPEAKER,
+              name: event.speaker_name,
+              role: event.speaker_title || "",
+              bio: event.speaker_bio || "",
+              photo_url: event.speaker_photo_url || "",
+              links: event.speaker_socials?.length ? event.speaker_socials : [""]
+            }
+          ]
+        : [{ ...EMPTY_SPEAKER }],
     about_sections: event.about_sections || [],
     requires_approval: !!event.requires_approval,
     registration_open: event.registration_open !== false,
@@ -1866,7 +1899,8 @@ function formToPayload(form, status) {
         name: sp.name.trim(),
         role: sp.role.trim(),
         bio: sp.bio.trim(),
-        linkedin: sp.linkedin.trim(),
+        links: (sp.links || []).map((l) => l.trim()).filter(Boolean),
+        linkedin: (sp.links || []).map((l) => l.trim()).find((l) => /linkedin\.com/i.test(l)) || "",
         photo_url: sp.photo_url || ""
       }))
       .filter((sp) => sp.name),
@@ -2380,9 +2414,19 @@ export default function EventsTab() {
                         )}
                       </div>
                       <div>
-                        <p className="font-bold text-white mb-1">Speaker / host</p>
-                        <p>{event.speaker_name || "—"} {event.speaker_title ? `· ${event.speaker_title}` : ""}</p>
-                        <p style={{ color: "#888" }}>{event.speaker_bio || ""}</p>
+                        <p className="font-bold text-white mb-1">Speakers / hosts</p>
+                        {event.speakers?.length ? (
+                          event.speakers.map((sp, i) => (
+                            <p key={i}>
+                              {sp.name} {sp.role ? `· ${sp.role}` : ""}
+                            </p>
+                          ))
+                        ) : (
+                          <>
+                            <p>{event.speaker_name || "—"} {event.speaker_title ? `· ${event.speaker_title}` : ""}</p>
+                            <p style={{ color: "#888" }}>{event.speaker_bio || ""}</p>
+                          </>
+                        )}
                         <p className="mt-1">join link: {event.join_link || "not set"}</p>
                         <p>capacity: {event.capacity ?? "unlimited"}</p>
                         <p>
