@@ -992,26 +992,38 @@ export default function PublicProfile({ platform = false }) {
 
   // After-trial layer (src/components/membership): the 30-days-of-VIP
   // welcome shows once on the owner's first landing during the trial, and
-  // the "your trial has ended" pop-up shows once the first time they land
-  // after it's over on pay-as-you-go. "Seen" lives in localStorage (per
-  // user) rather than a DB write — losing it just replays the sheet once,
-  // which is harmless.
+  // the "your trial has ended" pop-up shows on every visit (once per browser
+  // session) while they're on pay-as-you-go after it. A Typetober winner's
+  // unused coupon shows once per visit too, on its own sheet unless one of
+  // those pop-ups (which carry it) is showing. "Seen" lives in local /
+  // sessionStorage (per user) rather than a DB write — losing it just
+  // replays the sheet, which is harmless.
   const membership = useMembership();
   const { access } = membership;
+  const hasCoupon = !!membership.coupon;
   useEffect(() => {
     if (!isOwner || !user?.id || typeof window === "undefined") return;
-    const seen = (k) => {
+    const store = (visit) => (visit ? window.sessionStorage : window.localStorage);
+    const seen = (k, visit = false) => {
       try {
-        return localStorage.getItem(k);
+        return store(visit).getItem(k);
       } catch {
         return "1";
       }
     };
-    const mark = (k) => {
+    const mark = (k, visit = false) => {
       try {
-        localStorage.setItem(k, "1");
+        store(visit).setItem(k, "1");
       } catch {
         /* private mode — fine, it just shows again */
+      }
+    };
+    const endedKey = `evolve_trial_ended_seen_${user.id}`;
+    const couponKey = `evolve_coupon_seen_${user.id}`;
+    const couponOnce = () => {
+      if (hasCoupon && !seen(couponKey, true)) {
+        mark(couponKey, true);
+        membership.showCoupon();
       }
     };
     // rejoined after deleting an account — the old trial carried on
@@ -1022,28 +1034,29 @@ export default function PublicProfile({ platform = false }) {
       if (!seen(key)) {
         mark(key);
         mark(`evolve_trial_sheet_seen_${user.id}`);
-        mark(`evolve_trial_ended_seen_${user.id}`);
+        mark(endedKey, true);
         membership.showWelcomeBack();
+        return;
       }
-      return;
     }
     if (access.phase === "trial") {
       const key = `evolve_trial_sheet_seen_${user.id}`;
       if (!seen(key)) {
         mark(key);
+        mark(couponKey, true);
         membership.showWelcome();
-      }
+      } else couponOnce();
     } else if (access.mode === "payg" && !user.review_invite_at) {
       // free-review invitees never had a trial (review_invite.sql), so
       // there's no "your trial has ended" for them
-      const key = `evolve_trial_ended_seen_${user.id}`;
-      if (!seen(key)) {
-        mark(key);
+      if (!seen(endedKey, true)) {
+        mark(endedKey, true);
+        mark(couponKey, true);
         membership.openPlans(1);
-      }
-    }
+      } else couponOnce();
+    } else couponOnce();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOwner, user?.id, user?.trial_resumed_at, user?.review_invite_at, access.phase, access.mode]);
+  }, [isOwner, user?.id, user?.trial_resumed_at, user?.review_invite_at, access.phase, access.mode, hasCoupon]);
   const trialBadgeEnding = access.phase === "ended" && access.mode === "payg";
 
   // default collapsed on mobile (short summary) / expanded on desktop —

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supabaseClient";
+import { callAdminApi } from "../../supabaseAdminClient";
 import {
   accessState,
   planPrice,
@@ -24,6 +25,8 @@ import "./membership.css";
      • pay sheet: pay for this only, or switch to a plan — with a savings
        nudge once pay-per-item spend this month passes a monthly plan
      • "you're evolve verified" sheet + confetti
+     • Typetober winner's coupon (free annual plan), inside the pop-ups above
+       and as its own sheet
    Any page calls useMembership() to open these. ───────────────────────── */
 
 const MembershipContext = createContext(null);
@@ -39,7 +42,9 @@ const NO_MEMBERSHIP = {
   showWelcome: () => {},
   showWelcomeBack: () => {},
   showVerified: () => {},
-  showVerifyPrompt: () => {}
+  showVerifyPrompt: () => {},
+  coupon: null,
+  showCoupon: () => {}
 };
 
 export function useMembership() {
@@ -237,7 +242,60 @@ function StudentPricing({ user, onStudentId }) {
   );
 }
 
-function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentId }) {
+/* ── Typetober winner coupon: a free annual plan (api/_typetoberCoupons.js).
+   Only ever the code issued to their own email — it can't be redeemed
+   from another account, so there's no "enter a code" box. ─────────────── */
+function CouponCard({ coupon, redeemed, onRedeem }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  if (redeemed) {
+    return (
+      <div className="at-coupon done">
+        <span className="cp-k">Coupon applied</span>
+        <span className="cp-t">
+          You’re on the {redeemed} plan, free.
+          {redeemed === "annual"
+            ? " Everything is unlocked, and your free portfolio review is ready to book."
+            : " Everything is unlocked."}
+        </span>
+      </div>
+    );
+  }
+
+  async function go(c) {
+    if (!c.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await onRedeem(c);
+    } catch (e) {
+      setError(e?.message || "Couldn’t apply that code. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (coupon) {
+    return (
+      <div className="at-coupon">
+        <span className="cp-k">Typetober winner</span>
+        <span className="cp-t">Congratulations! Here’s your coupon for a year of evolve annual, free.</span>
+        <div className="cp-row">
+          <span className="cp-code">{coupon.code}</span>
+          <button type="button" className="at-btn" disabled={busy} onClick={() => go(coupon.code)}>
+            {busy ? "Applying…" : "Avail free annual access"}
+          </button>
+        </div>
+        {error && <span className="at-err">{error}</span>}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentId, couponProps }) {
   const m = planPrice(user, "monthly");
   const a = planPrice(user, "annual");
   const [card, setCard] = useState(step === 2 ? 2 : 0);
@@ -301,6 +359,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
               <p className="at-s">
                 Daily news, microlearning and quizzes stay free. These are now locked.
               </p>
+              <CouponCard {...couponProps} />
               <div className="at-locks">
                 <LockRow t="evolve verified badge" />
                 <LockRow t="Public profile page" />
@@ -318,6 +377,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                 {IC.back}Back
               </button>
               <h1 style={{ margin: "10px 0 14px" }}>How do you want to unlock?</h1>
+              <CouponCard {...couponProps} />
               <StudentPricing user={user} onStudentId={onStudentId} />
               <div className="at-car" ref={carRef}>
                 <div className="at-cc">
@@ -623,7 +683,7 @@ const ArrowRight = (
 );
 
 /* ── welcome: 30 days of VIP access (reference #trialSheet) ─────────────── */
-function VipWelcome({ onClose }) {
+function VipWelcome({ onClose, couponProps }) {
   useEffect(() => {
     const t = setTimeout(fireConfetti, 350);
     return () => clearTimeout(t);
@@ -646,6 +706,7 @@ function VipWelcome({ onClose }) {
           <li><span className="vip-e">🔥</span>Exclusive AMAs &amp; Community Access</li>
           <li><span className="vip-e">🤖</span>AI Assistant</li>
         </ul>
+        <CouponCard {...couponProps} />
         <button type="button" className="ev-btn" onClick={onClose}>
           Explore Your Access {ArrowRight}
         </button>
@@ -748,7 +809,7 @@ export function trialBannerCopy(user, access) {
   return { ending: true, text: "Profile is private. Events are pay per event.", cta: "See plans" };
 }
 
-function TrialStatus({ user, access, onClose, onCta }) {
+function TrialStatus({ user, access, onClose, onCta, couponProps }) {
   const c = trialBannerCopy(user, access);
   return (
     <Overlay onClose={onClose}>
@@ -762,7 +823,41 @@ function TrialStatus({ user, access, onClose, onCta }) {
               {c.cta}
             </button>
           </div>
+          {(couponProps.coupon || couponProps.redeemed) && (
+            <div style={{ marginTop: 14 }}>
+              <CouponCard {...couponProps} />
+            </div>
+          )}
         </div>
+      </div>
+    </Overlay>
+  );
+}
+
+/* ── Typetober winner's coupon on its own, once per visit until it's used ─ */
+function CouponSheet({ couponProps, onClose }) {
+  const done = !!couponProps.redeemed;
+  return (
+    <Overlay onClose={onClose}>
+      <div className="ev-sheet" role="dialog" aria-modal="true">
+        <div className="ev-sheet-handle" />
+        <div className="vip-gift">🏆</div>
+        <div className="ev-sheet-title" style={{ textAlign: "center" }}>
+          {done ? "Enjoy your year of evolve" : "You’re a Typetober winner!"}
+        </div>
+        <p className="ev-sheet-hint" style={{ margin: "8px 0 16px", textAlign: "center" }}>
+          {done ? "Your free annual plan is on." : "As a thank you, a year of evolve annual is on us."}
+        </p>
+        <CouponCard {...couponProps} />
+        {done ? (
+          <button type="button" className="ev-btn" onClick={onClose}>
+            Done {ArrowRight}
+          </button>
+        ) : (
+          <button type="button" className="at-link" onClick={onClose}>
+            Maybe later
+          </button>
+        )}
       </div>
     </Overlay>
   );
@@ -844,6 +939,36 @@ export function MembershipProvider({ children }) {
   const [status, setStatus] = useState(false);
   const [verified, setVerified] = useState(null); // { onPublish }
   const [verifyPrompt, setVerifyPrompt] = useState(null); // { onStart }
+  const [couponSheet, setCouponSheet] = useState(false);
+
+  // Typetober winner's unused coupon, matched by their email
+  const [coupon, setCoupon] = useState(null); // null | { code, plan }
+  const [couponRedeemed, setCouponRedeemed] = useState(null); // plan, once used
+  useEffect(() => {
+    setCoupon(null);
+    if (!authUser?.id) return;
+    let cancelled = false;
+    callAdminApi({ op: "coupon_self" }).then((r) => {
+      if (!cancelled) setCoupon(r.coupon || null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser?.id]);
+
+  // patched in place, same reason as handleStudentId
+  const redeemCoupon = useCallback(
+    async (code) => {
+      const r = await callAdminApi({ op: "coupon_redeem", code });
+      if (r.error) throw new Error(r.error.message);
+      setCoupon(null);
+      setCouponRedeemed(r.plan);
+      if (r.profile) setUser((u) => (u ? { ...u, ...r.profile } : u));
+      fireConfetti();
+    },
+    [setUser]
+  );
+  const couponProps = { coupon, redeemed: couponRedeemed, onRedeem: redeemCoupon };
 
   const openPlans = useCallback((step = 2) => setPlansStep(step), []);
 
@@ -910,9 +1035,11 @@ export function MembershipProvider({ children }) {
       showWelcome: () => setWelcome(true),
       showWelcomeBack: () => setWelcomeBack(true),
       showVerified: (onPublish) => setVerified({ onPublish }),
-      showVerifyPrompt: (onStart) => setVerifyPrompt({ onStart })
+      showVerifyPrompt: (onStart) => setVerifyPrompt({ onStart }),
+      coupon,
+      showCoupon: () => setCouponSheet(true)
     }),
-    [access, openPlans, payFor, gate]
+    [access, openPlans, payFor, gate, coupon]
   );
 
   return (
@@ -929,6 +1056,7 @@ export function MembershipProvider({ children }) {
             payFor({ kind: "plan", plan });
           }}
           onStudentId={handleStudentId}
+          couponProps={couponProps}
         />
       )}
       {user && pay && (
@@ -943,7 +1071,7 @@ export function MembershipProvider({ children }) {
           onStudentId={handleStudentId}
         />
       )}
-      {welcome && <VipWelcome onClose={() => setWelcome(false)} />}
+      {welcome && <VipWelcome onClose={() => setWelcome(false)} couponProps={couponProps} />}
       {welcomeBack && (
         <WelcomeBack
           access={access}
@@ -963,7 +1091,11 @@ export function MembershipProvider({ children }) {
             setStatus(false);
             setPlansStep(2);
           }}
+          couponProps={couponProps}
         />
+      )}
+      {user && couponSheet && (
+        <CouponSheet couponProps={couponProps} onClose={() => setCouponSheet(false)} />
       )}
       {verifyPrompt && (
         <VerifyPrompt

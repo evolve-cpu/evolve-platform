@@ -104,16 +104,28 @@ const CrossIcon = () => (
   </svg>
 );
 
-const PlanButton = ({ label, mobileLabel, onClick }) => (
+// ghost = the secondary outline button (free membership's Continue), same
+// as the ghost Continue on the in-app plans pop-up
+const PlanButton = ({ label, mobileLabel, onClick, ghost = false }) => (
   <button
     type="button"
     onClick={onClick}
-    className="w-full inline-flex items-center justify-center gap-2 rounded-[10px] bg-evolve-black text-evolve-yellow font-bold py-3 md:py-[clamp(10px,0.9vw,16px)] shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#806804] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+    className={`w-full inline-flex items-center justify-center gap-2 rounded-[10px] font-bold py-3 md:py-[clamp(10px,0.9vw,16px)] ${
+      ghost
+        ? "bg-transparent text-evolve-black border border-evolve-black transition-colors duration-150 hover:bg-black/5"
+        : "bg-evolve-black text-evolve-yellow shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#806804] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+    }`}
     style={{ fontSize: "clamp(16px, 1.05vw, 20px)" }}
   >
     <span className="md:hidden">{mobileLabel}</span>
     <span className="hidden md:inline">{label}</span>
-    <img src={right_arrow_yellow} alt="" className="w-4 h-4" />
+    {ghost ? (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    ) : (
+      <img src={right_arrow_yellow} alt="" className="w-4 h-4" />
+    )}
   </button>
 );
 
@@ -220,6 +232,7 @@ const FreeCard = ({ plan, cta, onSelect }) => (
         label={cta.label}
         mobileLabel={cta.mobileLabel}
         onClick={onSelect}
+        ghost
       />
     </div>
   </Card>

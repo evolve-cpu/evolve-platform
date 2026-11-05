@@ -26,6 +26,8 @@
 //   platform_report_discord Evolve admins → posts last week's report to Discord now (see _platformDiscord.js)
 //   platform_journeys   Evolve admins → funnel, entry/exit pages, paths, recent sessions (see _platformJourneys.js)
 //   platform_user_journey Evolve admins → one user's sessions, step by step
+//   coupon_issue        Evolve admins → Typetober winner coupons, see _typetoberCoupons.js
+//   coupon_delete       Evolve admins → removes an unused coupon
 //
 // Plus GET ?cron=platform-report: the weekly Discord post (vercel.json).
 //   anu_student_self    signed in → the caller's own anu_students row
@@ -33,6 +35,8 @@
 //   delete_account      signed in → deletes the caller's account, then "Sorry to see you go"
 //   community_feed      signed in → Discord posts for the Community tab (syncs if stale)
 //   review_profile_build signed in → builds a free-review invitee's AI profile from their review uploads
+//   coupon_self         signed in → the caller's unused Typetober coupon, if any
+//   coupon_redeem       signed in → spends a Typetober coupon on the caller's account
 //   anu_student_check   public → { exists } for the student sign-in form
 //   anant_staff_login   public → emails a magic link to listed Anant staff
 //
@@ -46,6 +50,7 @@ import { grantAccess, revokeDemo, revokeGrant } from "./_manualGrant.js";
 import { buildPlatformReport } from "./_platformReport.js";
 import { buildWeeklyReports, postWeeklyReportToDiscord } from "./_platformDiscord.js";
 import { buildJourneyReport, buildUserJourney } from "./_platformJourneys.js";
+import { issueCoupons, deleteCoupon, couponForUser, redeemCoupon } from "./_typetoberCoupons.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -319,6 +324,15 @@ export async function handleAdmin(body, req) {
 
   if (op === "review_profile_build") return reviewProfileBuild(db, user.id);
 
+  if (op === "coupon_self") return couponForUser(db, user);
+  if (op === "coupon_redeem") {
+    try {
+      return await redeemCoupon(db, user, body);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
+  }
+
   // first sign-up → welcome email, at most once (claim the stamp first)
   if (op === "welcome_email") {
     const { data: claimed } = await db
@@ -406,6 +420,15 @@ export async function handleAdmin(body, req) {
   if (op === "platform_report_discord") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     return postWeeklyReportToDiscord(await buildWeeklyReports(db));
+  }
+
+  if (op === "coupon_issue" || op === "coupon_delete") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    try {
+      return op === "coupon_issue" ? await issueCoupons(db, body) : await deleteCoupon(db, body);
+    } catch (err) {
+      throw new HttpError(400, err.message);
+    }
   }
 
   if (op === "revoke_demo") {

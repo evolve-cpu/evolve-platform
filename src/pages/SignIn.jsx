@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import {
   sendOtp,
   verifyOtp,
-  signInWithGoogle,
-  signInWithLinkedIn
+  signInWithGoogle
+  // signInWithLinkedIn
 } from "../auth/signInLogic";
 import { useAuth } from "../hooks/useAuth";
 import BlackNav from "../components/BlackNav";
@@ -233,15 +233,16 @@ export default function SignIn({ onClose } = {}) {
     }
   }
 
-  async function handleLinkedInSignIn() {
-    sessionStorage.removeItem("signin_from");
-    sessionStorage.removeItem("post_signin_redirect");
-    try {
-      await signInWithLinkedIn(from);
-    } catch (e) {
-      setError(e.message || "LinkedIn sign-in failed.");
-    }
-  }
+  // LinkedIn sign-in is commented out in the options below
+  // async function handleLinkedInSignIn() {
+  //   sessionStorage.removeItem("signin_from");
+  //   sessionStorage.removeItem("post_signin_redirect");
+  //   try {
+  //     await signInWithLinkedIn(from);
+  //   } catch (e) {
+  //     setError(e.message || "LinkedIn sign-in failed.");
+  //   }
+  // }
 
   async function handleGoogleSignIn() {
     // Redirect directly to `from` — avoids double-redirect that breaks OAuth state on mobile
@@ -367,6 +368,7 @@ export default function SignIn({ onClose } = {}) {
                   {GOOGLE_ICON}
                   Continue with Google
                 </button>
+                {/* LinkedIn sign-in removed for now — Google One Tap shows on this page instead (App.jsx)
                 <button
                   onClick={handleLinkedInSignIn}
                   className="w-full flex items-center justify-center gap-3 bg-[#0A66C2] text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
@@ -381,6 +383,7 @@ export default function SignIn({ onClose } = {}) {
                   </svg>
                   Continue with LinkedIn
                 </button>
+                */}
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-white/20" />

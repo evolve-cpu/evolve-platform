@@ -1573,9 +1573,10 @@ const AppLayout = () => {
   }, []);
 
   // Prompt Google One Tap as soon as the loader is gone (only when navbar is
-  // shown and user not logged in)
+  // shown, or on /signin, and user not logged in)
+  const oneTapRoute = showNavbar || location.pathname === "/signin";
   useEffect(() => {
-    if (!showNavbar || !googleScriptLoaded || isLoading) return;
+    if (!oneTapRoute || !googleScriptLoaded || isLoading) return;
 
     const promptGoogleOneTap = async () => {
       if (!window.google?.accounts?.id) return;
@@ -1608,7 +1609,7 @@ const AppLayout = () => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [showNavbar, googleScriptLoaded, isLoading]);
+  }, [oneTapRoute, googleScriptLoaded, isLoading]);
 
   // useEffect(() => {
   //   const isDevEnv = window.location.hostname.includes(

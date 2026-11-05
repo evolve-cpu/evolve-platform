@@ -10,6 +10,7 @@ import VerificationTab from "./VerificationTab";
 import GrantAccessTab from "./GrantAccessTab";
 import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import TypetoberReportTab from "./TypetoberReportTab";
+import TypetoberCouponsTab from "./TypetoberCouponsTab";
 import PlatformReportTab from "./PlatformReportTab";
 import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
@@ -1604,7 +1605,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "events", label: "events" },
     { id: "verification", label: "verification" },
     { id: "typetober-report", label: "typetober report" },
-    { id: "typetober", label: "typetober examples" }
+    { id: "typetober", label: "typetober examples" },
+    { id: "typetober-coupons", label: "typetober coupons" }
   ];
 
   // Anant tabs: faculty → students; uni_admin / evolve admin → students + faculty + college admin
@@ -2822,6 +2824,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {activeTab === "platform-report" && !isAnantAdmin && <PlatformReportTab />}
         {activeTab === "typetober-report" && !isAnantAdmin && <TypetoberReportTab />}
         {activeTab === "typetober" && !isAnantAdmin && <TypetoberExamplesTab />}
+        {activeTab === "typetober-coupons" && !isAnantAdmin && <TypetoberCouponsTab />}
 
         {/* ══════════════════════════════════════════════════════════════
             REVIEWS TAB (evolve non-Anant admin only)
