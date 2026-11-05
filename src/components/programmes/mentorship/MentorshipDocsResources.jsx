@@ -72,7 +72,7 @@ const RESOURCES = [
 ];
 
 /**
- * "My docs" (portfolio/resume/walkthrough, editable inline against the
+ * "My docs" (portfolio/resume, editable inline against the
  * shared mentorship_intake row) + the static resources list — shared by
  * every per-slot page (MentorshipSessionPage.jsx, MentorshipCallPage.jsx,
  * MentorshipAllRecordings.jsx) so this ~150-line block isn't duplicated
@@ -116,17 +116,6 @@ export function MentorshipDocsAndResources({ user, intake, onIntakeUpdated }) {
           value={intake?.resume_link}
           onClick={() => setEditingField("resume_link")}
         />
-        <DocRow
-          icon={
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <rect x="2.5" y="5.5" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M12.5 8.5L17 6v8l-4.5-2.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            </svg>
-          }
-          label="Walkthrough recording"
-          value={intake?.walkthrough_link}
-          onClick={() => setEditingField("walkthrough_link")}
-        />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -160,15 +149,6 @@ export function MentorshipDocsAndResources({ user, intake, onIntakeUpdated }) {
           value={intake?.resume_link}
           onClose={() => setEditingField(null)}
           onSave={(v) => saveIntakeField("resume_link", v)}
-        />
-      )}
-      {editingField === "walkthrough_link" && (
-        <DocEditModal
-          title="Walkthrough recording"
-          placeholder="https://loom.com/share.."
-          value={intake?.walkthrough_link}
-          onClose={() => setEditingField(null)}
-          onSave={(v) => saveIntakeField("walkthrough_link", v)}
         />
       )}
       {editingField === "portfolio_value" && (

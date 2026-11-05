@@ -45,6 +45,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *             | { mode: "invite", event_id, email, name }
  *             | { mode: "send_reminder", registration_id }
  *             | { mode: "send_due_reminders" }   (also tops up open-ended recurring series)
+ *             | { mode: "mentorship_meet" }   (caller's own JWT in Authorization)
  *
  * "send_due_reminders" is the cron-invoked mode (see
  * supabase/migrations/event_reminder_scheduling.sql for the Supabase
@@ -587,6 +588,135 @@ async function handleInvite(event_id: string, email: string, name: string) {
   return { ok: true, registration };
 }
 
+/* ── Mentorship: weekly Meet series after "Book a slot" ───────────────── */
+// Called by MentorshipBookSlot right after the learner's mentorship_bookings
+// row is saved. Creates one recurring event (5 weekly sessions, with a Meet
+// link) on the impersonated Workspace user's own calendar — not
+// GOOGLE_CALENDAR_ID, which is the public events calendar — invites the
+// learner, and fills mentorship_session_links 1-5 with each session's time
+// + the link. Idempotent: a booking that already has an event just returns
+// its links. Anything an admin already set in MentorshipV2Tab is kept, and
+// admins can still override afterwards. Same service account + delegation
+// as the events above; mentors/extra guests via MENTORSHIP_MEET_ATTENDEES
+// (comma-separated, optional).
+const MENTORSHIP_SESSIONS = 5;
+const MENTORSHIP_SESSION_MINUTES = 60;
+const IST_OFFSET_MS = 5.5 * 3600000;
+// a slot sooner than this rolls to next week, so nobody gets an invite for
+// a call that's minutes away
+const MENTORSHIP_MIN_LEAD_MS = 2 * 3600000;
+const DAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+// the 5 weekly start times (UTC) for a preferred IST day/time, e.g.
+// ("Tue", "10:00 PM") -> next Tuesday 10 PM IST, then the 4 after it
+function weeklySessionTimes(preferredDay: string, preferredTime: string) {
+  const targetDow = DAY_INDEX[preferredDay];
+  const [, hourStr, minStr, meridiem] = String(preferredTime).match(/(\d+):(\d+)\s*(AM|PM)/i) || [];
+  if (targetDow === undefined || !hourStr) return null;
+  let hour = parseInt(hourStr, 10) % 12;
+  if (/pm/i.test(meridiem)) hour += 12;
+
+  // IST "wall clock" via UTC getters, shifted back to UTC at the end
+  const nowIst = new Date(Date.now() + IST_OFFSET_MS);
+  const firstIst = new Date(nowIst);
+  firstIst.setUTCHours(hour, parseInt(minStr, 10), 0, 0);
+  firstIst.setUTCDate(firstIst.getUTCDate() + ((targetDow - nowIst.getUTCDay() + 7) % 7));
+  if (firstIst.getTime() - nowIst.getTime() < MENTORSHIP_MIN_LEAD_MS) firstIst.setUTCDate(firstIst.getUTCDate() + 7);
+  const first = firstIst.getTime() - IST_OFFSET_MS;
+  return Array.from({ length: MENTORSHIP_SESSIONS }, (_, i) => new Date(first + i * 7 * 86400000));
+}
+
+// "2026-11-10T22:00:00" — IST wall clock, sent alongside timeZone
+const istLocal = (d: Date) => new Date(d.getTime() + IST_OFFSET_MS).toISOString().slice(0, 19);
+
+async function createMentorshipMeet(firstStart: Date, email: string, name: string) {
+  const accessToken = await getAccessToken();
+  const base = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+  const extra = (Deno.env.get("MENTORSHIP_MEET_ATTENDEES") ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  const r = await fetch(`${base}?conferenceDataVersion=1&sendUpdates=all`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      summary: `evolve mentorship · 1:1 with Yagnesh Ahir${name ? ` · ${name}` : ""}`,
+      description: `evolve mentorship · ${MENTORSHIP_SESSIONS} weekly 1:1 sessions.`,
+      start: { dateTime: istLocal(firstStart), timeZone: "Asia/Kolkata" },
+      end: {
+        dateTime: istLocal(new Date(firstStart.getTime() + MENTORSHIP_SESSION_MINUTES * 60000)),
+        timeZone: "Asia/Kolkata"
+      },
+      recurrence: [`RRULE:FREQ=WEEKLY;COUNT=${MENTORSHIP_SESSIONS}`],
+      attendees: [{ email, displayName: name || undefined }, ...extra.map((e) => ({ email: e }))],
+      guestsCanInviteOthers: false,
+      conferenceData: {
+        createRequest: { requestId: crypto.randomUUID(), conferenceSolutionKey: { type: "hangoutsMeet" } }
+      }
+    })
+  });
+  let event = await r.json();
+  if (!r.ok) throw new Error(event.error?.message || "failed to create mentorship meeting");
+
+  // Meet creation is usually instant but can come back pending; one re-read
+  if (!event.hangoutLink) {
+    await new Promise((res) => setTimeout(res, 1500));
+    const again = await fetch(`${base}/${event.id}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (again.ok) event = await again.json();
+  }
+  return { eventId: event.id as string, meetLink: (event.hangoutLink as string) || null };
+}
+
+async function handleMentorshipMeet(req: Request) {
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: { user } } = await admin.auth.getUser(token);
+  if (!user) throw new Error("unauthorized");
+
+  const [{ data: booking }, { data: paid }, { data: profile }] = await Promise.all([
+    admin.from("mentorship_bookings").select("*").eq("user_id", user.id).maybeSingle(),
+    admin.from("mentorship_enrollments").select("id").eq("user_id", user.id).eq("status", "success").limit(1).maybeSingle(),
+    admin.from("profiles").select("name, email").eq("id", user.id).maybeSingle()
+  ]);
+  if (!paid) throw new Error("no mentorship enrollment");
+  if (!booking) throw new Error("book a slot first");
+
+  const readLinks = async () =>
+    (await admin.from("mentorship_session_links").select("*").eq("user_id", user.id).lte("session_number", MENTORSHIP_SESSIONS))
+      .data || [];
+
+  if (booking.google_event_id) return { ok: true, links: await readLinks() };
+
+  const times = weeklySessionTimes(booking.preferred_day, booking.preferred_time);
+  if (!times) throw new Error("invalid booking");
+
+  const email = profile?.email || user.email;
+  if (!email) throw new Error("no email on account");
+  const meet = await createMentorshipMeet(times[0], email, profile?.name || "");
+
+  await admin
+    .from("mentorship_bookings")
+    .update({ google_event_id: meet.eventId, meet_link: meet.meetLink })
+    .eq("user_id", user.id);
+
+  const existing = Object.fromEntries((await readLinks()).map((r: any) => [r.session_number, r]));
+  const { data: links, error } = await admin
+    .from("mentorship_session_links")
+    .upsert(
+      times.map((t, i) => ({
+        ...existing[i + 1],
+        user_id: user.id,
+        session_number: i + 1,
+        session_datetime: existing[i + 1]?.session_datetime || t.toISOString(),
+        join_link: existing[i + 1]?.join_link || meet.meetLink
+      })),
+      { onConflict: "user_id,session_number" }
+    )
+    .select();
+  if (error) throw new Error(error.message);
+  return { ok: true, links };
+}
+
 /* ── entrypoint ───────────────────────────────────────────────────────── */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -599,6 +729,7 @@ serve(async (req) => {
     else if (body.mode === "invite") result = await handleInvite(body.event_id, body.email, body.name);
     else if (body.mode === "send_reminder") result = await handleSendReminder(body.registration_id);
     else if (body.mode === "send_due_reminders") result = await handleSendDueReminders();
+    else if (body.mode === "mentorship_meet") result = await handleMentorshipMeet(req);
     else throw new Error("unknown mode");
 
     return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });

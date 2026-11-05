@@ -50,21 +50,21 @@ export default function MentorshipGiftModal({ user, onContinue }) {
           style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
         >
           <div
-            className="relative w-full h-full md:h-auto md:max-w-xs rounded-none md:rounded-3xl overflow-y-auto flex flex-col items-center justify-center py-10 px-6 gap-4"
+            className="relative w-full h-full md:h-auto md:max-w-xl md:max-h-[90vh] rounded-none md:rounded-3xl overflow-y-auto flex flex-col items-center justify-center py-10 px-6 md:py-12 md:px-10 gap-4 md:gap-5"
             style={{ backgroundColor: "rgba(255,208,7,1)" }}
           >
             <div className="relative z-10 flex flex-col items-center gap-3 text-center">
               <p
-                className="font-extrabold text-2xl leading-tight"
+                className="font-extrabold text-2xl md:text-4xl leading-tight"
                 style={{ color: "rgba(223,5,134,1)" }}
               >
                 Be AI ready!!
               </p>
-              <p className="text-evolve-black/80 text-sm max-w-[26ch] leading-relaxed">
+              <p className="text-evolve-black/80 text-sm md:text-base max-w-[26ch] md:max-w-[34ch] leading-relaxed">
                 We'll also show you how to stay visible as AI increasingly
                 filters who gets seen.
               </p>
-              <p className="font-extrabold text-evolve-black text-4xl mt-1">
+              <p className="font-extrabold text-evolve-black text-4xl md:text-5xl mt-1">
                 Free!
               </p>
               <p className="text-evolve-black/45 text-sm line-through">
@@ -74,11 +74,11 @@ export default function MentorshipGiftModal({ user, onContinue }) {
             <img
               src={surprise_box_open}
               alt="open gift"
-              className="relative z-10 w-36 object-contain"
+              className="relative z-10 w-36 md:w-52 object-contain"
             />
             <button
               onClick={onContinue}
-              className="relative z-10 w-full bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
+              className="relative z-10 w-full md:max-w-sm bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
             >
               Claim your gift!
             </button>

@@ -109,23 +109,6 @@ export default function MentorshipSessionPage({
         )}
       </div>
 
-      {!completed && (sessionNumber === 1 || sessionNumber === 2) && (
-        <div className="flex flex-col gap-3">
-          <p className="text-white font-bold text-sm">Before the call</p>
-          <DocRow
-            icon={
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-                <path d="M7 7h6M7 10.5h6M7 14h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            }
-            label={sessionNumber === 1 ? "Fill up the skill tracker" : "Fill up the stream-specific skill tracker"}
-            value={skillGateDone ? "Submitted" : ""}
-            onClick={() => onOpenSkillTracker(sessionNumber === 1 ? "foundation" : "stream")}
-          />
-        </div>
-      )}
-
       {completed ? (
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
@@ -145,6 +128,23 @@ export default function MentorshipSessionPage({
           gateCaption={gateCaption}
           joinLink={sessionLink?.join_link}
         />
+      )}
+
+      {!completed && (sessionNumber === 1 || sessionNumber === 2) && (
+        <div className="flex flex-col gap-3">
+          <p className="text-white font-bold text-sm">Before the call</p>
+          <DocRow
+            icon={
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M7 7h6M7 10.5h6M7 14h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            }
+            label={sessionNumber === 1 ? "Fill up the skill tracker" : "Fill up the stream-specific skill tracker"}
+            value={skillGateDone ? "Submitted" : ""}
+            onClick={() => onOpenSkillTracker(sessionNumber === 1 ? "foundation" : "stream")}
+          />
+        </div>
       )}
 
       {completed && completionBanner && (

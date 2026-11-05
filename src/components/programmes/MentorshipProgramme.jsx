@@ -12,7 +12,7 @@ import MentorshipWorkspaceShell from "./mentorship/MentorshipWorkspaceShell";
 /**
  * The in-profile individual-mentorship programme — a thin orchestrator.
  * Real content/logic lives under ./mentorship/: MentorshipLanding (pricing
- * page), MentorshipPricingModal (stream + phone + payment, patterned on
+ * page), MentorshipPricingModal (phone + payment, patterned on
  * PortfolioReviewProgramme's BookModal), MentorshipGiftModal (post-payment
  * "claim your gift", copied from Payment.jsx's gift1/gift2), and
  * MentorshipWorkspaceShell (post-flow landing, shell only for now).

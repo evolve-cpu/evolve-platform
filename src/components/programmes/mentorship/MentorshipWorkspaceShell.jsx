@@ -255,8 +255,14 @@ export default function MentorshipWorkspaceShell({ user, enrollment, onBack, onP
         {view === "bookSlot" && (
           <MentorshipBookSlot
             user={user}
-            onBooked={(row) => {
+            onBooked={(row, links) => {
               setBooking(row);
+              if (links?.length) {
+                setSessionLinks((prev) => ({
+                  ...prev,
+                  ...Object.fromEntries(links.map((r) => [r.session_number, r]))
+                }));
+              }
               setManualView(null);
             }}
           />

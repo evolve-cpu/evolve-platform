@@ -22,8 +22,8 @@ function UploadIcon() {
 }
 
 /**
- * The "Before we begin.." intake form — portfolio, resume, walkthrough
- * recording, and expectations, saved to mentorship_intake (one row per
+ * The "Before we begin.." intake form — portfolio, resume, notes and
+ * expectations, saved to mentorship_intake (one row per
  * user, editable). File upload only captures the filename for now (no
  * Storage bucket wired yet) — good enough to unblock the "link" path,
  * which is the one most people will use.
@@ -50,7 +50,6 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
     initialIntake?.portfolio_mode === "file" ? initialIntake?.portfolio_value || "" : ""
   );
   const [resumeLink, setResumeLink] = useState(initialIntake?.resume_link || "");
-  const [walkthroughLink, setWalkthroughLink] = useState(initialIntake?.walkthrough_link || "");
   const [notes, setNotes] = useState(initialIntake?.notes || "");
   const [expectations, setExpectations] = useState(initialIntake?.expectations || "");
   const [status, setStatus] = useState("idle"); // idle | saving | saved | error
@@ -78,7 +77,6 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
           portfolio_mode: portfolioMode,
           portfolio_value: portfolioMode === "file" ? portfolioFileName : portfolioLink.trim(),
           resume_link: resumeLink.trim(),
-          walkthrough_link: walkthroughLink.trim(),
           notes: notes.trim(),
           expectations: expectations.trim()
         },
@@ -207,37 +205,6 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
             value={resumeLink}
             onChange={(e) => {
               setResumeLink(e.target.value);
-              markDirty();
-            }}
-            className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/15 focus:border-evolve-yellow/60 transition-colors"
-            style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-          />
-        </div>
-
-        {/* walkthrough */}
-        <div className="flex flex-col gap-2 pt-6">
-          <label className="text-white text-sm font-bold">
-            Your walkthrough recording{" "}
-            <span className="text-white/30 font-normal">(optional)</span>
-          </label>
-          <p className="text-white/40 text-xs -mt-1">
-            No face cam needed, just walk us through your work. Record with{" "}
-            <a
-              href="https://www.loom.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-evolve-yellow underline"
-            >
-              Loom
-            </a>
-            .
-          </p>
-          <input
-            type="text"
-            placeholder="https://loom.com/share.."
-            value={walkthroughLink}
-            onChange={(e) => {
-              setWalkthroughLink(e.target.value);
               markDirty();
             }}
             className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/15 focus:border-evolve-yellow/60 transition-colors"

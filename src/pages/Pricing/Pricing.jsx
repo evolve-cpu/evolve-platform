@@ -15,11 +15,14 @@ const TIERS = [
   { id: "pro", title: "Professionals" }
 ];
 
+// annual plan only; the monthly card leaves it out
+const MENTOR_DISCOUNT = "10% off mentorship";
+
 const PLAN_FEATURES = [
   "evolve verified profile & public page",
   "All events, community and webinars",
   "All past sessions",
-  "10% off mentorship"
+  MENTOR_DISCOUNT
 ];
 
 // Free-membership item prices are the same for every tier.
@@ -59,7 +62,9 @@ function planDetails(tier, plan) {
       : "/ month · cancel anytime",
     badge: isAnnual ? "20% Off" : null,
     features: [
-      ...PLAN_FEATURES.map((label) => ({ label, included: true })),
+      ...PLAN_FEATURES.filter(
+        (label) => isAnnual || label !== MENTOR_DISCOUNT
+      ).map((label) => ({ label, included: true })),
       isAnnual
         ? { label: "1 free portfolio review", included: true }
         : {

@@ -59,17 +59,17 @@ function AllSetModal({ day, time, body, nextLabel, onContinue }) {
     <div className="fixed inset-0 z-[220] flex items-center justify-center md:px-6">
       <div className="absolute inset-0 bg-evolve-black/70 md:bg-evolve-black/85" />
       <div
-        className="relative w-full h-full md:h-auto md:max-w-sm rounded-none md:rounded-3xl border-0 md:border md:border-white/10 px-8 py-10 flex flex-col items-center text-center gap-5"
+        className="relative w-full h-full md:h-auto md:max-w-xl md:max-h-[90vh] rounded-none md:rounded-3xl border-0 md:border md:border-white/10 px-8 py-10 md:px-12 md:py-12 flex flex-col items-center justify-center text-center gap-5 md:gap-6 overflow-y-auto"
         style={{ backgroundColor: "#161618" }}
       >
         <AllSetIcon />
         <div>
-          <h3 className="text-white font-bold text-2xl font-bricolage">You're all set!</h3>
-          <p className="text-white/50 text-sm mt-3 leading-relaxed">{body(day, time)}</p>
+          <h3 className="text-white font-bold text-2xl md:text-4xl font-bricolage">You're all set!</h3>
+          <p className="text-white/50 text-sm md:text-base mt-3 leading-relaxed max-w-[40ch] mx-auto">{body(day, time)}</p>
         </div>
         <button
           onClick={onContinue}
-          className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80 mt-auto"
+          className="w-full md:max-w-sm bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80 mt-auto md:mt-2"
         >
           {nextLabel}
         </button>
@@ -81,16 +81,18 @@ function AllSetModal({ day, time, body, nextLabel, onContinue }) {
 const WEEKLY_CONFIRMED_BODY = (day, time) => (
   <>
     All 5 sessions are booked for <span className="text-white font-bold">{DAY_PLURAL[day]}</span> ·{" "}
-    <span className="text-white font-bold">{time}</span>, starting this week. We'll send reminders before
-    each one.
+    <span className="text-white font-bold">{time}</span>. The calendar invite with the Google Meet link is
+    on its way to your email.
   </>
 );
 
 /**
- * A day/time preference picker — a plain center-pane page (like "Before we
- * begin"), not a popup. Not a live calendar booking — the real meeting is
- * scheduled manually by an admin afterward (see mentorship_session_links /
- * MentorshipV2Tab.jsx). Confirming inserts a row and shows the responsive
+ * A day/time picker — a plain center-pane page (like "Before we begin"),
+ * not a popup. Confirming inserts a row and, for the weekly sessions, asks
+ * the server to create the recurring Google Meet series and invite the
+ * learner (events-notify's "mentorship_meet" mode), which fills mentorship_session_links 1-5 —
+ * admins can still override those in MentorshipV2Tab.jsx. Job-application
+ * calls are still scheduled by an admin. Then shows the responsive
  * "You're all set!" confirmation (modal on desktop, full-screen on mobile).
  *
  * Serves two cases via props: the initial 5-session weekly booking
@@ -115,7 +117,7 @@ export default function MentorshipBookSlot({
   const [time, setTime] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState(null); // { day, time } once saved
+  const [confirmed, setConfirmed] = useState(null); // { row, links } once saved
 
   async function handleConfirm() {
     if (!day || !time || !user?.id) return;
@@ -130,12 +132,39 @@ export default function MentorshipBookSlot({
       .upsert(payload, { onConflict: table === "mentorship_bookings" ? "user_id" : "user_id,session_number" })
       .select()
       .single();
-    setSaving(false);
     if (saveError) {
+      setSaving(false);
       setError("Couldn't save that — please try again.");
       return;
     }
-    setConfirmed(data);
+    // weekly sessions: create the recurring Meet + invite on the server. A
+    // failure here doesn't undo the booking — an admin can still add links.
+    const links = table === "mentorship_bookings" ? await createWeeklyMeet() : null;
+    setSaving(false);
+    setConfirmed({ row: data, links });
+  }
+
+  async function createWeeklyMeet() {
+    try {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      // same edge function (and Google setup) as the admin Events tab
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/events-notify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ mode: "mentorship_meet" })
+      });
+      const result = await res.json().catch(() => null);
+      return res.ok ? result?.links || [] : null;
+    } catch (err) {
+      console.error("mentorship meet error:", err);
+      return null;
+    }
   }
 
   return (
@@ -210,11 +239,11 @@ export default function MentorshipBookSlot({
 
       {confirmed && (
         <AllSetModal
-          day={confirmed.preferred_day}
-          time={confirmed.preferred_time}
+          day={confirmed.row.preferred_day}
+          time={confirmed.row.preferred_time}
           body={confirmedBody}
           nextLabel={nextLabel}
-          onContinue={() => onBooked(confirmed)}
+          onContinue={() => onBooked(confirmed.row, confirmed.links)}
         />
       )}
     </div>

@@ -16,6 +16,9 @@ import { fireConfetti } from "../../lib/confetti";
 import DevMembershipPanel from "./DevMembershipPanel";
 import "./membership.css";
 
+// annual plan only; the monthly card leaves it out
+const MENTOR_DISCOUNT = "10% off mentorship";
+
 /* ── After-trial layer: everything that happens once the 30-day trial is on
    or over, ported from evolve_mobile_after_trial.html:
      • VIP welcome sheet (30 days of VIP access) + confetti, once
@@ -338,7 +341,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
     "Evolve verified profile and public page",
     "All events free, community and webinars",
     "All past sessions",
-    "10% off mentorship"
+    MENTOR_DISCOUNT
   ];
 
   return (
@@ -406,7 +409,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                     {inr(m)} <small>/ month · cancel anytime</small>
                   </div>
                   <ul className="at-incl">
-                    {base.map((b) => (
+                    {base.filter((b) => b !== MENTOR_DISCOUNT).map((b) => (
                       <li key={b}>{IC.check}{b}</li>
                     ))}
                     <li className="off">{IC.cross}1 free portfolio review</li>
