@@ -45,6 +45,8 @@ function store(kind) {
 
 function enabled() {
   if (import.meta.env.DEV || typeof window === "undefined" || !isEvolve) return false;
+  // build-time prerender / headless browsers / crawlers (flag set in index.html)
+  if (window.__evolveNoAnalytics || navigator.webdriver) return false;
   return store("local")?.getItem("evolve_no_track") !== "1";
 }
 

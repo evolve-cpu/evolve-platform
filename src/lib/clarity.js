@@ -4,7 +4,11 @@
 // Skipped during local dev so testing doesn't pollute the data, and a
 // no-op if Clarity is blocked (ad blockers).
 
-const enabled = () => !import.meta.env.DEV && typeof window !== "undefined" && typeof window.clarity === "function";
+const enabled = () =>
+  !import.meta.env.DEV &&
+  typeof window !== "undefined" &&
+  !window.__evolveNoAnalytics &&
+  typeof window.clarity === "function";
 
 export function track(event, tags) {
   if (!enabled()) return;

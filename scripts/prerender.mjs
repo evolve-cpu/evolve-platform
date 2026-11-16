@@ -172,13 +172,20 @@ function injectRoot(shell, rootHtml) {
 async function render(browser, route) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 900 });
+  // never count prerender visits anywhere (GA, Clarity, platform analytics);
+  // index.html and src/lib/platformAnalytics.js check this flag
+  await page.evaluateOnNewDocument(() => {
+    window.__evolveNoAnalytics = true;
+  });
+  await page.setUserAgent((await browser.userAgent()) + " evolve-prerender");
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const type = req.resourceType();
     const url = req.url();
     if (
       ["image", "media", "font"].includes(type) ||
-      BLOCKED_HOSTS.some((h) => url.includes(h))
+      BLOCKED_HOSTS.some((h) => url.includes(h)) ||
+      /\/rest\/v1\/rpc\/analytics_/.test(url) // safety net: platform analytics
     ) {
       return req.abort();
     }

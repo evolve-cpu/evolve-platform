@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Automated browsers (our own build-time prerender in
+         scripts/prerender.mjs, headless Chrome, crawlers) must never be
+         counted: GA, Clarity and platform analytics all check this flag. -->
+    <script>
+      try {
+        window.__evolveNoAnalytics = window.__evolveNoAnalytics === true ||
+          navigator.webdriver === true ||
+          /HeadlessChrome|Lighthouse|bot|crawler|spider|prerender/i.test(navigator.userAgent);
+      } catch (e) {}
+    </script>
+
     <!-- Default title & description (overridden per-page by react-helmet-async) -->
     <title>evolve — a design ecosystem built around your journey</title>
     <meta name="description" content="Not just a course. Not just a community. evolve brings together learning, mentorship, sessions, and community, so you can pick what moves you forward, wherever you are in design." />
@@ -70,17 +81,26 @@
     </script>
 
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSYRSW4MEH"></script>
+    <!-- Not loaded for automated browsers: window.gtag stays undefined, so
+         every gtag call in the app (all guarded) becomes a no-op. -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      try {
-        if (localStorage.getItem('evolve_cookie_consent') === 'rejected') {
-          gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied' });
-        }
-      } catch (e) {}
-      gtag('js', new Date());
-      gtag('config', 'G-MSYRSW4MEH');
+      if (!window.__evolveNoAnalytics) {
+        (function () {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-MSYRSW4MEH';
+          document.head.appendChild(s);
+        })();
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function gtag(){dataLayer.push(arguments);};
+        try {
+          if (localStorage.getItem('evolve_cookie_consent') === 'rejected') {
+            gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied' });
+          }
+        } catch (e) {}
+        gtag('js', new Date());
+        gtag('config', 'G-MSYRSW4MEH');
+      }
     </script>
 
     <!-- Google Sign-In (One Tap) — warm the connection early -->
@@ -92,6 +112,7 @@
          (src/components/CookieConsent.jsx). -->
     <script type="text/javascript">
       (function(){
+        if (window.__evolveNoAnalytics) return;
         var ls; try { ls = window.localStorage; } catch (e) {}
         try {
           if (/[?&]notrack=1/.test(location.search) && ls) ls.setItem("evolve_no_track", "1");
