@@ -242,8 +242,10 @@ function TextAreaField({ label, ...rest }) {
 
 // Covers and speaker photos are shown on every member's profile page, so a
 // raw 5 MB camera/export file is re-served on each visit. Scale to at most
-// 1600px and re-encode as WebP (keeps transparency, unlike JPEG); keep the
-// original if the browser can't encode WebP or the result isn't smaller.
+// 1600px and re-encode as JPEG — not WebP, since covers are also embedded in
+// events-notify emails and Outlook desktop can't show WebP. Transparent
+// areas go white, matching the email body. Keep the original if the result
+// isn't smaller.
 const MAX_IMAGE_SIDE = 1600;
 
 function shrinkImage(file) {
@@ -256,13 +258,14 @@ function shrinkImage(file) {
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
-        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
           (blob) =>
-            blob && blob.type === "image/webp" && blob.size < file.size
-              ? resolve({ blob, ext: "webp" })
-              : resolve({ blob: file, ext: null }),
-          "image/webp",
+            blob && blob.size < file.size ? resolve({ blob, ext: "jpg" }) : resolve({ blob: file, ext: null }),
+          "image/jpeg",
           0.85
         );
       };

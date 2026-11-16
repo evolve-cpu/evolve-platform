@@ -1,5 +1,5 @@
 {
-    "buildCommand": "vite build",
+    "buildCommand": "npm run build",
     "crons": [
         {
             "path": "/api/sync-institute-posts",
@@ -22,7 +22,7 @@
     "rewrites": [
         {
             "source": "/(.*)",
-            "destination": "/index.html"
+            "destination": "/app-shell.html"
         }
     ],
     "headers": [

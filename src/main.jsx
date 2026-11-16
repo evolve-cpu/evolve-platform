@@ -1,4 +1,4 @@
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.jsx";
 import "./index.css";
@@ -14,8 +14,7 @@ const app = (
   </HelmetProvider>
 );
 
-if (rootElement.hasChildNodes()) {
-  hydrateRoot(rootElement, app);
-} else {
-  createRoot(rootElement).render(app);
-}
+// Prerendered pages (scripts/prerender.mjs) ship static HTML for AI readers and
+// crawlers; React simply re-renders over it rather than hydrating, since the
+// snapshot includes browser-only state (animations, auth) that would mismatch.
+createRoot(rootElement).render(app);
