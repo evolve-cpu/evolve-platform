@@ -45,6 +45,28 @@ export const soft = (p, label, warnings) =>
     return [];
   });
 
+// AI profiles users built themselves vs ones the team pre-generated from
+// their portfolio / resume (supabase/migrations/ai_profile_self_built.sql).
+// Sets p.selfBuiltAt on each profile; until that migration runs, falls back
+// to "any finished profile" with a warning.
+export async function attachSelfBuilt(db, profiles, warnings) {
+  try {
+    const rows = await fetchAll(db, "profiles", "id,ai_profile_self_built_at", (q) =>
+      q.not("ai_profile_self_built_at", "is", null)
+    );
+    const byId = new Map(rows.map((r) => [r.id, r.ai_profile_self_built_at]));
+    for (const p of profiles) p.selfBuiltAt = byId.get(p.id) || null;
+  } catch {
+    warnings.push(
+      "AI profiles: run supabase/migrations/ai_profile_self_built.sql — until then team-generated profiles are counted as user-built"
+    );
+    for (const p of profiles)
+      p.selfBuiltAt = p.ai_profile_status === "done" || p.ai_profile_first_built_at
+        ? p.ai_profile_first_built_at || p.created_at
+        : null;
+  }
+}
+
 export function tally(rows, keyOf) {
   const m = new Map();
   for (const r of rows) {
@@ -173,8 +195,10 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
   };
 
   // ── profiles + verification ─────────────────────────────────────────
-  const built = users.filter((p) => p.ai_profile_status === "done");
-  const profilesCreated = periods(built.map((p) => p.ai_profile_first_built_at || p.created_at), w);
+  // only profiles users built themselves — not the ones the team pre-generated
+  await attachSelfBuilt(db, users, warnings);
+  const built = users.filter((p) => p.selfBuiltAt);
+  const profilesCreated = periods(built.map((p) => p.selfBuiltAt), w);
   const asked = users.filter((p) => p.verification_status);
   const verification = {
     ...periods(asked.map((p) => p.verification_requested_at || p.created_at), w),

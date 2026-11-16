@@ -26,6 +26,7 @@
 //   platform_report_discord Evolve admins → posts last week's report to Discord now (see _platformDiscord.js)
 //   platform_journeys   Evolve admins → funnel, entry/exit pages, paths, recent sessions (see _platformJourneys.js)
 //   platform_user_journey Evolve admins → one user's sessions, step by step
+//   platform_users      Evolve admins → every user: source, sign-up, journey, time, segment (see _platformUsers.js)
 //   coupon_issue        Evolve admins → Typetober winner coupons, see _typetoberCoupons.js
 //   coupon_delete       Evolve admins → removes an unused coupon
 //
@@ -50,6 +51,7 @@ import { grantAccess, revokeDemo, revokeGrant } from "./_manualGrant.js";
 import { buildPlatformReport } from "./_platformReport.js";
 import { buildWeeklyReports, postWeeklyReportToDiscord } from "./_platformDiscord.js";
 import { buildJourneyReport, buildUserJourney } from "./_platformJourneys.js";
+import { buildUserAnalytics } from "./_platformUsers.js";
 import { issueCoupons, deleteCoupon, couponForUser, redeemCoupon } from "./_typetoberCoupons.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
@@ -407,6 +409,10 @@ export async function handleAdmin(body, req) {
   if (op === "platform_report") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     return buildPlatformReport(db, { rangeDays: body.rangeDays });
+  }
+  if (op === "platform_users") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    return buildUserAnalytics(db);
   }
   if (op === "platform_journeys" || op === "platform_user_journey") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");

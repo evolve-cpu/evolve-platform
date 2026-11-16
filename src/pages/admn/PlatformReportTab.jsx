@@ -294,7 +294,7 @@ export default function PlatformReportTab() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <PeriodCard title="Accounts created" p={r.accounts} color={Y} />
-            <PeriodCard title="Profiles created" p={r.profilesCreated} sub="AI profile built" color={Y} />
+            <PeriodCard title="Profiles created" p={r.profilesCreated} sub="AI profile built by the user (team-generated not counted)" color={Y} />
             <PeriodCard
               title="Asked for verification"
               p={r.verification}

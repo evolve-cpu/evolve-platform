@@ -4,6 +4,8 @@ import { supabase } from "../../supabaseClient";
 import AIReportModal from "./AIReportModal";
 import EvolveReviewsPanel from "./EvolveReviewsPanel";
 import AIProfilesTab from "./AIProfilesTab";
+import UserAIProfilesTab from "./UserAIProfilesTab";
+import UserAnalyticsTab from "./UserAnalyticsTab";
 import MentorshipV2Tab from "./MentorshipV2Tab";
 import EventsTab from "./EventsTab";
 import VerificationTab from "./VerificationTab";
@@ -1582,25 +1584,17 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
   const ALL_TABS = [
     { id: "overview", label: "overview" },
     { id: "platform-report", label: "platform report" },
+    { id: "user-analytics", label: "user analytics" },
     { id: "tables", label: "all tables" },
-    { id: "payments", label: `payments (${payments.length})` },
+    // payments, batches, waitlist, m-portfolios, m-profiles, sessions and
+    // accelerator 1:1 are hidden for now (their panels below are kept, just
+    // unreachable) — add an entry back here to bring one back.
     { id: "grant-access", label: "grant access" },
-    { id: "batches", label: `batches (${batches.length})` },
-    { id: "waitlist", label: `waitlist (${stats.waitlistCount})` },
     { id: "profiles", label: `profiles (${profiles.length})` },
     { id: "reviews", label: `reviews (${portfolioReviews.length})` },
     { id: "evolve-reviews", label: "evolve portfolio reviews" },
     { id: "ai-profiles", label: "ai profiles" },
-    {
-      id: "m-portfolios",
-      label: `m-portfolios (${mentorshipPortfolios.length})`
-    },
-    {
-      id: "m-profiles",
-      label: `m-profiles (${mentorshipProfilesData.length})`
-    },
-    { id: "sessions", label: "sessions" },
-    { id: "accelerator", label: "accelerator 1:1" },
+    { id: "user-ai-profiles", label: "user ai profiles" },
     { id: "mentorship-v2", label: "mentorship (individual)" },
     { id: "events", label: "events" },
     { id: "verification", label: "verification" },
@@ -2805,6 +2799,12 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
             side by side for eyeballing quality + a per-user regenerate.
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "ai-profiles" && !isAnantAdmin && <AIProfilesTab />}
+
+        {/* every user: source, sign-up, journey, time spent, segment, funnel */}
+        {activeTab === "user-analytics" && !isAnantAdmin && <UserAnalyticsTab />}
+
+        {/* AI profiles users built themselves in the app (not team-generated) */}
+        {activeTab === "user-ai-profiles" && !isAnantAdmin && <UserAIProfilesTab />}
 
         {/* Individual mentorship (mentorship_enrollments etc.) — separate,
             isolated flow from the batch tabs above. Self-contained, same

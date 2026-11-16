@@ -20,6 +20,7 @@
 import {
   TEAM_DOMAIN,
   addDays,
+  attachSelfBuilt,
   fetchAll,
   hostOf,
   istDayStartIso,
@@ -84,7 +85,7 @@ const CTA_LABELS = { sign_in: "Clicked Sign in", start_for_free: "Clicked Start 
 // ── loading ───────────────────────────────────────────────────────────
 async function loadPeople(db, warnings) {
   const [profiles, admins] = await Promise.all([
-    fetchAll(db, "profiles", "id,name,email,username,created_at,ai_profile_first_built_at,verification_requested_at"),
+    fetchAll(db, "profiles", "id,name,email,username,created_at,ai_profile_status,ai_profile_first_built_at,verification_requested_at"),
     soft(fetchAll(db, "admin_users", "email"), "admin_users", warnings)
   ]);
   const adminEmails = new Set(admins.map((a) => a.email?.toLowerCase()).filter(Boolean));
@@ -96,11 +97,12 @@ async function loadPeople(db, warnings) {
       })
       .map((p) => p.id)
   );
+  await attachSelfBuilt(db, profiles, warnings);
   return { profiles, byId: new Map(profiles.map((p) => [p.id, p])), teamIds };
 }
 
 // every action that has its own table, as { user_id, at, name }
-async function loadActions(db, people, warnings, userIds = null) {
+export async function loadActions(db, people, warnings, userIds = null) {
   const only = (q) => (userIds ? q.in("user_id", userIds) : q);
   const [reviews, enrollments, registrations, purchases] = await Promise.all([
     soft(fetchAll(db, "evolve_portfolio_reviews", "user_id,review_status,created_at", only), "evolve_portfolio_reviews", warnings),
@@ -112,7 +114,8 @@ async function loadActions(db, people, warnings, userIds = null) {
   const out = [];
   for (const p of profiles) {
     if (p.created_at) out.push({ user_id: p.id, at: p.created_at, name: "Signed up" });
-    if (p.ai_profile_first_built_at) out.push({ user_id: p.id, at: p.ai_profile_first_built_at, name: "Built AI profile" });
+    // only when they built it themselves; team pre-generated profiles aren't an action of theirs
+    if (p.selfBuiltAt) out.push({ user_id: p.id, at: p.selfBuiltAt, name: "Built AI profile" });
     if (p.verification_requested_at) out.push({ user_id: p.id, at: p.verification_requested_at, name: "Asked for verification" });
   }
   for (const r of reviews) if (r.review_status !== "draft") out.push({ user_id: r.user_id, at: r.created_at, name: "Submitted portfolio review" });
