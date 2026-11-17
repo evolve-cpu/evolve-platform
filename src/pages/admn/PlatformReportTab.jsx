@@ -438,7 +438,7 @@ export default function PlatformReportTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.slice(0, 200).map((u) => (
+                  {users.map((u) => (
                     <tr key={u.id} style={{ borderTop: "1px solid #1d1d1d" }}>
                       <td className={td}>
                         <button onClick={() => setJourneyUser(u.id)} className="text-white underline decoration-[#444] hover:decoration-white" title="See journey">
@@ -457,13 +457,15 @@ export default function PlatformReportTab() {
                         </td>
                       ))}
                       <td className={td} style={{ color: "#999" }}>
-                        {new Date(u.lastAt).toLocaleString("en-IN", {
-                          timeZone: "Asia/Kolkata",
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        })}
+                        {u.lastAt
+                          ? new Date(u.lastAt).toLocaleString("en-IN", {
+                              timeZone: "Asia/Kolkata",
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })
+                          : "never opened"}
                       </td>
                     </tr>
                   ))}
@@ -477,11 +479,9 @@ export default function PlatformReportTab() {
                 </tbody>
               </table>
             </div>
-            {users.length > 200 && (
-              <p className="text-[12px] mt-2" style={{ color: "#666" }}>
-                Showing 200 of {users.length}. Download the CSV for everyone.
-              </p>
-            )}
+            <p className="text-[12px] mt-2" style={{ color: "#666" }}>
+              Showing {users.length} of {r.exploration.users.length} users.
+            </p>
           </Section>
         </>
       )}

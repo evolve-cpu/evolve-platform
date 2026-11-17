@@ -273,21 +273,25 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
     u.visits += r.visits || 0;
     if (r.last_at > u.lastAt) u.lastAt = r.last_at;
   }
-  const perUser = [...areasOf.entries()]
-    .map(([id, u]) => {
-      const p = byId.get(id);
+  // every account, not only those with tracked exploration (they show 0%)
+  const perUser = users
+    .map((p) => {
+      const u = areasOf.get(p.id);
       return {
-        id,
-        name: p?.name || null,
-        email: p?.email || null,
-        username: p?.username || null,
-        areas: AREAS.filter((a) => u.areas.has(a)),
-        pct: Math.round((u.areas.size / AREAS.length) * 100),
-        visits: u.visits,
-        lastAt: u.lastAt
+        id: p.id,
+        name: p.name || null,
+        email: p.email || null,
+        username: p.username || null,
+        areas: u ? AREAS.filter((a) => u.areas.has(a)) : [],
+        pct: u ? Math.round((u.areas.size / AREAS.length) * 100) : 0,
+        visits: u?.visits || 0,
+        lastAt: u?.lastAt || null,
+        signedUpAt: p.created_at || null,
+        tracked: !!u
       };
     })
-    .sort((a, b) => b.pct - a.pct || (b.lastAt > a.lastAt ? 1 : -1));
+    .sort((a, b) => b.pct - a.pct || (b.lastAt || "").localeCompare(a.lastAt || "") || (b.signedUpAt || "").localeCompare(a.signedUpAt || ""));
+  const trackedUsers = perUser.filter((u) => u.tracked);
   const buckets = [
     ["0%", (p) => p === 0],
     ["1–33%", (p) => p > 0 && p <= 33],
@@ -298,8 +302,9 @@ export async function buildPlatformReport(db, { rangeDays = 7, now = Date.now() 
   const pcts = users.map((p) => (areasOf.has(p.id) ? Math.round((areasOf.get(p.id).areas.size / AREAS.length) * 100) : 0));
   const exploration = {
     areas: AREAS,
-    tracked: perUser.length,
-    avgPct: perUser.length ? Math.round(perUser.reduce((s, u) => s + u.pct, 0) / perUser.length) : 0,
+    tracked: trackedUsers.length,
+    total: perUser.length,
+    avgPct: trackedUsers.length ? Math.round(trackedUsers.reduce((s, u) => s + u.pct, 0) / trackedUsers.length) : 0,
     distribution: buckets.map(([label, test]) => [label, pcts.filter(test).length]),
     users: perUser
   };
