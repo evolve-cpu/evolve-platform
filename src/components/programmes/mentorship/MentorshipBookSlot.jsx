@@ -1,9 +1,49 @@
 import { useState } from "react";
 import { supabase } from "../../../supabaseClient";
+import {
+  DEFAULT_SLOT_CONFIG,
+  SLOT_OVERRIDES,
+  DAY_NAMES,
+  getSlotConfig,
+  weeklySessionTimes,
+  fmtIstDate,
+  fmtIstTime,
+  slotRange
+} from "./mentorshipSlotConfig";
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu"];
-const TIMES = ["9:00 PM", "10:00 PM", "11:00 PM"];
-const DAY_PLURAL = { Mon: "mondays", Tue: "tuesdays", Wed: "wednesdays", Thu: "thursdays" };
+const DAY_PLURAL = { Mon: "mondays", Tue: "tuesdays", Wed: "wednesdays", Thu: "thursdays", Fri: "fridays" };
+
+function Dropdown({ label, value, onChange, placeholder, options }) {
+  return (
+    <div className="flex-1 min-w-0 flex flex-col gap-2">
+      <label className="text-white font-bold text-sm">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full appearance-none rounded-xl bg-transparent px-4 py-3 pr-10 text-sm font-bold outline-none transition-colors cursor-pointer ${
+            value ? "border-2 border-evolve-yellow text-evolve-yellow" : "border border-white/15 text-white/70 hover:border-white/30"
+          }`}
+        >
+          <option value="" disabled className="bg-[#161618] text-white/50">
+            {placeholder}
+          </option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value} className="bg-[#161618] text-white">
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <svg
+          width="14" height="14" viewBox="0 0 20 20" fill="none"
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/50"
+        >
+          <path d="M5 7.5l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  );
+}
 
 function Chip({ active, children, ...props }) {
   return (
@@ -86,6 +126,27 @@ const WEEKLY_CONFIRMED_BODY = (day, time) => (
   </>
 );
 
+/** The exact 5 dates the calendar series will be created for. */
+function SessionSchedule({ day, time }) {
+  const times = weeklySessionTimes(day, time);
+  if (!times) return null;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-4">
+      <p className="text-white/50 text-xs font-bold uppercase tracking-wide">Your 5 sessions</p>
+      <ol className="mt-3 flex flex-col gap-2">
+        {times.map((t, i) => (
+          <li key={i} className="flex items-center justify-between gap-4 text-sm">
+            <span className="text-white/50">Session {i + 1}</span>
+            <span className="text-white font-semibold text-right">
+              {fmtIstDate(t, { weekday: "short", year: "numeric" })} · {fmtIstTime(t)} IST
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /**
  * A day/time picker — a plain center-pane page (like "Before we begin"),
  * not a popup. Confirming inserts a row and, for the weekly sessions, asks
@@ -111,8 +172,16 @@ export default function MentorshipBookSlot({
   meetingTitle = "Weekly 1:1 with Yagnesh Ahir",
   meetingMeta = "60 min · weekly · 5 sessions",
   confirmedBody = WEEKLY_CONFIRMED_BODY,
-  nextLabel = "Go to session 1 →"
+  nextLabel = "Go to session 1 →",
+  preview: previewProp = false
 }) {
+  // localhost only: "Preview as <learner>" swaps in their slot config; nothing is saved
+  const [previewAs, setPreviewAs] = useState("");
+  const preview = previewProp || !!previewAs;
+  // per-learner availability applies to the weekly booking only
+  const isWeekly = table === "mentorship_bookings";
+  const config = isWeekly ? getSlotConfig(previewAs || user?.email) : DEFAULT_SLOT_CONFIG;
+  const subtitle = config === DEFAULT_SLOT_CONFIG ? pageSubtitle : config.subtitle;
   const [day, setDay] = useState("");
   const [time, setTime] = useState("");
   const [saving, setSaving] = useState(false);
@@ -121,6 +190,10 @@ export default function MentorshipBookSlot({
 
   async function handleConfirm() {
     if (!day || !time || !user?.id) return;
+    if (preview) {
+      setConfirmed({ row: { preferred_day: day, preferred_time: time }, links: null });
+      return;
+    }
     setSaving(true);
     setError("");
     const payload =
@@ -169,6 +242,26 @@ export default function MentorshipBookSlot({
 
   return (
     <div className="flex-1 flex flex-col gap-6">
+      {import.meta.env.DEV && isWeekly && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {Object.keys(SLOT_OVERRIDES).map((email) => (
+            <button
+              key={email}
+              type="button"
+              onClick={() => {
+                setPreviewAs(previewAs === email ? "" : email);
+                setDay("");
+                setTime("");
+              }}
+              className={`rounded-lg border border-dashed px-3 py-1.5 font-bold ${
+                previewAs === email ? "border-evolve-yellow text-evolve-yellow" : "border-white/30 text-white/60"
+              }`}
+            >
+              {previewAs === email ? `Previewing as ${email} — exit` : `Preview as ${email}`}
+            </button>
+          ))}
+        </div>
+      )}
       <div>
         <h1
           className="text-white font-bold font-bricolage"
@@ -176,7 +269,7 @@ export default function MentorshipBookSlot({
         >
           {pageHeading}
         </h1>
-        <p className="text-white/50 text-sm mt-2">{pageSubtitle}</p>
+        <p className="text-white/50 text-sm mt-2">{subtitle}</p>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-6 flex flex-col gap-6">
@@ -197,27 +290,54 @@ export default function MentorshipBookSlot({
 
         <div className="border-t border-white/10" />
 
-        <div className="flex flex-col gap-3">
-          <label className="text-white font-bold text-sm">Select day</label>
-          <div className="flex gap-3">
-            {DAYS.map((d) => (
-              <Chip key={d} active={day === d} onClick={() => setDay(d)}>
-                {d}
-              </Chip>
-            ))}
+        {config.layout === "dropdown" ? (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Dropdown
+              label="Day"
+              value={day}
+              onChange={setDay}
+              placeholder="Select a day"
+              options={config.days.map((d) => {
+                // the date of the first session if this day is picked
+                const first = weeklySessionTimes(d, time || config.times[0])?.[0];
+                return { value: d, label: first ? `${DAY_NAMES[d]} · ${fmtIstDate(first)}` : DAY_NAMES[d] };
+              })}
+            />
+            <Dropdown
+              label="Time (IST)"
+              value={time}
+              onChange={setTime}
+              placeholder="Select a time"
+              options={config.times.map((t) => ({ value: t, label: slotRange(t) }))}
+            />
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3">
+              <label className="text-white font-bold text-sm">Select day</label>
+              <div className="flex gap-3">
+                {config.days.map((d) => (
+                  <Chip key={d} active={day === d} onClick={() => setDay(d)}>
+                    {d}
+                  </Chip>
+                ))}
+              </div>
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <label className="text-white font-bold text-sm">Time</label>
-          <div className="flex flex-wrap gap-3">
-            {TIMES.map((t) => (
-              <Chip key={t} active={time === t} onClick={() => setTime(t)}>
-                {t}
-              </Chip>
-            ))}
-          </div>
-        </div>
+            <div className="flex flex-col gap-3">
+              <label className="text-white font-bold text-sm">Time</label>
+              <div className="flex flex-wrap gap-3">
+                {config.times.map((t) => (
+                  <Chip key={t} active={time === t} onClick={() => setTime(t)}>
+                    {t}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {isWeekly && config.layout === "dropdown" && day && time && <SessionSchedule day={day} time={time} />}
 
         <p className="text-white/30 text-xs">
           Timings aren't working for you? Write to us at{" "}
@@ -233,7 +353,7 @@ export default function MentorshipBookSlot({
           disabled={!day || !time || saving}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
         >
-          {saving ? "Booking…" : "Confirm booking"}
+          {saving ? "Booking…" : preview ? "Confirm booking (preview — nothing is saved)" : "Confirm booking"}
         </button>
       </div>
 
@@ -243,7 +363,7 @@ export default function MentorshipBookSlot({
           time={confirmed.row.preferred_time}
           body={confirmedBody}
           nextLabel={nextLabel}
-          onContinue={() => onBooked(confirmed.row, confirmed.links)}
+          onContinue={() => (preview ? setConfirmed(null) : onBooked(confirmed.row, confirmed.links))}
         />
       )}
     </div>
