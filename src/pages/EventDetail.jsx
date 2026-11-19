@@ -903,6 +903,74 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
   const bookDisabled = myRegistration ? myStatus !== "registered" : !!closedReason;
   const spotsLeft = event?.capacity != null ? Math.max(0, event.capacity - registrantCount) : null;
 
+  const bookLabel =
+    myStatus === "registered"
+      ? "You're going ✓ — view ticket"
+      : myStatus === "pending"
+        ? "Request sent · awaiting approval"
+        : myStatus === "rejected"
+          ? "Not approved this time"
+          : myStatus === "cancelled"
+            ? "Registration cancelled"
+            : closedReason === "full"
+              ? "Session full"
+              : closedReason
+                ? "Registrations closed"
+                : event?.requires_approval
+                  ? "Request to join →"
+                  : "Book my spot →";
+
+  const registerBlurb =
+    myStatus === "pending"
+      ? "Your request is in. The team reviews every request and we'll email you once you're approved."
+      : myStatus === "rejected"
+        ? "We couldn't fit you into this one, but keep an eye out for the next session."
+        : !myRegistration && closedReason === "full"
+          ? "This session is full."
+          : !myRegistration && closedReason
+            ? "Registrations have closed for this session."
+            : event?.requires_approval
+              ? "Spots are limited and every request is reviewed. Request yours and we'll email you once you're in."
+              : event?.collect_speaker_question !== false
+                ? "Save your spot for this session. You can ask the speaker a question when you register."
+                : "Save your spot for this session.";
+
+  const priceNote =
+    event &&
+    user &&
+    !myRegistration &&
+    !closedReason &&
+    !membership.access.full &&
+    eventPrice(event) > 0 &&
+    !owned.event.has(event.id) ? (
+      <>
+        {inr(eventPrice(event))} for this session ·{" "}
+        <button
+          type="button"
+          onClick={() => membership.openPlans(2)}
+          className="text-evolve-yellow font-semibold hover:underline"
+        >
+          free with a plan
+        </button>
+      </>
+    ) : null;
+
+  const countNote =
+    registrantCount > 0 || (spotsLeft != null && !closedReason) ? (
+      <>
+        {registrantCount > 0 && `${registrantCount} going`}
+        {registrantCount > 0 && spotsLeft != null && !closedReason && " · "}
+        {spotsLeft != null && !closedReason && (
+          <span className={spotsLeft <= 10 ? "text-evolve-yellow font-semibold" : ""}>
+            {spotsLeft} {spotsLeft === 1 ? "spot" : "spots"} left
+          </span>
+        )}
+      </>
+    ) : null;
+
+  // compact line next to the button in the mobile sticky bar
+  const registerMeta = priceNote || countNote;
+
   if (notFound) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-evolve-black text-white">
@@ -950,7 +1018,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
       ) : (
       <div
         className={`grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 ${
-          embedded ? "pb-10" : "max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-10"
+          embedded ? "pb-28 md:pb-10" : "max-w-5xl mx-auto px-5 md:px-8 pt-28 pb-32 md:pb-10"
         }`}
       >
         {/* left card */}
@@ -1042,6 +1110,21 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
             </p>
           </div>
 
+          {/* desktop: register card right under the title */}
+          <div className="hidden md:block rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="font-bold text-sm">Register</p>
+            <p className="text-white/50 text-xs mt-1">{registerBlurb}</p>
+            <button
+              onClick={handleBookSpot}
+              disabled={bookDisabled}
+              className="mt-4 bg-evolve-yellow text-evolve-black font-extrabold text-sm px-6 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {bookLabel}
+            </button>
+            {priceNote && <p className="text-white/40 text-xs mt-3">{priceNote}</p>}
+            {countNote && <p className="text-white/40 text-xs mt-3">{countNote}</p>}
+          </div>
+
           {event.description && (
             <div>
               <p className="text-[10px] font-black uppercase tracking-wide text-white/40 mb-2">
@@ -1094,75 +1177,35 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
             </div>
           )}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="font-bold text-sm">Register</p>
-            <p className="text-white/50 text-xs mt-1">
-              {myStatus === "pending"
-                ? "Your request is in. The team reviews every request and we'll email you once you're approved."
-                : myStatus === "rejected"
-                  ? "We couldn't fit you into this one, but keep an eye out for the next session."
-                  : !myRegistration && closedReason === "full"
-                    ? "This session is full."
-                    : !myRegistration && closedReason
-                      ? "Registrations have closed for this session."
-                      : event.requires_approval
-                        ? "Spots are limited and every request is reviewed. Request yours and we'll email you once you're in."
-                        : event.collect_speaker_question !== false
-                          ? "Save your spot for this session. You can ask the speaker a question when you register."
-                          : "Save your spot for this session."}
-            </p>
+        </div>
+      </div>
+      )}
+
+      {/* mobile: sticky book bar (sits above the app tab bar when embedded) */}
+      {!isPast && (
+        <div
+          className="md:hidden fixed inset-x-0 z-30 border-t border-white/10 px-4 pt-3"
+          style={{
+            backgroundColor: "#161618",
+            bottom: embedded ? 56 : 0,
+            paddingBottom: embedded ? 12 : "calc(12px + env(safe-area-inset-bottom))",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            {registerMeta && (
+              <div className="min-w-0 flex-1 text-white/50 text-[11px] leading-snug">
+                {registerMeta}
+              </div>
+            )}
             <button
               onClick={handleBookSpot}
               disabled={bookDisabled}
-              className="mt-4 bg-evolve-yellow text-evolve-black font-extrabold text-sm px-6 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`${registerMeta ? "flex-shrink-0" : "w-full"} bg-evolve-yellow text-evolve-black font-extrabold text-sm px-5 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed`}
             >
-              {myStatus === "registered"
-                ? "You're going ✓ — view ticket"
-                : myStatus === "pending"
-                  ? "Request sent · awaiting approval"
-                  : myStatus === "rejected"
-                    ? "Not approved this time"
-                    : myStatus === "cancelled"
-                      ? "Registration cancelled"
-                      : closedReason === "full"
-                        ? "Session full"
-                        : closedReason
-                          ? "Registrations closed"
-                          : event.requires_approval
-                            ? "Request to join →"
-                            : "Book my spot →"}
+              {bookLabel}
             </button>
-            {user &&
-              !myRegistration &&
-              !closedReason &&
-              !membership.access.full &&
-              eventPrice(event) > 0 &&
-              !owned.event.has(event.id) && (
-                <p className="text-white/40 text-xs mt-3">
-                  {inr(eventPrice(event))} for this session ·{" "}
-                  <button
-                    type="button"
-                    onClick={() => membership.openPlans(2)}
-                    className="text-evolve-yellow font-semibold hover:underline"
-                  >
-                    free with a plan
-                  </button>
-                </p>
-              )}
-            {(registrantCount > 0 || spotsLeft != null) && (
-              <p className="text-white/40 text-xs mt-3">
-                {registrantCount > 0 && `${registrantCount} going`}
-                {registrantCount > 0 && spotsLeft != null && !closedReason && " · "}
-                {spotsLeft != null && !closedReason && (
-                  <span className={spotsLeft <= 10 ? "text-evolve-yellow font-semibold" : ""}>
-                    {spotsLeft} {spotsLeft === 1 ? "spot" : "spots"} left
-                  </span>
-                )}
-              </p>
-            )}
           </div>
         </div>
-      </div>
       )}
 
       {showQuestionModal && (
