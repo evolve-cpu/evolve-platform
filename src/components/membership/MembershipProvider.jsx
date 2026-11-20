@@ -473,7 +473,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
       forceItem ||
       (viaSub
         ? { kind: "plan", plan: pay.sub }
-        : { kind: item.kind, event_id: item.event_id, plan: item.plan });
+        : { kind: item.kind, event_id: item.event_id, plan: item.plan, currency: item.currency });
     setPay((p) => ({ ...p, step: "proc", error: "" }));
     try {
       await startMembershipCheckout(checkoutItem, user);
@@ -595,7 +595,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
                 <h3>Pay for this only</h3>
                 <div className="at-s">{item.title}</div>
               </div>
-              <div className="at-big">{inr(item.price)}</div>
+              <div className="at-big">{item.priceLabel || inr(item.price)}</div>
             </div>
           </button>
           {canSwitch && (
@@ -987,6 +987,7 @@ export function MembershipProvider({ children }) {
       .select("amount")
       .eq("user_id", user.id)
       .eq("status", "success")
+      .eq("currency", "INR") // USD event purchases aren't rupees
       .in("kind", ["event", "recording"])
       .gte("created_at", start.toISOString());
     setSpent((data || []).reduce((s, r) => s + (r.amount || 0), 0));

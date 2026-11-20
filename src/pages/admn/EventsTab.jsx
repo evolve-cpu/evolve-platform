@@ -116,6 +116,7 @@ const EMPTY_FORM = {
   // src/lib/membership.js) + the past-event CMS: recording, its thumbnail
   // and the guests who were on the session
   price_inr: "",
+  price_usd: "",
   recording_price_inr: "",
   recording_path: "",
   recording_url: "",
@@ -1156,6 +1157,14 @@ function EventForm({ form, setForm, onSave, onCancel, saving }) {
       />
       <Field
         type="number"
+        min="1"
+        label="international price ($, blank = $1)"
+        value={form.price_usd}
+        placeholder="1"
+        onChange={(e) => setForm((f) => ({ ...f, price_usd: e.target.value }))}
+      />
+      <Field
+        type="number"
         min="0"
         label="recording price (₹)"
         value={form.recording_price_inr}
@@ -1758,6 +1767,7 @@ function eventToForm(event) {
     join_link: event.join_link || "",
     capacity: event.capacity ?? "",
     price_inr: event.price_inr ?? "",
+    price_usd: event.price_usd ?? "",
     recording_price_inr: event.recording_price_inr ?? "",
     recording_path: event.recording_path || "",
     recording_url: event._recording_link || event.recording_url || "",
@@ -1886,6 +1896,7 @@ function formToPayload(form, status) {
     join_link: form.join_link.trim() || null,
     capacity: form.capacity === "" ? null : parseInt(form.capacity, 10),
     price_inr: intOrNull(form.price_inr),
+    price_usd: intOrNull(form.price_usd),
     recording_price_inr: intOrNull(form.recording_price_inr),
     recording_path: form.recording_path || null,
     // the link itself is saved to event_recording_links (saveRecordingLink)

@@ -85,6 +85,35 @@ export function eventPrice(ev) {
     : ITEM_PRICES.COMMUNITY;
 }
 
+// International buyers pay live sessions in USD (events.price_usd, blank =
+// $1). "International" = browser timezone outside India, same rule as
+// Typetober. Display only — the server prices the order.
+export const DEFAULT_EVENT_PRICE_USD = 1;
+
+export function buyerCurrency() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    return tz === "Asia/Kolkata" || tz === "Asia/Calcutta" ? "INR" : "USD";
+  } catch {
+    return "INR";
+  }
+}
+
+export function eventPriceUsd(ev) {
+  return ev?.price_usd ?? DEFAULT_EVENT_PRICE_USD;
+}
+
+export function usd(n) {
+  return "$" + (Number.isInteger(n) ? n : n.toFixed(2));
+}
+
+// What this buyer pays for the live session, formatted ("₹75" / "$1").
+// Free events stay free everywhere.
+export function eventPriceLabel(ev, currency = buyerCurrency()) {
+  if (eventPrice(ev) === 0) return inr(0);
+  return currency === "USD" ? usd(eventPriceUsd(ev)) : inr(eventPrice(ev));
+}
+
 export function recordingPrice(ev) {
   return ev?.recording_price_inr ?? ITEM_PRICES.RECORDING;
 }

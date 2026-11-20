@@ -9,7 +9,7 @@ import SEO from "../components/SEO";
 import SignIn from "./SignIn";
 import { useMembership } from "../components/membership/MembershipProvider";
 import PastEventRecording, { EventGuests, eventHasRecording } from "../components/events/PastEventRecording";
-import { eventPrice, eventKindLabel, inr } from "../lib/membership";
+import { eventPrice, eventKindLabel, eventPriceLabel, buyerCurrency } from "../lib/membership";
 import { fetchOwnedEventIds } from "../lib/membershipCheckout";
 import { isEventOver, registrationClosedReason } from "../lib/events";
 
@@ -821,6 +821,8 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
         title: event.title,
         sub: eventKindLabel(event),
         price: eventPrice(event),
+        currency: buyerCurrency(),
+        priceLabel: eventPriceLabel(event),
         owned: owned.event.has(event.id)
       },
       () => {
@@ -944,7 +946,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
     eventPrice(event) > 0 &&
     !owned.event.has(event.id) ? (
       <>
-        {inr(eventPrice(event))} for this session ·{" "}
+        {eventPriceLabel(event)} for this session ·{" "}
         <button
           type="button"
           onClick={() => membership.openPlans(2)}

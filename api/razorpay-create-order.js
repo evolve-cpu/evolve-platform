@@ -334,7 +334,14 @@ export default async function handler(req, res) {
       }
 
       const { kind, event_id } = body;
-      const priced = await priceItem(supabaseM, mUser.id, { kind, plan, eventId: event_id });
+      // currency: "USD" asks for the international price — honoured only for
+      // live events; priceItem decides the actual currency and amount.
+      const priced = await priceItem(supabaseM, mUser.id, {
+        kind,
+        plan,
+        eventId: event_id,
+        currency: requestedCurrency
+      });
       if (priced.error) return res.status(400).json({ error: priced.error });
 
       // Local-dev-only stand-in for a confirmed payment, like the other
@@ -348,7 +355,8 @@ export default async function handler(req, res) {
           user_id: mUser.id,
           ...priced.row,
           title: priced.title,
-          amount: priced.rupees,
+          amount: priced.amount,
+          currency: priced.currency,
           razorpay_order_id: devOrderId,
           status: "pending"
         });
@@ -359,14 +367,15 @@ export default async function handler(req, res) {
       if (!process.env.RAZORPAY_KEY_ID) return res.status(500).json({ error: "RAZORPAY_KEY_ID missing" });
       if (!process.env.RAZORPAY_KEY_SECRET) return res.status(500).json({ error: "RAZORPAY_KEY_SECRET missing" });
 
-      const amountPaise = chargePaise(priced.rupees);
+      // smallest unit of priced.currency (paise or cents)
+      const amountPaise = chargePaise(priced.amount);
       const mAuth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString("base64");
       const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
         method: "POST",
         headers: { Authorization: `Basic ${mAuth}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: amountPaise,
-          currency: "INR",
+          currency: priced.currency,
           receipt: `mb_${mUser.id.slice(0, 8)}_${Date.now()}`,
           notes: { product: "membership", kind: priced.row.kind }
         })
@@ -382,6 +391,7 @@ export default async function handler(req, res) {
         ...priced.row,
         title: priced.title,
         amount: amountPaise / 100,
+        currency: priced.currency,
         razorpay_order_id: order.id,
         status: "pending"
       });
@@ -393,7 +403,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         order_id: order.id,
         amount: amountPaise,
-        currency: "INR",
+        currency: priced.currency,
         title: priced.title,
         key_id: process.env.RAZORPAY_KEY_ID
       });

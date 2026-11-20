@@ -17,6 +17,7 @@ const DEFAULT_RECORDING_PRICE = 30;
 // ₹1 everywhere except production (same convention as the other order
 // endpoints), so a merge from development can never charge test prices live.
 const IS_PROD = process.env.VERCEL_ENV === "production";
+// Works for USD too (cents): $1 = 100, so the non-prod charge is $1.
 const chargePaise = (rupees) => (IS_PROD ? rupees * 100 : 100);
 
 // Statuses that mean a student ID has been uploaded — the student price
@@ -43,6 +44,12 @@ export function recordingPrice(ev) {
   return ev.recording_price_inr ?? DEFAULT_RECORDING_PRICE;
 }
 
+// International live-session price in whole dollars (null = $1).
+export const DEFAULT_EVENT_PRICE_USD = 1;
+export function eventPriceUsd(ev) {
+  return ev.price_usd ?? DEFAULT_EVENT_PRICE_USD;
+}
+
 export function hasFullAccess(profile) {
   const now = Date.now();
   return (
@@ -53,7 +60,11 @@ export function hasFullAccess(profile) {
 
 // Works out what an order is for and what it costs, entirely from the DB —
 // never from a client-sent amount.
-export async function priceItem(supabase, userId, { kind, plan, eventId }) {
+//
+// Returns { amount, currency, title, row }: amount is in whole units of
+// currency (rupees or dollars). Only live events can be USD — plans and
+// recordings are always INR, whatever the client asked for.
+export async function priceItem(supabase, userId, { kind, plan, eventId, currency }) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, student_id_verification_status, trial_ends_at, plan_expires_at")
@@ -65,7 +76,8 @@ export async function priceItem(supabase, userId, { kind, plan, eventId }) {
     if (!["monthly", "annual"].includes(plan)) return { error: "invalid plan" };
     const rupees = PLAN_PRICES[tierFor(profile)][plan];
     return {
-      rupees,
+      amount: rupees,
+      currency: "INR",
       title: `${plan === "annual" ? "Annual" : "Monthly"} plan`,
       row: { kind, plan, event_id: null }
     };
@@ -75,7 +87,7 @@ export async function priceItem(supabase, userId, { kind, plan, eventId }) {
     if (!eventId) return { error: "missing event" };
     const { data: ev } = await supabase
       .from("events")
-      .select("id, title, event_type, price_inr, recording_price_inr, status")
+      .select("id, title, event_type, price_inr, price_usd, recording_price_inr, status")
       .eq("id", eventId)
       .eq("status", "published")
       .maybeSingle();
@@ -83,8 +95,10 @@ export async function priceItem(supabase, userId, { kind, plan, eventId }) {
     if (hasFullAccess(profile)) return { error: "already included in your access" };
     const rupees = kind === "recording" ? recordingPrice(ev) : eventPrice(ev);
     if (rupees === 0) return { error: "this one is free" };
+    const usd = kind === "event" && currency === "USD";
     return {
-      rupees,
+      amount: usd ? eventPriceUsd(ev) : rupees,
+      currency: usd ? "USD" : "INR",
       title: ev.title,
       row: { kind, plan: null, event_id: ev.id }
     };

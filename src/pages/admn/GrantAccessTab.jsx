@@ -84,7 +84,7 @@ function RecentGrants({ refreshKey }) {
     let cancelled = false;
     const manual = (q) => q.like("razorpay_order_id", "manual_%").order("created_at", { ascending: false }).limit(50);
     Promise.all([
-      manual(supabaseAdmin.from("purchases").select("id, status, created_at, kind, plan, title, amount, razorpay_payment_id, profiles(name, email)")),
+      manual(supabaseAdmin.from("purchases").select("id, status, created_at, kind, plan, title, amount, currency, razorpay_payment_id, profiles(name, email)")),
       manual(supabaseAdmin.from("portfolio_review_payments").select("id, status, created_at, name, email, amount, razorpay_payment_id")),
       manual(supabaseAdmin.from("mentorship_enrollments").select("id, status, created_at, plan, amount, razorpay_payment_id, profiles(name, email)"))
     ]).then(([p, r, m]) => {
@@ -99,6 +99,7 @@ function RecentGrants({ refreshKey }) {
           email: x.profiles?.email,
           what: x.kind === "plan" ? `${x.plan} plan` : `${x.kind}: ${x.title}`,
           amount: x.amount,
+          currency: x.currency,
           audit: x.razorpay_payment_id
         })),
         ...(r.data || []).map((x) => ({
@@ -149,7 +150,7 @@ function RecentGrants({ refreshKey }) {
               <span className="text-white font-semibold">{g.who}</span>
               {g.email && g.email !== g.who && <span className="text-white/40">{g.email}</span>}
               <span style={{ color: Y }}>{g.what}</span>
-              <span className="text-white/70">{g.amount ? `₹${Number(g.amount).toLocaleString("en-IN")}` : "free"}</span>
+              <span className="text-white/70">{g.amount ? (g.currency === "USD" ? `$${g.amount}` : `₹${Number(g.amount).toLocaleString("en-IN")}`) : "free"}</span>
               {revoked ? (
                 <span className="ml-auto text-white/50">{g.status === "refunded" ? "revoked" : g.status}</span>
               ) : (
