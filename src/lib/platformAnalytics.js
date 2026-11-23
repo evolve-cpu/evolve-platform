@@ -155,6 +155,24 @@ export function trackSignupCta(cta, location = "") {
   }
 }
 
+// "Book your spot" on an event page (signed in or not) — the step between
+// "viewed the event" and "registered" in the success-metrics event funnel
+// (supabase/migrations/success_metrics.sql, api/_successMetrics.js)
+export function trackEventRegisterClick(slug, signedIn) {
+  try {
+    if (!enabled() || !slug) return;
+    rpc("analytics_track_event", {
+      p_visitor: visitorId(),
+      p_event: "event_register_click",
+      p_props: { slug, signed_in: !!signedIn },
+      p_path: window.location.pathname,
+      p_session: sessionId().id
+    });
+  } catch {
+    // ignore
+  }
+}
+
 // google_one_tap | google | linkedin | email | discord
 export function markSignupMethod(method) {
   try {

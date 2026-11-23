@@ -83,7 +83,7 @@ export function pageName(path = "/") {
 const CTA_LABELS = { sign_in: "Clicked Sign in", start_for_free: "Clicked Start for free" };
 
 // ── loading ───────────────────────────────────────────────────────────
-async function loadPeople(db, warnings) {
+export async function loadPeople(db, warnings) {
   const [profiles, admins] = await Promise.all([
     fetchAll(db, "profiles", "id,name,email,username,created_at,ai_profile_status,ai_profile_first_built_at,verification_requested_at"),
     soft(fetchAll(db, "admin_users", "email"), "admin_users", warnings)
@@ -136,7 +136,7 @@ function sourceOf(visit) {
   return hostOf(visit.referrer) || "(direct)";
 }
 
-function buildSessions({ steps, visits, events, actions, people }) {
+export function buildSessions({ steps, visits, events, actions, people }) {
   const visitorUser = new Map();
   for (const s of steps) if (s.user_id && !visitorUser.has(s.visitor_id)) visitorUser.set(s.visitor_id, s.user_id);
   const visitBySession = new Map(visits.filter((v) => v.session_id).map((v) => [v.session_id, v]));

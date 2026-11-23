@@ -14,6 +14,7 @@ import TypetoberExamplesTab from "./TypetoberExamplesTab";
 import TypetoberReportTab from "./TypetoberReportTab";
 import TypetoberCouponsTab from "./TypetoberCouponsTab";
 import PlatformReportTab from "./PlatformReportTab";
+import SuccessMetricsTab from "./SuccessMetricsTab";
 import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1583,6 +1584,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
   const ALL_TABS = [
     { id: "overview", label: "overview" },
+    { id: "success-metrics", label: "success metrics" },
     { id: "platform-report", label: "platform report" },
     { id: "user-analytics", label: "user analytics" },
     { id: "tables", label: "all tables" },
@@ -2801,6 +2803,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {activeTab === "ai-profiles" && !isAnantAdmin && <AIProfilesTab />}
 
         {/* every user: source, sign-up, journey, time spent, segment, funnel */}
+        {activeTab === "success-metrics" && !isAnantAdmin && <SuccessMetricsTab />}
         {activeTab === "user-analytics" && !isAnantAdmin && <UserAnalyticsTab />}
 
         {/* AI profiles users built themselves in the app (not team-generated) */}

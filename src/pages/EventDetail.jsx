@@ -12,6 +12,7 @@ import PastEventRecording, { EventGuests, eventHasRecording } from "../component
 import { eventPrice, eventKindLabel, eventPriceLabel, buyerCurrency } from "../lib/membership";
 import { fetchOwnedEventIds } from "../lib/membershipCheckout";
 import { isEventOver, registrationClosedReason } from "../lib/events";
+import { trackEventRegisterClick } from "../lib/platformAnalytics";
 
 const COMMUNITY_URL =
   "https://discord.gg/MmfaqCPdF7";
@@ -787,6 +788,15 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
   }
 
   function handleBookSpot() {
+    // the first click only; the re-entry after sign-in / payment calls this again
+    try {
+      if (!myRegistration && !sessionStorage.getItem(`event_click:${slug}`)) {
+        sessionStorage.setItem(`event_click:${slug}`, "1");
+        trackEventRegisterClick(slug, !!user);
+      }
+    } catch {
+      // tracking must never block booking
+    }
     if (!user) {
       sessionStorage.setItem(PENDING_KEY, slug);
       // location.state alone doesn't survive the full-page redirect round trip
