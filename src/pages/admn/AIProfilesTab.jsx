@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabaseAdmin } from "../../supabaseAdminClient";
 import { AIProfileReveal } from "../../components/AccountPanel";
+import ProfileReviewPanel from "./ProfileReviewPanel";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -70,6 +71,20 @@ async function callEdgeFn(name, user_id) {
    side, so an admin can eyeball how close the AI output landed. Also used
    by VerificationTab before a verification call. ── */
 export function ViewModal({ row, onClose }) {
+  const [mode, setMode] = useState("profile"); // "profile" | "review"
+  const tabBtn = (m, label) => (
+    <button
+      onClick={() => setMode(m)}
+      className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+      style={{
+        background: mode === m ? `${Y}22` : "#161616",
+        border: `1px solid ${mode === m ? Y : "#333"}`,
+        color: mode === m ? Y : "#888"
+      }}
+    >
+      {label}
+    </button>
+  );
   const modal = (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
@@ -92,13 +107,21 @@ export function ViewModal({ row, onClose }) {
                 : "not generated yet"}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-xs px-3 py-1.5 rounded-lg font-semibold shrink-0"
-            style={{ background: "#161616", border: "1px solid #333", color: "#888" }}
-          >
-            close
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {row.aiProfile && row.userId && (
+              <>
+                {tabBtn("profile", "profile")}
+                {tabBtn("review", "review")}
+              </>
+            )}
+            <button
+              onClick={onClose}
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+              style={{ background: "#161616", border: "1px solid #333", color: "#888" }}
+            >
+              close
+            </button>
+          </div>
         </div>
 
         {/* Plain block, not a flex container — a flex column here would let
@@ -126,7 +149,9 @@ export function ViewModal({ row, onClose }) {
               </div>
             </div>
 
-            {row.aiProfile ? (
+            {row.aiProfile && mode === "review" ? (
+              <ProfileReviewPanel row={row} />
+            ) : row.aiProfile ? (
               <AIProfileReveal
                 profile={row.aiProfile}
                 portfolioLink={row.portfolioLink}
@@ -197,7 +222,7 @@ export default function AIProfilesTab() {
       const { data } = await supabaseAdmin
         .from("profiles")
         .select(
-          "id, name, email, portfolio_link, portfolio_file_url, resume_link, resume_file_url, social_links, ai_profile, ai_profile_status, ai_profile_updated_at"
+          "id, name, email, portfolio_link, portfolio_file_url, resume_link, resume_file_url, social_links, ai_profile, ai_profile_status, ai_profile_updated_at, ai_profile_self_built_at"
         )
         .in("id", chunk);
       for (const p of data || []) profileById.set(p.id, p);
@@ -230,6 +255,7 @@ export default function AIProfilesTab() {
         aiProfile: profile?.ai_profile || null,
         aiProfileStatus: userId ? profile?.ai_profile_status || "none" : "no_account",
         aiProfileUpdatedAt: profile?.ai_profile_updated_at || null,
+        selfBuilt: profile ? !!profile.ai_profile_self_built_at : null,
         hasProfileRow: !!profile,
         patch
       };

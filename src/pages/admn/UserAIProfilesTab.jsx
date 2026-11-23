@@ -167,6 +167,8 @@ export default function UserAIProfilesTab() {
       {viewing && (
         <ViewModal
           row={{
+            userId: viewing.id,
+            selfBuilt: true,
             name: viewing.name,
             email: viewing.email,
             portfolioLink: viewing.portfolio_link,
