@@ -619,7 +619,6 @@ import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import { supabase } from "../supabaseClient";
 import { isEventOver, upcomingCutoffIso, collapseSeries } from "../lib/events";
-import { eventHasRecording } from "../components/events/PastEventRecording";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 
@@ -990,71 +989,108 @@ function fmtEventDate(dtStr) {
   };
 }
 
-function UpcomingEventsSection({ events }) {
-  const [index, setIndex] = useState(0);
-  if (!events.length) return null;
-  const event = events[Math.min(index, events.length - 1)];
-  const { day, month, time } = fmtEventDate(event.start_time);
+// Purple "stage" steps at the bottom of the events hero. Rows run top → bottom;
+// rows with two widths are split around the centre (where the dots sit).
+const STAGE_ROWS = [
+  ["28%"],
+  ["44%"],
+  ["22%", "22%"],
+  ["40%", "40%"],
+  ["100%"]
+];
 
+function HeroArrow({ dir, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir === "prev" ? "previous event" : "next event"}
+      className="flex-shrink-0 flex items-center justify-center p-2 disabled:opacity-30"
+    >
+      <img
+        src={right_arrow_icon}
+        alt=""
+        className={`h-6 w-6 md:h-8 md:w-8 ${dir === "prev" ? "rotate-180" : ""}`}
+      />
+    </button>
+  );
+}
+
+// Hero shown on /events when at least one upcoming event exists. Replaces the
+// default illustrated hero and the old separate "Upcoming Event" section.
+function UpcomingEventsHero({ events }) {
+  const [index, setIndex] = useState(0);
+  const safeIndex = Math.min(index, events.length - 1);
+  const event = events[safeIndex];
+  const { day, month, year, time } = fmtEventDate(event.start_time);
   const photo = event.speaker_photo_url || event.cover_image_url;
+  const many = events.length > 1;
+  const prev = () => setIndex((i) => Math.max(0, i - 1));
+  const next = () => setIndex((i) => Math.min(events.length - 1, i + 1));
 
   return (
-    <section className="relative bg-evolve-pink w-full h-screen overflow-hidden flex flex-col items-center justify-center px-6 md:px-16 py-10">
-      <h2 className="text-white text-center font-extrabold text-4xl md:text-6xl leading-none mb-8">
-        Upcoming Event
-      </h2>
+    <section className="relative bg-evolve-yellow w-full min-h-screen overflow-hidden flex flex-col items-center pt-24 md:pt-28">
+      <img
+        src={rays_webinars}
+        alt=""
+        className="absolute inset-x-0 -top-10 mx-auto object-contain pointer-events-none hidden md:block"
+      />
+      <img
+        src={rays_webinars_mobile}
+        alt=""
+        className="absolute inset-0 w-full pointer-events-none md:hidden"
+      />
 
-      <div className="relative w-full max-w-7xl flex items-center gap-3 md:gap-6">
-        {events.length > 1 && (
-          <button
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
-            disabled={index === 0}
-            aria-label="previous event"
-            className="hidden md:flex flex-shrink-0 items-center justify-center disabled:opacity-30"
-          >
-            <img
-              src={right_arrow_icon}
-              alt=""
-              className="h-8 w-8 rotate-180"
-              style={{ filter: "invert(1)" }}
-            />
-          </button>
-        )}
+      <div className="relative z-10 text-center px-6">
+        <h1
+          className="text-evolve-pink font-extrabold leading-[0.8] md:leading-none"
+          style={{
+            fontSize: "clamp(48px, 5.5vw, 96px)",
+            letterSpacing: "-0.03em"
+          }}
+        >
+          {COPY.hero.heading}
+        </h1>
+        <p className="mt-2 text-black font-semibold text-lg md:text-2xl">
+          Upcoming Event
+        </p>
+      </div>
 
-        <div className="relative flex-1 bg-evolve-yellow rounded-[100px] md:rounded-[100px] p-8 md:p-14 min-h-[460px] md:min-h-[490px] flex flex-col justify-center overflow-hidden">
-          <div className="relative z-10 max-w-full md:max-w-[65%] pb-52 md:pb-0 flex flex-col items-center text-center md:items-start md:text-left">
+      <div className="relative z-20 w-full max-w-[1600px] flex items-center gap-1 md:gap-4 px-2 md:px-6 mt-6 md:mt-8">
+        <div className="hidden md:block">
+          {many && <HeroArrow dir="prev" onClick={prev} disabled={safeIndex === 0} />}
+        </div>
+
+        <div className="relative flex-1 bg-evolve-yellow border-4 border-evolve-pink rounded-[48px] md:rounded-[96px] p-8 md:p-14 min-h-[480px] md:min-h-[440px] flex flex-col justify-center overflow-hidden">
+          <div className="relative z-10 max-w-full md:max-w-[min(70%,calc(100%-24rem))] pb-56 md:pb-0 flex flex-col items-center text-center md:items-start md:text-left">
             <span className="inline-block bg-black text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3">
               {event.event_type || "Webinar"}
             </span>
-            <h3
-              className="text-evolve-pink font-extrabold text-4xl md:text-6xl md:leading-[0.9] leading-[0.9]"
+            <h2
+              className="text-evolve-pink font-extrabold text-4xl md:text-6xl leading-[0.9]"
               style={{ letterSpacing: "-0.03em" }}
             >
               {event.title}
-            </h3>
+            </h2>
             {event.speaker_title && (
               <p className="text-black font-medium mt-3 text-base md:text-lg leading-tight">
                 {event.speaker_title}
               </p>
             )}
             {event.speaker_name && (
-              <p className="text-black font-extrabold mt-1 text-base md:text-xl leading-tight">
+              <p className="text-black font-extrabold mt-2 text-lg md:text-2xl leading-tight">
                 by {event.speaker_name}
               </p>
             )}
             <div className="flex items-center gap-4 mt-4">
               <p className="text-evolve-pink font-extrabold text-lg md:text-xl leading-tight">
                 {month} {day}
-                <span className="block text-black font-normal text-xs">
-                  {new Date(event.start_time).getFullYear()}
-                </span>
+                <span className="block text-black font-normal text-xs">{year}</span>
               </p>
               <div className="w-px h-8 bg-black/20" />
               <p className="text-evolve-pink font-extrabold text-lg md:text-xl leading-tight">
                 {time}
-                <span className="block text-black font-normal text-xs">
-                  IST
-                </span>
+                <span className="block text-black font-normal text-xs">IST</span>
               </p>
             </div>
             <Link
@@ -1074,81 +1110,57 @@ function UpcomingEventsSection({ events }) {
             <img
               src={photo}
               alt={event.speaker_name || event.title}
-              className="pointer-events-none select-none absolute bottom-0 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-4 w-56 h-56 md:w-[22rem] md:h-[22rem] rounded-t-[28px] object-cover"
+              className="pointer-events-none select-none absolute bottom-0 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-10 w-56 h-56 md:w-[22rem] md:h-[22rem] rounded-t-[28px] object-cover"
             />
           )}
         </div>
 
-        {events.length > 1 && (
-          <button
-            onClick={() => setIndex((i) => Math.min(events.length - 1, i + 1))}
-            disabled={index === events.length - 1}
-            aria-label="next event"
-            className="hidden md:flex flex-shrink-0 items-center justify-center disabled:opacity-30"
-          >
-            <img
-              src={right_arrow_icon}
-              alt=""
-              className="h-8 w-8"
-              style={{ filter: "invert(1)" }}
-            />
-          </button>
-        )}
+        <div className="hidden md:block">
+          {many && <HeroArrow dir="next" onClick={next} disabled={safeIndex === events.length - 1} />}
+        </div>
       </div>
 
-      {events.length > 1 && (
-        <div className="hidden md:flex justify-center gap-2 mt-6">
-          {events.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              aria-label={`go to event ${i + 1}`}
-              className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/40"}`}
-            />
+      {/* Stage steps + carousel controls */}
+      <div className="relative z-10 w-full mt-auto pt-4">
+        <div className="flex flex-col items-center">
+          {STAGE_ROWS.map((row, r) => (
+            <div
+              key={r}
+              className={`flex w-full h-6 md:h-8 ${row.length > 1 ? "justify-between" : "justify-center"}`}
+              style={row.length > 1 ? { paddingInline: `calc((100% - ${row[0]} - ${row[1]} - 20%) / 2)` } : undefined}
+            >
+              {row.map((w, i) => (
+                <div
+                  key={i}
+                  className="bg-evolve-lavender-indigo border border-black -mt-px h-full"
+                  style={{ width: w }}
+                />
+              ))}
+            </div>
           ))}
         </div>
-      )}
 
-      {events.length > 1 && (
-        <div className="w-full max-w-6xl flex md:hidden items-center justify-between mt-6">
-          <button
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
-            disabled={index === 0}
-            aria-label="previous event"
-            className="flex-shrink-0 disabled:opacity-30"
-          >
-            <img
-              src={right_arrow_icon}
-              alt=""
-              className="h-6 w-6 rotate-180"
-              style={{ filter: "invert(1)" }}
-            />
-          </button>
-          <div className="flex gap-2">
-            {events.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIndex(i)}
-                aria-label={`go to event ${i + 1}`}
-                className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/40"}`}
-              />
-            ))}
+        {many && (
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-12 md:bottom-16 flex items-center gap-3">
+            <div className="md:hidden">
+              <HeroArrow dir="prev" onClick={prev} disabled={safeIndex === 0} />
+            </div>
+            <div className="flex gap-2">
+              {events.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIndex(i)}
+                  aria-label={`go to event ${i + 1}`}
+                  className={`w-2.5 h-2.5 rounded-full ${i === safeIndex ? "bg-black" : "bg-black/30"}`}
+                />
+              ))}
+            </div>
+            <div className="md:hidden">
+              <HeroArrow dir="next" onClick={next} disabled={safeIndex === events.length - 1} />
+            </div>
           </div>
-          <button
-            onClick={() => setIndex((i) => Math.min(events.length - 1, i + 1))}
-            disabled={index === events.length - 1}
-            aria-label="next event"
-            className="flex-shrink-0 disabled:opacity-30"
-          >
-            <img
-              src={right_arrow_icon}
-              alt=""
-              className="h-6 w-6"
-              style={{ filter: "invert(1)" }}
-            />
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
@@ -1159,83 +1171,138 @@ const PAST_PAGE = 6;
 // recording for past events.
 function PastEventsSection({ events }) {
   const [shown, setShown] = useState(PAST_PAGE);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
   if (!events.length) return null;
 
+  const categories = [
+    ...new Set(events.map((e) => e.event_type || "Webinar"))
+  ].sort();
+  const q = query.trim().toLowerCase();
+  const filtered = events.filter((e) => {
+    if (category !== "all" && (e.event_type || "Webinar") !== category) return false;
+    if (!q) return true;
+    return [e.title, e.speaker_name, e.event_type]
+      .filter(Boolean)
+      .some((v) => v.toLowerCase().includes(q));
+  });
+
+  const pickCategory = (value) => {
+    setCategory(value);
+    setShown(PAST_PAGE);
+    setFilterOpen(false);
+  };
+
   return (
-    <section className="bg-evolve-yellow px-6 md:px-16 py-16 md:py-24">
+    <section className="bg-evolve-yellow px-4 md:px-16 py-16 md:py-24">
       <h2
         className="text-black text-center font-extrabold"
         style={{
-          fontSize: "clamp(44px, 4.6vw, 80px)",
+          fontSize: "clamp(32px, 3.4vw, 56px)",
           lineHeight: 1,
           letterSpacing: "-0.03em"
         }}
       >
         {COPY.pastSection.heading}
       </h2>
-      <p
-        className="mt-4 mx-auto max-w-[760px] text-black font-medium text-center"
-        style={{ fontSize: "clamp(17px, 1.4vw, 24px)", lineHeight: 1.35 }}
-      >
-        {COPY.pastSection.description}
-      </p>
 
-      <div className="mt-10 md:mt-14 mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        {events.slice(0, shown).map((event) => {
-          const { day, month, year } = fmtEventDate(event.start_time);
+      {/* Search + category filter */}
+      <div className="relative mt-6 md:mt-8 mx-auto max-w-[720px] flex items-stretch gap-3 md:gap-0 md:rounded-xl md:bg-[#FFE57A] md:overflow-hidden">
+        <div className="hidden md:flex items-center border-r border-black/10 pl-4 pr-3">
+          <select
+            value={category}
+            onChange={(e) => pickCategory(e.target.value)}
+            aria-label="filter by category"
+            className="bg-transparent font-bold text-sm text-black outline-none cursor-pointer pr-1"
+          >
+            <option value="all">All categories</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setShown(PAST_PAGE);
+          }}
+          placeholder="Search event"
+          className="flex-1 min-w-0 rounded-xl md:rounded-none bg-[#FFE57A] px-4 py-4 md:py-3 text-black text-base md:text-sm placeholder:text-black/70 outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setFilterOpen((o) => !o)}
+          aria-label="filter by category"
+          aria-expanded={filterOpen}
+          className="md:hidden flex-shrink-0 w-14 rounded-xl bg-black flex items-center justify-center"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD007" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M4 7h16M7 12h10M10 17h4" />
+          </svg>
+        </button>
+
+        {filterOpen && (
+          <div className="md:hidden absolute right-0 top-full mt-2 z-30 w-56 rounded-xl border border-black bg-[#FFE57A] py-2 shadow-[4px_4px_0px_#806804]">
+            {[["all", "All categories"], ...categories.map((c) => [c, c])].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => pickCategory(value)}
+                className={`block w-full text-left px-4 py-2 text-sm ${category === value ? "font-bold" : "font-medium"} text-black`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-10 md:mt-14 mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-x-16 lg:gap-x-24 gap-y-8 md:gap-y-14">
+        {filtered.slice(0, shown).map((event) => {
           const photo = event.cover_image_url || event.speaker_photo_url;
+          const type = event.event_type || "Webinar";
           return (
             <Link
               key={event.id}
               to={`/events/${event.slug}`}
-              className="group flex flex-col rounded-[24px] border border-black bg-[#FFDC47] overflow-hidden transition-transform duration-150 hover:-translate-y-1"
+              className="group block"
             >
-              <div className="aspect-video bg-black overflow-hidden">
+              <div className="aspect-video rounded-md md:rounded-xl border-2 border-black bg-black overflow-hidden">
                 {photo && (
                   <img
                     src={photo}
-                    alt=""
+                    alt={event.title}
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                 )}
               </div>
-              <div className="flex flex-col flex-1 p-5 md:p-6">
-                <span className="self-start bg-black text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full">
-                  {event.event_type || "Webinar"}
-                </span>
-                <h3
-                  className="mt-3 text-evolve-pink font-extrabold text-2xl leading-[1.05]"
-                  style={{ letterSpacing: "-0.02em" }}
-                >
+              {/* Desktop: one line. Mobile: title, then speaker | type */}
+              <p className="mt-1.5 md:mt-4 text-black font-bold text-[15px] md:text-xl leading-snug">
+                <span className="block md:inline">
                   {event.title}
-                </h3>
-                {event.speaker_name && (
-                  <p className="mt-2 text-black font-bold text-base leading-tight">
-                    by {event.speaker_name}
-                  </p>
-                )}
-                <div className="mt-auto pt-5 flex items-center justify-between gap-3">
-                  <p className="text-black/70 font-medium text-sm">
-                    {day} {month} {year}
-                    {event.recording_duration_min
-                      ? ` · ${event.recording_duration_min} min`
-                      : ""}
-                  </p>
-                  {eventHasRecording(event) && (
-                    <span className="inline-flex items-center gap-1.5 text-black font-bold text-sm">
-                      Watch recording
-                      <img src={right_arrow_icon} alt="" className="h-4 w-4" />
-                    </span>
-                  )}
-                </div>
-              </div>
+                  <span className="hidden md:inline"> | </span>
+                </span>
+                {event.speaker_name && <> by {event.speaker_name} | </>}
+                {type}
+              </p>
             </Link>
           );
         })}
       </div>
 
-      {events.length > shown && (
+      {!filtered.length && (
+        <p className="mt-10 text-center text-black font-medium">
+          No events match your search.
+        </p>
+      )}
+
+      {filtered.length > shown && (
         <div className="mt-10 md:mt-14 flex justify-center">
           <button
             type="button"
@@ -1255,6 +1322,7 @@ const Webinars = () => {
   const [currentMobileCard, setCurrentMobileCard] = useState(0);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
+  const [upcomingLoaded, setUpcomingLoaded] = useState(false);
 
   useEffect(() => {
     supabase
@@ -1263,7 +1331,10 @@ const Webinars = () => {
       .eq("status", "published")
       .gte("start_time", upcomingCutoffIso())
       .order("start_time", { ascending: true })
-      .then(({ data }) => setUpcomingEvents(collapseSeries((data || []).filter((e) => !isEventOver(e)))));
+      .then(({ data }) => {
+        setUpcomingEvents(collapseSeries((data || []).filter((e) => !isEventOver(e))));
+        setUpcomingLoaded(true);
+      });
 
     supabase
       .from("events")
@@ -1308,6 +1379,13 @@ const Webinars = () => {
         description={COPY.seo.description}
         path="/events"
       />
+      {!upcomingLoaded ? (
+        // Hold the space until we know which hero to show (avoids a flash of the default hero)
+        <div className="h-screen bg-evolve-yellow" />
+      ) : upcomingEvents.length > 0 ? (
+        <UpcomingEventsHero events={upcomingEvents} />
+      ) : (
+      <>
       {/* Desktop/Tablet View */}
       <div className="hidden md:block">
         {/* Wrapper for the entire hero section */}
@@ -1386,9 +1464,6 @@ const Webinars = () => {
           </section>
         </div>
 
-        <UpcomingEventsSection events={upcomingEvents} />
-
-        {/* Past Webinars Section - Desktop */}
       </div>
 
       {/* Mobile View */}
@@ -1462,14 +1537,14 @@ const Webinars = () => {
           </div>
           {/* </section> */}
 
-          <UpcomingEventsSection events={upcomingEvents} />
-
           {/* ---------- PAST WEBINARS ---------- */}
           {/* <div className="relative z-40 pt-32">
             <MobilePinnedCards cards={cards} />
           </div> */}
         </section>
       </div>
+      </>
+      )}
 
       <PastEventsSection events={pastEvents} />
     </main>
