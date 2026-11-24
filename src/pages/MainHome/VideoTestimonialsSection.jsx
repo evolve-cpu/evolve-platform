@@ -86,7 +86,7 @@ const VideoCard = ({ t, isPlaying, onToggle }) => {
           onEnded={() => onToggle(false)}
           className="absolute inset-0 w-full h-full object-cover cursor-pointer"
         />
-        <button
+        <button data-cta="web_home_testimonial_video_play"
           type="button"
           onClick={() => onToggle(!isPlaying)}
           aria-label={`${isPlaying ? "Pause" : "Play"} ${t.name}'s testimonial video`}

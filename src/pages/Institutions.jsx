@@ -13,6 +13,7 @@ import {
   download_icon,
   right_arrow_icon
 } from "../assets/images/Nav";
+import { ctaSlug } from "../utils/analytics";
 
 const INQUIRY = AUDIENCE_INQUIRY_CONFIG.institutions;
 
@@ -53,7 +54,7 @@ const ArrowButton = () => (
 const OfferingCard = ({ card }) => {
   const navigate = useNavigate();
   return (
-    <button
+    <button data-cta={`web_institutions_programme_${ctaSlug(card.title)}`}
       onClick={() => navigate(card.path)}
       className="group relative text-left flex-1 flex flex-col md:justify-end rounded-[24px] border border-black/10 hover:border-black/20 transition-colors duration-200 md:min-h-[440px]"
       style={{
@@ -182,7 +183,7 @@ export default function Institutions() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button
+              <button data-cta="web_institutions_get_in_touch"
                 onClick={() => openModal("contact")}
                 className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
                 style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
@@ -192,7 +193,7 @@ export default function Institutions() {
                   <img src={right_arrow_icon} alt="" className="w-6 h-6" />
                 </span>
               </button>
-              <button
+              <button data-cta={mySpaceSlug ? "web_institutions_go_to_my_space" : "web_institutions_set_up_space"}
                 onClick={() =>
                   mySpaceSlug
                     ? navigate(`/space/${mySpaceSlug}`)
@@ -289,7 +290,7 @@ export default function Institutions() {
         </div>
 
         <div className="mt-10 flex justify-center">
-          <button
+          <button data-cta="web_institutions_download_handbook"
             onClick={() => openModal("handbook")}
             className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
             style={{

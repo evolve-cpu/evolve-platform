@@ -4,6 +4,7 @@ import InstituteContactModal from "./InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
 import { preventWidow } from "../utils/preventWidow";
 import { right_arrow_icon } from "../assets/images/Nav";
+import { ctaSlug } from "../utils/analytics";
 
 const NAV_LINKS = [
   { path: "/designers", label: "Designers" },
@@ -72,7 +73,7 @@ const AudienceFooter = ({
                 {preventWidow(description)}
               </p>
             )}
-            <button
+            <button data-cta={`web_${audience}_footer_get_in_touch`}
               onClick={() => setModalOpen(true)}
               className="mt-6 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-6 py-3 text-[16px] hover:opacity-90 transition-opacity"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
@@ -105,7 +106,7 @@ const AudienceFooter = ({
                             : "mt-2";
                     return (
                       <li key={item.path} className={spacing}>
-                        <Link
+                        <Link data-cta={`web_audience_footer_${ctaSlug(item.label)}`}
                           to={item.path}
                           className={`hover:text-evolve-yellow transition-colors duration-200 ${
                             item.sub
@@ -125,7 +126,7 @@ const AudienceFooter = ({
                 <ul className="space-y-2">
                   {SOCIAL_LINKS.map((item) => (
                     <li key={item.label}>
-                      <a
+                      <a data-cta={`web_audience_footer_social_${ctaSlug(item.label)}`}
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -147,14 +148,14 @@ const AudienceFooter = ({
           <span>©2026 evolve. all rights reserved</span>
           <span className="hidden md:inline">·</span>
           <div className="flex items-center gap-4">
-            <Link
+            <Link data-cta="web_audience_footer_privacy_policy"
               to="/privacy"
               className="hover:text-white transition-colors duration-200"
             >
               Privacy Policy
             </Link>
             <span>·</span>
-            <Link
+            <Link data-cta="web_audience_footer_terms"
               to="/terms"
               className="hover:text-white transition-colors duration-200"
             >

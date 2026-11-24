@@ -112,7 +112,7 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
             <span className="text-white/30 font-normal">(optional)</span>
           </label>
           <div className="flex gap-2 w-fit rounded-xl border border-white/10 p-1">
-            <button
+            <button data-cta="app_mentorship_intake_portfolio_link"
               type="button"
               onClick={() => {
                 setPortfolioMode("link");
@@ -126,7 +126,7 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
             >
               Paste a link
             </button>
-            <button
+            <button data-cta="app_mentorship_intake_portfolio_file"
               type="button"
               onClick={() => {
                 setPortfolioMode("file");
@@ -254,7 +254,7 @@ export default function MentorshipIntakeForm({ user, enrollmentId, initialIntake
         </p>
       )}
 
-      <button
+      <button data-cta="app_mentorship_intake_continue"
         type="button"
         onClick={handleContinue}
         disabled={status === "saving"}

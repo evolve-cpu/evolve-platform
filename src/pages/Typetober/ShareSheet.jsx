@@ -4,6 +4,7 @@ import { renderWorkCard } from "./lib/shareCard";
 
 // Typetober channel on the Evolve Discord server.
 import { track } from "../../lib/clarity";
+import { ctaSlug, ctaArea } from "../../utils/analytics";
 
 const DISCORD_INVITE = "https://discord.gg/HpDcGubnYW";
 
@@ -267,7 +268,7 @@ export default function ShareSheet({
           aria-label="Share link"
           className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/15 text-white/80 text-[14px] px-3 py-3 focus:outline-none focus:border-evolve-yellow"
         />
-        <button
+        <button data-cta={`${ctaArea()}_typetober_share_copy_link`}
           onClick={() => copy("link", shareUrl)}
           className={`flex-none flex items-center gap-2 px-4 rounded-xl font-extrabold text-[14px] transition-colors ${
             copied === "link"
@@ -299,7 +300,7 @@ export default function ShareSheet({
             made.
           </span>
         </div>
-        <a
+        <a data-cta={`${ctaArea()}_typetober_share_discord_join`}
           href={DISCORD_INVITE}
           target="_blank"
           rel="noopener noreferrer"
@@ -314,7 +315,7 @@ export default function ShareSheet({
       </div>
 
       <div className="grid grid-cols-3 gap-2 mt-4">
-        <button
+        <button data-cta={`${ctaArea()}_typetober_share_native`}
           onClick={() => {
             track("typetober_share_native");
             nativeShare();
@@ -325,7 +326,7 @@ export default function ShareSheet({
           <Icon name="share" />
           {busy ? "Making…" : "Share"}
         </button>
-        <button
+        <button data-cta={`${ctaArea()}_typetober_share_save_image`}
           onClick={saveImage}
           disabled={busy}
           className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-[13px] disabled:opacity-50"
@@ -333,7 +334,7 @@ export default function ShareSheet({
           <Icon name="save" />
           Save image
         </button>
-        <button
+        <button data-cta={`${ctaArea()}_typetober_share_copy_caption`}
           onClick={() => copy("caption", caption)}
           className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-[13px]"
         >
@@ -347,7 +348,7 @@ export default function ShareSheet({
       </div>
       <div className="grid grid-cols-3 gap-y-4 gap-x-2">
         {apps.map(([icon, label, href]) => (
-          <a
+          <a data-cta={`${ctaArea()}_typetober_share_${ctaSlug(label)}`}
             key={label}
             href={href}
             target="_blank"
@@ -365,7 +366,7 @@ export default function ShareSheet({
           </a>
         ))}
         {/* Instagram has no web share URL: copy the caption and save the image to post from the app. */}
-        <button
+        <button data-cta={`${ctaArea()}_typetober_share_instagram`}
           onClick={async () => {
             await copy("caption", caption);
             await saveImage();

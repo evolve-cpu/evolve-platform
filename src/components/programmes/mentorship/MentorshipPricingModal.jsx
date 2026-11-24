@@ -188,7 +188,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <button
+            <button data-cta="app_mentorship_proceed_to_payment"
               onClick={handlePay}
               disabled={paying || phone.trim().length < 10}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -234,7 +234,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
                 again. Nothing's lost.
               </p>
             </div>
-            <button
+            <button data-cta="app_mentorship_payment_try_again"
               onClick={() => confirmPayment(pendingPayload)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -268,7 +268,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
                 Just a quick gift before we get you set up.
               </p>
             </div>
-            <button
+            <button data-cta="app_mentorship_payment_success_continue"
               onClick={() => onSuccess(confirmedRow)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -290,7 +290,7 @@ export default function MentorshipPricingModal({ user, plan, onClose, onSuccess 
                 Nothing was charged — try again when ready.
               </p>
             </div>
-            <button
+            <button data-cta="app_mentorship_payment_retry"
               onClick={() => setStep("form")}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >

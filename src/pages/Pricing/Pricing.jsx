@@ -111,9 +111,10 @@ const CrossIcon = () => (
 
 // ghost = the secondary outline button (free membership's Continue), same
 // as the ghost Continue on the in-app plans pop-up
-const PlanButton = ({ label, mobileLabel, onClick, ghost = false }) => (
+const PlanButton = ({ label, mobileLabel, onClick, ghost = false, cta }) => (
   <button
     type="button"
+    data-cta={cta}
     onClick={onClick}
     className={`w-full inline-flex items-center justify-center gap-2 rounded-[10px] font-bold py-3 md:py-[clamp(10px,0.9vw,16px)] ${
       ghost
@@ -238,6 +239,7 @@ const FreeCard = ({ plan, cta, onSelect }) => (
         mobileLabel={cta.mobileLabel}
         onClick={onSelect}
         ghost
+        cta="web_pricing_free_continue"
       />
     </div>
   </Card>
@@ -252,7 +254,7 @@ const BillingToggle = ({ id, value, onChange }) => (
     {BILLING.map((b) => {
       const active = value === b.id;
       return (
-        <button
+        <button data-cta={`web_pricing_${id}_billing_${b.id}`}
           key={b.id}
           type="button"
           role="tab"
@@ -315,6 +317,7 @@ const TierCard = ({ tier, plan, onPlanChange, cta, onSelect }) => {
           label={cta.label}
           mobileLabel={cta.mobileLabel}
           onClick={onSelect}
+          cta={`web_pricing_${tier.id}_${plan}_${cta.label === "Extend plan" ? "extend" : "subscribe"}`}
         />
       </div>
     </Card>

@@ -155,7 +155,7 @@ export default function MentorshipSessionPage({
       )}
 
       {completed && nextLabel && (
-        <button
+        <button data-cta="app_mentorship_session_go_to_next"
           onClick={onGoToNext}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 flex items-center justify-center gap-2 active:opacity-80"
         >

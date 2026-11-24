@@ -20,6 +20,7 @@ import AuthModal from "./AuthModal";
 import { trackSignupCta } from "../lib/platformAnalytics";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { ctaSlug } from "../utils/analytics";
 
 function ordinalDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
@@ -477,7 +478,7 @@ const Navigation = ({
               }}
             >
               {/* MENU BUTTON */}
-              <button
+              <button data-cta="web_nav_menu_toggle"
                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="open menu"
@@ -492,7 +493,7 @@ const Navigation = ({
               </button>
 
               {/* LOGO */}
-              <div
+              <div data-cta="web_nav_logo"
                 onClick={handleLogoClick}
                 className="absolute left-1/2 cursor-pointer -translate-x-1/2 flex justify-center items-center"
               >
@@ -512,7 +513,7 @@ const Navigation = ({
 
               {/* AUTH BUTTON */}
               {!hideAuthButton && (
-                <button
+                <button data-cta={user ? "web_nav_account" : "web_nav_sign_in"}
                   ref={accountBtnRef}
                   disabled={authLoading}
                   onClick={() => {
@@ -591,7 +592,7 @@ const Navigation = ({
                   {user.email}
                 </p>
                 {user.onboarding_completed && user.username ? (
-                  <button
+                  <button data-cta="web_nav_account_my_profile"
                     onClick={() => {
                       setAccountOpen(false);
                       navigate("/app/profile");
@@ -601,14 +602,14 @@ const Navigation = ({
                     My profile page
                   </button>
                 ) : (
-                  <button
+                  <button data-cta="web_nav_account_complete_profile"
                     onClick={handleCompleteOnboarding}
                     className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
                   >
                     Complete your profile
                   </button>
                 )}
-                <button
+                <button data-cta="web_nav_account_log_out"
                   onClick={handleLogout}
                   className="mt-3 text-black font-extrabold underline flex items-center gap-2"
                 >
@@ -642,7 +643,7 @@ const Navigation = ({
                         </div>
                       ))}
                     </div>
-                    <button
+                    <button data-cta="web_nav_account_download_receipt"
                       onClick={downloadReceipt}
                       className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] tracking-wide"
                     >
@@ -686,7 +687,7 @@ const Navigation = ({
               {user.email}
             </p>
             {user.onboarding_completed && user.username ? (
-              <button
+              <button data-cta="web_nav_account_my_profile"
                 onClick={() => {
                   setAccountOpen(false);
                   navigate("/app/profile");
@@ -696,14 +697,14 @@ const Navigation = ({
                 My profile page
               </button>
             ) : (
-              <button
+              <button data-cta="web_nav_account_complete_profile"
                 onClick={handleCompleteOnboarding}
                 className="mt-5 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[13px] tracking-wide"
               >
                 Complete your profile
               </button>
             )}
-            <button
+            <button data-cta="web_nav_account_log_out"
               onClick={handleLogout}
               className="mt-3 text-black font-extrabold underline"
             >
@@ -735,7 +736,7 @@ const Navigation = ({
                     </div>
                   ))}
                 </div>
-                <button
+                <button data-cta="web_nav_account_download_receipt"
                   onClick={downloadReceipt}
                   className="mt-3 w-full bg-black text-evolve-yellow font-extrabold py-2.5 rounded-xl text-[12px] tracking-wide"
                 >
@@ -797,7 +798,7 @@ const Navigation = ({
 
                       if (item.external) {
                         return (
-                          <a
+                          <a data-cta={`web_nav_menu_${ctaSlug(item.label)}`}
                             key={item.path}
                             href={item.path}
                             target="_blank"
@@ -812,7 +813,7 @@ const Navigation = ({
 
                       if (item.isModal) {
                         return (
-                          <button
+                          <button data-cta={`web_nav_menu_${ctaSlug(item.label)}`}
                             key={item.path}
                             onClick={() => {
                               setMenuOpen(false);
@@ -830,7 +831,7 @@ const Navigation = ({
                       }
 
                       return (
-                        <Link
+                        <Link data-cta={`web_nav_menu_${ctaSlug(item.label)}`}
                           key={item.path}
                           to={item.path}
                           onClick={() => setMenuOpen(false)}

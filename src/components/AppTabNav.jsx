@@ -77,7 +77,7 @@ export default function AppTabNav({ activeTab, onTabChange, variant = "mobile" }
         : "flex items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-white/[0.06]";
 
     return (
-      <button key={key} type="button" onClick={() => onTabChange(key)} className={sharedClass}>
+      <button data-cta={`app_tab_${key}`} key={key} type="button" onClick={() => onTabChange(key)} className={sharedClass}>
         {content}
       </button>
     );

@@ -14,6 +14,7 @@ import {
   evolve_yellow_logo,
   evolve_yellow_with_name
 } from "../../assets/images/Nav";
+import { ctaSlug } from "../../utils/analytics";
 
 let msgId = 0;
 
@@ -335,7 +336,7 @@ export default function ChatOnboarding({ initialProfile, onComplete, onLogout })
           />
         </Link>
         {onLogout && (
-          <button
+          <button data-cta="app_onboarding_log_out"
             onClick={onLogout}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
             style={{ background: "rgba(255,255,255,0.06)" }}
@@ -430,7 +431,7 @@ export default function ChatOnboarding({ initialProfile, onComplete, onLogout })
                   className="flex flex-col gap-2"
                 >
                   {optionCards.map((o) => (
-                    <button
+                    <button data-cta={`app_onboarding_chat_pick_${ctaSlug(o.title)}`}
                       key={o.title}
                       onClick={() => handlePick(o.fill)}
                       className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] hover:border-evolve-lavender-indigo/60 px-4 py-3 text-left transition-colors"
@@ -501,7 +502,7 @@ export default function ChatOnboarding({ initialProfile, onComplete, onLogout })
                 className="flex-1 resize-none max-h-24 min-h-[46px] rounded-2xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none border border-white/10 focus:border-evolve-yellow/50 transition-colors"
                 style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
               />
-              <button
+              <button data-cta="app_onboarding_chat_send"
                 onClick={handleSend}
                 disabled={!inputValue.trim() || busy}
                 className="w-11 h-11 rounded-full bg-evolve-yellow text-evolve-black flex items-center justify-center flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"

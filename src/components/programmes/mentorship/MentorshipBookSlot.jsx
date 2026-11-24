@@ -107,7 +107,7 @@ function AllSetModal({ day, time, body, nextLabel, onContinue }) {
           <h3 className="text-white font-bold text-2xl md:text-4xl font-bricolage">You're all set!</h3>
           <p className="text-white/50 text-sm md:text-base mt-3 leading-relaxed max-w-[40ch] mx-auto">{body(day, time)}</p>
         </div>
-        <button
+        <button data-cta="app_mentorship_book_slot_continue"
           onClick={onContinue}
           className="w-full md:max-w-sm bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80 mt-auto md:mt-2"
         >
@@ -348,7 +348,7 @@ export default function MentorshipBookSlot({
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <button
+        <button data-cta="app_mentorship_book_slot_confirm"
           onClick={handleConfirm}
           disabled={!day || !time || saving}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"

@@ -93,7 +93,7 @@ const GetStartedButton = ({ trackLabel, mobile = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   return (
-    <button
+    <button data-cta={`web_portfolio_review_get_started_${trackLabel}`}
       onClick={() => {
         trackPortfolioReviewCta(trackLabel);
         navigate("/app/grow/portfolio-review");
@@ -135,7 +135,7 @@ const GetStartedButton = ({ trackLabel, mobile = false }) => {
 const BecomeReviewerButton = () => {
   const navigate = useNavigate();
   return (
-    <button
+    <button data-cta="web_portfolio_review_become_a_reviewer"
       onClick={() => {
         trackPortfolioReviewCta("become_a_reviewer");
         navigate("/portfolio-review/become-a-reviewer");
@@ -341,7 +341,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
   return (
     <div className="flex items-center gap-2 mt-3">
       {linkedinUrl && (
-        <a
+        <a data-cta="web_portfolio_review_reviewer_linkedin"
           href={linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -351,7 +351,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
         </a>
       )}
       {instagramUrl && (
-        <a
+        <a data-cta="web_portfolio_review_reviewer_instagram"
           href={instagramUrl}
           target="_blank"
           rel="noopener noreferrer"

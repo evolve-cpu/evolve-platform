@@ -64,7 +64,7 @@ function AddOnRow() {
 
 function AllRecordingsRow({ active, onClick }) {
   return (
-    <button
+    <button data-cta="app_mentorship_timeline_all_recordings"
       type="button"
       onClick={onClick}
       className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-left transition-colors ${

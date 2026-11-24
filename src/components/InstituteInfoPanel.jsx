@@ -1,4 +1,5 @@
 // Shared between InstitutePublicPage's sidebar/mobile sheet and
+import { ctaSlug } from "../utils/analytics";
 // InstituteSettingsPage's sidebar — one place for what an institute's
 // identity block looks like, so the two pages can't drift apart.
 export default function InstituteInfoPanel({ org, isAdmin, sidebarStats, onEditInfo }) {
@@ -11,7 +12,7 @@ export default function InstituteInfoPanel({ org, isAdmin, sidebarStats, onEditI
       {(org.website || (org.social_links || []).length > 0) && (
         <div className="flex items-center gap-1.5 mt-3 flex-wrap">
           {org.website && (
-            <a href={org.website} target="_blank" rel="noopener noreferrer" title="website" className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/50 hover:text-white flex-shrink-0">
+            <a data-cta="app_space_info_website" href={org.website} target="_blank" rel="noopener noreferrer" title="website" className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/50 hover:text-white flex-shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
                 <path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18" stroke="currentColor" strokeWidth="1.8" />
@@ -19,7 +20,7 @@ export default function InstituteInfoPanel({ org, isAdmin, sidebarStats, onEditI
             </a>
           )}
           {(org.social_links || []).map((l, i) => (
-            <a
+            <a data-cta={`app_space_info_link_${ctaSlug(l.platform)}`}
               key={i}
               href={/^https?:\/\//.test(l.url) ? l.url : `https://${l.url}`}
               target="_blank"
@@ -57,7 +58,7 @@ export default function InstituteInfoPanel({ org, isAdmin, sidebarStats, onEditI
       </div>
 
       {isAdmin && (
-        <button
+        <button data-cta="app_space_info_edit"
           onClick={onEditInfo}
           className="inline-flex items-center gap-1.5 mt-3.5 pt-3.5 border-t border-white/10 w-full text-evolve-lavender-indigo text-xs font-semibold hover:underline underline-offset-2"
         >

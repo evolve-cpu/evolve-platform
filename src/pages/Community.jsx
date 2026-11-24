@@ -1052,7 +1052,7 @@ const Community = () => {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            <a
+            <a data-cta="web_community_hero_join_discord"
               href="https://discord.gg/MmfaqCPdF7"
               target="_blank"
               rel="noopener noreferrer"
@@ -1067,7 +1067,7 @@ const Community = () => {
             </a>
           </div> */}
           <div className="mt-8">
-            <a
+            <a data-cta="web_community_join_us"
               href="https://discord.gg/MmfaqCPdF7"
               target="_blank"
               rel="noopener noreferrer"

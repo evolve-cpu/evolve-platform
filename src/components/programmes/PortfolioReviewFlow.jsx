@@ -10,6 +10,7 @@ import {
 import { DISCIPLINE_VALUES } from "../../pages/Onboarding/questions";
 // import GrowthStageModal from "../GrowthStageModal"; // growth feature disabled
 import { right_arrow_icon } from "../../assets/images/Nav";
+import { ctaSlug } from "../../utils/analytics";
 
 // year options mirror the "standard" onboarding question exactly (see
 // src/pages/Onboarding/questions.js) so a design-school student's prefilled
@@ -186,7 +187,7 @@ function StepSidebar({
             {section.items.map((item) => {
               const filled = item.active || item.done;
               return (
-                <button
+                <button data-cta={`app_portfolio_review_flow_step_${ctaSlug(item.label)}`}
                   key={item.label}
                   type="button"
                   onClick={item.navigable ? item.onClick : undefined}
@@ -326,7 +327,7 @@ function ReviewCyclesSidebar({
           expanded={openHistoryId === h.id}
           onToggle={() => setOpenHistoryId((id) => (id === h.id ? null : h.id))}
         >
-          <button
+          <button data-cta="app_portfolio_review_flow_view_past_cycle"
             type="button"
             onClick={() => onViewCycle(h)}
             className={`w-full text-left rounded-lg px-2.5 py-1.5 mb-1 text-[11px] font-semibold transition-colors ${
@@ -361,7 +362,7 @@ function ReviewCyclesSidebar({
       </ReviewCycleGroup>
 
       {activeCompleted && onApplyAgain && (
-        <button
+        <button data-cta="app_portfolio_review_flow_apply_again"
           type="button"
           onClick={onApplyAgain}
           className="rounded-xl border border-evolve-yellow/40 bg-evolve-yellow/[0.08] text-evolve-yellow text-xs font-bold px-3.5 py-3 hover:bg-evolve-yellow/[0.14] transition-colors"
@@ -390,7 +391,7 @@ function PastCycleView({ row, onBack }) {
           Review {row.attempt} — report
         </h2>
         {row.review_report_url && (
-          <a
+          <a data-cta="app_portfolio_review_flow_open_report"
             href={row.review_report_url}
             target="_blank"
             rel="noreferrer"
@@ -807,7 +808,7 @@ export default function PortfolioReviewFlow({
           We couldn't find your review — try refreshing the page.
         </p>
         {onBack && (
-          <button
+          <button data-cta="app_portfolio_review_flow_back_to_programmes"
             onClick={onBack}
             className="text-evolve-yellow text-xs font-semibold"
           >
@@ -859,7 +860,7 @@ export default function PortfolioReviewFlow({
 
   return (
     <div className="flex flex-col gap-6">
-      <button
+      <button data-cta="app_portfolio_review_flow_back_to_programmes"
         onClick={goBackToProgrammes}
         disabled={saving}
         className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold w-fit transition-colors disabled:opacity-50"
@@ -991,7 +992,7 @@ export default function PortfolioReviewFlow({
                   </p>
                   <div className="flex items-center justify-end gap-3">
                     {QUESTIONS[currentQ].optional && (
-                      <button
+                      <button data-cta="app_portfolio_review_flow_questions_skip"
                         onClick={() => setPhase("share")}
                         disabled={saving}
                         className="text-white/60 hover:text-white text-xs font-bold rounded-2xl border border-[#373737] hover:bg-[#232325] px-5 py-2.5 mr-auto disabled:opacity-30 transition-colors"
@@ -1017,7 +1018,7 @@ export default function PortfolioReviewFlow({
                         Back
                       </button>
                     )}
-                    <button
+                    <button data-cta="app_portfolio_review_flow_questions_continue"
                       onClick={nextQ}
                       disabled={
                         saving ||
@@ -1050,13 +1051,13 @@ export default function PortfolioReviewFlow({
                         Your resume
                       </h2>
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
-                        <button
+                        <button data-cta="app_portfolio_review_flow_resume_upload"
                           onClick={() => setResumeMode("upload")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           Upload
                         </button>
-                        <button
+                        <button data-cta="app_portfolio_review_flow_resume_link"
                           onClick={() => setResumeMode("link")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${resumeMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
@@ -1101,13 +1102,13 @@ export default function PortfolioReviewFlow({
                         Your portfolio
                       </h2>
                       <div className="flex items-center gap-2 text-[11px] font-semibold">
-                        <button
+                        <button data-cta="app_portfolio_review_flow_portfolio_link"
                           onClick={() => setPortfolioMode("link")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "link" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
                           Link
                         </button>
-                        <button
+                        <button data-cta="app_portfolio_review_flow_portfolio_upload"
                           onClick={() => setPortfolioMode("upload")}
                           className={`rounded-full px-4 py-1.5 border transition-colors ${portfolioMode === "upload" ? "border-white text-white" : "border-[#373737] text-white/40 hover:bg-[#232325]"}`}
                         >
@@ -1233,14 +1234,14 @@ export default function PortfolioReviewFlow({
                   )}
 
                   <div className="flex items-center justify-between gap-3 pt-1">
-                    <button
+                    <button data-cta="app_portfolio_review_flow_save_for_later"
                       onClick={handleSaveForLater}
                       disabled={saving}
                       className="text-white/40 hover:text-white text-xs font-semibold transition-colors"
                     >
                       {savedMsg ? "Saved ✓" : "Save for later"}
                     </button>
-                    <button
+                    <button data-cta="app_portfolio_review_flow_submit_book_call"
                       onClick={handleSubmitShare}
                       disabled={saving || resumeUploading || portfolioUploading}
                       className="inline-flex items-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-7 py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -1366,7 +1367,7 @@ export default function PortfolioReviewFlow({
                       </div>
                     );
                   })()}
-                  <button
+                  <button data-cta="app_portfolio_review_flow_reschedule_call"
                     onClick={() => {
                       if (window.confirm("Reschedule your call?"))
                         setPhase("booking");
@@ -1388,7 +1389,7 @@ export default function PortfolioReviewFlow({
                       Your review is ready
                     </h2>
                     {row.review_report_url && (
-                      <a
+                      <a data-cta="app_portfolio_review_flow_open_report"
                         href={row.review_report_url}
                         target="_blank"
                         rel="noreferrer"
@@ -1479,7 +1480,7 @@ export default function PortfolioReviewFlow({
                               backgroundColor: "rgba(255,255,255,0.06)"
                             }}
                           />
-                          <button
+                          <button data-cta="app_portfolio_review_flow_submit_feedback"
                             onClick={submitFeedback}
                             disabled={!feedbackRating}
                             className="self-start bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2 disabled:opacity-40"
@@ -1542,7 +1543,7 @@ export default function PortfolioReviewFlow({
                             Book a free follow-up call with your reviewer.
                           </p>
                         </div>
-                        <button
+                        <button data-cta="app_portfolio_review_flow_book_follow_up"
                           onClick={() => setBookingFollowup(true)}
                           className="bg-evolve-inchworm text-evolve-black font-bold text-xs rounded-full px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
                         >
@@ -1562,7 +1563,7 @@ export default function PortfolioReviewFlow({
                           you're ready.
                         </p>
                       </div>
-                      <button
+                      <button data-cta="app_portfolio_review_flow_apply_again"
                         onClick={onApplyAgain}
                         className="bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
                       >

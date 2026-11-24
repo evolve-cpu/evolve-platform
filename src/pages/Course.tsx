@@ -96,7 +96,7 @@ const Course = () => {
               experience that goes beyond theory — it’s hands-on, engaging, and
               crafted for you.
             </p>
-            <Link
+            <Link data-cta="web_course_open_course"
               to="/what-is-design"
               className="inline-block bg-white text-evolve-lavender-indigo font-semibold text-lg px-10 py-4 rounded-xl shadow hover:scale-105 transition-transform"
             >
@@ -199,7 +199,7 @@ const Course = () => {
           <p className="text-lg text-evolve-gray mb-8">
             No more "someday." No more "...when I'm ready."
           </p>
-          <button className="btn-accent text-xl px-12 py-5">Start Now</button>
+          <button data-cta="web_course_start_now" className="btn-accent text-xl px-12 py-5">Start Now</button>
         </div>
       </div>
     </div>

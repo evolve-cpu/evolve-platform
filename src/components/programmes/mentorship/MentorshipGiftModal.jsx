@@ -33,7 +33,7 @@ export default function MentorshipGiftModal({ user, onContinue }) {
           <p className="text-white/60 text-sm">Here is a gift for you!</p>
         </div>
         <img src={surprise_box} alt="gift" className="w-52 h-52 object-contain" />
-        <button
+        <button data-cta="app_mentorship_gift_claim"
           onClick={() => setStep("gift2")}
           className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-base rounded-2xl py-4 active:opacity-80"
         >
@@ -76,7 +76,7 @@ export default function MentorshipGiftModal({ user, onContinue }) {
               alt="open gift"
               className="relative z-10 w-36 md:w-52 object-contain"
             />
-            <button
+            <button data-cta="app_mentorship_gift_claim_continue"
               onClick={onContinue}
               className="relative z-10 w-full md:max-w-sm bg-evolve-black text-evolve-yellow font-extrabold text-base rounded-2xl py-4 active:opacity-80 mt-2"
             >

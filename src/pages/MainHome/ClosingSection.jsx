@@ -58,7 +58,7 @@ const ClosingSection = ({ onStart }) => (
         </h2>
 
         <div className="mt-10 md:mt-[clamp(32px,3.2vw,60px)]">
-          <CtaButton onClick={onStart}>Start for free</CtaButton>
+          <CtaButton cta="web_home_closing_start_for_free" onClick={onStart}>Start for free</CtaButton>
         </div>
       </motion.div>
 

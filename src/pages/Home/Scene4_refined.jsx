@@ -372,7 +372,7 @@ const Scene4_refined = React.forwardRef(
                 {WAITLIST_CONFIRMATION}
               </div>
             ) : (
-              <button
+              <button data-cta="web_designers_waitlist_be_first_to_know"
                 type="button"
                 onClick={handleCtaClick}
                 disabled={waitlistSaving}
@@ -443,7 +443,7 @@ const Scene4_refined = React.forwardRef(
                       {waitlistError}
                     </p>
                   )}
-                  <button
+                  <button data-cta="web_designers_waitlist_notify_me"
                     type="submit"
                     disabled={waitlistSaving}
                     className="bg-black text-[#FFD007] font-extrabold rounded-xl py-3 disabled:opacity-60"

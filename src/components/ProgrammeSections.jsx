@@ -5,6 +5,7 @@
 import { useId } from "react";
 import { right_arrow_icon } from "../assets/images/Nav";
 import { preventWidow } from "../utils/preventWidow";
+import { ctaSlug } from "../utils/analytics";
 
 export const ProgrammeHero = ({
   heading,
@@ -53,7 +54,7 @@ export const ProgrammeHero = ({
         </p>
 
         <div className="mt-8 flex items-center gap-6 flex-wrap">
-          <button
+          <button data-cta={`web_${ctaSlug(window.location.pathname.split("/").pop())}_get_in_touch`}
             onClick={onGetInTouch}
             className="inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
             style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
@@ -65,7 +66,7 @@ export const ProgrammeHero = ({
           </button>
 
           {onDownloadHandbook && (
-            <button
+            <button data-cta={`web_${ctaSlug(window.location.pathname.split("/").pop())}_download_handbook`}
               onClick={onDownloadHandbook}
               className="font-bold text-evolve-yellow text-[16px]"
               style={{
@@ -223,7 +224,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
   return (
     <div className="flex items-center gap-2 mt-3">
       {linkedinUrl && (
-        <a
+        <a data-cta={`web_${ctaSlug(window.location.pathname.split("/").pop())}_reviewer_linkedin`}
           href={linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -233,7 +234,7 @@ const ReviewerSocials = ({ name, linkedinUrl, instagramUrl }) => {
         </a>
       )}
       {instagramUrl && (
-        <a
+        <a data-cta={`web_${ctaSlug(window.location.pathname.split("/").pop())}_reviewer_instagram`}
           href={instagramUrl}
           target="_blank"
           rel="noopener noreferrer"

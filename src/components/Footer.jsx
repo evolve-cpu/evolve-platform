@@ -16,6 +16,7 @@ import {
 } from "../assets/images/Home";
 import { right_arrow_yellow } from "../assets/images/Home_images";
 import { trackSignupCta } from "../lib/platformAnalytics";
+import { ctaSlug } from "../utils/analytics";
 
 const useIsMobile = (bp = 768) => {
   const [isMobile, setIsMobile] = useState(
@@ -83,14 +84,14 @@ const Footer = ({ onContactClick }) => {
 
   const renderNavLink = (item, sizeClass) =>
     item.isModal ? (
-      <button
+      <button data-cta={`web_footer_${ctaSlug(item.label)}`}
         onClick={() => onContactClick && onContactClick()}
         className={`${sizeClass} ${linkClass(false)}`}
       >
         {item.label}
       </button>
     ) : (
-      <Link
+      <Link data-cta={`web_footer_${ctaSlug(item.label)}`}
         to={item.path}
         className={`${sizeClass} ${linkClass(isActive(item.path))}`}
       >
@@ -100,7 +101,7 @@ const Footer = ({ onContactClick }) => {
 
   // same CTA (and destination) as the home hero's "Start for free"
   const startButton = (
-    <button
+    <button data-cta="web_footer_start_for_free"
       type="button"
       onClick={() => {
         if (!user) trackSignupCta("start_for_free", "footer");
@@ -115,11 +116,11 @@ const Footer = ({ onContactClick }) => {
 
   const legal = (sizeClass) => (
     <div className={`${sizeClass} text-black`}>
-      <Link to="/privacy" className="hover:text-evolve-pink transition-colors">
+      <Link data-cta="web_footer_privacy_policy" to="/privacy" className="hover:text-evolve-pink transition-colors">
         Privacy Policy
       </Link>{" "}
       and{" "}
-      <Link to="/terms" className="hover:text-evolve-pink transition-colors">
+      <Link data-cta="web_footer_terms" to="/terms" className="hover:text-evolve-pink transition-colors">
         Terms &amp; Conditions
       </Link>
     </div>
@@ -203,7 +204,7 @@ const Footer = ({ onContactClick }) => {
                 <ul className="space-y-1">
                   {socialLinks.map((item) => (
                     <li key={item.label}>
-                      <a
+                      <a data-cta={`web_footer_social_${ctaSlug(item.label)}`}
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -276,7 +277,7 @@ const Footer = ({ onContactClick }) => {
               <ul className="space-y-1">
                 {socialLinks.map((item) => (
                   <li key={item.label}>
-                    <a
+                    <a data-cta={`web_footer_social_${ctaSlug(item.label)}`}
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"

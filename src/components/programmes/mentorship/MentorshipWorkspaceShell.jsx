@@ -213,7 +213,7 @@ export default function MentorshipWorkspaceShell({ user, enrollment, onBack, onP
     <div className="flex flex-col gap-6">
       <div className="sticky top-16 z-20 -mx-6 md:-mx-8 px-6 md:px-8 py-3 lg:py-2.5 flex flex-col gap-1 bg-[#161618]/95 backdrop-blur border-b border-white/10 lg:border-b-0">
         {onBack && (
-          <button
+          <button data-cta="app_mentorship_workspace_back"
             onClick={onBack}
             className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold w-fit transition-colors"
           >

@@ -19,6 +19,7 @@ import {
   evolve_be_remarkable
 } from "../assets/images/Nav";
 import { join_us_button, join_us_button_hover } from "../assets/images/Home";
+import { ctaSlug } from "../utils/analytics";
 
 const NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -208,7 +209,7 @@ export default function BlackNav({ onLogoClick, right }) {
               }}
             >
               {/* menu button — left */}
-              <button
+              <button data-cta="web_nav_menu_toggle"
                 onClick={() => setMenuOpen((v) => !v)}
                 className="cursor-pointer transition-transform duration-300 hover:scale-105 flex-shrink-0"
                 style={{ width: 44 }}
@@ -223,7 +224,7 @@ export default function BlackNav({ onLogoClick, right }) {
 
               {/* logo — centre */}
               <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center">
-                <button
+                <button data-cta="web_nav_logo"
                   onClick={onLogoClick ?? (() => navigate("/"))}
                   className="focus:outline-none cursor-pointer"
                 >
@@ -267,7 +268,7 @@ export default function BlackNav({ onLogoClick, right }) {
                   <div className="flex flex-col items-start space-y-2 tracking-normal">
                     {NAV_ITEMS.map((item) =>
                       item.isModal ? (
-                        <button
+                        <button data-cta={`web_nav_menu_${ctaSlug(item.label)}`}
                           key={item.path}
                           onClick={() => {
                             setMenuOpen(false);
@@ -280,7 +281,7 @@ export default function BlackNav({ onLogoClick, right }) {
                           {item.label}
                         </button>
                       ) : (
-                        <button
+                        <button data-cta={`web_nav_menu_${ctaSlug(item.label)}`}
                           key={item.path}
                           onClick={() => {
                             setMenuOpen(false);
@@ -302,7 +303,7 @@ export default function BlackNav({ onLogoClick, right }) {
 
               {/* join us */}
               <div className="w-full flex justify-center mb-5 md:mb-6">
-                <a
+                <a data-cta="web_nav_menu_join_discord"
                   href="https://discord.gg/MmfaqCPdF7"
                   target="_blank"
                   rel="noopener noreferrer"

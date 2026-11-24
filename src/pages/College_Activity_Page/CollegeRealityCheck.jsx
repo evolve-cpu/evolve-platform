@@ -1202,7 +1202,7 @@ There are no right or wrong answers.`}
             </p>
 
             <div className="mt-10 flex justify-center md:justify-start">
-              <button
+              <button data-cta="web_in_person_reality_check_begin"
                 onClick={handleBegin}
                 className="
                   bg-black text-white font-extrabold
@@ -1284,7 +1284,7 @@ There are no right or wrong answers.`}
 
             {/* add answer */}
             <div className="mt-8 flex justify-center md:justify-start">
-              <button
+              <button data-cta="web_in_person_reality_check_add_answer"
                 onClick={handleAddAnswer}
                 className={`
                   bg-black text-white font-extrabold
@@ -1484,7 +1484,7 @@ we’ll look at patterns and talk through them together.`}
 
                 {/* back */}
                 <div className="mt-10 flex justify-center md:justify-start">
-                  <button
+                  <button data-cta="web_in_person_reality_check_back_to_activities"
                     onClick={() =>
                       navigate(`/evolve-in-person/activities?id=${id}`)
                     }
@@ -1568,7 +1568,7 @@ we’ll look at patterns and talk through them together.`}
 
                 {/* button */}
                 <div className="mt-8 flex justify-center md:justify-start">
-                  <button
+                  <button data-cta="web_in_person_reality_check_save_major_start"
                     onClick={handleSaveMajorAndStart}
                     disabled={!canProceedMajor || savingMajor}
                     className={`

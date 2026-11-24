@@ -42,7 +42,7 @@ const ProfileCreation = () => {
       intro="Map your design fundamentals, track skill development across core dimensions, and organize your work history into a visual, interactive timeline"
       features={FEATURES}
       action={
-        <CtaButton onClick={() => navigate(user ? "/app/profile" : "/signin")}>
+        <CtaButton cta="web_profile_creation_build_verified_profile" onClick={() => navigate(user ? "/app/profile" : "/signin")}>
           Build Your Verified Profile
         </CtaButton>
       }

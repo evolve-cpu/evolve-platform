@@ -13,7 +13,7 @@ export default function MentorshipJoinCard({ fmt, joinEnabled, gateCaption, join
         <p className="text-white font-bold text-lg mt-1">{fmt?.date || "To be scheduled"}</p>
         {fmt && <p className="text-evolve-yellow font-bold text-sm mt-1">{fmt.time}</p>}
       </div>
-      <button
+      <button data-cta="app_mentorship_join_call"
         disabled={!joinEnabled}
         onClick={() => joinEnabled && window.open(joinLink, "_blank", "noopener,noreferrer")}
         className={`w-full font-bold text-sm rounded-2xl py-3.5 flex items-center justify-center gap-2 active:opacity-80 transition-opacity ${

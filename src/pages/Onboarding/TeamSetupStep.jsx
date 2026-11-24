@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ctaSlug } from "../../utils/analytics";
 // import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 
 const ORG_TYPES = [
@@ -45,7 +46,7 @@ export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
             {ORG_TYPES.map(t => {
               const isSelected = orgType === t.value;
               return (
-                <button
+                <button data-cta={`app_onboarding_team_type_${ctaSlug(t.value)}`}
                   key={t.value}
                   onClick={() => setOrgType(t.value)}
                   className="w-full text-left rounded-2xl border p-4 flex items-center gap-3 transition-colors"
@@ -66,13 +67,13 @@ export default function TeamSetupStep({ onBack, onContinue, presetOrgType }) {
         </div>
 
         <div className="w-full flex gap-3 mt-2">
-          <button
+          <button data-cta="app_onboarding_team_back"
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
             Back
           </button>
-          <button
+          <button data-cta="app_onboarding_team_continue"
             onClick={() => canContinue && onContinue({ name: name.trim(), org_type: orgType })}
             disabled={!canContinue}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"

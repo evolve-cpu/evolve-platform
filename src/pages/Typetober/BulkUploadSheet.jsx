@@ -12,6 +12,7 @@ import {
   guessLetterFromName,
   postOrder
 } from "./lib/upload";
+import { ctaSlug, ctaArea } from "../../utils/analytics";
 
 const MAX_IMAGES = 60;
 const RECOGNISE_BATCH = 12; // matches RECOGNISE_MAX_IMAGES on the server
@@ -500,14 +501,14 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
         {error && <p className="text-red-400 text-[13px] mb-2">{error}</p>}
         <div className="flex gap-2">
           {count < MAX_IMAGES && (
-            <button
+            <button data-cta={`${ctaArea()}_typetober_bulk_add_more`}
               onClick={() => fileRef.current?.click()}
               className="flex-none px-4 rounded-2xl bg-white/10 font-bold text-[14px]"
             >
               Add more
             </button>
           )}
-          <button
+          <button data-cta={`${ctaArea()}_typetober_bulk_continue`}
             disabled={!count || unmapped.length > 0}
             onClick={() => {
               setSelected(null);
@@ -570,7 +571,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
             Pick all your letters at once. We'll work out which letter each image is, you fix any we miss, then
             pay once: {PRICE[currency]} per image.
           </p>
-          <button
+          <button data-cta={`${ctaArea()}_typetober_bulk_choose_images`}
             onClick={() => fileRef.current?.click()}
             className="w-full mt-5 rounded-3xl border-2 border-dashed border-white/20 hover:border-evolve-yellow/60 py-12 px-4 text-center"
           >
@@ -611,7 +612,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
               ["INR", "India · ₹10 each"],
               ["USD", "International · $1 each"]
             ].map(([c, label]) => (
-              <button
+              <button data-cta={`${ctaArea()}_typetober_bulk_currency_${ctaSlug(c)}`}
                 key={c}
                 role="radio"
                 aria-checked={currency === c}
@@ -648,7 +649,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
             These are my own work and I agree to the terms. Payments are final.
           </label>
           {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
-          <button
+          <button data-cta={`${ctaArea()}_typetober_bulk_pay_submit`}
             disabled={!agree || busy}
             onClick={pay}
             className="tt-btn tt-btn-dark w-full mt-4 py-3.5 rounded-2xl font-extrabold text-[17px] disabled:opacity-40"
@@ -687,7 +688,7 @@ export default function BulkUploadSheet({ open, onClose, user, onSuccess }) {
               </div>
             ))}
           </div>
-          <button onClick={onClose} className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl">
+          <button data-cta={`${ctaArea()}_typetober_bulk_see_on_wall`} onClick={onClose} className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl">
             See them on the wall
           </button>
         </>

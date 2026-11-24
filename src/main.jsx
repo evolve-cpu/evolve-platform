@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./index.css";
 import { trackVisit } from "./lib/platformAnalytics";
 import { devRedirectGate } from "./lib/devRedirect";
+import { initCtaTracking } from "./utils/analytics";
 
 // On the dev host, non-admins are sent to production before anything renders.
 devRedirectGate().then((stay) => {
@@ -11,6 +12,8 @@ devRedirectGate().then((stay) => {
 
   // before the first render — AuthContext strips OAuth params from the URL
   trackVisit();
+  // GA4 cta_click for every element with a data-cta attribute
+  initCtaTracking();
 
   const rootElement = document.getElementById("root");
   const app = (

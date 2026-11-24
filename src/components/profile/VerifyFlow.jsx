@@ -155,7 +155,7 @@ export function VerifyCard({
             value={shareUrl}
             className="flex-1 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-lg px-3 py-2 outline-none"
           />
-          <button
+          <button data-cta="app_verify_copy_link"
             type="button"
             onClick={onCopyLink}
             className="text-evolve-yellow text-xs font-semibold px-3 py-2 rounded-lg border border-evolve-yellow/40 hover:bg-evolve-yellow/10 flex-shrink-0"
@@ -163,7 +163,7 @@ export function VerifyCard({
             {copied ? "Copied ✓" : "Copy"}
           </button>
         </div>
-        <button
+        <button data-cta="app_verify_unpublish"
           type="button"
           onClick={onUnpublish}
           className="self-start text-white/40 text-[11px] font-semibold hover:text-white/70"
@@ -189,7 +189,7 @@ export function VerifyCard({
             </p>
           </div>
         </div>
-        <VerifyPrimaryButton onClick={onPublish} disabled={publishing}>
+        <VerifyPrimaryButton data-cta="app_verify_publish_profile" onClick={onPublish} disabled={publishing}>
           {publishing ? "Publishing…" : "Publish profile"}
           <ArrowIcon />
         </VerifyPrimaryButton>
@@ -212,7 +212,7 @@ export function VerifyCard({
             </p>
           </div>
         </div>
-        <VerifyPrimaryButton onClick={onReapply}>
+        <VerifyPrimaryButton data-cta="app_verify_reupload_reapply" onClick={onReapply}>
           Re-upload &amp; reapply
           <ArrowIcon />
         </VerifyPrimaryButton>
@@ -236,7 +236,7 @@ export function VerifyCard({
           </div>
         </div>
         {meetLink && (
-          <a
+          <a data-cta="app_verify_call_link"
             href={meetLink}
             target="_blank"
             rel="noreferrer"
@@ -265,7 +265,7 @@ export function VerifyCard({
             </p>
             <div className="flex items-center gap-3 mt-1.5">
               {!meetLink && slot && (
-                <button
+                <button data-cta="app_verify_reschedule"
                   type="button"
                   onClick={onReschedule}
                   className="text-white/40 text-[11px] font-semibold hover:text-white/70"
@@ -274,7 +274,7 @@ export function VerifyCard({
                 </button>
               )}
               {meetLink && (
-                <a
+                <a data-cta="app_verify_join_call"
                   href={meetLink}
                   target="_blank"
                   rel="noreferrer"
@@ -306,7 +306,7 @@ export function VerifyCard({
           </p>
         </div>
       </div>
-      <VerifyPrimaryButton onClick={onStart}>
+      <VerifyPrimaryButton data-cta="app_verify_start_verification" onClick={onStart}>
         Start verification
         <ArrowIcon />
       </VerifyPrimaryButton>
@@ -551,7 +551,7 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
               placeholder={currentQuestion.placeholder}
             />
             <div className="flex-1" />
-            <VerifyPrimaryButton
+            <VerifyPrimaryButton data-cta="app_verify_flow_continue"
               disabled={!canContinue}
               onClick={() => setStep((s) => s + 1)}
             >
@@ -605,7 +605,7 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
               {slots?.map((s) => {
                 const active = selectedSlot?.id === s.id;
                 return (
-                  <button
+                  <button data-cta="app_verify_flow_pick_slot"
                     key={s.id}
                     type="button"
                     onClick={() => setSelectedSlot(s)}
@@ -625,7 +625,7 @@ export function VerifyFlowModal({ open, user, startAtSlot, initialAnswers, onClo
             {error && <p className="text-red-400 text-xs">{error}</p>}
 
             <div className="flex-1" />
-            <VerifyPrimaryButton
+            <VerifyPrimaryButton data-cta="app_verify_flow_confirm_booking"
               disabled={!selectedSlot || submitting}
               onClick={handleConfirmBooking}
             >

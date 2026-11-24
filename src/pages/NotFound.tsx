@@ -23,7 +23,7 @@ const NotFound = () => {
         <p className="mb-8 text-xl text-evolve-gray">
           Oops! This page seems to have evolved into something else.
         </p>
-        <a href="/" className="btn-primary">
+        <a data-cta="web_404_return_home" href="/" className="btn-primary">
           Return to Home
         </a>
       </div>

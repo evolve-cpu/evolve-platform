@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ctaSlug } from "../../utils/analytics";
 // import GrowthMascot from "../../components/GrowthMascot"; // growth feature disabled
 
 const ORG_TYPES = [
@@ -52,7 +53,7 @@ export default function OrgTypeStep({ onBack, onContinue }) {
           {ORG_TYPES.map((opt) => {
             const isSelected = selected === opt.value;
             return (
-              <button
+              <button data-cta={`app_onboarding_org_type_${ctaSlug(opt.value)}`}
                 key={opt.value}
                 onClick={() => setSelected(opt.value)}
                 className="w-full text-left rounded-2xl border p-5 flex items-start gap-4 transition-colors"
@@ -90,13 +91,13 @@ export default function OrgTypeStep({ onBack, onContinue }) {
         </div>
 
         <div className="w-full flex gap-3 mt-2">
-          <button
+          <button data-cta="app_onboarding_org_type_back"
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
             Back
           </button>
-          <button
+          <button data-cta="app_onboarding_org_type_continue"
             onClick={() => selected && onContinue(selected)}
             disabled={!selected}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"

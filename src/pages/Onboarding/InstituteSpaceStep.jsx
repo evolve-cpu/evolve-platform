@@ -213,7 +213,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                   className={`w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none border ${errCls(touched && !noWebsite && !linkInput.trim())} focus:border-evolve-lavender-indigo/70`}
                   style={inputStyle}
                 />
-                <button
+                <button data-cta="app_onboarding_space_no_website"
                   onClick={() => setNoWebsite(true)}
                   className="text-white/40 text-xs underline underline-offset-2 mt-3 hover:text-white/70 transition-colors"
                 >
@@ -264,7 +264,7 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
                     />
                   </Field>
                 </div>
-                <button
+                <button data-cta="app_onboarding_space_use_website"
                   onClick={() => setNoWebsite(false)}
                   className="text-white/40 text-xs underline underline-offset-2 hover:text-white/70 transition-colors self-start"
                 >
@@ -329,13 +329,13 @@ export default function InstituteSpaceStep({ initial, onBack, onSubmit, submitti
 
         {phase === "form" && (
           <div className="w-full flex gap-3 mt-2">
-            <button
+            <button data-cta="app_onboarding_space_back"
               onClick={onBack}
               className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
             >
               Back
             </button>
-            <button
+            <button data-cta="app_onboarding_space_build_my_space"
               onClick={buildSpace}
               className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98]"
             >

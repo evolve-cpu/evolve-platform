@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import gsap from "gsap";
 import { cross_line_pink } from "../../assets/images/Nav";
 import { SITE_NAV_ITEMS } from "../../components/Navigation";
+import { ctaSlug, ctaArea } from "../../utils/analytics";
 
 // The main site nav's own items (src/components/Navigation.jsx) — the same
 // menu, just recoloured dark-bg/yellow-text per the brief, instead of the
@@ -88,7 +89,7 @@ export default function TypetoberNav({
       {/* Floating icon buttons — no shared bar/logo, matches the reference design. */}
       <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-3 pt-3 md:px-6 md:pt-5 pointer-events-none">
         {onBack ? (
-          <button
+          <button data-cta={`${ctaArea()}_typetober_nav_back_to_platform`}
             onClick={onBack}
             className="tt-ibtn tt-ibtn-wide pointer-events-auto"
             aria-label="back to my platform"
@@ -110,7 +111,7 @@ export default function TypetoberNav({
             </span>
           </button>
         ) : (
-          <button
+          <button data-cta={`${ctaArea()}_typetober_nav_menu_toggle`}
             onClick={() => setMenuOpen((v) => !v)}
             className="tt-ibtn pointer-events-auto"
             aria-label="open menu"
@@ -134,7 +135,7 @@ export default function TypetoberNav({
         )}
 
         <div className="flex items-center gap-2 pointer-events-auto">
-          <a
+          <a data-cta={`${ctaArea()}_typetober_nav_join_community`}
             href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"
@@ -146,7 +147,7 @@ export default function TypetoberNav({
             </svg>
             <span className="hidden md:inline text-[14px] font-bold text-white">Join community</span>
           </a>
-          <button onClick={onPrize} aria-label="Prizes" className="tt-ibtn">
+          <button data-cta={`${ctaArea()}_typetober_nav_prizes`} onClick={onPrize} aria-label="Prizes" className="tt-ibtn">
             <svg
               viewBox="0 0 24 24"
               width="20"
@@ -160,7 +161,7 @@ export default function TypetoberNav({
               <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
             </svg>
           </button>
-          <button onClick={onGuide} aria-label="Guidelines" className="tt-ibtn">
+          <button data-cta={`${ctaArea()}_typetober_nav_guidelines`} onClick={onGuide} aria-label="Guidelines" className="tt-ibtn">
             <svg
               viewBox="0 0 24 24"
               width="20"
@@ -175,7 +176,7 @@ export default function TypetoberNav({
             </svg>
           </button>
           {user && (
-            <button
+            <button data-cta={`${ctaArea()}_typetober_nav_profile`}
               onClick={onAvatarClick}
               className="tt-ibtn tt-ibtn-wide"
               aria-label="your profile"
@@ -211,7 +212,7 @@ export default function TypetoberNav({
                   <div className="flex flex-col items-start space-y-1.5">
                     {NAV_ITEMS.map((item) =>
                       item.isModal ? (
-                        <button
+                        <button data-cta={`${ctaArea()}_typetober_nav_menu_${ctaSlug(item.label)}`}
                           key={item.path}
                           onClick={() => {
                             setMenuOpen(false);
@@ -225,7 +226,7 @@ export default function TypetoberNav({
                           {item.label}
                         </button>
                       ) : (
-                        <button
+                        <button data-cta={`${ctaArea()}_typetober_nav_menu_${ctaSlug(item.label)}`}
                           key={item.path}
                           onClick={() => {
                             setMenuOpen(false);

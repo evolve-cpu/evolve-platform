@@ -257,7 +257,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
         ? <AnantPortfolioNav onLogoClick={onBackToCommunity} />
         : <BlackNav onLogoClick={onBackToCommunity} />}
       <div className="absolute top-20 left-6 z-50">
-        <button
+        <button data-cta="web_portfolio_review_form_success_back_to_community"
           onClick={onBackToCommunity}
           className="text-xs hover:opacity-80 transition-colors flex items-center gap-1 font-semibold"
           style={{ color: isAnant ? "#3b82f6" : "#FFD007" }}
@@ -338,7 +338,7 @@ function SuccessScreen({ onBackToCommunity, onApplyMentorship }) {
                 </p>
 
                 {/* Mentorship CTA card */}
-                <button
+                <button data-cta="web_portfolio_review_form_success_apply_mentorship"
                   onClick={onApplyMentorship}
                   className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-yellow-300 hover:border-evolve-yellow transition-colors"
                   style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
@@ -597,7 +597,7 @@ function MobileForm({
           </p>
           {/* Tabs */}
           <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: T.border }}>
-            <button
+            <button data-cta="web_portfolio_review_form_paste_link"
               onClick={() => setPortfolioMode("link")}
               className="flex-1 py-3 text-sm font-bold transition-colors"
               style={{
@@ -609,7 +609,7 @@ function MobileForm({
             >
               paste a link
             </button>
-            <button
+            <button data-cta="web_portfolio_review_form_upload_file"
               type="button"
               onClick={() => setPortfolioMode("file")}
               className="flex-1 py-3 text-sm font-bold transition-colors"
@@ -813,7 +813,7 @@ function MobileForm({
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <button
+        <button data-cta="web_portfolio_review_form_submit"
           onClick={handleSubmit}
           disabled={submitting}
           className="w-full flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -992,7 +992,7 @@ function DesktopForm({
               </p>
 
               <div className="pl-10 flex gap-2">
-                <button
+                <button data-cta="web_portfolio_review_form_paste_link"
                   onClick={() => setPortfolioMode("link")}
                   className="px-4 py-2 rounded-xl text-sm font-bold border transition-all"
                   style={{
@@ -1003,7 +1003,7 @@ function DesktopForm({
                 >
                   paste a link
                 </button>
-                <button
+                <button data-cta="web_portfolio_review_form_upload_file"
                   onClick={() => setPortfolioMode("file")}
                   className="px-4 py-2 rounded-xl text-sm font-bold border transition-all"
                   style={{
@@ -1222,7 +1222,7 @@ function DesktopForm({
 
             {error && <p className="text-red-400 text-sm pl-10">{error}</p>}
 
-            <button
+            <button data-cta="web_portfolio_review_form_submit"
               onClick={handleSubmit}
               disabled={submitting}
               className="ml-10 w-full flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl py-4 disabled:opacity-40 active:opacity-80 transition-opacity"

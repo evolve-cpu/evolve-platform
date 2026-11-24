@@ -327,7 +327,7 @@ export default function StudentOnboarding({
         >
           <OnboardingProgressBar step={2} total={2} />
           {onBack && (
-            <button
+            <button data-cta="app_onboarding_professional_back"
               onClick={onBack}
               className="self-start text-white/40 text-xs font-semibold hover:text-white/70 transition-colors"
             >
@@ -418,7 +418,7 @@ export default function StudentOnboarding({
             <p className="text-red-400 text-xs">{detailsError}</p>
           )}
 
-          <button
+          <button data-cta="app_onboarding_professional_continue"
             onClick={handleSubmitProfessional}
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
@@ -455,7 +455,7 @@ export default function StudentOnboarding({
           style={{ backgroundColor: "#1c1c1f" }}
         >
           <OnboardingProgressBar step={3} total={3} />
-          <button
+          <button data-cta="app_onboarding_student_details_back"
             onClick={() => setPhase("upload")}
             className="self-start text-white/40 text-xs font-semibold hover:text-white/70 transition-colors"
           >
@@ -538,7 +538,7 @@ export default function StudentOnboarding({
             <p className="text-red-400 text-xs">{detailsError}</p>
           )}
 
-          <button
+          <button data-cta="app_onboarding_student_details_continue"
             onClick={handleSubmitDetails}
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"
@@ -568,7 +568,7 @@ export default function StudentOnboarding({
       >
         <OnboardingProgressBar step={2} total={3} />
         {onBack && (
-          <button
+          <button data-cta="app_onboarding_student_id_back"
             onClick={onBack}
             className="self-start text-white/40 text-xs font-semibold hover:text-white/70 transition-colors"
           >
@@ -647,14 +647,14 @@ export default function StudentOnboarding({
           )}
         </div>
 
-        <button
+        <button data-cta="app_onboarding_student_id_enter_manually"
           onClick={goToManualDetails}
           className="self-start text-white/50 text-xs font-semibold underline hover:text-white/80 transition-colors"
         >
           Prefer to type it in? Enter details manually
         </button>
 
-        <button
+        <button data-cta="app_onboarding_student_id_continue"
           onClick={handleContinueUpload}
           disabled={!file || uploading}
           className="flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-40 transition-opacity active:scale-[0.98] mt-2"

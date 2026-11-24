@@ -24,6 +24,7 @@ import {
   upload_portfolio,
   upload_resume
 } from "../assets/images/Mentorship";
+import { ctaSlug } from "../utils/analytics";
 
 /* ─── Session date/time helpers ───────────────────────────────────────────── */
 function formatSessionDate(datetimeStr) {
@@ -244,7 +245,7 @@ function ProfileSheet({ user, onClose }) {
                 </div>
               ))}
             </div>
-            <button
+            <button data-cta="app_session_download_receipt"
               onClick={downloadReceipt}
               className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs rounded-xl py-2.5 active:opacity-80"
             >
@@ -255,7 +256,7 @@ function ProfileSheet({ user, onClose }) {
 
         <div className="h-px bg-white/10" />
 
-        <button
+        <button data-cta="app_session_sign_out"
           onClick={handleSignOut}
           className="text-left text-sm text-red-400 font-semibold hover:opacity-80 transition-opacity"
         >
@@ -361,7 +362,7 @@ function WelcomeScreen({ user, onGetStarted, onBack }) {
           mentorship program
         </p>
 
-        <button
+        <button data-cta="app_session_get_started"
           onClick={onGetStarted}
           className="flex items-center gap-2 font-bold rounded-2xl active:opacity-80 transition-opacity"
           style={{
@@ -597,7 +598,7 @@ function ProfileSetupScreen({ user, onSubmitDone, onBack }) {
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
         {/* submit */}
-        <button
+        <button data-cta="app_session_onboarding_submit"
           onClick={handleSubmit}
           disabled={!canSubmit}
           className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl transition-opacity"
@@ -766,7 +767,7 @@ function FeedbackPopup({ session, user, onClose }) {
 
             {/* Buttons pinned to bottom */}
             <div className="mt-5">
-              <button
+              <button data-cta="app_session_feedback_submit"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl transition-opacity mb-4"
@@ -791,7 +792,7 @@ function FeedbackPopup({ session, user, onClose }) {
                   </svg>
                 )}
               </button>
-              <button
+              <button data-cta="app_session_feedback_did_not_attend"
                 onClick={handleDidNotAttend}
                 disabled={submitting}
                 className="w-full text-center text-sm font-medium underline underline-offset-2"
@@ -966,7 +967,7 @@ function PortfolioModal({
   };
 
   const DocRow = ({ item }) => (
-    <a
+    <a data-cta="app_session_portfolio_open_version"
       href={item.url || "#"}
       target="_blank"
       rel="noopener noreferrer"
@@ -1008,7 +1009,7 @@ function PortfolioModal({
           })}
         </p>
         {item.walkthrough && (
-          <a
+          <a data-cta="app_session_portfolio_walkthrough"
             href={item.walkthrough}
             target="_blank"
             rel="noopener noreferrer"
@@ -1185,7 +1186,7 @@ function PortfolioModal({
                   canUploadMore &&
                   !submitting;
                 return (
-                  <button
+                  <button data-cta="app_session_portfolio_submit"
                     onClick={handleSubmit}
                     disabled={!pCanSubmit}
                     className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
@@ -1283,7 +1284,7 @@ function PortfolioModal({
 
             {/* Button pinned to bottom */}
             {!_uploadsLocked && canUploadMore ? (
-              <button
+              <button data-cta="app_session_portfolio_upload_new_version"
                 onClick={() => {
                   setPortfolioUrl(latestVersion?.url ?? "");
                   setWalkthroughUrl("");
@@ -1868,7 +1869,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
                   canUploadMore &&
                   !submitting;
                 return (
-                  <button
+                  <button data-cta="app_session_resume_submit"
                     onClick={handleSubmit}
                     disabled={!rCanSubmit}
                     className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
@@ -1948,7 +1949,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               const current = reversed[0];
               const past = reversed.slice(1);
               const ResumeRow = ({ v }) => (
-                <a
+                <a data-cta="app_session_resume_open_version"
                   key={v.id}
                   href={v.resume_url || "#"}
                   target="_blank"
@@ -2025,7 +2026,7 @@ function ResumeModal({ user, batchId, versions, sessions, onClose, onSaved }) {
               );
             })()}
             {!_rUploadsLocked && canUploadMore ? (
-              <button
+              <button data-cta="app_session_resume_upload_new_version"
                 onClick={() => {
                   setResumeUrl("");
                   setNotes("");
@@ -2299,7 +2300,7 @@ function OnboardingCompleteScreen({
 
     // Shared document rows
     const accelDocRow = (icon, label, onClick, active = true) => (
-      <button
+      <button data-cta={`app_session_doc_${ctaSlug(label)}`}
         key={label}
         onClick={onClick}
         disabled={!active}
@@ -2426,7 +2427,7 @@ function OnboardingCompleteScreen({
                 : accelDocRow(upload_sheet, "google sheet", null, false)}
             </div>
 
-            <button
+            <button data-cta="app_session_view_past_sessions"
               onClick={onViewPastSessions}
               className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-4"
               style={{
@@ -2587,7 +2588,7 @@ function OnboardingCompleteScreen({
             </div>
 
             {/* Book button */}
-            <a
+            <a data-cta="app_session_bonus_book_call"
               href={localBonus?.booking_link || "#"}
               target={localBonus?.booking_link ? "_blank" : undefined}
               rel="noopener noreferrer"
@@ -2662,7 +2663,7 @@ function OnboardingCompleteScreen({
                 {upcomingCall.duration_minutes || 30} mins ·{" "}
                 {upcomingCall.platform || "google meet"}
               </p>
-              <a
+              <a data-cta="app_session_join_call"
                 href={canJoinCall ? upcomingCall.meeting_link || "#" : "#"}
                 onClick={!canJoinCall ? (e) => e.preventDefault() : undefined}
                 target={
@@ -2760,7 +2761,7 @@ function OnboardingCompleteScreen({
           </div>
 
           {/* View past sessions */}
-          <button
+          <button data-cta="app_session_view_past_sessions"
             onClick={onViewPastSessions}
             className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl py-4"
             style={{
@@ -2956,7 +2957,7 @@ function OnboardingCompleteScreen({
                             </p>
                           </div>
                           {/* arrow → session detail */}
-                          <button
+                          <button data-cta="app_session_upcoming_view_session"
                             onClick={() =>
                               onViewSessions(upcomingSession.session_number - 1)
                             }
@@ -2989,7 +2990,7 @@ function OnboardingCompleteScreen({
                     {/* ── Join button — outside the card ── */}
                     <div className="mt-3">
                       {canJoin ? (
-                        <a
+                        <a data-cta="app_session_join_session"
                           href={upcomingSession.meet_link}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -3069,7 +3070,7 @@ function OnboardingCompleteScreen({
               <>
                 <p className="text-white/35 text-sm mb-3 mt-1">my documents</p>
                 <div className="flex flex-col gap-2 mb-5">
-                  <a
+                  <a data-cta="app_session_portfolio_report"
                     href={reportUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -3124,7 +3125,7 @@ function OnboardingCompleteScreen({
                 );
                 const sheetRow = (label, showNew) =>
                   googleSheetUrl ? (
-                    <a
+                    <a data-cta="app_session_google_sheet"
                       key="sheet"
                       href={googleSheetUrl}
                       target="_blank"
@@ -3200,7 +3201,7 @@ function OnboardingCompleteScreen({
                     </div>
                   );
                 const portfolioRow = (label) => (
-                  <button
+                  <button data-cta="app_session_upload_portfolio"
                     key="portfolio"
                     onClick={() => setShowPortfolioModal(true)}
                     className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
@@ -3219,7 +3220,7 @@ function OnboardingCompleteScreen({
                   </button>
                 );
                 const resumeRow = (label) => (
-                  <button
+                  <button data-cta="app_session_upload_resume"
                     key="resume"
                     onClick={() => setShowResumeModal(true)}
                     className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:opacity-75"
@@ -3238,7 +3239,7 @@ function OnboardingCompleteScreen({
                   </button>
                 );
                 const reviewRow = reportUrl ? (
-                  <a
+                  <a data-cta="app_session_portfolio_review_report"
                     key="review"
                     href={reportUrl}
                     target="_blank"
@@ -3493,7 +3494,7 @@ function OnboardingCompleteScreen({
                   )
                 }
               ].map((r) => (
-                <a
+                <a data-cta={`app_session_resource_${ctaSlug(r.label)}`}
                   key={r.label}
                   href={r.url}
                   target="_blank"
@@ -3526,7 +3527,7 @@ function OnboardingCompleteScreen({
 
         {/* view past sessions — shown when at least one recorded session exists */}
         {hasPastRecordings && (
-          <button
+          <button data-cta="app_session_view_past_sessions"
             onClick={onViewPastSessions}
             className="w-full flex items-center justify-center gap-2 font-bold rounded-2xl mt-8 py-4"
             style={{
@@ -3652,7 +3653,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
               const s = sessions[i];
               const isActive = activeTab === i;
               return (
-                <button
+                <button data-cta="app_session_tab_session"
                   key={i}
                   onClick={() => setActiveTab(i)}
                   className="flex-1 min-w-0 py-1.5 rounded-lg text-[11px] font-semibold transition-colors text-center"
@@ -3746,7 +3747,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           </h2>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12">
             {EVOLVE_TEAM.map((member) => (
-              <a
+              <a data-cta="app_session_team_linkedin"
                 key={member.name}
                 href={member.linkedin || undefined}
                 target={member.linkedin ? "_blank" : undefined}
@@ -3833,7 +3834,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           <div className="flex flex-col mb-8">
             {SESSION_FAQS.map((faq, i) => (
               <div key={i}>
-                <button
+                <button data-cta="app_session_faq_toggle"
                   onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                   className="w-full flex items-start justify-between gap-4 py-4 text-left"
                 >
@@ -3859,7 +3860,7 @@ function SessionDetailScreen({ batchId, defaultSessionIndex = 0, onBack }) {
           {/* Contact */}
           <p className="text-white/40 text-sm">
             have more questions?{" "}
-            <a
+            <a data-cta="app_session_whatsapp_connect"
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship%20session"
               target="_blank"
               rel="noopener noreferrer"
@@ -3905,7 +3906,7 @@ function CommentBubble({ comment, onReply, isReply }) {
         </div>
         <p className="text-white/70 text-sm leading-relaxed">{comment.body}</p>
         {!isReply && onReply && (
-          <button
+          <button data-cta="app_session_comment_reply"
             onClick={onReply}
             className="text-[11px] text-white/30 mt-1 hover:text-white/60 transition-colors"
           >
@@ -3981,7 +3982,7 @@ function CommentsSection({ session, user }) {
           placeholder="share something with the group…"
           className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
         />
-        <button
+        <button data-cta="app_session_comment_post"
           onClick={() => post(newComment, null, () => setNewComment(""))}
           disabled={!newComment.trim() || posting}
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
@@ -4038,7 +4039,7 @@ function CommentsSection({ session, user }) {
                       if (e.key === "Escape") setReplyTo(null);
                     }}
                   />
-                  <button
+                  <button data-cta="app_session_comment_send_reply"
                     onClick={() =>
                       post(replyText, comment.id, () => {
                         setReplyText("");
@@ -4135,7 +4136,7 @@ function PastSessionsScreen({ batchId, onSelectSession, onBack }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {sessions.map((session) => (
-              <button
+              <button data-cta="app_session_recording_open"
                 key={session.id}
                 onClick={() => onSelectSession(session)}
                 className="text-left"
@@ -4324,7 +4325,7 @@ function SessionPlayerScreen({ session, user, onBack }) {
             const key =
               label === "summary + transcript" ? "summary" : "comments";
             return (
-              <button
+              <button data-cta={`app_session_recording_tab_${ctaSlug(label)}`}
                 key={label}
                 onClick={() => setActiveTab(key)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"

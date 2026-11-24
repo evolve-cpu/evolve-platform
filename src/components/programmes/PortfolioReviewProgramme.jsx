@@ -1317,7 +1317,7 @@ function BookModal({ user, onClose, onSuccess }) {
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
             {isSupportedStream ? (
-              <button
+              <button data-cta={hasFreeReview ? "app_portfolio_review_book_free_review" : "app_portfolio_review_proceed_to_pay"}
                 onClick={hasFreeReview ? handleRedeemFree : handlePay}
                 disabled={paying || phone.trim().length < 10}
                 className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -1329,7 +1329,7 @@ function BookModal({ user, onClose, onSuccess }) {
                     : "Proceed to payment →"}
               </button>
             ) : (
-              <button
+              <button data-cta="app_portfolio_review_join_waitlist"
                 onClick={handleJoinWaitlist}
                 disabled={paying || phone.trim().length < 10 || !streamChoice}
                 className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -1408,7 +1408,7 @@ function BookModal({ user, onClose, onSuccess }) {
                 again. Nothing's lost.
               </p>
             </div>
-            <button
+            <button data-cta="app_portfolio_review_payment_try_again"
               onClick={() => confirmPayment(pendingPayload)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -1442,7 +1442,7 @@ function BookModal({ user, onClose, onSuccess }) {
                 Let's get your pre-review questionnaire out of the way.
               </p>
             </div>
-            <button
+            <button data-cta="app_portfolio_review_start_your_review"
               onClick={() => onSuccess(confirmedRow)}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -1464,7 +1464,7 @@ function BookModal({ user, onClose, onSuccess }) {
                 Nothing was charged — try again when ready.
               </p>
             </div>
-            <button
+            <button data-cta="app_portfolio_review_payment_retry"
               onClick={() => setStep("form")}
               className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -1582,7 +1582,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
   return (
     <div className="flex flex-col gap-14">
       {onBack && (
-        <button
+        <button data-cta="app_portfolio_review_back"
           onClick={onBack}
           className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold w-fit transition-colors"
         >
@@ -1621,7 +1621,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
           <Chip>Written report</Chip>
           <Chip>1 free follow-up</Chip>
         </div>
-        <button
+        <button data-cta="app_portfolio_review_see_whats_included"
           onClick={() =>
             document
               .getElementById("pr-pricing")
@@ -1730,7 +1730,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
               actionable fixes, and a free follow-up once you've made your
               revisions.
             </p>
-            <button
+            <button data-cta="app_portfolio_review_get_started_hero"
               onClick={() => setBookOpen(true)}
               className="mt-2 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80 w-fit px-6"
             >
@@ -1788,7 +1788,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
               actionable fixes, and a free follow-up call once you've made your
               revisions. Everything is built around your goals.
             </p>
-            <button
+            <button data-cta="app_portfolio_review_get_started_pricing"
               onClick={() => setBookOpen(true)}
               className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 active:opacity-80"
             >
@@ -1852,7 +1852,7 @@ export default function PortfolioReviewProgramme({ user, onBack }) {
             ₹2,500 · live 1:1 review + written report + free follow-up
           </p>
         </div>
-        <button
+        <button data-cta="app_portfolio_review_get_started_bottom"
           onClick={() => setBookOpen(true)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 active:opacity-80 flex-shrink-0"
         >

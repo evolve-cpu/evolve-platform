@@ -207,7 +207,7 @@ function StudentPricing({ user, onStudentId }) {
         {inr(s.monthly)} a month instead of {inr(p.monthly)}.
       </span>
       {!open ? (
-        <button
+        <button data-cta="app_plans_im_a_student"
           type="button"
           className="at-btn ghost"
           style={{ alignSelf: "flex-start" }}
@@ -226,7 +226,7 @@ function StudentPricing({ user, onStudentId }) {
             }}
             style={{ fontSize: 13, color: "var(--at-mute)" }}
           />
-          <button
+          <button data-cta="app_plans_upload_student_id"
             type="button"
             className="at-btn"
             style={{ alignSelf: "flex-start" }}
@@ -286,7 +286,7 @@ function CouponCard({ coupon, redeemed, onRedeem }) {
         <span className="cp-t">Congratulations! Here’s your coupon for a year of evolve annual, free.</span>
         <div className="cp-row">
           <span className="cp-code">{coupon.code}</span>
-          <button type="button" className="at-btn" disabled={busy} onClick={() => go(coupon.code)}>
+          <button data-cta="app_plans_coupon_free_annual_access" type="button" className="at-btn" disabled={busy} onClick={() => go(coupon.code)}>
             {busy ? "Applying…" : "Avail free annual access"}
           </button>
         </div>
@@ -370,7 +370,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                 <LockRow t="Webinars" s={`${inr(ITEM_PRICES.WEBINAR)} each`} />
                 <LockRow t="Past sessions" s={`${inr(ITEM_PRICES.RECORDING)} each`} />
               </div>
-              <button type="button" className="at-btn block" onClick={() => setStep(2)}>
+              <button data-cta="app_trial_ended_lets_unlock" type="button" className="at-btn block" onClick={() => setStep(2)}>
                 Let’s unlock
               </button>
             </>
@@ -399,7 +399,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                       </div>
                     ))}
                   </div>
-                  <button type="button" className="at-btn ghost block" style={{ marginTop: "auto" }} onClick={onClose}>
+                  <button data-cta="app_trial_ended_continue_free" type="button" className="at-btn ghost block" style={{ marginTop: "auto" }} onClick={onClose}>
                     Continue
                   </button>
                 </div>
@@ -414,7 +414,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                     ))}
                     <li className="off">{IC.cross}1 free portfolio review</li>
                   </ul>
-                  <button type="button" className="at-btn block" style={{ marginTop: "auto" }} onClick={() => onSubscribe("monthly")}>
+                  <button data-cta="app_plans_subscribe_monthly" type="button" className="at-btn block" style={{ marginTop: "auto" }} onClick={() => onSubscribe("monthly")}>
                     Subscribe · {inr(m)} per month
                   </button>
                 </div>
@@ -430,7 +430,7 @@ function TrialEndedModal({ user, step, setStep, onClose, onSubscribe, onStudentI
                     ))}
                     <li>{IC.check}1 free portfolio review</li>
                   </ul>
-                  <button type="button" className="at-btn block" style={{ marginTop: "auto" }} onClick={() => onSubscribe("annual")}>
+                  <button data-cta="app_plans_subscribe_annual" type="button" className="at-btn block" style={{ marginTop: "auto" }} onClick={() => onSubscribe("annual")}>
                     Subscribe · {inr(a)} per year
                   </button>
                 </div>
@@ -533,10 +533,10 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
         <p className="at-err" style={{ textAlign: "left", marginBottom: 16 }}>
           {pay.error}
         </p>
-        <button type="button" className="at-btn block" onClick={() => go({ kind: "plan", plan: item.plan })}>
+        <button data-cta="app_pay_try_again" type="button" className="at-btn block" onClick={() => go({ kind: "plan", plan: item.plan })}>
           Try again
         </button>
-        <button type="button" className="at-link" onClick={() => onClose(false)}>
+        <button data-cta="app_pay_not_now" type="button" className="at-link" onClick={() => onClose(false)}>
           Not now
         </button>
       </>
@@ -558,7 +558,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
         <p className="at-s" style={{ textAlign: "center", margin: "6px 0 18px" }}>
           {pay.doneSub}
         </p>
-        <button type="button" className="at-btn block" onClick={() => onClose(true)}>
+        <button data-cta="app_pay_done" type="button" className="at-btn block" onClick={() => onClose(true)}>
           Done
         </button>
       </>
@@ -585,7 +585,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
         </p>
         {nudge}
         <div style={{ display: "grid", gap: 12 }}>
-          <button
+          <button data-cta="app_pay_option_direct"
             type="button"
             className={`at-opt ${pay.choice === "direct" ? "sel" : ""}`}
             onClick={() => setPay((p) => ({ ...p, choice: "direct" }))}
@@ -614,7 +614,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
               <div style={{ marginTop: 12 }}>
                 <div className="at-seg">
                   {["monthly", "annual"].map((pl) => (
-                    <button
+                    <button data-cta={`app_pay_option_subscribe_${pl}`}
                       key={pl}
                       type="button"
                       className={pay.sub === pl ? "on" : ""}
@@ -658,7 +658,7 @@ function PaySheet({ user, access, pay, setPay, spent, onClose, onFulfilled, onSt
             </div>
           )}
         </div>
-        <button type="button" className="at-btn block" style={{ marginTop: 16 }} onClick={() => go()}>
+        <button data-cta={viaSub ? "app_pay_subscribe_and_pay" : "app_pay_pay_now"} type="button" className="at-btn block" style={{ marginTop: 16 }} onClick={() => go()}>
           {viaSub ? "Subscribe and pay " : "Pay "}
           {inr(due)}
         </button>
@@ -710,7 +710,7 @@ function VipWelcome({ onClose, couponProps }) {
           <li><span className="vip-e">🤖</span>AI Assistant</li>
         </ul>
         <CouponCard {...couponProps} />
-        <button type="button" className="ev-btn" onClick={onClose}>
+        <button data-cta="app_vip_welcome_explore_access" type="button" className="ev-btn" onClick={onClose}>
           Explore Your Access {ArrowRight}
         </button>
       </div>
@@ -742,12 +742,12 @@ function WelcomeBack({ access, onClose, onPlans }) {
           </p>
         )}
         {days > 0 ? (
-          <button type="button" className="ev-btn" onClick={onClose}>
+          <button data-cta="app_welcome_back_continue" type="button" className="ev-btn" onClick={onClose}>
             Continue {ArrowRight}
           </button>
         ) : (
           <>
-            <button type="button" className="ev-btn" onClick={onPlans}>
+            <button data-cta="app_welcome_back_see_plans" type="button" className="ev-btn" onClick={onPlans}>
               See plans {ArrowRight}
             </button>
             <button type="button" className="at-link" onClick={onClose}>
@@ -774,10 +774,10 @@ function VerifyPrompt({ onStart, onClose }) {
           Verified profiles are the ones we put in front of hiring partners. Two quick questions and a
           short call. It’s <b style={{ color: "#FFD007", fontWeight: 600 }}>free during your trial</b>.
         </p>
-        <button type="button" className="ev-btn" onClick={onStart}>
+        <button data-cta="app_verify_prompt_start_verification" type="button" className="ev-btn" onClick={onStart}>
           Start verification {ArrowRight}
         </button>
-        <button type="button" className="at-link" onClick={onClose}>
+        <button data-cta="app_verify_prompt_maybe_later" type="button" className="at-link" onClick={onClose}>
           Maybe later
         </button>
       </div>
@@ -822,7 +822,7 @@ function TrialStatus({ user, access, onClose, onCta, couponProps }) {
           <div className={`trial-banner ${c.ending ? "ending" : ""}`}>
             <span className="trial-banner-icon">{IC.clock}</span>
             <span className="trial-banner-text">{c.text}</span>
-            <button type="button" className="trial-banner-cta" onClick={onCta}>
+            <button data-cta="app_trial_status_see_plans" type="button" className="trial-banner-cta" onClick={onCta}>
               {c.cta}
             </button>
           </div>
@@ -853,7 +853,7 @@ function CouponSheet({ couponProps, onClose }) {
         </p>
         <CouponCard {...couponProps} />
         {done ? (
-          <button type="button" className="ev-btn" onClick={onClose}>
+          <button data-cta="app_coupon_sheet_done" type="button" className="ev-btn" onClick={onClose}>
             Done {ArrowRight}
           </button>
         ) : (
@@ -898,11 +898,11 @@ function VerifiedSheet({ access, onPublish, onClose }) {
               </span>
             </div>
           </div>
-          <button type="button" className="at-btn block" onClick={onPublish}>
+          <button data-cta="app_verified_publish_share" type="button" className="at-btn block" onClick={onPublish}>
             Publish &amp; share
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
-          <button type="button" className="at-link" onClick={onClose}>
+          <button data-cta="app_verified_not_now" type="button" className="at-link" onClick={onClose}>
             Not now
           </button>
         </div>

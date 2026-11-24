@@ -3,6 +3,7 @@ import { MotionConfig, motion } from "framer-motion";
 import CtaButton from "./CtaButton";
 import { mentorship, portfolio_review } from "../../assets/images/Home_images";
 import { noWidow } from "../../lib/noWidow";
+import { ctaSlug } from "../../utils/analytics";
 
 const CARDS = [
   {
@@ -100,7 +101,7 @@ const GuidanceSection = () => {
                     {noWidow(card.desc)}
                   </p>
                   <div className="mt-12 md:mt-[clamp(32px,3.3vw,64px)]">
-                    <CtaButton onClick={() => navigate(card.path)}>
+                    <CtaButton cta={`web_home_guidance_${ctaSlug(card.id)}_know_more`} onClick={() => navigate(card.path)}>
                       Know more
                     </CtaButton>
                   </div>

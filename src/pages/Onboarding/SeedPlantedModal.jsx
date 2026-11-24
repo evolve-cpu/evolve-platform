@@ -50,7 +50,7 @@ export default function SeedPlantedModal({ onContinue, spaceName }) {
           stage {stage} · {label}
         </span>
 
-        <button
+        <button data-cta="app_onboarding_seed_planted_lets_go"
           onClick={onContinue}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 mt-2 active:scale-[0.98] transition-transform"
         >

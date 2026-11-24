@@ -40,7 +40,7 @@ export default function MentorshipTeamFaqPanel() {
               <p className="text-white text-sm font-bold truncate">{member.name}</p>
               <p className="text-white/40 text-xs">{member.role}</p>
             </div>
-            <button
+            <button data-cta="app_mentorship_team_email"
               type="button"
               className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors"
               title={`email ${member.name}`}

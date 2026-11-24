@@ -65,7 +65,7 @@ const TabAction = ({ tab, onNavigate }) =>
       Coming soon...
     </p>
   ) : (
-    <CtaButton
+    <CtaButton cta={`web_home_ecosystem_${tab.id}_explore`}
       href={tab.href}
       onClick={tab.href ? undefined : () => onNavigate(tab.path)}
     >
@@ -89,7 +89,7 @@ const DesktopEcosystem = ({ onNavigate }) => {
         {TABS.map((tab) => {
           const isActive = tab.id === activeId;
           return (
-            <button
+            <button data-cta={`web_home_ecosystem_tab_${tab.id}`}
               key={tab.id}
               role="tab"
               aria-selected={isActive}

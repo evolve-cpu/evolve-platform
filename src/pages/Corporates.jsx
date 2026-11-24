@@ -132,7 +132,7 @@ export default function Corporates() {
               )}
             </p>
 
-            <button
+            <button data-cta="web_corporates_get_in_touch"
               onClick={() => openModal("contact")}
               className="mt-8 inline-flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity w-fit"
               style={{ borderRadius: 16, boxShadow: "4px 4px 0 0 #806804" }}
@@ -193,7 +193,7 @@ export default function Corporates() {
           </div>
 
           <div className="mt-10 flex justify-center">
-            <button
+            <button data-cta="web_corporates_download_handbook"
               onClick={() => openModal("handbook")}
               className="inline-flex items-center justify-center gap-2 bg-evolve-black text-evolve-yellow font-extrabold px-7 py-3.5 text-[16px] hover:opacity-90 transition-opacity"
               style={{

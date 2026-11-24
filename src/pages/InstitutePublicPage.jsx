@@ -15,6 +15,7 @@ import {
   initialsOf,
   timeAgo
 } from "../lib/orgShared";
+import { ctaSlug } from "../utils/analytics";
 
 // This page used to be split in two: /institute/:slug (public, read-only)
 // and /space/:slug (a separate admin-only console, TeamSpace.jsx). They're
@@ -69,7 +70,7 @@ function EmptyBlock({ text, sub, cta, onCta, primary }) {
       <p className="text-white/50 text-xs font-bold">{text}</p>
       {sub && <p className="text-white/25 text-[11px] max-w-xs">{sub}</p>}
       {cta && (
-        <button
+        <button data-cta={`app_space_empty_${ctaSlug(cta)}`}
           onClick={onCta}
           className={`mt-1 text-xs font-bold rounded-lg px-4 py-2 transition-colors ${
             primary ? "bg-evolve-lavender-indigo text-white" : "border border-white/15 text-white/60 hover:text-white"
@@ -1128,7 +1129,7 @@ export default function InstitutePublicPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-center px-6" style={{ backgroundColor: "#131313" }}>
         <p className="text-white font-bold text-xl">this page isn't available.</p>
         <p className="text-white/40 text-sm max-w-sm">"{slug}" may not exist, or the owner has kept this space private.</p>
-        <Link to="/" className="text-evolve-lavender-indigo text-sm font-semibold mt-2">
+        <Link data-cta="app_space_back_to_evolve" to="/" className="text-evolve-lavender-indigo text-sm font-semibold mt-2">
           back to evolve
         </Link>
       </div>
@@ -1193,7 +1194,7 @@ export default function InstitutePublicPage() {
           <span title="coming soon" className="text-white/35 text-xs font-semibold cursor-default">
             explore people
           </span>
-          <Link to="/community" className="text-white/50 hover:text-white text-xs font-semibold transition-colors">
+          <Link data-cta="app_space_nav_evolve_community" to="/community" className="text-white/50 hover:text-white text-xs font-semibold transition-colors">
             evolve community
           </Link>
         </div>
@@ -1205,7 +1206,7 @@ export default function InstitutePublicPage() {
             </svg>
           </button>
           {isOwner && (
-            <button
+            <button data-cta="app_space_nav_settings"
               onClick={() => setTab("settings")}
               title="space settings"
               className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] flex-shrink-0 transition-colors"
@@ -1223,7 +1224,7 @@ export default function InstitutePublicPage() {
             </button>
           )}
           {user?.username && (
-            <Link
+            <Link data-cta="app_space_nav_my_profile"
               to="/app/profile"
               className="w-[30px] h-[30px] rounded-full overflow-hidden flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 ml-1"
               style={{ background: "linear-gradient(135deg, rgba(163,91,251,1), #c264ff)" }}
@@ -1303,7 +1304,7 @@ export default function InstitutePublicPage() {
           <div className="sticky z-40 border-b border-white/10" style={{ top: 52, background: "rgba(19,19,19,.97)", backdropFilter: "blur(14px)" }}>
             <div className="max-w-[1080px] mx-auto flex gap-1 px-5 md:px-8 overflow-x-auto">
               {TABS.map((t) => (
-                <button
+                <button data-cta={`app_space_tab_${t.id}`}
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={`px-1 py-3.5 mr-6 text-[13px] font-semibold border-b-2 transition-colors flex items-center gap-1.5 flex-shrink-0 ${
@@ -1332,7 +1333,7 @@ export default function InstitutePublicPage() {
                         { id: "posts", label: "posts", count: updates.length },
                         { id: "pending", label: "pending review", count: pendingUpdates.length }
                       ].map((v) => (
-                        <button
+                        <button data-cta={`app_space_feed_view_${v.id}`}
                           key={v.id}
                           onClick={() => setFeedView(v.id)}
                           className={`flex items-center gap-2 text-[13px] font-bold px-4 py-2.5 rounded-lg transition-colors ${
@@ -1350,7 +1351,7 @@ export default function InstitutePublicPage() {
                     <div className="flex items-center justify-between gap-3 mb-4">
                       <p className="text-white font-extrabold text-base">institute highlights</p>
                       {canSubmitUpdate && feedView !== "pending" && (
-                        <button onClick={() => openPostModal()} className="text-xs font-bold text-evolve-lavender-indigo flex-shrink-0">
+                        <button data-cta="app_space_feed_new_post" onClick={() => openPostModal()} className="text-xs font-bold text-evolve-lavender-indigo flex-shrink-0">
                           + post
                         </button>
                       )}
@@ -1384,7 +1385,7 @@ export default function InstitutePublicPage() {
                                   <p className="text-white text-[13px] font-bold mb-1">{u.title}</p>
                                   {u.description && <p className="text-white/40 text-xs leading-relaxed">{u.description}</p>}
                                   {u.source_url && (
-                                    <a
+                                    <a data-cta="app_space_feed_view_source"
                                       href={u.source_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
@@ -1399,10 +1400,10 @@ export default function InstitutePublicPage() {
                                   </p>
                                   {isAdmin ? (
                                     <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-white/10">
-                                      <button onClick={() => removeUpdate(u.id, false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white/60 border border-white/15 rounded-lg px-3 py-1.5 hover:text-white">
+                                      <button data-cta="app_space_feed_reject_post" onClick={() => removeUpdate(u.id, false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white/60 border border-white/15 rounded-lg px-3 py-1.5 hover:text-white">
                                         ✕ reject
                                       </button>
-                                      <button onClick={() => approveUpdate(u.id)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-evolve-black bg-evolve-inchworm rounded-lg px-3 py-1.5">
+                                      <button data-cta="app_space_feed_approve_post" onClick={() => approveUpdate(u.id)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-evolve-black bg-evolve-inchworm rounded-lg px-3 py-1.5">
                                         ✓ approve
                                       </button>
                                     </div>
@@ -1438,7 +1439,7 @@ export default function InstitutePublicPage() {
                                   {u.source_url && (
                                     <>
                                       <span>·</span>
-                                      <a
+                                      <a data-cta="app_space_feed_view_source"
                                         href={u.source_url}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -1465,7 +1466,7 @@ export default function InstitutePublicPage() {
                                       <div
                                         className="absolute right-0 top-8 z-50 w-36 rounded-xl border border-white/10 bg-[#1c1c1e] shadow-xl overflow-hidden py-1"
                                       >
-                                        <button
+                                        <button data-cta="app_space_feed_edit_post"
                                           onClick={() => {
                                             setPostMenuOpenId(null);
                                             openPostModal(u);
@@ -1474,7 +1475,7 @@ export default function InstitutePublicPage() {
                                         >
                                           edit post
                                         </button>
-                                        <button
+                                        <button data-cta="app_space_feed_remove_post"
                                           onClick={() => {
                                             setPostMenuOpenId(null);
                                             removeUpdate(u.id, true);
@@ -1502,7 +1503,7 @@ export default function InstitutePublicPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <p className="text-white font-extrabold text-sm flex-1">mark your calendar</p>
                       {isAdmin && (
-                        <button onClick={openCalendarModal} title="edit calendar" className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors">
+                        <button data-cta="app_space_calendar_edit" onClick={openCalendarModal} title="edit calendar" className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                             <path d="M12 20h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                             <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -1546,7 +1547,7 @@ export default function InstitutePublicPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <p className="text-white font-extrabold text-sm flex-1">testimonials</p>
                       {(isAdmin || canAddTestimonial) && (
-                        <button
+                        <button data-cta={isAdmin ? "app_space_testimonials_edit" : "app_space_testimonials_add"}
                           onClick={openTestimonialsModal}
                           title={isAdmin ? "edit testimonials" : "add a testimonial"}
                           className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors"
@@ -1597,7 +1598,7 @@ export default function InstitutePublicPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <p className="text-white font-extrabold text-sm flex-1">mark your calendar</p>
                   {isAdmin && (
-                    <button onClick={openCalendarModal} title="edit calendar" className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors">
+                    <button data-cta="app_space_calendar_edit" onClick={openCalendarModal} title="edit calendar" className="text-white/40 hover:text-evolve-lavender-indigo w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/[0.06] flex-shrink-0 transition-colors">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <path d="M12 20h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                         <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -1658,13 +1659,13 @@ export default function InstitutePublicPage() {
                           >
                             cancel
                           </button>
-                          <button onClick={saveProgramme} disabled={programmeSaving} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
+                          <button data-cta="app_space_programme_save" onClick={saveProgramme} disabled={programmeSaving} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
                             {programmeSaving ? "saving…" : "save changes"}
                           </button>
                         </div>
                       </>
                     ) : (
-                      <button onClick={() => setProgrammeEditOpen(true)} className="text-evolve-lavender-indigo text-xs font-bold">
+                      <button data-cta="app_space_programme_edit_what_we_do" onClick={() => setProgrammeEditOpen(true)} className="text-evolve-lavender-indigo text-xs font-bold">
                         edit "what we do" →
                       </button>
                     )}
@@ -1697,7 +1698,7 @@ export default function InstitutePublicPage() {
                             ))}
                           </div>
                           <div className="flex items-center justify-between gap-2 pt-3 mt-1 border-t border-white/10">
-                            <a
+                            <a data-cta="app_space_programs_explore"
                               href={p.href}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -1714,7 +1715,7 @@ export default function InstitutePublicPage() {
                       </div>
                     ))}
                     {isAdmin && (
-                      <button
+                      <button data-cta="app_space_programs_request_tailored"
                         onClick={() => {
                           setReqMessage("");
                           setProgramModalOpen(true);
@@ -1768,7 +1769,7 @@ export default function InstitutePublicPage() {
                         className="flex-1 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none border border-white/10 focus:border-evolve-yellow/50"
                         style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                       />
-                      <button onClick={handleSimpleInvite} disabled={inviting || !inviteEmail.trim()} className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-xl px-5 disabled:opacity-30">
+                      <button data-cta="app_space_team_quick_invite" onClick={handleSimpleInvite} disabled={inviting || !inviteEmail.trim()} className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-xl px-5 disabled:opacity-30">
                         {inviting ? "sending…" : "invite"}
                       </button>
                     </div>
@@ -1809,7 +1810,7 @@ export default function InstitutePublicPage() {
                           <>
                             <div className="fixed inset-0 z-10" onClick={() => setInviteDdOpen(false)} />
                             <div className="absolute top-[calc(100%+8px)] right-0 w-[250px] bg-[#232325] border border-white/15 rounded-xl shadow-2xl p-1.5 z-20">
-                              <button onClick={() => openTeamModal("one")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
+                              <button data-cta="app_space_team_add_one" onClick={() => openTeamModal("one")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
                                 <div className="w-[30px] h-[30px] min-w-[30px] rounded-lg bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex items-center justify-center">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -1822,7 +1823,7 @@ export default function InstitutePublicPage() {
                                   <p className="text-white/40 text-[10.5px] mt-0.5">name + email</p>
                                 </div>
                               </button>
-                              <button onClick={() => openTeamModal("csv")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
+                              <button data-cta="app_space_team_upload_csv" onClick={() => openTeamModal("csv")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
                                 <div className="w-[30px] h-[30px] min-w-[30px] rounded-lg bg-evolve-inchworm/15 text-evolve-inchworm flex items-center justify-center">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1833,7 +1834,7 @@ export default function InstitutePublicPage() {
                                   <p className="text-white/40 text-[10.5px] mt-0.5">for a whole batch</p>
                                 </div>
                               </button>
-                              <button onClick={() => openTeamModal("find")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
+                              <button data-cta="app_space_team_find_on_evolve" onClick={() => openTeamModal("find")} className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] text-left">
                                 <div className="w-[30px] h-[30px] min-w-[30px] rounded-lg bg-evolve-yellow/15 text-evolve-yellow flex items-center justify-center">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
@@ -1862,7 +1863,7 @@ export default function InstitutePublicPage() {
                         return (
                           <div key={m.id} className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 group">
                             {isAdmin && m.user_id !== user?.id && (
-                              <button
+                              <button data-cta="app_space_team_remove_member"
                                 onClick={() => removeMember(m.id)}
                                 className="absolute top-3 right-3 w-6.5 h-6.5 rounded-md text-white/25 opacity-0 group-hover:opacity-100 hover:text-evolve-red hover:bg-evolve-red/10 flex items-center justify-center transition-all"
                               >
@@ -1917,21 +1918,21 @@ export default function InstitutePublicPage() {
                           </p>
                           <p className="text-white/35 text-xs max-w-sm">add {ROLE_META[teamRoleFilter]?.plural} one by one, upload a csv, or find them if they're already on evolve.</p>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mt-3">
-                            <button onClick={() => openTeamModal("one")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                            <button data-cta="app_space_team_add_one" onClick={() => openTeamModal("one")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
                               <div className="w-7 h-7 rounded-lg bg-evolve-lavender-indigo/15 text-evolve-lavender-indigo flex items-center justify-center text-sm font-bold">+</div>
                               <div>
                                 <p className="text-white text-xs font-bold">add one by one</p>
                                 <p className="text-white/35 text-[11px] mt-0.5">name, email — role is set for you</p>
                               </div>
                             </button>
-                            <button onClick={() => openTeamModal("csv")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                            <button data-cta="app_space_team_upload_csv" onClick={() => openTeamModal("csv")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
                               <div className="w-7 h-7 rounded-lg bg-evolve-inchworm/15 text-evolve-inchworm flex items-center justify-center text-sm">⇧</div>
                               <div>
                                 <p className="text-white text-xs font-bold">upload a csv</p>
                                 <p className="text-white/35 text-[11px] mt-0.5">for the whole batch</p>
                               </div>
                             </button>
-                            <button onClick={() => openTeamModal("find")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
+                            <button data-cta="app_space_team_find_on_evolve" onClick={() => openTeamModal("find")} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/20 p-4 flex flex-col gap-2.5 transition-colors">
                               <div className="w-7 h-7 rounded-lg bg-evolve-yellow/15 text-evolve-yellow flex items-center justify-center text-sm">⌕</div>
                               <div>
                                 <p className="text-white text-xs font-bold">find on evolve</p>
@@ -2078,7 +2079,7 @@ export default function InstitutePublicPage() {
                 </p>
               </div>
             </div>
-            <button
+            <button data-cta={editingUpdateId ? "app_space_post_save_changes" : isAdmin ? "app_space_post_publish" : "app_space_post_submit_for_review"}
               onClick={submitShareUpdate}
               disabled={shareSubmitting || !shareTitle.trim()}
               className="w-full mt-5 text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity"
@@ -2108,7 +2109,7 @@ export default function InstitutePublicPage() {
                   <p className="text-white/40 text-xs mt-1 hidden sm:block">visible to everyone on the space — changes are instant</p>
                 </div>
               </div>
-              <button
+              <button data-cta="app_space_settings_save"
                 onClick={saveBanner}
                 disabled={bannerSaving}
                 className="sm:hidden text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40 flex-shrink-0"
@@ -2190,7 +2191,7 @@ export default function InstitutePublicPage() {
                         </div>
                       ))}
                     </div>
-                    <button onClick={addLinkRow} className="text-evolve-lavender-indigo text-xs font-semibold w-fit">
+                    <button data-cta="app_space_settings_add_link" onClick={addLinkRow} className="text-evolve-lavender-indigo text-xs font-semibold w-fit">
                       + add link
                     </button>
                   </div>
@@ -2212,7 +2213,7 @@ export default function InstitutePublicPage() {
                         </div>
                       ))}
                     </div>
-                    <button onClick={addAwardRow} className="text-evolve-lavender-indigo text-xs font-semibold w-fit">
+                    <button data-cta="app_space_settings_add_award" onClick={addAwardRow} className="text-evolve-lavender-indigo text-xs font-semibold w-fit">
                       + add award
                     </button>
                   </div>
@@ -2233,7 +2234,7 @@ export default function InstitutePublicPage() {
             </div>
 
             <div className="hidden sm:block px-6 py-4 border-t border-white/10 flex-shrink-0">
-              <button onClick={saveBanner} disabled={bannerSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
+              <button data-cta="app_space_settings_save" onClick={saveBanner} disabled={bannerSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
                 {bannerSaving ? "saving…" : "save changes"}
               </button>
             </div>
@@ -2274,14 +2275,14 @@ export default function InstitutePublicPage() {
               )}
             </div>
             <div className="flex items-center gap-2.5 px-6 py-4 border-t border-white/10 mt-2">
-              <button onClick={() => submitAddOne(true)} disabled={addSubmitting || !EMAIL_RE.test(addEmail.trim())} className="text-evolve-lavender-indigo text-xs font-semibold disabled:opacity-30">
+              <button data-cta="app_space_team_save_add_another" onClick={() => submitAddOne(true)} disabled={addSubmitting || !EMAIL_RE.test(addEmail.trim())} className="text-evolve-lavender-indigo text-xs font-semibold disabled:opacity-30">
                 + save &amp; add another
               </button>
               <span className="flex-1" />
               <button onClick={closeTeamModal} className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white">
                 cancel
               </button>
-              <button onClick={() => submitAddOne(false)} disabled={addSubmitting || !EMAIL_RE.test(addEmail.trim())} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
+              <button data-cta="app_space_team_send_invite" onClick={() => submitAddOne(false)} disabled={addSubmitting || !EMAIL_RE.test(addEmail.trim())} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
                 {addSubmitting ? "sending…" : "send invite"}
               </button>
             </div>
@@ -2384,7 +2385,7 @@ export default function InstitutePublicPage() {
                 cancel
               </button>
               {csvPhase === "review" && (
-                <button onClick={submitCsv} disabled={csvSubmitting || !csvReadyRows.length} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
+                <button data-cta="app_space_team_send_csv_invites" onClick={submitCsv} disabled={csvSubmitting || !csvReadyRows.length} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
                   {csvSubmitting ? "sending…" : `send ${csvReadyRows.length} invites`}
                 </button>
               )}
@@ -2456,7 +2457,7 @@ export default function InstitutePublicPage() {
               <button onClick={closeTeamModal} className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white">
                 cancel
               </button>
-              <button onClick={submitFind} disabled={findSubmitting || findSelected.size === 0} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
+              <button data-cta="app_space_team_send_find_invites" onClick={submitFind} disabled={findSubmitting || findSelected.size === 0} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
                 {findSubmitting ? "adding…" : "send invites"}
               </button>
             </div>
@@ -2501,7 +2502,7 @@ export default function InstitutePublicPage() {
               <button onClick={() => setProgramModalOpen(false)} className="text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2 hover:text-white">
                 cancel
               </button>
-              <button onClick={submitProgramRequest} disabled={reqSubmitting || !reqMessage.trim()} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
+              <button data-cta="app_space_programs_send_request" onClick={submitProgramRequest} disabled={reqSubmitting || !reqMessage.trim()} className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-40">
                 {reqSubmitting ? "sending…" : "send request"}
               </button>
             </div>
@@ -2537,7 +2538,7 @@ export default function InstitutePublicPage() {
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-3">
-              <button onClick={addCalendarDraftRow} className="w-full text-[13px] font-bold text-evolve-lavender-indigo bg-evolve-lavender-indigo/10 hover:bg-evolve-lavender-indigo/15 rounded-xl py-3 transition-colors">
+              <button data-cta="app_space_calendar_add_event" onClick={addCalendarDraftRow} className="w-full text-[13px] font-bold text-evolve-lavender-indigo bg-evolve-lavender-indigo/10 hover:bg-evolve-lavender-indigo/15 rounded-xl py-3 transition-colors">
                 + add new event
               </button>
 
@@ -2665,7 +2666,7 @@ export default function InstitutePublicPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-white/10 flex-shrink-0">
-              <button onClick={saveCalendarChanges} disabled={calendarSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
+              <button data-cta="app_space_calendar_save" onClick={saveCalendarChanges} disabled={calendarSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
                 {calendarSaving ? "saving…" : "save changes"}
               </button>
             </div>
@@ -2700,7 +2701,7 @@ export default function InstitutePublicPage() {
 
             <div className="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-3">
               {isAdmin && (
-                <button onClick={addTestimonialDraftRow} className="w-full text-[13px] font-bold text-evolve-lavender-indigo bg-evolve-lavender-indigo/10 hover:bg-evolve-lavender-indigo/15 rounded-xl py-3 transition-colors">
+                <button data-cta="app_space_testimonials_add_row" onClick={addTestimonialDraftRow} className="w-full text-[13px] font-bold text-evolve-lavender-indigo bg-evolve-lavender-indigo/10 hover:bg-evolve-lavender-indigo/15 rounded-xl py-3 transition-colors">
                   + add new testimonial
                 </button>
               )}
@@ -2800,7 +2801,7 @@ export default function InstitutePublicPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-white/10 flex-shrink-0">
-              <button onClick={saveTestimonials} disabled={testimonialSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
+              <button data-cta={isAdmin ? "app_space_testimonials_save" : "app_space_testimonials_share"} onClick={saveTestimonials} disabled={testimonialSaving} className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 transition-opacity">
                 {testimonialSaving ? "saving…" : isAdmin ? "save changes" : "share testimonial"}
               </button>
             </div>

@@ -6,7 +6,7 @@ const CLASS_NAME =
 const STYLE = { fontSize: "clamp(16px, 1.15vw, 22px)" };
 
 // Renders an external link when `href` is given, otherwise a button.
-const CtaButton = ({ children, onClick, href }) => {
+const CtaButton = ({ children, onClick, href, cta }) => {
   const content = (
     <>
       {children}
@@ -17,6 +17,7 @@ const CtaButton = ({ children, onClick, href }) => {
   return href ? (
     <a
       href={href}
+      data-cta={cta}
       target="_blank"
       rel="noopener noreferrer"
       className={CLASS_NAME}
@@ -25,7 +26,7 @@ const CtaButton = ({ children, onClick, href }) => {
       {content}
     </a>
   ) : (
-    <button type="button" onClick={onClick} className={CLASS_NAME} style={STYLE}>
+    <button type="button" data-cta={cta} onClick={onClick} className={CLASS_NAME} style={STYLE}>
       {content}
     </button>
   );

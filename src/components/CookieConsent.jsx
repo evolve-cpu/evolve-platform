@@ -47,20 +47,20 @@ export default function CookieConsent() {
         <p className="text-white/50 text-xs leading-relaxed">
           We use analytics cookies to understand how evolve is used and make it
           better. You can accept or reject them — the site works either way.{" "}
-          <Link to="/privacy" className="text-white/70 underline hover:text-white">
+          <Link data-cta="web_cookie_privacy_policy" to="/privacy" className="text-white/70 underline hover:text-white">
             Privacy policy
           </Link>
         </p>
       </div>
       <div className="flex items-center gap-2.5">
-        <button
+        <button data-cta="web_cookie_reject"
           type="button"
           onClick={() => choose(false)}
           className="flex-1 text-white font-bold text-xs rounded-xl border border-[#373737] hover:bg-[#232325] px-4 py-2.5 transition-colors"
         >
           Reject cookies
         </button>
-        <button
+        <button data-cta="web_cookie_accept"
           type="button"
           onClick={() => choose(true)}
           className="flex-1 bg-evolve-yellow text-evolve-black font-bold text-xs rounded-xl px-4 py-2.5 hover:opacity-90 transition-opacity"

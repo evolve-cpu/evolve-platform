@@ -640,9 +640,10 @@ const MarqueeStrip = ({ isMobile, spotsText, marqueeLabel }) => {
    boxes, and the closing "why we built this"
    section all funnel through this one button)
 ───────────────────────────────────────────── */
-const GetStartedCta = ({ onClick, className = "" }) => (
+const GetStartedCta = ({ onClick, className = "", cta }) => (
   <button
     type="button"
+    data-cta={cta}
     onClick={onClick}
     className={`inline-flex items-center gap-2 bg-black text-evolve-yellow font-bold rounded-xl cursor-pointer transition-opacity duration-150 hover:opacity-90 active:opacity-80 ${className}`}
     style={{
@@ -684,7 +685,7 @@ const GetStartedCta = ({ onClick, className = "" }) => (
    components/programmes/mentorship/plans.js —
    title/badge/gift-line are marketing-page-only copy)
 ───────────────────────────────────────────── */
-const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
+const PricingBox = ({ title, badge, price, features, onGetStarted, cta }) => (
   <div
     className="relative flex flex-col justify-between text-left bg-evolve-yellow rounded-3xl border-2 border-black flex-1 w-full md:w-auto"
     style={{
@@ -768,7 +769,7 @@ const PricingBox = ({ title, badge, price, features, onGetStarted }) => (
       </ul>
     </div>
     <div className="mt-8">
-      <GetStartedCta onClick={onGetStarted} />
+      <GetStartedCta onClick={onGetStarted} cta={cta} />
       <p
         className="font-bold"
         style={{
@@ -964,7 +965,7 @@ const Mentorship = () => {
           </p>
           <div className="mt-6 flex flex-col items-center gap-2">
             {hasPaid ? (
-              <button
+              <button data-cta="web_mentorship_my_session"
                 onClick={() => navigate("/mentorship-session")}
                 className="font-extrabold text-white cursor-pointer px-7 py-4 rounded-2xl"
                 style={{
@@ -990,7 +991,7 @@ const Mentorship = () => {
                   style={{ width: isMobile ? "220px" : "220px" }}
                 /> */}
                 {/* Commented out for now — "Coming Soon" button, changed to plain text
-                <button
+                <button data-cta="web_mentorship_hero_explore"
                   type="button"
                   onClick={() => {
                     trackCtaClick("explore_mentorship", "hero");
@@ -1006,7 +1007,7 @@ const Mentorship = () => {
                 >
                   Coming Soon <span aria-hidden="true">→</span>
                 </button> */}
-                <GetStartedCta onClick={() => handleGetStarted("hero")} />
+                <GetStartedCta onClick={() => handleGetStarted("hero")} cta="web_mentorship_hero_get_started" />
                 {/* limited seats note not needed for now
                 <p className="text-black text-sm font-semibold">
                   {COPY.limitedSeatsNote}
@@ -1052,7 +1053,7 @@ const Mentorship = () => {
             {renderWithBreaks(COPY.cta.body)}
           </p>
           <div className="flex flex-col items-center mt-10 gap-6">
-            <button
+            <button data-cta="web_mentorship_how_it_works"
               type="button"
               onClick={() => {
                 trackCtaClick("how_it_works", "section2");
@@ -1195,7 +1196,7 @@ const Mentorship = () => {
                 <br />
                 {renderWithBreaks(COPY.mentor.bio2)}
               </p>
-              <a
+              <a data-cta="web_mentorship_mentor_linkedin"
                 href={COPY.mentor.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -1274,7 +1275,7 @@ const Mentorship = () => {
               <br />
               {renderWithBreaks(COPY.mentor.bio2)}
             </p>
-            <a
+            <a data-cta="web_mentorship_mentor_linkedin"
               href={COPY.mentor.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -1851,6 +1852,7 @@ const Mentorship = () => {
               price={PLANS.core.price}
               features={PLANS.core.features}
               onGetStarted={() => handleGetStarted("pricing_core")}
+              cta="web_mentorship_pricing_core_get_started"
             />
             <PricingBox
               title="Mentorship + Job Assistance"
@@ -1860,6 +1862,7 @@ const Mentorship = () => {
               onGetStarted={() =>
                 handleGetStarted("pricing_application_support")
               }
+              cta="web_mentorship_pricing_job_assistance_get_started"
             />
           </div>
         </div>
@@ -1891,7 +1894,7 @@ const Mentorship = () => {
             <p className="font-semibold text-black text-base mb-4">
               {COPY.faqSection.contactPrompt}
             </p>
-            <a
+            <a data-cta="web_mentorship_whatsapp_connect"
               href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
               target="_blank"
               rel="noopener noreferrer"
@@ -2072,7 +2075,7 @@ const Mentorship = () => {
           <p className="font-semibold text-black text-base">
             {noWidow(COPY.faqSection.contactPrompt)}
           </p>
-          <a
+          <a data-cta="web_mentorship_whatsapp_connect"
             href="https://wa.me/919227123007?text=Hi%2C%20I%20have%20a%20question%20about%20evolve%20mentorship"
             target="_blank"
             rel="noopener noreferrer"
@@ -2136,7 +2139,7 @@ const Mentorship = () => {
 
           {/* Explore plans / session button */}
           {hasPaid ? (
-            <button
+            <button data-cta="web_mentorship_my_session"
               onClick={() => navigate("/mentorship-session")}
               className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
               style={{
@@ -2150,6 +2153,7 @@ const Mentorship = () => {
             <GetStartedCta
               onClick={() => handleGetStarted("why_we_built_this")}
               className="mt-8"
+              cta="web_mentorship_why_we_built_this_get_started"
             />
           )}
         </div>
@@ -2211,7 +2215,7 @@ const Mentorship = () => {
 
           {/* Explore plans / session button */}
           {hasPaid ? (
-            <button
+            <button data-cta="web_mentorship_my_session"
               onClick={() => navigate("/mentorship-session")}
               className="font-extrabold text-white cursor-pointer mt-8 px-7 py-4 rounded-2xl"
               style={{
@@ -2225,6 +2229,7 @@ const Mentorship = () => {
             <GetStartedCta
               onClick={() => handleGetStarted("why_we_built_this")}
               className="mt-[3rem]"
+              cta="web_mentorship_why_we_built_this_get_started"
             />
           )}
         </div>

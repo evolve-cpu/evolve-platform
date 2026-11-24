@@ -90,7 +90,7 @@ export default function MentorshipFeedbackModal({ user, sessionNumber, onClose, 
           />
         </div>
 
-        <button
+        <button data-cta="app_mentorship_feedback_submit"
           onClick={() => submit(true)}
           disabled={!canSubmit || saving}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3.5 flex items-center justify-center gap-2 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -102,7 +102,7 @@ export default function MentorshipFeedbackModal({ user, sessionNumber, onClose, 
             </svg>
           )}
         </button>
-        <button
+        <button data-cta="app_mentorship_feedback_did_not_attend"
           onClick={() => submit(false)}
           disabled={saving}
           className="text-evolve-yellow text-sm font-semibold underline text-center"

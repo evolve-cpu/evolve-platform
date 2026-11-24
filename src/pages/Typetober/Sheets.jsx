@@ -4,6 +4,7 @@ import { signInWithGoogle, signInWithLinkedIn, sendOtp, verifyOtp } from "../../
 import { accentFor } from "./lib/constants";
 import fontfabric_white from "../../assets/images/Typetober/fontfabric.svg";
 import rescript_logo from "../../assets/images/Typetober/rescript.png";
+import { ctaArea } from "../../utils/analytics";
 
 /**
  * Shared bottom-sheet-on-mobile / centred-modal-on-desktop shell. Every
@@ -123,7 +124,7 @@ function EmailSignIn({ onBack }) {
         />
         {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
         {note && <p className="text-evolve-inchworm text-[13px] mt-3">{note}</p>}
-        <button
+        <button data-cta={`${ctaArea()}_typetober_signin_verify_code`}
           type="submit"
           disabled={code.length < 6 || busy}
           className="tt-btn w-full mt-4 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
@@ -134,7 +135,7 @@ function EmailSignIn({ onBack }) {
           <button type="button" onClick={() => setStep("form")}>
             Change email
           </button>
-          <button type="button" disabled={busy} onClick={() => send("resend")}>
+          <button data-cta={`${ctaArea()}_typetober_signin_resend_code`} type="button" disabled={busy} onClick={() => send("resend")}>
             Resend code
           </button>
         </div>
@@ -163,7 +164,7 @@ function EmailSignIn({ onBack }) {
         className={FIELD}
       />
       {error && <p className="text-red-400 text-[13px]">{error}</p>}
-      <button
+      <button data-cta={`${ctaArea()}_typetober_signin_send_code`}
         type="submit"
         disabled={busy}
         className="tt-btn w-full bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
@@ -208,7 +209,7 @@ export function AuthSheet({ open, onClose }) {
         <EmailSignIn onBack={() => setEmailMode(false)} />
       ) : (
       <div className="flex flex-col gap-3 mt-6">
-        <button
+        <button data-cta={`${ctaArea()}_typetober_signin_google`}
           onClick={() => go("google")}
           disabled={!!loading}
           className="w-full h-14 bg-white text-black font-semibold text-[16px] rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50"
@@ -239,7 +240,7 @@ export function AuthSheet({ open, onClose }) {
           {loading === "google" ? "Opening Google…" : "Continue with Google"}
         </button>
 
-        <button
+        <button data-cta={`${ctaArea()}_typetober_signin_linkedin`}
           onClick={() => go("linkedin")}
           disabled={!!loading}
           className="w-full h-14 bg-[#2d64bc] text-white font-semibold text-[16px] rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50"
@@ -260,7 +261,7 @@ export function AuthSheet({ open, onClose }) {
           or continue with email
         </div>
 
-        <button
+        <button data-cta={`${ctaArea()}_typetober_signin_email`}
           onClick={() => setEmailMode(true)}
           disabled={!!loading}
           className="w-full h-14 border border-white/20 text-white font-semibold text-[16px] rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 hover:bg-white/5"
@@ -504,7 +505,7 @@ export function GuideSheet({ open, onClose }) {
           ["guidelines", "Guidelines"],
           ["faqs", "FAQs"]
         ].map(([k, label]) => (
-          <button
+          <button data-cta={`${ctaArea()}_typetober_info_tab_${k}`}
             key={k}
             role="tab"
             aria-selected={tab === k}
@@ -603,7 +604,7 @@ export function Lightbox({
       </div>
       {voteAction && <div className="mt-5">{voteAction}</div>}
       {mine ? (
-        <button
+        <button data-cta={`${ctaArea()}_typetober_letter_share`}
           onClick={onShare}
           className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl"
         >
@@ -615,7 +616,7 @@ export function Lightbox({
             1 month, 26 alphabets. Illustrate them your way and put yours on the
             wall.
           </p>
-          <button
+          <button data-cta={`${ctaArea()}_typetober_letter_take_challenge`}
             onClick={onJoin}
             className="tt-btn w-full mt-4 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl"
           >

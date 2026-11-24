@@ -553,7 +553,7 @@ export default function CollegeSelfReflection() {
 
               {/* add this field button */}
               <div className="mt-12">
-                <button
+                <button data-cta="web_in_person_reflection_add_field"
                   onClick={handleAddField}
                   disabled={!canAddField || saving}
                   className={`
@@ -876,7 +876,7 @@ export default function CollegeSelfReflection() {
               {/* finish button */}
               {!!reviewCount && (
                 <div className="mt-12 flex items-center gap-4">
-                  <button
+                  <button data-cta="web_in_person_reflection_add_more"
                     onClick={() => setActiveTab("reflect")}
                     className="
                       bg-transparent border-[3px] border-black/40
@@ -889,7 +889,7 @@ export default function CollegeSelfReflection() {
                     add more
                   </button>
 
-                  <button
+                  <button data-cta="web_in_person_reflection_save_finish"
                     onClick={handleSaveAndFinish}
                     disabled={saving}
                     className="

@@ -13,6 +13,7 @@ import { eventPrice, eventKindLabel, eventPriceLabel, buyerCurrency } from "../l
 import { fetchOwnedEventIds } from "../lib/membershipCheckout";
 import { isEventOver, registrationClosedReason } from "../lib/events";
 import { trackEventRegisterClick } from "../lib/platformAnalytics";
+import { ctaArea } from "../utils/analytics";
 
 const COMMUNITY_URL =
   "https://discord.gg/MmfaqCPdF7";
@@ -155,7 +156,7 @@ function CustomQuestion({ q, value, onChange }) {
               <>
                 I agree to the{" "}
                 {q.terms_url ? (
-                  <a href={q.terms_url} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow underline">
+                  <a data-cta={`${ctaArea()}_event_register_terms_link`} href={q.terms_url} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow underline">
                     {q.label}
                   </a>
                 ) : (
@@ -338,7 +339,7 @@ function QuestionModal({ event, onClose, onSubmit, submitting, error }) {
         <div className="mt-5 flex flex-col gap-3">
           {(missing || error) && <p className="text-red-400 text-xs">{missing || error}</p>}
 
-          <button
+          <button data-cta={`${ctaArea()}_event_register_submit`}
             onClick={submit}
             disabled={submitting}
             className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-sm py-3 rounded-lg disabled:opacity-50"
@@ -463,14 +464,14 @@ function TicketModal({ event, registration, user, onClose }) {
         </div>
 
         <div className="flex flex-col gap-2 mt-3">
-          <button
+          <button data-cta={`${ctaArea()}_event_ticket_save`}
             onClick={handleSave}
             disabled={saving}
             className="w-full bg-evolve-yellow text-black font-extrabold text-sm py-3 rounded-full disabled:opacity-50"
           >
             ↓ {saving ? "saving…" : "save ticket to share"}
           </button>
-          <a
+          <a data-cta={`${ctaArea()}_event_ticket_join_community`}
             href={COMMUNITY_URL}
             target="_blank"
             rel="noopener noreferrer"
@@ -585,7 +586,7 @@ function PastSpeaker({ speaker, index }) {
             {links.map((url) => {
               const platform = detectPlatform(url);
               return (
-                <a
+                <a data-cta={`${ctaArea()}_event_speaker_${platform}`}
                   key={url}
                   href={url}
                   target="_blank"
@@ -957,7 +958,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
     !owned.event.has(event.id) ? (
       <>
         {eventPriceLabel(event)} for this session ·{" "}
-        <button
+        <button data-cta={`${ctaArea()}_event_free_with_plan`}
           type="button"
           onClick={() => membership.openPlans(2)}
           className="text-evolve-yellow font-semibold hover:underline"
@@ -989,7 +990,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
         <p className="text-lg font-bold">
           This event doesn't exist or isn't published yet.
         </p>
-        <Link to={eventsHome} className="text-evolve-yellow underline">
+        <Link data-cta={`${ctaArea()}_event_back_to_events`} to={eventsHome} className="text-evolve-yellow underline">
           Back to events
         </Link>
       </div>
@@ -1008,7 +1009,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
       )}
 
       {embedded && (
-        <Link
+        <Link data-cta="app_event_all_events"
           to="/app/events"
           className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold mb-6"
         >
@@ -1092,7 +1093,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
                       {links.length > 0 && (
                         <div className="flex items-center gap-3 mt-3">
                           {links.map((url) => (
-                            <a
+                            <a data-cta={`${ctaArea()}_event_host_${detectPlatform(url)}`}
                               key={url}
                               href={url}
                               target="_blank"
@@ -1126,7 +1127,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
           <div className="hidden md:block rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="font-bold text-sm">Register</p>
             <p className="text-white/50 text-xs mt-1">{registerBlurb}</p>
-            <button
+            <button data-cta={`${ctaArea()}_event_book_spot`}
               onClick={handleBookSpot}
               disabled={bookDisabled}
               className="mt-4 bg-evolve-yellow text-evolve-black font-extrabold text-sm px-6 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1209,7 +1210,7 @@ export default function EventDetail({ embedded = false, slug: slugProp }) {
                 {registerMeta}
               </div>
             )}
-            <button
+            <button data-cta={`${ctaArea()}_event_book_spot_mobile`}
               onClick={handleBookSpot}
               disabled={bookDisabled}
               className={`${registerMeta ? "flex-shrink-0" : "w-full"} bg-evolve-yellow text-evolve-black font-extrabold text-sm px-5 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed`}

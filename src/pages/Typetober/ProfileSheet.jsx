@@ -3,6 +3,7 @@ import { SheetShell } from "./Sheets";
 import { BulkIcon } from "./BulkUploadSheet";
 import { CERT_TIERS, LETTERS } from "./lib/constants";
 import { renderCertificateCard } from "./lib/shareCard";
+import { ctaArea } from "../../utils/analytics";
 
 const CERT_WHY = {
   bronze: "10 submissions",
@@ -41,7 +42,7 @@ function CertCard({ tier, unlocked, name }) {
       <div className="text-[34px] font-extrabold leading-none mt-2">{tier.label}</div>
       <div className="text-[14px] font-bold mt-2">Awarded to @{name}</div>
       <div className="text-[13px] opacity-75">{CERT_WHY[tier.key]}</div>
-      <button
+      <button data-cta={`${ctaArea()}_typetober_profile_download_certificate`}
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -91,7 +92,7 @@ export default function ProfileSheet({
       </div>
 
       {onBulk && (
-        <button
+        <button data-cta={`${ctaArea()}_typetober_profile_bulk_upload`}
           onClick={onBulk}
           className="tt-btn tt-btn-dark w-full mt-5 flex items-center gap-3 text-left rounded-2xl px-4 py-3"
         >
@@ -157,7 +158,7 @@ export default function ProfileSheet({
               ["subs", "Submissions"],
               ["certs", "Certificates"]
             ].map(([k, label]) => (
-              <button
+              <button data-cta={`${ctaArea()}_typetober_profile_tab_${k}`}
                 key={k}
                 onClick={() => setTab(k)}
                 className={`flex-1 py-2 rounded-full font-extrabold text-[14px] ${tab === k ? "bg-evolve-yellow text-black" : "text-white/60"}`}
@@ -177,7 +178,7 @@ export default function ProfileSheet({
                   const unlocked = i < currentDay;
                   if (row) {
                     return (
-                      <button key={ch} onClick={() => onViewLetter(i)} className="relative aspect-square rounded-lg overflow-hidden">
+                      <button data-cta={`${ctaArea()}_typetober_profile_view_letter`} key={ch} onClick={() => onViewLetter(i)} className="relative aspect-square rounded-lg overflow-hidden">
                         {row.imageUrl && <img src={row.imageUrl} alt={ch} className="w-full h-full object-cover" />}
                         {paid.length > 1 && (
                           <span className="absolute right-1 bottom-1 bg-evolve-yellow text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
@@ -196,7 +197,7 @@ export default function ProfileSheet({
                   }
                   if (unlocked) {
                     return (
-                      <button
+                      <button data-cta={`${ctaArea()}_typetober_profile_go_to_letter`}
                         key={ch}
                         onClick={() => onGoToLetter(i)}
                         className="aspect-square rounded-lg border border-dashed border-white/25 grid place-items-center text-white/30 font-extrabold text-[18px]"
@@ -224,7 +225,7 @@ export default function ProfileSheet({
         </>
       )}
 
-      <button onClick={onLogout} className="mt-6 text-white/40 text-[13px] font-bold underline">
+      <button data-cta={`${ctaArea()}_typetober_profile_sign_out`} onClick={onLogout} className="mt-6 text-white/40 text-[13px] font-bold underline">
         Sign out
       </button>
     </SheetShell>

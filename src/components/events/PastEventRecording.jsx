@@ -3,6 +3,7 @@ import { supabase } from "../../supabaseClient";
 import { useMembership, MEMBERSHIP_ICONS } from "../membership/MembershipProvider";
 import { inr, recordingPrice } from "../../lib/membership";
 import YouTubeLockedPlayer from "./YouTubeLockedPlayer";
+import { ctaArea } from "../../utils/analytics";
 
 // Past-event recording, uploaded through the admin Events CMS
 // (src/pages/admn/EventsTab.jsx). Locked behind the after-trial rules: open
@@ -58,7 +59,7 @@ export const PlayIcon = (
 // once someone actually presses play
 function PosterButton({ src, onPlay }) {
   return (
-    <button type="button" onClick={onPlay} className="group absolute inset-0 w-full h-full" aria-label="Play recording">
+    <button data-cta={`${ctaArea()}_event_recording_play`} type="button" onClick={onPlay} className="group absolute inset-0 w-full h-full" aria-label="Play recording">
       <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <span className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors" />
       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-[76px] md:h-[76px] rounded-full bg-black/70 backdrop-blur-sm text-white flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -223,7 +224,7 @@ function LockedPlayer({ thumb, price, signedIn, onUnlock }) {
 
   return (
     <>
-      <button
+      <button data-cta={`${ctaArea()}_event_recording_unlock`}
         type="button"
         onClick={onUnlock}
         className="group relative block w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-[#19191b]"
@@ -250,7 +251,7 @@ function LockedPlayer({ thumb, price, signedIn, onUnlock }) {
               {signedIn ? "Unlock the full recording, yours to rewatch anytime" : "Sign in to unlock the full recording"}
             </p>
           </div>
-          <button
+          <button data-cta={`${ctaArea()}_event_recording_unlock`}
             type="button"
             onClick={onUnlock}
             className="flex-none rounded-xl bg-evolve-yellow text-evolve-black font-extrabold text-sm md:text-base px-4 md:px-6 py-2.5 md:py-3 transition-transform active:scale-95 hover:brightness-105"

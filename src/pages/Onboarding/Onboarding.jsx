@@ -502,7 +502,7 @@ export default function Onboarding() {
   // through every step of onboarding — it's not a link until a profile
   // page actually exists for them (username is set on final confirm)
   const profileChip = (
-    <Link
+    <Link data-cta="app_onboarding_view_profile"
       to={user.username ? `/profile/${user.username}` : "#"}
       className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 border border-white/10 transition-colors hover:border-white/25"
       style={{
@@ -621,7 +621,7 @@ export default function Onboarding() {
       >
         <p className="text-white font-bold text-lg">Something went wrong</p>
         <p className="text-white/50 text-sm max-w-xs">{error}</p>
-        <button
+        <button data-cta="app_onboarding_try_again"
           onClick={() =>
             role === "student" || role === "professional"
               ? handleStudentComplete(studentDraft)
@@ -645,7 +645,7 @@ export default function Onboarding() {
           every other step — still the "wrong account / just browsing"
           escape hatch out of onboarding */}
       {step !== "chat" && (
-        <button
+        <button data-cta="app_onboarding_log_out"
           onClick={handleLogout}
           className="fixed top-5 right-5 z-50 flex items-center gap-1.5 rounded-full px-4 py-1.5 border border-white/10 text-white/60 text-xs font-semibold transition-colors hover:border-white/25 hover:text-white/90"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}

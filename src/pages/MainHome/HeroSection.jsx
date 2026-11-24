@@ -100,7 +100,7 @@ const HeroSection = ({ onStart }) => (
         and excel in your design journey
       </p>
 
-      <button
+      <button data-cta="web_home_hero_start_for_free"
         type="button"
         onClick={onStart}
         className="mt-10 inline-flex items-center gap-3 rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow font-semibold px-8 py-4 shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px]  active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
@@ -116,7 +116,7 @@ const HeroSection = ({ onStart }) => (
     </div>
 
     {/* Scroll cue */}
-    <button
+    <button data-cta="web_home_hero_scroll_down"
       type="button"
       aria-label="Scroll down"
       onClick={() =>

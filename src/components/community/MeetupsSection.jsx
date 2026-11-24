@@ -150,7 +150,7 @@ const MeetupsSection = () => (
       </div>
 
       <div className="mt-14 md:mt-[clamp(72px,6vw,120px)] flex justify-center">
-        <a
+        <a data-cta="web_community_meetups_join_us"
           href={COPY.hero.joinUrl}
           target="_blank"
           rel="noopener noreferrer"

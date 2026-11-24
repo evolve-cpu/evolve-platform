@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { initialsOf } from "../lib/orgShared";
+import { ctaSlug } from "../utils/analytics";
 
 // The settings "page" content — deliberately NOT a page of its own. It's
 // rendered inside InstitutePublicPage's existing shell (same topbar, same
@@ -253,7 +254,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
               <div className="h-full rounded-full bg-evolve-red" style={{ width: `${progressPct}%` }} />
             </div>
             <div className="flex flex-col gap-2">
-              <button
+              <button data-cta="app_space_settings_restore_space"
                 onClick={restoreSpace}
                 disabled={restoring}
                 className="flex items-center justify-center gap-2 bg-white text-evolve-black font-bold text-[13px] rounded-xl py-3 disabled:opacity-50"
@@ -264,7 +265,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                 </svg>
                 {restoring ? "restoring…" : "restore this space"}
               </button>
-              <a href="mailto:contact@evolvedesign.academy" className="text-center border border-white/15 text-white/60 hover:text-white font-bold text-[13px] rounded-xl py-3 transition-colors">
+              <a data-cta="app_space_settings_contact_support" href="mailto:contact@evolvedesign.academy" className="text-center border border-white/15 text-white/60 hover:text-white font-bold text-[13px] rounded-xl py-3 transition-colors">
                 contact support
               </a>
             </div>
@@ -322,7 +323,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                 value={
                   <span className="inline-flex items-center gap-1.5">
                     {org.id.slice(0, 13)}…
-                    <button onClick={copySpaceId} title="copy full id" className="text-white/30 hover:text-white">
+                    <button data-cta="app_space_settings_copy_space_id" onClick={copySpaceId} title="copy full id" className="text-white/30 hover:text-white">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.8" />
                         <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="1.8" />
@@ -353,7 +354,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                 { value: "public", title: "public", desc: "anyone on evolve can find and view this page." },
                 { value: "private", title: "team only", desc: "only invited team members can view this page." }
               ].map((v) => (
-                <button
+                <button data-cta={`app_space_settings_visibility_${v.value}`}
                   key={v.value}
                   onClick={() => {
                     setVisibilityDraft(v.value);
@@ -377,7 +378,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
             </div>
             <div className="flex items-center justify-between mt-3">
               <p className="text-white/30 text-[11px]">{visibilityDraft === "public" ? "public · discoverable across evolve." : "team only · visible only to your invited team members."}</p>
-              <button
+              <button data-cta="app_space_settings_save_visibility"
                 onClick={saveVisibility}
                 disabled={!visibilityDirty || visibilitySaving}
                 className="text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2 disabled:opacity-30 flex-shrink-0"
@@ -412,7 +413,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                     <p className="text-white text-[13px] font-semibold">{row.label}</p>
                     <p className="text-white/30 text-[11px] mt-0.5 leading-relaxed">{row.desc}</p>
                   </div>
-                  <button
+                  <button data-cta={`app_space_settings_notification_${ctaSlug(row.key)}`}
                     onClick={() => toggleNotifPref(row.key)}
                     className={`w-[42px] h-6 min-w-[42px] rounded-full relative transition-colors flex-shrink-0 ${
                       notifPrefs[row.key] ? "bg-evolve-lavender-indigo" : "bg-white/10 border border-white/15"
@@ -447,7 +448,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
               </div>
               <p className="text-white font-bold text-sm">no paid programs yet</p>
               <p className="text-white/35 text-xs max-w-sm leading-relaxed">once you unlock a paid program for your team, its billing and payment history will show up here.</p>
-              <button onClick={() => onNavigateTab("programs")} className="mt-1 text-xs font-bold text-evolve-lavender-indigo">
+              <button data-cta="app_space_settings_browse_programs" onClick={() => onNavigateTab("programs")} className="mt-1 text-xs font-bold text-evolve-lavender-indigo">
                 browse ongoing programs →
               </button>
             </div>
@@ -473,7 +474,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                   <p className="text-white text-[13px] font-bold">transfer ownership</p>
                   <p className="text-white/35 text-[11.5px] mt-0.5 leading-relaxed max-w-md">hand over admin control to another admin. you'll be moved to an admin role.</p>
                 </div>
-                <button
+                <button data-cta="app_space_settings_transfer_open"
                   onClick={openTransferSheet}
                   disabled={transferCandidates.length === 0}
                   title={transferCandidates.length === 0 ? "add another admin first" : undefined}
@@ -487,7 +488,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                   <p className="text-white text-[13px] font-bold">delete this space</p>
                   <p className="text-white/35 text-[11.5px] mt-0.5 leading-relaxed max-w-md">deactivates the page and removes team access. 14 days to undo before it's permanent.</p>
                 </div>
-                <button
+                <button data-cta="app_space_settings_delete_open"
                   onClick={() => {
                     setDeleteConfirmText("");
                     setDeleteSheetOpen(true);
@@ -558,7 +559,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                     </button>
                   );
                 })}
-                <button
+                <button data-cta="app_space_settings_transfer_continue"
                   onClick={() => setTransferStep("confirm")}
                   disabled={!transferPickId}
                   className="w-full text-[13px] font-bold bg-evolve-lavender-indigo text-white rounded-lg py-3 disabled:opacity-40 mt-2 transition-opacity"
@@ -609,7 +610,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
                   <button onClick={() => setTransferStep("pick")} className="flex-1 text-xs font-semibold text-white/50 border border-white/15 rounded-lg px-4 py-2.5 hover:text-white">
                     back
                   </button>
-                  <button
+                  <button data-cta="app_space_settings_transfer_confirm"
                     onClick={submitTransfer}
                     disabled={transferSubmitting || transferConfirmText.trim().toLowerCase() !== "transfer"}
                     className="flex-[2] text-xs font-bold bg-evolve-lavender-indigo text-white rounded-lg px-4 py-2.5 disabled:opacity-40"
@@ -657,7 +658,7 @@ export default function InstituteSettingsPanel({ org, members, user, slug, onBac
               </div>
               <p className="text-white/30 text-[10.5px] font-bold uppercase tracking-wide mt-4 mb-1.5">type the space name to confirm</p>
               <input value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder={org.name} className={fieldInputCls} />
-              <button
+              <button data-cta="app_space_settings_delete_confirm"
                 onClick={confirmDeleteSpace}
                 disabled={deleteSubmitting || deleteConfirmText.trim().toLowerCase() !== org.name.trim().toLowerCase()}
                 className="w-full mt-4 text-[13px] font-bold bg-evolve-red text-white rounded-lg py-3 disabled:opacity-30"

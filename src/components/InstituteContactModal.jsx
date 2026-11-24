@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { supabase } from "../supabaseClient";
+import { ctaSlug } from "../utils/analytics";
 
 const WhatsAppIcon = ({ className }) => (
   <svg
@@ -251,7 +252,7 @@ const InstituteContactModal = ({
                   </p>
                 )}
 
-                <button
+                <button data-cta={`web_inquiry_${ctaSlug(programme)}_${intent === "handbook" ? "submit_download_handbook" : "submit"}`}
                   type="submit"
                   disabled={submitting || !isFormFilled}
                   className="mt-1 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow transition-colors hover:bg-[#FFE470] hover:text-black disabled:opacity-60 disabled:hover:bg-evolve-yellow"
@@ -274,7 +275,7 @@ const InstituteContactModal = ({
                     </span>
                     <div className="h-px flex-1 bg-black/20" />
                   </div>
-                  <a
+                  <a data-cta={`web_inquiry_${ctaSlug(programme)}_book_call`}
                     href={CALENDLY_URL}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -287,7 +288,7 @@ const InstituteContactModal = ({
               )}
 
               {whatsappUrl && intent !== "handbook" && (
-                <a
+                <a data-cta={`web_inquiry_${ctaSlug(programme)}_whatsapp`}
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"

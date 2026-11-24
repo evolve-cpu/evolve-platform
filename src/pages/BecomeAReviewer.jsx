@@ -374,7 +374,7 @@ function ReviewerFormFields(props) {
         <p className="text-sm font-semibold text-red-700">{submitError}</p>
       )}
 
-      <button
+      <button data-cta="web_become_reviewer_submit"
         type="submit"
         disabled={submitting}
         className="mt-1 inline-flex items-center justify-center gap-2 font-extrabold px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-evolve-yellow transition-opacity duration-150 hover:opacity-80 disabled:opacity-60"
@@ -412,7 +412,7 @@ function ReviewerSuccessContent() {
       <p className="text-black/70 text-sm md:text-base">
         we've got your details, we will reach out to you shortly :)
       </p>
-      <a
+      <a data-cta="web_become_reviewer_join_community"
         href={COMMUNITY_URL}
         target="_blank"
         rel="noopener noreferrer"

@@ -8,8 +8,7 @@ import {
   trackPurchase,
   trackPaymentDismissed,
   trackPaymentFailed,
-  trackWaitlistJoin
-} from "../utils/analytics";
+  trackWaitlistJoin, ctaSlug } from "../utils/analytics";
 import BlackNav from "../components/BlackNav";
 import {
   surprise_box,
@@ -262,7 +261,7 @@ function ProfileSheet({ user, onClose }) {
                 </div>
               ))}
             </div>
-            <button
+            <button data-cta="app_payment_download_receipt"
               onClick={downloadReceipt}
               className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-xs rounded-xl py-2.5 active:opacity-80"
             >
@@ -273,7 +272,7 @@ function ProfileSheet({ user, onClose }) {
 
         <div className="h-px bg-white/10" />
 
-        <button
+        <button data-cta="app_payment_sign_out"
           onClick={handleSignOut}
           className="text-left text-sm text-red-400 font-semibold hover:opacity-80 transition-opacity"
         >
@@ -707,7 +706,7 @@ export default function Payment() {
               alt="gift"
               className="w-52 h-52 object-contain"
             />
-            <button
+            <button data-cta="app_payment_claim_gift"
               onClick={() => setStep("gift2")}
               className="w-full bg-evolve-yellow text-evolve-black font-extrabold text-base rounded-2xl py-4 active:opacity-80"
             >
@@ -754,7 +753,7 @@ export default function Payment() {
                 alt="open gift"
                 className="relative z-10 w-36 object-contain"
               />
-              <button
+              <button data-cta="app_payment_claim_gift_continue"
                 onClick={() =>
                   setStep(showBatchPicker ? "batch_pick" : "details")
                 }
@@ -861,7 +860,7 @@ export default function Payment() {
                 <p className="text-red-400 text-sm">{waitlistError}</p>
               )}
 
-              <button
+              <button data-cta="app_payment_waitlist_add_me"
                 onClick={handleWaitlistJoin}
                 disabled={waitlistSubmitting}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-50 active:opacity-80"
@@ -910,7 +909,7 @@ export default function Payment() {
                   batches reopen
                 </p>
               </div>
-              <button
+              <button data-cta="app_payment_back_to_evolve"
                 onClick={() => navigate("/mentorship")}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 active:opacity-80"
               >
@@ -954,7 +953,7 @@ export default function Payment() {
 
               <div className="flex flex-col gap-3">
                 {batches.map((b) => (
-                  <button
+                  <button data-cta="app_payment_select_batch"
                     key={b.id}
                     onClick={() => setSelectedBatchId(b.id)}
                     className="w-full rounded-2xl p-5 text-left transition-all"
@@ -981,7 +980,7 @@ export default function Payment() {
                 note: once the payment is made, you won't be able to switch
               </p>
 
-              <button
+              <button data-cta="app_payment_batch_continue"
                 onClick={() => setStep("details")}
                 disabled={!selectedBatchId}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 active:opacity-80"
@@ -1032,7 +1031,7 @@ export default function Payment() {
               {/* plan tabs */}
               <div className="flex gap-2">
                 {["starter", "accelerator"].map((t) => (
-                  <button
+                  <button data-cta={`app_payment_plan_${ctaSlug(t)}`}
                     key={t}
                     onClick={() => handlePlanChange(t)}
                     className="flex-1 py-3 font-extrabold text-sm transition-colors"
@@ -1049,7 +1048,7 @@ export default function Payment() {
 
               <PlanCard />
 
-              <button
+              <button data-cta="app_payment_details_continue"
                 onClick={() => setStep("phone")}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 active:opacity-80"
               >
@@ -1106,7 +1105,7 @@ export default function Payment() {
                 />
                 <span className="text-white/55 text-sm leading-relaxed">
                   I agree to{" "}
-                  <a
+                  <a data-cta="app_payment_terms_link"
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1120,7 +1119,7 @@ export default function Payment() {
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
 
-              <button
+              <button data-cta="app_payment_confirm_and_pay"
                 onClick={handlePay}
                 disabled={paying || !agreed || !phone.trim()}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 active:opacity-80"
@@ -1195,7 +1194,7 @@ export default function Payment() {
                   receipt sent to {user.email}
                 </p>
               )}
-              <button
+              <button data-cta="app_payment_see_whats_next"
                 onClick={() => navigate("/mentorship-session")}
                 className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 active:opacity-80"
               >

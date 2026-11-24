@@ -300,7 +300,7 @@ const ContactModal = ({ isOpen, onClose }) => {
 
                   {/* circle enter button */}
                   <div className="mt-4 md:mt-0 md:flex md:items-end md:self-end relative">
-                    <button
+                    <button data-cta="web_contact_modal_send_message"
                       onClick={handleSubmit}
                       aria-label="Send message"
                       disabled={isSubmitting}

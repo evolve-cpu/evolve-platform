@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ctaArea } from "../../utils/analytics";
 
 // YouTube recording with our own controls. YouTube's player chrome (title,
 // logo, "Watch on YouTube", share, right-click "copy video URL", end-screen
@@ -259,7 +260,7 @@ export default function YouTubeLockedPlayer({ videoId, poster, title, children }
       {started && <div className="absolute inset-0" onClick={togglePlay} />}
 
       {coverWithPoster && (
-        <button
+        <button data-cta={`${ctaArea()}_event_recording_play`}
           type="button"
           onClick={() => (started ? togglePlay() : setStarted(true))}
           className="group absolute inset-0 w-full h-full"

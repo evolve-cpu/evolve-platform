@@ -361,7 +361,7 @@ export default function SignIn({ onClose } = {}) {
               </div>
 
               <div className="flex flex-col gap-3 mt-2">
-                <button
+                <button data-cta="web_signin_continue_google"
                   onClick={handleGoogleSignIn}
                   className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold text-base rounded-2xl py-4 active:opacity-80"
                 >
@@ -369,7 +369,7 @@ export default function SignIn({ onClose } = {}) {
                   Continue with Google
                 </button>
                 {/* LinkedIn sign-in removed for now — Google One Tap shows on this page instead (App.jsx)
-                <button
+                <button data-cta="web_signin_continue_linkedin"
                   onClick={handleLinkedInSignIn}
                   className="w-full flex items-center justify-center gap-3 bg-[#0A66C2] text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
                 >
@@ -392,7 +392,7 @@ export default function SignIn({ onClose } = {}) {
                 </span>
                 <div className="flex-1 h-px bg-white/20" />
               </div>
-              <button
+              <button data-cta="web_signin_continue_email"
                 onClick={() => setStep("email-form")}
                 className="w-full flex items-center justify-center gap-2 border border-white/20 text-white font-semibold text-base rounded-2xl py-4 active:opacity-80"
               >
@@ -459,7 +459,7 @@ export default function SignIn({ onClose } = {}) {
               />
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button
+            <button data-cta="web_signin_send_code"
               onClick={handleSendOtp}
               disabled={!name.trim() || !email.trim()}
               className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
@@ -534,7 +534,7 @@ export default function SignIn({ onClose } = {}) {
               ))}
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button
+            <button data-cta="web_signin_confirm_code"
               onClick={handleVerifyOtp}
               disabled={otpDigits.join("").length < 6}
               className="w-full flex items-center justify-center gap-2 bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-[0.98]"
@@ -554,7 +554,7 @@ export default function SignIn({ onClose } = {}) {
               {countdown > 0 ? (
                 <span className="text-white/30">Resend in {countdown}s</span>
               ) : (
-                <button
+                <button data-cta="web_signin_resend_code"
                   onClick={handleResend}
                   className="text-evolve-yellow underline underline-offset-2"
                 >

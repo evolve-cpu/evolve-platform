@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../../../supabaseClient";
+import { ctaSlug } from "../../../utils/analytics";
 
 export function DocRow({ icon, label, value, onClick }) {
   return (
-    <button
+    <button data-cta={`app_mentorship_docs_${ctaSlug(label)}`}
       type="button"
       onClick={onClick}
       className="w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 text-left hover:bg-white/[0.04] transition-colors"
@@ -48,7 +49,7 @@ function DocEditModal({ title, placeholder, value, onSave, onClose }) {
           >
             Cancel
           </button>
-          <button
+          <button data-cta="app_mentorship_docs_save"
             onClick={async () => {
               setSaving(true);
               await onSave(val.trim());

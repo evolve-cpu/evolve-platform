@@ -1,4 +1,5 @@
 // import React from "react";
+import { ctaSlug } from "../../utils/analytics";
 // import { useSearchParams } from "react-router-dom";
 
 // export default function CollegeActivities() {
@@ -564,7 +565,7 @@ export default function CollegeActivities() {
                 </p>
 
                 {!item.isLocked ? (
-                  <button
+                  <button data-cta={`web_in_person_activity_start_${ctaSlug(item.key)}`}
                     // onClick={() => handleStart(item.key)}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -636,7 +637,7 @@ export default function CollegeActivities() {
                     </p>
 
                     {!item.isLocked ? (
-                      <button
+                      <button data-cta={`web_in_person_activity_start_${ctaSlug(item.key)}`}
                         onClick={() => handleStart(item.key)}
                         disabled={loading}
                         className="

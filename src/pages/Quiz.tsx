@@ -213,7 +213,7 @@ const Quiz = () => {
             </div>
 
             {/* CTA button */}
-            <a
+            <a data-cta="web_quiz_story_start"
               href="https://story-quiz.netlify.app/quiz/story"
               target="_blank"
               rel="noopener noreferrer"
@@ -248,7 +248,7 @@ const Quiz = () => {
             </div>
 
             {/* CTA button */}
-            <a
+            <a data-cta="web_quiz_printing_start"
               href="https://evolve-printing-challange.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
@@ -261,7 +261,7 @@ const Quiz = () => {
 
         {/* Random Quiz CTA */}
         <div className="text-center">
-          <button className="btn-secondary inline-flex items-center gap-2 text-base font-semibold px-8 py-3 rounded-lg hover:scale-[1.02] transition-transform mx-auto">
+          <button data-cta="web_quiz_random_start" className="btn-secondary inline-flex items-center gap-2 text-base font-semibold px-8 py-3 rounded-lg hover:scale-[1.02] transition-transform mx-auto">
             Take Random Quiz <ArrowRight size={18} />
           </button>
         </div>

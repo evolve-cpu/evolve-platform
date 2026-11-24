@@ -158,7 +158,7 @@ export default function InviteAccept() {
     return (
       <Screen>
         <p className="text-white font-bold text-xl">this invite has already been accepted.</p>
-        <button
+        <button data-cta="web_invite_go_to_institute"
           onClick={() => navigate(`/institute/${invite.org_slug}`)}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3.5 active:scale-[0.98] transition-transform"
         >
@@ -211,7 +211,7 @@ export default function InviteAccept() {
                 <span className="text-white font-medium">{v || "—"}</span>
               </div>
             ))}
-            <a
+            <a data-cta="web_invite_flag_issue"
               href="mailto:contact@evolvedesign.academy"
               className="text-white/25 text-[11px] hover:text-white/50 transition-colors mt-1"
             >
@@ -226,7 +226,7 @@ export default function InviteAccept() {
             </p>
           )}
 
-          <button
+          <button data-cta={user ? "web_invite_accept_continue" : "web_invite_sign_in_to_accept"}
             onClick={handleAcceptClick}
             disabled={user && !emailMatches}
             className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98] disabled:opacity-40"
@@ -267,7 +267,7 @@ export default function InviteAccept() {
           >
             back
           </button>
-          <button
+          <button data-cta="web_invite_intake_continue"
             onClick={handleIntakeContinue}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98]"
           >
@@ -320,7 +320,7 @@ export default function InviteAccept() {
           >
             back
           </button>
-          <button
+          <button data-cta="web_invite_confirm_enter_space"
             onClick={() => submitAccept(fields ? answers : null)}
             disabled={phase === "submitting"}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98] disabled:opacity-60"

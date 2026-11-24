@@ -123,7 +123,7 @@ export default function CollegeActivationVerify() {
           <p className="text-evolve-pink font-semibold mt-4">{error}</p>
         )}
 
-        <button
+        <button data-cta="web_in_person_verify_continue"
           onClick={handleVerify}
           disabled={loading}
           className="mt-6 w-full bg-black text-white font-extrabold rounded-[37.11px] py-3 shadow-[6px_6px_0px_rgba(0,0,0,0.25)] disabled:opacity-50"

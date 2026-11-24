@@ -1,0 +1,720 @@
+﻿cta_name,platform,page,action,button_text,pattern,source
+web_404_return_home,Website,404 page,404 return home,Return to Home,,src/pages/NotFound.tsx:26
+web_about_be_a_builder,Website,About ( /about ),About be a builder,Be a builder,,src/pages/About/BuildersSection.jsx:443
+web_about_be_a_collaborator,Website,About ( /about ),About be a collaborator,Be a collaborator,,src/pages/About/CollaboratorsSection.jsx:153
+web_about_builder_linkedin,Website,About ( /about ),About builder linkedin,,,src/pages/About/BuildersSection.jsx:252
+web_about_builder_read_testimonial,Website,About ( /about ),About builder read testimonial,,,src/pages/About/BuildersSection.jsx:182
+web_about_builder_video_play,Website,About ( /about ),About builder video play,,,src/pages/About/BuildersSection.jsx:156
+web_about_team_instagram,Website,About ( /about ),About team instagram,,,src/pages/About/MemberCard.jsx:34
+web_about_team_linkedin,Website,About ( /about ),About team linkedin,,,src/pages/About/MemberCard.jsx:34
+web_about_team_member_open,Website,About ( /about ),About team member open,,,src/pages/About/MobileMemberSheet.jsx:11
+web_become_reviewer_join_community,Website,Become a reviewer ( /portfolio-review/become-a-reviewer ),Become reviewer join community,Join evolve community,,src/pages/BecomeAReviewer.jsx:415
+web_become_reviewer_submit,Website,Become a reviewer ( /portfolio-review/become-a-reviewer ),Become reviewer submit,Submit,,src/pages/BecomeAReviewer.jsx:377
+web_community_hero_join_discord,Website,Community ( /community ),Community hero join discord,,,src/pages/Community.jsx:1055
+web_community_join_us,Website,Community ( /community ),Community join us,Join Us,,src/pages/Community.jsx:1070
+web_community_meetups_join_us,Website,Community ( /community ),Community meetups join us,Join Us,,src/components/community/MeetupsSection.jsx:153
+web_community_showcase_tab_activities,Website,Community ( /community ),Community showcase tab activities,,,src/components/community/CommunityShowcase.jsx:143
+web_community_showcase_tab_ama,Website,Community ( /community ),Community showcase tab ama,,,src/components/community/CommunityShowcase.jsx:143
+web_community_showcase_tab_bookclub,Website,Community ( /community ),Community showcase tab bookclub,,,src/components/community/CommunityShowcase.jsx:143
+web_contact_modal_send_message,Website,Contact us pop-up,Contact modal send message,[Send message],,src/components/ContactModal.jsx:303
+web_cookie_accept,Website,Cookie banner,Cookie accept,Accept cookies,,src/components/CookieConsent.jsx:63
+web_cookie_privacy_policy,Website,Cookie banner,Cookie privacy policy,Privacy policy,,src/components/CookieConsent.jsx:50
+web_cookie_reject,Website,Cookie banner,Cookie reject,Reject cookies,,src/components/CookieConsent.jsx:56
+web_corporates_download_handbook,Website,Corporates ( /corporates ),Corporates download handbook,Download handbook,,src/pages/Corporates.jsx:196
+web_corporates_get_in_touch,Website,Corporates ( /corporates ),Corporates get in touch,Get in touch,,src/pages/Corporates.jsx:135
+web_course_open_course,Website,Course ( /course ),Course open course,🚀 Open Course,,src/pages/Course.tsx:99
+web_course_start_now,Website,Course ( /course ),Course start now,Start Now,,src/pages/Course.tsx:202
+web_designers_explore_community,Website,Designers ( /designers ),Designers explore community,Explore evolve community,,src/pages/Home/Scene1_4.jsx:221 ; src/pages/Home/Scene1_4.jsx:270
+web_designers_testimonial_video_play,Website,Designers ( /designers ),Designers testimonial video play,,,src/pages/Home/SceneTestimonials.jsx:116
+web_designers_waitlist_be_first_to_know,Website,Designers ( /designers ),Designers waitlist be first to know,Be the first to know,,src/pages/Home/Scene4_refined.jsx:375
+web_designers_waitlist_notify_me,Website,Designers ( /designers ),Designers waitlist notify me,notify me,,src/pages/Home/Scene4_refined.jsx:446
+web_event_back_to_events,Website,Event page ( /events/:slug and /app/events/:slug ),Event back to events,Back to events,,src/pages/EventDetail.jsx:993
+web_event_book_spot,Website,Event page ( /events/:slug and /app/events/:slug ),Event book spot,,,src/pages/EventDetail.jsx:1130
+web_event_book_spot_mobile,Website,Event page ( /events/:slug and /app/events/:slug ),Event book spot mobile,,,src/pages/EventDetail.jsx:1213
+web_event_free_with_plan,Website,Event page ( /events/:slug and /app/events/:slug ),Event free with plan,free with a plan,,src/pages/EventDetail.jsx:961
+web_event_host_behance,Website,Event page ( /events/:slug and /app/events/:slug ),Event host behance,,,src/pages/EventDetail.jsx:1096
+web_event_host_dribbble,Website,Event page ( /events/:slug and /app/events/:slug ),Event host dribbble,,,src/pages/EventDetail.jsx:1096
+web_event_host_github,Website,Event page ( /events/:slug and /app/events/:slug ),Event host github,,,src/pages/EventDetail.jsx:1096
+web_event_host_instagram,Website,Event page ( /events/:slug and /app/events/:slug ),Event host instagram,,,src/pages/EventDetail.jsx:1096
+web_event_host_linkedin,Website,Event page ( /events/:slug and /app/events/:slug ),Event host linkedin,,,src/pages/EventDetail.jsx:1096
+web_event_host_twitter,Website,Event page ( /events/:slug and /app/events/:slug ),Event host twitter,,,src/pages/EventDetail.jsx:1096
+web_event_host_website,Website,Event page ( /events/:slug and /app/events/:slug ),Event host website,,,src/pages/EventDetail.jsx:1096
+web_event_host_youtube,Website,Event page ( /events/:slug and /app/events/:slug ),Event host youtube,,,src/pages/EventDetail.jsx:1096
+web_event_register_submit,Website,Event page ( /events/:slug and /app/events/:slug ),Event register submit,,,src/pages/EventDetail.jsx:342
+web_event_register_terms_link,Website,Event page ( /events/:slug and /app/events/:slug ),Event register terms link,,,src/pages/EventDetail.jsx:159
+web_event_speaker_behance,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker behance,,,src/pages/EventDetail.jsx:589
+web_event_speaker_dribbble,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker dribbble,,,src/pages/EventDetail.jsx:589
+web_event_speaker_github,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker github,,,src/pages/EventDetail.jsx:589
+web_event_speaker_instagram,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker instagram,,,src/pages/EventDetail.jsx:589
+web_event_speaker_linkedin,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker linkedin,,,src/pages/EventDetail.jsx:589
+web_event_speaker_twitter,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker twitter,,,src/pages/EventDetail.jsx:589
+web_event_speaker_website,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker website,,,src/pages/EventDetail.jsx:589
+web_event_speaker_youtube,Website,Event page ( /events/:slug and /app/events/:slug ),Event speaker youtube,,,src/pages/EventDetail.jsx:589
+web_event_ticket_join_community,Website,Event page ( /events/:slug and /app/events/:slug ),Event ticket join community,⚡ join evolve community,,src/pages/EventDetail.jsx:474
+web_event_ticket_save,Website,Event page ( /events/:slug and /app/events/:slug ),Event ticket save,↓ save ticket to share,,src/pages/EventDetail.jsx:467
+web_event_recording_play,Website,Event page: past event recording,Event recording play,,,src/components/events/PastEventRecording.jsx:62 ; src/components/events/YouTubeLockedPlayer.jsx:263
+web_event_recording_unlock,Website,Event page: past event recording,Event recording unlock,,,src/components/events/PastEventRecording.jsx:227 ; src/components/events/PastEventRecording.jsx:254
+web_events_hero_next,Website,Events ( /events ),Events hero next,,,src/pages/Webinars.jsx:1004
+web_events_hero_prev,Website,Events ( /events ),Events hero prev,,,src/pages/Webinars.jsx:1004
+web_events_past_event_card,Website,Events ( /events ),Events past event card,,,src/pages/Webinars.jsx:1270
+web_events_past_filter,Website,Events ( /events ),Events past filter,[filter by category],,src/pages/Webinars.jsx:1237
+web_events_past_filter_<event category>,Website,Events ( /events ),Events past filter <event category>,,yes,src/pages/Webinars.jsx:1252
+web_events_past_filter_all,Website,Events ( /events ),Events past filter all,,,src/pages/Webinars.jsx:1252
+web_events_past_show_more,Website,Events ( /events ),Events past show more,Show more,,src/pages/Webinars.jsx:1307
+web_events_upcoming_register_now,Website,Events ( /events ),Events upcoming register now,Register now,,src/pages/Webinars.jsx:1096
+web_events_watch_playlist,Website,Events ( /events ),Events watch playlist,,,src/pages/Webinars.jsx:801
+web_events_watch_playlist_mobile,Website,Events ( /events ),Events watch playlist mobile,,,src/pages/Webinars.jsx:951
+web_inquiry_corporates_book_call,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry corporates book call,Book a 30-min call,,src/components/InstituteContactModal.jsx:278
+web_inquiry_corporates_submit,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry corporates submit,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_corporates_submit_download_handbook,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry corporates submit download handbook,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_corporates_whatsapp,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry corporates whatsapp,Or message us on whatsapp,,src/components/InstituteContactModal.jsx:291
+web_inquiry_find_your_niche_book_call,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry find your niche book call,Book a 30-min call,,src/components/InstituteContactModal.jsx:278
+web_inquiry_find_your_niche_submit,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry find your niche submit,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_find_your_niche_submit_download_handbook,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry find your niche submit download handbook,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_find_your_niche_whatsapp,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry find your niche whatsapp,Or message us on whatsapp,,src/components/InstituteContactModal.jsx:291
+web_inquiry_institutions_book_call,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry institutions book call,Book a 30-min call,,src/components/InstituteContactModal.jsx:278
+web_inquiry_institutions_submit,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry institutions submit,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_institutions_submit_download_handbook,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry institutions submit download handbook,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_institutions_whatsapp,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry institutions whatsapp,Or message us on whatsapp,,src/components/InstituteContactModal.jsx:291
+web_inquiry_portfolio_review_book_call,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry portfolio review book call,Book a 30-min call,,src/components/InstituteContactModal.jsx:278
+web_inquiry_portfolio_review_submit,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry portfolio review submit,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_portfolio_review_submit_download_handbook,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry portfolio review submit download handbook,,,src/components/InstituteContactModal.jsx:255
+web_inquiry_portfolio_review_whatsapp,Website,"Get in touch / handbook pop-up (institutions, corporates, programmes)",Inquiry portfolio review whatsapp,Or message us on whatsapp,,src/components/InstituteContactModal.jsx:291
+web_home_closing_start_for_free,Website,Home ( / ),Home closing start for free,Start for free,,src/pages/MainHome/ClosingSection.jsx:61
+web_home_ecosystem_community_explore,Website,Home ( / ),Home ecosystem community explore,,,src/pages/MainHome/EcosystemSection.jsx:68
+web_home_ecosystem_events_explore,Website,Home ( / ),Home ecosystem events explore,,,src/pages/MainHome/EcosystemSection.jsx:68
+web_home_ecosystem_grow_explore,Website,Home ( / ),Home ecosystem grow explore,,,src/pages/MainHome/EcosystemSection.jsx:68
+web_home_ecosystem_profile_explore,Website,Home ( / ),Home ecosystem profile explore,,,src/pages/MainHome/EcosystemSection.jsx:68
+web_home_ecosystem_tab_community,Website,Home ( / ),Home ecosystem tab community,,,src/pages/MainHome/EcosystemSection.jsx:92
+web_home_ecosystem_tab_events,Website,Home ( / ),Home ecosystem tab events,,,src/pages/MainHome/EcosystemSection.jsx:92
+web_home_ecosystem_tab_grow,Website,Home ( / ),Home ecosystem tab grow,,,src/pages/MainHome/EcosystemSection.jsx:92
+web_home_ecosystem_tab_profile,Website,Home ( / ),Home ecosystem tab profile,,,src/pages/MainHome/EcosystemSection.jsx:92
+web_home_guidance_mentorship_know_more,Website,Home ( / ),Home guidance mentorship know more,Know more,,src/pages/MainHome/GuidanceSection.jsx:104
+web_home_guidance_portfolio_review_know_more,Website,Home ( / ),Home guidance portfolio review know more,Know more,,src/pages/MainHome/GuidanceSection.jsx:104
+web_home_hero_scroll_down,Website,Home ( / ),Home hero scroll down,,,src/pages/MainHome/HeroSection.jsx:119
+web_home_hero_start_for_free,Website,Home ( / ),Home hero start for free,Start for free,,src/pages/MainHome/HeroSection.jsx:103
+web_home_testimonial_video_play,Website,Home ( / ),Home testimonial video play,,,src/pages/MainHome/VideoTestimonialsSection.jsx:89
+web_invite_accept_continue,Website,Institute invite ( /invite/:token ),Invite accept continue,,,src/pages/InviteAccept.jsx:229
+web_invite_confirm_enter_space,Website,Institute invite ( /invite/:token ),Invite confirm enter space,confirm & enter my space →,,src/pages/InviteAccept.jsx:323
+web_invite_flag_issue,Website,Institute invite ( /invite/:token ),Invite flag issue,doesn't look right? flag it,,src/pages/InviteAccept.jsx:214
+web_invite_go_to_institute,Website,Institute invite ( /invite/:token ),Invite go to institute,,,src/pages/InviteAccept.jsx:161
+web_invite_intake_continue,Website,Institute invite ( /invite/:token ),Invite intake continue,continue →,,src/pages/InviteAccept.jsx:270
+web_invite_sign_in_to_accept,Website,Institute invite ( /invite/:token ),Invite sign in to accept,,,src/pages/InviteAccept.jsx:229
+web_find_your_niche_programme_download_handbook,Website,Institute programme pages ( /for-institutes/* ),Find your niche programme download handbook,Download handbook,,src/components/ProgrammeSections.jsx:69
+web_find_your_niche_programme_get_in_touch,Website,Institute programme pages ( /for-institutes/* ),Find your niche programme get in touch,Get in touch,,src/components/ProgrammeSections.jsx:57
+web_find_your_niche_programme_reviewer_instagram,Website,Institute programme pages ( /for-institutes/* ),Find your niche programme reviewer instagram,,,src/components/ProgrammeSections.jsx:237
+web_find_your_niche_programme_reviewer_linkedin,Website,Institute programme pages ( /for-institutes/* ),Find your niche programme reviewer linkedin,,,src/components/ProgrammeSections.jsx:227
+web_portfolio_review_programme_download_handbook,Website,Institute programme pages ( /for-institutes/* ),Portfolio review programme download handbook,Download handbook,,src/components/ProgrammeSections.jsx:69
+web_portfolio_review_programme_get_in_touch,Website,Institute programme pages ( /for-institutes/* ),Portfolio review programme get in touch,Get in touch,,src/components/ProgrammeSections.jsx:57
+web_portfolio_review_programme_reviewer_instagram,Website,Institute programme pages ( /for-institutes/* ),Portfolio review programme reviewer instagram,,,src/components/ProgrammeSections.jsx:237
+web_portfolio_review_programme_reviewer_linkedin,Website,Institute programme pages ( /for-institutes/* ),Portfolio review programme reviewer linkedin,,,src/components/ProgrammeSections.jsx:227
+web_institutions_download_handbook,Website,Institutions ( /institutions ),Institutions download handbook,Download handbook,,src/pages/Institutions.jsx:293
+web_institutions_get_in_touch,Website,Institutions ( /institutions ),Institutions get in touch,Get in touch,,src/pages/Institutions.jsx:186
+web_institutions_go_to_my_space,Website,Institutions ( /institutions ),Institutions go to my space,,,src/pages/Institutions.jsx:196
+web_institutions_programme_find_your_niche,Website,Institutions ( /institutions ),Institutions programme find your niche,,,src/pages/Institutions.jsx:57
+web_institutions_programme_portfolio_review_programme,Website,Institutions ( /institutions ),Institutions programme portfolio review programme,,,src/pages/Institutions.jsx:57
+web_institutions_set_up_space,Website,Institutions ( /institutions ),Institutions set up space,,,src/pages/Institutions.jsx:196
+web_audience_footer_corporates,Website,Institutions / corporates footer,Audience footer corporates,,,src/components/AudienceFooter.jsx:109
+web_audience_footer_designers,Website,Institutions / corporates footer,Audience footer designers,,,src/components/AudienceFooter.jsx:109
+web_audience_footer_find_your_niche_programme,Website,Institutions / corporates footer,Audience footer find your niche programme,,,src/components/AudienceFooter.jsx:109
+web_audience_footer_institutions,Website,Institutions / corporates footer,Audience footer institutions,,,src/components/AudienceFooter.jsx:109
+web_audience_footer_portfolio_review_programme,Website,Institutions / corporates footer,Audience footer portfolio review programme,,,src/components/AudienceFooter.jsx:109
+web_audience_footer_privacy_policy,Website,Institutions / corporates footer,Audience footer privacy policy,Privacy Policy,,src/components/AudienceFooter.jsx:151
+web_audience_footer_social_discord,Website,Institutions / corporates footer,Audience footer social discord,,,src/components/AudienceFooter.jsx:129
+web_audience_footer_social_instagram,Website,Institutions / corporates footer,Audience footer social instagram,,,src/components/AudienceFooter.jsx:129
+web_audience_footer_social_linkedin,Website,Institutions / corporates footer,Audience footer social linkedin,,,src/components/AudienceFooter.jsx:129
+web_audience_footer_social_medium,Website,Institutions / corporates footer,Audience footer social medium,,,src/components/AudienceFooter.jsx:129
+web_audience_footer_social_youtube,Website,Institutions / corporates footer,Audience footer social youtube,,,src/components/AudienceFooter.jsx:129
+web_audience_footer_terms,Website,Institutions / corporates footer,Audience footer terms,Terms & Conditions,,src/components/AudienceFooter.jsx:158
+web_corporates_footer_get_in_touch,Website,Institutions / corporates footer,Corporates footer get in touch,,,src/components/AudienceFooter.jsx:76
+web_institutions_footer_get_in_touch,Website,Institutions / corporates footer,Institutions footer get in touch,,,src/components/AudienceFooter.jsx:76
+web_audience_nav_corporates,Website,Institutions / corporates navigation,Audience nav corporates,,,src/components/AudienceNav.jsx:79
+web_audience_nav_designers,Website,Institutions / corporates navigation,Audience nav designers,,,src/components/AudienceNav.jsx:79
+web_audience_nav_institutions,Website,Institutions / corporates navigation,Audience nav institutions,,,src/components/AudienceNav.jsx:79
+web_audience_nav_logo,Website,Institutions / corporates navigation,Audience nav logo,[evolve home],,src/components/AudienceNav.jsx:52
+web_corporates_nav_get_in_touch,Website,Institutions / corporates navigation,Corporates nav get in touch,Get in Touch,,src/components/AudienceNav.jsx:92
+web_institutions_nav_get_in_touch,Website,Institutions / corporates navigation,Institutions nav get in touch,Get in Touch,,src/components/AudienceNav.jsx:92
+web_mentorship_hero_explore,Website,Mentorship ( /mentorship ),Mentorship hero explore,Coming Soon →,,src/pages/Mentorship.jsx:994
+web_mentorship_hero_get_started,Website,Mentorship ( /mentorship ),Mentorship hero get started,,,src/pages/Mentorship.jsx:1010
+web_mentorship_how_it_works,Website,Mentorship ( /mentorship ),Mentorship how it works,See how it works,,src/pages/Mentorship.jsx:1056
+web_mentorship_mentor_linkedin,Website,Mentorship ( /mentorship ),Mentorship mentor linkedin,,,src/pages/Mentorship.jsx:1199 ; src/pages/Mentorship.jsx:1278
+web_mentorship_my_session,Website,Mentorship ( /mentorship ),Mentorship my session,my mentorship session,,src/pages/Mentorship.jsx:968 ; src/pages/Mentorship.jsx:2142 ; src/pages/Mentorship.jsx:2218
+web_mentorship_pricing_core_get_started,Website,Mentorship ( /mentorship ),Mentorship pricing core get started,[Core Mentorship],,src/pages/Mentorship.jsx:1855
+web_mentorship_pricing_job_assistance_get_started,Website,Mentorship ( /mentorship ),Mentorship pricing job assistance get started,[Mentorship + Job Assistance],,src/pages/Mentorship.jsx:1865
+web_mentorship_whatsapp_connect,Website,Mentorship ( /mentorship ),Mentorship whatsapp connect,Connect with us,,src/pages/Mentorship.jsx:1897 ; src/pages/Mentorship.jsx:2078
+web_mentorship_why_we_built_this_get_started,Website,Mentorship ( /mentorship ),Mentorship why we built this get started,,,src/pages/Mentorship.jsx:2156 ; src/pages/Mentorship.jsx:2232
+web_nav_logo,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav logo,,,src/components/BlackNav.jsx:227 ; src/components/Navigation.jsx:496
+web_nav_menu_community,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav menu community,,,src/components/BlackNav.jsx:271 ; src/components/BlackNav.jsx:284 ; src/components/Navigation.jsx:801
+web_nav_menu_contact_us,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav menu contact us,,,src/components/BlackNav.jsx:271 ; src/components/BlackNav.jsx:284 ; src/components/Navigation.jsx:801
+web_nav_menu_events,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav menu events,,,src/components/BlackNav.jsx:271 ; src/components/BlackNav.jsx:284 ; src/components/Navigation.jsx:801
+web_nav_menu_home,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav menu home,,,src/components/BlackNav.jsx:271 ; src/components/BlackNav.jsx:284 ; src/components/Navigation.jsx:801
+web_nav_menu_join_discord,Website,Navigation on mentorship session & payment pages,Nav menu join discord,,,src/components/BlackNav.jsx:306
+web_nav_menu_mentorship,Website,Navigation on mentorship session & payment pages,Nav menu mentorship,,,src/components/BlackNav.jsx:271 ; src/components/BlackNav.jsx:284
+web_nav_menu_toggle,Website,Navigation on mentorship session & payment pages ; Site navigation (all website pages),Nav menu toggle,[open menu],,src/components/BlackNav.jsx:212 ; src/components/Navigation.jsx:481
+web_profile_header_avatar,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header avatar,,,src/pages/PublicProfile.jsx:1396
+web_profile_header_discord,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header discord,Evolve community,,src/pages/PublicProfile.jsx:1385
+web_profile_header_logo,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header logo,,,src/pages/PublicProfile.jsx:1372
+web_profile_header_sign_in,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header sign in,Sign in,,src/pages/PublicProfile.jsx:1473
+web_profile_tab_grow,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile tab grow,,,src/pages/PublicProfile.jsx:180
+web_profile_tab_profile,Website,"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile tab profile,,,src/pages/PublicProfile.jsx:180
+web_portfolio_review_become_a_reviewer,Website,Portfolio review ( /portfolio-review ),Portfolio review become a reviewer,Become a reviewer,,src/pages/PortfolioReview.jsx:138
+web_portfolio_review_get_started_benefits_desktop,Website,Portfolio review ( /portfolio-review ),Portfolio review get started benefits desktop,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_get_started_benefits_mobile,Website,Portfolio review ( /portfolio-review ),Portfolio review get started benefits mobile,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_get_started_hero_desktop,Website,Portfolio review ( /portfolio-review ),Portfolio review get started hero desktop,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_get_started_hero_mobile,Website,Portfolio review ( /portfolio-review ),Portfolio review get started hero mobile,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_get_started_pricing_desktop,Website,Portfolio review ( /portfolio-review ),Portfolio review get started pricing desktop,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_get_started_pricing_mobile,Website,Portfolio review ( /portfolio-review ),Portfolio review get started pricing mobile,Get Started,,src/pages/PortfolioReview.jsx:96
+web_portfolio_review_reviewer_instagram,Website,Portfolio review ( /portfolio-review ),Portfolio review reviewer instagram,,,src/pages/PortfolioReview.jsx:354
+web_portfolio_review_reviewer_linkedin,Website,Portfolio review ( /portfolio-review ),Portfolio review reviewer linkedin,,,src/pages/PortfolioReview.jsx:344
+web_portfolio_review_form_paste_link,Website,Portfolio review form ( /portfolio-review/form ),Portfolio review form paste link,paste a link,,src/pages/PortfolioReviewForm.jsx:600 ; src/pages/PortfolioReviewForm.jsx:995
+web_portfolio_review_form_submit,Website,Portfolio review form ( /portfolio-review/form ),Portfolio review form submit,,,src/pages/PortfolioReviewForm.jsx:816 ; src/pages/PortfolioReviewForm.jsx:1225
+web_portfolio_review_form_success_apply_mentorship,Website,Portfolio review form ( /portfolio-review/form ),Portfolio review form success apply mentorship,apply for mentorship,,src/pages/PortfolioReviewForm.jsx:341
+web_portfolio_review_form_success_back_to_community,Website,Portfolio review form ( /portfolio-review/form ),Portfolio review form success back to community,,,src/pages/PortfolioReviewForm.jsx:260
+web_portfolio_review_form_upload_file,Website,Portfolio review form ( /portfolio-review/form ),Portfolio review form upload file,upload a file,,src/pages/PortfolioReviewForm.jsx:612 ; src/pages/PortfolioReviewForm.jsx:1006
+web_pricing_free_continue,Website,Pricing ( /pricing ),Pricing free continue,,,src/pages/Pricing/Pricing.jsx:242
+web_pricing_pro_annual_extend,Website,Pricing ( /pricing ),Pricing pro annual extend,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_pro_annual_subscribe,Website,Pricing ( /pricing ),Pricing pro annual subscribe,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_pro_billing_annual,Website,Pricing ( /pricing ),Pricing pro billing annual,,,src/pages/Pricing/Pricing.jsx:257
+web_pricing_pro_billing_monthly,Website,Pricing ( /pricing ),Pricing pro billing monthly,,,src/pages/Pricing/Pricing.jsx:257
+web_pricing_pro_monthly_extend,Website,Pricing ( /pricing ),Pricing pro monthly extend,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_pro_monthly_subscribe,Website,Pricing ( /pricing ),Pricing pro monthly subscribe,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_student_annual_extend,Website,Pricing ( /pricing ),Pricing student annual extend,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_student_annual_subscribe,Website,Pricing ( /pricing ),Pricing student annual subscribe,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_student_billing_annual,Website,Pricing ( /pricing ),Pricing student billing annual,,,src/pages/Pricing/Pricing.jsx:257
+web_pricing_student_billing_monthly,Website,Pricing ( /pricing ),Pricing student billing monthly,,,src/pages/Pricing/Pricing.jsx:257
+web_pricing_student_monthly_extend,Website,Pricing ( /pricing ),Pricing student monthly extend,,,src/pages/Pricing/Pricing.jsx:320
+web_pricing_student_monthly_subscribe,Website,Pricing ( /pricing ),Pricing student monthly subscribe,,,src/pages/Pricing/Pricing.jsx:320
+web_profile_link_portfolio,Website,"Profile & account ( /app/profile, /app/account )",Profile link portfolio,,,src/components/AccountPanel.jsx:1685
+web_profile_link_resume,Website,"Profile & account ( /app/profile, /app/account )",Profile link resume,,,src/components/AccountPanel.jsx:1685
+web_profile_portfolio,Website,"Profile & account ( /app/profile, /app/account )",Profile portfolio,[Portfolio],,src/components/AccountPanel.jsx:1769
+web_profile_resume,Website,"Profile & account ( /app/profile, /app/account )",Profile resume,[Resume],,src/components/AccountPanel.jsx:1778
+web_profile_social_link,Website,"Profile & account ( /app/profile, /app/account )",Profile social link,,,src/components/AccountPanel.jsx:1670
+web_profile_creation_build_verified_profile,Website,Profile creation ( /profile-creation ),Profile creation build verified profile,Build Your Verified Profile,,src/pages/Ecosystem/ProfileCreation.jsx:45
+web_quiz_printing_start,Website,Quiz ( /quiz ),Quiz printing start,Start Quiz,,src/pages/Quiz.tsx:251
+web_quiz_random_start,Website,Quiz ( /quiz ),Quiz random start,Take Random Quiz,,src/pages/Quiz.tsx:264
+web_quiz_story_start,Website,Quiz ( /quiz ),Quiz story start,Start Quiz,,src/pages/Quiz.tsx:216
+web_signin_confirm_code,Website,Sign in ( /signin ),Signin confirm code,Confirm,,src/pages/SignIn.jsx:537
+web_signin_continue_email,Website,Sign in ( /signin ),Signin continue email,,,src/pages/SignIn.jsx:395
+web_signin_continue_google,Website,Sign in ( /signin ),Signin continue google,,,src/pages/SignIn.jsx:364
+web_signin_continue_linkedin,Website,Sign in ( /signin ),Signin continue linkedin,,,src/pages/SignIn.jsx:372
+web_signin_resend_code,Website,Sign in ( /signin ),Signin resend code,Resend code,,src/pages/SignIn.jsx:557
+web_signin_send_code,Website,Sign in ( /signin ),Signin send code,Send code,,src/pages/SignIn.jsx:462
+web_auth_modal_continue_google,Website,Sign-in pop-up,Auth modal continue google,,,src/components/AuthModal.jsx:184
+web_auth_modal_resend_code,Website,Sign-in pop-up,Auth modal resend code,Resend code,,src/components/AuthModal.jsx:286
+web_auth_modal_send_code,Website,Sign-in pop-up,Auth modal send code,,,src/components/AuthModal.jsx:160
+web_auth_modal_verify_code,Website,Sign-in pop-up,Auth modal verify code,,,src/components/AuthModal.jsx:269
+web_footer_about,Website,Site footer,Footer about,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_community,Website,Site footer,Footer community,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_contact_us,Website,Site footer,Footer contact us,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_corporates,Website,Site footer,Footer corporates,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_events,Website,Site footer,Footer events,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_grow,Website,Site footer,Footer grow,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_home,Website,Site footer,Footer home,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_institutions,Website,Site footer,Footer institutions,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_mentorship,Website,Site footer,Footer mentorship,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_portfolio_review,Website,Site footer,Footer portfolio review,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_pricing,Website,Site footer,Footer pricing,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_privacy_policy,Website,Site footer,Footer privacy policy,Privacy Policy,,src/components/Footer.jsx:119
+web_footer_profile_creation,Website,Site footer,Footer profile creation,,,src/components/Footer.jsx:87 ; src/components/Footer.jsx:94
+web_footer_social_discord,Website,Site footer,Footer social discord,,,src/components/Footer.jsx:207 ; src/components/Footer.jsx:280
+web_footer_social_instagram,Website,Site footer,Footer social instagram,,,src/components/Footer.jsx:207 ; src/components/Footer.jsx:280
+web_footer_social_linkedin,Website,Site footer,Footer social linkedin,,,src/components/Footer.jsx:207 ; src/components/Footer.jsx:280
+web_footer_social_medium,Website,Site footer,Footer social medium,,,src/components/Footer.jsx:207 ; src/components/Footer.jsx:280
+web_footer_social_youtube,Website,Site footer,Footer social youtube,,,src/components/Footer.jsx:207 ; src/components/Footer.jsx:280
+web_footer_start_for_free,Website,Site footer,Footer start for free,Start for free,,src/components/Footer.jsx:104
+web_footer_terms,Website,Site footer,Footer terms,Terms & Conditions,,src/components/Footer.jsx:123
+web_nav_account,Website,Site navigation (all website pages),Nav account,,,src/components/Navigation.jsx:516
+web_nav_account_complete_profile,Website,Site navigation (all website pages),Nav account complete profile,Complete your profile,,src/components/Navigation.jsx:605 ; src/components/Navigation.jsx:700
+web_nav_account_download_receipt,Website,Site navigation (all website pages),Nav account download receipt,download receipt ↓,,src/components/Navigation.jsx:646 ; src/components/Navigation.jsx:739
+web_nav_account_log_out,Website,Site navigation (all website pages),Nav account log out,Log out,,src/components/Navigation.jsx:612 ; src/components/Navigation.jsx:707
+web_nav_account_my_profile,Website,Site navigation (all website pages),Nav account my profile,My profile page,,src/components/Navigation.jsx:595 ; src/components/Navigation.jsx:690
+web_nav_menu_about,Website,Site navigation (all website pages),Nav menu about,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_grow,Website,Site navigation (all website pages),Nav menu grow,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_mentorship_programme,Website,Site navigation (all website pages),Nav menu mentorship programme,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_portfolio_review,Website,Site navigation (all website pages),Nav menu portfolio review,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_pricing,Website,Site navigation (all website pages),Nav menu pricing,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_profile_creation,Website,Site navigation (all website pages),Nav menu profile creation,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_menu_typetober,Website,Site navigation (all website pages),Nav menu typetober,,,src/components/Navigation.jsx:801 ; src/components/Navigation.jsx:816 ; src/components/Navigation.jsx:834
+web_nav_sign_in,Website,Site navigation (all website pages),Nav sign in,,,src/components/Navigation.jsx:516
+web_typetober_add_letter,Website,Typetober ( /typetober and /app/typetober ),Typetober add letter,,,src/pages/Typetober/Typetober.jsx:202 ; src/pages/Typetober/Typetober.jsx:232
+web_typetober_bulk_add_more,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk add more,Add more,,src/pages/Typetober/BulkUploadSheet.jsx:504
+web_typetober_bulk_choose_images,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk choose images,Choose images,,src/pages/Typetober/BulkUploadSheet.jsx:574
+web_typetober_bulk_continue,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk continue,,,src/pages/Typetober/BulkUploadSheet.jsx:511
+web_typetober_bulk_currency_inr,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk currency inr,,,src/pages/Typetober/BulkUploadSheet.jsx:615
+web_typetober_bulk_currency_usd,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk currency usd,,,src/pages/Typetober/BulkUploadSheet.jsx:615
+web_typetober_bulk_pay_submit,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk pay submit,,,src/pages/Typetober/BulkUploadSheet.jsx:652
+web_typetober_bulk_see_on_wall,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk see on wall,See them on the wall,,src/pages/Typetober/BulkUploadSheet.jsx:691
+web_typetober_bulk_upload_fab,Website,Typetober ( /typetober and /app/typetober ),Typetober bulk upload fab,Bulk upload,,src/pages/Typetober/Typetober.jsx:950
+web_typetober_example_view,Website,Typetober ( /typetober and /app/typetober ),Typetober example view,,,src/pages/Typetober/Typetober.jsx:141
+web_typetober_hero_accept_challenge,Website,Typetober ( /typetober and /app/typetober ),Typetober hero accept challenge,,,src/pages/Typetober/Typetober.jsx:114
+web_typetober_hero_see_gallery,Website,Typetober ( /typetober and /app/typetober ),Typetober hero see gallery,,,src/pages/Typetober/Typetober.jsx:114
+web_typetober_hero_vote_now,Website,Typetober ( /typetober and /app/typetober ),Typetober hero vote now,,,src/pages/Typetober/Typetober.jsx:114
+web_typetober_info_tab_faqs,Website,Typetober ( /typetober and /app/typetober ),Typetober info tab faqs,,,src/pages/Typetober/Sheets.jsx:508
+web_typetober_info_tab_guidelines,Website,Typetober ( /typetober and /app/typetober ),Typetober info tab guidelines,,,src/pages/Typetober/Sheets.jsx:508
+web_typetober_letter_share,Website,Typetober ( /typetober and /app/typetober ),Typetober letter share,Share this letter,,src/pages/Typetober/Sheets.jsx:607
+web_typetober_letter_tab,Website,Typetober ( /typetober and /app/typetober ),Typetober letter tab,,,src/pages/Typetober/Typetober.jsx:667
+web_typetober_letter_take_challenge,Website,Typetober ( /typetober and /app/typetober ),Typetober letter take challenge,Take the challenge,,src/pages/Typetober/Sheets.jsx:619
+web_typetober_my_letter_view,Website,Typetober ( /typetober and /app/typetober ),Typetober my letter view,,,src/pages/Typetober/Typetober.jsx:167
+web_typetober_nav_back_to_platform,Website,Typetober ( /typetober and /app/typetober ),Typetober nav back to platform,[back to my platform],,src/pages/Typetober/TypetoberNav.jsx:92
+web_typetober_nav_guidelines,Website,Typetober ( /typetober and /app/typetober ),Typetober nav guidelines,[Guidelines],,src/pages/Typetober/TypetoberNav.jsx:164
+web_typetober_nav_join_community,Website,Typetober ( /typetober and /app/typetober ),Typetober nav join community,[Join community],,src/pages/Typetober/TypetoberNav.jsx:138
+web_typetober_nav_menu_about,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu about,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_community,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu community,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_contact_us,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu contact us,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_events,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu events,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_grow,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu grow,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_home,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu home,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_mentorship_programme,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu mentorship programme,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_portfolio_review,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu portfolio review,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_pricing,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu pricing,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_profile_creation,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu profile creation,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_menu_toggle,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu toggle,,,src/pages/Typetober/TypetoberNav.jsx:114
+web_typetober_nav_menu_typetober,Website,Typetober ( /typetober and /app/typetober ),Typetober nav menu typetober,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+web_typetober_nav_prizes,Website,Typetober ( /typetober and /app/typetober ),Typetober nav prizes,[Prizes],,src/pages/Typetober/TypetoberNav.jsx:150
+web_typetober_nav_profile,Website,Typetober ( /typetober and /app/typetober ),Typetober nav profile,,,src/pages/Typetober/TypetoberNav.jsx:179
+web_typetober_profile_bulk_upload,Website,Typetober ( /typetober and /app/typetober ),Typetober profile bulk upload,Bulk upload,,src/pages/Typetober/ProfileSheet.jsx:95
+web_typetober_profile_download_certificate,Website,Typetober ( /typetober and /app/typetober ),Typetober profile download certificate,Download certificate,,src/pages/Typetober/ProfileSheet.jsx:45
+web_typetober_profile_go_to_letter,Website,Typetober ( /typetober and /app/typetober ),Typetober profile go to letter,,,src/pages/Typetober/ProfileSheet.jsx:200
+web_typetober_profile_sign_out,Website,Typetober ( /typetober and /app/typetober ),Typetober profile sign out,Sign out,,src/pages/Typetober/ProfileSheet.jsx:228
+web_typetober_profile_tab_certs,Website,Typetober ( /typetober and /app/typetober ),Typetober profile tab certs,,,src/pages/Typetober/ProfileSheet.jsx:161
+web_typetober_profile_tab_subs,Website,Typetober ( /typetober and /app/typetober ),Typetober profile tab subs,,,src/pages/Typetober/ProfileSheet.jsx:161
+web_typetober_profile_view_letter,Website,Typetober ( /typetober and /app/typetober ),Typetober profile view letter,,,src/pages/Typetober/ProfileSheet.jsx:181
+web_typetober_share_copy_caption,Website,Typetober ( /typetober and /app/typetober ),Typetober share copy caption,,,src/pages/Typetober/ShareSheet.jsx:337
+web_typetober_share_copy_link,Website,Typetober ( /typetober and /app/typetober ),Typetober share copy link,,,src/pages/Typetober/ShareSheet.jsx:271
+web_typetober_share_discord_join,Website,Typetober ( /typetober and /app/typetober ),Typetober share discord join,Join,,src/pages/Typetober/ShareSheet.jsx:303
+web_typetober_share_instagram,Website,Typetober ( /typetober and /app/typetober ),Typetober share instagram,,,src/pages/Typetober/ShareSheet.jsx:369
+web_typetober_share_native,Website,Typetober ( /typetober and /app/typetober ),Typetober share native,Share,,src/pages/Typetober/ShareSheet.jsx:318
+web_typetober_share_save_image,Website,Typetober ( /typetober and /app/typetober ),Typetober share save image,Save image,,src/pages/Typetober/ShareSheet.jsx:329
+web_typetober_share_whatsapp,Website,Typetober ( /typetober and /app/typetober ),Typetober share whatsapp,,,src/pages/Typetober/ShareSheet.jsx:351
+web_typetober_share_x,Website,Typetober ( /typetober and /app/typetober ),Typetober share x,,,src/pages/Typetober/ShareSheet.jsx:351
+web_typetober_signin_email,Website,Typetober ( /typetober and /app/typetober ),Typetober signin email,,,src/pages/Typetober/Sheets.jsx:264
+web_typetober_signin_google,Website,Typetober ( /typetober and /app/typetober ),Typetober signin google,,,src/pages/Typetober/Sheets.jsx:212
+web_typetober_signin_linkedin,Website,Typetober ( /typetober and /app/typetober ),Typetober signin linkedin,,,src/pages/Typetober/Sheets.jsx:243
+web_typetober_signin_resend_code,Website,Typetober ( /typetober and /app/typetober ),Typetober signin resend code,Resend code,,src/pages/Typetober/Sheets.jsx:138
+web_typetober_signin_send_code,Website,Typetober ( /typetober and /app/typetober ),Typetober signin send code,Send me a code,,src/pages/Typetober/Sheets.jsx:167
+web_typetober_signin_verify_code,Website,Typetober ( /typetober and /app/typetober ),Typetober signin verify code,Verify & continue,,src/pages/Typetober/Sheets.jsx:127
+web_typetober_upload_choose_image,Website,Typetober ( /typetober and /app/typetober ),Typetober upload choose image,,,src/pages/Typetober/UploadSheet.jsx:189
+web_typetober_upload_continue,Website,Typetober ( /typetober and /app/typetober ),Typetober upload continue,Continue →,,src/pages/Typetober/UploadSheet.jsx:209
+web_typetober_upload_currency_inr,Website,Typetober ( /typetober and /app/typetober ),Typetober upload currency inr,,,src/pages/Typetober/UploadSheet.jsx:228
+web_typetober_upload_currency_usd,Website,Typetober ( /typetober and /app/typetober ),Typetober upload currency usd,,,src/pages/Typetober/UploadSheet.jsx:228
+web_typetober_upload_pay_submit,Website,Typetober ( /typetober and /app/typetober ),Typetober upload pay submit,,,src/pages/Typetober/UploadSheet.jsx:257
+web_typetober_upload_see_on_wall,Website,Typetober ( /typetober and /app/typetober ),Typetober upload see on wall,See it on the wall,,src/pages/Typetober/UploadSheet.jsx:277
+web_typetober_upload_switch_to_bulk,Website,Typetober ( /typetober and /app/typetober ),Typetober upload switch to bulk,Upload many at once,,src/pages/Typetober/UploadSheet.jsx:197
+web_typetober_upload_take_photo,Website,Typetober ( /typetober and /app/typetober ),Typetober upload take photo,Take photo,,src/pages/Typetober/UploadSheet.jsx:192
+web_typetober_vote,Website,Typetober ( /typetober and /app/typetober ),Typetober vote,,,src/pages/Typetober/Typetober.jsx:431
+web_typetober_wall_entry_view,Website,Typetober ( /typetober and /app/typetober ),Typetober wall entry view,,,src/pages/Typetober/Typetober.jsx:467
+web_in_person_activity_start_reality_check,Website,evolve in person ( /evolve-in-person/* ),In person activity start reality check,,,src/pages/College_Activity_Page/CollegeActivities.jsx:568 ; src/pages/College_Activity_Page/CollegeActivities.jsx:640
+web_in_person_activity_start_self_reflection,Website,evolve in person ( /evolve-in-person/* ),In person activity start self reflection,,,src/pages/College_Activity_Page/CollegeActivities.jsx:568 ; src/pages/College_Activity_Page/CollegeActivities.jsx:640
+web_in_person_edit_details,Website,evolve in person ( /evolve-in-person/* ),In person edit details,edit details / edit,,src/pages/College_Activity_Page/CollegeActivation.jsx:2586 ; src/pages/College_Activity_Page/CollegeActivation.jsx:2829
+web_in_person_reality_check_add_answer,Website,evolve in person ( /evolve-in-person/* ),In person reality check add answer,add answer,,src/pages/College_Activity_Page/CollegeRealityCheck.jsx:1287
+web_in_person_reality_check_back_to_activities,Website,evolve in person ( /evolve-in-person/* ),In person reality check back to activities,back to activities,,src/pages/College_Activity_Page/CollegeRealityCheck.jsx:1487
+web_in_person_reality_check_begin,Website,evolve in person ( /evolve-in-person/* ),In person reality check begin,begin,,src/pages/College_Activity_Page/CollegeRealityCheck.jsx:1205
+web_in_person_reality_check_save_major_start,Website,evolve in person ( /evolve-in-person/* ),In person reality check save major start,next,,src/pages/College_Activity_Page/CollegeRealityCheck.jsx:1571
+web_in_person_reflection_add_field,Website,evolve in person ( /evolve-in-person/* ),In person reflection add field,add this field,,src/pages/College_Activity_Page/CollegeSelfReflection.jsx:556
+web_in_person_reflection_add_more,Website,evolve in person ( /evolve-in-person/* ),In person reflection add more,add more,,src/pages/College_Activity_Page/CollegeSelfReflection.jsx:879
+web_in_person_reflection_save_finish,Website,evolve in person ( /evolve-in-person/* ),In person reflection save finish,save & finish,,src/pages/College_Activity_Page/CollegeSelfReflection.jsx:892
+web_in_person_resend_code,Website,evolve in person ( /evolve-in-person/* ),In person resend code,resend otp / resend,,src/pages/College_Activity_Page/CollegeActivation.jsx:2575 ; src/pages/College_Activity_Page/CollegeActivation.jsx:2818
+web_in_person_send_code,Website,evolve in person ( /evolve-in-person/* ),In person send code,lets begin,,src/pages/College_Activity_Page/CollegeActivation.jsx:2599 ; src/pages/College_Activity_Page/CollegeActivation.jsx:2753
+web_in_person_verify_code,Website,evolve in person ( /evolve-in-person/* ),In person verify code,verify otp,,src/pages/College_Activity_Page/CollegeActivation.jsx:2618 ; src/pages/College_Activity_Page/CollegeActivation.jsx:2839
+web_in_person_verify_continue,Website,evolve in person ( /evolve-in-person/* ),In person verify continue,continue,,src/pages/College_Activity_Page/CollegeActivationVerify.jsx:126
+app_community_channel_<discord channel id>,Platform (app),Community tab ( /app/community ),Community channel <discord channel id>,,yes,src/components/community/CommunityFeed.jsx:187
+app_community_channel_all,Platform (app),Community tab ( /app/community ),Community channel all,,,src/components/community/CommunityFeed.jsx:187
+app_community_feed_try_again,Platform (app),Community tab ( /app/community ),Community feed try again,Try again,,src/components/community/CommunityFeed.jsx:220
+app_community_join_discord,Platform (app),Community tab ( /app/community ),Community join discord,Join,,src/components/community/CommunityFeed.jsx:173
+app_community_reply_on_discord,Platform (app),Community tab ( /app/community ),Community reply on discord,Reply on Discord →,,src/components/community/CommunityFeed.jsx:129
+app_event_all_events,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event all events,← all events,,src/pages/EventDetail.jsx:1012
+app_event_back_to_events,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event back to events,Back to events,,src/pages/EventDetail.jsx:993
+app_event_book_spot,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event book spot,,,src/pages/EventDetail.jsx:1130
+app_event_book_spot_mobile,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event book spot mobile,,,src/pages/EventDetail.jsx:1213
+app_event_free_with_plan,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event free with plan,free with a plan,,src/pages/EventDetail.jsx:961
+app_event_host_behance,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host behance,,,src/pages/EventDetail.jsx:1096
+app_event_host_dribbble,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host dribbble,,,src/pages/EventDetail.jsx:1096
+app_event_host_github,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host github,,,src/pages/EventDetail.jsx:1096
+app_event_host_instagram,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host instagram,,,src/pages/EventDetail.jsx:1096
+app_event_host_linkedin,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host linkedin,,,src/pages/EventDetail.jsx:1096
+app_event_host_twitter,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host twitter,,,src/pages/EventDetail.jsx:1096
+app_event_host_website,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host website,,,src/pages/EventDetail.jsx:1096
+app_event_host_youtube,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event host youtube,,,src/pages/EventDetail.jsx:1096
+app_event_register_submit,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event register submit,,,src/pages/EventDetail.jsx:342
+app_event_register_terms_link,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event register terms link,,,src/pages/EventDetail.jsx:159
+app_event_speaker_behance,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker behance,,,src/pages/EventDetail.jsx:589
+app_event_speaker_dribbble,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker dribbble,,,src/pages/EventDetail.jsx:589
+app_event_speaker_github,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker github,,,src/pages/EventDetail.jsx:589
+app_event_speaker_instagram,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker instagram,,,src/pages/EventDetail.jsx:589
+app_event_speaker_linkedin,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker linkedin,,,src/pages/EventDetail.jsx:589
+app_event_speaker_twitter,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker twitter,,,src/pages/EventDetail.jsx:589
+app_event_speaker_website,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker website,,,src/pages/EventDetail.jsx:589
+app_event_speaker_youtube,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event speaker youtube,,,src/pages/EventDetail.jsx:589
+app_event_ticket_join_community,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event ticket join community,⚡ join evolve community,,src/pages/EventDetail.jsx:474
+app_event_ticket_save,Platform (app),Event page ( /events/:slug and /app/events/:slug ),Event ticket save,↓ save ticket to share,,src/pages/EventDetail.jsx:467
+app_event_recording_play,Platform (app),Event page: past event recording,Event recording play,,,src/components/events/PastEventRecording.jsx:62 ; src/components/events/YouTubeLockedPlayer.jsx:263
+app_event_recording_unlock,Platform (app),Event page: past event recording,Event recording unlock,,,src/components/events/PastEventRecording.jsx:227 ; src/components/events/PastEventRecording.jsx:254
+app_mentorship_back,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship back,,,src/components/programmes/mentorship/MentorshipLanding.jsx:89
+app_mentorship_book_slot_confirm,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship book slot confirm,,,src/components/programmes/mentorship/MentorshipBookSlot.jsx:351
+app_mentorship_book_slot_continue,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship book slot continue,,,src/components/programmes/mentorship/MentorshipBookSlot.jsx:110
+app_mentorship_call_go_to_next,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship call go to next,,,src/components/programmes/mentorship/MentorshipCallPage.jsx:154
+app_mentorship_docs_<resource title>,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs <resource title>,,yes,src/components/programmes/mentorship/MentorshipDocsResources.jsx:7
+app_mentorship_docs_fill_up_the_skill_tracker,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs fill up the skill tracker,,,src/components/programmes/mentorship/MentorshipDocsResources.jsx:7
+app_mentorship_docs_fill_up_the_stream_specific_skill_tracker,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs fill up the stream specific skill tracker,,,src/components/programmes/mentorship/MentorshipDocsResources.jsx:7
+app_mentorship_docs_portfolio,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs portfolio,,,src/components/programmes/mentorship/MentorshipDocsResources.jsx:7
+app_mentorship_docs_resume,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs resume,,,src/components/programmes/mentorship/MentorshipDocsResources.jsx:7
+app_mentorship_docs_save,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship docs save,Save,,src/components/programmes/mentorship/MentorshipDocsResources.jsx:52
+app_mentorship_explore_plans,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship explore plans,Explore plans,,src/components/programmes/mentorship/MentorshipLanding.jsx:127
+app_mentorship_feedback_did_not_attend,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship feedback did not attend,I did not attend the session,,src/components/programmes/mentorship/MentorshipFeedbackModal.jsx:105
+app_mentorship_feedback_submit,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship feedback submit,Submit,,src/components/programmes/mentorship/MentorshipFeedbackModal.jsx:93
+app_mentorship_get_started,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship get started,Get started,,src/components/programmes/mentorship/MentorshipLanding.jsx:344
+app_mentorship_gift_claim,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship gift claim,Claim your gift!,,src/components/programmes/mentorship/MentorshipGiftModal.jsx:36
+app_mentorship_gift_claim_continue,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship gift claim continue,Claim your gift!,,src/components/programmes/mentorship/MentorshipGiftModal.jsx:79
+app_mentorship_intake_continue,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship intake continue,,,src/components/programmes/mentorship/MentorshipIntakeForm.jsx:257
+app_mentorship_intake_portfolio_file,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship intake portfolio file,Upload a file,,src/components/programmes/mentorship/MentorshipIntakeForm.jsx:129
+app_mentorship_intake_portfolio_link,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship intake portfolio link,Paste a link,,src/components/programmes/mentorship/MentorshipIntakeForm.jsx:115
+app_mentorship_join_call,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship join call,Join session,,src/components/programmes/mentorship/MentorshipJoinCard.jsx:16
+app_mentorship_mentor_linkedin,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship mentor linkedin,View LinkedIn,,src/components/programmes/mentorship/MentorshipLanding.jsx:209
+app_mentorship_open_recording,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship open recording,Open recording ↗,,src/components/programmes/mentorship/MentorshipRecordingPlayer.jsx:56
+app_mentorship_payment_retry,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship payment retry,Retry,,src/components/programmes/mentorship/MentorshipPricingModal.jsx:293
+app_mentorship_payment_success_continue,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship payment success continue,Continue →,,src/components/programmes/mentorship/MentorshipPricingModal.jsx:271
+app_mentorship_payment_try_again,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship payment try again,Try again,,src/components/programmes/mentorship/MentorshipPricingModal.jsx:237
+app_mentorship_proceed_to_payment,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship proceed to payment,Proceed to payment →,,src/components/programmes/mentorship/MentorshipPricingModal.jsx:191
+app_mentorship_recording_play,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship recording play,,,src/components/programmes/mentorship/MentorshipAllRecordings.jsx:6
+app_mentorship_select_plan_application_support,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship select plan application support,Get started,,src/components/programmes/mentorship/MentorshipLanding.jsx:298
+app_mentorship_select_plan_core,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship select plan core,Get started,,src/components/programmes/mentorship/MentorshipLanding.jsx:298
+app_mentorship_session_go_to_next,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship session go to next,,,src/components/programmes/mentorship/MentorshipSessionPage.jsx:158
+app_mentorship_skill_tracker_next,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship skill tracker next,,,src/components/programmes/mentorship/MentorshipSkillTracker.jsx:249
+app_mentorship_skill_tracker_save,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship skill tracker save,Save skill tracker,,src/components/programmes/mentorship/MentorshipSkillTracker.jsx:231
+app_mentorship_team_email,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship team email,,,src/components/programmes/mentorship/MentorshipTeamFaqPanel.jsx:43
+app_mentorship_timeline_all_recordings,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship timeline all recordings,,,src/components/programmes/mentorship/MentorshipTimeline.jsx:67
+app_mentorship_workspace_back,Platform (app),Grow > Mentorship ( /app/grow/mentorship ),Mentorship workspace back,,,src/components/programmes/mentorship/MentorshipWorkspaceShell.jsx:216
+app_portfolio_review_back,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review back,,,src/components/programmes/PortfolioReviewProgramme.jsx:1585
+app_portfolio_review_book_free_review,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review book free review,,,src/components/programmes/PortfolioReviewProgramme.jsx:1320
+app_portfolio_review_get_started_bottom,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review get started bottom,Get started →,,src/components/programmes/PortfolioReviewProgramme.jsx:1855
+app_portfolio_review_get_started_hero,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review get started hero,Get started →,,src/components/programmes/PortfolioReviewProgramme.jsx:1733
+app_portfolio_review_get_started_pricing,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review get started pricing,Get started →,,src/components/programmes/PortfolioReviewProgramme.jsx:1791
+app_portfolio_review_join_waitlist,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review join waitlist,Join the waitlist →,,src/components/programmes/PortfolioReviewProgramme.jsx:1332
+app_portfolio_review_payment_retry,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review payment retry,Retry,,src/components/programmes/PortfolioReviewProgramme.jsx:1467
+app_portfolio_review_payment_try_again,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review payment try again,Try again,,src/components/programmes/PortfolioReviewProgramme.jsx:1411
+app_portfolio_review_proceed_to_pay,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review proceed to pay,,,src/components/programmes/PortfolioReviewProgramme.jsx:1320
+app_portfolio_review_see_whats_included,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review see whats included,See what's included,,src/components/programmes/PortfolioReviewProgramme.jsx:1624
+app_portfolio_review_start_your_review,Platform (app),Grow > Portfolio review ( /app/grow/portfolio-review ),Portfolio review start your review,Start your review →,,src/components/programmes/PortfolioReviewProgramme.jsx:1445
+app_growth_stage_keep_going,Platform (app),Growth stage pop-up,Growth stage keep going,Keep going →,,src/components/GrowthStageModal.jsx:41
+app_space_back_to_evolve,Platform (app),Institute / company space ( /institute/:slug ),Space back to evolve,back to evolve,,src/pages/InstitutePublicPage.jsx:1132
+app_space_calendar_add_event,Platform (app),Institute / company space ( /institute/:slug ),Space calendar add event,+ add new event,,src/pages/InstitutePublicPage.jsx:2541
+app_space_calendar_edit,Platform (app),Institute / company space ( /institute/:slug ),Space calendar edit,[edit calendar],,src/pages/InstitutePublicPage.jsx:1506 ; src/pages/InstitutePublicPage.jsx:1601
+app_space_calendar_save,Platform (app),Institute / company space ( /institute/:slug ),Space calendar save,save changes,,src/pages/InstitutePublicPage.jsx:2669
+app_space_feed_approve_post,Platform (app),Institute / company space ( /institute/:slug ),Space feed approve post,✓ approve,,src/pages/InstitutePublicPage.jsx:1406
+app_space_feed_edit_post,Platform (app),Institute / company space ( /institute/:slug ),Space feed edit post,edit post,,src/pages/InstitutePublicPage.jsx:1469
+app_space_feed_new_post,Platform (app),Institute / company space ( /institute/:slug ),Space feed new post,+ post,,src/pages/InstitutePublicPage.jsx:1354
+app_space_feed_reject_post,Platform (app),Institute / company space ( /institute/:slug ),Space feed reject post,✕ reject,,src/pages/InstitutePublicPage.jsx:1403
+app_space_feed_remove_post,Platform (app),Institute / company space ( /institute/:slug ),Space feed remove post,remove from feed,,src/pages/InstitutePublicPage.jsx:1478
+app_space_feed_view_pending,Platform (app),Institute / company space ( /institute/:slug ),Space feed view pending,,,src/pages/InstitutePublicPage.jsx:1336
+app_space_feed_view_posts,Platform (app),Institute / company space ( /institute/:slug ),Space feed view posts,,,src/pages/InstitutePublicPage.jsx:1336
+app_space_feed_view_source,Platform (app),Institute / company space ( /institute/:slug ),Space feed view source,view source ↗,,src/pages/InstitutePublicPage.jsx:1388 ; src/pages/InstitutePublicPage.jsx:1442
+app_space_nav_evolve_community,Platform (app),Institute / company space ( /institute/:slug ),Space nav evolve community,evolve community,,src/pages/InstitutePublicPage.jsx:1197
+app_space_nav_my_profile,Platform (app),Institute / company space ( /institute/:slug ),Space nav my profile,,,src/pages/InstitutePublicPage.jsx:1227
+app_space_nav_settings,Platform (app),Institute / company space ( /institute/:slug ),Space nav settings,[space settings],,src/pages/InstitutePublicPage.jsx:1209
+app_space_post_publish,Platform (app),Institute / company space ( /institute/:slug ),Space post publish,,,src/pages/InstitutePublicPage.jsx:2082
+app_space_post_save_changes,Platform (app),Institute / company space ( /institute/:slug ),Space post save changes,,,src/pages/InstitutePublicPage.jsx:2082
+app_space_post_submit_for_review,Platform (app),Institute / company space ( /institute/:slug ),Space post submit for review,,,src/pages/InstitutePublicPage.jsx:2082
+app_space_programme_edit_what_we_do,Platform (app),Institute / company space ( /institute/:slug ),Space programme edit what we do,"edit ""what we do"" →",,src/pages/InstitutePublicPage.jsx:1668
+app_space_programme_save,Platform (app),Institute / company space ( /institute/:slug ),Space programme save,save changes,,src/pages/InstitutePublicPage.jsx:1662
+app_space_programs_explore,Platform (app),Institute / company space ( /institute/:slug ),Space programs explore,explore program,,src/pages/InstitutePublicPage.jsx:1701
+app_space_programs_request_tailored,Platform (app),Institute / company space ( /institute/:slug ),Space programs request tailored,✎,,src/pages/InstitutePublicPage.jsx:1718
+app_space_programs_send_request,Platform (app),Institute / company space ( /institute/:slug ),Space programs send request,send request,,src/pages/InstitutePublicPage.jsx:2505
+app_space_settings_add_award,Platform (app),Institute / company space ( /institute/:slug ),Space settings add award,+ add award,,src/pages/InstitutePublicPage.jsx:2216
+app_space_settings_add_link,Platform (app),Institute / company space ( /institute/:slug ),Space settings add link,+ add link,,src/pages/InstitutePublicPage.jsx:2194
+app_space_settings_save,Platform (app),Institute / company space ( /institute/:slug ),Space settings save,save / save changes,,src/pages/InstitutePublicPage.jsx:2112 ; src/pages/InstitutePublicPage.jsx:2237
+app_space_tab_calendar,Platform (app),Institute / company space ( /institute/:slug ),Space tab calendar,,,src/pages/InstitutePublicPage.jsx:1307
+app_space_tab_feed,Platform (app),Institute / company space ( /institute/:slug ),Space tab feed,,,src/pages/InstitutePublicPage.jsx:1307
+app_space_tab_programs,Platform (app),Institute / company space ( /institute/:slug ),Space tab programs,,,src/pages/InstitutePublicPage.jsx:1307
+app_space_tab_team,Platform (app),Institute / company space ( /institute/:slug ),Space tab team,,,src/pages/InstitutePublicPage.jsx:1307
+app_space_team_add_one,Platform (app),Institute / company space ( /institute/:slug ),Space team add one,+,,src/pages/InstitutePublicPage.jsx:1813 ; src/pages/InstitutePublicPage.jsx:1921
+app_space_team_find_on_evolve,Platform (app),Institute / company space ( /institute/:slug ),Space team find on evolve,⌕,,src/pages/InstitutePublicPage.jsx:1837 ; src/pages/InstitutePublicPage.jsx:1935
+app_space_team_quick_invite,Platform (app),Institute / company space ( /institute/:slug ),Space team quick invite,invite,,src/pages/InstitutePublicPage.jsx:1772
+app_space_team_remove_member,Platform (app),Institute / company space ( /institute/:slug ),Space team remove member,,,src/pages/InstitutePublicPage.jsx:1866
+app_space_team_save_add_another,Platform (app),Institute / company space ( /institute/:slug ),Space team save add another,+ save & add another,,src/pages/InstitutePublicPage.jsx:2278
+app_space_team_send_csv_invites,Platform (app),Institute / company space ( /institute/:slug ),Space team send csv invites,,,src/pages/InstitutePublicPage.jsx:2388
+app_space_team_send_find_invites,Platform (app),Institute / company space ( /institute/:slug ),Space team send find invites,send invites,,src/pages/InstitutePublicPage.jsx:2460
+app_space_team_send_invite,Platform (app),Institute / company space ( /institute/:slug ),Space team send invite,send invite,,src/pages/InstitutePublicPage.jsx:2285
+app_space_team_upload_csv,Platform (app),Institute / company space ( /institute/:slug ),Space team upload csv,⇧,,src/pages/InstitutePublicPage.jsx:1826 ; src/pages/InstitutePublicPage.jsx:1928
+app_space_testimonials_add,Platform (app),Institute / company space ( /institute/:slug ),Space testimonials add,,,src/pages/InstitutePublicPage.jsx:1550
+app_space_testimonials_add_row,Platform (app),Institute / company space ( /institute/:slug ),Space testimonials add row,+ add new testimonial,,src/pages/InstitutePublicPage.jsx:2704
+app_space_testimonials_edit,Platform (app),Institute / company space ( /institute/:slug ),Space testimonials edit,,,src/pages/InstitutePublicPage.jsx:1550
+app_space_testimonials_save,Platform (app),Institute / company space ( /institute/:slug ),Space testimonials save,,,src/pages/InstitutePublicPage.jsx:2804
+app_space_testimonials_share,Platform (app),Institute / company space ( /institute/:slug ),Space testimonials share,,,src/pages/InstitutePublicPage.jsx:2804
+app_space_info_edit,Platform (app),Institute space: info panel,Space info edit,,,src/components/InstituteInfoPanel.jsx:61
+app_space_info_link_<link platform>,Platform (app),Institute space: info panel,Space info link <link platform>,,yes,src/components/InstituteInfoPanel.jsx:23
+app_space_info_website,Platform (app),Institute space: info panel,Space info website,[website],,src/components/InstituteInfoPanel.jsx:15
+app_space_settings_browse_programs,Platform (app),Institute space: settings,Space settings browse programs,browse ongoing programs →,,src/components/InstituteSettingsPanel.jsx:451
+app_space_settings_contact_support,Platform (app),Institute space: settings,Space settings contact support,contact support,,src/components/InstituteSettingsPanel.jsx:268
+app_space_settings_copy_space_id,Platform (app),Institute space: settings,Space settings copy space id,[copy full id],,src/components/InstituteSettingsPanel.jsx:326
+app_space_settings_delete_confirm,Platform (app),Institute space: settings,Space settings delete confirm,delete space,,src/components/InstituteSettingsPanel.jsx:661
+app_space_settings_delete_open,Platform (app),Institute space: settings,Space settings delete open,delete space,,src/components/InstituteSettingsPanel.jsx:491
+app_space_settings_notification_new_member,Platform (app),Institute space: settings,Space settings notification new member,,,src/components/InstituteSettingsPanel.jsx:416
+app_space_settings_notification_new_post_pending,Platform (app),Institute space: settings,Space settings notification new post pending,,,src/components/InstituteSettingsPanel.jsx:416
+app_space_settings_notification_product_updates,Platform (app),Institute space: settings,Space settings notification product updates,,,src/components/InstituteSettingsPanel.jsx:416
+app_space_settings_notification_weekly_analytics,Platform (app),Institute space: settings,Space settings notification weekly analytics,,,src/components/InstituteSettingsPanel.jsx:416
+app_space_settings_restore_space,Platform (app),Institute space: settings,Space settings restore space,,,src/components/InstituteSettingsPanel.jsx:257
+app_space_settings_save_visibility,Platform (app),Institute space: settings,Space settings save visibility,save changes,,src/components/InstituteSettingsPanel.jsx:381
+app_space_settings_transfer_confirm,Platform (app),Institute space: settings,Space settings transfer confirm,transfer,,src/components/InstituteSettingsPanel.jsx:613
+app_space_settings_transfer_continue,Platform (app),Institute space: settings,Space settings transfer continue,continue,,src/components/InstituteSettingsPanel.jsx:562
+app_space_settings_transfer_open,Platform (app),Institute space: settings,Space settings transfer open,transfer,,src/components/InstituteSettingsPanel.jsx:477
+app_space_settings_visibility_private,Platform (app),Institute space: settings,Space settings visibility private,,,src/components/InstituteSettingsPanel.jsx:357
+app_space_settings_visibility_public,Platform (app),Institute space: settings,Space settings visibility public,,,src/components/InstituteSettingsPanel.jsx:357
+app_payment_back_to_evolve,Platform (app),Mentorship checkout ( /payment ),Payment back to evolve,back to evolve,,src/pages/Payment.jsx:912
+app_payment_batch_continue,Platform (app),Mentorship checkout ( /payment ),Payment batch continue,continue this selection,,src/pages/Payment.jsx:983
+app_payment_claim_gift,Platform (app),Mentorship checkout ( /payment ),Payment claim gift,claim your gift!,,src/pages/Payment.jsx:709
+app_payment_claim_gift_continue,Platform (app),Mentorship checkout ( /payment ),Payment claim gift continue,claim your gift!,,src/pages/Payment.jsx:756
+app_payment_confirm_and_pay,Platform (app),Mentorship checkout ( /payment ),Payment confirm and pay,,,src/pages/Payment.jsx:1122
+app_payment_details_continue,Platform (app),Mentorship checkout ( /payment ),Payment details continue,continue,,src/pages/Payment.jsx:1051
+app_payment_download_receipt,Platform (app),Mentorship checkout ( /payment ),Payment download receipt,download receipt ↓,,src/pages/Payment.jsx:264
+app_payment_plan_accelerator,Platform (app),Mentorship checkout ( /payment ),Payment plan accelerator,,,src/pages/Payment.jsx:1034
+app_payment_plan_starter,Platform (app),Mentorship checkout ( /payment ),Payment plan starter,,,src/pages/Payment.jsx:1034
+app_payment_see_whats_next,Platform (app),Mentorship checkout ( /payment ),Payment see whats next,see what's next,,src/pages/Payment.jsx:1197
+app_payment_select_batch,Platform (app),Mentorship checkout ( /payment ),Payment select batch,,,src/pages/Payment.jsx:956
+app_payment_sign_out,Platform (app),Mentorship checkout ( /payment ),Payment sign out,sign out,,src/pages/Payment.jsx:275
+app_payment_terms_link,Platform (app),Mentorship checkout ( /payment ),Payment terms link,T&Cs,,src/pages/Payment.jsx:1108
+app_payment_waitlist_add_me,Platform (app),Mentorship checkout ( /payment ),Payment waitlist add me,add me to list,,src/pages/Payment.jsx:863
+app_session_bonus_book_call,Platform (app),Mentorship session ( /mentorship-session ),Session bonus book call,book a call #FFD007,,src/pages/MentorshipSession.jsx:2591
+app_session_comment_post,Platform (app),Mentorship session ( /mentorship-session ),Session comment post,,,src/pages/MentorshipSession.jsx:3985
+app_session_comment_reply,Platform (app),Mentorship session ( /mentorship-session ),Session comment reply,reply,,src/pages/MentorshipSession.jsx:3909
+app_session_comment_send_reply,Platform (app),Mentorship session ( /mentorship-session ),Session comment send reply,send,,src/pages/MentorshipSession.jsx:4042
+app_session_doc_comments,Platform (app),Mentorship session ( /mentorship-session ),Session doc comments,,,src/pages/MentorshipSession.jsx:2303
+app_session_doc_google_sheet,Platform (app),Mentorship session ( /mentorship-session ),Session doc google sheet,,,src/pages/MentorshipSession.jsx:2303
+app_session_doc_portfolio,Platform (app),Mentorship session ( /mentorship-session ),Session doc portfolio,,,src/pages/MentorshipSession.jsx:2303
+app_session_doc_portfolio_review,Platform (app),Mentorship session ( /mentorship-session ),Session doc portfolio review,,,src/pages/MentorshipSession.jsx:2303
+app_session_doc_resume,Platform (app),Mentorship session ( /mentorship-session ),Session doc resume,,,src/pages/MentorshipSession.jsx:2303
+app_session_doc_summary_transcript,Platform (app),Mentorship session ( /mentorship-session ),Session doc summary transcript,,,src/pages/MentorshipSession.jsx:2303
+app_session_download_receipt,Platform (app),Mentorship session ( /mentorship-session ),Session download receipt,download receipt ↓,,src/pages/MentorshipSession.jsx:248
+app_session_faq_toggle,Platform (app),Mentorship session ( /mentorship-session ),Session faq toggle,,,src/pages/MentorshipSession.jsx:3837
+app_session_feedback_did_not_attend,Platform (app),Mentorship session ( /mentorship-session ),Session feedback did not attend,I did not attend the session,,src/pages/MentorshipSession.jsx:795
+app_session_feedback_submit,Platform (app),Mentorship session ( /mentorship-session ),Session feedback submit,submit,,src/pages/MentorshipSession.jsx:770
+app_session_get_started,Platform (app),Mentorship session ( /mentorship-session ),Session get started,get started,,src/pages/MentorshipSession.jsx:365
+app_session_google_sheet,Platform (app),Mentorship session ( /mentorship-session ),Session google sheet,,,src/pages/MentorshipSession.jsx:3128
+app_session_join_call,Platform (app),Mentorship session ( /mentorship-session ),Session join call,,,src/pages/MentorshipSession.jsx:2666
+app_session_join_session,Platform (app),Mentorship session ( /mentorship-session ),Session join session,join session,,src/pages/MentorshipSession.jsx:2993
+app_session_onboarding_submit,Platform (app),Mentorship session ( /mentorship-session ),Session onboarding submit,submit,,src/pages/MentorshipSession.jsx:601
+app_session_portfolio_open_version,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio open version,,,src/pages/MentorshipSession.jsx:970
+app_session_portfolio_report,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio report,portfolio review report,,src/pages/MentorshipSession.jsx:3073
+app_session_portfolio_review_report,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio review report,portfolio review report,,src/pages/MentorshipSession.jsx:3242
+app_session_portfolio_submit,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio submit,,,src/pages/MentorshipSession.jsx:1189
+app_session_portfolio_upload_new_version,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio upload new version,update portfolio,,src/pages/MentorshipSession.jsx:1287
+app_session_portfolio_walkthrough,Platform (app),Mentorship session ( /mentorship-session ),Session portfolio walkthrough,your portfolio walkthrough,,src/pages/MentorshipSession.jsx:1012
+app_session_recording_open,Platform (app),Mentorship session ( /mentorship-session ),Session recording open,,,src/pages/MentorshipSession.jsx:4139
+app_session_recording_tab_comments,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab comments,,,src/pages/MentorshipSession.jsx:4328
+app_session_recording_tab_google_sheet,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab google sheet,,,src/pages/MentorshipSession.jsx:4328
+app_session_recording_tab_portfolio,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab portfolio,,,src/pages/MentorshipSession.jsx:4328
+app_session_recording_tab_portfolio_review,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab portfolio review,,,src/pages/MentorshipSession.jsx:4328
+app_session_recording_tab_resume,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab resume,,,src/pages/MentorshipSession.jsx:4328
+app_session_recording_tab_summary_transcript,Platform (app),Mentorship session ( /mentorship-session ),Session recording tab summary transcript,,,src/pages/MentorshipSession.jsx:4328
+app_session_resource_claude_design_features,Platform (app),Mentorship session ( /mentorship-session ),Session resource claude design features,,,src/pages/MentorshipSession.jsx:3497
+app_session_resource_colour_theory_in_movies,Platform (app),Mentorship session ( /mentorship-session ),Session resource colour theory in movies,,,src/pages/MentorshipSession.jsx:3497
+app_session_resource_creative_confidence,Platform (app),Mentorship session ( /mentorship-session ),Session resource creative confidence,,,src/pages/MentorshipSession.jsx:3497
+app_session_resource_new_york_subway_system,Platform (app),Mentorship session ( /mentorship-session ),Session resource new york subway system,,,src/pages/MentorshipSession.jsx:3497
+app_session_resource_skill_tracker_sheet,Platform (app),Mentorship session ( /mentorship-session ),Session resource skill tracker sheet,,,src/pages/MentorshipSession.jsx:3497
+app_session_resume_open_version,Platform (app),Mentorship session ( /mentorship-session ),Session resume open version,,,src/pages/MentorshipSession.jsx:1952
+app_session_resume_submit,Platform (app),Mentorship session ( /mentorship-session ),Session resume submit,,,src/pages/MentorshipSession.jsx:1872
+app_session_resume_upload_new_version,Platform (app),Mentorship session ( /mentorship-session ),Session resume upload new version,update resume,,src/pages/MentorshipSession.jsx:2029
+app_session_sign_out,Platform (app),Mentorship session ( /mentorship-session ),Session sign out,sign out,,src/pages/MentorshipSession.jsx:259
+app_session_tab_session,Platform (app),Mentorship session ( /mentorship-session ),Session tab session,session,,src/pages/MentorshipSession.jsx:3656
+app_session_team_linkedin,Platform (app),Mentorship session ( /mentorship-session ),Session team linkedin,,,src/pages/MentorshipSession.jsx:3750
+app_session_upcoming_view_session,Platform (app),Mentorship session ( /mentorship-session ),Session upcoming view session,,,src/pages/MentorshipSession.jsx:2960
+app_session_upload_portfolio,Platform (app),Mentorship session ( /mentorship-session ),Session upload portfolio,,,src/pages/MentorshipSession.jsx:3204
+app_session_upload_resume,Platform (app),Mentorship session ( /mentorship-session ),Session upload resume,,,src/pages/MentorshipSession.jsx:3223
+app_session_view_past_sessions,Platform (app),Mentorship session ( /mentorship-session ),Session view past sessions,view past sessions & recordings / view past sessions,,src/pages/MentorshipSession.jsx:2430 ; src/pages/MentorshipSession.jsx:2764 ; src/pages/MentorshipSession.jsx:3530
+app_session_whatsapp_connect,Platform (app),Mentorship session ( /mentorship-session ),Session whatsapp connect,contact us,,src/pages/MentorshipSession.jsx:3863
+app_onboarding_admin_profile_back,Platform (app),Onboarding ( /onboarding ),Onboarding admin profile back,Back,,src/pages/Onboarding/InstituteAdminProfileStep.jsx:157
+app_onboarding_admin_profile_continue,Platform (app),Onboarding ( /onboarding ),Onboarding admin profile continue,Continue →,,src/pages/Onboarding/InstituteAdminProfileStep.jsx:163
+app_onboarding_chat_pick_<suggested answer>,Platform (app),Onboarding ( /onboarding ),Onboarding chat pick <suggested answer>,,yes,src/pages/Onboarding/ChatOnboarding.jsx:434
+app_onboarding_chat_send,Platform (app),Onboarding ( /onboarding ),Onboarding chat send,,,src/pages/Onboarding/ChatOnboarding.jsx:505
+app_onboarding_log_out,Platform (app),Onboarding ( /onboarding ),Onboarding log out,Log out,,src/pages/Onboarding/ChatOnboarding.jsx:339 ; src/pages/Onboarding/Onboarding.jsx:648
+app_onboarding_org_type_back,Platform (app),Onboarding ( /onboarding ),Onboarding org type back,Back,,src/pages/Onboarding/OrgTypeStep.jsx:94
+app_onboarding_org_type_company,Platform (app),Onboarding ( /onboarding ),Onboarding org type company,,,src/pages/Onboarding/OrgTypeStep.jsx:56
+app_onboarding_org_type_continue,Platform (app),Onboarding ( /onboarding ),Onboarding org type continue,Continue →,,src/pages/Onboarding/OrgTypeStep.jsx:100
+app_onboarding_org_type_institute,Platform (app),Onboarding ( /onboarding ),Onboarding org type institute,,,src/pages/Onboarding/OrgTypeStep.jsx:56
+app_onboarding_professional_back,Platform (app),Onboarding ( /onboarding ),Onboarding professional back,← Back,,src/pages/Onboarding/StudentOnboarding.jsx:330
+app_onboarding_professional_continue,Platform (app),Onboarding ( /onboarding ),Onboarding professional continue,,,src/pages/Onboarding/StudentOnboarding.jsx:421
+app_onboarding_role_back,Platform (app),Onboarding ( /onboarding ),Onboarding role back,back,,src/pages/Onboarding/RoleChoiceStep.jsx:71
+app_onboarding_role_professional,Platform (app),Onboarding ( /onboarding ),Onboarding role professional,,,src/pages/Onboarding/RoleChoiceStep.jsx:92
+app_onboarding_role_student,Platform (app),Onboarding ( /onboarding ),Onboarding role student,,,src/pages/Onboarding/RoleChoiceStep.jsx:92
+app_onboarding_seed_planted_lets_go,Platform (app),Onboarding ( /onboarding ),Onboarding seed planted lets go,Let's go,,src/pages/Onboarding/SeedPlantedModal.jsx:53
+app_onboarding_space_back,Platform (app),Onboarding ( /onboarding ),Onboarding space back,Back,,src/pages/Onboarding/InstituteSpaceStep.jsx:332
+app_onboarding_space_build_my_space,Platform (app),Onboarding ( /onboarding ),Onboarding space build my space,Build my space →,,src/pages/Onboarding/InstituteSpaceStep.jsx:338
+app_onboarding_space_no_website,Platform (app),Onboarding ( /onboarding ),Onboarding space no website,don't have a website? enter your institute name instead →,,src/pages/Onboarding/InstituteSpaceStep.jsx:216
+app_onboarding_space_use_website,Platform (app),Onboarding ( /onboarding ),Onboarding space use website,"← actually, use a website link",,src/pages/Onboarding/InstituteSpaceStep.jsx:267
+app_onboarding_student_details_back,Platform (app),Onboarding ( /onboarding ),Onboarding student details back,← Back,,src/pages/Onboarding/StudentOnboarding.jsx:458
+app_onboarding_student_details_continue,Platform (app),Onboarding ( /onboarding ),Onboarding student details continue,,,src/pages/Onboarding/StudentOnboarding.jsx:541
+app_onboarding_student_id_back,Platform (app),Onboarding ( /onboarding ),Onboarding student id back,← Back,,src/pages/Onboarding/StudentOnboarding.jsx:571
+app_onboarding_student_id_continue,Platform (app),Onboarding ( /onboarding ),Onboarding student id continue,,,src/pages/Onboarding/StudentOnboarding.jsx:657
+app_onboarding_student_id_enter_manually,Platform (app),Onboarding ( /onboarding ),Onboarding student id enter manually,Prefer to type it in? Enter details manually,,src/pages/Onboarding/StudentOnboarding.jsx:650
+app_onboarding_team_back,Platform (app),Onboarding ( /onboarding ),Onboarding team back,Back,,src/pages/Onboarding/TeamSetupStep.jsx:70
+app_onboarding_team_continue,Platform (app),Onboarding ( /onboarding ),Onboarding team continue,Continue →,,src/pages/Onboarding/TeamSetupStep.jsx:76
+app_onboarding_team_type_company,Platform (app),Onboarding ( /onboarding ),Onboarding team type company,,,src/pages/Onboarding/TeamSetupStep.jsx:49
+app_onboarding_team_type_institute,Platform (app),Onboarding ( /onboarding ),Onboarding team type institute,,,src/pages/Onboarding/TeamSetupStep.jsx:49
+app_onboarding_try_again,Platform (app),Onboarding ( /onboarding ),Onboarding try again,Try again →,,src/pages/Onboarding/Onboarding.jsx:624
+app_onboarding_view_profile,Platform (app),Onboarding ( /onboarding ),Onboarding view profile,,,src/pages/Onboarding/Onboarding.jsx:505
+app_coupon_sheet_done,Platform (app),"Plans, trial & payment pop-ups",Coupon sheet done,,,src/components/membership/MembershipProvider.jsx:856
+app_pay_done,Platform (app),"Plans, trial & payment pop-ups",Pay done,Done,,src/components/membership/MembershipProvider.jsx:561
+app_pay_not_now,Platform (app),"Plans, trial & payment pop-ups",Pay not now,Not now,,src/components/membership/MembershipProvider.jsx:539
+app_pay_option_direct,Platform (app),"Plans, trial & payment pop-ups",Pay option direct,Pay for this only,,src/components/membership/MembershipProvider.jsx:588
+app_pay_option_subscribe_annual,Platform (app),"Plans, trial & payment pop-ups",Pay option subscribe annual,,,src/components/membership/MembershipProvider.jsx:617
+app_pay_option_subscribe_monthly,Platform (app),"Plans, trial & payment pop-ups",Pay option subscribe monthly,,,src/components/membership/MembershipProvider.jsx:617
+app_pay_pay_now,Platform (app),"Plans, trial & payment pop-ups",Pay pay now,,,src/components/membership/MembershipProvider.jsx:661
+app_pay_subscribe_and_pay,Platform (app),"Plans, trial & payment pop-ups",Pay subscribe and pay,,,src/components/membership/MembershipProvider.jsx:661
+app_pay_try_again,Platform (app),"Plans, trial & payment pop-ups",Pay try again,Try again,,src/components/membership/MembershipProvider.jsx:536
+app_plans_coupon_free_annual_access,Platform (app),"Plans, trial & payment pop-ups",Plans coupon free annual access,Avail free annual access,,src/components/membership/MembershipProvider.jsx:289
+app_plans_im_a_student,Platform (app),"Plans, trial & payment pop-ups",Plans im a student,I’m a student,,src/components/membership/MembershipProvider.jsx:210
+app_plans_subscribe_annual,Platform (app),"Plans, trial & payment pop-ups",Plans subscribe annual,Subscribe · per year,,src/components/membership/MembershipProvider.jsx:433
+app_plans_subscribe_monthly,Platform (app),"Plans, trial & payment pop-ups",Plans subscribe monthly,Subscribe · per month,,src/components/membership/MembershipProvider.jsx:417
+app_plans_upload_student_id,Platform (app),"Plans, trial & payment pop-ups",Plans upload student id,Upload ID and get student price,,src/components/membership/MembershipProvider.jsx:229
+app_trial_ended_continue_free,Platform (app),"Plans, trial & payment pop-ups",Trial ended continue free,Continue,,src/components/membership/MembershipProvider.jsx:402
+app_trial_ended_lets_unlock,Platform (app),"Plans, trial & payment pop-ups",Trial ended lets unlock,Let’s unlock,,src/components/membership/MembershipProvider.jsx:373
+app_trial_status_see_plans,Platform (app),"Plans, trial & payment pop-ups",Trial status see plans,,,src/components/membership/MembershipProvider.jsx:825
+app_verified_not_now,Platform (app),"Plans, trial & payment pop-ups",Verified not now,Not now,,src/components/membership/MembershipProvider.jsx:905
+app_verified_publish_share,Platform (app),"Plans, trial & payment pop-ups",Verified publish share,Publish & share,,src/components/membership/MembershipProvider.jsx:901
+app_verify_prompt_maybe_later,Platform (app),"Plans, trial & payment pop-ups",Verify prompt maybe later,Maybe later,,src/components/membership/MembershipProvider.jsx:780
+app_verify_prompt_start_verification,Platform (app),"Plans, trial & payment pop-ups",Verify prompt start verification,,,src/components/membership/MembershipProvider.jsx:777
+app_vip_welcome_explore_access,Platform (app),"Plans, trial & payment pop-ups",Vip welcome explore access,,,src/components/membership/MembershipProvider.jsx:713
+app_welcome_back_continue,Platform (app),"Plans, trial & payment pop-ups",Welcome back continue,,,src/components/membership/MembershipProvider.jsx:745
+app_welcome_back_see_plans,Platform (app),"Plans, trial & payment pop-ups",Welcome back see plans,,,src/components/membership/MembershipProvider.jsx:750
+app_tab_community,Platform (app),Platform bottom tab bar (mobile),Tab community,,,src/components/AppTabNav.jsx:80
+app_tab_events,Platform (app),Platform bottom tab bar (mobile),Tab events,,,src/components/AppTabNav.jsx:80
+app_tab_grow,Platform (app),Platform bottom tab bar (mobile),Tab grow,,,src/components/AppTabNav.jsx:80
+app_tab_profile,Platform (app),Platform bottom tab bar (mobile),Tab profile,,,src/components/AppTabNav.jsx:80
+app_account_delete_confirm,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Account delete confirm,Delete my account,,src/pages/PublicProfile.jsx:1509
+app_account_logout_confirm,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Account logout confirm,Log out,,src/pages/PublicProfile.jsx:1543
+app_account_menu_account,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username ) ; Profile & account ( /app/profile, /app/account )",Account menu account,My Account,,src/pages/PublicProfile.jsx:1428 ; src/components/AccountPanel.jsx:244
+app_account_menu_delete,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username ) ; Profile & account ( /app/profile, /app/account )",Account menu delete,Delete Account,,src/pages/PublicProfile.jsx:1458 ; src/components/AccountPanel.jsx:244
+app_account_menu_invoice,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username ) ; Profile & account ( /app/profile, /app/account )",Account menu invoice,Invoice,,src/pages/PublicProfile.jsx:1439 ; src/components/AccountPanel.jsx:244
+app_account_menu_logout,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username ) ; Profile & account ( /app/profile, /app/account )",Account menu logout,Log Out,,src/pages/PublicProfile.jsx:1450 ; src/components/AccountPanel.jsx:244
+app_events_back_to_profile,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events back to profile,[back to my profile],,src/pages/PublicProfile.jsx:433
+app_events_filter_past,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events filter past,,,src/pages/PublicProfile.jsx:455
+app_events_filter_upcoming,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events filter upcoming,,,src/pages/PublicProfile.jsx:455
+app_events_list_open_event,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events list open event,,,src/pages/PublicProfile.jsx:307
+app_events_list_open_typetober,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events list open typetober,,,src/pages/PublicProfile.jsx:351
+app_events_rail_featured_open,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events rail featured open,,,src/pages/PublicProfile.jsx:661
+app_events_rail_featured_view_event,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events rail featured view event,View Event,,src/pages/PublicProfile.jsx:702
+app_events_rail_open_event,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events rail open event,,,src/pages/PublicProfile.jsx:520
+app_events_rail_view_all,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Events rail view all,View all,,src/pages/PublicProfile.jsx:642
+app_profile_complete_profile,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile complete profile,complete your profile →,,src/pages/PublicProfile.jsx:1708
+app_profile_header_avatar,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header avatar,,,src/pages/PublicProfile.jsx:1396
+app_profile_header_discord,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header discord,Evolve community,,src/pages/PublicProfile.jsx:1385
+app_profile_header_logo,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile header logo,,,src/pages/PublicProfile.jsx:1372
+app_profile_tab_grow,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile tab grow,,,src/pages/PublicProfile.jsx:180
+app_profile_tab_profile,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Profile tab profile,,,src/pages/PublicProfile.jsx:180
+app_trial_bar_see_plans,Platform (app),"Platform shell: profile, events, header ( /app/* ; public /profile/:username )",Trial bar see plans,,,src/pages/PublicProfile.jsx:222
+app_portfolio_review_flow_apply_again,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow apply again,Apply again →,,src/components/programmes/PortfolioReviewFlow.jsx:365 ; src/components/programmes/PortfolioReviewFlow.jsx:1566
+app_portfolio_review_flow_back_to_programmes,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow back to programmes,Back to programmes,,src/components/programmes/PortfolioReviewFlow.jsx:811 ; src/components/programmes/PortfolioReviewFlow.jsx:863
+app_portfolio_review_flow_book_follow_up,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow book follow up,Book a follow-up call →,,src/components/programmes/PortfolioReviewFlow.jsx:1546
+app_portfolio_review_flow_open_report,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow open report,Open report in new tab ↗,,src/components/programmes/PortfolioReviewFlow.jsx:394 ; src/components/programmes/PortfolioReviewFlow.jsx:1392
+app_portfolio_review_flow_portfolio_link,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow portfolio link,Link,,src/components/programmes/PortfolioReviewFlow.jsx:1105
+app_portfolio_review_flow_portfolio_upload,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow portfolio upload,Upload,,src/components/programmes/PortfolioReviewFlow.jsx:1111
+app_portfolio_review_flow_questions_continue,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow questions continue,,,src/components/programmes/PortfolioReviewFlow.jsx:1021
+app_portfolio_review_flow_questions_skip,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow questions skip,Skip,,src/components/programmes/PortfolioReviewFlow.jsx:995
+app_portfolio_review_flow_reschedule_call,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow reschedule call,Need to reschedule?,,src/components/programmes/PortfolioReviewFlow.jsx:1370
+app_portfolio_review_flow_resume_link,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow resume link,Link,,src/components/programmes/PortfolioReviewFlow.jsx:1060
+app_portfolio_review_flow_resume_upload,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow resume upload,Upload,,src/components/programmes/PortfolioReviewFlow.jsx:1054
+app_portfolio_review_flow_save_for_later,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow save for later,,,src/components/programmes/PortfolioReviewFlow.jsx:1237
+app_portfolio_review_flow_step_book_a_follow_up_call,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step book a follow up call,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_step_call_confirmed,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step call confirmed,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_step_pick_a_slot,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step pick a slot,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_step_upload_resume_and_portfolio,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step upload resume and portfolio,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_step_view_report,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step view report,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_step_view_session,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow step view session,,,src/components/programmes/PortfolioReviewFlow.jsx:190
+app_portfolio_review_flow_submit_book_call,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow submit book call,,,src/components/programmes/PortfolioReviewFlow.jsx:1244
+app_portfolio_review_flow_submit_feedback,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow submit feedback,Submit feedback,,src/components/programmes/PortfolioReviewFlow.jsx:1483
+app_portfolio_review_flow_view_past_cycle,Platform (app),Portfolio review workspace ( /app/grow/portfolio-review ),Portfolio review flow view past cycle,View this review →,,src/components/programmes/PortfolioReviewFlow.jsx:330
+app_account_save_changes,Platform (app),"Profile & account ( /app/profile, /app/account )",Account save changes,,,src/components/AccountPanel.jsx:3517
+app_profile_build_my_profile,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile build my profile,Build my profile,,src/components/AccountPanel.jsx:2494
+app_profile_copy_share_link,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile copy share link,,,src/components/AccountPanel.jsx:3045
+app_profile_get_started_upload,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile get started upload,Get started,,src/components/AccountPanel.jsx:3181
+app_profile_link_portfolio,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile link portfolio,,,src/components/AccountPanel.jsx:1685
+app_profile_link_resume,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile link resume,,,src/components/AccountPanel.jsx:1685
+app_profile_portfolio,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile portfolio,[Portfolio],,src/components/AccountPanel.jsx:1769
+app_profile_publish,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile publish,Publish,,src/components/AccountPanel.jsx:3062
+app_profile_resume,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile resume,[Resume],,src/components/AccountPanel.jsx:1778
+app_profile_social_link,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile social link,,,src/components/AccountPanel.jsx:1670
+app_profile_source_mode_file,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile source mode file,upload a file,,src/components/AccountPanel.jsx:320
+app_profile_source_mode_link,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile source mode link,paste a link,,src/components/AccountPanel.jsx:309
+app_profile_unlock_with_plan,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile unlock with plan,Unlock with a plan,,src/components/AccountPanel.jsx:3029
+app_profile_unpublish,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile unpublish,Unpublish,,src/components/AccountPanel.jsx:3052
+app_profile_update_profile,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile update profile,[Update profile],,src/components/AccountPanel.jsx:2194
+app_profile_verify,Platform (app),"Profile & account ( /app/profile, /app/account )",Profile verify,Verify,,src/components/AccountPanel.jsx:2915
+app_verify_call_link,Platform (app),Profile verification,Verify call link,Your call link →,,src/components/profile/VerifyFlow.jsx:239
+app_verify_copy_link,Platform (app),Profile verification,Verify copy link,,,src/components/profile/VerifyFlow.jsx:158
+app_verify_flow_confirm_booking,Platform (app),Profile verification,Verify flow confirm booking,,,src/components/profile/VerifyFlow.jsx:628
+app_verify_flow_continue,Platform (app),Profile verification,Verify flow continue,Continue,,src/components/profile/VerifyFlow.jsx:554
+app_verify_flow_pick_slot,Platform (app),Profile verification,Verify flow pick slot,,,src/components/profile/VerifyFlow.jsx:608
+app_verify_join_call,Platform (app),Profile verification,Verify join call,Join call →,,src/components/profile/VerifyFlow.jsx:277
+app_verify_publish_profile,Platform (app),Profile verification,Verify publish profile,Publish profile,,src/components/profile/VerifyFlow.jsx:192
+app_verify_reschedule,Platform (app),Profile verification,Verify reschedule,Reschedule,,src/components/profile/VerifyFlow.jsx:268
+app_verify_reupload_reapply,Platform (app),Profile verification,Verify reupload reapply,Re-upload & reapply,,src/components/profile/VerifyFlow.jsx:215
+app_verify_start_verification,Platform (app),Profile verification,Verify start verification,Start verification,,src/components/profile/VerifyFlow.jsx:309
+app_verify_unpublish,Platform (app),Profile verification,Verify unpublish,Unpublish,,src/components/profile/VerifyFlow.jsx:166
+app_programme_mentorship_back_to_grow,Platform (app),Programme page ( /programmes/mentorship ),Programme mentorship back to grow,,,src/pages/ProgrammeMentorship.jsx:31
+app_programme_portfolio_review_back_to_grow,Platform (app),Programme page ( /programmes/portfolio-review ),Programme portfolio review back to grow,,,src/pages/ProgrammePortfolioReview.jsx:31
+app_typetober_add_letter,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober add letter,,,src/pages/Typetober/Typetober.jsx:202 ; src/pages/Typetober/Typetober.jsx:232
+app_typetober_bulk_add_more,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk add more,Add more,,src/pages/Typetober/BulkUploadSheet.jsx:504
+app_typetober_bulk_choose_images,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk choose images,Choose images,,src/pages/Typetober/BulkUploadSheet.jsx:574
+app_typetober_bulk_continue,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk continue,,,src/pages/Typetober/BulkUploadSheet.jsx:511
+app_typetober_bulk_currency_inr,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk currency inr,,,src/pages/Typetober/BulkUploadSheet.jsx:615
+app_typetober_bulk_currency_usd,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk currency usd,,,src/pages/Typetober/BulkUploadSheet.jsx:615
+app_typetober_bulk_pay_submit,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk pay submit,,,src/pages/Typetober/BulkUploadSheet.jsx:652
+app_typetober_bulk_see_on_wall,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk see on wall,See them on the wall,,src/pages/Typetober/BulkUploadSheet.jsx:691
+app_typetober_bulk_upload_fab,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober bulk upload fab,Bulk upload,,src/pages/Typetober/Typetober.jsx:950
+app_typetober_example_view,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober example view,,,src/pages/Typetober/Typetober.jsx:141
+app_typetober_hero_accept_challenge,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober hero accept challenge,,,src/pages/Typetober/Typetober.jsx:114
+app_typetober_hero_see_gallery,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober hero see gallery,,,src/pages/Typetober/Typetober.jsx:114
+app_typetober_hero_vote_now,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober hero vote now,,,src/pages/Typetober/Typetober.jsx:114
+app_typetober_info_tab_faqs,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober info tab faqs,,,src/pages/Typetober/Sheets.jsx:508
+app_typetober_info_tab_guidelines,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober info tab guidelines,,,src/pages/Typetober/Sheets.jsx:508
+app_typetober_letter_share,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober letter share,Share this letter,,src/pages/Typetober/Sheets.jsx:607
+app_typetober_letter_tab,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober letter tab,,,src/pages/Typetober/Typetober.jsx:667
+app_typetober_letter_take_challenge,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober letter take challenge,Take the challenge,,src/pages/Typetober/Sheets.jsx:619
+app_typetober_my_letter_view,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober my letter view,,,src/pages/Typetober/Typetober.jsx:167
+app_typetober_nav_back_to_platform,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav back to platform,[back to my platform],,src/pages/Typetober/TypetoberNav.jsx:92
+app_typetober_nav_guidelines,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav guidelines,[Guidelines],,src/pages/Typetober/TypetoberNav.jsx:164
+app_typetober_nav_join_community,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav join community,[Join community],,src/pages/Typetober/TypetoberNav.jsx:138
+app_typetober_nav_menu_about,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu about,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_community,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu community,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_contact_us,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu contact us,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_events,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu events,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_grow,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu grow,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_home,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu home,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_mentorship_programme,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu mentorship programme,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_portfolio_review,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu portfolio review,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_pricing,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu pricing,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_profile_creation,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu profile creation,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_menu_toggle,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu toggle,,,src/pages/Typetober/TypetoberNav.jsx:114
+app_typetober_nav_menu_typetober,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav menu typetober,,,src/pages/Typetober/TypetoberNav.jsx:215 ; src/pages/Typetober/TypetoberNav.jsx:229
+app_typetober_nav_prizes,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav prizes,[Prizes],,src/pages/Typetober/TypetoberNav.jsx:150
+app_typetober_nav_profile,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober nav profile,,,src/pages/Typetober/TypetoberNav.jsx:179
+app_typetober_profile_bulk_upload,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile bulk upload,Bulk upload,,src/pages/Typetober/ProfileSheet.jsx:95
+app_typetober_profile_download_certificate,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile download certificate,Download certificate,,src/pages/Typetober/ProfileSheet.jsx:45
+app_typetober_profile_go_to_letter,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile go to letter,,,src/pages/Typetober/ProfileSheet.jsx:200
+app_typetober_profile_sign_out,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile sign out,Sign out,,src/pages/Typetober/ProfileSheet.jsx:228
+app_typetober_profile_tab_certs,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile tab certs,,,src/pages/Typetober/ProfileSheet.jsx:161
+app_typetober_profile_tab_subs,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile tab subs,,,src/pages/Typetober/ProfileSheet.jsx:161
+app_typetober_profile_view_letter,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober profile view letter,,,src/pages/Typetober/ProfileSheet.jsx:181
+app_typetober_share_copy_caption,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share copy caption,,,src/pages/Typetober/ShareSheet.jsx:337
+app_typetober_share_copy_link,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share copy link,,,src/pages/Typetober/ShareSheet.jsx:271
+app_typetober_share_discord_join,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share discord join,Join,,src/pages/Typetober/ShareSheet.jsx:303
+app_typetober_share_instagram,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share instagram,,,src/pages/Typetober/ShareSheet.jsx:369
+app_typetober_share_native,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share native,Share,,src/pages/Typetober/ShareSheet.jsx:318
+app_typetober_share_save_image,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share save image,Save image,,src/pages/Typetober/ShareSheet.jsx:329
+app_typetober_share_whatsapp,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share whatsapp,,,src/pages/Typetober/ShareSheet.jsx:351
+app_typetober_share_x,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober share x,,,src/pages/Typetober/ShareSheet.jsx:351
+app_typetober_signin_email,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin email,,,src/pages/Typetober/Sheets.jsx:264
+app_typetober_signin_google,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin google,,,src/pages/Typetober/Sheets.jsx:212
+app_typetober_signin_linkedin,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin linkedin,,,src/pages/Typetober/Sheets.jsx:243
+app_typetober_signin_resend_code,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin resend code,Resend code,,src/pages/Typetober/Sheets.jsx:138
+app_typetober_signin_send_code,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin send code,Send me a code,,src/pages/Typetober/Sheets.jsx:167
+app_typetober_signin_verify_code,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober signin verify code,Verify & continue,,src/pages/Typetober/Sheets.jsx:127
+app_typetober_upload_choose_image,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload choose image,,,src/pages/Typetober/UploadSheet.jsx:189
+app_typetober_upload_continue,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload continue,Continue →,,src/pages/Typetober/UploadSheet.jsx:209
+app_typetober_upload_currency_inr,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload currency inr,,,src/pages/Typetober/UploadSheet.jsx:228
+app_typetober_upload_currency_usd,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload currency usd,,,src/pages/Typetober/UploadSheet.jsx:228
+app_typetober_upload_pay_submit,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload pay submit,,,src/pages/Typetober/UploadSheet.jsx:257
+app_typetober_upload_see_on_wall,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload see on wall,See it on the wall,,src/pages/Typetober/UploadSheet.jsx:277
+app_typetober_upload_switch_to_bulk,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload switch to bulk,Upload many at once,,src/pages/Typetober/UploadSheet.jsx:197
+app_typetober_upload_take_photo,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober upload take photo,Take photo,,src/pages/Typetober/UploadSheet.jsx:192
+app_typetober_vote,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober vote,,,src/pages/Typetober/Typetober.jsx:431
+app_typetober_wall_entry_view,Platform (app),Typetober ( /typetober and /app/typetober ),Typetober wall entry view,,,src/pages/Typetober/Typetober.jsx:467

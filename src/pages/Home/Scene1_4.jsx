@@ -218,7 +218,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             the same way again.
           </p>
 
-          <a
+          <a data-cta="web_designers_explore_community"
             href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"
@@ -267,7 +267,7 @@ const Scene1_4 = React.forwardRef(({ isMobile = false }, ref) => {
             the same way again.
           </p>
 
-          <a
+          <a data-cta="web_designers_explore_community"
             href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"

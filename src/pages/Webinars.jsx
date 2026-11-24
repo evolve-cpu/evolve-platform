@@ -26,7 +26,7 @@
 
 // import { webinars as COPY } from "../content";
 // import { renderWithBreaks } from "../utils/renderWithBreaks";
-// import { trackWebinarPlaylist } from "../utils/analytics";
+// import { trackWebinarPlaylist, ctaSlug } from "../utils/analytics";
 
 // gsap.registerPlugin(ScrollTrigger);
 
@@ -798,7 +798,7 @@ ${svg === interaction_design ? "min-w-[150%] bottom-[-4rem]" : ""}
           dangerouslySetInnerHTML={{ __html: title }}
         /> */}
         {/* Button */}
-        <a
+        <a data-cta="web_events_watch_playlist"
           // href={playlistUrl}
           onClick={() => {
             trackWebinarPlaylist(title);
@@ -948,7 +948,7 @@ const MobilePinnedCards = ({ cards }) => {
                 style={{ fontSize: "40px", lineHeight: "36px" }}
                 dangerouslySetInnerHTML={{ __html: card.title }}
               />
-              <img
+              <img data-cta="web_events_watch_playlist_mobile"
                 src={watch_playlist_button}
                 onClick={() => {
                   trackWebinarPlaylist(card.title);
@@ -1001,7 +1001,7 @@ const STAGE_ROWS = [
 
 function HeroArrow({ dir, onClick, disabled }) {
   return (
-    <button
+    <button data-cta={`web_events_hero_${dir}`}
       onClick={onClick}
       disabled={disabled}
       aria-label={dir === "prev" ? "previous event" : "next event"}
@@ -1093,7 +1093,7 @@ function UpcomingEventsHero({ events }) {
                 <span className="block text-black font-normal text-xs">IST</span>
               </p>
             </div>
-            <Link
+            <Link data-cta="web_events_upcoming_register_now"
               to={`/events/${event.slug}`}
               className="inline-flex items-center gap-2 mt-5 bg-black text-white font-bold text-sm px-8 py-3 rounded-xl shadow-[4px_4px_0px_#806804]"
             >
@@ -1234,7 +1234,7 @@ function PastEventsSection({ events }) {
           placeholder="Search event"
           className="flex-1 min-w-0 rounded-xl md:rounded-none bg-[#FFE57A] px-4 py-4 md:py-3 text-black text-base md:text-sm placeholder:text-black/70 outline-none"
         />
-        <button
+        <button data-cta="web_events_past_filter"
           type="button"
           onClick={() => setFilterOpen((o) => !o)}
           aria-label="filter by category"
@@ -1249,7 +1249,7 @@ function PastEventsSection({ events }) {
         {filterOpen && (
           <div className="md:hidden absolute right-0 top-full mt-2 z-30 w-56 rounded-xl border border-black bg-[#FFE57A] py-2 shadow-[4px_4px_0px_#806804]">
             {[["all", "All categories"], ...categories.map((c) => [c, c])].map(([value, label]) => (
-              <button
+              <button data-cta={`web_events_past_filter_${ctaSlug(value)}`}
                 key={value}
                 type="button"
                 onClick={() => pickCategory(value)}
@@ -1267,7 +1267,7 @@ function PastEventsSection({ events }) {
           const photo = event.cover_image_url || event.speaker_photo_url;
           const type = event.event_type || "Webinar";
           return (
-            <Link
+            <Link data-cta="web_events_past_event_card"
               key={event.id}
               to={`/events/${event.slug}`}
               className="group block"
@@ -1304,7 +1304,7 @@ function PastEventsSection({ events }) {
 
       {filtered.length > shown && (
         <div className="mt-10 md:mt-14 flex justify-center">
-          <button
+          <button data-cta="web_events_past_show_more"
             type="button"
             onClick={() => setShown((n) => n + PAST_PAGE)}
             className="inline-flex items-center gap-2 rounded-[16px] bg-black text-evolve-yellow border border-evolve-yellow font-semibold px-8 py-4 text-[18px] leading-none shadow-[4px_4px_0px_#806804] transition-transform duration-150 hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"

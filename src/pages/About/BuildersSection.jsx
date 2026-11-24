@@ -153,7 +153,7 @@ const VideoMedia = ({ b, isPlaying, onToggle }) => {
           <Photo b={b} />
         </div>
       )}
-      <button
+      <button data-cta="web_about_builder_video_play"
         type="button"
         onClick={toggle}
         aria-label={`${isPlaying ? "Pause" : "Play"} ${b.name}'s testimonial video`}
@@ -179,7 +179,7 @@ const FlipMedia = ({ b }) => {
         {/* Front: photo */}
         <div className={FACE}>
           <Photo b={b} />
-          <button
+          <button data-cta="web_about_builder_read_testimonial"
             type="button"
             onClick={() => setFlipped(true)}
             aria-label={`Read ${b.name}'s testimonial`}
@@ -249,7 +249,7 @@ const BuilderCard = ({ b, isPlaying, onToggle }) => {
           {b.name}
         </h3>
         {b.linkedin && (
-          <a
+          <a data-cta="web_about_builder_linkedin"
             href={b.linkedin}
             target="_blank"
             rel="noopener noreferrer"
@@ -440,7 +440,7 @@ const BuildersSection = () => {
         )}
 
         <div className="mt-12 md:mt-[clamp(48px,4.5vw,88px)] flex justify-center">
-          <CtaButton href={BUILDER_FORM_URL}>Be a builder</CtaButton>
+          <CtaButton cta="web_about_be_a_builder" href={BUILDER_FORM_URL}>Be a builder</CtaButton>
         </div>
       </div>
     </section>

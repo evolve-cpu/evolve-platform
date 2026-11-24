@@ -228,7 +228,7 @@ export default function MentorshipSkillTracker({
         >
           Cancel
         </button>
-        <button
+        <button data-cta="app_mentorship_skill_tracker_save"
           onClick={handleSave}
           disabled={saving}
           className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl px-6 py-3 disabled:opacity-40 active:opacity-80 transition-opacity"
@@ -246,7 +246,7 @@ export default function MentorshipSkillTracker({
           >
             Back
           </button>
-          <button
+          <button data-cta="app_mentorship_skill_tracker_next"
             onClick={handleMobileNext}
             disabled={!activeCategoryComplete || saving}
             className="flex-1 bg-evolve-yellow text-evolve-black font-bold text-sm rounded-2xl py-3 disabled:opacity-40 active:opacity-80 transition-opacity"

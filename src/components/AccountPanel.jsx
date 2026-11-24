@@ -29,6 +29,7 @@ import {
   SpiralTimeline
 } from "./profile/ProfileInfographics";
 import { VerifyCard, VerifyFlowModal } from "./profile/VerifyFlow";
+import { ctaSlug, ctaArea } from "../utils/analytics";
 
 // Portfolio & Resume / AI-profile tab is still in testing — keep this false
 // on main. On merges from development this line should conflict (development
@@ -240,7 +241,7 @@ export function AccountMenuList({
       <BackHeader title="Back" onBack={onBack} />
       <div className="flex flex-col gap-2">
         {items.map((item) => (
-          <button
+          <button data-cta={`app_account_menu_${item.key}`}
             key={item.key}
             type="button"
             onClick={() => {
@@ -305,7 +306,7 @@ function SourceEditor({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2">
-        <button
+        <button data-cta="app_profile_source_mode_link"
           type="button"
           onClick={() => setMode("link")}
           className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
@@ -316,7 +317,7 @@ function SourceEditor({
         >
           paste a link
         </button>
-        <button
+        <button data-cta="app_profile_source_mode_file"
           type="button"
           onClick={() => setMode("file")}
           className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors ${
@@ -1666,7 +1667,7 @@ function prettyPlatform(p) {
 function SocialLinkPill({ platform, url }) {
   if (!url) return null;
   return (
-    <a
+    <a data-cta={`${ctaArea()}_profile_social_link`}
       href={withScheme(url)}
       target="_blank"
       rel="noopener noreferrer"
@@ -1681,7 +1682,7 @@ function SocialLinkPill({ platform, url }) {
 function LinkPill({ href, label, children }) {
   if (!href) return null;
   return (
-    <a
+    <a data-cta={`${ctaArea()}_profile_link_${ctaSlug(label)}`}
       href={withScheme(href)}
       target="_blank"
       rel="noopener noreferrer"
@@ -1765,7 +1766,7 @@ function ProfileSourceLinks({ portfolio, resume, dark }) {
   return (
     <div className="relative ml-auto flex items-center gap-2 flex-shrink-0">
       {portfolio && (
-        <a href={withScheme(portfolio)} target="_blank" rel="noopener noreferrer" title="Portfolio" className={pill}>
+        <a data-cta={`${ctaArea()}_profile_portfolio`} href={withScheme(portfolio)} target="_blank" rel="noopener noreferrer" title="Portfolio" className={pill}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
             <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.8" />
@@ -1774,7 +1775,7 @@ function ProfileSourceLinks({ portfolio, resume, dark }) {
         </a>
       )}
       {resume && (
-        <a href={withScheme(resume)} target="_blank" rel="noopener noreferrer" title="Resume" className={pill}>
+        <a data-cta={`${ctaArea()}_profile_resume`} href={withScheme(resume)} target="_blank" rel="noopener noreferrer" title="Resume" className={pill}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
             <path d="M9 13h6M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -2190,7 +2191,7 @@ export function AIProfileReveal({
         <h2 className="text-white font-bricolage font-extrabold text-base">evolve profile</h2>
         {onUpdate && (
           <div className="relative group">
-            <button
+            <button data-cta="app_profile_update_profile"
               type="button"
               onClick={onUpdate}
               aria-label="Update profile"
@@ -2490,7 +2491,7 @@ function ProfileUploadSheet({
 
             {errorMsg && <p className="text-red-400 text-xs">{errorMsg}</p>}
 
-            <button
+            <button data-cta="app_profile_build_my_profile"
               type="button"
               onClick={onSubmit}
               disabled={!canBuild}
@@ -2911,7 +2912,7 @@ export function ProfileTabPane({ user }) {
   const isVerified = wasVerified && access.full;
   const profileLocked = wasVerified && !access.full;
   const verifyButton = canVerify && !verificationStatus && (
-    <button
+    <button data-cta="app_profile_verify"
       type="button"
       onClick={() => {
         setVerifyRescheduling(false);
@@ -3025,7 +3026,7 @@ export function ProfileTabPane({ user }) {
         <div className="at-priv">
           <span className="ic">{MEMBERSHIP_ICONS.lock}</span>
           <span className="tx">Profile is private</span>
-          <button type="button" onClick={() => membership.openPlans(2)}>
+          <button data-cta="app_profile_unlock_with_plan" type="button" onClick={() => membership.openPlans(2)}>
             Unlock with a plan
           </button>
         </div>
@@ -3041,14 +3042,14 @@ export function ProfileTabPane({ user }) {
               value={shareUrl}
               className="flex-1 min-w-0 text-xs text-white/70 bg-white/5 border border-[#373737] rounded-xl px-3 py-2.5 outline-none"
             />
-            <button
+            <button data-cta="app_profile_copy_share_link"
               type="button"
               onClick={handleCopyShareLink}
               className="bg-evolve-yellow text-evolve-black font-bold text-sm rounded-xl px-5 py-2.5 active:opacity-80 transition-opacity flex-shrink-0"
             >
               {linkCopied ? "Copied ✓" : "Copy link"}
             </button>
-            <button
+            <button data-cta="app_profile_unpublish"
               type="button"
               onClick={handleUnpublish}
               disabled={publishing}
@@ -3058,7 +3059,7 @@ export function ProfileTabPane({ user }) {
             </button>
           </div>
         ) : (
-          <button
+          <button data-cta="app_profile_publish"
             type="button"
             onClick={handlePublish}
             disabled={publishing}
@@ -3177,7 +3178,7 @@ export function ProfileTabPane({ user }) {
             <p className="text-[15px] leading-normal max-w-[290px] mb-7" style={{ color: "#9a9a9a" }}>
               Share your resume and portfolio. We'll map your skills, strengths and journey for you.
             </p>
-            <button
+            <button data-cta="app_profile_get_started_upload"
               type="button"
               onClick={() => setUploadOpen(true)}
               className="inline-flex items-center gap-2 bg-evolve-yellow text-[#161616] font-bold text-[15px] rounded-[14px] px-7 py-3.5 active:scale-[0.97] transition-transform"
@@ -3513,7 +3514,7 @@ export function MyAccountPanel({ onBack, onSaved }) {
 
         {saveError && <p className="text-red-400 text-xs">{saveError}</p>}
 
-        <button
+        <button data-cta="app_account_save_changes"
           type="button"
           onClick={handleSave}
           disabled={!dirty || saving}

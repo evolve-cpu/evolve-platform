@@ -43,6 +43,7 @@ import {
   evolve_yellow_with_name,
   right_arrow_icon
 } from "../assets/images/Nav";
+import { ctaArea } from "../utils/analytics";
 
 // short encouragement line shown under the stage badge in the growth rail,
 // one per unique label in STAGE_LABELS (src/lib/growthStage.js).
@@ -176,7 +177,7 @@ function DesktopProfileTabs({ activeTab, onTabChange }) {
   return (
     <div className="hidden md:flex items-center gap-6 border-b border-white/10 mb-2">
       {tabs.map((t) => (
-        <button
+        <button data-cta={`${ctaArea()}_profile_tab_${t.key}`}
           key={t.key}
           type="button"
           onClick={() => onTabChange(t.key)}
@@ -218,7 +219,7 @@ function TrialBar({ user }) {
         </svg>
         <p className="text-white/80 text-xs font-semibold">{c.text}</p>
       </div>
-      <button
+      <button data-cta="app_trial_bar_see_plans"
         type="button"
         onClick={() => openPlans(2)}
         className="flex-shrink-0 bg-evolve-yellow text-evolve-black text-xs font-bold rounded-full px-4 py-1.5 hover:opacity-90 transition-opacity"
@@ -303,7 +304,7 @@ function EventThumb({ src, index = 0, className = "" }) {
 // desktop (full-width 1:1 image on top) so the grid fills the pane
 function EventRow({ to, thumb, index, title, when, description }) {
   return (
-    <Link
+    <Link data-cta="app_events_list_open_event"
       to={to}
       className="group flex gap-3.5 py-4 transition-colors hover:opacity-80 md:hover:opacity-100 md:flex-col md:gap-0 md:py-0 md:rounded-2xl md:overflow-hidden md:border md:border-white/10 md:bg-white/[0.03] md:hover:border-white/25"
     >
@@ -347,7 +348,7 @@ function TypetoberLiveLabel() {
 // mobile, a wide featured banner across the grid on desktop
 function TypetoberFeature() {
   return (
-    <Link
+    <Link data-cta="app_events_list_open_typetober"
       to={TYPETOBER_EVENT.path}
       className="group flex items-center gap-3.5 md:gap-7 rounded-2xl border border-evolve-yellow/30 bg-evolve-yellow/[0.06] hover:bg-evolve-yellow/[0.1] transition-colors p-3 md:p-5 mb-2 md:mb-6"
     >
@@ -429,7 +430,7 @@ function EventsTabPane() {
 
   return (
     <div className="flex flex-col w-full">
-      <button
+      <button data-cta="app_events_back_to_profile"
         type="button"
         onClick={() => navigate("/app/profile")}
         aria-label="back to my profile"
@@ -451,7 +452,7 @@ function EventsTabPane() {
       <div className="flex flex-col items-start gap-3.5 md:gap-4 mb-3.5 md:mb-6">
         <div className="inline-flex self-start rounded-full border border-white/10 bg-[#1c1c1e] p-1 gap-0.5">
           {["upcoming", "past"].map((f) => (
-            <button
+            <button data-cta={`app_events_filter_${f}`}
               key={f}
               type="button"
               onClick={() => setFilter(f)}
@@ -516,7 +517,7 @@ function EventsTabPane() {
 // one rail entry — live ones get a tinted pink card so they stand out
 function RailRow({ to, thumb, index, title, when, live }) {
   return (
-    <Link
+    <Link data-cta="app_events_rail_open_event"
       to={to}
       className={`flex items-center gap-3.5 transition-colors ${
         live
@@ -638,7 +639,7 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
 
       <div className="flex items-center justify-between">
         <p className="text-white/40 text-xs font-bold uppercase tracking-wide">Events</p>
-        <button
+        <button data-cta="app_events_rail_view_all"
           type="button"
           onClick={onGoToEvents}
           className="text-evolve-yellow text-[11px] font-bold uppercase tracking-wide hover:opacity-80"
@@ -657,7 +658,7 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
         <>
           {featured && (
             <div className="flex flex-col gap-3">
-              <Link
+              <Link data-cta="app_events_rail_featured_open"
                 to={`/app/events/${featured.slug}`}
                 className="rounded-2xl overflow-hidden border border-white/10 relative hover:border-white/20 transition-colors"
               >
@@ -698,7 +699,7 @@ function EventsRailPanel({ collapsed, onToggleCollapsed, onGoToEvents }) {
                 {goingCount !== null && (
                   <span className="text-white/40 text-xs">{goingCount} going</span>
                 )}
-                <Link
+                <Link data-cta="app_events_rail_featured_view_event"
                   to={`/app/events/${featured.slug}`}
                   className="ml-auto bg-evolve-yellow text-evolve-black font-bold text-xs rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
                 >
@@ -1368,7 +1369,7 @@ export default function PublicProfile({ platform = false }) {
       >
         {/* inside the platform the logo is the app's home (my profile), not
             the marketing site's */}
-        <Link to={platform || isOwner ? "/app/profile" : "/"}>
+        <Link data-cta={`${ctaArea()}_profile_header_logo`} to={platform || isOwner ? "/app/profile" : "/"}>
           <img
             src={evolve_yellow_logo}
             alt="evolve"
@@ -1381,7 +1382,7 @@ export default function PublicProfile({ platform = false }) {
           />
         </Link>
         <div className="flex items-center gap-2.5">
-          <a
+          <a data-cta={`${ctaArea()}_profile_header_discord`}
             href="https://discord.gg/MmfaqCPdF7"
             target="_blank"
             rel="noopener noreferrer"
@@ -1392,7 +1393,7 @@ export default function PublicProfile({ platform = false }) {
           </a>
           {user ? (
             <div className="relative" ref={accountMenuRef}>
-              <button
+              <button data-cta={`${ctaArea()}_profile_header_avatar`}
                 type="button"
                 onClick={handleAvatarClick}
                 className={`w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-colors ${
@@ -1424,7 +1425,7 @@ export default function PublicProfile({ platform = false }) {
 
               {accountMenuOpen && (
                 <div className="hidden md:flex flex-col gap-1 absolute right-0 top-11 w-56 rounded-2xl bg-[#1c1c1f] border border-[#373737] p-1.5 z-50">
-                  <button
+                  <button data-cta="app_account_menu_account"
                     type="button"
                     onClick={() => {
                       setAccountMenuOpen(false);
@@ -1435,7 +1436,7 @@ export default function PublicProfile({ platform = false }) {
                     <UserIcon className="text-white/50 flex-shrink-0" />
                     My Account
                   </button>
-                  <button
+                  <button data-cta="app_account_menu_invoice"
                     type="button"
                     onClick={() => {
                       setAccountMenuOpen(false);
@@ -1446,7 +1447,7 @@ export default function PublicProfile({ platform = false }) {
                     <InvoiceIcon className="text-white/50 flex-shrink-0" />
                     Invoice
                   </button>
-                  <button
+                  <button data-cta="app_account_menu_logout"
                     type="button"
                     onClick={handleLogOut}
                     className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-white text-sm font-semibold hover:bg-[#232325] transition-colors text-left"
@@ -1454,7 +1455,7 @@ export default function PublicProfile({ platform = false }) {
                     <LogOutIcon className="text-white/50 flex-shrink-0" />
                     Log Out
                   </button>
-                  <button
+                  <button data-cta="app_account_menu_delete"
                     type="button"
                     onClick={() => {
                       setAccountMenuOpen(false);
@@ -1469,7 +1470,7 @@ export default function PublicProfile({ platform = false }) {
               )}
             </div>
           ) : (
-            <Link
+            <Link data-cta="web_profile_header_sign_in"
               to="/signin"
               className="text-xs font-semibold text-evolve-black bg-evolve-yellow rounded-full px-4 py-2"
             >
@@ -1505,7 +1506,7 @@ export default function PublicProfile({ platform = false }) {
               >
                 Cancel
               </button>
-              <button
+              <button data-cta="app_account_delete_confirm"
                 type="button"
                 onClick={handleDeleteAccount}
                 className="bg-red-500 text-white font-bold text-xs rounded-2xl px-5 py-2.5 hover:opacity-90 transition-opacity"
@@ -1539,7 +1540,7 @@ export default function PublicProfile({ platform = false }) {
               >
                 Cancel
               </button>
-              <button
+              <button data-cta="app_account_logout_confirm"
                 type="button"
                 onClick={confirmLogOut}
                 className="bg-red-500 text-white font-bold text-xs rounded-2xl px-5 py-2.5 hover:opacity-90 transition-opacity"
@@ -1704,7 +1705,7 @@ export default function PublicProfile({ platform = false }) {
           <div className={activeProgramme ? "hidden" : "contents"}>
             <div className={activeTab === "profile" ? "contents" : "hidden"}>
               {isOwner && !user.onboarding_completed && (
-                <button
+                <button data-cta="app_profile_complete_profile"
                   onClick={() => navigate("/onboarding", { state: { completeProfile: true } })}
                   className="w-full text-left rounded-xl border border-evolve-yellow/25 bg-evolve-yellow/[0.06] px-4 py-3 flex flex-col gap-0.5 hover:bg-evolve-yellow/[0.1] transition-colors"
                 >

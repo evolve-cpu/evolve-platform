@@ -154,13 +154,13 @@ export default function InstituteAdminProfileStep({ initial, onBack, onContinue 
         </div>
 
         <div className="w-full flex gap-3 mt-2">
-          <button
+          <button data-cta="app_onboarding_admin_profile_back"
             onClick={onBack}
             className="flex-1 border border-white/20 text-white font-semibold text-sm rounded-2xl py-4 active:opacity-80"
           >
             Back
           </button>
-          <button
+          <button data-cta="app_onboarding_admin_profile_continue"
             onClick={handleContinue}
             className="flex-[2] bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 transition-opacity active:scale-[0.98]"
           >

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { callAdminApi } from "../../supabaseAdminClient";
+import { ctaSlug } from "../../utils/analytics";
 
 // The app's Community tab: recent posts from the Evolve Discord channels
 // chosen on the server (DISCORD_COMMUNITY_CHANNEL_IDS). Posts are synced and
@@ -125,7 +126,7 @@ function Post({ post, showChannel }) {
               {r.count}
             </span>
           ))}
-          <a
+          <a data-cta="app_community_reply_on_discord"
             href={post.jump_url}
             target="_blank"
             rel="noopener noreferrer"
@@ -169,7 +170,7 @@ export default function CommunityFeed() {
           <h2 className="text-white font-extrabold text-2xl">Community</h2>
           <p className="text-white/45 text-sm mt-1">What's happening on the Evolve Discord</p>
         </div>
-        <a
+        <a data-cta="app_community_join_discord"
           href={DISCORD_INVITE}
           target="_blank"
           rel="noopener noreferrer"
@@ -183,7 +184,7 @@ export default function CommunityFeed() {
       {channels.length > 1 && (
         <div className="mt-5 flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
           {[["all", "All"], ...channels.map(([id, name]) => [id, `#${name}`])].map(([id, label]) => (
-            <button
+            <button data-cta={`app_community_channel_${ctaSlug(id)}`}
               key={id}
               type="button"
               onClick={() => setChannel(id)}
@@ -216,7 +217,7 @@ export default function CommunityFeed() {
         ) : state.error ? (
           <div className="py-16 text-center">
             <p className="text-white font-bold">Couldn't load the community feed</p>
-            <button type="button" onClick={load} className="mt-3 text-evolve-yellow text-sm font-semibold hover:underline">
+            <button data-cta="app_community_feed_try_again" type="button" onClick={load} className="mt-3 text-evolve-yellow text-sm font-semibold hover:underline">
               Try again
             </button>
           </div>

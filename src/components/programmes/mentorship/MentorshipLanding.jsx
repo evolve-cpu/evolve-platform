@@ -86,7 +86,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
   return (
     <div className="flex flex-col gap-14">
       {onBack && (
-        <button
+        <button data-cta="app_mentorship_back"
           onClick={onBack}
           className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm font-semibold w-fit transition-colors"
         >
@@ -124,7 +124,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
           <Chip>5 sessions</Chip>
           <Chip>A dedicated team lead</Chip>
         </div>
-        <button
+        <button data-cta="app_mentorship_explore_plans"
           onClick={() =>
             document
               .getElementById("mt-pricing")
@@ -206,7 +206,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
               also sits on the other side of the table, hiring designers and
               building teams. He's mentored 100+ designers so far.
             </p>
-            <a
+            <a data-cta="app_mentorship_mentor_linkedin"
               href="https://www.linkedin.com/in/yagnesh-ahir-24676516/"
               target="_blank"
               rel="noopener noreferrer"
@@ -295,7 +295,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
                     </li>
                   ))}
                 </ul>
-                <button
+                <button data-cta={`app_mentorship_select_plan_${p.key}`}
                   onClick={() => onSelectPlan(p.key)}
                   className={`mt-2 text-center font-bold text-sm rounded-2xl py-3.5 active:opacity-80 ${
                     p.featured
@@ -341,7 +341,7 @@ export default function MentorshipLanding({ onBack, onSelectPlan }) {
             Personalised 1:1 sessions tailored to your need
           </p>
         </div>
-        <button
+        <button data-cta="app_mentorship_get_started"
           onClick={() =>
             document
               .getElementById("mt-pricing")

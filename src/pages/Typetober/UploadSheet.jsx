@@ -5,6 +5,7 @@ import { track, keepRecording } from "../../lib/clarity";
 import { supabase } from "../../supabaseClient";
 import { LETTERS } from "./lib/constants";
 import { loadRazorpayScript, toSquareBlob, PRICE, defaultCurrency } from "./lib/upload";
+import { ctaSlug, ctaArea } from "../../utils/analytics";
 
 export default function UploadSheet({ open, onClose, user, letterIndex, onSuccess, onBulk }) {
   const [currency, setCurrency] = useState(defaultCurrency);
@@ -185,15 +186,15 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
           </div>
           {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
           <div className="grid grid-cols-2 gap-2 mt-4">
-            <button onClick={() => galRef.current?.click()} className="bg-white/10 text-white font-bold py-3 rounded-2xl">
+            <button data-cta={`${ctaArea()}_typetober_upload_choose_image`} onClick={() => galRef.current?.click()} className="bg-white/10 text-white font-bold py-3 rounded-2xl">
               {preview ? "Change" : "Upload"}
             </button>
-            <button onClick={() => camRef.current?.click()} className="bg-white/10 text-white font-bold py-3 rounded-2xl">
+            <button data-cta={`${ctaArea()}_typetober_upload_take_photo`} onClick={() => camRef.current?.click()} className="bg-white/10 text-white font-bold py-3 rounded-2xl">
               Take photo
             </button>
           </div>
           {!preview && onBulk && (
-            <button
+            <button data-cta={`${ctaArea()}_typetober_upload_switch_to_bulk`}
               onClick={onBulk}
               className="w-full mt-3 flex items-center gap-3 text-left rounded-2xl border-2 border-white/15 bg-black px-4 py-3"
             >
@@ -205,7 +206,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
             </button>
           )}
           <p className="text-white/30 text-[12px] mt-3">Only your own work — copied or unlawful work gets removed, no refund.</p>
-          <button
+          <button data-cta={`${ctaArea()}_typetober_upload_continue`}
             disabled={!blob}
             onClick={() => setStep(2)}
             className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
@@ -224,7 +225,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
               ["INR", "India · ₹10"],
               ["USD", "International · $1"]
             ].map(([c, label]) => (
-              <button
+              <button data-cta={`${ctaArea()}_typetober_upload_currency_${ctaSlug(c)}`}
                 key={c}
                 role="radio"
                 aria-checked={currency === c}
@@ -253,7 +254,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
             This is my own work and I agree to the terms. Payments are final.
           </label>
           {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
-          <button
+          <button data-cta={`${ctaArea()}_typetober_upload_pay_submit`}
             disabled={!agree || busy}
             onClick={pay}
             className="tt-btn w-full mt-4 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl disabled:opacity-40"
@@ -273,7 +274,7 @@ export default function UploadSheet({ open, onClose, user, letterIndex, onSucces
           <div className="mt-4 aspect-square w-full mx-auto md:max-w-[min(100%,50vh)] relative rounded-2xl overflow-hidden">
             {preview && <img src={preview} alt={letter} className="w-full h-full object-cover" />}
           </div>
-          <button onClick={close} className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl">
+          <button data-cta={`${ctaArea()}_typetober_upload_see_on_wall`} onClick={close} className="tt-btn w-full mt-5 bg-evolve-yellow text-black font-extrabold py-3.5 rounded-2xl">
             See it on the wall
           </button>
         </>

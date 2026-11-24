@@ -113,7 +113,7 @@ const TestimonialCard = ({ t, isMobile, isActive, isFront }) => {
           onEnded={() => setPlaying(false)}
           className="w-full h-full object-cover"
         />
-        <button
+        <button data-cta="web_designers_testimonial_video_play"
           onClick={togglePlay}
           aria-label={
             playing

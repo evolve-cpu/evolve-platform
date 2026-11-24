@@ -2572,7 +2572,7 @@ export default function CollegeActivation() {
                 )}
 
                 <div className="mt-6 flex items-center justify-between">
-                  <button
+                  <button data-cta="web_in_person_resend_code"
                     type="button"
                     disabled={cooldown > 0 || loading}
                     onClick={sendOtp}
@@ -2583,7 +2583,7 @@ export default function CollegeActivation() {
                     {cooldown > 0 ? `resend in ${cooldown}s` : "resend otp"}
                   </button>
 
-                  <button
+                  <button data-cta="web_in_person_edit_details"
                     type="button"
                     onClick={() => setStep("form")}
                     className="text-black font-bold underline"
@@ -2596,7 +2596,7 @@ export default function CollegeActivation() {
 
             <div className="flex justify-center pt-2">
               {step === "form" ? (
-                <button
+                <button data-cta="web_in_person_send_code"
                   onClick={sendOtp}
                   disabled={loading || !isFormValid}
                   className="
@@ -2615,7 +2615,7 @@ export default function CollegeActivation() {
                   {loading ? "sending..." : "lets begin"}
                 </button>
               ) : (
-                <button
+                <button data-cta="web_in_person_verify_code"
                   onClick={verifyOtp}
                   disabled={loading || otp.length !== 6}
                   className="
@@ -2750,7 +2750,7 @@ export default function CollegeActivation() {
                   )}
 
                   <div className="flex justify-center">
-                    <button
+                    <button data-cta="web_in_person_send_code"
                       onClick={sendOtp}
                       disabled={loading || !isFormValid}
                       className="
@@ -2815,7 +2815,7 @@ export default function CollegeActivation() {
                   )}
 
                   <div className="mt-4 flex items-center justify-between">
-                    <button
+                    <button data-cta="web_in_person_resend_code"
                       type="button"
                       disabled={cooldown > 0 || loading}
                       onClick={sendOtp}
@@ -2826,7 +2826,7 @@ export default function CollegeActivation() {
                       {cooldown > 0 ? `${cooldown}s` : "resend"}
                     </button>
 
-                    <button
+                    <button data-cta="web_in_person_edit_details"
                       type="button"
                       onClick={() => setStep("form")}
                       className="text-black font-bold underline"
@@ -2836,7 +2836,7 @@ export default function CollegeActivation() {
                   </div>
 
                   <div className="flex justify-center mt-6">
-                    <button
+                    <button data-cta="web_in_person_verify_code"
                       onClick={verifyOtp}
                       disabled={loading || otp.length !== 6}
                       className="

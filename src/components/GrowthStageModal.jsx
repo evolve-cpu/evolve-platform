@@ -38,7 +38,7 @@ export default function GrowthStageModal({ progress, heading, message, onContinu
           stage {stage} · {label}
         </span>
 
-        <button
+        <button data-cta="app_growth_stage_keep_going"
           onClick={onContinue}
           className="w-full bg-evolve-yellow text-evolve-black font-bold text-base rounded-2xl py-4 mt-2 active:scale-[0.98] transition-transform"
         >

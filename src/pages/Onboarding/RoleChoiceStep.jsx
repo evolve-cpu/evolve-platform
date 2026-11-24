@@ -1,4 +1,5 @@
 import OnboardingProgressBar from "./OnboardingProgressBar";
+import { ctaSlug } from "../../utils/analytics";
 
 function GraduationCapIcon({ className }) {
   return (
@@ -67,7 +68,7 @@ export default function RoleChoiceStep({ onSelect, onBack }) {
         <OnboardingProgressBar step={1} total={3} />
 
         {onBack && (
-          <button
+          <button data-cta="app_onboarding_role_back"
             onClick={onBack}
             className="self-start flex items-center gap-1 text-white/40 text-xs font-semibold hover:text-white/70 transition-colors -mb-2"
           >
@@ -88,7 +89,7 @@ export default function RoleChoiceStep({ onSelect, onBack }) {
 
         <div className="w-full flex flex-col gap-3">
           {ROLES.map((opt) => (
-            <button
+            <button data-cta={`app_onboarding_role_${ctaSlug(opt.value)}`}
               key={opt.value}
               onClick={() => onSelect(opt.value)}
               className="w-full text-left rounded-2xl border p-4 flex items-center gap-4 transition-colors hover:border-white/25"

@@ -53,7 +53,7 @@ export default function MentorshipRecordingPlayer({ url }) {
   return (
     <div className="aspect-video bg-black flex flex-col items-center justify-center gap-3">
       <p className="text-white/40 text-sm px-6 text-center">Preview isn't available for this link.</p>
-      <a href={url} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow text-sm font-bold underline">
+      <a data-cta="app_mentorship_open_recording" href={url} target="_blank" rel="noopener noreferrer" className="text-evolve-yellow text-sm font-bold underline">
         Open recording ↗
       </a>
     </div>

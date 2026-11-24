@@ -24,6 +24,7 @@ import {
   formatCountdown
 } from "./lib/constants";
 import "./Typetober.css";
+import { ctaArea } from "../../utils/analytics";
 
 function Landing({ onAccept, phase }) {
   const afterSubmissions = phase === "voting" || phase === "closed";
@@ -110,7 +111,7 @@ function Landing({ onAccept, phase }) {
               {countdown.days}d {countdown.hours}h until letters start unlocking
             </p>
           )}
-          <button
+          <button data-cta={`${ctaArea()}_typetober_hero_${phase === "voting" ? "vote_now" : phase === "closed" ? "see_gallery" : "accept_challenge"}`}
             onClick={onAccept}
             className="tt-cta w-full md:w-auto md:min-w-[360px] bg-black text-evolve-yellow font-extrabold text-[20px] py-4 px-8 rounded-2xl border-2 border-black"
           >
@@ -137,7 +138,7 @@ function Landing({ onAccept, phase }) {
 function Tile({ t, ch, i, accent, onAdd, onView }) {
   if (t.type === "example") {
     return (
-      <button
+      <button data-cta={`${ctaArea()}_typetober_example_view`}
         onClick={() => onView(i, t.item)}
         className="relative aspect-square rounded-lg overflow-hidden bg-white/5"
         style={{ outline: `1px solid ${accent}`, outlineOffset: "-1px" }}
@@ -163,7 +164,7 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   if (t.type === "img" || t.type === "mine") {
     const mine = t.type === "mine";
     return (
-      <button
+      <button data-cta={`${ctaArea()}_typetober_my_letter_view`}
         onClick={() => onView(i, t.item)}
         className="relative aspect-square rounded-lg overflow-hidden bg-white/5"
         style={
@@ -198,7 +199,7 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   }
   if (t.type === "add") {
     return (
-      <button
+      <button data-cta={`${ctaArea()}_typetober_add_letter`}
         onClick={() => onAdd(i)}
         className="tt-slot tt-slot-add relative aspect-square rounded-lg grid place-items-center"
         style={{ "--c": accent }}
@@ -228,7 +229,7 @@ function Tile({ t, ch, i, accent, onAdd, onView }) {
   }
   // Open slot: clearly outlined, shows the letter faintly, and also opens the upload.
   return (
-    <button
+    <button data-cta={`${ctaArea()}_typetober_add_letter`}
       onClick={() => onAdd(i)}
       className="tt-slot tt-slot-open aspect-square rounded-lg grid place-items-center"
       style={{ "--c": accent }}
@@ -427,7 +428,7 @@ function VoteButton({ item, votes, large = false }) {
   const count = votes.counts[item.id] || 0;
   const open = votes.phase === "voting";
   return (
-    <button
+    <button data-cta={`${ctaArea()}_typetober_vote`}
       onClick={(e) => {
         e.stopPropagation();
         votes.onToggle(item);
@@ -463,7 +464,7 @@ function VoteTile({ item, ch, i, votes, onView }) {
           : undefined
       }
     >
-      <button
+      <button data-cta={`${ctaArea()}_typetober_wall_entry_view`}
         onClick={() => onView(i, item)}
         className="absolute inset-0 w-full h-full"
         aria-label={`View ${ch} by ${item.profiles?.username || item.profiles?.name || "participant"}`}
@@ -663,7 +664,7 @@ function Rail({ currentDay, mySubmissions, onClick }) {
           (r) => r.status === "success"
         );
         return (
-          <button
+          <button data-cta={`${ctaArea()}_typetober_letter_tab`}
             key={ch}
             className={!unlocked ? "locked" : done ? "done" : ""}
             onClick={() => onClick(i)}
@@ -946,7 +947,7 @@ export default function Typetober({ platform = false }) {
             onClick={handleRailClick}
           />
           {currentDay > 0 && submissionsOpen && (
-            <button
+            <button data-cta={`${ctaArea()}_typetober_bulk_upload_fab`}
               onClick={handleBulk}
               className="tt-bulk-fab ml-[-22px] md:ml-[-30px]"
             >

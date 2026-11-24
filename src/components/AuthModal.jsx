@@ -157,7 +157,7 @@ const AuthModal = ({ isOpen, onClose, user }) => {
                 <p className="text-red-600 text-[13px] font-normal">{error}</p>
               )}
 
-              <button
+              <button data-cta="web_auth_modal_send_code"
                 type="submit"
                 disabled={loading}
                 className="w-full bg-black text-evolve-yellow font-extrabold text-[18px] rounded-lg py-3 flex items-center justify-center gap-2 transition-opacity duration-150 disabled:opacity-50"
@@ -181,7 +181,7 @@ const AuthModal = ({ isOpen, onClose, user }) => {
             </div>
 
             {/* Google button */}
-            <button
+            <button data-cta="web_auth_modal_continue_google"
               onClick={handleGoogle}
               disabled={loading}
               className="w-full bg-white text-black border-2 border-black font-semibold text-[16px] rounded-lg py-3 flex items-center justify-center gap-3 transition-opacity duration-150 disabled:opacity-50"
@@ -266,7 +266,7 @@ const AuthModal = ({ isOpen, onClose, user }) => {
                 <p className="text-red-600 text-[13px] font-normal">{error}</p>
               )}
 
-              <button
+              <button data-cta="web_auth_modal_verify_code"
                 type="submit"
                 disabled={loading || otp.length < 6}
                 className="w-full bg-black text-evolve-yellow font-extrabold text-[18px] rounded-lg py-3 flex items-center justify-center gap-2 transition-opacity duration-150 disabled:opacity-50"
@@ -283,7 +283,7 @@ const AuthModal = ({ isOpen, onClose, user }) => {
 
               <p className="text-black/50 text-[13px] text-center">
                 Didn't get it?{" "}
-                <button
+                <button data-cta="web_auth_modal_resend_code"
                   type="button"
                   onClick={() => {
                     setError("");

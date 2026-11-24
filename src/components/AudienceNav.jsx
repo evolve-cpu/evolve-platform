@@ -6,6 +6,7 @@ import {
 } from "../assets/images/Nav";
 import InstituteContactModal from "./InstituteContactModal";
 import { AUDIENCE_INQUIRY_CONFIG } from "../lib/audienceInquiry";
+import { ctaSlug } from "../utils/analytics";
 
 /**
  * AudienceNav — shared header for the institutions & corporates pages.
@@ -48,7 +49,7 @@ const AudienceNav = ({ audience = "institutions" }) => {
             }}
           >
             {/* logo — left */}
-            <button
+            <button data-cta="web_audience_nav_logo"
               onClick={() => navigate("/")}
               className="focus:outline-none cursor-pointer flex-shrink-0"
               aria-label="evolve home"
@@ -75,7 +76,7 @@ const AudienceNav = ({ audience = "institutions" }) => {
                   location.pathname === item.path ||
                   item.path === AUDIENCE_INQUIRY_CONFIG[audience]?.path;
                 return (
-                  <Link
+                  <Link data-cta={`web_audience_nav_${ctaSlug(item.label)}`}
                     key={item.path}
                     to={item.path}
                     className={`transition-colors duration-200 hover:text-[#FFE470] text-[13px] md:text-[17px] ${
@@ -88,7 +89,7 @@ const AudienceNav = ({ audience = "institutions" }) => {
                   </Link>
                 );
               })}
-              <button
+              <button data-cta={`web_${audience}_nav_get_in_touch`}
                 onClick={() => setModalOpen(true)}
                 className="hidden md:inline text-[#BF9C05] font-medium text-[17px] hover:text-white transition-colors duration-200"
               >

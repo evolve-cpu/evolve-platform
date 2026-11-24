@@ -1,5 +1,6 @@
 import { linkedin_logo } from "../../assets/images/Mentorship";
 import { instagram_logo } from "../../assets/images/About";
+import { ctaSlug } from "../../utils/analytics";
 
 // Photos are Google Drive files shared as "anyone with the link".
 // driveId is the part between /d/ and /view in the share URL.
@@ -30,7 +31,7 @@ const MemberCard = ({ member, photoBg, size = "lg", socialBelow = false }) => {
   const s = SIZES[size];
   const social = getSocial(member);
   const socialLink = social && (
-    <a
+    <a data-cta={`web_about_team_${ctaSlug(social.label)}`}
       href={social.href}
       target="_blank"
       rel="noopener noreferrer"

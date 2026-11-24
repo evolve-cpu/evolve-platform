@@ -8,7 +8,7 @@ const drivePhoto = (id) => `https://lh3.googleusercontent.com/d/${id}=w600`;
 export const MobileMemberGrid = ({ members, photoBg, onSelect }) => (
   <div className="md:hidden mt-8 grid grid-cols-2 gap-x-7 gap-y-6">
     {members.map((m, i) => (
-      <button
+      <button data-cta="web_about_team_member_open"
         key={m.name}
         type="button"
         onClick={() => onSelect(i)}

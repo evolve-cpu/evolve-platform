@@ -28,7 +28,7 @@ export default function ProgrammeMentorship() {
         className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-4 border-b border-white/10"
         style={{ backgroundColor: "#161618" }}
       >
-        <Link
+        <Link data-cta="app_programme_mentorship_back_to_grow"
           to="/app/grow"
           className="flex items-center gap-1.5 text-evolve-yellow text-sm font-semibold"
         >
