@@ -3,18 +3,24 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.jsx";
 import "./index.css";
 import { trackVisit } from "./lib/platformAnalytics";
+import { devRedirectGate } from "./lib/devRedirect";
 
-// before the first render — AuthContext strips OAuth params from the URL
-trackVisit();
+// On the dev host, non-admins are sent to production before anything renders.
+devRedirectGate().then((stay) => {
+  if (!stay) return;
 
-const rootElement = document.getElementById("root");
-const app = (
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
-);
+  // before the first render — AuthContext strips OAuth params from the URL
+  trackVisit();
 
-// Prerendered pages (scripts/prerender.mjs) ship static HTML for AI readers and
-// crawlers; React simply re-renders over it rather than hydrating, since the
-// snapshot includes browser-only state (animations, auth) that would mismatch.
-createRoot(rootElement).render(app);
+  const rootElement = document.getElementById("root");
+  const app = (
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
+
+  // Prerendered pages (scripts/prerender.mjs) ship static HTML for AI readers and
+  // crawlers; React simply re-renders over it rather than hydrating, since the
+  // snapshot includes browser-only state (animations, auth) that would mismatch.
+  createRoot(rootElement).render(app);
+});
