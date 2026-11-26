@@ -29,6 +29,7 @@
 //   platform_users      Evolve admins → every user: source, sign-up, journey, time, segment (see _platformUsers.js)
 //   voice_review        Evolve admins → spoken AI-profile review → transcript + field corrections (see _voiceReview.js)
 //   success_metrics     Evolve admins → business funnel, signed-in vs not, why no sign-in, sources, event funnels (see _successMetrics.js)
+//   payments_report     Evolve admins → every paid service except Typetober: who paid, what, how much (see _payments.js)
 //   coupon_issue        Evolve admins → Typetober winner coupons, see _typetoberCoupons.js
 //   coupon_delete       Evolve admins → removes an unused coupon
 //
@@ -56,6 +57,7 @@ import { buildJourneyReport, buildUserJourney } from "./_platformJourneys.js";
 import { buildUserAnalytics } from "./_platformUsers.js";
 import { voiceReview } from "./_voiceReview.js";
 import { buildSuccessMetrics } from "./_successMetrics.js";
+import { buildPaymentsReport } from "./_payments.js";
 import { issueCoupons, deleteCoupon, couponForUser, redeemCoupon } from "./_typetoberCoupons.js";
 
 const ANU_ORIGIN = "https://anu.evolvedesign.academy";
@@ -421,6 +423,10 @@ export async function handleAdmin(body, req) {
   if (op === "success_metrics") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     return buildSuccessMetrics(db, { rangeDays: body.rangeDays });
+  }
+  if (op === "payments_report") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    return buildPaymentsReport(db);
   }
   if (op === "platform_users") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");

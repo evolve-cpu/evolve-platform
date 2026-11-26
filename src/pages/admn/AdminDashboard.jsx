@@ -15,6 +15,7 @@ import TypetoberReportTab from "./TypetoberReportTab";
 import TypetoberCouponsTab from "./TypetoberCouponsTab";
 import PlatformReportTab from "./PlatformReportTab";
 import SuccessMetricsTab from "./SuccessMetricsTab";
+import PaymentsTab from "./PaymentsTab";
 import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1587,8 +1588,9 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
     { id: "success-metrics", label: "success metrics" },
     { id: "platform-report", label: "platform report" },
     { id: "user-analytics", label: "user analytics" },
+    { id: "payments", label: "payments" },
     { id: "tables", label: "all tables" },
-    // payments, batches, waitlist, m-portfolios, m-profiles, sessions and
+    // batch payments (old), batches, waitlist, m-portfolios, m-profiles, sessions and
     // accelerator 1:1 are hidden for now (their panels below are kept, just
     // unreachable) — add an entry back here to bring one back.
     { id: "grant-access", label: "grant access" },
@@ -2237,7 +2239,7 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
         {/* ══════════════════════════════════════════════════════════════
             PAYMENTS TAB
         ══════════════════════════════════════════════════════════════ */}
-        {activeTab === "payments" && (
+        {activeTab === "batch-payments" && (
           <div className="space-y-4">
             {/* filters */}
             <div className="flex flex-wrap gap-3 items-center">
@@ -2804,6 +2806,8 @@ Give exactly 3 sharp, practical insights for a non-technical founder. Focus on: 
 
         {/* every user: source, sign-up, journey, time spent, segment, funnel */}
         {activeTab === "success-metrics" && !isAnantAdmin && <SuccessMetricsTab />}
+        {/* every paid service except Typetober — PaymentsTab.jsx / api/_payments.js */}
+        {activeTab === "payments" && !isAnantAdmin && <PaymentsTab />}
         {activeTab === "user-analytics" && !isAnantAdmin && <UserAnalyticsTab />}
 
         {/* AI profiles users built themselves in the app (not team-generated) */}
