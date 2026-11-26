@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { supabaseAdmin } from "../../supabaseAdminClient";
+import { supabaseAdmin, callAdminApi } from "../../supabaseAdminClient";
 
 /* ── Human review of an AI profile, field by field ────────────────────────
    Every verdict (agree / disagree / missing) plus the reviewer's REASONING
@@ -231,30 +231,281 @@ function CorrectionForm({ value, onChange, isMissing }) {
   );
 }
 
+function VoiceBadge() {
+  return (
+    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: `${Y}1a`, color: Y }}>
+      🎙 from voice — check
+    </span>
+  );
+}
+
+/* ── record → Gemini (api/_voiceReview.js) → structured corrections ──
+   Low bitrate + a length cap keep each upload under Vercel's body limit;
+   reviewers can record as many short takes as they like. ── */
+const MAX_RECORD_SECS = 10 * 60;
+const fmtSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = () => reject(new Error("couldn't read the recording"));
+    r.readAsDataURL(blob);
+  });
+}
+
+function VoiceRecorder({ fields, onResult }) {
+  const [state, setState] = useState("idle"); // idle | recording | processing
+  const [secs, setSecs] = useState(0);
+  const [err, setErr] = useState("");
+  const [lastCount, setLastCount] = useState(null);
+  const recRef = useRef(null);
+  const streamRef = useRef(null);
+  const timerRef = useRef(null);
+  const chunksRef = useRef([]);
+  const cancelledRef = useRef(false);
+  const fieldsRef = useRef(fields);
+  fieldsRef.current = fields;
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+
+  const releaseMic = () => {
+    clearInterval(timerRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  };
+  useEffect(() => () => {
+    cancelledRef.current = true;
+    if (recRef.current?.state === "recording") recRef.current.stop();
+    releaseMic();
+  }, []);
+
+  async function processRecording(blob) {
+    setState("processing");
+    try {
+      if (blob.size < 2000) throw new Error("that recording was too short — try again");
+      const audio = await blobToBase64(blob);
+      const r = await callAdminApi({ op: "voice_review", audio, mimeType: blob.type || "audio/webm", fields: fieldsRef.current });
+      if (r.error) throw new Error(r.error.message);
+      onResultRef.current(r);
+      setLastCount((r.corrections || []).length);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setState("idle");
+    }
+  }
+
+  async function start() {
+    setErr("");
+    setLastCount(null);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      return setErr("this browser can't record audio — try Chrome");
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      return setErr("microphone access was blocked — allow it in the browser's address bar and try again");
+    }
+    streamRef.current = stream;
+    const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find((t) => MediaRecorder.isTypeSupported?.(t)) || "";
+    const rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
+    chunksRef.current = [];
+    cancelledRef.current = false;
+    rec.ondataavailable = (e) => e.data?.size && chunksRef.current.push(e.data);
+    rec.onstop = () => {
+      releaseMic();
+      if (cancelledRef.current) return setState("idle");
+      processRecording(new Blob(chunksRef.current, { type: (rec.mimeType || mime || "audio/webm").split(";")[0] }));
+    };
+    rec.start(1000);
+    recRef.current = rec;
+    setSecs(0);
+    setState("recording");
+    timerRef.current = setInterval(() => setSecs((s) => s + 1), 1000);
+  }
+
+  function stop(cancel = false) {
+    cancelledRef.current = cancel;
+    if (recRef.current?.state === "recording") recRef.current.stop();
+  }
+
+  useEffect(() => {
+    if (state === "recording" && secs >= MAX_RECORD_SECS) stop();
+  }, [state, secs]);
+
+  return (
+    <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: "#0d0d0d", border: `1px solid ${state === "recording" ? RED : "#1e1e1e"}` }}>
+      <div className="flex items-center gap-3 flex-wrap">
+        {state === "idle" && (
+          <button type="button" onClick={start} className="text-xs px-4 py-2 rounded-lg font-black" style={{ background: Y, color: "#000" }}>
+            🎙 record review
+          </button>
+        )}
+        {state === "recording" && (
+          <>
+            <button type="button" onClick={() => stop(false)} className="text-xs px-4 py-2 rounded-lg font-black" style={{ background: RED, color: "#000" }}>
+              ■ stop & fill the form
+            </button>
+            <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: RED }}>
+              <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: RED }} />
+              recording {fmtSecs(secs)} / {fmtSecs(MAX_RECORD_SECS)}
+            </span>
+            <button type="button" onClick={() => stop(true)} className="text-[11px] ml-auto" style={{ color: "#666" }}>
+              discard
+            </button>
+          </>
+        )}
+        {state === "processing" && (
+          <span className="text-xs font-bold" style={{ color: Y }}>
+            listening to your review & filling the form… (takes ~10–30s)
+          </span>
+        )}
+        {state === "idle" && lastCount != null && (
+          <span className="text-xs" style={{ color: GR }}>
+            ✓ filled {lastCount} point{lastCount === 1 ? "" : "s"} from your recording — check the ones marked 🎙 below
+          </span>
+        )}
+      </div>
+      <p className="text-[11px]" style={{ color: "#666" }}>
+        Talk through the profile like you would on a call — Hinglish is fine. Say the field, what's wrong, what it should be, and why (e.g. "Stage says
+        Mid-level, but she's only done internships, so Early"). Record in as many parts as you like; each part is added to this review. Audio isn't stored —
+        only the text.
+      </p>
+      {err && <p className="text-xs" style={{ color: RED }}>{err}</p>}
+    </div>
+  );
+}
+
+const GAP_LABEL = Object.fromEntries(GAP_TYPES.map(([v, l]) => [v, l]));
+
+/* ── a submitted review, read-only. A profile build is reviewed once; it
+   opens up again only when the profile is regenerated. ── */
+function ReviewedView({ review, justSubmitted }) {
+  const [full, setFull] = useState(null);
+  const [items, setItems] = useState(null);
+  useEffect(() => {
+    supabaseAdmin
+      .from("ai_profile_reviews")
+      .select("*")
+      .eq("id", review.id)
+      .maybeSingle()
+      .then(({ data }) => setFull(data || null));
+    supabaseAdmin
+      .from("ai_profile_review_items")
+      .select("*")
+      .eq("review_id", review.id)
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => setItems(error ? { error: error.message } : data || []));
+  }, [review.id]);
+
+  const corrections = Array.isArray(items) ? items.filter((i) => i.verdict !== "agree") : [];
+  const agreed = Array.isArray(items) ? items.filter((i) => i.verdict === "agree") : [];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-xl p-4 text-xs flex flex-col gap-1.5" style={{ background: "#0d1a10", border: `1px solid ${GR}55`, color: "#9a9" }}>
+        <p className="font-black uppercase tracking-widest" style={{ color: GR }}>
+          {justSubmitted ? "✓ review saved — thanks!" : "✓ already reviewed"}
+        </p>
+        <p>
+          Reviewed {new Date(review.created_at).toLocaleString()} by <b style={{ color: "#fff" }}>{review.reviewer_email || "?"}</b> · accuracy{" "}
+          {review.overall_accuracy ?? "?"}/5 · {review.agree_count} agree · {review.disagree_count} disagree · {review.missing_count} missing
+        </p>
+        <p style={{ color: "#6a6" }}>This profile is locked. It can be reviewed again only after the AI profile is regenerated.</p>
+      </div>
+
+      {full?.overall_notes && (
+        <div className="rounded-xl p-4 text-xs" style={{ background: "#0d0d0d", border: "1px solid #1e1e1e" }}>
+          <p className="font-bold mb-1" style={{ color: "#777" }}>overall notes</p>
+          <p className="whitespace-pre-wrap" style={{ color: "#ddd" }}>{full.overall_notes}</p>
+        </div>
+      )}
+
+      {items?.error && <p className="text-xs" style={{ color: RED }}>couldn't load the review: {items.error}</p>}
+      {items === null && <p className="text-xs text-center py-6" style={{ color: "#555" }}>loading review…</p>}
+
+      {corrections.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1e1e1e" }}>
+          <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest" style={{ background: "#111", color: RED }}>
+            corrections ({corrections.length})
+          </p>
+          {corrections.map((c) => (
+            <div key={c.id} className="px-4 py-3 text-xs flex flex-col gap-1" style={{ borderTop: "1px solid #161616" }}>
+              <p className="font-bold" style={{ color: c.verdict === "missing" ? BLUE : "#bbb" }}>
+                {c.field_label || c.field_path}
+                <span className="ml-2 font-normal" style={{ color: "#666" }}>
+                  {GAP_LABEL[c.gap_type] || c.gap_type}
+                  {c.severity ? ` · ${c.severity}` : ""}
+                  {c.from_voice ? " · 🎙" : ""}
+                </span>
+              </p>
+              {c.ai_value != null && (
+                <p style={{ color: "#777" }}>
+                  AI said: <span style={{ color: "#999" }}>{fmt(c.ai_value)}</span>
+                </p>
+              )}
+              {c.human_value && (
+                <p style={{ color: "#777" }}>
+                  should be: <span style={{ color: GR }}>{c.human_value}</span>
+                </p>
+              )}
+              <p style={{ color: "#ddd" }}>{c.reasoning}</p>
+              {c.evidence && <p style={{ color: "#666" }}>evidence: {c.evidence}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {agreed.length > 0 && (
+        <details className="rounded-xl px-4 py-3 text-xs" style={{ background: "#0d0d0d", border: "1px solid #1e1e1e", color: "#888" }}>
+          <summary className="cursor-pointer font-bold" style={{ color: GR }}>agreed fields ({agreed.length})</summary>
+          <p className="mt-2" style={{ color: "#888" }}>{agreed.map((a) => a.field_label || a.field_path).join(" · ")}</p>
+        </details>
+      )}
+
+      {full?.voice_transcript && (
+        <details className="rounded-xl px-4 py-3 text-xs" style={{ background: "#0d0d0d", border: "1px solid #1e1e1e", color: "#888" }}>
+          <summary className="cursor-pointer font-bold" style={{ color: "#aaa" }}>what the reviewer said</summary>
+          <p className="mt-2 whitespace-pre-wrap" style={{ color: "#bbb" }}>{full.voice_transcript}</p>
+        </details>
+      )}
+    </div>
+  );
+}
+
 export default function ProfileReviewPanel({ row, onSubmitted }) {
   const profile = row.aiProfile;
   const groups = useMemo(() => buildItems(profile), [profile]);
   const reviewable = useMemo(() => groups.flatMap((g) => g.rows.filter((r) => !r.addMissing)), [groups]);
   const key = draftKey(row.userId, profile);
+  // identifies this particular build of the profile — one review per build
+  const buildStamp = profile?.generated_at || row.aiProfileUpdatedAt || null;
+  const listFields = useMemo(
+    () => groups.flatMap((g) => g.rows.filter((r) => r.addMissing)).map((r) => ({ path: r.listKey, label: r.label, isList: true })),
+    [groups]
+  );
 
   const [draft] = useState(() => loadDraft(key));
-  const [verdicts, setVerdicts] = useState(draft?.verdicts || {}); // path -> { verdict, human_value, gap_type, severity, reasoning, evidence }
-  const [missing, setMissing] = useState(draft?.missing || []); // [{ listKey, label, human_value, ... }]
+  const [verdicts, setVerdicts] = useState(draft?.verdicts || {}); // path -> { verdict, human_value, gap_type, severity, reasoning, evidence, fromVoice }
+  const [missing, setMissing] = useState(draft?.missing || []); // [{ listKey, label, human_value, ..., fromVoice }]
   const [overall, setOverall] = useState(draft?.overall || { accuracy: null, notes: "" });
+  const [transcripts, setTranscripts] = useState(draft?.transcripts || []);
   const [past, setPast] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    saveDraft(key, { verdicts, missing, overall });
-  }, [key, verdicts, missing, overall]);
+    saveDraft(key, { verdicts, missing, overall, transcripts });
+  }, [key, verdicts, missing, overall, transcripts]);
 
   useEffect(() => {
     if (!row.userId) return;
     supabaseAdmin
       .from("ai_profile_reviews")
-      .select("id, reviewer_email, created_at, agree_count, disagree_count, missing_count, overall_accuracy")
+      .select("id, reviewer_email, created_at, agree_count, disagree_count, missing_count, overall_accuracy, profile_generated_at")
       .eq("user_id", row.userId)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -269,6 +520,51 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
       return next;
     });
   const setCorrection = (path, value) => setVerdicts((prev) => ({ ...prev, [path]: { ...value, verdict: "disagree" } }));
+
+  // merge one voice recording's result into the form — never wipes what the
+  // reviewer already typed, only fills/extends it
+  function applyVoice(r) {
+    if (r.transcript?.trim()) setTranscripts((prev) => [...prev, r.transcript.trim()]);
+    const join = (a, b) => (a?.trim() && b?.trim() && !a.includes(b) ? `${a.trim()} ${b.trim()}` : a?.trim() || b?.trim() || "");
+    const labelOf = (k) => listFields.find((f) => f.path === k)?.label || k;
+    const newMissing = [];
+    setVerdicts((prev) => {
+      const next = { ...prev };
+      for (const c of r.corrections || []) {
+        if (c.verdict === "missing") {
+          newMissing.push({
+            listKey: c.field_path,
+            label: labelOf(c.field_path),
+            human_value: c.human_value,
+            gap_type: c.gap_type || "missed_info",
+            severity: c.severity,
+            reasoning: c.reasoning,
+            evidence: c.evidence,
+            fromVoice: true
+          });
+        } else if (c.verdict === "agree") {
+          if (!next[c.field_path]) next[c.field_path] = { verdict: "agree", fromVoice: true };
+        } else {
+          const old = next[c.field_path]?.verdict === "disagree" ? next[c.field_path] : {};
+          next[c.field_path] = {
+            verdict: "disagree",
+            human_value: old.human_value?.trim() || c.human_value,
+            gap_type: old.gap_type || c.gap_type,
+            severity: old.severity || c.severity,
+            reasoning: join(old.reasoning, c.reasoning),
+            evidence: join(old.evidence, c.evidence),
+            fromVoice: true
+          };
+        }
+      }
+      return next;
+    });
+    if (newMissing.length) setMissing((prev) => [...prev, ...newMissing]);
+    setOverall((o) => ({
+      accuracy: o.accuracy || r.overall_accuracy || null,
+      notes: join(o.notes, r.overall_notes)
+    }));
+  }
 
   const counts = useMemo(() => {
     const vs = Object.values(verdicts);
@@ -314,7 +610,8 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
           profile_source: row.selfBuilt == null ? null : row.selfBuilt ? "self_built" : "team_built",
           model: profile.model || null,
           prompt_version: profile.prompt_version || null,
-          profile_generated_at: profile.generated_at || null,
+          profile_generated_at: buildStamp,
+          voice_transcript: transcripts.length ? transcripts.join("\n\n— next recording —\n\n") : null,
           input_snapshot: src?.extracted_profile ?? null,
           ai_output: profile,
           overall_accuracy: overall.accuracy,
@@ -325,6 +622,10 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
         })
         .select("id")
         .single();
+      if (rErr?.message?.includes("ai_profile_reviews_one_per_build")) {
+        setDone(true); // reload past reviews → shows the existing one
+        throw new Error("Someone already reviewed this profile — showing their review.");
+      }
       if (rErr || !review?.id) throw new Error(rErr?.message || "couldn't save review");
 
       const byPath = new Map(reviewable.map((r) => [r.path, r]));
@@ -339,7 +640,8 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
           gap_type: v.verdict === "disagree" ? v.gap_type : null,
           severity: v.verdict === "disagree" ? v.severity || null : null,
           reasoning: v.verdict === "disagree" ? v.reasoning.trim() : null,
-          evidence: v.verdict === "disagree" ? v.evidence?.trim() || null : null
+          evidence: v.verdict === "disagree" ? v.evidence?.trim() || null : null,
+          from_voice: !!v.fromVoice
         })),
         ...missing.map((m) => ({
           review_id: review.id,
@@ -351,7 +653,8 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
           gap_type: m.gap_type,
           severity: m.severity || null,
           reasoning: m.reasoning.trim(),
-          evidence: m.evidence?.trim() || null
+          evidence: m.evidence?.trim() || null,
+          from_voice: !!m.fromVoice
         }))
       ];
       const { error: iErr } = await supabaseAdmin.from("ai_profile_review_items").insert(items);
@@ -365,6 +668,7 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
       setVerdicts({});
       setMissing([]);
       setOverall({ accuracy: null, notes: "" });
+      setTranscripts([]);
       setDone(true);
       onSubmitted?.();
     } catch (e) {
@@ -377,6 +681,13 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
   if (!row.userId) {
     return <p className="text-sm text-center py-10" style={{ color: "#555" }}>no linked account — can't review.</p>;
   }
+  if (past === null) {
+    return <p className="text-sm text-center py-10" style={{ color: "#555" }}>loading…</p>;
+  }
+  // this exact profile build already has a review → show it, read-only
+  const sameBuild = (a, b) => a && b && new Date(a).getTime() === new Date(b).getTime();
+  const existing = Array.isArray(past) ? past.find((p) => sameBuild(p.profile_generated_at, buildStamp)) : null;
+  if (existing) return <ReviewedView review={existing} justSubmitted={done} />;
 
   return (
     <div className="flex flex-col gap-4">
@@ -405,8 +716,21 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
             ))}
           </div>
         )}
-        {done && <p style={{ color: GR }}>✓ review saved. Thanks — this goes straight into the training set.</p>}
       </div>
+
+      <VoiceRecorder fields={[...reviewable.map((r) => ({ path: r.path, label: r.label, display: r.display })), ...listFields]} onResult={applyVoice} />
+      {transcripts.length > 0 && (
+        <details className="rounded-xl px-4 py-3 text-xs" style={{ background: "#0d0d0d", border: "1px solid #1e1e1e", color: "#888" }}>
+          <summary className="cursor-pointer font-bold" style={{ color: "#aaa" }}>
+            what you said ({transcripts.length} recording{transcripts.length > 1 ? "s" : ""}) — saved with the review
+          </summary>
+          {transcripts.map((t, i) => (
+            <p key={i} className="mt-2 whitespace-pre-wrap" style={{ color: "#bbb" }}>
+              {t}
+            </p>
+          ))}
+        </details>
+      )}
 
       {groups.map((g) => (
         <div key={g.title} className="rounded-xl overflow-hidden" style={{ border: "1px solid #1e1e1e" }}>
@@ -424,6 +748,7 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold" style={{ color: BLUE }}>
                             missing from {r.label.toLowerCase()}
+                            {m.fromVoice && <VoiceBadge />}
                           </span>
                           <button
                             type="button"
@@ -463,6 +788,7 @@ export default function ProfileReviewPanel({ row, onSubmitted }) {
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold" style={{ color: "#777" }}>
                         {r.label}
+                        {v?.fromVoice && <VoiceBadge />}
                       </p>
                       <p className="text-xs mt-0.5 break-words" style={{ color: "#ddd" }}>
                         {r.display}

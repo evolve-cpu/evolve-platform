@@ -7,7 +7,20 @@ What teaches the model the most is **the reason you give when you disagree**.
 
 Admin → **AI Profiles**, **User AI Profiles** or **Verification** → **view** → **review**.
 
-## How
+## Fastest way: talk through it 🎙
+
+1. Open the portfolio and resume, then click **🎙 record review**.
+2. Talk through the profile like you would on a call. Hinglish is fine. For each point, say **the field, what's wrong, what it should be, and why**:
+   > "Stage says Mid-level, but she's only done internships, so Early. Skills is missing packaging, the tea box project is clearly packaging…"
+3. Click **stop & fill the form**. After 10–30 seconds, the form is filled in for you, and every point it filled is marked **🎙 from voice, check**.
+4. Check those points, fix anything it got wrong, and add whatever's missing. You can record more parts; each one adds to the same review.
+5. Use **mark the rest as agree** for the fields you checked and had no problem with, then give an overall score and submit.
+
+Only the text of what you said is saved, never the audio. Each recording can be up to 10 minutes.
+
+Each AI profile is reviewed **once**. After it's submitted, everyone sees the finished review instead of the form. It opens for review again only if the profile is regenerated.
+
+## How (typing)
 
 1. Open the portfolio and resume using the links at the top of the modal. Review against the source, not from memory.
 2. For each field, choose **✓ agree** or **✕ disagree**.

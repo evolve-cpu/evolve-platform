@@ -2,6 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const MISTRAL_API_KEY = Deno.env.get("MISTRAL_API_KEY") ?? "";
+const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-3.5-flash-lite";
+// the alias Mistral's own vision + document examples use; override with the
+// MISTRAL_MODEL secret (ids your key can use: GET https://api.mistral.ai/v1/models)
+const MISTRAL_MODEL = Deno.env.get("MISTRAL_MODEL") ?? "mistral-small-latest";
+// "auto" (default) = Gemini first, Mistral if Gemini fails / is out of quota.
+// "gemini" or "mistral" = only that one. A request body `provider` overrides
+// this per call, for testing one provider without changing the secret.
+const AI_PROVIDER = (Deno.env.get("AI_PROVIDER") ?? "auto").toLowerCase();
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 
 const SERVICE_ROLE_KEY = (() => {
@@ -28,8 +37,13 @@ const DB_HEADERS = {
   "Content-Type": "application/json",
 };
 
-const MAX_IMAGES = 6;
-const MAX_TEXT_CHARS = 20000;
+const MAX_IMAGES_GEMINI = 14;
+const MAX_IMAGES_MISTRAL = 8; // Mistral's hard per-request limit
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_BYTES = 14 * 1024 * 1024; // Gemini's inline request limit is ~20MB after base64
+// separate budgets, so a long portfolio can no longer push the resume out
+const TEXT_BUDGET = { portfolio: 16000, resume: 10000, outlinks: 10000 };
+const OUTLINK_TEXT_CHARS = 2500;
 
 // Uploaded PDFs go to Gemini as documents (it reads every page visually, so
 // image-only portfolios and outlined-text resumes work). They're STREAMED
@@ -56,6 +70,17 @@ type ExtractedProfile = {
     text?: string;
     note?: string;
   };
+  outlinks?: Array<{
+    url: string;
+    type: string;
+    found_in?: string;
+    status: string;
+    title?: string | null;
+    text?: string;
+    image_urls?: string[];
+    note?: string;
+  }>;
+  outlinks_summary?: Record<string, number>;
 };
 
 /* ── Supabase REST helpers ───────────────────────────────────────────────── */
@@ -80,23 +105,67 @@ async function dbFetchExtracted(userId: string): Promise<Record<string, unknown>
 
 /* ── Gather raw text + screenshots already captured by extract-profile-data ── */
 
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}\n[…truncated]` : s);
+
 function buildRawText(extracted: ExtractedProfile): string {
-  const parts: string[] = [];
+  const portfolio: string[] = [];
   for (const p of extracted?.portfolio?.pages ?? []) {
-    if (p.text) parts.push(`--- Portfolio page: ${p.url} ---\n${p.text}`);
+    if (p.text) portfolio.push(`--- Portfolio page: ${p.url} ---\n${p.text}`);
   }
-  if (extracted?.portfolio?.note) parts.push(`Portfolio note: ${extracted.portfolio.note}`);
-  if (extracted?.resume?.text) parts.push(`--- Resume ---\n${extracted.resume.text}`);
-  if (extracted?.resume?.note) parts.push(`Resume note: ${extracted.resume.note}`);
-  return parts.join("\n\n").slice(0, MAX_TEXT_CHARS);
+  if (extracted?.portfolio?.note) portfolio.push(`Portfolio note: ${extracted.portfolio.note}`);
+
+  const resume: string[] = [];
+  if (extracted?.resume?.text) resume.push(`--- Resume ---\n${extracted.resume.text}`);
+  if (extracted?.resume?.note) resume.push(`Resume note: ${extracted.resume.note}`);
+
+  const parts = [clip(portfolio.join("\n\n"), TEXT_BUDGET.portfolio), clip(resume.join("\n\n"), TEXT_BUDGET.resume)];
+
+  const outlinks = extracted?.outlinks ?? [];
+  if (outlinks.length) {
+    const s = extracted.outlinks_summary ?? {};
+    const lines = [
+      `--- Linked work: links found in the resume/portfolio, each one opened by the system ---`,
+      `Link check: ${s.found ?? outlinks.length} found — ${s.opened ?? 0} opened, ${s.private ?? 0} private/login-walled, ${s.not_found ?? 0} dead (404), ${s.failed ?? 0} couldn't be loaded, ${s.skipped ?? 0} not opened (social profiles / over the limit).`,
+    ];
+    outlinks.forEach((o, i) => {
+      lines.push(
+        [
+          `[L${i + 1}] ${o.type} — ${o.url}`,
+          `Found in: ${o.found_in ?? "?"} | Status: ${o.status}${o.note ? ` (${o.note})` : ""}`,
+          o.title ? `Title: ${o.title}` : "",
+          o.text ? clip(o.text, OUTLINK_TEXT_CHARS) : "",
+        ].filter(Boolean).join("\n"),
+      );
+    });
+    parts.push(clip(lines.join("\n\n"), TEXT_BUDGET.outlinks));
+  }
+  return parts.filter((p) => p.trim()).join("\n\n");
 }
 
-function collectScreenshotUrls(extracted: ExtractedProfile): string[] {
-  const urls: string[] = [];
+type LabeledImage = { url: string; label: string };
+
+// Round-robin across sources, so one long page can no longer use up the
+// whole image budget and every linked project gets at least one image in.
+function collectImages(extracted: ExtractedProfile, cap: number): LabeledImage[] {
+  const groups: LabeledImage[][] = [];
   for (const p of extracted?.portfolio?.pages ?? []) {
-    for (const u of p.screenshot_urls ?? []) urls.push(u);
+    const urls = p.screenshot_urls ?? [];
+    if (urls.length) groups.push(urls.map((url, i) => ({ url, label: `Portfolio page ${p.url} — screenshot ${i + 1}` })));
   }
-  return urls.slice(0, MAX_IMAGES);
+  (extracted?.outlinks ?? []).forEach((o, i) => {
+    const urls = o.status === "opened" ? o.image_urls ?? [] : [];
+    if (urls.length) {
+      groups.push(urls.map((url, j) => ({ url, label: `Linked work [L${i + 1}] ${o.title || o.url} (${o.type}) — image ${j + 1}` })));
+    }
+  });
+  const out: LabeledImage[] = [];
+  for (let round = 0; out.length < cap && groups.some((g) => g.length > round); round++) {
+    for (const g of groups) {
+      if (out.length >= cap) break;
+      if (g[round]) out.push(g[round]);
+    }
+  }
+  return out;
 }
 
 // the uploaded resume / portfolio PDFs (links are already rendered to text +
@@ -155,16 +224,32 @@ async function pdfToPart(doc: { label: string; url: string }): Promise<unknown |
   }
 }
 
-async function imageToInlineData(url: string): Promise<{ mimeType: string; data: string } | null> {
+type LoadedImage = { label: string; mimeType: string; data: string; bytes: number };
+
+async function imageToInlineData(img: LabeledImage): Promise<LoadedImage | null> {
   try {
-    const res = await fetch(url);
+    const res = await fetch(img.url);
     if (!res.ok) return null;
     const bytes = new Uint8Array(await res.arrayBuffer());
-    const contentType = res.headers.get("content-type") || "image/png";
-    return { mimeType: contentType, data: encodeBase64(bytes) };
+    if (bytes.length > MAX_IMAGE_BYTES) return null;
+    const contentType = (res.headers.get("content-type") || "image/png").split(";")[0];
+    return { label: img.label, mimeType: contentType, data: encodeBase64(bytes), bytes: bytes.length };
   } catch {
     return null;
   }
+}
+
+// keeps priority order, drops whatever would push the request over the byte budget
+async function loadImages(list: LabeledImage[]): Promise<LoadedImage[]> {
+  const loaded = await Promise.all(list.map(imageToInlineData));
+  const out: LoadedImage[] = [];
+  let total = 0;
+  for (const img of loaded) {
+    if (!img || total + img.bytes > MAX_TOTAL_IMAGE_BYTES) continue;
+    total += img.bytes;
+    out.push(img);
+  }
+  return out;
 }
 
 /* ── The rubric — same framework as the parameter spec, so each field's
@@ -190,6 +275,8 @@ Follow this exact reasoning order:
 - Step 6 (competency_matrix, skill_profile, technical/soft/interpersonal skills): These render as info-graphics, not prose, so build them directly instead of leaving the UI to infer them from other fields. competency_matrix is a fixed five-point map — Design Core, Collaboration, Business Understanding, Leadership, Continuous Learning — scored 0-4 from the same evidence as foundational_clarity/team_work_proficiency/understanding_of_business/learning, each with up to 3 short evidence chips (this is what a click-to-expand pentagon vertex shows). skill_profile groups the craft skills you already found in Step 2 into 3-6 named categories (e.g. "Brand & Identity", "UI/UX", "Motion") that sum to ~100%, each carrying its own subskills/tools/domain/sector detail (this is what a click-to-expand donut segment shows) — do not invent categories the work doesn't support; fold a thin category into a bigger one rather than padding it out. technical_skills/soft_skills/interpersonal_skills are three short, separate name-only lists (no evidence, no scores) — technical = tools/craft techniques, soft = individual work-style traits (time management, adaptability), interpersonal = traits that only show up around other people (communication, mentoring, stakeholder handling) — each inferred from the same evidence already gathered, not re-researched.
 
 Ground every field in the actual evidence you were given (portfolio text, resume text, screenshots). Where the evidence is genuinely absent, say so plainly using the exact fallback language specified per field below — never guess or invent specifics like names, companies, or numbers that are not present in the material.
+
+LINKED WORK: the section "Linked work" lists links found in the resume/portfolio that the system itself opened (Behance projects, Dribbble shots, Figma files, live sites, Drive files), each with a status. Content and images from a link with status "opened" are real evidence of this person's work — weigh them exactly like portfolio pages (skills, tools, notable_works, dimension scores), and when a notable work comes from one, use that link's URL verbatim as its "link". Every image is preceded by a label naming its source; tie what you see to that source. Statuses are facts for your inventory: "not_found" = a dead link, "private" = not shared publicly / password-protected, "failed" = couldn't be loaded (not proof the link is broken), "skipped" = not opened. Use them for the "do the links actually work" check, and never describe the contents of a link whose status isn't "opened".
 
 URLs are a hard case of this rule: only output a URL (a social/profile link, a project link) if it appears verbatim in the text you were given. Never construct one from a handle, name, or platform guess (e.g. never turn "Jane on Dribbble" into a dribbble.com URL unless that exact URL is in the text). If no URL is present for something, output null/empty rather than a best guess.
 
@@ -556,6 +643,187 @@ const RESPONSE_SCHEMA = {
   ],
 };
 
+/* ── Model providers ─────────────────────────────────────────────────────────
+   Same prompt, same schema, same evidence for both — only the wire format
+   differs. Gemini: PDFs via its Files API, schema in its own OpenAPI dialect.
+   Mistral: PDFs as public document_url parts, images as data URLs (max 8),
+   schema converted to standard JSON Schema for strict structured output. ── */
+
+type Provider = "gemini" | "mistral";
+type ProviderInput = {
+  rawText: string;
+  images: LoadedImage[]; // fair-ordered; each provider takes as many as it allows
+  pdfDocs: Array<{ label: string; url: string }>;
+};
+type ProviderSuccess = { ok: true; profile: Record<string, unknown>; model: string; imagesUsed: number; documentsUsed: string[] };
+type ProviderResult = ProviderSuccess | { ok: false; error: string };
+
+const contentIntro = (rawText: string) =>
+  `PORTFOLIO & RESUME CONTENT:\n\n${rawText || "(no text could be extracted — read the attached documents)"}`;
+const docNote = (label: string) =>
+  `--- Attached document: ${label}. Read every page, including text that only appears inside images. ---`;
+const imageNote = (label: string) => `[Image — ${label}]`;
+const FINAL_ASK = "Analyze the above (text, attached documents and the labelled images) and return the structured profile now.";
+
+function parseJsonOutput(raw: string): Record<string, unknown> | null {
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  try {
+    const v = JSON.parse(cleaned);
+    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+async function runGemini(input: ProviderInput): Promise<ProviderResult> {
+  if (!GEMINI_API_KEY) return { ok: false, error: "GEMINI_API_KEY not set" };
+  const images = input.images.slice(0, MAX_IMAGES_GEMINI);
+  const pdfParts = await Promise.all(input.pdfDocs.map(pdfToPart));
+  const docs = input.pdfDocs.map((d, i) => ({ ...d, part: pdfParts[i] })).filter((d) => d.part);
+
+  const parts: unknown[] = [
+    { text: contentIntro(input.rawText) },
+    ...docs.flatMap((d) => [{ text: docNote(d.label) }, d.part]),
+    ...images.flatMap((img) => [{ text: imageNote(img.label) }, { inlineData: { mimeType: img.mimeType, data: img.data } }]),
+    { text: FINAL_ASK },
+  ];
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 8000,
+            responseMimeType: "application/json",
+            responseSchema: RESPONSE_SCHEMA,
+          },
+        }),
+      }
+    );
+    if (!res.ok) return { ok: false, error: `Gemini ${res.status}: ${(await res.text()).slice(0, 300)}` };
+    const data = await res.json();
+    const raw: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    if (!raw) {
+      const why = data?.candidates?.[0]?.finishReason ?? data?.promptFeedback?.blockReason ?? "unknown";
+      return { ok: false, error: `Gemini returned no text (reason: ${why})` };
+    }
+    const profile = parseJsonOutput(raw);
+    if (!profile) return { ok: false, error: `Gemini JSON parse failed: ${raw.slice(0, 200)}` };
+    return { ok: true, profile, model: GEMINI_MODEL, imagesUsed: images.length, documentsUsed: docs.map((d) => d.label) };
+  } catch (err) {
+    return { ok: false, error: `Gemini request failed: ${(err as Error).message}` };
+  }
+}
+
+// Gemini's OpenAPI-style schema → standard JSON Schema for Mistral's strict
+// mode: lowercase types, nullable → [type, "null"], every object closed and
+// every key required (nullable keys can still be null).
+// deno-lint-ignore no-explicit-any
+function toJsonSchema(node: any): Record<string, unknown> {
+  const type = String(node?.type || "").toLowerCase();
+  const out: Record<string, unknown> = {};
+  if (node?.description) out.description = node.description;
+  if (node?.enum) out.enum = node.nullable ? [...node.enum, null] : node.enum;
+  if (type === "object") {
+    const props: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(node.properties ?? {})) props[k] = toJsonSchema(v);
+    out.properties = props;
+    out.required = Object.keys(props);
+    out.additionalProperties = false;
+  } else if (type === "array") {
+    out.items = toJsonSchema(node.items);
+  }
+  out.type = node?.nullable ? [type, "null"] : type;
+  return out;
+}
+
+const MISTRAL_SCHEMA = toJsonSchema(RESPONSE_SCHEMA);
+
+async function runMistral(input: ProviderInput): Promise<ProviderResult> {
+  if (!MISTRAL_API_KEY) return { ok: false, error: "MISTRAL_API_KEY not set" };
+  const images = input.images.slice(0, MAX_IMAGES_MISTRAL);
+  const content = [
+    { type: "text", text: contentIntro(input.rawText) },
+    ...input.pdfDocs.flatMap((d) => [
+      { type: "text", text: docNote(d.label) },
+      { type: "document_url", document_url: d.url },
+    ]),
+    ...images.flatMap((img) => [
+      { type: "text", text: imageNote(img.label) },
+      { type: "image_url", image_url: `data:${img.mimeType};base64,${img.data}` },
+    ]),
+    { type: "text", text: FINAL_ASK },
+  ];
+
+  const send = (responseFormat: unknown, system: string) =>
+    fetch("https://api.mistral.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${MISTRAL_API_KEY}` },
+      body: JSON.stringify({
+        model: MISTRAL_MODEL,
+        temperature: 0.4,
+        max_tokens: 8000,
+        response_format: responseFormat,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content },
+        ],
+      }),
+    });
+
+  try {
+    let res = await send(
+      { type: "json_schema", json_schema: { name: "designer_profile", schema: MISTRAL_SCHEMA, strict: true } },
+      SYSTEM_PROMPT,
+    );
+    // if strict mode rejects the schema, don't sink the run — retry in plain
+    // JSON mode with the schema spelled out in the instructions instead
+    if (res.status === 400 || res.status === 422) {
+      const strictErr = (await res.text()).slice(0, 300);
+      // a wrong model id fails the same way in any mode — don't waste a second call
+      if (/invalid_model/i.test(strictErr)) {
+        return { ok: false, error: `Mistral model "${MISTRAL_MODEL}" isn't available to this key — set MISTRAL_MODEL. ${strictErr}` };
+      }
+      res = await send(
+        { type: "json_object" },
+        `${SYSTEM_PROMPT}\n\nReturn ONLY one JSON object that matches this JSON Schema exactly, with every key present:\n${JSON.stringify(MISTRAL_SCHEMA)}`,
+      );
+      if (!res.ok) {
+        return { ok: false, error: `Mistral ${res.status}: ${(await res.text()).slice(0, 300)} (strict attempt: ${strictErr})` };
+      }
+    }
+    if (!res.ok) return { ok: false, error: `Mistral ${res.status}: ${(await res.text()).slice(0, 300)}` };
+
+    const data = await res.json();
+    const msg = data?.choices?.[0]?.message?.content;
+    const raw = typeof msg === "string"
+      ? msg
+      : Array.isArray(msg) ? msg.map((p: { text?: string }) => p?.text ?? "").join("") : "";
+    if (!raw) return { ok: false, error: `Mistral returned no text (finish_reason: ${data?.choices?.[0]?.finish_reason ?? "unknown"})` };
+    const profile = parseJsonOutput(raw);
+    if (!profile) return { ok: false, error: `Mistral JSON parse failed: ${raw.slice(0, 200)}` };
+    return { ok: true, profile, model: MISTRAL_MODEL, imagesUsed: images.length, documentsUsed: input.pdfDocs.map((d) => d.label) };
+  } catch (err) {
+    return { ok: false, error: `Mistral request failed: ${(err as Error).message}` };
+  }
+}
+
+function providerOrder(requested: unknown): Provider[] {
+  const want = String(requested || AI_PROVIDER).toLowerCase();
+  if (want === "gemini") return ["gemini"];
+  if (want === "mistral") return ["mistral"];
+  const order: Provider[] = [];
+  if (GEMINI_API_KEY) order.push("gemini");
+  if (MISTRAL_API_KEY) order.push("mistral");
+  return order;
+}
+
 /* ── Main handler ────────────────────────────────────────────────────────── */
 
 serve(async (req) => {
@@ -588,16 +856,11 @@ serve(async (req) => {
     }
 
     const rawText = buildRawText(extracted);
-    const screenshotUrls = collectScreenshotUrls(extracted);
     const pdfDocs = collectPdfDocs(extracted);
-    const [images, pdfParts] = await Promise.all([
-      Promise.all(screenshotUrls.map(imageToInlineData)).then((r) => r.filter(Boolean) as Array<{ mimeType: string; data: string }>),
-      Promise.all(pdfDocs.map(pdfToPart)),
-    ]);
-    const attachedDocs = pdfDocs.filter((_, i) => pdfParts[i]);
+    const images = await loadImages(collectImages(extracted, MAX_IMAGES_GEMINI));
 
     // nothing to read at all — text, screenshots or documents
-    if (!rawText.trim() && !images.length && !attachedDocs.length) {
+    if (!rawText.trim() && !images.length && !pdfDocs.length) {
       await dbUpdate(user_id, { ai_profile_status: "failed" });
       return new Response(
         JSON.stringify({ error: "We couldn't read your resume or portfolio. Try a PDF, or paste a link instead." }),
@@ -605,67 +868,45 @@ serve(async (req) => {
       );
     }
 
-    const parts: unknown[] = [
-      { text: `PORTFOLIO & RESUME CONTENT:\n\n${rawText || "(no text could be extracted — read the attached documents)"}` },
-      ...attachedDocs.flatMap((doc) => [
-        { text: `--- Attached document: ${doc.label}. Read every page, including text that only appears inside images. ---` },
-        pdfParts[pdfDocs.indexOf(doc)],
-      ]),
-      ...images.map((img) => ({ inlineData: img })),
-      { text: "Analyze the above (text, attached documents and any screenshots) and return the structured profile now." },
-    ];
+    const order = providerOrder(body.provider);
+    if (!order.length) {
+      await dbUpdate(user_id, { ai_profile_status: "failed" });
+      return new Response(
+        JSON.stringify({ error: "No AI provider configured — set GEMINI_API_KEY and/or MISTRAL_API_KEY" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: "user", parts }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 8000,
-            responseMimeType: "application/json",
-            responseSchema: RESPONSE_SCHEMA,
-          },
-        }),
+    // try each provider in order; a failure (quota, outage, bad output) falls through to the next
+    const input: ProviderInput = { rawText, images, pdfDocs };
+    const providerErrors: string[] = [];
+    let success: ProviderSuccess | null = null;
+    let usedProvider: Provider | null = null;
+    for (const p of order) {
+      const r = p === "gemini" ? await runGemini(input) : await runMistral(input);
+      if (r.ok) {
+        success = r;
+        usedProvider = p;
+        break;
       }
-    );
+      providerErrors.push(`${p}: ${r.error}`);
+    }
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
+    if (!success) {
       await dbUpdate(user_id, { ai_profile_status: "failed" });
       return new Response(
-        JSON.stringify({ error: "Gemini API error", status: geminiRes.status, details: errText.slice(0, 500) }),
+        JSON.stringify({ error: "AI analysis failed", tried: order, details: providerErrors }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const geminiData = await geminiRes.json();
-    const rawOut: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    if (!rawOut) {
-      await dbUpdate(user_id, { ai_profile_status: "failed" });
-      return new Response(
-        JSON.stringify({ error: "Empty response from Gemini", raw: JSON.stringify(geminiData).slice(0, 400) }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let profile: Record<string, unknown>;
-    try {
-      profile = JSON.parse(rawOut);
-    } catch {
-      await dbUpdate(user_id, { ai_profile_status: "failed" });
-      return new Response(
-        JSON.stringify({ error: "JSON parse failed", raw: rawOut.slice(0, 400) }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    const profile = success.profile;
     profile.generated_at = new Date().toISOString();
-    profile.images_analyzed = images.length;
-    profile.documents_analyzed = attachedDocs.map((d) => d.label);
+    profile.images_analyzed = success.imagesUsed;
+    profile.documents_analyzed = success.documentsUsed;
+    profile.ai_provider = usedProvider;
+    profile.ai_model = success.model;
+    if (providerErrors.length) profile.provider_fallback = providerErrors;
 
     await dbUpdate(user_id, {
       ai_profile: profile,
@@ -674,7 +915,7 @@ serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({ success: true, ai_profile: profile }),
+      JSON.stringify({ success: true, provider: usedProvider, model: success.model, ai_profile: profile }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

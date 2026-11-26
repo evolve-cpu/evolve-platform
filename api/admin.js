@@ -27,6 +27,7 @@
 //   platform_journeys   Evolve admins → funnel, entry/exit pages, paths, recent sessions (see _platformJourneys.js)
 //   platform_user_journey Evolve admins → one user's sessions, step by step
 //   platform_users      Evolve admins → every user: source, sign-up, journey, time, segment (see _platformUsers.js)
+//   voice_review        Evolve admins → spoken AI-profile review → transcript + field corrections (see _voiceReview.js)
 //   success_metrics     Evolve admins → business funnel, signed-in vs not, why no sign-in, sources, event funnels (see _successMetrics.js)
 //   coupon_issue        Evolve admins → Typetober winner coupons, see _typetoberCoupons.js
 //   coupon_delete       Evolve admins → removes an unused coupon
@@ -53,6 +54,7 @@ import { buildPlatformReport } from "./_platformReport.js";
 import { buildWeeklyReports, postWeeklyReportToDiscord } from "./_platformDiscord.js";
 import { buildJourneyReport, buildUserJourney } from "./_platformJourneys.js";
 import { buildUserAnalytics } from "./_platformUsers.js";
+import { voiceReview } from "./_voiceReview.js";
 import { buildSuccessMetrics } from "./_successMetrics.js";
 import { issueCoupons, deleteCoupon, couponForUser, redeemCoupon } from "./_typetoberCoupons.js";
 
@@ -391,6 +393,10 @@ export async function handleAdmin(body, req) {
   if (op === "query") return runQuery(db, who, body);
   if (op === "storage") return runStorage(db, who, body);
   if (op === "gemini") return runGemini(body);
+  if (op === "voice_review") {
+    if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
+    return voiceReview(body, HttpError);
+  }
   if (op === "grant_access") {
     if (who.role !== "evolve") throw new HttpError(403, "Evolve admins only");
     try {
